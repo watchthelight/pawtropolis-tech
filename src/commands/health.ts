@@ -7,10 +7,10 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 export const data = new SlashCommandBuilder()
   .setName("health")
-  .setDescription("Show bot health (uptime and latency).");
+  .setDescription("Bot health (uptime and latency).");
 export async function execute(interaction: ChatInputCommandInteraction) {
   const uptimeSec = Math.floor(process.uptime());
   const ping = Math.round(interaction.client.ws.ping);
-  const content = `✅ Healthy. Uptime: ${uptimeSec}s • WS ping: ${ping}ms`;
+  const content = `Healthy. Uptime: ${uptimeSec}s • WS ping: ${ping}ms`;
   await interaction.reply({ content, ephemeral: true });
 }
