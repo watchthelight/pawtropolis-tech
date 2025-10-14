@@ -12,5 +12,5 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const uptimeSec = Math.floor(process.uptime());
   const ping = Math.round(interaction.client.ws.ping);
   const content = `Healthy. Uptime: ${uptimeSec}s • WS ping: ${ping}ms`;
-  await interaction.reply({ content, ephemeral: true });
+  await interaction.reply({ content, ephemeral: false });
 }
