@@ -4,13 +4,20 @@
  * License: MIT
  * Repo: https://github.com/watchthelight/pawtropolis-tech
  */
+
 import "dotenv/config";
 import { z } from "zod";
+
 const schema = z.object({
-  DISCORD_TOKEN: z.string().min(1, "put your bot token in the .env dummy"),
-  CLIENT_ID: z.string().min(1, "yeah and your client ID needs to be in there too"),
+  DISCORD_TOKEN: z.string().min(1, "Missing DISCORD_TOKEN"),
+  CLIENT_ID: z.string().min(1, "Missing CLIENT_ID"),
   GUILD_ID: z.string().optional(),
   NODE_ENV: z.enum(["development", "production"]).default("development"),
+  DB_PATH: z.string().default("data/data.db"),
+
+  // Seed-only helpers (optional at runtime)
+  TEST_GUILD_ID: z.string().optional(),
+  TEST_REVIEWER_ROLE_ID: z.string().optional(),
 });
 const parsed = schema.safeParse(process.env);
 if (!parsed.success) {

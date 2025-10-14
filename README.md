@@ -12,3 +12,18 @@ A transparent, server-owned Discord gatekeeping bot: pinned application, staff r
 - Issues: https://github.com/watchthelight/pawtropolis-tech/issues
 - Email: admin@watchthelight.org
 - Discord: `watchthelight`
+
+## Database
+
+SQLite is used for durability and simple ops.
+
+```bash
+npm run db:migrate   # apply SQL migrations in ./migrations
+npm run db:seed      # insert TEST guild config + question set
+```
+
+Seed uses environment variables:
+
+- `TEST_GUILD_ID` (default 1427677679280324730)
+- `TEST_REVIEWER_ROLE_ID` (default 896070888749940774)
+- `DB_PATH` (default ./data/data.db)
