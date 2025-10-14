@@ -4,10 +4,13 @@
  * License: MIT
  * Repo: https://github.com/watchthelight/pawtropolis-tech
  */
+
 import { REST, Routes } from "discord.js";
 import { env } from "../src/lib/env.js";
 import * as health from "../src/commands/health.js";
-const commands = [health.data.toJSON()];
+import * as gate from "../src/commands/gate.js";
+
+const commands = [health.data.toJSON(), gate.data.toJSON()];
 async function run() {
   // eslint-disable-next-line no-console
   console.log("Token length:", env.DISCORD_TOKEN.length);
@@ -29,7 +32,8 @@ async function run() {
     await rest.put(Routes.applicationCommands(env.CLIENT_ID), { body: commands });
     // eslint-disable-next-line no-console
     console.log(
-      `Registered ${commands.length} global command(s). Propagation may take up to 1 hour.`);
+      `Registered ${commands.length} global command(s). Propagation may take up to 1 hour.`
+    );
   }
 }
 run().catch((err) => {

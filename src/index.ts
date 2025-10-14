@@ -4,22 +4,18 @@
  * License: MIT
  * Repo: https://github.com/watchthelight/pawtropolis-tech
  */
-import {
-  Client,
-  GatewayIntentBits,
-  Partials,
-  Collection,
-  REST,
-  Routes,
-  type Interaction,
-} from "discord.js";
+
+import { Client, GatewayIntentBits, Partials, Collection, type Interaction } from "discord.js";
 import { logger } from "./lib/logger.js";
 import { env } from "./lib/env.js";
 import * as health from "./commands/health.js";
+import * as gate from "./commands/gate.js";
+
 type CommandModule = {
   data: { name: string; toJSON: () => unknown };
   execute: (interaction: Interaction) => Promise<void>;
 };
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -28,8 +24,9 @@ const client = new Client({
   ],
   partials: [Partials.Channel],
 });
+
 const commands = new Collection<string, CommandModule>();
-[health].forEach((cmd) => commands.set(cmd.data.name, cmd as unknown as CommandModule));
+[health, gate].forEach((cmd) => commands.set(cmd.data.name, cmd as unknown as CommandModule));
 client.once("ready", async () => {
   logger.info({ tag: client.user?.tag, id: client.user?.id }, "Bot ready");
   if (env.NODE_ENV === "development") {
@@ -37,16 +34,14 @@ client.once("ready", async () => {
       "Dev mode: use `npm run deploy:cmds` (bro you made ts why do you not remember what this does)."
     );
   } else {
-    logger.info(
-      "Prod mode: `npm run deploy:cmds`"
-    );
+    logger.info("Prod mode: `npm run deploy:cmds`");
   }
 });
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
   const cmd = commands.get(interaction.commandName);
   if (!cmd) {
-    await interaction.reply({ content: "Unknown command.", ephemeral: true }).catch(() => { });
+    await interaction.reply({ content: "Unknown command.", ephemeral: true }).catch(() => {});
     return;
   }
   try {
@@ -57,11 +52,11 @@ client.on("interactionCreate", async (interaction) => {
     if (interaction.deferred || interaction.replied) {
       await interaction
         .followUp({ content: "Something went wrong.", ephemeral: true })
-        .catch(() => { });
+        .catch(() => {});
     } else {
       await interaction
         .reply({ content: "Something went wrong.", ephemeral: true })
-        .catch(() => { });
+        .catch(() => {});
     }
   }
 });
