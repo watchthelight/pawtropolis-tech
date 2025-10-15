@@ -5,7 +5,7 @@ Unless explicitly stated otherwise, all content in this repository, such as writ
 Transparent, server-owned Discord gatekeeping bot: pinned application, staff review actions, modmail bridge, and clean audit logs.
 
 **Maintainer:** watchthelight (Bash) • admin@watchthelight.org • Discord: `watchthelight`  
-**License:** MIT © 2025 watchthelight (Bash) 
+**License:** CC-BY © 2025 watchthelight (Bash) 
 
 ---
 
