@@ -21,6 +21,14 @@ export type GuildConfig = {
   min_join_age_hours: number;
 };
 
+// guild configs in-memory cache
+const configCache = new Map<string, { config: GuildConfig; timestamp: number }>();
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5mins
+
+function invalidateCache(guildId: string) {
+  configCache.delete(guildId);
+}
+
 export function upsertConfig(guildId: string, partial: Partial<Omit<GuildConfig, "guild_id">>) {
   const existing = db.prepare("SELECT * FROM guild_config WHERE guild_id = ?").get(guildId);
   if (!existing) {
@@ -46,16 +54,30 @@ export function upsertConfig(guildId: string, partial: Partial<Omit<GuildConfig,
       partial.min_join_age_hours
     );
   } else {
-    const keys = Object.keys(partial);
+    const keys = Object.keys(partial) as Array<keyof typeof partial>;
     if (keys.length === 0) return;
     const sets = keys.map((k) => `${k} = ?`).join(", ") + ", updated_at = datetime('now')";
-    const vals = keys.map((k) => (partial as any)[k]);
+    const vals = keys.map((k) => partial[k]);
     db.prepare(`UPDATE guild_config SET ${sets} WHERE guild_id = ?`).run(...vals, guildId);
   }
+  // Invalidate cache after a config update
+  invalidateCache(guildId);
 }
 
 export function getConfig(guildId: string): GuildConfig | undefined {
-  return db.prepare("SELECT * FROM guild_config WHERE guild_id = ?").get(guildId) as
+  // Check cache 1st
+  const cached = configCache.get(guildId);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return cached.config;
+  }
+  // Fetch from database
+  const config = db.prepare("SELECT * FROM guild_config WHERE guild_id = ?").get(guildId) as
     | GuildConfig
     | undefined;
+
+  // Cache the result if any
+  if (config) {
+    configCache.set(guildId, { config, timestamp: Date.now() });
+  }
+  return config;
 }

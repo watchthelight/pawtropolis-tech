@@ -41,7 +41,9 @@ client.on("interactionCreate", async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
   const cmd = commands.get(interaction.commandName);
   if (!cmd) {
-    await interaction.reply({ content: "Unknown command.", ephemeral: true }).catch(() => {});
+    await interaction
+      .reply({ content: "Unknown command.", ephemeral: true })
+      .catch((err) => logger.warn({ err }, "Failed to reply with unknown command message"));
     return;
   }
   try {
@@ -52,11 +54,11 @@ client.on("interactionCreate", async (interaction) => {
     if (interaction.deferred || interaction.replied) {
       await interaction
         .followUp({ content: "Something went wrong.", ephemeral: true })
-        .catch(() => {});
+        .catch((err) => logger.warn({ err }, "Failed to send error followUp"));
     } else {
       await interaction
         .reply({ content: "Something went wrong.", ephemeral: true })
-        .catch(() => {});
+        .catch((err) => logger.warn({ err }, "Failed to send error reply"));
     }
   }
 });

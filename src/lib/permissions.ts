@@ -7,6 +7,7 @@
 
 import type { ChatInputCommandInteraction, GuildMember } from "discord.js";
 import { db } from "../db/connection.js";
+import { logger } from "./logger.js";
 
 export function hasManageGuild(member: GuildMember | null): boolean {
   return !!member?.permissions?.has("ManageGuild");
@@ -30,7 +31,7 @@ export function requireStaff(interaction: ChatInputCommandInteraction): boolean 
         ephemeral: true,
         content: "You don't have permission to manage gate settings.",
       })
-      .catch(() => {});
+      .catch((err) => logger.warn({ err }, "Failed to send permission denied message"));
   }
   return ok;
 }

@@ -23,7 +23,7 @@ const parsed = schema.safeParse(process.env);
 if (!parsed.success) {
   // issue then exit
   const issues = parsed.error.issues.map((i) => `- ${i.path.join(".")}: ${i.message}`).join("\n");
-  // eslint-disable-next-line no-console
+   
   console.error(`Environment validation failed:\n${issues}`);
   process.exit(1);
 }
