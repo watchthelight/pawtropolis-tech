@@ -51,3 +51,22 @@ npm ci
 npm run db:migrate
 npm run deploy:cmds    # with GUILD_ID set to your test guild
 npm run dev            # tsx watch
+```
+
+## Troubleshooting
+
+**401 on `deploy:cmds` or `TokenInvalid` on startup**
+- Run `npm run auth:whoami`. Expected:  
+  `whoami: application.id=1427436615021629590 • expected CLIENT_ID=1427436615021629590`  
+  If it prints 401, your `DISCORD_TOKEN` is invalid. Rotate the token and update `.env`.  
+  If IDs mismatch, your token belongs to a different app than `CLIENT_ID`.
+- Ensure `.env` is loaded with override (already implemented in `src/lib/env.ts`). Check for trailing spaces/newlines.
+
+**Slash commands not visible**
+- You didn’t run `deploy:cmds` after changing commands, or `GUILD_ID` is wrong for guild-scoped deploys.
+
+**Bot not appearing in member list**
+- You added the **app** only. Invite with scopes: `bot applications.commands`.
+
+**Remote works but local fails**
+- Your local `.env` differs from the server. Compare `CLIENT_ID`, rotate `DISCORD_TOKEN` locally, then rerun `npm run auth:whoami`.

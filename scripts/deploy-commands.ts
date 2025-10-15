@@ -7,36 +7,64 @@
 
 import { REST, Routes } from "discord.js";
 import { env } from "../src/lib/env.js";
-import * as health from "../src/commands/health.js";
-import * as gate from "../src/commands/gate.js";
 
-const commands = [health.data.toJSON(), gate.data.toJSON()];
-async function run() {
-  // Debug info (only show in development, never log tokens)
-  if (env.NODE_ENV === "development") {
-     
-    console.log("Client ID:", env.CLIENT_ID);
-     
-    console.log("Guild ID:", env.GUILD_ID || "(global deployment)");
-  }
+function mask(t?: string) {
+  return t ? t.slice(0, 6) + "…(" + t.length + ")" : "(missing)";
+}
 
-  const rest = new REST({ version: "10" }).setToken(env.DISCORD_TOKEN);
-  if (env.GUILD_ID && env.GUILD_ID.trim().length > 0) {
-    await rest.put(Routes.applicationGuildCommands(env.CLIENT_ID, env.GUILD_ID), {
-      body: commands,
-    });
-     
-    console.log(`Registered ${commands.length} command(s) to guild ${env.GUILD_ID}.`);
-  } else {
-    await rest.put(Routes.applicationCommands(env.CLIENT_ID), { body: commands });
-     
-    console.log(
-      `Registered ${commands.length} global command(s). Propagation may take up to 1 hour.`
+async function preflight(rest: REST) {
+  const me = (await rest.get(Routes.oauth2CurrentApplication())) as any;
+  const returnedId = me?.id;
+  console.log("Client ID:", env.CLIENT_ID);
+  console.log("Guild ID:", env.GUILD_ID || "(none)");
+  console.log("Token:", mask(process.env.DISCORD_TOKEN));
+  if (!returnedId) throw new Error("No application id from @me");
+  if (returnedId !== env.CLIENT_ID) {
+    throw new Error(
+      `Token/CLIENT_ID mismatch: token belongs to ${returnedId}, env.CLIENT_ID=${env.CLIENT_ID}`
     );
   }
 }
+
+async function run() {
+  const rest = new REST({ version: "10" }).setToken(env.DISCORD_TOKEN);
+  try {
+    await preflight(rest);
+  } catch (e) {
+    console.error("[deploy:cmds] Preflight failed:", e);
+    console.error("Tip: run `npm run auth:whoami` for a focused check.");
+    process.exit(2);
+  }
+
+  const cmds: any[] = [];
+  const health = await import("../src/commands/health.js");
+  cmds.push(health.data.toJSON());
+
+  try {
+    const gate = await import("../src/commands/gate.js");
+    cmds.push(gate.data.toJSON());
+  } catch {
+    // gate may not exist yet; that's fine
+  }
+
+  try {
+    if (env.GUILD_ID && env.GUILD_ID.trim()) {
+      await rest.put(Routes.applicationGuildCommands(env.CLIENT_ID, env.GUILD_ID), { body: cmds });
+      console.log(`Registered ${cmds.length} command(s) to guild ${env.GUILD_ID}.`);
+    } else {
+      await rest.put(Routes.applicationCommands(env.CLIENT_ID), { body: cmds });
+      console.log(`Registered ${cmds.length} global command(s).`);
+    }
+  } catch (err: any) {
+    if (err?.status === 401) {
+      console.error("[deploy:cmds] 401 Unauthorized. Token invalid or mismatched with CLIENT_ID.");
+      console.error("Run: npm run auth:whoami");
+    }
+    throw err;
+  }
+}
+
 run().catch((err) => {
-   
   console.error("Failed to deploy commands:", err);
   process.exit(1);
 });
