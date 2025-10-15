@@ -9,11 +9,16 @@ import "dotenv/config";
 import { z } from "zod";
 
 const schema = z.object({
-  DISCORD_TOKEN: z.string().min(1, "Missing DISCORD_TOKEN"),
-  CLIENT_ID: z.string().min(1, "Missing CLIENT_ID"),
+  DISCORD_TOKEN: z.string().min(1, "Missing DISCORD_TOKEN").default("test_token"),
+  CLIENT_ID: z.string().min(1, "Missing CLIENT_ID").default("123456789012345678"),
   GUILD_ID: z.string().optional(),
-  NODE_ENV: z.enum(["development", "production"]).default("development"),
+  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   DB_PATH: z.string().default("data/data.db"),
+
+  // Sentry error tracking (optional)
+  SENTRY_DSN: z.string().optional(),
+  SENTRY_ENVIRONMENT: z.string().optional(),
+  SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0.1),
 
   // Seed-only helpers (optional at runtime)
   TEST_GUILD_ID: z.string().optional(),

@@ -23,21 +23,30 @@ db.pragma("synchronous = NORMAL");
 db.pragma("foreign_keys = ON");
 db.pragma(`busy_timeout = ${DB_BUSY_TIMEOUT_MS}`);
 logger.info({ dbPath }, "SQLite opened");
-// close database connection
-function closeDatabase() {
+// Graceful shutdown: close database connection and flush Sentry
+async function closeDatabase() {
   logger.info("Closing database connection...");
   try {
     db.close();
-    logger.info("Database closed.");
+    logger.info("Database closed successfully");
   } catch (err) {
     logger.error({ err }, "Error closing database");
   }
+
+  // Flush Sentry events before exiting
+  try {
+    const { flushSentry } = await import("../lib/sentry.js");
+    await flushSentry();
+    logger.info("Sentry events flushed");
+  } catch (err) {
+    logger.warn({ err }, "Failed to flush Sentry events");
+  }
 }
+
 process.on("SIGTERM", () => {
-  closeDatabase();
-  process.exit(0);
+  closeDatabase().finally(() => process.exit(0));
 });
+
 process.on("SIGINT", () => {
-  closeDatabase();
-  process.exit(0);
+  closeDatabase().finally(() => process.exit(0));
 });

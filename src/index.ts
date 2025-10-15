@@ -5,6 +5,10 @@
  * Repo: https://github.com/watchthelight/pawtropolis-tech
  */
 
+// Initialize Sentry first, before any other imports
+import { initializeSentry, addBreadcrumb, setUser, setTag, captureException } from "./lib/sentry.js";
+initializeSentry();
+
 import { Client, GatewayIntentBits, Partials, Collection, type Interaction } from "discord.js";
 import { logger } from "./lib/logger.js";
 import { env } from "./lib/env.js";
@@ -29,6 +33,19 @@ const commands = new Collection<string, CommandModule>();
 [health, gate].forEach((cmd) => commands.set(cmd.data.name, cmd as unknown as CommandModule));
 client.once("ready", async () => {
   logger.info({ tag: client.user?.tag, id: client.user?.id }, "Bot ready");
+
+  // Set Sentry tags for better filtering
+  if (client.user) {
+    setTag("bot_id", client.user.id);
+    setTag("bot_username", client.user.username);
+  }
+
+  addBreadcrumb({
+    message: "Bot successfully connected to Discord",
+    category: "bot",
+    level: "info",
+  });
+
   if (env.NODE_ENV === "development") {
     logger.info(
       "Dev mode: use `npm run deploy:cmds` (bro you made ts why do you not remember what this does)."
@@ -39,18 +56,60 @@ client.once("ready", async () => {
 });
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
+
+  // Set user context for error tracking
+  setUser({
+    id: interaction.user.id,
+    username: interaction.user.username,
+  });
+
   const cmd = commands.get(interaction.commandName);
   if (!cmd) {
+    addBreadcrumb({
+      message: `Unknown command attempted: ${interaction.commandName}`,
+      category: "command",
+      level: "warning",
+      data: { commandName: interaction.commandName },
+    });
+
     await interaction
       .reply({ content: "Unknown command.", ephemeral: true })
       .catch((err) => logger.warn({ err }, "Failed to reply with unknown command message"));
     return;
   }
+
+  // Add breadcrumb for command execution
+  addBreadcrumb({
+    message: `Executing command: ${interaction.commandName}`,
+    category: "command",
+    level: "info",
+    data: {
+      commandName: interaction.commandName,
+      guildId: interaction.guildId,
+      userId: interaction.user.id,
+    },
+  });
+
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (cmd as any).execute(interaction);
+
+    addBreadcrumb({
+      message: `Command completed: ${interaction.commandName}`,
+      category: "command",
+      level: "info",
+    });
   } catch (err) {
     logger.error({ err }, "Command execution error");
+
+    // Capture exception in Sentry with context
+    captureException(err, {
+      commandName: interaction.commandName,
+      guildId: interaction.guildId,
+      userId: interaction.user.id,
+      username: interaction.user.username,
+    });
+
     if (interaction.deferred || interaction.replied) {
       await interaction
         .followUp({ content: "Something went wrong.", ephemeral: true })
