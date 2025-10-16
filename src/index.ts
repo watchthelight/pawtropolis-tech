@@ -15,6 +15,7 @@ import {
   Partials,
   Collection,
   type Interaction,
+  Events,
 } from "discord.js";
 import { logger } from "./lib/logger.js";
 import { env } from "./lib/env.js";
@@ -42,7 +43,7 @@ const client = new Client({
 
 const commands = new Collection<string, CommandModule>();
 [health, gate].forEach((cmd) => commands.set(cmd.data.name, cmd as unknown as CommandModule));
-client.once("ready", async () => {
+client.once(Events.ClientReady, async () => {
   logger.info({ tag: client.user?.tag, id: client.user?.id }, "Bot ready");
 
   // Set Sentry tags for better filtering
