@@ -14,6 +14,7 @@ import {
   handleGateModalSubmit,
   handleStartButton,
 } from "../../src/features/gate/gateEntry.js";
+import { handleFactoryResetModal } from "../../src/commands/gate.js";
 
 beforeAll(() => {
   db.exec(`
@@ -61,12 +62,45 @@ beforeAll(() => {
       PRIMARY KEY (guild_id, q_index),
       FOREIGN KEY (guild_id) REFERENCES guild_config(guild_id) ON DELETE CASCADE
     );
+    CREATE TABLE IF NOT EXISTS review_action (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      app_id TEXT,
+      moderator_id TEXT NOT NULL,
+      action TEXT NOT NULL,
+      reason TEXT,
+      message_link TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS modmail_bridge (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      guild_id TEXT NOT NULL,
+      user_id  TEXT NOT NULL,
+      thread_id TEXT NOT NULL,
+      state TEXT NOT NULL DEFAULT 'open',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      closed_at  TEXT
+    );
+    CREATE TABLE IF NOT EXISTS user_snapshot (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      guild_id TEXT NOT NULL,
+      user_id  TEXT NOT NULL,
+      username TEXT,
+      discriminator TEXT,
+      global_name TEXT,
+      avatar_url TEXT,
+      joined_at TEXT,
+      account_created_at TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
   `);
 });
 
 beforeEach(() => {
   db.exec(`
     DELETE FROM application_response;
+    DELETE FROM review_action;
+    DELETE FROM modmail_bridge;
+    DELETE FROM user_snapshot;
     DELETE FROM application;
     DELETE FROM guild_question;
     DELETE FROM guild_config;
@@ -161,5 +195,82 @@ describe("gate interactions", () => {
       { q_index: 0, answer: "Because I love the community" },
       { q_index: 1, answer: "Looking forward to events" },
     ]);
+  });
+
+  it("rejects factory reset when confirmation mismatch", async () => {
+    db.prepare("INSERT INTO application (id, guild_id, user_id, status) VALUES (?, ?, ?, 'submitted')").run(
+      "app-1",
+      "guild-1",
+      "user-1"
+    );
+    const reply = vi.fn().mockResolvedValue(undefined);
+    const interaction = {
+      inGuild: () => true,
+      guildId: "guild-1",
+      member: {
+        permissions: { has: () => true },
+        roles: { cache: new Map() },
+      },
+      customId: "v1:factory-reset",
+      fields: {
+        getTextInputValue: () => "nope",
+      },
+      reply,
+    } as unknown as Parameters<typeof handleFactoryResetModal>[0];
+    await handleFactoryResetModal(interaction);
+    expect(reply).toHaveBeenCalledWith({ ephemeral: true, content: "Nope." });
+    const remaining = db.prepare("SELECT COUNT(*) as count FROM application").get() as { count: number };
+    expect(remaining.count).toBe(1);
+  });
+
+  it("wipes tables on factory reset success", async () => {
+    db.prepare("INSERT INTO application (id, guild_id, user_id, status) VALUES (?, ?, ?, 'draft')").run(
+      "app-2",
+      "guild-1",
+      "user-2"
+    );
+    db.prepare(
+      "INSERT INTO application_response (app_id, q_index, question, answer) VALUES (?, ?, ?, ?)"
+    ).run("app-2", 0, "Q", "A");
+    db.prepare(
+      "INSERT INTO review_action (app_id, moderator_id, action) VALUES (?, ?, 'accept')"
+    ).run("app-2", "mod-1");
+    db.prepare(
+      "INSERT INTO modmail_bridge (guild_id, user_id, thread_id, state) VALUES (?, ?, ?, 'open')"
+    ).run("guild-1", "user-2", "thread-1");
+    db.prepare(
+      "INSERT INTO user_snapshot (guild_id, user_id, username) VALUES (?, ?, ?)"
+    ).run("guild-1", "user-2", "tester");
+    db.prepare("INSERT INTO guild_question (guild_id, q_index, prompt, required) VALUES (?, ?, ?, ?)").run(
+      "guild-1",
+      2,
+      "Another",
+      1
+    );
+    const reply = vi.fn().mockResolvedValue(undefined);
+    const interaction = {
+      inGuild: () => true,
+      guildId: "guild-1",
+      member: {
+        permissions: { has: () => true },
+        roles: { cache: new Map() },
+      },
+      customId: "v1:factory-reset",
+      fields: {
+        getTextInputValue: () => "RESET",
+      },
+      reply,
+    } as unknown as Parameters<typeof handleFactoryResetModal>[0];
+
+    await handleFactoryResetModal(interaction);
+    expect(reply).toHaveBeenCalledWith({ ephemeral: true, content: "Factory reset complete." });
+    const count = (table: string) =>
+      (db.prepare(`SELECT COUNT(*) as count FROM ${table}`).get() as { count: number }).count;
+    expect(count("application")).toBe(0);
+    expect(count("application_response")).toBe(0);
+    expect(count("review_action")).toBe(0);
+    expect(count("modmail_bridge")).toBe(0);
+    expect(count("user_snapshot")).toBe(0);
+    expect(count("guild_question")).toBe(0);
   });
 });

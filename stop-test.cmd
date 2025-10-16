@@ -23,27 +23,21 @@ goto parse_args
 
 if exist ".env" (
   for /f "usebackq delims=" %%L in (".env") do (
-    set "LINE=%%L"
-    if defined LINE (
-      if not "!LINE:~0,1!"=="#" if not "!LINE:~0,1!"==";" if defined LINE (
-        for /f "tokens=1,* delims==" %%A in ("!LINE!") do (
-          set "KEY=%%A"
-          set "VALUE=%%B"
-          for /f "tokens=* delims= " %%K in ("!KEY!") do set "KEY=%%K"
-          for /f "tokens=* delims= " %%V in ("!VALUE!") do set "VALUE=%%V"
-          set "VALUE=!VALUE:"=!"
-          if /I "!KEY!"=="SSH_HOSTS" (
-            set "SSH_HOSTS=!VALUE!"
-          ) else if /I "!KEY!"=="SSH_USER" (
-            set "SSH_USER=!VALUE!"
-          ) else if /I "!KEY!"=="SSH_PORT" (
-            set "SSH_PORT=!VALUE!"
-          ) else if /I "!KEY!"=="SSH_KEY" (
-            set "SSH_KEY=!VALUE!"
-          ) else if /I "!KEY!"=="PM2_NAME" (
-            set "PM2_NAME=!VALUE!"
-          )
-        )
+    for /f "tokens=1,* delims==" %%A in ("%%L") do (
+      set "KEY=%%A"
+      set "VALUE=%%B"
+      if "!KEY!"=="" (
+        rem skip
+      ) else if /I "!KEY!"=="SSH_HOSTS" (
+        set "SSH_HOSTS=!VALUE!"
+      ) else if /I "!KEY!"=="SSH_USER" (
+        set "SSH_USER=!VALUE!"
+      ) else if /I "!KEY!"=="SSH_PORT" (
+        set "SSH_PORT=!VALUE!"
+      ) else if /I "!KEY!"=="SSH_KEY" (
+        set "SSH_KEY=!VALUE!"
+      ) else if /I "!KEY!"=="PM2_NAME" (
+        set "PM2_NAME=!VALUE!"
       )
     )
   )

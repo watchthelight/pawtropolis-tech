@@ -6,6 +6,7 @@ import {
   Client,
   EmbedBuilder,
   ModalSubmitInteraction,
+  PermissionsBitField,
   type GuildTextBasedChannel,
 } from "discord.js";
 import { captureException, addBreadcrumb } from "../../lib/sentry.js";
@@ -79,17 +80,51 @@ function buildDoneRow() {
   ];
 }
 
-export async function ensurePinnedGateMessage(client: Client, guildId: string) {
+type EnsureGateResult = { pinned: boolean; reason?: string };
+
+export async function ensurePinnedGateMessage(
+  client: Client,
+  guildId: string
+): Promise<EnsureGateResult> {
+  const result: EnsureGateResult = { pinned: false };
   try {
     const cfg = getConfig(guildId);
-    if (!cfg?.gate_channel_id) return;
+    if (!cfg?.gate_channel_id) {
+      result.reason = "Gate channel not configured";
+      return result;
+    }
     const channel = (await client.channels
       .fetch(cfg.gate_channel_id)
       .catch((err) => {
         logger.warn({ err, guildId }, "Failed to fetch gate channel");
         return null;
       })) as GuildTextBasedChannel | null;
-    if (!channel || !channel.isTextBased() || channel.isDMBased()) return;
+    if (!channel || !channel.isTextBased() || channel.isDMBased()) {
+      result.reason = "Gate channel unavailable";
+      return result;
+    }
+    const me =
+      channel.guild.members.me ??
+      (client.user
+        ? await channel.guild.members.fetch(client.user.id).catch(() => null)
+        : null);
+    if (!me) {
+      logger.warn({ guildId, channelId: channel.id }, "Bot member missing for gate channel");
+      result.reason = "Bot member missing";
+      return result;
+    }
+    const perms = me.permissionsIn(channel);
+    const missingBase: string[] = [];
+    if (!perms.has(PermissionsBitField.Flags.ViewChannel)) missingBase.push("ViewChannel");
+    if (!perms.has(PermissionsBitField.Flags.SendMessages)) missingBase.push("SendMessages");
+    if (missingBase.length > 0) {
+      logger.warn(
+        { guildId, channelId: channel.id, missing: missingBase },
+        "Missing base permissions for gate entry message"
+      );
+      result.reason = `Missing ${missingBase.join(", ")} permission(s)`;
+      return result;
+    }
     const embed = new EmbedBuilder()
       .setTitle("Gate Entry")
       .setDescription("Press Start to begin or resume your application.")
@@ -111,12 +146,44 @@ export async function ensurePinnedGateMessage(client: Client, guildId: string) {
       await existing
         .edit({ embeds: [embed], components })
         .catch((err) => logger.warn({ err, guildId }, "Failed to edit gate entry message"));
-      if (!existing.pinned) {
-        await existing.pin().catch((err) =>
-          logger.warn({ err, guildId }, "Failed to pin existing gate entry message")
+      const canPin = perms.has(PermissionsBitField.Flags.ManageMessages);
+      if (!canPin) {
+        logger.warn(
+          { guildId, channelId: channel.id, missing: "ManageMessages" },
+          "Cannot pin gate entry message"
         );
+        result.reason = "Missing ManageMessages permission; message left unpinned.";
+        return result;
       }
-      return;
+      addBreadcrumb({
+        message: "Pinning gate entry message",
+        category: "gate",
+        data: { channelId: channel.id, hasManageMessages: canPin },
+        level: "info",
+      });
+      if (!existing.pinned) {
+        try {
+          await existing.pin();
+          result.pinned = true;
+          return result;
+        } catch (err) {
+          const code = (err as { code?: unknown }).code;
+          if (code === 50013) {
+            logger.warn(
+              { guildId, channelId: channel.id },
+              "Failed to pin gate entry message due to missing permissions"
+            );
+            result.reason = "ManageMessages denied; message left unpinned.";
+            return result;
+          }
+          captureException(err, { guildId, channelId: channel.id, area: "ensurePinnedGateMessage" });
+          logger.warn({ err, guildId }, "Failed to pin existing gate entry message");
+          result.reason = "Pin failed";
+          return result;
+        }
+      }
+      result.pinned = true;
+      return result;
     }
 
     const message = await channel
@@ -125,14 +192,51 @@ export async function ensurePinnedGateMessage(client: Client, guildId: string) {
         logger.warn({ err, guildId }, "Failed to send gate entry message");
         return null;
       });
-    if (message && !message.pinned) {
-      await message
-        .pin()
-        .catch((err) => logger.warn({ err, guildId }, "Failed to pin gate entry message"));
+    if (!message) {
+      result.reason = "Failed to send gate entry message";
+      return result;
     }
+    const canPin = perms.has(PermissionsBitField.Flags.ManageMessages);
+    if (!canPin) {
+      logger.warn(
+        { guildId, channelId: channel.id, missing: "ManageMessages" },
+        "Cannot pin gate entry message"
+      );
+      result.reason = "Missing ManageMessages permission; message left unpinned.";
+      return result;
+    }
+    addBreadcrumb({
+      message: "Pinning gate entry message",
+      category: "gate",
+      data: { channelId: channel.id, hasManageMessages: canPin },
+      level: "info",
+    });
+    try {
+      if (!message.pinned) {
+        await message.pin();
+      }
+      result.pinned = true;
+    } catch (err) {
+      const code = (err as { code?: unknown }).code;
+      if (code === 50013) {
+        logger.warn(
+          { guildId, channelId: channel.id },
+          "Failed to pin gate entry message due to missing permissions"
+        );
+        result.reason = "ManageMessages denied; message left unpinned.";
+        return result;
+      }
+      captureException(err, { guildId, channelId: channel.id, area: "ensurePinnedGateMessage" });
+      logger.warn({ err, guildId }, "Failed to pin gate entry message");
+      result.reason = "Pin failed";
+    }
+    return result;
   } catch (err) {
     captureException(err, { guildId, area: "ensurePinnedGateMessage" });
+    result.reason = "Unexpected error";
+    return result;
   }
+  return result;
 }
 
 export async function handleStartButton(interaction: ButtonInteraction) {

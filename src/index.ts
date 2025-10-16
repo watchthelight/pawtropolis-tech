@@ -21,6 +21,7 @@ import { logger } from "./lib/logger.js";
 import { env } from "./lib/env.js";
 import * as health from "./commands/health.js";
 import * as gate from "./commands/gate.js";
+import { handleFactoryResetModal } from "./commands/gate.js";
 import {
   handleStartButton,
   handleGateModalSubmit,
@@ -145,6 +146,10 @@ client.on("interactionCreate", async (interaction) => {
   if (interaction.isModalSubmit()) {
     if (interaction.customId.startsWith("v1:modal:p")) {
       await handleGateModalSubmit(interaction);
+      return;
+    }
+    if (interaction.customId === "v1:factory-reset") {
+      await handleFactoryResetModal(interaction);
     }
   }
 });

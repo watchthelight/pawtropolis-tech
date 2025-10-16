@@ -10,9 +10,15 @@ import {
   PermissionFlagsBits,
   userMention,
   inlineCode,
+  ModalBuilder,
+  TextInputBuilder,
+  ActionRowBuilder,
+  TextInputStyle,
+  ModalSubmitInteraction,
+  type GuildMember,
 } from "discord.js";
 import { ConfigKey, Hours, HttpUrl, Snowflake } from "../lib/validators.js";
-import { requireStaff } from "../lib/permissions.js";
+import { requireStaff, hasManageGuild, isReviewer } from "../lib/permissions.js";
 import { getConfig, upsertConfig } from "../lib/config.js";
 import { db } from "../db/connection.js";
 import { ensurePinnedGateMessage } from "../features/gate/gateEntry.js";
@@ -82,6 +88,9 @@ export const data = new SlashCommandBuilder()
   .addSubcommand((sc) =>
     sc.setName("ensure-entry").setDescription("Ensure the gate entry message is pinned")
   )
+  .addSubcommand((sc) =>
+    sc.setName("factory-reset").setDescription("Wipe application data after confirmation")
+  )
   .setDefaultMemberPermissions(PermissionFlagsBits.SendMessages);
 export async function execute(interaction: ChatInputCommandInteraction) {
   if (!interaction.guildId) return interaction.reply({ ephemeral: true, content: "Guild only." });
@@ -93,6 +102,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   if (sub === "status") return runStatus(interaction);
   if (sub === "reset") return runReset(interaction);
   if (sub === "ensure-entry") return runEnsureEntry(interaction);
+  if (sub === "factory-reset") return runFactoryReset(interaction);
 }
 async function runSetup(interaction: ChatInputCommandInteraction) {
   const gid = interaction.guildId!;
@@ -117,7 +127,7 @@ async function runSetup(interaction: ChatInputCommandInteraction) {
     accepted_role_id: accepted,
     reviewer_role_id: reviewer,
   });
-  await ensurePinnedGateMessage(interaction.client, gid);
+  const pinResult = await ensurePinnedGateMessage(interaction.client, gid);
   await interaction.reply({
     ephemeral: true,
     content:
@@ -126,7 +136,8 @@ async function runSetup(interaction: ChatInputCommandInteraction) {
       `gate=${inlineCode(gate)}\n` +
       `unverified=${inlineCode(unverified)}\n` +
       `general=${inlineCode(general)}\n` +
-      `accepted_role=${inlineCode(accepted)} reviewer_role=${inlineCode(reviewer)}`,
+      `accepted_role=${inlineCode(accepted)} reviewer_role=${inlineCode(reviewer)}\n` +
+      `Pinned ${pinResult.pinned ? "✅" : "❌"}${pinResult.reason ? `: ${pinResult.reason}` : ""}`,
   });
 }
 async function runConfig(interaction: ChatInputCommandInteraction) {
@@ -221,9 +232,55 @@ async function runReset(interaction: ChatInputCommandInteraction) {
 }
 async function runEnsureEntry(interaction: ChatInputCommandInteraction) {
   const gid = interaction.guildId!;
-  await ensurePinnedGateMessage(interaction.client, gid);
+  const pinResult = await ensurePinnedGateMessage(interaction.client, gid);
   await interaction.reply({
     ephemeral: true,
-    content: "Gate entry message refreshed.",
+    content: `Gate entry message refreshed.\nPinned ${pinResult.pinned ? "✅" : "❌"}${
+      pinResult.reason ? `: ${pinResult.reason}` : ""
+    }`,
   });
+}
+
+async function runFactoryReset(interaction: ChatInputCommandInteraction) {
+  const modal = new ModalBuilder().setCustomId("v1:factory-reset").setTitle("Factory Reset");
+  const confirmInput = new TextInputBuilder()
+    .setCustomId("v1:factory-reset:confirm")
+    .setLabel("Type RESET to confirm")
+    .setStyle(TextInputStyle.Short)
+    .setRequired(true);
+  modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(confirmInput));
+  await interaction.showModal(modal);
+}
+
+export async function handleFactoryResetModal(interaction: ModalSubmitInteraction) {
+  if (!interaction.inGuild() || !interaction.guildId) {
+    await interaction.reply({ ephemeral: true, content: "Guild only." });
+    return;
+  }
+  const guildMember = interaction.member as GuildMember | null;
+  const manageGuild = hasManageGuild(guildMember);
+  const reviewer = isReviewer(interaction.guildId, guildMember);
+  if (!manageGuild && !reviewer) {
+    await interaction.reply({ ephemeral: true, content: "Nope." });
+    return;
+  }
+
+  const confirm = interaction.fields.getTextInputValue("v1:factory-reset:confirm").trim();
+  if (confirm !== "RESET") {
+    await interaction.reply({ ephemeral: true, content: "Nope." });
+    return;
+  }
+
+  const wipe = db.transaction(() => {
+    db.prepare("DELETE FROM application_response").run();
+    db.prepare("DELETE FROM review_action").run();
+    db.prepare("DELETE FROM modmail_bridge").run();
+    db.prepare("DELETE FROM user_snapshot").run();
+    db.prepare("DELETE FROM application").run();
+    db.prepare("DELETE FROM guild_question").run();
+  });
+  wipe();
+  db.prepare("VACUUM").run();
+  await import("../db/migrate.js");
+  await interaction.reply({ ephemeral: true, content: "Factory reset complete." });
 }
