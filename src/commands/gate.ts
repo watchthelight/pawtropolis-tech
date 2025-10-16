@@ -15,6 +15,7 @@ import { ConfigKey, Hours, HttpUrl, Snowflake } from "../lib/validators.js";
 import { requireStaff } from "../lib/permissions.js";
 import { getConfig, upsertConfig } from "../lib/config.js";
 import { db } from "../db/connection.js";
+import { ensurePinnedGateMessage } from "../features/gate/gateEntry.js";
 export const data = new SlashCommandBuilder()
   .setName("gate")
   .setDescription("Gatekeeping configuration and utilities")
@@ -78,6 +79,9 @@ export const data = new SlashCommandBuilder()
       .setDescription("Delete a user's draft application")
       .addUserOption((o) => o.setName("user").setDescription("Target user").setRequired(true))
   )
+  .addSubcommand((sc) =>
+    sc.setName("ensure-entry").setDescription("Ensure the gate entry message is pinned")
+  )
   .setDefaultMemberPermissions(PermissionFlagsBits.SendMessages);
 export async function execute(interaction: ChatInputCommandInteraction) {
   if (!interaction.guildId) return interaction.reply({ ephemeral: true, content: "Guild only." });
@@ -88,6 +92,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   if (sub === "config") return runConfig(interaction);
   if (sub === "status") return runStatus(interaction);
   if (sub === "reset") return runReset(interaction);
+  if (sub === "ensure-entry") return runEnsureEntry(interaction);
 }
 async function runSetup(interaction: ChatInputCommandInteraction) {
   const gid = interaction.guildId!;
@@ -112,6 +117,7 @@ async function runSetup(interaction: ChatInputCommandInteraction) {
     accepted_role_id: accepted,
     reviewer_role_id: reviewer,
   });
+  await ensurePinnedGateMessage(interaction.client, gid);
   await interaction.reply({
     ephemeral: true,
     content:
@@ -211,5 +217,13 @@ async function runReset(interaction: ChatInputCommandInteraction) {
   await interaction.reply({
     ephemeral: true,
     content: `🧹 Deleted draft application for ${userMention(user.id)}.`,
+  });
+}
+async function runEnsureEntry(interaction: ChatInputCommandInteraction) {
+  const gid = interaction.guildId!;
+  await ensurePinnedGateMessage(interaction.client, gid);
+  await interaction.reply({
+    ephemeral: true,
+    content: "Gate entry message refreshed.",
   });
 }

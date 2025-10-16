@@ -9,11 +9,22 @@
 import { initializeSentry, addBreadcrumb, setUser, setTag, captureException } from "./lib/sentry.js";
 initializeSentry();
 
-import { Client, GatewayIntentBits, Partials, Collection, type Interaction } from "discord.js";
+import {
+  Client,
+  GatewayIntentBits,
+  Partials,
+  Collection,
+  type Interaction,
+} from "discord.js";
 import { logger } from "./lib/logger.js";
 import { env } from "./lib/env.js";
 import * as health from "./commands/health.js";
 import * as gate from "./commands/gate.js";
+import {
+  handleStartButton,
+  handleGateModalSubmit,
+  handleDoneButton,
+} from "./features/gate/gateEntry.js";
 
 type CommandModule = {
   data: { name: string; toJSON: () => unknown };
@@ -55,69 +66,84 @@ client.once("ready", async () => {
   }
 });
 client.on("interactionCreate", async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
-
-  // Set user context for error tracking
   setUser({
     id: interaction.user.id,
     username: interaction.user.username,
   });
 
-  const cmd = commands.get(interaction.commandName);
-  if (!cmd) {
+  if (interaction.isChatInputCommand()) {
+    const cmd = commands.get(interaction.commandName);
+    if (!cmd) {
+      addBreadcrumb({
+        message: `Unknown command attempted: ${interaction.commandName}`,
+        category: "command",
+        level: "warning",
+        data: { commandName: interaction.commandName },
+      });
+
+      await interaction
+        .reply({ content: "Unknown command.", ephemeral: true })
+        .catch((err) => logger.warn({ err }, "Failed to reply with unknown command message"));
+      return;
+    }
+
     addBreadcrumb({
-      message: `Unknown command attempted: ${interaction.commandName}`,
+      message: `Executing command: ${interaction.commandName}`,
       category: "command",
-      level: "warning",
-      data: { commandName: interaction.commandName },
+      level: "info",
+      data: {
+        commandName: interaction.commandName,
+        guildId: interaction.guildId,
+        userId: interaction.user.id,
+      },
     });
 
-    await interaction
-      .reply({ content: "Unknown command.", ephemeral: true })
-      .catch((err) => logger.warn({ err }, "Failed to reply with unknown command message"));
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (cmd as any).execute(interaction);
+
+      addBreadcrumb({
+        message: `Command completed: ${interaction.commandName}`,
+        category: "command",
+        level: "info",
+      });
+    } catch (err) {
+      logger.error({ err }, "Command execution error");
+      captureException(err, {
+        commandName: interaction.commandName,
+        guildId: interaction.guildId,
+        userId: interaction.user.id,
+        username: interaction.user.username,
+      });
+
+      if (interaction.deferred || interaction.replied) {
+        await interaction
+          .followUp({ content: "Something went wrong.", ephemeral: true })
+          .catch((err) => logger.warn({ err }, "Failed to send error followUp"));
+      } else {
+        await interaction
+          .reply({ content: "Something went wrong.", ephemeral: true })
+          .catch((err) => logger.warn({ err }, "Failed to send error reply"));
+      }
+    }
     return;
   }
 
-  // Add breadcrumb for command execution
-  addBreadcrumb({
-    message: `Executing command: ${interaction.commandName}`,
-    category: "command",
-    level: "info",
-    data: {
-      commandName: interaction.commandName,
-      guildId: interaction.guildId,
-      userId: interaction.user.id,
-    },
-  });
+  if (interaction.isButton()) {
+    if (interaction.customId === "v1:done") {
+      await handleDoneButton(interaction);
+      return;
+    }
+    if (interaction.customId.startsWith("v1:start")) {
+      await handleStartButton(interaction);
+      return;
+    }
+    return;
+  }
 
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (cmd as any).execute(interaction);
-
-    addBreadcrumb({
-      message: `Command completed: ${interaction.commandName}`,
-      category: "command",
-      level: "info",
-    });
-  } catch (err) {
-    logger.error({ err }, "Command execution error");
-
-    // Capture exception in Sentry with context
-    captureException(err, {
-      commandName: interaction.commandName,
-      guildId: interaction.guildId,
-      userId: interaction.user.id,
-      username: interaction.user.username,
-    });
-
-    if (interaction.deferred || interaction.replied) {
-      await interaction
-        .followUp({ content: "Something went wrong.", ephemeral: true })
-        .catch((err) => logger.warn({ err }, "Failed to send error followUp"));
-    } else {
-      await interaction
-        .reply({ content: "Something went wrong.", ephemeral: true })
-        .catch((err) => logger.warn({ err }, "Failed to send error reply"));
+  if (interaction.isModalSubmit()) {
+    if (interaction.customId.startsWith("v1:modal:p")) {
+      await handleGateModalSubmit(interaction);
     }
   }
 });
