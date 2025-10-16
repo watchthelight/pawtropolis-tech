@@ -1,10 +1,12 @@
 # Pawtropolis Tech Gatekeeper
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
+Unless explicitly stated otherwise, all content in this repository, such as written prose or visual content, is licensed under [CC-BY](https://creativecommons.org/licenses/by/4.0/)
 
 Transparent, server-owned Discord gatekeeping bot: pinned application, staff review actions, modmail bridge, and clean audit logs.
 
 **Maintainer:** watchthelight (Bash) • admin@watchthelight.org • Discord: `watchthelight`  
-**License:** MIT © 2025 watchthelight (Bash) 
+
+**License:** CC-BY © 2025 watchthelight (Bash) 
 
 ---
 
