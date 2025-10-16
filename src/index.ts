@@ -21,6 +21,7 @@ import { logger } from "./lib/logger.js";
 import { env } from "./lib/env.js";
 import * as health from "./commands/health.js";
 import * as gate from "./commands/gate.js";
+import * as statusupdate from "./commands/statusupdate.js";
 import { handleFactoryResetModal } from "./commands/gate.js";
 import {
   handleStartButton,
@@ -43,7 +44,9 @@ const client = new Client({
 });
 
 const commands = new Collection<string, CommandModule>();
-[health, gate].forEach((cmd) => commands.set(cmd.data.name, cmd as unknown as CommandModule));
+[health, gate, statusupdate].forEach((cmd) =>
+  commands.set(cmd.data.name, cmd as unknown as CommandModule)
+);
 client.once(Events.ClientReady, async () => {
   logger.info({ tag: client.user?.tag, id: client.user?.id }, "Bot ready");
 

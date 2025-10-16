@@ -37,14 +37,21 @@ async function run() {
   }
 
   const cmds: any[] = [];
-  const health = await import("../src/commands/health.js");
-  cmds.push(health.data.toJSON());
+  const modules = [
+    "../src/commands/health.js",
+    "../src/commands/gate.js",
+    "../src/commands/statusupdate.js",
+  ];
 
-  try {
-    const gate = await import("../src/commands/gate.js");
-    cmds.push(gate.data.toJSON());
-  } catch {
-    // gate may not exist yet; that's fine
+  for (const mod of modules) {
+    try {
+      const loaded = await import(mod);
+      if (loaded?.data?.toJSON) {
+        cmds.push(loaded.data.toJSON());
+      }
+    } catch {
+      // optional command not present
+    }
   }
 
   try {
