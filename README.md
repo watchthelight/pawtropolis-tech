@@ -1,19 +1,17 @@
 # Pawtropolis Tech Gatekeeper
 
-Unless explicitly stated otherwise, all content in this repository, such as written prose or visual content, is licensed under [CC-BY](https://creativecommons.org/licenses/by/4.0/)
-
 Transparent, server-owned Discord gatekeeping bot: pinned application, staff review actions, modmail bridge, and clean audit logs.
 
 **Maintainer:** watchthelight (Bash) • admin@watchthelight.org • Discord: `watchthelight`  
 
-**License:** CC-BY © 2025 watchthelight (Bash) 
+**License:** LicenseRef-ANW-1.0 (see [LICENSE](LICENSE))
 
 ---
 
 ## What’s built (current status)
 
 - ✅ **Project scaffold**: Node 20 + TypeScript, discord.js v14, tsx, tsup, eslint/prettier, pino logs, env validation.
-- ✅ **Branding & licensing**: MIT license, package metadata, file headers.
+- ✅ **Branding & licensing**: ANW-1.0 license, package metadata, file headers.
 - ✅ **Database**: SQLite with migrations/runner, WAL pragmas, seeds.
 - ✅ **Seeded config**: TEST guild `1427677679280324730`, reviewer role `896070888749940774`, 5 application questions.
 - ✅ **Slash command `/health`**: uptime + WS ping.
@@ -72,3 +70,11 @@ npm run dev            # tsx watch
 
 **Remote works but local fails**
 - Your local `.env` differs from the server. Compare `CLIENT_ID`, rotate `DISCORD_TOKEN` locally, then rerun `npm run auth:whoami`.
+
+## License
+
+- You can study the code and use the ideas.
+- You can copy small excerpts with attribution.
+- You can't copy or distribute the whole project or a substantial part.
+
+See [LICENSE](LICENSE) for the full terms.

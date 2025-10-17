@@ -1,7 +1,8 @@
+// SPDX-License-Identifier: LicenseRef-ANW-1.0
 /**
  * Pawtropolis Tech Gatekeeper - Tests
  * Copyright (c) 2025 watchthelight (Bash) <admin@watchthelight.org>
- * License: MIT
+ * License: LicenseRef-ANW-1.0
  */
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";

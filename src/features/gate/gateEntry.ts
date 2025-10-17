@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-ANW-1.0
 import {
   ActionRowBuilder,
   ButtonBuilder,

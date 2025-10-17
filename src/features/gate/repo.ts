@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-ANW-1.0
 import type { Database as BetterSqliteDatabase } from "better-sqlite3";
 import { randomUUID } from "node:crypto";
 

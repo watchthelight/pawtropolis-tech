@@ -12,7 +12,7 @@
     "email": "admin@watchthelight.org",
     "url": "https://watchthelight.org"
   },
-  "license": "MIT",
+  "license": "LicenseRef-ANW-1.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/watchthelight/pawtropolis-tech.git"

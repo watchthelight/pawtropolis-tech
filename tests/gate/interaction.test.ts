@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-ANW-1.0
 import Database from "better-sqlite3";
 import { vi, describe, it, expect, beforeAll, beforeEach } from "vitest";
 

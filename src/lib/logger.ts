@@ -1,7 +1,8 @@
+// SPDX-License-Identifier: LicenseRef-ANW-1.0
 /**
  * Pawtropolis Tech Gatekeeper
  * Copyright (c) 2025 watchthelight (Bash) <admin@watchthelight.org>
- * License: MIT
+ * License: LicenseRef-ANW-1.0
  * Repo: https://github.com/watchthelight/pawtropolis-tech
  */
 import pino from "pino";

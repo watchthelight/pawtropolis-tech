@@ -1,21 +1,46 @@
-MIT License
+SPDX-License-Identifier: LicenseRef-ANW-1.0
+
+Attribution–No Wholesale Copying License, Version 1.0 (ANW-1.0)
 
 Copyright (c) 2025 watchthelight (Bash)
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+1. Definitions
+“Project” means the work in this repository, including source code and associated files.
+“Excerpt” means a limited portion of the Project’s source code.
+“Substantial” means more than the Excerpt limits in Section 3.
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+2. Permission
+You may view, study, and use the ideas and techniques from the Project for any purpose. You may copy and adapt Excerpts for any purpose, subject to Attribution and Limits below.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+3. Excerpt Limits
+You may copy at most the lesser of:
+  (a) 200 contiguous lines from any single file; and
+  (b) 10% of the lines of that file; and
+  (c) 10% of the total lines of source code in the Project.
+All three caps apply. Aggregating multiple Excerpts to recreate a substantial part of the Project is not allowed.
+
+4. Attribution
+If you use any Excerpt, you must give reasonable attribution:
+  • Include a NOTICE naming the Project, OWNER, the repository URL, and this license.
+  • Mark changes you made to any Excerpt.
+  • Do not suggest endorsement by OWNER.
+
+5. Prohibitions
+You may not:
+  • Reproduce, distribute, or host the Project in full or in Substantial part.
+  • Offer a work that is a substitute for the Project or serves the same role by copying Substantial parts.
+  • Remove or alter copyright, license, or NOTICE text.
+
+6. Trademarks
+This license does not grant rights to use OWNER’s names, logos, or trademarks.
+
+7. Warranty & Liability
+The Project is provided “as is,” without warranty of any kind. To the maximum extent permitted by law, OWNER is not liable for any damages arising from use of the Project.
+
+8. Termination
+This license terminates automatically if you breach it. If you cure the breach within 30 days of notice, your license reinstates prospectively.
+
+9. Miscellany
+This is a source-available license and is not an OSI-approved open source license.
+
+SPDX-License-Identifier: LicenseRef-ANW-1.0

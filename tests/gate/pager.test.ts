@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-ANW-1.0
 import { describe, it, expect } from "vitest";
 import { paginate, buildModalForPage, type QuestionPage } from "../../src/features/gate/pager.js";
 

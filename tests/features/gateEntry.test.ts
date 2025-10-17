@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-ANW-1.0
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Collection, PermissionsBitField } from "discord.js";
 import { ensurePinnedGateMessage } from "../../src/features/gate/gateEntry.js";
