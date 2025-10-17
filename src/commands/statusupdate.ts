@@ -4,7 +4,7 @@ import {
   type ChatInputCommandInteraction,
   ActivityType,
 } from "discord.js";
-import { requireStaff } from "../lib/permissions.js";
+import { requireStaff } from "../lib/config.js";
 import { withStep, type CommandContext } from "../lib/cmdWrap.js";
 
 export const data = new SlashCommandBuilder()

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 import Jimp from "jimp";
-import { logger } from "../../lib/logger.js";
+import { logger } from "../lib/logger.js";
+import { db } from "../db/db.js";
+import type { GuildConfig } from "../lib/config.js";
 
 type ScanOptions = {
   nsfwThreshold: number;
@@ -14,17 +16,26 @@ type ScanResult = {
   reason: "both" | "nsfw" | "skin_edge" | "none";
 };
 
+export type AvatarScanRow = {
+  application_id: string;
+  avatar_url: string;
+  nsfw_score: number | null;
+  skin_edge_score: number | null;
+  flagged: number;
+  reason: string;
+  scanned_at: string;
+};
+
 let nsfwModelPromise: Promise<unknown | null> | null = null;
-let tfModulePromise: Promise<{ node: { decodeImage: (buffer: Uint8Array, channels: number) => unknown }; dispose: () => void } | null> | null =
-  null;
+let tfModulePromise: Promise<any | null> | null = null;
 
 async function loadNsfwModel() {
   if (!nsfwModelPromise) {
     nsfwModelPromise = (async () => {
       try {
-        const tf = await import("@tensorflow/tfjs-node");
+        const tf = await import("@tensorflow/tfjs-node" as any);
         tfModulePromise = Promise.resolve(tf);
-        const nsfw = await import("nsfwjs");
+        const nsfw = await import("nsfwjs" as any);
         return await nsfw.load();
       } catch (err) {
         logger.debug({ err }, "NSFW model unavailable, falling back to heuristics");
@@ -38,7 +49,7 @@ async function loadNsfwModel() {
 async function getTfModule() {
   if (!tfModulePromise) {
     try {
-      const tf = await import("@tensorflow/tfjs-node");
+      const tf = await import("@tensorflow/tfjs-node" as any);
       tfModulePromise = Promise.resolve(tf);
     } catch (err) {
       tfModulePromise = Promise.resolve(null);
@@ -85,19 +96,16 @@ export async function scanAvatar(avatarUrl: string, options: ScanOptions): Promi
 
     let nsfwScore: number | null = null;
     try {
-      const model = (await loadNsfwModel()) as { classify: (img: unknown, topK?: number) => Promise<Array<{ className: string; probability: number }>> } | null;
+      const model = (await loadNsfwModel()) as any;
       const tf = await getTfModule();
       if (model && tf) {
-        const tensor = (tf as unknown as { node: { decodeImage: (buffer: Uint8Array, channels: number) => unknown } }).node.decodeImage(
-          buffer,
-          3
-        );
+        const tensor = tf.node.decodeImage(buffer, 3);
         const predictions = await model.classify(tensor, 5);
-        const porn = predictions.find((p) => p.className.toLowerCase() === "porn")?.probability ?? 0;
-        const hentai = predictions.find((p) => p.className.toLowerCase() === "hentai")?.probability ?? 0;
+        const porn = predictions.find((p: any) => p.className.toLowerCase() === "porn")?.probability ?? 0;
+        const hentai = predictions.find((p: any) => p.className.toLowerCase() === "hentai")?.probability ?? 0;
         nsfwScore = Math.max(porn, hentai);
-        if ("dispose" in tensor && typeof (tensor as { dispose: () => void }).dispose === "function") {
-          (tensor as { dispose: () => void }).dispose();
+        if (tensor && typeof tensor.dispose === "function") {
+          tensor.dispose();
         }
       }
     } catch (err) {
@@ -157,4 +165,26 @@ export async function scanAvatar(avatarUrl: string, options: ScanOptions): Promi
     logger.warn({ err }, "Avatar scan failed");
     return defaultResult;
   }
+}
+
+export function getScan(applicationId: string): AvatarScanRow | undefined {
+  return db
+    .prepare(
+      `
+      SELECT application_id, avatar_url, nsfw_score, skin_edge_score, flagged, reason, scanned_at
+      FROM avatar_scan
+      WHERE application_id = ?
+    `
+    )
+    .get(applicationId) as AvatarScanRow | undefined;
+}
+
+export function buildReverseImageUrl(cfg: Pick<GuildConfig, "image_search_url_template">, avatarUrl: string) {
+  const template = cfg.image_search_url_template || "https://lens.google.com/uploadbyurl?url={avatarUrl}";
+  const encoded = encodeURIComponent(avatarUrl);
+  if (template.includes("{avatarUrl}")) {
+    return template.replaceAll("{avatarUrl}", encoded);
+  }
+  const separator = template.includes("?") ? "&" : "?";
+  return `${template}${separator}avatar=${encoded}`;
 }

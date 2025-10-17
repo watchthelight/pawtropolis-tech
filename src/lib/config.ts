@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
-/**
- * Pawtropolis Tech Gatekeeper
- * Copyright (c) 2025 watchthelight (Bash) <admin@watchthelight.org>
- * License: LicenseRef-ANW-1.0
- * Repo: https://github.com/watchthelight/pawtropolis-tech
- */
-
-import { db } from "../db/connection.js";
+import type { ChatInputCommandInteraction, GuildMember } from "discord.js";
+import { db } from "../db/db.js";
+import { logger } from "./logger.js";
 
 export type GuildConfig = {
   guild_id: string;
@@ -25,9 +20,8 @@ export type GuildConfig = {
   avatar_scan_skin_edge_threshold: number;
 };
 
-// guild configs in-memory cache
 const configCache = new Map<string, { config: GuildConfig; timestamp: number }>();
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5mins
+const CACHE_TTL_MS = 5 * 60 * 1000;
 
 function invalidateCache(guildId: string) {
   configCache.delete(guildId);
@@ -68,24 +62,47 @@ export function upsertConfig(guildId: string, partial: Partial<Omit<GuildConfig,
     const vals = keys.map((k) => partial[k]);
     db.prepare(`UPDATE guild_config SET ${sets} WHERE guild_id = ?`).run(...vals, guildId);
   }
-  // Invalidate cache after a config update
   invalidateCache(guildId);
 }
 
 export function getConfig(guildId: string): GuildConfig | undefined {
-  // Check cache 1st
   const cached = configCache.get(guildId);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
     return cached.config;
   }
-  // Fetch from database
   const config = db.prepare("SELECT * FROM guild_config WHERE guild_id = ?").get(guildId) as
     | GuildConfig
     | undefined;
 
-  // Cache the result if any
   if (config) {
     configCache.set(guildId, { config, timestamp: Date.now() });
   }
   return config;
+}
+
+export function hasManageGuild(member: GuildMember | null): boolean {
+  return !!member?.permissions?.has("ManageGuild");
+}
+
+export function isReviewer(guildId: string, member: GuildMember | null): boolean {
+  if (!member) return false;
+  const row = db
+    .prepare("SELECT reviewer_role_id FROM guild_config WHERE guild_id = ?")
+    .get(guildId) as { reviewer_role_id?: string } | undefined;
+  const reviewerRole = row?.reviewer_role_id;
+  return !!(reviewerRole && member.roles.cache.has(reviewerRole));
+}
+
+export function requireStaff(interaction: ChatInputCommandInteraction): boolean {
+  const member = interaction.member as GuildMember | null;
+  const ok = hasManageGuild(member) || isReviewer(interaction.guildId!, member);
+  if (!ok) {
+    interaction
+      .reply({
+        ephemeral: true,
+        content: "You don't have permission to manage gate settings.",
+      })
+      .catch((err) => logger.warn({ err }, "Failed to send permission denied message"));
+  }
+  return ok;
 }

@@ -1,18 +1,10 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
-/**
- * Pawtropolis Tech Gatekeeper
- * Copyright (c) 2025 watchthelight (Bash) <admin@watchthelight.org>
- * License: LicenseRef-ANW-1.0
- * Repo: https://github.com/watchthelight/pawtropolis-tech
- */
-
 import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
 import { env } from "../lib/env.js";
 import { logger } from "../lib/logger.js";
 
-// Database configuration constants
 const DB_BUSY_TIMEOUT_MS = 5000;
 const DB_DEFAULT_PATH = "data/data.db";
 
@@ -24,7 +16,7 @@ db.pragma("synchronous = NORMAL");
 db.pragma("foreign_keys = ON");
 db.pragma(`busy_timeout = ${DB_BUSY_TIMEOUT_MS}`);
 logger.info({ dbPath }, "SQLite opened");
-// Graceful shutdown: close database connection and flush Sentry
+
 async function closeDatabase() {
   logger.info("Closing database connection...");
   try {
@@ -34,7 +26,6 @@ async function closeDatabase() {
     logger.error({ err }, "Error closing database");
   }
 
-  // Flush Sentry events before exiting
   try {
     const { flushSentry } = await import("../lib/sentry.js");
     await flushSentry();
