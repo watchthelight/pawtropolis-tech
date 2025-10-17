@@ -15,7 +15,7 @@ import {
   GatewayIntentBits,
   Partials,
   Collection,
-  type Interaction,
+  type ChatInputCommandInteraction,
   Events,
 } from "discord.js";
 import { logger } from "./lib/logger.js";
@@ -29,11 +29,13 @@ import {
   handleGateModalSubmit,
   handleDoneButton,
 } from "./features/gate/gateEntry.js";
-
-type CommandModule = {
-  data: { name: string; toJSON: () => unknown };
-  execute: (interaction: Interaction) => Promise<void>;
-};
+import {
+  handleReviewButton,
+  handleRejectModal,
+  handleAvatarViewSourceButton,
+  handleAvatarConfirmModal,
+} from "./features/review/reviewHandlers.js";
+import { wrapCommand } from "./lib/cmdWrap.js";
 
 const client = new Client({
   intents: [
@@ -44,10 +46,10 @@ const client = new Client({
   partials: [Partials.Channel],
 });
 
-const commands = new Collection<string, CommandModule>();
-[health, gate, statusupdate].forEach((cmd) =>
-  commands.set(cmd.data.name, cmd as unknown as CommandModule)
-);
+const commands = new Collection<string, (interaction: ChatInputCommandInteraction) => Promise<void>>();
+commands.set(health.data.name, wrapCommand("health", health.execute));
+commands.set(gate.data.name, wrapCommand("gate", gate.execute));
+commands.set(statusupdate.data.name, wrapCommand("statusupdate", statusupdate.execute));
 client.once(Events.ClientReady, async () => {
   logger.info({ tag: client.user?.tag, id: client.user?.id }, "Bot ready");
 
@@ -78,8 +80,8 @@ client.on("interactionCreate", async (interaction) => {
   });
 
   if (interaction.isChatInputCommand()) {
-    const cmd = commands.get(interaction.commandName);
-    if (!cmd) {
+    const executor = commands.get(interaction.commandName);
+    if (!executor) {
       addBreadcrumb({
         message: `Unknown command attempted: ${interaction.commandName}`,
         category: "command",
@@ -105,8 +107,7 @@ client.on("interactionCreate", async (interaction) => {
     });
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (cmd as any).execute(interaction);
+      await executor(interaction);
 
       addBreadcrumb({
         message: `Command completed: ${interaction.commandName}`,
@@ -114,28 +115,26 @@ client.on("interactionCreate", async (interaction) => {
         level: "info",
       });
     } catch (err) {
-      logger.error({ err }, "Command execution error");
+      logger.error({ err }, "Command execution error (unwrapped)");
       captureException(err, {
         commandName: interaction.commandName,
         guildId: interaction.guildId,
         userId: interaction.user.id,
         username: interaction.user.username,
       });
-
-      if (interaction.deferred || interaction.replied) {
-        await interaction
-          .followUp({ content: "Something went wrong.", ephemeral: true })
-          .catch((err) => logger.warn({ err }, "Failed to send error followUp"));
-      } else {
-        await interaction
-          .reply({ content: "Something went wrong.", ephemeral: true })
-          .catch((err) => logger.warn({ err }, "Failed to send error reply"));
-      }
     }
     return;
   }
 
   if (interaction.isButton()) {
+    if (interaction.customId.startsWith("v1:avatar:viewsrc:")) {
+      await handleAvatarViewSourceButton(interaction);
+      return;
+    }
+    if (interaction.customId.startsWith("v1:decide:")) {
+      await handleReviewButton(interaction);
+      return;
+    }
     if (interaction.customId === "v1:done") {
       await handleDoneButton(interaction);
       return;
@@ -148,6 +147,14 @@ client.on("interactionCreate", async (interaction) => {
   }
 
   if (interaction.isModalSubmit()) {
+    if (interaction.customId.startsWith("v1:avatar:confirm18:")) {
+      await handleAvatarConfirmModal(interaction);
+      return;
+    }
+    if (interaction.customId.startsWith("v1:modal:reject:")) {
+      await handleRejectModal(interaction);
+      return;
+    }
     if (interaction.customId.startsWith("v1:modal:p")) {
       await handleGateModalSubmit(interaction);
       return;

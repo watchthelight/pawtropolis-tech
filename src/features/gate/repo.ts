@@ -14,7 +14,7 @@ export function getOrCreateDraft(db: BetterSqliteDatabase, guildId: string, user
 
   const active = db
     .prepare(
-      `SELECT id, status FROM application WHERE guild_id = ? AND user_id = ? AND status = 'submitted'`
+      `SELECT id, status FROM application WHERE guild_id = ? AND user_id = ? AND status IN ('submitted','needs_info')`
     )
     .get(guildId, userId) as { id: string; status: string } | undefined;
   if (active) {
@@ -85,7 +85,8 @@ export function submitApplication(db: BetterSqliteDatabase, appId: string) {
       `
       UPDATE application
       SET status = 'submitted',
-          submitted_at = datetime('now')
+          submitted_at = datetime('now'),
+          updated_at = datetime('now')
       WHERE id = ? AND status = 'draft'
     `
     )

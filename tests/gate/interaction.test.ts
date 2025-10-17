@@ -30,6 +30,9 @@ beforeAll(() => {
       reapply_cooldown_hours   INTEGER NOT NULL DEFAULT 24,
       min_account_age_hours    INTEGER NOT NULL DEFAULT 0,
       min_join_age_hours       INTEGER NOT NULL DEFAULT 0,
+      avatar_scan_enabled      INTEGER NOT NULL DEFAULT 0,
+      avatar_scan_nsfw_threshold REAL NOT NULL DEFAULT 0.60,
+      avatar_scan_skin_edge_threshold REAL NOT NULL DEFAULT 0.18,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
@@ -39,6 +42,7 @@ beforeAll(() => {
       user_id  TEXT NOT NULL,
       status   TEXT NOT NULL DEFAULT 'draft',
       created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at   TEXT NOT NULL DEFAULT (datetime('now')),
       submitted_at TEXT,
       resolved_at  TEXT,
       resolver_id  TEXT,
@@ -69,8 +73,34 @@ beforeAll(() => {
       action TEXT NOT NULL,
       reason TEXT,
       message_link TEXT,
+      meta TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
+    CREATE TABLE IF NOT EXISTS review_card (
+      app_id TEXT PRIMARY KEY,
+      channel_id TEXT NOT NULL,
+      message_id TEXT NOT NULL,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS avatar_scan (
+      application_id TEXT PRIMARY KEY,
+      avatar_url TEXT NOT NULL,
+      nsfw_score REAL,
+      skin_edge_score REAL,
+      flagged INTEGER NOT NULL DEFAULT 0,
+      reason TEXT NOT NULL DEFAULT 'none',
+      scanned_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS schema_migrations (
+      filename TEXT PRIMARY KEY,
+      applied_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    INSERT OR IGNORE INTO schema_migrations (filename) VALUES
+      ('000_init.sql'),
+      ('001_indices.sql'),
+      ('002_questions.sql'),
+      ('002_review_cards.sql'),
+      ('003_avatar_scan.sql');
     CREATE TABLE IF NOT EXISTS modmail_bridge (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       guild_id TEXT NOT NULL,
@@ -99,6 +129,8 @@ beforeEach(() => {
   db.exec(`
     DELETE FROM application_response;
     DELETE FROM review_action;
+    DELETE FROM review_card;
+    DELETE FROM avatar_scan;
     DELETE FROM modmail_bridge;
     DELETE FROM user_snapshot;
     DELETE FROM application;
@@ -203,14 +235,15 @@ describe("gate interactions", () => {
       "guild-1",
       "user-1"
     );
-    const reply = vi.fn().mockResolvedValue(undefined);
-    const interaction = {
-      inGuild: () => true,
-      guildId: "guild-1",
-      member: {
-        permissions: { has: () => true },
-        roles: { cache: new Map() },
-      },
+  const reply = vi.fn().mockResolvedValue(undefined);
+  const interaction = {
+    inGuild: () => true,
+    guildId: "guild-1",
+    user: { id: "mod-1", username: "Mod" },
+    member: {
+      permissions: { has: () => true },
+      roles: { cache: new Map() },
+    },
       customId: "v1:factory-reset",
       fields: {
         getTextInputValue: () => "nope",
@@ -233,7 +266,7 @@ describe("gate interactions", () => {
       "INSERT INTO application_response (app_id, q_index, question, answer) VALUES (?, ?, ?, ?)"
     ).run("app-2", 0, "Q", "A");
     db.prepare(
-      "INSERT INTO review_action (app_id, moderator_id, action) VALUES (?, ?, 'accept')"
+      "INSERT INTO review_action (app_id, moderator_id, action) VALUES (?, ?, 'approve')"
     ).run("app-2", "mod-1");
     db.prepare(
       "INSERT INTO modmail_bridge (guild_id, user_id, thread_id, state) VALUES (?, ?, ?, 'open')"
@@ -247,14 +280,15 @@ describe("gate interactions", () => {
       "Another",
       1
     );
-    const reply = vi.fn().mockResolvedValue(undefined);
-    const interaction = {
-      inGuild: () => true,
-      guildId: "guild-1",
-      member: {
-        permissions: { has: () => true },
-        roles: { cache: new Map() },
-      },
+  const reply = vi.fn().mockResolvedValue(undefined);
+  const interaction = {
+    inGuild: () => true,
+    guildId: "guild-1",
+    user: { id: "mod-1", username: "Mod" },
+    member: {
+      permissions: { has: () => true },
+      roles: { cache: new Map() },
+    },
       customId: "v1:factory-reset",
       fields: {
         getTextInputValue: () => "RESET",

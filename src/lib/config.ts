@@ -20,6 +20,9 @@ export type GuildConfig = {
   reapply_cooldown_hours: number;
   min_account_age_hours: number;
   min_join_age_hours: number;
+  avatar_scan_enabled: number;
+  avatar_scan_nsfw_threshold: number;
+  avatar_scan_skin_edge_threshold: number;
 };
 
 // guild configs in-memory cache
@@ -38,8 +41,9 @@ export function upsertConfig(guildId: string, partial: Partial<Omit<GuildConfig,
       INSERT INTO guild_config (
         guild_id, review_channel_id, gate_channel_id, unverified_channel_id, general_channel_id,
         accepted_role_id, reviewer_role_id, image_search_url_template,
-        reapply_cooldown_hours, min_account_age_hours, min_join_age_hours
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, COALESCE(?, 'https://lens.google.com/uploadbyurl?url={avatarUrl}'), COALESCE(?,24), COALESCE(?,0), COALESCE(?,0))
+        reapply_cooldown_hours, min_account_age_hours, min_join_age_hours,
+        avatar_scan_enabled, avatar_scan_nsfw_threshold, avatar_scan_skin_edge_threshold
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, COALESCE(?, 'https://lens.google.com/uploadbyurl?url={avatarUrl}'), COALESCE(?,24), COALESCE(?,0), COALESCE(?,0), COALESCE(?,0), COALESCE(?,0.60), COALESCE(?,0.18))
     `
     ).run(
       guildId,
@@ -52,7 +56,10 @@ export function upsertConfig(guildId: string, partial: Partial<Omit<GuildConfig,
       partial.image_search_url_template,
       partial.reapply_cooldown_hours,
       partial.min_account_age_hours,
-      partial.min_join_age_hours
+      partial.min_join_age_hours,
+      partial.avatar_scan_enabled ?? 0,
+      partial.avatar_scan_nsfw_threshold ?? 0.6,
+      partial.avatar_scan_skin_edge_threshold ?? 0.18
     );
   } else {
     const keys = Object.keys(partial) as Array<keyof typeof partial>;

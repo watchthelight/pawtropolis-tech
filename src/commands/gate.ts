@@ -7,7 +7,7 @@
  */
 import {
   SlashCommandBuilder,
-  ChatInputCommandInteraction,
+  type ChatInputCommandInteraction,
   PermissionFlagsBits,
   userMention,
   inlineCode,
@@ -15,7 +15,7 @@ import {
   TextInputBuilder,
   ActionRowBuilder,
   TextInputStyle,
-  ModalSubmitInteraction,
+  type ModalSubmitInteraction,
   type GuildMember,
 } from "discord.js";
 import { ConfigKey, Hours, HttpUrl, Snowflake } from "../lib/validators.js";
@@ -23,10 +23,12 @@ import { requireStaff, hasManageGuild, isReviewer } from "../lib/permissions.js"
 import { getConfig, upsertConfig } from "../lib/config.js";
 import { db } from "../db/connection.js";
 import { ensurePinnedGateMessage } from "../features/gate/gateEntry.js";
+import { wrapCommand, withStep, type CommandContext } from "../lib/cmdWrap.js";
+import { logger } from "../lib/logger.js";
+
 export const data = new SlashCommandBuilder()
   .setName("gate")
   .setDescription("Gatekeeping configuration and utilities")
-  // /gate setup …
   .addSubcommand((sc) =>
     sc
       .setName("setup")
@@ -38,10 +40,7 @@ export const data = new SlashCommandBuilder()
         o.setName("gate_channel").setDescription("Public gate/apply channel").setRequired(true)
       )
       .addChannelOption((o) =>
-        o
-          .setName("unverified_channel")
-          .setDescription("Unverified chat/ping channel")
-          .setRequired(true)
+        o.setName("unverified_channel").setDescription("Unverified chat/ping channel").setRequired(true)
       )
       .addChannelOption((o) =>
         o.setName("general_channel").setDescription("General/welcome channel").setRequired(true)
@@ -53,7 +52,6 @@ export const data = new SlashCommandBuilder()
         o.setName("reviewer_role").setDescription("Role that can review").setRequired(true)
       )
   )
-  // /gate config set key value
   .addSubcommand((sc) =>
     sc
       .setName("config")
@@ -75,11 +73,10 @@ export const data = new SlashCommandBuilder()
         o.setName("value").setDescription("new value (string/snowflake/hours/url)")
       )
   )
-  // /gate status
   .addSubcommand((sc) =>
     sc.setName("status").setDescription("Show bot status and config completeness")
   )
-  // /gate reset user @user
+  .addSubcommand((sc) => sc.setName("queue").setDescription("Show application queue counts"))
   .addSubcommand((sc) =>
     sc
       .setName("reset")
@@ -93,65 +90,101 @@ export const data = new SlashCommandBuilder()
     sc.setName("factory-reset").setDescription("Wipe application data after confirmation")
   )
   .setDefaultMemberPermissions(PermissionFlagsBits.SendMessages);
-export async function execute(interaction: ChatInputCommandInteraction) {
-  if (!interaction.guildId) return interaction.reply({ ephemeral: true, content: "Guild only." });
-  const sub = interaction.options.getSubcommand(true);
-  // guard staff perms for all subcommands
+
+export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) {
+  const { interaction } = ctx;
+  if (!interaction.guildId) {
+    ctx.step("invalid_scope");
+    await interaction.reply({ ephemeral: true, content: "Guild only." });
+    return;
+  }
+
+  ctx.step("permission_check");
   if (!requireStaff(interaction)) return;
-  if (sub === "setup") return runSetup(interaction);
-  if (sub === "config") return runConfig(interaction);
-  if (sub === "status") return runStatus(interaction);
-  if (sub === "reset") return runReset(interaction);
-  if (sub === "ensure-entry") return runEnsureEntry(interaction);
-  if (sub === "factory-reset") return runFactoryReset(interaction);
+
+  const sub = await withStep(ctx, "parse_subcommand", async () =>
+    interaction.options.getSubcommand(true)
+  );
+
+  ctx.step(`dispatch_${sub}`);
+  if (sub === "setup") return runSetup(ctx);
+  if (sub === "config") return runConfig(ctx);
+  if (sub === "status") return runStatus(ctx);
+  if (sub === "queue") return runQueue(ctx);
+  if (sub === "reset") return runReset(ctx);
+  if (sub === "ensure-entry") return runEnsureEntry(ctx);
+  if (sub === "factory-reset") return runFactoryReset(ctx);
 }
-async function runSetup(interaction: ChatInputCommandInteraction) {
+
+async function runSetup(ctx: CommandContext<ChatInputCommandInteraction>) {
+  const { interaction } = ctx;
   const gid = interaction.guildId!;
-  const review = interaction.options.getChannel("review_channel", true).id;
-  const gate = interaction.options.getChannel("gate_channel", true).id;
-  const unverified = interaction.options.getChannel("unverified_channel", true).id;
-  const general = interaction.options.getChannel("general_channel", true).id;
-  const accepted = interaction.options.getRole("accepted_role", true).id;
-  const reviewer = interaction.options.getRole("reviewer_role", true).id;
-  // validate as snowflakes
-  Snowflake.parse(review);
-  Snowflake.parse(gate);
-  Snowflake.parse(unverified);
-  Snowflake.parse(general);
-  Snowflake.parse(accepted);
-  Snowflake.parse(reviewer);
-  upsertConfig(gid, {
-    review_channel_id: review,
-    gate_channel_id: gate,
-    unverified_channel_id: unverified,
-    general_channel_id: general,
-    accepted_role_id: accepted,
-    reviewer_role_id: reviewer,
+
+  const channels = await withStep(ctx, "validate_input", async () => {
+    const review = interaction.options.getChannel("review_channel", true).id;
+    const gate = interaction.options.getChannel("gate_channel", true).id;
+    const unverified = interaction.options.getChannel("unverified_channel", true).id;
+    const general = interaction.options.getChannel("general_channel", true).id;
+    const accepted = interaction.options.getRole("accepted_role", true).id;
+    const reviewer = interaction.options.getRole("reviewer_role", true).id;
+    Snowflake.parse(review);
+    Snowflake.parse(gate);
+    Snowflake.parse(unverified);
+    Snowflake.parse(general);
+    Snowflake.parse(accepted);
+    Snowflake.parse(reviewer);
+    return { review, gate, unverified, general, accepted, reviewer };
   });
-  const pinResult = await ensurePinnedGateMessage(interaction.client, gid);
-  await interaction.reply({
-    ephemeral: true,
-    content:
-      "✅ Config saved.\n" +
-      `review=${inlineCode(review)}\n` +
-      `gate=${inlineCode(gate)}\n` +
-      `unverified=${inlineCode(unverified)}\n` +
-      `general=${inlineCode(general)}\n` +
-      `accepted_role=${inlineCode(accepted)} reviewer_role=${inlineCode(reviewer)}\n` +
-      `Pinned ${pinResult.pinned ? "✅" : "❌"}${pinResult.reason ? `: ${pinResult.reason}` : ""}`,
+
+  await withStep(ctx, "db_write", async () => {
+    upsertConfig(gid, {
+      review_channel_id: channels.review,
+      gate_channel_id: channels.gate,
+      unverified_channel_id: channels.unverified,
+      general_channel_id: channels.general,
+      accepted_role_id: channels.accepted,
+      reviewer_role_id: channels.reviewer,
+    });
+  });
+
+  const pinResult = await withStep(ctx, "pin_message", async () =>
+    ensurePinnedGateMessage(interaction.client, gid)
+  );
+
+  await withStep(ctx, "final_reply", async () => {
+    await interaction.reply({
+      ephemeral: true,
+      content:
+        "Config saved.\n" +
+        `review=${inlineCode(channels.review)}\n` +
+        `gate=${inlineCode(channels.gate)}\n` +
+        `unverified=${inlineCode(channels.unverified)}\n` +
+        `general=${inlineCode(channels.general)}\n` +
+        `accepted_role=${inlineCode(channels.accepted)} reviewer_role=${inlineCode(channels.reviewer)}\n` +
+        `Pinned ${pinResult.pinned ? "✅" : "⚠️"}${pinResult.reason ? `: ${pinResult.reason}` : ""}`,
+    });
   });
 }
-async function runConfig(interaction: ChatInputCommandInteraction) {
+
+async function runConfig(ctx: CommandContext<ChatInputCommandInteraction>) {
+  const { interaction } = ctx;
   const gid = interaction.guildId!;
-  const action = interaction.options.getString("action", true);
+  const action = await withStep(ctx, "parse_action", async () =>
+    interaction.options.getString("action", true)
+  );
+
   if (action === "get") {
-    const cfg = getConfig(gid);
-    if (!cfg)
-      return interaction.reply({
-        ephemeral: true,
-        content: "No config found. Run /gate setup first.",
+    const cfg = await withStep(ctx, "load_config", async () => getConfig(gid));
+    if (!cfg) {
+      await withStep(ctx, "final_reply", async () => {
+        await interaction.reply({
+          ephemeral: true,
+          content: "No config found. Run /gate setup first.",
+        });
       });
-    const lines = [
+      return;
+    }
+    const content = [
       `review_channel_id: ${cfg.review_channel_id ?? "unset"}`,
       `gate_channel_id: ${cfg.gate_channel_id ?? "unset"}`,
       `unverified_channel_id: ${cfg.unverified_channel_id ?? "unset"}`,
@@ -163,13 +196,19 @@ async function runConfig(interaction: ChatInputCommandInteraction) {
       `min_join_age_hours: ${cfg.min_join_age_hours}`,
       `image_search_url_template: ${cfg.image_search_url_template}`,
     ].join("\n");
-    return interaction.reply({ ephemeral: true, content: "```ini\n" + lines + "\n```" });
+    await withStep(ctx, "final_reply", async () => {
+      await interaction.reply({ ephemeral: true, content: "```ini\n" + content + "\n```" });
+    });
+    return;
   }
-  // set
-  const key = interaction.options.getString("key", true);
-  const value = interaction.options.getString("value", true);
-  ConfigKey.parse(key);
-  // validate by key
+
+  const { key, value } = await withStep(ctx, "validate_input", async () => {
+    const optionKey = interaction.options.getString("key", true);
+    const optionValue = interaction.options.getString("value", true);
+    ConfigKey.parse(optionKey);
+    return { key: optionKey, value: optionValue };
+  });
+
   const patch: Record<string, string | number | null> = {};
   if (key.endsWith("_id")) {
     Snowflake.parse(value);
@@ -181,11 +220,19 @@ async function runConfig(interaction: ChatInputCommandInteraction) {
   } else {
     patch[key] = value;
   }
-  upsertConfig(gid, patch);
-  await interaction.reply({ ephemeral: true, content: `✅ Updated ${inlineCode(key)}.` });
+
+  await withStep(ctx, "db_write", async () => {
+    upsertConfig(gid, patch);
+  });
+
+  await withStep(ctx, "final_reply", async () => {
+    await interaction.reply({ ephemeral: true, content: `✅ Updated ${inlineCode(key)}.` });
+  });
 }
-async function runStatus(interaction: ChatInputCommandInteraction) {
-  const cfg = getConfig(interaction.guildId!);
+
+async function runStatus(ctx: CommandContext<ChatInputCommandInteraction>) {
+  const { interaction } = ctx;
+  const cfg = await withStep(ctx, "load_config", async () => getConfig(interaction.guildId!));
   const required = [
     "review_channel_id",
     "gate_channel_id",
@@ -201,48 +248,105 @@ async function runStatus(interaction: ChatInputCommandInteraction) {
     `WS ping: ${wsPing}ms\n` +
     `Config: ${ok ? "complete" : "missing"}\n` +
     (ok ? "" : `Missing: ${missing.join(", ")}`);
-  await interaction.reply({ ephemeral: true, content });
-}
-async function runReset(interaction: ChatInputCommandInteraction) {
-  const gid = interaction.guildId!;
-  const user = interaction.options.getUser("user", true);
-  const draft = db
-    .prepare(
-      `
-    SELECT id FROM application
-    WHERE guild_id = ? AND user_id = ? AND status = 'draft'
-  `
-    )
-    .get(gid, user.id) as { id: string } | undefined;
-  if (!draft) {
-    await interaction.reply({
-      ephemeral: true,
-      content: `${userMention(user.id)} has no draft application.`,
-    });
-    return;
-  }
-  const tx = db.transaction(() => {
-    db.prepare("DELETE FROM application_response WHERE app_id = ?").run(draft.id);
-    db.prepare("DELETE FROM application WHERE id = ?").run(draft.id);
-  });
-  tx();
-  await interaction.reply({
-    ephemeral: true,
-    content: `🧹 Deleted draft application for ${userMention(user.id)}.`,
-  });
-}
-async function runEnsureEntry(interaction: ChatInputCommandInteraction) {
-  const gid = interaction.guildId!;
-  const pinResult = await ensurePinnedGateMessage(interaction.client, gid);
-  await interaction.reply({
-    ephemeral: true,
-    content: `Gate entry message refreshed.\nPinned ${pinResult.pinned ? "✅" : "❌"}${
-      pinResult.reason ? `: ${pinResult.reason}` : ""
-    }`,
+
+  await withStep(ctx, "final_reply", async () => {
+    await interaction.reply({ ephemeral: true, content });
   });
 }
 
-async function runFactoryReset(interaction: ChatInputCommandInteraction) {
+async function runQueue(ctx: CommandContext<ChatInputCommandInteraction>) {
+  const { interaction } = ctx;
+  const gid = interaction.guildId!;
+  const rows = await withStep(ctx, "db_query", async () =>
+    db
+      .prepare(
+        `
+    SELECT status, COUNT(*) as count
+    FROM application
+    WHERE guild_id = ?
+    GROUP BY status
+  `
+      )
+      .all(gid) as Array<{ status: string; count: number }>
+  );
+  const counts = new Map(rows.map((row) => [row.status, row.count]));
+  const lines = [
+    `Submitted: ${counts.get("submitted") ?? 0}`,
+    `Needs info: ${counts.get("needs_info") ?? 0}`,
+    `Approved: ${counts.get("approved") ?? 0}`,
+    `Rejected: ${counts.get("rejected") ?? 0}`,
+    `Kicked: ${counts.get("kicked") ?? 0}`,
+  ];
+
+  await withStep(ctx, "final_reply", async () => {
+    await interaction.reply({ ephemeral: true, content: lines.join("\n") });
+  });
+}
+
+async function runReset(ctx: CommandContext<ChatInputCommandInteraction>) {
+  const { interaction } = ctx;
+  const gid = interaction.guildId!;
+  const user = await withStep(ctx, "validate_input", async () =>
+    interaction.options.getUser("user", true)
+  );
+
+  const draft = await withStep(ctx, "lookup_draft", async () =>
+    db
+      .prepare(
+        `
+    SELECT id FROM application
+    WHERE guild_id = ? AND user_id = ? AND status = 'draft'
+  `
+      )
+      .get(gid, user.id) as { id: string } | undefined
+  );
+
+  if (!draft) {
+    await withStep(ctx, "final_reply", async () => {
+      await interaction.reply({
+        ephemeral: true,
+        content: `${userMention(user.id)} has no draft application.`,
+      });
+    });
+    return;
+  }
+
+  await withStep(ctx, "db_write", async () => {
+    const tx = db.transaction(() => {
+      db.prepare("DELETE FROM application_response WHERE app_id = ?").run(draft.id);
+      db.prepare("DELETE FROM application WHERE id = ?").run(draft.id);
+    });
+    tx();
+  });
+
+  await withStep(ctx, "final_reply", async () => {
+    await interaction.reply({
+      ephemeral: true,
+      content: `✅ Deleted draft application for ${userMention(user.id)}.`,
+    });
+  });
+}
+
+async function runEnsureEntry(ctx: CommandContext<ChatInputCommandInteraction>) {
+  const { interaction } = ctx;
+  const gid = interaction.guildId!;
+  const pinResult = await withStep(ctx, "pin_message", async () =>
+    ensurePinnedGateMessage(interaction.client, gid)
+  );
+
+  await withStep(ctx, "final_reply", async () => {
+    await interaction.reply({
+      ephemeral: true,
+      content: `Gate entry message refreshed.\nPinned ${pinResult.pinned ? "✅" : "⚠️"}${
+        pinResult.reason ? `: ${pinResult.reason}` : ""
+      }`,
+    });
+  });
+}
+
+async function runFactoryReset(ctx: CommandContext<ChatInputCommandInteraction>) {
+  const { interaction } = ctx;
+  ctx.step("confirm_modal");
   const modal = new ModalBuilder().setCustomId("v1:factory-reset").setTitle("Factory Reset");
   const confirmInput = new TextInputBuilder()
     .setCustomId("v1:factory-reset:confirm")
@@ -250,38 +354,62 @@ async function runFactoryReset(interaction: ChatInputCommandInteraction) {
     .setStyle(TextInputStyle.Short)
     .setRequired(true);
   modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(confirmInput));
-  await interaction.showModal(modal);
-}
-
-export async function handleFactoryResetModal(interaction: ModalSubmitInteraction) {
-  if (!interaction.inGuild() || !interaction.guildId) {
-    await interaction.reply({ ephemeral: true, content: "Guild only." });
-    return;
-  }
-  const guildMember = interaction.member as GuildMember | null;
-  const manageGuild = hasManageGuild(guildMember);
-  const reviewer = isReviewer(interaction.guildId, guildMember);
-  if (!manageGuild && !reviewer) {
-    await interaction.reply({ ephemeral: true, content: "Nope." });
-    return;
-  }
-
-  const confirm = interaction.fields.getTextInputValue("v1:factory-reset:confirm").trim();
-  if (confirm !== "RESET") {
-    await interaction.reply({ ephemeral: true, content: "Nope." });
-    return;
-  }
-
-  const wipe = db.transaction(() => {
-    db.prepare("DELETE FROM application_response").run();
-    db.prepare("DELETE FROM review_action").run();
-    db.prepare("DELETE FROM modmail_bridge").run();
-    db.prepare("DELETE FROM user_snapshot").run();
-    db.prepare("DELETE FROM application").run();
-    db.prepare("DELETE FROM guild_question").run();
+  await withStep(ctx, "show_modal", async () => {
+    await interaction.showModal(modal);
   });
-  wipe();
-  db.prepare("VACUUM").run();
-  await import("../db/migrate.js");
-  await interaction.reply({ ephemeral: true, content: "Factory reset complete." });
 }
+
+export const handleFactoryResetModal = wrapCommand<ModalSubmitInteraction>(
+  "gate factory-reset",
+  async (ctx) => {
+    const { interaction } = ctx;
+
+    ctx.step("verify_modal");
+    if (!interaction.inGuild() || !interaction.guildId) {
+      await interaction.reply({ ephemeral: true, content: "Guild only." });
+      return;
+    }
+
+    const guildMember = interaction.member as GuildMember | null;
+    const manageGuild = hasManageGuild(guildMember);
+    const reviewer = isReviewer(interaction.guildId, guildMember);
+    if (!manageGuild && !reviewer) {
+      await interaction.reply({ ephemeral: true, content: "Nope." });
+      return;
+    }
+
+    const confirm = interaction.fields.getTextInputValue("v1:factory-reset:confirm").trim();
+    if (confirm !== "RESET") {
+      await interaction.reply({ ephemeral: true, content: "Nope." });
+      return;
+    }
+
+    ctx.step("db_begin");
+    const wipe = db.transaction(() => {
+      ctx.step("drop_or_truncate");
+      db.prepare("DELETE FROM application_response").run();
+      db.prepare("DELETE FROM review_action").run();
+      db.prepare("DELETE FROM review_card").run();
+      db.prepare("DELETE FROM modmail_bridge").run();
+      db.prepare("DELETE FROM user_snapshot").run();
+      db.prepare("DELETE FROM application").run();
+      db.prepare("DELETE FROM guild_question").run();
+    });
+    wipe();
+
+  ctx.step("migrate_post_wipe");
+  db.prepare("VACUUM").run();
+    try {
+      await import("../db/migrate.js");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (!/duplicate column name/i.test(message)) {
+        throw err;
+      }
+      logger.warn({ err }, "Factory reset migrations already applied");
+    }
+
+  ctx.step("reply_done");
+  await interaction.reply({ ephemeral: true, content: "Factory reset complete." });
+  }
+);

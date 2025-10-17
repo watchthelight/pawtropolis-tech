@@ -42,10 +42,6 @@ Source-available Discord bot for Pawtropolis that runs a gated application flow 
 npm ci
 ```
 
-```bash
-npm ci
-```
-
 ### Setup `.env`
 
 ```powershell

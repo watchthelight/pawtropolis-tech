@@ -15,7 +15,10 @@ import { logger } from "../../lib/logger.js";
 import { getConfig } from "../../lib/config.js";
 import { db } from "../../db/connection.js";
 import { buildModalForPage, getQuestions, paginate } from "./pager.js";
+import { ensureReviewMessage } from "../review/reviewCard.js";
 import { getDraft, getOrCreateDraft, submitApplication, upsertAnswer } from "./repo.js";
+import { scanAvatar } from "../avatarScan/scanner.js";
+import { upsertScan } from "../avatarScan/repo.js";
 
 function parsePage(customId: string): number {
   const match = customId.match(/^v1:start(?::p(\d+))?/);
@@ -405,6 +408,36 @@ export async function handleGateModalSubmit(interaction: ModalSubmitInteraction)
     });
 
     submitApplication(db, draftRow.id);
+    const cfg = getConfig(guildId);
+    if (cfg?.avatar_scan_enabled) {
+      const avatarUrl = interaction.user.displayAvatarURL({
+        extension: "png",
+        forceStatic: true,
+        size: 512,
+      });
+      if (avatarUrl) {
+        try {
+          const result = await scanAvatar(avatarUrl, {
+            nsfwThreshold: cfg.avatar_scan_nsfw_threshold ?? 0.6,
+            skinEdgeThreshold: cfg.avatar_scan_skin_edge_threshold ?? 0.18,
+          });
+          upsertScan(draftRow.id, {
+            avatarUrl,
+            nsfwScore: result.nsfw_score,
+            skinEdgeScore: result.skin_edge_score,
+            flagged: result.flagged,
+            reason: result.reason,
+          });
+        } catch (scanErr) {
+          logger.warn({ err: scanErr, appId: draftRow.id }, "Avatar scan failed");
+        }
+      }
+    }
+    try {
+      await ensureReviewMessage(interaction.client, draftRow.id);
+    } catch (err) {
+      logger.warn({ err, appId: draftRow.id }, "Failed to ensure review card after submission");
+    }
 
     await interaction.reply({ ephemeral: true, content: "Application submitted", components: buildDoneRow() });
   } catch (err) {

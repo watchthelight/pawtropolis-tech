@@ -33,6 +33,9 @@ describe("Config Management", () => {
         reapply_cooldown_hours INTEGER NOT NULL DEFAULT 24,
         min_account_age_hours INTEGER NOT NULL DEFAULT 0,
         min_join_age_hours INTEGER NOT NULL DEFAULT 0,
+          avatar_scan_enabled INTEGER NOT NULL DEFAULT 0,
+          avatar_scan_nsfw_threshold REAL NOT NULL DEFAULT 0.60,
+          avatar_scan_skin_edge_threshold REAL NOT NULL DEFAULT 0.18,
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
       );
