@@ -5,15 +5,22 @@
  * Repo: https://github.com/watchthelight/pawtropolis-tech
  */
 
-import { REST, Routes } from "discord.js";
+import {
+  REST,
+  Routes,
+  type RESTGetAPIOAuth2CurrentApplicationResult,
+  type RESTPostAPIChatInputApplicationCommandsJSONBody,
+} from "discord.js";
 import { env } from "../src/lib/env.js";
 
 function mask(t?: string) {
-  return t ? t.slice(0, 6) + "…(" + t.length + ")" : "(missing)";
+  return t ? `${t.slice(0, 6)}...(${t.length})` : "(missing)";
 }
 
 async function preflight(rest: REST) {
-  const me = (await rest.get(Routes.oauth2CurrentApplication())) as any;
+  const me = (await rest.get(
+    Routes.oauth2CurrentApplication()
+  )) as RESTGetAPIOAuth2CurrentApplicationResult;
   const returnedId = me?.id;
   console.log("Client ID:", env.CLIENT_ID);
   console.log("Guild ID:", env.GUILD_ID || "(none)");
@@ -36,7 +43,7 @@ async function run() {
     process.exit(2);
   }
 
-  const cmds: any[] = [];
+  const cmds: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [];
   const modules = [
     "../src/commands/health.js",
     "../src/commands/gate.js",
@@ -47,7 +54,8 @@ async function run() {
     try {
       const loaded = await import(mod);
       if (loaded?.data?.toJSON) {
-        cmds.push(loaded.data.toJSON());
+        const payload = loaded.data.toJSON() as RESTPostAPIChatInputApplicationCommandsJSONBody;
+        cmds.push(payload);
       }
     } catch {
       // optional command not present
@@ -62,8 +70,13 @@ async function run() {
       await rest.put(Routes.applicationCommands(env.CLIENT_ID), { body: cmds });
       console.log(`Registered ${cmds.length} global command(s).`);
     }
-  } catch (err: any) {
-    if (err?.status === 401) {
+  } catch (err: unknown) {
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "status" in err &&
+      (err as { status?: number }).status === 401
+    ) {
       console.error("[deploy:cmds] 401 Unauthorized. Token invalid or mismatched with CLIENT_ID.");
       console.error("Run: npm run auth:whoami");
     }

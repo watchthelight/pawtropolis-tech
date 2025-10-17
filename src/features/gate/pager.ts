@@ -55,7 +55,7 @@ export function buildModalForPage(
 ): ModalBuilder {
   const modal = new ModalBuilder()
     .setCustomId(`v1:modal:p${page.pageIndex}`)
-    .setTitle(`Gate Entry · Page ${page.pageIndex + 1}`);
+    .setTitle(`Gate Entry - Page ${page.pageIndex + 1}`);
 
   const rows = page.questions.map((question) => {
     const label =

@@ -8,13 +8,13 @@
 import { env } from "../src/lib/env.js";
 function maskToken(t?: string) {
   if (!t) return "(missing)";
-  return t.slice(0, 6) + "…(" + t.length + ")";
+  return `${t.slice(0, 6)}...(${t.length})`;
 }
 async function main() {
   console.log("[auth:whoami] Checking Discord token authentication...");
   console.log("[auth:whoami] Token (masked):", maskToken(env.DISCORD_TOKEN));
   console.log("[auth:whoami] Expected CLIENT_ID:", env.CLIENT_ID);
-  const res = await fetch("https://discord.com/api/v10/oauth2/applications/@me", {
+  const res = await globalThis.fetch("https://discord.com/api/v10/oauth2/applications/@me", {
     headers: { Authorization: `Bot ${env.DISCORD_TOKEN}` },
   });
   if (res.status === 401) {

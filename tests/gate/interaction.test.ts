@@ -1,8 +1,7 @@
+import Database from "better-sqlite3";
 import { vi, describe, it, expect, beforeAll, beforeEach } from "vitest";
 
 vi.mock("../../src/db/connection.js", () => {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const Database = require("better-sqlite3");
   const db = new Database(":memory:");
   db.pragma("journal_mode = WAL");
   db.pragma("foreign_keys = ON");

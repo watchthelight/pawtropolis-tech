@@ -236,7 +236,6 @@ export async function ensurePinnedGateMessage(
     result.reason = "Unexpected error";
     return result;
   }
-  return result;
 }
 
 export async function handleStartButton(interaction: ButtonInteraction) {

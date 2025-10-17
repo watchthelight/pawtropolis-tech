@@ -53,7 +53,6 @@ const schema = z.object({
 const parsed = schema.safeParse(raw);
 if (!parsed.success) {
   const issues = parsed.error.issues.map((i) => `- ${i.path.join(".")}: ${i.message}`).join("\n");
-  // eslint-disable-next-line no-console
   console.error(`Environment validation failed:\n${issues}`);
   process.exit(1);
 }

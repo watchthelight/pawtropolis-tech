@@ -15,25 +15,32 @@ export const logger = pino({
   base: undefined,
   // Pino hooks to send errors to Sentry
   hooks: {
-    logMethod(args, method) {
-      // Dynamically import Sentry to avoid circular dependencies
-      const level = (this as pino.Logger).level;
-
-      // Send errors and fatal logs to Sentry
-      if (level === "error" || level === "fatal") {
-        // Check if first arg is an error object
+    logMethod(args, method, level) {
+      const levelValue =
+        typeof level === "number" ? level : pino.levels.values[level as keyof typeof pino.levels.values] ?? 0;
+      if (levelValue >= pino.levels.values.error) {
         const firstArg = args[0];
-        if (firstArg && typeof firstArg === "object" && "err" in firstArg) {
-          // Import Sentry asynchronously to send error
-          import("./sentry.js").then(({ captureException, isSentryEnabled }) => {
-            if (isSentryEnabled()) {
-              const err = (firstArg as { err: Error }).err;
-              const msg = args[1] as string | undefined;
-              captureException(err, { message: msg, level });
-            }
-          }).catch(() => {
-            // Silently fail if Sentry module isn't loaded yet
-          });
+        const errorCandidate =
+          firstArg instanceof Error
+            ? firstArg
+            : firstArg && typeof firstArg === "object" && "err" in firstArg
+              ? (firstArg as { err?: unknown }).err
+              : undefined;
+
+        if (errorCandidate instanceof Error) {
+          const message = typeof args[1] === "string" ? args[1] : undefined;
+          const label =
+            typeof level === "string"
+              ? level
+              : pino.levels.labels[levelValue as keyof typeof pino.levels.labels] ?? "error";
+
+          import("./sentry.js")
+            .then(({ captureException, isSentryEnabled }) => {
+              if (isSentryEnabled()) {
+                captureException(errorCandidate, { message, level: label });
+              }
+            })
+            .catch(() => undefined);
         }
       }
 
