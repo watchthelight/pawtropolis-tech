@@ -1,80 +1,96 @@
 # Pawtropolis Tech Gatekeeper
 
-Transparent, server-owned Discord gatekeeping bot: pinned application, staff review actions, modmail bridge, and clean audit logs.
+Runs the community gate process end-to-end: collects applications, equips reviewers, and keeps audit trails clean.
 
-**Maintainer:** watchthelight (Bash) • admin@watchthelight.org • Discord: `watchthelight`  
+[![Node.js 20](https://img.shields.io/badge/Node.js-20.x-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![discord.js v14](https://img.shields.io/badge/discord.js-v14-5865F2?logo=discord&logoColor=white)](https://discord.js.org/#/)
+[![License LicenseRef-ANW-1.0](https://img.shields.io/badge/license-LicenseRef--ANW--1.0-0a2f5a)](LICENSE)
 
-**License:** LicenseRef-ANW-1.0 (see [LICENSE](LICENSE))
+## Table of Contents
 
----
+- [Quick Install](#quick-install)
+- [Run Locally](#run-locally)
+- [Remote Server (Ops)](#remote-server-ops)
+- [How To Use (Staff)](#how-to-use-staff)
+- [Troubleshooting (Fast)](#troubleshooting-fast)
+- [License](#license)
 
-## What’s built (current status)
+## Quick Install
 
-- ✅ **Project scaffold**: Node 20 + TypeScript, discord.js v14, tsx, tsup, eslint/prettier, pino logs, env validation.
-- ✅ **Branding & licensing**: ANW-1.0 license, package metadata, file headers.
-- ✅ **Database**: SQLite with migrations/runner, WAL pragmas, seeds.
-- ✅ **Seeded config**: TEST guild `1427677679280324730`, reviewer role `896070888749940774`, 5 application questions.
-- ✅ **Slash command `/health`**: uptime + WS ping.
-- ✅ **Admin suite (Step 3)**: `/gate setup | config | status | reset` with Zod validation and staff perms.
-- ✅ **Hosting**: EC2 Ubuntu t*-micro, Node 20, PM2, SSH alias `pawtech` → `ubuntu@3.209.223.216`.
-- 🟡 **Gate entry UX (Step 4)**: in progress — pinned gate embed + Start button → paged modals → draft persistence.
-- ⛔ **Submission pipeline (Step 5)**: staff review card with Q&A + action buttons.
-- ⛔ **Accept/Reject/Kick (Step 6)**: idempotent flows, welcome ping, DM reason, cooldowns.
-- ⛔ **Ping Applicant (Step 7)**: temp mention in unverified + jump link + auto-delete.
-- ⛔ **Modmail bridge (Step 8)**: thread ↔ DM mirror, close, transcript pointer.
-- ⛔ **Admin UX polish (Step 9)**: question CRUD commands, policy flags, audit log channel.
-- 🟡 **Observability (Step 10)**: basic logs done; still adding status health report, backup/rotate script, and runbook.
+### Windows (PowerShell)
 
----
-
-## Roadmap (10 parts)
-
-1) **Foundations & guild setup** — ✅  
-2) **Data model & storage** — ✅  
-3) **Slash commands & config management** — ✅  
-4) **Gate entry UX** — 🟡 building now  
-5) **Submission & staff review card** — next  
-6) **Accept / Reject / Kick flows**  
-7) **Ping Applicant jump-link**  
-8) **Modmail thread bridge**  
-9) **Admin UX & hardening**  
-10) **Observability, backups, packaging, deploy docs**
-
----
-
-## Dev quickstart (local)
-
-```bash
-# Windows PowerShell or Bash
-cp .env.example .env   # then fill values
+```powershell
+git clone https://github.com/watchthelight/pawtropolis-tech.git
+cd pawtropolis-tech
 npm ci
-npm run db:migrate
-npm run deploy:cmds    # with GUILD_ID set to your test guild
-npm run dev            # tsx watch
+npm run build
 ```
 
-## Troubleshooting
+### macOS/Linux (bash)
 
-**401 on `deploy:cmds` or `TokenInvalid` on startup**
-- Run `npm run auth:whoami`. Expected:  
-  `whoami: application.id=1427436615021629590 • expected CLIENT_ID=1427436615021629590`  
-  If it prints 401, your `DISCORD_TOKEN` is invalid. Rotate the token and update `.env`.  
-  If IDs mismatch, your token belongs to a different app than `CLIENT_ID`.
-- Ensure `.env` is loaded with override (already implemented in `src/lib/env.ts`). Check for trailing spaces/newlines.
+```bash
+git clone https://github.com/watchthelight/pawtropolis-tech.git
+cd pawtropolis-tech
+npm ci
+npm run build
+```
 
-**Slash commands not visible**
-- You didn’t run `deploy:cmds` after changing commands, or `GUILD_ID` is wrong for guild-scoped deploys.
+## Run Locally
 
-**Bot not appearing in member list**
-- You added the **app** only. Invite with scopes: `bot applications.commands`.
+### Dev (watch)
 
-**Remote works but local fails**
-- Your local `.env` differs from the server. Compare `CLIENT_ID`, rotate `DISCORD_TOKEN` locally, then rerun `npm run auth:whoami`.
+```bash
+npm run dev
+```
+
+### Prod (built)
+
+```bash
+npm start
+```
+
+## Remote Server (Ops)
+
+Start remote:
+
+```powershell
+.\start.cmd --remote
+```
+
+Stop remote:
+
+```powershell
+.\stop.cmd --remote
+```
+
+Deploy slash commands to the server:
+
+```bash
+npm run deploy:cmds
+```
+
+Check which bot/app you're running:
+
+```bash
+npm run auth:whoami
+```
+
+## How To Use (Staff)
+
+- Run `/gate setup` once per guild to wire review, gate, unverified, and welcome channels plus roles. Adjust later with `/gate config`.
+- Applicants press **Start** on the pinned Gate Entry message, fill paged modals, and submit.
+- Reviewers handle drafts in the staff channel: approve, reject, request info, kick, or set cooldowns using the buttons that appear.
+- `/health` returns uptime and websocket latency for quick diagnostics.
+- `/statusupdate text:<message>` refreshes the bot presence string when you need new messaging.
+- `/gate factory-reset` wipes application data after a modal confirmation; use only for emergency resets.
+- Sentry captures command errors and uncaught issues automatically when enabled; see [docs/SENTRY_SETUP.md](docs/SENTRY_SETUP.md) for setup and tuning.
+
+## Troubleshooting (Fast)
+
+- Slash commands not visible -> ensure the bot is in the server and run `npm run deploy:cmds`.
+- Cannot pin Gate Entry (Discord 50013) -> grant the bot **Manage Messages** in the gate channel and rerun `/gate ensure-entry`.
+- Sentry prompts during startup -> it is optional; ignore the DSN request if you do not need error reporting.
 
 ## License
 
-- You can study the code and use the ideas.
-- You can copy small excerpts with attribution.
-- You can't copy or distribute the whole project or a substantial part.
-
-See [LICENSE](LICENSE) for the full terms.
+Licensed under Attribution-No Wholesale Copying License, Version 1.0 (LicenseRef-ANW-1.0). See [LICENSE](LICENSE). Portions may be reused within excerpt limits with attribution (see NOTICE).
