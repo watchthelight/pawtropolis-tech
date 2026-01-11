@@ -19,6 +19,23 @@ import {
   clearStaleAcknowledgments,
   type AcknowledgedIssue,
 } from "../store/acknowledgedSecurityStore.js";
+import {
+  saveSnapshot,
+  getLatestSnapshot,
+  recordIssueHistory,
+  pruneOldSnapshots,
+  type RoleSnapshot,
+  type ChannelSnapshot,
+  type IssueSnapshot,
+  type PermissionOverwriteSnapshot,
+} from "../store/securitySnapshotStore.js";
+import {
+  computeSnapshotDiff,
+  generateDiffMarkdown,
+  hasMeaningfulChanges,
+  getDangerousChanges,
+  type SnapshotDiff,
+} from "./securityDiff.js";
 
 // All permission flags we care about for the matrix
 const PERMISSION_FLAGS = [
@@ -152,6 +169,12 @@ export interface AuditResult {
   acknowledgedCount: number;
   outputDir: string;
   commitUrl?: string;
+  /** Diff from previous snapshot (if available) */
+  diff?: SnapshotDiff;
+  /** Number of dangerous permission changes detected */
+  dangerousChangeCount?: number;
+  /** Snapshot ID for reference */
+  snapshotId?: number;
 }
 
 export interface GitPushResult {
@@ -214,6 +237,55 @@ function getMfaLevelName(level: number): string {
  */
 function computePermissionHash(data: string): string {
   return createHash("md5").update(data).digest("hex").slice(0, 16);
+}
+
+/**
+ * Convert RoleData to snapshot format for storage.
+ */
+function roleToSnapshot(role: RoleData): RoleSnapshot {
+  return {
+    id: role.id,
+    name: role.name,
+    position: role.position,
+    color: parseInt(role.color.replace("#", "").replace("default", "0"), 16),
+    managed: role.managed,
+    permissions: role.permissions.join(","), // Store as comma-separated for bitfield reconstruction
+    memberCount: role.memberCount,
+  };
+}
+
+/**
+ * Convert ChannelData to snapshot format for storage.
+ */
+function channelToSnapshot(channel: ChannelData): ChannelSnapshot {
+  return {
+    id: channel.id,
+    name: channel.name,
+    type: channel.type,
+    parentId: channel.parentId,
+    position: channel.position,
+    overwrites: channel.overwrites.map((ow): PermissionOverwriteSnapshot => ({
+      id: ow.id,
+      type: ow.type,
+      allow: ow.allow.join(","),
+      deny: ow.deny.join(","),
+    })),
+  };
+}
+
+/**
+ * Convert SecurityIssue to snapshot format for storage.
+ */
+function issueToSnapshot(issue: SecurityIssue): IssueSnapshot {
+  return {
+    key: issue.issueKey,
+    severity: issue.severity,
+    title: issue.title,
+    description: issue.issue,
+    targetId: issue.affected.match(/\((\d+)\)/)?.[1] ?? "",
+    targetName: issue.affected.replace(/\s*\(\d+\)$/, "").replace(/^(Role|Channel):\s*/, ""),
+    permissionHash: issue.permissionHash,
+  };
 }
 
 // Fetch all role data
@@ -506,6 +578,234 @@ function analyzeSecurityIssues(roles: RoleData[], channels: ChannelData[]): Secu
     }
   }
 
+  // =========================================================================
+  // PHASE 2: Enhanced Security Checks
+  // =========================================================================
+
+  // --- Role Hierarchy Checks ---
+  // Build position -> role map for hierarchy analysis
+  const rolesByPosition = new Map<number, RoleData>();
+  for (const role of roles) {
+    rolesByPosition.set(role.position, role);
+  }
+  const sortedRoles = [...roles].sort((a, b) => b.position - a.position); // Highest first
+
+  // Check for hierarchy inversions (lower role has more dangerous perms than higher)
+  for (let i = 0; i < sortedRoles.length; i++) {
+    const higherRole = sortedRoles[i];
+    if (higherRole.name === "@everyone" || higherRole.managed) continue;
+
+    const higherDangerousPerms = higherRole.permissions.filter((p) =>
+      DANGEROUS_PERMISSIONS.includes(p)
+    );
+
+    for (let j = i + 1; j < sortedRoles.length; j++) {
+      const lowerRole = sortedRoles[j];
+      if (lowerRole.name === "@everyone" || lowerRole.managed) continue;
+
+      const lowerDangerousPerms = lowerRole.permissions.filter((p) =>
+        DANGEROUS_PERMISSIONS.includes(p)
+      );
+
+      // Find perms the lower role has that the higher role doesn't
+      const escalatedPerms = lowerDangerousPerms.filter((p) => !higherDangerousPerms.includes(p));
+
+      if (escalatedPerms.length > 0) {
+        const hashData = `hierarchy:${higherRole.id}:${lowerRole.id}:${escalatedPerms.sort().join(",")}`;
+        issues.push({
+          severity: "high",
+          id: `HIGH-${String(issueId++).padStart(3, "0")}`,
+          title: `Hierarchy Inversion`,
+          affected: `Roles: ${lowerRole.name} (pos ${lowerRole.position}) > ${higherRole.name} (pos ${higherRole.position})`,
+          issue: `Lower-positioned role "${lowerRole.name}" has dangerous permissions that "${higherRole.name}" lacks: ${escalatedPerms.join(", ")}`,
+          risk: `Users with the lower role may have more power than their higher-ranked counterparts.`,
+          recommendation: `Review role hierarchy. Either elevate ${lowerRole.name} or remove the excess permissions.`,
+          issueKey: `hierarchy:inversion:${lowerRole.id}:${higherRole.id}`,
+          permissionHash: computePermissionHash(hashData),
+        });
+        break; // Only report once per role pair
+      }
+    }
+  }
+
+  // Check for roles that can ManageRoles above their position (impossible, but check grants)
+  for (const role of roles) {
+    if (role.name === "@everyone") continue;
+    if (role.permissions.includes("ManageRoles") && !role.permissions.includes("Administrator")) {
+      // Find roles above this one that this role could theoretically target
+      const rolesAbove = roles.filter((r) => r.position > role.position && r.name !== "@everyone");
+      if (rolesAbove.length > 0 && role.memberCount > 0) {
+        const hashData = `hierarchy:manage_scope:${role.id}:${role.position}`;
+        issues.push({
+          severity: "medium",
+          id: `MED-${String(issueId++).padStart(3, "0")}`,
+          title: `ManageRoles Scope Warning`,
+          affected: `Role: ${role.name} (position ${role.position})`,
+          issue: `Role can assign/remove ${role.position} roles below it. ${rolesAbove.length} roles are protected above.`,
+          risk: `Ensure position is intentional. Lower positions = more assignable roles.`,
+          recommendation: `Review role position. Move up if this is a senior staff role.`,
+          issueKey: `hierarchy:manage_scope:${role.id}`,
+          permissionHash: computePermissionHash(hashData),
+        });
+      }
+    }
+  }
+
+  // --- Channel Sync Validation ---
+  // Check if channels are more permissive than their parent category
+  const categoriesById = new Map<string, ChannelData>();
+  for (const ch of channels) {
+    if (ch.type === "Category") {
+      categoriesById.set(ch.id, ch);
+    }
+  }
+
+  for (const channel of channels) {
+    if (channel.type === "Category" || !channel.parentId) continue;
+
+    const parent = categoriesById.get(channel.parentId);
+    if (!parent) continue;
+
+    // Check if channel has overwrites that parent doesn't (more permissive)
+    for (const chOverwrite of channel.overwrites) {
+      const parentOverwrite = parent.overwrites.find((o) => o.id === chOverwrite.id);
+
+      if (chOverwrite.allow.length > 0) {
+        // Channel allows something - check if parent denies it or doesn't allow it
+        const parentDenied = parentOverwrite?.deny || [];
+        const parentAllowed = parentOverwrite?.allow || [];
+
+        const overridesDeny = chOverwrite.allow.filter((p) => parentDenied.includes(p));
+        if (overridesDeny.length > 0) {
+          const hashData = `sync:${channel.id}:${chOverwrite.id}:${overridesDeny.sort().join(",")}`;
+          issues.push({
+            severity: "medium",
+            id: `MED-${String(issueId++).padStart(3, "0")}`,
+            title: `Channel Overrides Category Deny`,
+            affected: `Channel: #${channel.name} (${channel.id})`,
+            issue: `Channel explicitly allows ${overridesDeny.join(", ")} for ${chOverwrite.name}, but category denies it.`,
+            risk: `Intentional access expansion or accidental permission leak.`,
+            recommendation: `Verify this override is intentional. Consider syncing with category if not.`,
+            issueKey: `channel:${channel.id}:sync_override:${chOverwrite.id}`,
+            permissionHash: computePermissionHash(hashData),
+          });
+        }
+      }
+    }
+  }
+
+  // --- Webhook Abuse Detection ---
+  // Check for roles with ManageWebhooks that also have access to sensitive channels
+  const webhookRoles = roles.filter(
+    (r) => r.permissions.includes("ManageWebhooks") && !r.managed && r.name !== "@everyone"
+  );
+
+  for (const role of webhookRoles) {
+    const accessibleSensitiveChannels: string[] = [];
+
+    for (const channel of channels) {
+      if (channel.type === "Category") continue;
+
+      const nameLower = channel.name.toLowerCase();
+      const isSensitive = sensitiveKeywords.some((kw) => nameLower.includes(kw));
+      if (!isSensitive) continue;
+
+      // Check if role has access to this channel
+      const roleOverwrite = channel.overwrites.find((o) => o.id === role.id);
+      const everyoneOverwrite = channel.overwrites.find((o) => o.name === "@everyone");
+
+      // If ViewChannel is not denied for this role, they can access it
+      const viewDenied = roleOverwrite?.deny.includes("ViewChannel");
+      const everyoneViewDenied = everyoneOverwrite?.deny.includes("ViewChannel");
+      const roleViewAllowed = roleOverwrite?.allow.includes("ViewChannel");
+
+      if (!viewDenied && (!everyoneViewDenied || roleViewAllowed)) {
+        accessibleSensitiveChannels.push(channel.name);
+      }
+    }
+
+    if (accessibleSensitiveChannels.length > 0) {
+      const hashData = `webhook_sensitive:${role.id}:${accessibleSensitiveChannels.sort().join(",")}`;
+      issues.push({
+        severity: "medium",
+        id: `MED-${String(issueId++).padStart(3, "0")}`,
+        title: `Webhook Access to Sensitive Channels`,
+        affected: `Role: ${role.name} (${role.id})`,
+        issue: `Role has ManageWebhooks and can access ${accessibleSensitiveChannels.length} sensitive channels: ${accessibleSensitiveChannels.slice(0, 5).join(", ")}${accessibleSensitiveChannels.length > 5 ? "..." : ""}`,
+        risk: `Users with this role can create webhooks that impersonate staff/bots in sensitive channels.`,
+        recommendation: `Restrict ManageWebhooks to truly trusted roles, or limit channel access.`,
+        issueKey: `role:${role.id}:webhook_sensitive`,
+        permissionHash: computePermissionHash(hashData),
+      });
+    }
+  }
+
+  // --- Verification Flow Checks ---
+  // Check for gate/verification related channels that might be exposed
+  const gateKeywords = ["gate", "verify", "verification", "rules", "welcome", "intake", "onboard"];
+
+  for (const channel of channels) {
+    if (channel.type === "Category") continue;
+
+    const nameLower = channel.name.toLowerCase();
+    const isGateChannel = gateKeywords.some((kw) => nameLower.includes(kw));
+
+    if (isGateChannel) {
+      // Gate channels should typically deny @everyone ViewChannel
+      // and only allow unverified/new member roles
+      const everyoneOverwrite = channel.overwrites.find((o) => o.name === "@everyone");
+      const hasEveryoneAccess = !everyoneOverwrite?.deny.includes("ViewChannel");
+
+      // Check if any staff/mod roles can see this channel
+      const staffKeywords = ["mod", "admin", "staff", "helper", "support"];
+      const staffWithAccess = channel.overwrites.filter((o) => {
+        const isStaff = staffKeywords.some((kw) => o.name.toLowerCase().includes(kw));
+        return isStaff && o.allow.includes("ViewChannel");
+      });
+
+      // If @everyone can see it but it looks like a gate, flag it
+      if (hasEveryoneAccess && !nameLower.includes("rules")) {
+        const hashData = `verification:${channel.id}:exposed`;
+        issues.push({
+          severity: "medium",
+          id: `MED-${String(issueId++).padStart(3, "0")}`,
+          title: `Gate Channel Potentially Exposed`,
+          affected: `Channel: #${channel.name} (${channel.id})`,
+          issue: `Channel appears to be a gate/verification channel but @everyone can view it.`,
+          risk: `Verified members may still see verification prompts, or unverified users may have more access than intended.`,
+          recommendation: `Review if this channel should be hidden from verified members.`,
+          issueKey: `channel:${channel.id}:verification_exposed`,
+          permissionHash: computePermissionHash(hashData),
+        });
+      }
+    }
+  }
+
+  // Check if any role named "unverified", "new member", etc. has dangerous permissions
+  const unverifiedKeywords = ["unverified", "new member", "newcomer", "pending", "unverify"];
+  for (const role of roles) {
+    const nameLower = role.name.toLowerCase();
+    const isUnverifiedRole = unverifiedKeywords.some((kw) => nameLower.includes(kw));
+
+    if (isUnverifiedRole) {
+      const dangerousPerms = role.permissions.filter((p) => DANGEROUS_PERMISSIONS.includes(p));
+      if (dangerousPerms.length > 0) {
+        const hashData = `verification:unverified_perms:${role.id}:${dangerousPerms.sort().join(",")}`;
+        issues.push({
+          severity: "critical",
+          id: `CRIT-${String(issueId++).padStart(3, "0")}`,
+          title: `Unverified Role Has Dangerous Permissions`,
+          affected: `Role: ${role.name} (${role.id})`,
+          issue: `This unverified/new member role has: ${dangerousPerms.join(", ")}`,
+          risk: `All new joins before verification have these dangerous permissions.`,
+          recommendation: `Remove dangerous permissions from unverified role immediately.`,
+          issueKey: `role:${role.id}:verification_dangerous`,
+          permissionHash: computePermissionHash(hashData),
+        });
+      }
+    }
+  }
+
   const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
   issues.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
 
@@ -721,21 +1021,31 @@ function generateChannelsDoc(channels: ChannelData[], serverInfo: ServerData): s
 
 ## Permission Overwrites by Channel
 
+> **Note:** Channels marked "Inherits from category" have no explicit overwrites and use their parent category's permissions.
+
 `;
 
   for (const channel of channels) {
-    if (channel.overwrites.length === 0) continue;
     doc += `### #${channel.name}
 
-**ID:** \`${channel.id}\` | **Type:** ${channel.type}
+**ID:** \`${channel.id}\` | **Type:** ${channel.type}${channel.parentName ? ` | **Category:** ${channel.parentName}` : ""}
 
-| Target | Type | Allow | Deny |
+`;
+    if (channel.overwrites.length === 0) {
+      if (channel.type === "Category") {
+        doc += `*No permission overwrites (uses server defaults)*\n\n`;
+      } else {
+        doc += `*Inherits from category — no explicit overwrites*\n\n`;
+      }
+    } else {
+      doc += `| Target | Type | Allow | Deny |
 |--------|------|-------|------|
 `;
-    for (const ow of channel.overwrites) {
-      doc += `| ${ow.name} | ${ow.type} | ${ow.allow.join(", ") || "-"} | ${ow.deny.join(", ") || "-"} |\n`;
+      for (const ow of channel.overwrites) {
+        doc += `| ${ow.name} | ${ow.type} | ${ow.allow.join(", ") || "-"} | ${ow.deny.join(", ") || "-"} |\n`;
+      }
+      doc += "\n";
     }
-    doc += "\n";
   }
 
   doc += `---
@@ -836,6 +1146,150 @@ function generateConflictsDoc(
       doc += `\n*To unacknowledge, use \`/audit unacknowledge ${issue.id}\`*\n\n---\n\n`;
     }
   }
+
+  return doc;
+}
+
+// Generate HIERARCHY.md - Visual role hierarchy with permission analysis
+function generateHierarchyDoc(roles: RoleData[], serverInfo: ServerData): string {
+  // Sort roles by position (highest first)
+  const sortedRoles = [...roles].sort((a, b) => b.position - a.position);
+
+  let doc = `# Role Hierarchy — ${serverInfo.name}
+
+**Generated:** ${new Date().toISOString()}
+
+This document shows the complete role hierarchy from highest to lowest position.
+Roles higher in the list can manage roles lower in the list (if they have ManageRoles permission).
+
+---
+
+## Hierarchy Overview
+
+\`\`\`
+`;
+
+  // Build ASCII hierarchy
+  for (const role of sortedRoles) {
+    const position = String(role.position).padStart(3, " ");
+    const name = role.name.length > 30 ? role.name.slice(0, 27) + "..." : role.name.padEnd(30, " ");
+    const managed = role.managed ? " [BOT]" : "";
+    const admin = role.permissions.includes("Administrator") ? " [ADMIN]" : "";
+    const members = `(${role.memberCount} members)`;
+
+    doc += `${position}│ ${name}${managed}${admin} ${members}\n`;
+  }
+
+  doc += `\`\`\`
+
+---
+
+## Permission Scope by Position
+
+Shows which roles each ManageRoles-capable role can assign/remove:
+
+| Role | Position | Can Manage | Protected Above |
+|------|----------|------------|-----------------|
+`;
+
+  // Find roles with ManageRoles
+  const manageRolesRoles = sortedRoles.filter(
+    (r) => r.permissions.includes("ManageRoles") || r.permissions.includes("Administrator")
+  );
+
+  for (const role of manageRolesRoles) {
+    if (role.name === "@everyone") continue;
+
+    const canManage = sortedRoles.filter((r) => r.position < role.position && r.name !== "@everyone");
+    const protectedAbove = sortedRoles.filter((r) => r.position >= role.position && r.id !== role.id);
+
+    doc += `| ${role.name} | ${role.position} | ${canManage.length} roles | ${protectedAbove.length} roles |\n`;
+  }
+
+  doc += `
+---
+
+## Hierarchy Inversions
+
+Roles where a lower-positioned role has more dangerous permissions than a higher-positioned role:
+
+`;
+
+  // Check for hierarchy inversions
+  let inversionsFound = false;
+  for (let i = 0; i < sortedRoles.length; i++) {
+    const higherRole = sortedRoles[i];
+    if (higherRole.name === "@everyone" || higherRole.managed) continue;
+
+    const higherDangerous = higherRole.permissions.filter((p) => DANGEROUS_PERMISSIONS.includes(p));
+
+    for (let j = i + 1; j < sortedRoles.length; j++) {
+      const lowerRole = sortedRoles[j];
+      if (lowerRole.name === "@everyone" || lowerRole.managed) continue;
+
+      const lowerDangerous = lowerRole.permissions.filter((p) => DANGEROUS_PERMISSIONS.includes(p));
+      const escalated = lowerDangerous.filter((p) => !higherDangerous.includes(p));
+
+      if (escalated.length > 0) {
+        inversionsFound = true;
+        doc += `### ${lowerRole.name} (pos ${lowerRole.position}) > ${higherRole.name} (pos ${higherRole.position})
+
+**Permissions ${lowerRole.name} has that ${higherRole.name} lacks:**
+${escalated.map((p) => `- ${p}`).join("\n")}
+
+---
+
+`;
+        break; // Only report once per pair
+      }
+    }
+  }
+
+  if (!inversionsFound) {
+    doc += "*No hierarchy inversions detected. Role positions align with permissions.*\n\n";
+  }
+
+  doc += `---
+
+## Staff Role Details
+
+Detailed permission breakdown for roles with moderation capabilities:
+
+`;
+
+  // Find staff roles (those with dangerous perms and not bots)
+  const staffRoles = sortedRoles.filter(
+    (r) =>
+      !r.managed &&
+      r.name !== "@everyone" &&
+      r.permissions.some((p) => DANGEROUS_PERMISSIONS.includes(p))
+  );
+
+  for (const role of staffRoles) {
+    const dangerousPerms = role.permissions.filter((p) => DANGEROUS_PERMISSIONS.includes(p));
+    const otherPerms = role.permissions.filter((p) => !DANGEROUS_PERMISSIONS.includes(p));
+
+    doc += `### ${role.name}
+
+- **Position:** ${role.position}
+- **Members:** ${role.memberCount}
+- **Color:** ${role.color}
+
+**Dangerous Permissions:**
+${dangerousPerms.map((p) => `- ${p}`).join("\n") || "- None"}
+
+**Other Permissions:**
+${otherPerms.slice(0, 10).map((p) => `- ${p}`).join("\n")}${otherPerms.length > 10 ? `\n- ...and ${otherPerms.length - 10} more` : ""}
+
+---
+
+`;
+  }
+
+  doc += `---
+
+*Generated by Pawtropolis Tech security audit system*
+`;
 
   return doc;
 }
@@ -964,6 +1418,7 @@ export async function generateAuditDocs(guild: Guild, outputDir?: string): Promi
   writeFileSync(join(OUTPUT_DIR, "CHANNELS.md"), generateChannelsDoc(channels, serverInfo));
   writeFileSync(join(OUTPUT_DIR, "CONFLICTS.md"), generateConflictsDoc(partitioned, serverInfo));
   writeFileSync(join(OUTPUT_DIR, "SERVER-INFO.md"), generateServerInfoDoc(serverInfo, roles, channels));
+  writeFileSync(join(OUTPUT_DIR, "HIERARCHY.md"), generateHierarchyDoc(roles, serverInfo));
 
   // Count active issues only (not acknowledged ones)
   const active = partitioned.active;
@@ -971,6 +1426,77 @@ export async function generateAuditDocs(guild: Guild, outputDir?: string): Promi
   const high = active.filter((i) => i.severity === "high").length;
   const medium = active.filter((i) => i.severity === "medium").length;
   const low = active.filter((i) => i.severity === "low").length;
+
+  // --- Snapshot and Diff Tracking ---
+
+  // Convert data to snapshot format
+  const rolesSnapshot = roles.map(roleToSnapshot);
+  const channelsSnapshot = channels.map(channelToSnapshot);
+  const issuesSnapshot = issues.map(issueToSnapshot);
+
+  // Get previous snapshot for diff computation
+  const previousSnapshot = getLatestSnapshot(guild.id);
+
+  // Save new snapshot
+  let snapshotId: number | undefined;
+  let diff: SnapshotDiff | undefined;
+  let dangerousChangeCount = 0;
+
+  try {
+    snapshotId = saveSnapshot({
+      guildId: guild.id,
+      roleCount: roles.length,
+      channelCount: channels.length,
+      issueCount: active.length,
+      criticalCount: critical,
+      highCount: high,
+      mediumCount: medium,
+      lowCount: low,
+      rolesSnapshot,
+      channelsSnapshot,
+      issuesSnapshot,
+    });
+
+    // Compute diff if we have a previous snapshot
+    if (previousSnapshot) {
+      const newSnapshot = getLatestSnapshot(guild.id);
+      if (newSnapshot) {
+        diff = computeSnapshotDiff(previousSnapshot, newSnapshot);
+        dangerousChangeCount = getDangerousChanges(diff).length;
+
+        // Generate DIFF.md if there are meaningful changes
+        if (hasMeaningfulChanges(diff)) {
+          const diffMarkdown = generateDiffMarkdown(diff, serverInfo.name);
+          writeFileSync(join(OUTPUT_DIR, "DIFF.md"), diffMarkdown);
+        }
+      }
+    }
+
+    // Record issue history for trend tracking
+    // Count issues by category
+    const roleIssues = issues.filter((i) => i.issueKey.startsWith("role:")).length;
+    const channelIssues = issues.filter((i) => i.issueKey.startsWith("channel:")).length;
+    const hierarchyIssues = issues.filter((i) => i.issueKey.includes("hierarchy")).length;
+    const verificationIssues = issues.filter((i) => i.issueKey.includes("verification")).length;
+
+    recordIssueHistory({
+      guildId: guild.id,
+      criticalCount: critical,
+      highCount: high,
+      mediumCount: medium,
+      lowCount: low,
+      acknowledgedCount: partitioned.acknowledged.length,
+      roleIssues,
+      channelIssues,
+      hierarchyIssues,
+      verificationIssues,
+    });
+
+    // Prune old snapshots to prevent unbounded growth (keep last 30)
+    pruneOldSnapshots(guild.id, 30);
+  } catch {
+    // Snapshot storage is non-critical, don't fail the audit
+  }
 
   return {
     roleCount: roles.length,
@@ -982,6 +1508,9 @@ export async function generateAuditDocs(guild: Guild, outputDir?: string): Promi
     lowCount: low,
     acknowledgedCount: partitioned.acknowledged.length,
     outputDir: OUTPUT_DIR,
+    diff,
+    dangerousChangeCount,
+    snapshotId,
   };
 }
 
