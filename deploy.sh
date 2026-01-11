@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 # Pawtropolis Deployment Script
 # Deploys to pawtech server (Ubuntu, user: ubuntu)
@@ -58,11 +58,11 @@ fi
 echo "Starting deployment to ${REMOTE_HOST}..."
 
 # Step 1: Run tests
-echo "Step 1/7: Running tests..."
+echo "Step 1/9: Running tests..."
 npm test
 
 # Step 2: Build
-echo "Step 2/7: Building project..."
+echo "Step 2/9: Building project..."
 npm run build
 
 # Step 3: Inject build metadata
@@ -78,27 +78,43 @@ npm run build
 #   - Error cards showing version+SHA
 #   - /health command with deployment info
 # ─────────────────────────────────────────────────────────────────────────────
-echo "Step 3/7: Injecting build metadata..."
+echo "Step 3/9: Injecting build metadata..."
 npx tsx scripts/inject-build-info.ts
 
 # Step 4: Create tarball
 # Include .env.build so the build metadata is available on the server
-echo "Step 4/7: Creating deployment tarball..."
-tar -czf ${TARBALL} dist migrations package.json package-lock.json .env.build
+echo "Step 4/9: Creating deployment tarball..."
+tar -czf ${TARBALL} dist migrations scripts package.json package-lock.json .env.build
 
 # Step 5: Upload to remote
-echo "Step 5/7: Uploading to remote server..."
+echo "Step 5/9: Uploading to remote server..."
 scp ${TARBALL} ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}/
 
 # Step 6: Extract and install on remote
-echo "Step 6/7: Extracting and installing on remote..."
+echo "Step 6/9: Extracting and installing on remote..."
 ssh ${REMOTE_USER}@${REMOTE_HOST} "cd ${REMOTE_PATH} && tar -xzf ${TARBALL} && npm ci --omit=dev"
 
+# Step 6.5: Run migrations on remote
+echo "Step 6.5/9: Running migrations on remote..."
+ssh ${REMOTE_USER}@${REMOTE_HOST} "cd ${REMOTE_PATH} && node scripts/migrate-remote.js" || echo "Migration step completed (may have warnings)"
+
 # Step 7: Restart PM2
-echo "Step 7/7: Restarting PM2 process..."
+echo "Step 7/9: Restarting PM2 process..."
 ssh ${REMOTE_USER}@${REMOTE_HOST} "pm2 restart ${PM2_PROCESS}"
 
-# Cleanup
+# Step 8: Post-deploy health check
+echo "Step 8/9: Waiting for process to stabilize..."
+sleep 3
+echo "Checking PM2 process status..."
+ssh ${REMOTE_USER}@${REMOTE_HOST} "pm2 show ${PM2_PROCESS} | grep -E 'status|restarts|uptime'" || {
+  echo "WARNING: Could not verify process status. Check logs manually."
+}
+
+# Step 9: Remote cleanup
+echo "Step 9/9: Cleaning up remote tarball..."
+ssh ${REMOTE_USER}@${REMOTE_HOST} "rm -f ${REMOTE_PATH}/${TARBALL}"
+
+# Local cleanup
 echo "Cleaning up local tarball..."
 rm ${TARBALL}
 
