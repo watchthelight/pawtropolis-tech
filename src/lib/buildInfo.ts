@@ -99,6 +99,13 @@
 
 import { hostname } from "os";
 import { createRequire } from "module";
+import dotenv from "dotenv";
+import path from "node:path";
+
+// Load .env.build for build metadata (git SHA, timestamp, deploy ID)
+// This must happen before getBuildInfo() is called to populate process.env
+// We load it here rather than relying on env.ts import order
+dotenv.config({ path: path.join(process.cwd(), ".env.build"), override: true });
 
 /**
  * BuildInfo contains all metadata about the current build and runtime environment.
@@ -233,19 +240,19 @@ let _buildInfoCache: BuildInfo | null = null;
 /**
  * Reads the package version from package.json.
  *
- * We use createRequire() because we're in ESM and can't use require() directly.
- * This reads the actual package.json file, not a bundled version, so it's
- * always accurate even after npm version bumps.
+ * We use createRequire() with process.cwd() because tsup bundles everything
+ * into a single dist/index.js file, so relative paths from import.meta.url
+ * don't work. process.cwd() is reliable since the bot always runs from project root.
  *
- * GOTCHA: This assumes package.json is in the expected location relative to
- * the compiled output. If you change the build output structure, this might break.
+ * GOTCHA: This assumes you run the bot from the project root directory.
+ * Don't be clever with your working directory.
  */
 function getPackageVersion(): string {
   try {
     // createRequire gives us a require function that works in ESM
-    const require = createRequire(import.meta.url);
-    // Navigate up from dist/lib/ to project root where package.json lives
-    const pkg = require("../../package.json");
+    // Use process.cwd() since tsup bundles into a single file
+    const require = createRequire(path.join(process.cwd(), "package.json"));
+    const pkg = require("./package.json");
     return pkg.version || "0.0.0";
   } catch {
     // If package.json can't be read (shouldn't happen in normal operation),
@@ -384,12 +391,6 @@ export function getBuildInfo(): BuildInfo {
  * a compact representation of the build.
  *
  * @returns String like "v4.9.2 (abc1234)" or "v4.9.2 (dev)" if no SHA
- *
- * @example
- * ```typescript
- * embed.setFooter({ text: getShortBuildId() });
- * // Footer: "v4.9.2 (abc1234)"
- * ```
  */
 export function getShortBuildId(): string {
   const info = getBuildInfo();
@@ -404,14 +405,6 @@ export function getShortBuildId(): string {
  * is not available.
  *
  * @returns Human-readable relative time or null
- *
- * @example
- * ```typescript
- * const age = getBuildAge();
- * if (age) {
- *   console.log(`Built ${age}`); // "Built 2h ago"
- * }
- * ```
  */
 export function getBuildAge(): string | null {
   const info = getBuildInfo();

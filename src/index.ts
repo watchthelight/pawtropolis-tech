@@ -273,6 +273,10 @@ commands.set(developer.data.name, wrapCommand("developer", developer.execute));
 import * as test from "./commands/test.js";
 commands.set(test.data.name, wrapCommand("test", test.execute));
 
+// Skull mode command (random skull reactions)
+import * as skullmode from "./commands/skullmode.js";
+commands.set(skullmode.data.name, wrapCommand("skullmode", skullmode.execute));
+
 client.once(Events.ClientReady, async () => {
   // schema self-heal before anything else
   // sudo make it work
@@ -472,6 +476,20 @@ client.once(Events.ClientReady, async () => {
     );
   }
 
+  // Start security audit scheduler
+  // WHAT: Runs security permission audit every 30 minutes
+  // WHY: Continuous monitoring for dangerous permissions, alerts leadership for critical issues
+  // DOCS: See src/scheduler/securityAuditScheduler.ts
+  try {
+    const { startSecurityAuditScheduler } = await import("./scheduler/securityAuditScheduler.js");
+    startSecurityAuditScheduler(client);
+  } catch (err) {
+    logger.warn(
+      { err },
+      "[startup] security audit scheduler failed to start - continuing without security monitoring"
+    );
+  }
+
   // Initialize banner sync (bot profile + website)
   try {
     await initializeBannerSync(client);
@@ -507,6 +525,9 @@ client.once(Events.ClientReady, async () => {
 
       const { stopStaleApplicationScheduler } = await import("./scheduler/staleApplicationCheck.js");
       stopStaleApplicationScheduler();
+
+      const { stopSecurityAuditScheduler } = await import("./scheduler/securityAuditScheduler.js");
+      stopSecurityAuditScheduler();
 
       // 2. Flush message activity buffer before shutdown
       try {
