@@ -148,19 +148,3 @@ export function getEpochPredicate(
   };
 }
 
-/**
- * WHAT: Clear the metrics epoch for a guild.
- * WHY: Remove epoch filter to show all historical metrics again.
- * HOW: Delete row from metrics_epoch table.
- *
- * @param guildId - Discord guild ID
- */
-export function clearMetricsEpoch(guildId: string): void {
-  try {
-    db.prepare(`DELETE FROM metrics_epoch WHERE guild_id = ?`).run(guildId);
-    logger.info({ guildId }, "[metricsEpoch] epoch cleared");
-  } catch (err) {
-    logger.error({ err, guildId }, "[metricsEpoch] failed to clear epoch");
-    throw err;
-  }
-}

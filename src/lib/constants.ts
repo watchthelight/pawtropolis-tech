@@ -56,6 +56,3 @@ export const BULK_DELETE_ITERATION_DELAY_MS = 1000;
 export const UNCAUGHT_EXCEPTION_EXIT_DELAY_MS = 1000;
 
 // ===== Feature-Specific Constants =====
-
-/** OAuth rate limit: max requests per minute for general endpoints */
-export const OAUTH_RATE_LIMIT_MAX_REQUESTS = 10;

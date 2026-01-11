@@ -177,31 +177,3 @@ export function setNotifyConfig(guildId: string, config: Partial<NotifyConfig>):
   return oldConfig;
 }
 
-/**
- * WHAT: Get all guilds with notification configured
- * WHY: Admin overview / debugging
- *
- * @returns Array of guild IDs with notify_role_id set
- */
-export function getConfiguredGuilds(): string[] {
-  try {
-    // Only guilds with notify_role_id set are "configured". Guilds with just
-    // a forum channel but no role are effectively not using notifications.
-    const rows = db
-      .prepare(
-        `
-      SELECT guild_id
-      FROM guild_config
-      WHERE notify_role_id IS NOT NULL
-    `
-      )
-      .all() as { guild_id: string }[];
-
-    return rows.map((r) => r.guild_id);
-  } catch (err) {
-    // Return empty rather than throw - this is a diagnostic function,
-    // failure shouldn't break calling code.
-    logger.error({ err }, "[notifyConfig] failed to get configured guilds");
-    return [];
-  }
-}

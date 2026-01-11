@@ -462,36 +462,3 @@ export function getLevelRewards(guildId: string, level: number): LevelReward[] {
   return stmt.all(guildId, level) as LevelReward[];
 }
 
-/**
- * Get assignment history for a user
- *
- * Useful for debugging "why do I have this role?" questions.
- * Default limit of 50 is usually enough - if a user has more than 50 role
- * changes, they're either a mod being tested on or something is very wrong.
- */
-export function getAssignmentHistory(
-  guildId: string,
-  userId: string,
-  limit: number = 50
-): RoleAssignment[] {
-  const stmt = db.prepare(`
-    SELECT * FROM role_assignments
-    WHERE guild_id = ? AND user_id = ?
-    ORDER BY created_at DESC
-    LIMIT ?
-  `);
-  return stmt.all(guildId, userId, limit) as RoleAssignment[];
-}
-
-/**
- * Get recent role assignments (for admin monitoring)
- */
-export function getRecentAssignments(guildId: string, limit: number = 100): RoleAssignment[] {
-  const stmt = db.prepare(`
-    SELECT * FROM role_assignments
-    WHERE guild_id = ?
-    ORDER BY created_at DESC
-    LIMIT ?
-  `);
-  return stmt.all(guildId, limit) as RoleAssignment[];
-}

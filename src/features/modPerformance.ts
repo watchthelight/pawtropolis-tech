@@ -33,11 +33,6 @@ export const MOD_ACTIONS = new Set([
 ]);
 
 /**
- * Actions performed by applicants (not moderators)
- */
-export const APPLICANT_ACTIONS = new Set(["app_submitted"]);
-
-/**
  * Moderator metrics shape
  */
 export interface ModMetrics {
@@ -483,3 +478,4 @@ export async function getTopModerators(
 
   return sorted.slice(0, limit);
 }
+
