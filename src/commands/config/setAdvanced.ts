@@ -13,6 +13,8 @@ import {
   type CommandContext,
   replyOrEdit,
   ensureDeferred,
+  withStep,
+  withSql,
   logger,
   setSilentFirstMsgDays,
 } from "./shared.js";
@@ -22,10 +24,14 @@ export async function executeSetFlagsThreshold(ctx: CommandContext<ChatInputComm
    * Sets the silent days threshold for flagging (7-365 days).
    */
   const { interaction } = ctx;
-  await ensureDeferred(interaction);
 
-  ctx.step("get_days");
-  const days = interaction.options.getInteger("days", true);
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
+
+  const days = await withStep(ctx, "get_days", async () => {
+    return interaction.options.getInteger("days", true);
+  });
 
   if (days < 7 || days > 365 || !Number.isInteger(days)) {
     await replyOrEdit(interaction, {
@@ -35,82 +41,121 @@ export async function executeSetFlagsThreshold(ctx: CommandContext<ChatInputComm
     return;
   }
 
-  ctx.step("persist_threshold");
-  try {
-    setSilentFirstMsgDays(interaction.guildId!, days);
-  } catch (err: any) {
-    logger.error(
-      { err, guildId: interaction.guildId, days },
-      "[config] failed to set flags threshold"
-    );
+  const success = await withStep(ctx, "persist_threshold", async () => {
+    try {
+      withSql(ctx, "INSERT/UPDATE flags_threshold", () =>
+        setSilentFirstMsgDays(interaction.guildId!, days)
+      );
+      logger.info(
+        { evt: "config_set_flags_threshold", guildId: interaction.guildId, days },
+        "[config] flags threshold updated"
+      );
+      return true;
+    } catch (err: any) {
+      logger.error(
+        { err, guildId: interaction.guildId, days },
+        "[config] failed to set flags threshold"
+      );
+      await replyOrEdit(interaction, {
+        content: `Failed to set threshold: ${err.message}`,
+        flags: MessageFlags.Ephemeral,
+      });
+      return false;
+    }
+  });
+
+  if (!success) return;
+
+  await withStep(ctx, "reply", async () => {
     await replyOrEdit(interaction, {
-      content: `Failed to set threshold: ${err.message}`,
-      flags: MessageFlags.Ephemeral,
+      content: `Silent days threshold set to **${days} days**\n\nAccounts that stay silent for ${days}+ days before their first message will now be flagged.`,
     });
-    return;
-  }
-
-  logger.info(
-    { evt: "config_set_flags_threshold", guildId: interaction.guildId, days },
-    "[config] flags threshold updated"
-  );
-
-  ctx.step("reply");
-  await replyOrEdit(interaction, {
-    content: `Silent days threshold set to **${days} days**\n\nAccounts that stay silent for ${days}+ days before their first message will now be flagged.`,
   });
 }
 
 export async function executeSetReapplyCooldown(ctx: CommandContext<ChatInputCommandInteraction>) {
   const { interaction } = ctx;
-  await ensureDeferred(interaction);
 
-  const hours = interaction.options.getInteger("hours", true);
-  upsertConfig(interaction.guildId!, { reapply_cooldown_hours: hours });
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
-  logger.info(
-    { evt: "config_set_reapply_cooldown", guildId: interaction.guildId, hours },
-    "[config] reapply cooldown updated"
-  );
+  const hours = await withStep(ctx, "get_hours", async () => {
+    return interaction.options.getInteger("hours", true);
+  });
 
-  await replyOrEdit(interaction, {
-    content: `Reapply cooldown set to **${hours} hours**`,
+  await withStep(ctx, "persist_config", async () => {
+    withSql(ctx, "INSERT/UPDATE guild_config reapply_cooldown_hours", () =>
+      upsertConfig(interaction.guildId!, { reapply_cooldown_hours: hours })
+    );
+    logger.info(
+      { evt: "config_set_reapply_cooldown", guildId: interaction.guildId, hours },
+      "[config] reapply cooldown updated"
+    );
+  });
+
+  await withStep(ctx, "reply", async () => {
+    await replyOrEdit(interaction, {
+      content: `Reapply cooldown set to **${hours} hours**`,
+    });
   });
 }
 
 export async function executeSetMinAccountAge(ctx: CommandContext<ChatInputCommandInteraction>) {
   const { interaction } = ctx;
-  await ensureDeferred(interaction);
 
-  const hours = interaction.options.getInteger("hours", true);
-  upsertConfig(interaction.guildId!, { min_account_age_hours: hours });
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
-  logger.info(
-    { evt: "config_set_min_account_age", guildId: interaction.guildId, hours },
-    "[config] min account age updated"
-  );
+  const hours = await withStep(ctx, "get_hours", async () => {
+    return interaction.options.getInteger("hours", true);
+  });
 
-  const display = hours === 0 ? "disabled (no minimum)" : `**${hours} hours** (${(hours / 24).toFixed(1)} days)`;
-  await replyOrEdit(interaction, {
-    content: `Minimum account age set to ${display}`,
+  await withStep(ctx, "persist_config", async () => {
+    withSql(ctx, "INSERT/UPDATE guild_config min_account_age_hours", () =>
+      upsertConfig(interaction.guildId!, { min_account_age_hours: hours })
+    );
+    logger.info(
+      { evt: "config_set_min_account_age", guildId: interaction.guildId, hours },
+      "[config] min account age updated"
+    );
+  });
+
+  await withStep(ctx, "reply", async () => {
+    const display = hours === 0 ? "disabled (no minimum)" : `**${hours} hours** (${(hours / 24).toFixed(1)} days)`;
+    await replyOrEdit(interaction, {
+      content: `Minimum account age set to ${display}`,
+    });
   });
 }
 
 export async function executeSetMinJoinAge(ctx: CommandContext<ChatInputCommandInteraction>) {
   const { interaction } = ctx;
-  await ensureDeferred(interaction);
 
-  const hours = interaction.options.getInteger("hours", true);
-  upsertConfig(interaction.guildId!, { min_join_age_hours: hours });
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
-  logger.info(
-    { evt: "config_set_min_join_age", guildId: interaction.guildId, hours },
-    "[config] min join age updated"
-  );
+  const hours = await withStep(ctx, "get_hours", async () => {
+    return interaction.options.getInteger("hours", true);
+  });
 
-  const display = hours === 0 ? "disabled (no minimum)" : `**${hours} hours** (${(hours / 24).toFixed(1)} days)`;
-  await replyOrEdit(interaction, {
-    content: `Minimum time in server set to ${display}`,
+  await withStep(ctx, "persist_config", async () => {
+    withSql(ctx, "INSERT/UPDATE guild_config min_join_age_hours", () =>
+      upsertConfig(interaction.guildId!, { min_join_age_hours: hours })
+    );
+    logger.info(
+      { evt: "config_set_min_join_age", guildId: interaction.guildId, hours },
+      "[config] min join age updated"
+    );
+  });
+
+  await withStep(ctx, "reply", async () => {
+    const display = hours === 0 ? "disabled (no minimum)" : `**${hours} hours** (${(hours / 24).toFixed(1)} days)`;
+    await replyOrEdit(interaction, {
+      content: `Minimum time in server set to ${display}`,
+    });
   });
 }
 
@@ -119,22 +164,29 @@ export async function executeSetGateAnswerLength(ctx: CommandContext<ChatInputCo
    * Sets the max character length for gate application answers.
    */
   const { interaction } = ctx;
-  await ensureDeferred(interaction);
 
-  ctx.step("get_length");
-  const length = interaction.options.getInteger("length", true);
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
-  ctx.step("persist_length");
-  upsertConfig(interaction.guildId!, { gate_answer_max_length: length });
+  const length = await withStep(ctx, "get_length", async () => {
+    return interaction.options.getInteger("length", true);
+  });
 
-  logger.info(
-    { evt: "config_set_gate_answer_length", guildId: interaction.guildId, length },
-    "[config] gate answer max length updated"
-  );
+  await withStep(ctx, "persist_length", async () => {
+    withSql(ctx, "INSERT/UPDATE guild_config gate_answer_max_length", () =>
+      upsertConfig(interaction.guildId!, { gate_answer_max_length: length })
+    );
+    logger.info(
+      { evt: "config_set_gate_answer_length", guildId: interaction.guildId, length },
+      "[config] gate answer max length updated"
+    );
+  });
 
-  ctx.step("reply");
-  await replyOrEdit(interaction, {
-    content: `Gate answer max length set to **${length} characters**\n\nApplication answers will be limited to this length.`,
+  await withStep(ctx, "reply", async () => {
+    await replyOrEdit(interaction, {
+      content: `Gate answer max length set to **${length} characters**\n\nApplication answers will be limited to this length.`,
+    });
   });
 }
 
@@ -143,22 +195,29 @@ export async function executeSetBannerSyncInterval(ctx: CommandContext<ChatInput
    * Sets the interval between banner sync updates.
    */
   const { interaction } = ctx;
-  await ensureDeferred(interaction);
 
-  ctx.step("get_minutes");
-  const minutes = interaction.options.getInteger("minutes", true);
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
-  ctx.step("persist_interval");
-  upsertConfig(interaction.guildId!, { banner_sync_interval_minutes: minutes });
+  const minutes = await withStep(ctx, "get_minutes", async () => {
+    return interaction.options.getInteger("minutes", true);
+  });
 
-  logger.info(
-    { evt: "config_set_banner_sync_interval", guildId: interaction.guildId, minutes },
-    "[config] banner sync interval updated"
-  );
+  await withStep(ctx, "persist_interval", async () => {
+    withSql(ctx, "INSERT/UPDATE guild_config banner_sync_interval_minutes", () =>
+      upsertConfig(interaction.guildId!, { banner_sync_interval_minutes: minutes })
+    );
+    logger.info(
+      { evt: "config_set_banner_sync_interval", guildId: interaction.guildId, minutes },
+      "[config] banner sync interval updated"
+    );
+  });
 
-  ctx.step("reply");
-  await replyOrEdit(interaction, {
-    content: `Banner sync interval set to **${minutes} minute${minutes === 1 ? "" : "s"}**\n\nBanner updates will be rate-limited to this interval.`,
+  await withStep(ctx, "reply", async () => {
+    await replyOrEdit(interaction, {
+      content: `Banner sync interval set to **${minutes} minute${minutes === 1 ? "" : "s"}**\n\nBanner updates will be rate-limited to this interval.`,
+    });
   });
 }
 
@@ -167,22 +226,29 @@ export async function executeSetModmailForwardSize(ctx: CommandContext<ChatInput
    * Sets the max size for modmail forward tracking.
    */
   const { interaction } = ctx;
-  await ensureDeferred(interaction);
 
-  ctx.step("get_size");
-  const size = interaction.options.getInteger("size", true);
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
-  ctx.step("persist_size");
-  upsertConfig(interaction.guildId!, { modmail_forward_max_size: size });
+  const size = await withStep(ctx, "get_size", async () => {
+    return interaction.options.getInteger("size", true);
+  });
 
-  logger.info(
-    { evt: "config_set_modmail_forward_size", guildId: interaction.guildId, size },
-    "[config] modmail forward max size updated"
-  );
+  await withStep(ctx, "persist_size", async () => {
+    withSql(ctx, "INSERT/UPDATE guild_config modmail_forward_max_size", () =>
+      upsertConfig(interaction.guildId!, { modmail_forward_max_size: size })
+    );
+    logger.info(
+      { evt: "config_set_modmail_forward_size", guildId: interaction.guildId, size },
+      "[config] modmail forward max size updated"
+    );
+  });
 
-  ctx.step("reply");
-  await replyOrEdit(interaction, {
-    content: `Modmail forward tracking max size set to **${size.toLocaleString()} entries**\n\nOlder entries will be evicted when this limit is reached.`,
+  await withStep(ctx, "reply", async () => {
+    await replyOrEdit(interaction, {
+      content: `Modmail forward tracking max size set to **${size.toLocaleString()} entries**\n\nOlder entries will be evicted when this limit is reached.`,
+    });
   });
 }
 
@@ -191,7 +257,10 @@ export async function executeSetRetryConfig(ctx: CommandContext<ChatInputCommand
    * Configures retry settings for API calls.
    */
   const { interaction } = ctx;
-  await ensureDeferred(interaction);
+
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
   const maxAttempts = interaction.options.getInteger("max_attempts");
   const initialDelay = interaction.options.getInteger("initial_delay_ms");
@@ -199,7 +268,9 @@ export async function executeSetRetryConfig(ctx: CommandContext<ChatInputCommand
 
   if (maxAttempts === null && initialDelay === null && maxDelay === null) {
     // Show current config
-    const cfg = getConfig(interaction.guildId!);
+    const cfg = await withStep(ctx, "get_config", async () => {
+      return withSql(ctx, "SELECT * FROM guild_config", () => getConfig(interaction.guildId!));
+    });
     await replyOrEdit(interaction, {
       content: `**Retry Configuration**\n` +
         `- Max attempts: ${cfg?.retry_max_attempts ?? 3}\n` +
@@ -210,33 +281,35 @@ export async function executeSetRetryConfig(ctx: CommandContext<ChatInputCommand
     return;
   }
 
-  ctx.step("update_config");
-  const updates: Record<string, number> = {};
-  const changes: string[] = [];
+  await withStep(ctx, "update_config", async () => {
+    const updates: Record<string, number> = {};
+    const changes: string[] = [];
 
-  if (maxAttempts !== null) {
-    updates.retry_max_attempts = maxAttempts;
-    changes.push(`Max attempts: ${maxAttempts}`);
-  }
-  if (initialDelay !== null) {
-    updates.retry_initial_delay_ms = initialDelay;
-    changes.push(`Initial delay: ${initialDelay}ms`);
-  }
-  if (maxDelay !== null) {
-    updates.retry_max_delay_ms = maxDelay;
-    changes.push(`Max delay: ${maxDelay}ms`);
-  }
+    if (maxAttempts !== null) {
+      updates.retry_max_attempts = maxAttempts;
+      changes.push(`Max attempts: ${maxAttempts}`);
+    }
+    if (initialDelay !== null) {
+      updates.retry_initial_delay_ms = initialDelay;
+      changes.push(`Initial delay: ${initialDelay}ms`);
+    }
+    if (maxDelay !== null) {
+      updates.retry_max_delay_ms = maxDelay;
+      changes.push(`Max delay: ${maxDelay}ms`);
+    }
 
-  upsertConfig(interaction.guildId!, updates);
+    withSql(ctx, "INSERT/UPDATE guild_config retry settings", () =>
+      upsertConfig(interaction.guildId!, updates)
+    );
 
-  logger.info(
-    { evt: "config_set_retry", guildId: interaction.guildId, updates },
-    "[config] retry config updated"
-  );
+    logger.info(
+      { evt: "config_set_retry", guildId: interaction.guildId, updates },
+      "[config] retry config updated"
+    );
 
-  ctx.step("reply");
-  await replyOrEdit(interaction, {
-    content: `Retry configuration updated:\n${changes.map(c => `- ${c}`).join("\n")}`,
+    await replyOrEdit(interaction, {
+      content: `Retry configuration updated:\n${changes.map(c => `- ${c}`).join("\n")}`,
+    });
   });
 }
 
@@ -245,14 +318,19 @@ export async function executeSetCircuitBreaker(ctx: CommandContext<ChatInputComm
    * Configures circuit breaker settings for API resilience.
    */
   const { interaction } = ctx;
-  await ensureDeferred(interaction);
+
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
   const threshold = interaction.options.getInteger("threshold");
   const resetMs = interaction.options.getInteger("reset_ms");
 
   if (threshold === null && resetMs === null) {
     // Show current config
-    const cfg = getConfig(interaction.guildId!);
+    const cfg = await withStep(ctx, "get_config", async () => {
+      return withSql(ctx, "SELECT * FROM guild_config", () => getConfig(interaction.guildId!));
+    });
     await replyOrEdit(interaction, {
       content: `**Circuit Breaker Configuration**\n` +
         `- Failure threshold: ${cfg?.circuit_breaker_threshold ?? 5} failures\n` +
@@ -262,29 +340,31 @@ export async function executeSetCircuitBreaker(ctx: CommandContext<ChatInputComm
     return;
   }
 
-  ctx.step("update_config");
-  const updates: Record<string, number> = {};
-  const changes: string[] = [];
+  await withStep(ctx, "update_config", async () => {
+    const updates: Record<string, number> = {};
+    const changes: string[] = [];
 
-  if (threshold !== null) {
-    updates.circuit_breaker_threshold = threshold;
-    changes.push(`Failure threshold: ${threshold}`);
-  }
-  if (resetMs !== null) {
-    updates.circuit_breaker_reset_ms = resetMs;
-    changes.push(`Reset time: ${resetMs}ms`);
-  }
+    if (threshold !== null) {
+      updates.circuit_breaker_threshold = threshold;
+      changes.push(`Failure threshold: ${threshold}`);
+    }
+    if (resetMs !== null) {
+      updates.circuit_breaker_reset_ms = resetMs;
+      changes.push(`Reset time: ${resetMs}ms`);
+    }
 
-  upsertConfig(interaction.guildId!, updates);
+    withSql(ctx, "INSERT/UPDATE guild_config circuit_breaker settings", () =>
+      upsertConfig(interaction.guildId!, updates)
+    );
 
-  logger.info(
-    { evt: "config_set_circuit_breaker", guildId: interaction.guildId, updates },
-    "[config] circuit breaker config updated"
-  );
+    logger.info(
+      { evt: "config_set_circuit_breaker", guildId: interaction.guildId, updates },
+      "[config] circuit breaker config updated"
+    );
 
-  ctx.step("reply");
-  await replyOrEdit(interaction, {
-    content: `Circuit breaker configuration updated:\n${changes.map(c => `- ${c}`).join("\n")}`,
+    await replyOrEdit(interaction, {
+      content: `Circuit breaker configuration updated:\n${changes.map(c => `- ${c}`).join("\n")}`,
+    });
   });
 }
 
@@ -293,7 +373,10 @@ export async function executeSetAvatarThresholds(ctx: CommandContext<ChatInputCo
    * Configures avatar scan NSFW detection thresholds.
    */
   const { interaction } = ctx;
-  await ensureDeferred(interaction);
+
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
   const hard = interaction.options.getNumber("hard");
   const soft = interaction.options.getNumber("soft");
@@ -301,7 +384,9 @@ export async function executeSetAvatarThresholds(ctx: CommandContext<ChatInputCo
 
   if (hard === null && soft === null && racy === null) {
     // Show current config
-    const cfg = getConfig(interaction.guildId!);
+    const cfg = await withStep(ctx, "get_config", async () => {
+      return withSql(ctx, "SELECT * FROM guild_config", () => getConfig(interaction.guildId!));
+    });
     await replyOrEdit(interaction, {
       content: `**Avatar Scan Thresholds**\n` +
         `- Hard evidence: ${cfg?.avatar_scan_hard_threshold ?? 0.8}\n` +
@@ -312,33 +397,35 @@ export async function executeSetAvatarThresholds(ctx: CommandContext<ChatInputCo
     return;
   }
 
-  ctx.step("update_config");
-  const updates: Record<string, number> = {};
-  const changes: string[] = [];
+  await withStep(ctx, "update_config", async () => {
+    const updates: Record<string, number> = {};
+    const changes: string[] = [];
 
-  if (hard !== null) {
-    updates.avatar_scan_hard_threshold = hard;
-    changes.push(`Hard evidence: ${hard}`);
-  }
-  if (soft !== null) {
-    updates.avatar_scan_soft_threshold = soft;
-    changes.push(`Soft evidence: ${soft}`);
-  }
-  if (racy !== null) {
-    updates.avatar_scan_racy_threshold = racy;
-    changes.push(`Racy content: ${racy}`);
-  }
+    if (hard !== null) {
+      updates.avatar_scan_hard_threshold = hard;
+      changes.push(`Hard evidence: ${hard}`);
+    }
+    if (soft !== null) {
+      updates.avatar_scan_soft_threshold = soft;
+      changes.push(`Soft evidence: ${soft}`);
+    }
+    if (racy !== null) {
+      updates.avatar_scan_racy_threshold = racy;
+      changes.push(`Racy content: ${racy}`);
+    }
 
-  upsertConfig(interaction.guildId!, updates);
+    withSql(ctx, "INSERT/UPDATE guild_config avatar_scan thresholds", () =>
+      upsertConfig(interaction.guildId!, updates)
+    );
 
-  logger.info(
-    { evt: "config_set_avatar_thresholds", guildId: interaction.guildId, updates },
-    "[config] avatar thresholds updated"
-  );
+    logger.info(
+      { evt: "config_set_avatar_thresholds", guildId: interaction.guildId, updates },
+      "[config] avatar thresholds updated"
+    );
 
-  ctx.step("reply");
-  await replyOrEdit(interaction, {
-    content: `Avatar scan thresholds updated:\n${changes.map(c => `- ${c}`).join("\n")}`,
+    await replyOrEdit(interaction, {
+      content: `Avatar scan thresholds updated:\n${changes.map(c => `- ${c}`).join("\n")}`,
+    });
   });
 }
 
@@ -347,14 +434,19 @@ export async function executeSetFlagRateLimit(ctx: CommandContext<ChatInputComma
    * Configures flag command rate limiting.
    */
   const { interaction } = ctx;
-  await ensureDeferred(interaction);
+
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
   const cooldownMs = interaction.options.getInteger("cooldown_ms");
   const ttlMs = interaction.options.getInteger("ttl_ms");
 
   if (cooldownMs === null && ttlMs === null) {
     // Show current config
-    const cfg = getConfig(interaction.guildId!);
+    const cfg = await withStep(ctx, "get_config", async () => {
+      return withSql(ctx, "SELECT * FROM guild_config", () => getConfig(interaction.guildId!));
+    });
     await replyOrEdit(interaction, {
       content: `**Flag Rate Limit Configuration**\n` +
         `- Cooldown: ${cfg?.flag_rate_limit_ms ?? 2000}ms\n` +
@@ -364,29 +456,31 @@ export async function executeSetFlagRateLimit(ctx: CommandContext<ChatInputComma
     return;
   }
 
-  ctx.step("update_config");
-  const updates: Record<string, number> = {};
-  const changes: string[] = [];
+  await withStep(ctx, "update_config", async () => {
+    const updates: Record<string, number> = {};
+    const changes: string[] = [];
 
-  if (cooldownMs !== null) {
-    updates.flag_rate_limit_ms = cooldownMs;
-    changes.push(`Cooldown: ${cooldownMs}ms`);
-  }
-  if (ttlMs !== null) {
-    updates.flag_cooldown_ttl_ms = ttlMs;
-    changes.push(`Cache TTL: ${ttlMs}ms`);
-  }
+    if (cooldownMs !== null) {
+      updates.flag_rate_limit_ms = cooldownMs;
+      changes.push(`Cooldown: ${cooldownMs}ms`);
+    }
+    if (ttlMs !== null) {
+      updates.flag_cooldown_ttl_ms = ttlMs;
+      changes.push(`Cache TTL: ${ttlMs}ms`);
+    }
 
-  upsertConfig(interaction.guildId!, updates);
+    withSql(ctx, "INSERT/UPDATE guild_config flag_rate_limit settings", () =>
+      upsertConfig(interaction.guildId!, updates)
+    );
 
-  logger.info(
-    { evt: "config_set_flag_rate_limit", guildId: interaction.guildId, updates },
-    "[config] flag rate limit updated"
-  );
+    logger.info(
+      { evt: "config_set_flag_rate_limit", guildId: interaction.guildId, updates },
+      "[config] flag rate limit updated"
+    );
 
-  ctx.step("reply");
-  await replyOrEdit(interaction, {
-    content: `Flag rate limit configuration updated:\n${changes.map(c => `- ${c}`).join("\n")}`,
+    await replyOrEdit(interaction, {
+      content: `Flag rate limit configuration updated:\n${changes.map(c => `- ${c}`).join("\n")}`,
+    });
   });
 }
 
@@ -395,14 +489,19 @@ export async function executeSetNotifyConfig(ctx: CommandContext<ChatInputComman
    * Configures forum post notification settings.
    */
   const { interaction } = ctx;
-  await ensureDeferred(interaction);
+
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
   const cooldownSeconds = interaction.options.getInteger("cooldown_seconds");
   const maxPerHour = interaction.options.getInteger("max_per_hour");
 
   if (cooldownSeconds === null && maxPerHour === null) {
     // Show current config
-    const cfg = getConfig(interaction.guildId!);
+    const cfg = await withStep(ctx, "get_config", async () => {
+      return withSql(ctx, "SELECT * FROM guild_config", () => getConfig(interaction.guildId!));
+    });
     await replyOrEdit(interaction, {
       content: `**Notify Configuration**\n` +
         `- Cooldown: ${cfg?.notify_cooldown_seconds ?? 5} seconds\n` +
@@ -412,35 +511,40 @@ export async function executeSetNotifyConfig(ctx: CommandContext<ChatInputComman
     return;
   }
 
-  ctx.step("update_config");
-  const updates: Record<string, number> = {};
-  const changes: string[] = [];
+  await withStep(ctx, "update_config", async () => {
+    const updates: Record<string, number> = {};
+    const changes: string[] = [];
 
-  if (cooldownSeconds !== null) {
-    updates.notify_cooldown_seconds = cooldownSeconds;
-    changes.push(`Cooldown: ${cooldownSeconds}s`);
-  }
-  if (maxPerHour !== null) {
-    updates.notify_max_per_hour = maxPerHour;
-    changes.push(`Max per hour: ${maxPerHour}`);
-  }
+    if (cooldownSeconds !== null) {
+      updates.notify_cooldown_seconds = cooldownSeconds;
+      changes.push(`Cooldown: ${cooldownSeconds}s`);
+    }
+    if (maxPerHour !== null) {
+      updates.notify_max_per_hour = maxPerHour;
+      changes.push(`Max per hour: ${maxPerHour}`);
+    }
 
-  upsertConfig(interaction.guildId!, updates);
+    withSql(ctx, "INSERT/UPDATE guild_config notify settings", () =>
+      upsertConfig(interaction.guildId!, updates)
+    );
 
-  logger.info(
-    { evt: "config_set_notify_config", guildId: interaction.guildId, updates },
-    "[config] notify config updated"
-  );
+    logger.info(
+      { evt: "config_set_notify_config", guildId: interaction.guildId, updates },
+      "[config] notify config updated"
+    );
 
-  ctx.step("reply");
-  await replyOrEdit(interaction, {
-    content: `Notify configuration updated:\n${changes.map(c => `- ${c}`).join("\n")}`,
+    await replyOrEdit(interaction, {
+      content: `Notify configuration updated:\n${changes.map(c => `- ${c}`).join("\n")}`,
+    });
   });
 }
 
 export async function executeSetAvatarScanAdvanced(ctx: CommandContext<ChatInputCommandInteraction>) {
   const { interaction } = ctx;
-  await ensureDeferred(interaction);
+
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
   const nsfwThreshold = interaction.options.getNumber("nsfw_threshold");
   const skinEdgeThreshold = interaction.options.getNumber("skin_edge_threshold");
@@ -474,14 +578,20 @@ export async function executeSetAvatarScanAdvanced(ctx: CommandContext<ChatInput
     return;
   }
 
-  upsertConfig(interaction.guildId!, updates);
+  await withStep(ctx, "persist_config", async () => {
+    withSql(ctx, "INSERT/UPDATE guild_config avatar_scan_advanced settings", () =>
+      upsertConfig(interaction.guildId!, updates)
+    );
 
-  logger.info(
-    { evt: "config_set_avatar_scan_advanced", guildId: interaction.guildId, updates },
-    "[config] avatar scan advanced settings updated"
-  );
+    logger.info(
+      { evt: "config_set_avatar_scan_advanced", guildId: interaction.guildId, updates },
+      "[config] avatar scan advanced settings updated"
+    );
+  });
 
-  await replyOrEdit(interaction, {
-    content: `Avatar scan settings updated:\n${changes.map(c => `- ${c}`).join("\n")}`,
+  await withStep(ctx, "reply", async () => {
+    await replyOrEdit(interaction, {
+      content: `Avatar scan settings updated:\n${changes.map(c => `- ${c}`).join("\n")}`,
+    });
   });
 }

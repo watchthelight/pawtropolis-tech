@@ -49,6 +49,8 @@ export {
   type CommandContext,
   ensureDeferred,
   replyOrEdit,
+  withStep,
+  withSql,
 } from "../../lib/cmdWrap.js";
 
 export { shortCode } from "../../lib/ids.js";

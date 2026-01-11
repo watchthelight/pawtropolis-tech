@@ -11,6 +11,8 @@ import {
   type CommandContext,
   replyOrEdit,
   ensureDeferred,
+  withStep,
+  withSql,
   logger,
   retrofitModmailParentsForGuild,
 } from "./shared.js";
@@ -22,59 +24,68 @@ export async function executeSetModRoles(ctx: CommandContext<ChatInputCommandInt
    * WHY: Allows guild admins to specify which roles can run all commands.
    */
   const { interaction } = ctx;
-  await ensureDeferred(interaction);
 
-  ctx.step("gather_roles");
-  const roles = [];
-  for (let i = 1; i <= 5; i++) {
-    const role = interaction.options.getRole(`role${i}`);
-    if (role) {
-      roles.push(role.id);
-      logger.info(
-        {
-          evt: "config_set_mod_role",
-          guildId: interaction.guildId,
-          roleId: role.id,
-          roleName: role.name,
-        },
-        "[config] adding mod role"
-      );
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
+
+  const roles = await withStep(ctx, "gather_roles", async () => {
+    const collected = [];
+    for (let i = 1; i <= 5; i++) {
+      const role = interaction.options.getRole(`role${i}`);
+      if (role) {
+        collected.push(role.id);
+        logger.info(
+          {
+            evt: "config_set_mod_role",
+            guildId: interaction.guildId,
+            roleId: role.id,
+            roleName: role.name,
+          },
+          "[config] adding mod role"
+        );
+      }
     }
-  }
+    return collected;
+  });
 
   if (roles.length === 0) {
     await replyOrEdit(interaction, { content: "At least one role is required." });
     return;
   }
 
-  ctx.step("persist_roles");
-  const csv = roles.join(",");
-  upsertConfig(interaction.guildId!, { mod_role_ids: csv });
-
-  logger.info(
-    { evt: "config_set_mod_roles", guildId: interaction.guildId, roleIds: roles, csv },
-    "[config] mod roles updated"
-  );
+  await withStep(ctx, "persist_roles", async () => {
+    const csv = roles.join(",");
+    withSql(ctx, "INSERT/UPDATE guild_config mod_role_ids", () =>
+      upsertConfig(interaction.guildId!, { mod_role_ids: csv })
+    );
+    logger.info(
+      { evt: "config_set_mod_roles", guildId: interaction.guildId, roleIds: roles, csv },
+      "[config] mod roles updated"
+    );
+  });
 
   // Update permissions on modmail parent channels
-  ctx.step("retrofit_modmail_perms");
-  try {
-    await retrofitModmailParentsForGuild(interaction.guild!);
-    logger.info(
-      { evt: "config_retrofit_modmail", guildId: interaction.guildId },
-      "[config] retrofitted modmail parent permissions after mod roles update"
-    );
-  } catch (err) {
-    logger.warn(
-      { err, guildId: interaction.guildId },
-      "[config] failed to retrofit modmail permissions"
-    );
-  }
+  await withStep(ctx, "retrofit_modmail_perms", async () => {
+    try {
+      await retrofitModmailParentsForGuild(interaction.guild!);
+      logger.info(
+        { evt: "config_retrofit_modmail", guildId: interaction.guildId },
+        "[config] retrofitted modmail parent permissions after mod roles update"
+      );
+    } catch (err) {
+      logger.warn(
+        { err, guildId: interaction.guildId },
+        "[config] failed to retrofit modmail permissions"
+      );
+    }
+  });
 
-  ctx.step("reply");
-  const roleList = roles.map((id) => `<@&${id}>`).join(", ");
-  await replyOrEdit(interaction, {
-    content: `Moderator roles updated: ${roleList}\n\nUsers with any of these roles can now run all commands.`,
+  await withStep(ctx, "reply", async () => {
+    const roleList = roles.map((id) => `<@&${id}>`).join(", ");
+    await replyOrEdit(interaction, {
+      content: `Moderator roles updated: ${roleList}\n\nUsers with any of these roles can now run all commands.`,
+    });
   });
 }
 
@@ -84,61 +95,90 @@ export async function executeSetGatekeeper(ctx: CommandContext<ChatInputCommandI
    * WHAT: Sets the gatekeeper role in guild config.
    */
   const { interaction } = ctx;
-  await ensureDeferred(interaction);
 
-  ctx.step("get_role");
-  const role = interaction.options.getRole("role", true);
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
-  ctx.step("persist_role");
-  upsertConfig(interaction.guildId!, { gatekeeper_role_id: role.id });
+  const role = await withStep(ctx, "get_role", async () => {
+    return interaction.options.getRole("role", true);
+  });
 
-  logger.info(
-    {
-      evt: "config_set_gatekeeper",
-      guildId: interaction.guildId,
-      roleId: role.id,
-      roleName: role.name,
-    },
-    "[config] gatekeeper role updated"
-  );
+  await withStep(ctx, "persist_role", async () => {
+    withSql(ctx, "INSERT/UPDATE guild_config gatekeeper_role_id", () =>
+      upsertConfig(interaction.guildId!, { gatekeeper_role_id: role.id })
+    );
+    logger.info(
+      {
+        evt: "config_set_gatekeeper",
+        guildId: interaction.guildId,
+        roleId: role.id,
+        roleName: role.name,
+      },
+      "[config] gatekeeper role updated"
+    );
+  });
 
-  ctx.step("reply");
-  await replyOrEdit(interaction, {
-    content: `Gatekeeper role set to <@&${role.id}>`,
+  await withStep(ctx, "reply", async () => {
+    await replyOrEdit(interaction, {
+      content: `Gatekeeper role set to <@&${role.id}>`,
+    });
   });
 }
 
 export async function executeSetReviewerRole(ctx: CommandContext<ChatInputCommandInteraction>) {
   const { interaction } = ctx;
-  await ensureDeferred(interaction);
 
-  const role = interaction.options.getRole("role", true);
-  upsertConfig(interaction.guildId!, { reviewer_role_id: role.id });
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
-  logger.info(
-    { evt: "config_set_reviewer_role", guildId: interaction.guildId, roleId: role.id },
-    "[config] reviewer role updated"
-  );
+  const role = await withStep(ctx, "get_role", async () => {
+    return interaction.options.getRole("role", true);
+  });
 
-  await replyOrEdit(interaction, {
-    content: `Reviewer role set to <@&${role.id}>`,
+  await withStep(ctx, "persist_role", async () => {
+    withSql(ctx, "INSERT/UPDATE guild_config reviewer_role_id", () =>
+      upsertConfig(interaction.guildId!, { reviewer_role_id: role.id })
+    );
+    logger.info(
+      { evt: "config_set_reviewer_role", guildId: interaction.guildId, roleId: role.id },
+      "[config] reviewer role updated"
+    );
+  });
+
+  await withStep(ctx, "reply", async () => {
+    await replyOrEdit(interaction, {
+      content: `Reviewer role set to <@&${role.id}>`,
+    });
   });
 }
 
 export async function executeSetLeadershipRole(ctx: CommandContext<ChatInputCommandInteraction>) {
   const { interaction } = ctx;
-  await ensureDeferred(interaction);
 
-  const role = interaction.options.getRole("role", true);
-  upsertConfig(interaction.guildId!, { leadership_role_id: role.id });
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
-  logger.info(
-    { evt: "config_set_leadership_role", guildId: interaction.guildId, roleId: role.id },
-    "[config] leadership role updated"
-  );
+  const role = await withStep(ctx, "get_role", async () => {
+    return interaction.options.getRole("role", true);
+  });
 
-  await replyOrEdit(interaction, {
-    content: `Leadership role set to <@&${role.id}>`,
+  await withStep(ctx, "persist_role", async () => {
+    withSql(ctx, "INSERT/UPDATE guild_config leadership_role_id", () =>
+      upsertConfig(interaction.guildId!, { leadership_role_id: role.id })
+    );
+    logger.info(
+      { evt: "config_set_leadership_role", guildId: interaction.guildId, roleId: role.id },
+      "[config] leadership role updated"
+    );
+  });
+
+  await withStep(ctx, "reply", async () => {
+    await replyOrEdit(interaction, {
+      content: `Leadership role set to <@&${role.id}>`,
+    });
   });
 }
 
@@ -147,38 +187,56 @@ export async function executeSetBotDevRole(ctx: CommandContext<ChatInputCommandI
    * Sets the role to ping on new applications (when ping_dev_on_app is enabled).
    */
   const { interaction } = ctx;
-  await ensureDeferred(interaction);
 
-  ctx.step("get_role");
-  const role = interaction.options.getRole("role", true);
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
-  ctx.step("persist_role");
-  upsertConfig(interaction.guildId!, { bot_dev_role_id: role.id });
+  const role = await withStep(ctx, "get_role", async () => {
+    return interaction.options.getRole("role", true);
+  });
 
-  logger.info(
-    { evt: "config_set_bot_dev_role", guildId: interaction.guildId, roleId: role.id, roleName: role.name },
-    "[config] bot dev role updated"
-  );
+  await withStep(ctx, "persist_role", async () => {
+    withSql(ctx, "INSERT/UPDATE guild_config bot_dev_role_id", () =>
+      upsertConfig(interaction.guildId!, { bot_dev_role_id: role.id })
+    );
+    logger.info(
+      { evt: "config_set_bot_dev_role", guildId: interaction.guildId, roleId: role.id, roleName: role.name },
+      "[config] bot dev role updated"
+    );
+  });
 
-  ctx.step("reply");
-  await replyOrEdit(interaction, {
-    content: `Bot Dev role set to <@&${role.id}>\n\nThis role will be pinged on new applications when \`/config set pingdevonapp enabled:true\` is set.`,
+  await withStep(ctx, "reply", async () => {
+    await replyOrEdit(interaction, {
+      content: `Bot Dev role set to <@&${role.id}>\n\nThis role will be pinged on new applications when \`/config set pingdevonapp enabled:true\` is set.`,
+    });
   });
 }
 
 export async function executeSetNotifyRole(ctx: CommandContext<ChatInputCommandInteraction>) {
   const { interaction } = ctx;
-  await ensureDeferred(interaction);
 
-  const role = interaction.options.getRole("role", true);
-  upsertConfig(interaction.guildId!, { notify_role_id: role.id });
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
-  logger.info(
-    { evt: "config_set_notify_role", guildId: interaction.guildId, roleId: role.id },
-    "[config] notify role updated"
-  );
+  const role = await withStep(ctx, "get_role", async () => {
+    return interaction.options.getRole("role", true);
+  });
 
-  await replyOrEdit(interaction, {
-    content: `Notification role set to <@&${role.id}>`,
+  await withStep(ctx, "persist_role", async () => {
+    withSql(ctx, "INSERT/UPDATE guild_config notify_role_id", () =>
+      upsertConfig(interaction.guildId!, { notify_role_id: role.id })
+    );
+    logger.info(
+      { evt: "config_set_notify_role", guildId: interaction.guildId, roleId: role.id },
+      "[config] notify role updated"
+    );
+  });
+
+  await withStep(ctx, "reply", async () => {
+    await replyOrEdit(interaction, {
+      content: `Notification role set to <@&${role.id}>`,
+    });
   });
 }

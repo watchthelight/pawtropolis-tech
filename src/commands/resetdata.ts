@@ -16,7 +16,7 @@ import {
   PermissionFlagsBits,
   type GuildMember,
 } from "discord.js";
-import { withStep, type CommandContext } from "../lib/cmdWrap.js";
+import { withStep, withSql, type CommandContext } from "../lib/cmdWrap.js";
 import { setMetricsEpoch } from "../features/metricsEpoch.js";
 import { __test__clearModMetricsCache as clearModMetricsCache } from "../features/modPerformance.js";
 import { db } from "../db/db.js";
@@ -48,7 +48,9 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   const { interaction } = ctx;
 
   // Defer reply (this might take a moment)
-  await interaction.deferReply({ ephemeral: true });
+  await withStep(ctx, "defer", async () => {
+    await interaction.deferReply({ ephemeral: true });
+  });
 
   const password = interaction.options.getString("password", true);
   const guildId = interaction.guildId;
@@ -140,19 +142,19 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   // queries respect the epoch, but it keeps the DB clean and avoids confusion
   // when debugging.
   await withStep(ctx, "clear_db_cache", async () => {
-    db.prepare(`DELETE FROM mod_metrics WHERE guild_id = ?`).run(guildId);
+    withSql(ctx, "DELETE FROM mod_metrics", () =>
+      db.prepare(`DELETE FROM mod_metrics WHERE guild_id = ?`).run(guildId)
+    );
   });
 
-  // Log to audit trail. Using "modmail_close" as action type is a hack -
-  // ideally we'd add "metrics_reset" to the ActionType enum, but this works
-  // for now since the meta field clarifies what actually happened.
+  // Log to audit trail with proper action type
   await withStep(ctx, "log_action", async () => {
     if (!interaction.guild) return;
 
     await logActionPretty(interaction.guild, {
       actorId: interaction.user.id,
-      action: "modmail_close",
-      meta: { action_type: "metrics_reset", epoch: epoch.toISOString() },
+      action: "metrics_reset",
+      meta: { epoch: epoch.toISOString() },
     });
   });
 

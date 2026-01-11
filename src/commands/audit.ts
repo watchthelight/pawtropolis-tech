@@ -24,7 +24,7 @@ import {
 } from "discord.js";
 import { logger } from "../lib/logger.js";
 import { postPermissionDenied } from "../lib/permissionCard.js";
-import { type CommandContext } from "../lib/cmdWrap.js";
+import { type CommandContext, withStep, withSql } from "../lib/cmdWrap.js";
 import { ROLE_IDS, shouldBypass } from "../lib/roles.js";
 import {
   analyzeMember,
@@ -51,6 +51,16 @@ import {
 import { checkCooldown, formatCooldown, COOLDOWNS } from "../lib/rateLimiter.js";
 import { generateAuditDocs, commitAndPushDocs, analyzeSecurityOnly, type SecurityIssue } from "../features/serverAuditDocs.js";
 import { acknowledgeIssue, unacknowledgeIssue, getAcknowledgedIssues } from "../store/acknowledgedSecurityStore.js";
+import {
+  getLatestSnapshot,
+  getSnapshotHistory,
+  getIssueHistory,
+} from "../store/securitySnapshotStore.js";
+import {
+  computeSnapshotDiff,
+  getDangerousChanges,
+  hasMeaningfulChanges,
+} from "../features/securityDiff.js";
 
 // Allowed role IDs (Admin+ and Server Dev)
 // Uses centralized ROLE_IDS from roles.ts for consistency
@@ -120,6 +130,24 @@ export const data = new SlashCommandBuilder()
           .setDescription("Issue ID to unacknowledge (e.g., CRIT-001 or LOW-008)")
           .setRequired(true)
       )
+  )
+  .addSubcommand((sub) =>
+    sub
+      .setName("trends")
+      .setDescription("Show security issue trends over time")
+      .addIntegerOption((opt) =>
+        opt
+          .setName("days")
+          .setDescription("Number of days to show (default: 7)")
+          .setRequired(false)
+          .setMinValue(1)
+          .setMaxValue(30)
+      )
+  )
+  .addSubcommand((sub) =>
+    sub
+      .setName("diff")
+      .setDescription("Show permission changes since last audit")
   );
 
 export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) {
@@ -138,16 +166,23 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
 
   // IMPORTANT: Defer EARLY for slow subcommands to avoid 3-second timeout
   // Members/NSFW show confirmation buttons first, so they defer later
-  const deferEarly = ["security", "acknowledge", "unacknowledge"].includes(subcommand);
+  const deferEarly = ["security", "acknowledge", "unacknowledge", "trends", "diff"].includes(subcommand);
   if (deferEarly) {
-    const isEphemeral = subcommand === "unacknowledge";
-    await interaction.deferReply({ ephemeral: isEphemeral });
+    await withStep(ctx, "defer_early", async () => {
+      const isEphemeral = subcommand === "unacknowledge";
+      await interaction.deferReply({ ephemeral: isEphemeral });
+    });
   }
 
   // Check if user has an allowed role or is bot owner/server dev
-  const member = await guild.members.fetch(user.id);
-  const hasAllowedRole = member.roles.cache.some((role) => ALLOWED_ROLES.includes(role.id));
-  const canBypass = shouldBypass(user.id);
+  const permissionResult = await withStep(ctx, "permission_check", async () => {
+    const member = await guild.members.fetch(user.id);
+    const hasAllowedRole = member.roles.cache.some((role) => ALLOWED_ROLES.includes(role.id));
+    const canBypass = shouldBypass(user.id);
+    return { member, hasAllowedRole, canBypass };
+  });
+
+  const { member, hasAllowedRole, canBypass } = permissionResult;
 
   if (!hasAllowedRole && !canBypass) {
     const descriptions: Record<string, string> = {
@@ -178,231 +213,453 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
 
   // Handle security subcommand (generates docs, doesn't need session tracking)
   if (subcommand === "security") {
-    // Already deferred above
+    await withStep(ctx, "handle_security", async () => {
+      // Already deferred above
 
-    // Helper to update progress with verbose status
-    const updateProgress = async (step: string, detail?: string) => {
-      const embed = new EmbedBuilder()
-        .setTitle("🔄 Security Audit in Progress")
-        .setDescription(`**${step}**${detail ? `\n\`${detail}\`` : ""}`)
-        .setColor(0x3B82F6)
-        .setTimestamp();
+      // Helper to update progress with verbose status
+      const updateProgress = async (step: string, detail?: string) => {
+        const embed = new EmbedBuilder()
+          .setTitle("🔄 Security Audit in Progress")
+          .setDescription(`**${step}**${detail ? `\n\`${detail}\`` : ""}`)
+          .setColor(0x3B82F6)
+          .setTimestamp();
+
+        try {
+          await interaction.editReply({ embeds: [embed] });
+        } catch {
+          // Interaction may have expired, ignore
+        }
+      };
 
       try {
-        await interaction.editReply({ embeds: [embed] });
-      } catch {
-        // Interaction may have expired, ignore
-      }
-    };
+        logger.info({ userId: user.id, guildId }, "[audit:security] Starting security audit");
 
-    try {
-      logger.info({ userId: user.id, guildId }, "[audit:security] Starting security audit");
+        // Step 1: Fetch roles
+        await updateProgress("Fetching server roles", `Analyzing ${guild.name}...`);
 
-      // Step 1: Fetch roles
-      await updateProgress("Fetching server roles", `Analyzing ${guild.name}...`);
+        // Step 2: Generate docs (includes fetching channels, analyzing)
+        await updateProgress("Analyzing permissions", "Scanning roles and channels...");
+        const result = await generateAuditDocs(guild);
 
-      // Step 2: Generate docs (includes fetching channels, analyzing)
-      await updateProgress("Analyzing permissions", "Scanning roles and channels...");
-      const result = await generateAuditDocs(guild);
+        await updateProgress("Documentation generated", `${result.roleCount} roles, ${result.channelCount} channels, ${result.issueCount} issues`);
 
-      await updateProgress("Documentation generated", `${result.roleCount} roles, ${result.channelCount} channels, ${result.issueCount} issues`);
+        // Step 3: Commit and push to GitHub with verbose progress
+        const pushResult = await commitAndPushDocs(result, async (step, detail) => {
+          await updateProgress(step, detail);
+        });
 
-      // Step 3: Commit and push to GitHub with verbose progress
-      const pushResult = await commitAndPushDocs(result, async (step, detail) => {
-        await updateProgress(step, detail);
-      });
+        const embed = new EmbedBuilder()
+          .setTitle("✅ Security Audit Complete")
+          .setColor(0x22C55E)
+          .addFields(
+            { name: "Roles", value: result.roleCount.toLocaleString(), inline: true },
+            { name: "Channels", value: result.channelCount.toLocaleString(), inline: true },
+            { name: "Active Issues", value: result.issueCount.toLocaleString(), inline: true },
+            {
+              name: "Issue Breakdown",
+              value: [
+                `🔴 Critical: ${result.criticalCount}`,
+                `🟠 High: ${result.highCount}`,
+                `🟡 Medium: ${result.mediumCount}`,
+                `🟢 Low: ${result.lowCount}`,
+                `✅ Acknowledged: ${result.acknowledgedCount}`,
+              ].join("\n"),
+              inline: false,
+            }
+          )
+          .setTimestamp();
 
-      const embed = new EmbedBuilder()
-        .setTitle("✅ Security Audit Complete")
-        .setColor(0x22C55E)
-        .addFields(
-          { name: "Roles", value: result.roleCount.toLocaleString(), inline: true },
-          { name: "Channels", value: result.channelCount.toLocaleString(), inline: true },
-          { name: "Active Issues", value: result.issueCount.toLocaleString(), inline: true },
-          {
-            name: "Issue Breakdown",
-            value: [
-              `🔴 Critical: ${result.criticalCount}`,
-              `🟠 High: ${result.highCount}`,
-              `🟡 Medium: ${result.mediumCount}`,
-              `🟢 Low: ${result.lowCount}`,
-              `✅ Acknowledged: ${result.acknowledgedCount}`,
-            ].join("\n"),
+        // Add GitHub link or error
+        if (pushResult.success && pushResult.docsUrl) {
+          embed.setDescription(`Server documentation has been updated and pushed to GitHub.`);
+          embed.addFields({
+            name: "📎 View Report",
+            value: `[View CONFLICTS.md on GitHub](${pushResult.docsUrl})`,
             inline: false,
-          }
-        )
-        .setTimestamp();
+          });
+        } else if (pushResult.error === "No changes to commit") {
+          embed.setDescription("Server documentation regenerated. No changes detected since last audit.");
+        } else if (pushResult.error) {
+          embed.setDescription("Server documentation regenerated but push to GitHub failed.");
+          embed.addFields({
+            name: "⚠️ Push Error",
+            value: pushResult.error,
+            inline: false,
+          });
+          embed.setColor(0xF59E0B); // Warning color
+        } else {
+          embed.setDescription("Server documentation regenerated. GitHub push not configured.");
+        }
 
-      // Add GitHub link or error
-      if (pushResult.success && pushResult.docsUrl) {
-        embed.setDescription(`Server documentation has been updated and pushed to GitHub.`);
-        embed.addFields({
-          name: "📎 View Report",
-          value: `[View CONFLICTS.md on GitHub](${pushResult.docsUrl})`,
-          inline: false,
+        await interaction.editReply({ embeds: [embed] });
+
+        logger.info(
+          { userId: user.id, guildId, ...result, pushResult },
+          "[audit:security] Security audit complete"
+        );
+      } catch (err) {
+        logger.error({ err, userId: user.id, guildId }, "[audit:security] Failed to generate docs");
+        await interaction.editReply({
+          content: `❌ Failed to generate documentation: ${err instanceof Error ? err.message : "Unknown error"}`,
         });
-      } else if (pushResult.error === "No changes to commit") {
-        embed.setDescription("Server documentation regenerated. No changes detected since last audit.");
-      } else if (pushResult.error) {
-        embed.setDescription("Server documentation regenerated but push to GitHub failed.");
-        embed.addFields({
-          name: "⚠️ Push Error",
-          value: pushResult.error,
-          inline: false,
-        });
-        embed.setColor(0xF59E0B); // Warning color
-      } else {
-        embed.setDescription("Server documentation regenerated. GitHub push not configured.");
       }
-
-      await interaction.editReply({ embeds: [embed] });
-
-      logger.info(
-        { userId: user.id, guildId, ...result, pushResult },
-        "[audit:security] Security audit complete"
-      );
-    } catch (err) {
-      logger.error({ err, userId: user.id, guildId }, "[audit:security] Failed to generate docs");
-      await interaction.editReply({
-        content: `❌ Failed to generate documentation: ${err instanceof Error ? err.message : "Unknown error"}`,
-      });
-    }
+    });
     return;
   }
 
   // Handle acknowledge subcommand
   if (subcommand === "acknowledge") {
-    // Already deferred above
+    await withStep(ctx, "handle_acknowledge", async () => {
+      // Already deferred above
 
-    const issueId = interaction.options.getString("issue", true).toUpperCase();
-    const reason = interaction.options.getString("reason") ?? undefined;
+      const issueId = interaction.options.getString("issue", true).toUpperCase();
+      const reason = interaction.options.getString("reason") ?? undefined;
 
-    try {
-      // Run fresh analysis to get current issues
-      const issues = await analyzeSecurityOnly(guild);
-      const issue = issues.find((i) => i.id === issueId);
+      try {
+        // Run fresh analysis to get current issues
+        const issues = await analyzeSecurityOnly(guild);
+        const issue = issues.find((i) => i.id === issueId);
 
-      if (!issue) {
-        await interaction.editReply({
-          content: `❌ Issue \`${issueId}\` not found. Run \`/audit security\` first to see current issues.`,
+        if (!issue) {
+          await interaction.editReply({
+            content: `❌ Issue \`${issueId}\` not found. Run \`/audit security\` first to see current issues.`,
+          });
+          return;
+        }
+
+        // Check if already acknowledged with same hash
+        const existing = getAcknowledgedIssues(guildId);
+        const existingAck = existing.get(issue.issueKey);
+        if (existingAck && existingAck.permissionHash === issue.permissionHash) {
+          await interaction.editReply({
+            content: `⚠️ Issue \`${issueId}\` is already acknowledged.\n` +
+              `**Acknowledged by:** <@${existingAck.acknowledgedBy}>\n` +
+              (existingAck.reason ? `**Reason:** ${existingAck.reason}` : ""),
+          });
+          return;
+        }
+
+        // Acknowledge the issue
+        acknowledgeIssue({
+          guildId,
+          issueKey: issue.issueKey,
+          severity: issue.severity,
+          title: issue.title,
+          permissionHash: issue.permissionHash,
+          acknowledgedBy: user.id,
+          reason,
         });
-        return;
-      }
 
-      // Check if already acknowledged with same hash
-      const existing = getAcknowledgedIssues(guildId);
-      const existingAck = existing.get(issue.issueKey);
-      if (existingAck && existingAck.permissionHash === issue.permissionHash) {
+        const embed = new EmbedBuilder()
+          .setTitle("✅ Issue Acknowledged")
+          .setColor(0x22C55E)
+          .addFields(
+            { name: "Issue", value: `[${issue.id}] ${issue.title}`, inline: false },
+            { name: "Affected", value: issue.affected, inline: false },
+            { name: "Acknowledged by", value: `<@${user.id}>`, inline: true }
+          )
+          .setTimestamp();
+
+        if (reason) {
+          embed.addFields({ name: "Reason", value: reason, inline: false });
+        }
+
+        embed.setFooter({ text: "This issue will be marked as acknowledged in future audits." });
+
+        await interaction.editReply({ embeds: [embed] });
+
+        logger.info(
+          { userId: user.id, guildId, issueId, issueKey: issue.issueKey, reason },
+          "[audit:acknowledge] Issue acknowledged"
+        );
+      } catch (err) {
+        logger.error({ err, userId: user.id, guildId, issueId }, "[audit:acknowledge] Failed to acknowledge");
         await interaction.editReply({
-          content: `⚠️ Issue \`${issueId}\` is already acknowledged.\n` +
-            `**Acknowledged by:** <@${existingAck.acknowledgedBy}>\n` +
-            (existingAck.reason ? `**Reason:** ${existingAck.reason}` : ""),
+          content: `❌ Failed to acknowledge issue: ${err instanceof Error ? err.message : "Unknown error"}`,
         });
-        return;
       }
-
-      // Acknowledge the issue
-      acknowledgeIssue({
-        guildId,
-        issueKey: issue.issueKey,
-        severity: issue.severity,
-        title: issue.title,
-        permissionHash: issue.permissionHash,
-        acknowledgedBy: user.id,
-        reason,
-      });
-
-      const embed = new EmbedBuilder()
-        .setTitle("✅ Issue Acknowledged")
-        .setColor(0x22C55E)
-        .addFields(
-          { name: "Issue", value: `[${issue.id}] ${issue.title}`, inline: false },
-          { name: "Affected", value: issue.affected, inline: false },
-          { name: "Acknowledged by", value: `<@${user.id}>`, inline: true }
-        )
-        .setTimestamp();
-
-      if (reason) {
-        embed.addFields({ name: "Reason", value: reason, inline: false });
-      }
-
-      embed.setFooter({ text: "This issue will be marked as acknowledged in future audits." });
-
-      await interaction.editReply({ embeds: [embed] });
-
-      logger.info(
-        { userId: user.id, guildId, issueId, issueKey: issue.issueKey, reason },
-        "[audit:acknowledge] Issue acknowledged"
-      );
-    } catch (err) {
-      logger.error({ err, userId: user.id, guildId, issueId }, "[audit:acknowledge] Failed to acknowledge");
-      await interaction.editReply({
-        content: `❌ Failed to acknowledge issue: ${err instanceof Error ? err.message : "Unknown error"}`,
-      });
-    }
+    });
     return;
   }
 
   // Handle unacknowledge subcommand
   if (subcommand === "unacknowledge") {
-    // Already deferred above
+    await withStep(ctx, "handle_unacknowledge", async () => {
+      // Already deferred above
 
-    const issueId = interaction.options.getString("issue", true).toUpperCase();
+      const issueId = interaction.options.getString("issue", true).toUpperCase();
 
-    try {
-      // Run fresh analysis to get current issues
-      const issues = await analyzeSecurityOnly(guild);
-      const issue = issues.find((i) => i.id === issueId);
+      try {
+        // Run fresh analysis to get current issues
+        const issues = await analyzeSecurityOnly(guild);
+        const issue = issues.find((i) => i.id === issueId);
 
-      if (!issue) {
+        if (!issue) {
+          await interaction.editReply({
+            content: `❌ Issue \`${issueId}\` not found. Run \`/audit security\` first to see current issues.`,
+          });
+          return;
+        }
+
+        // Check if acknowledged
+        const existing = getAcknowledgedIssues(guildId);
+        const existingAck = existing.get(issue.issueKey);
+        if (!existingAck) {
+          await interaction.editReply({
+            content: `⚠️ Issue \`${issueId}\` is not currently acknowledged.`,
+          });
+          return;
+        }
+
+        // Unacknowledge the issue
+        const removed = unacknowledgeIssue(guildId, issue.issueKey);
+
+        if (removed) {
+          const embed = new EmbedBuilder()
+            .setTitle("🔄 Acknowledgment Removed")
+            .setColor(0xF59E0B)
+            .addFields(
+              { name: "Issue", value: `[${issue.id}] ${issue.title}`, inline: false },
+              { name: "Affected", value: issue.affected, inline: false },
+              { name: "Removed by", value: `<@${user.id}>`, inline: true }
+            )
+            .setFooter({ text: "This issue will appear in future audits again." })
+            .setTimestamp();
+
+          await interaction.editReply({ embeds: [embed] });
+
+          logger.info(
+            { userId: user.id, guildId, issueId, issueKey: issue.issueKey },
+            "[audit:unacknowledge] Acknowledgment removed"
+          );
+        } else {
+          await interaction.editReply({
+            content: `⚠️ Could not remove acknowledgment for \`${issueId}\`.`,
+          });
+        }
+      } catch (err) {
+        logger.error({ err, userId: user.id, guildId, issueId }, "[audit:unacknowledge] Failed to unacknowledge");
         await interaction.editReply({
-          content: `❌ Issue \`${issueId}\` not found. Run \`/audit security\` first to see current issues.`,
+          content: `❌ Failed to unacknowledge issue: ${err instanceof Error ? err.message : "Unknown error"}`,
         });
-        return;
       }
+    });
+    return;
+  }
 
-      // Check if acknowledged
-      const existing = getAcknowledgedIssues(guildId);
-      const existingAck = existing.get(issue.issueKey);
-      if (!existingAck) {
-        await interaction.editReply({
-          content: `⚠️ Issue \`${issueId}\` is not currently acknowledged.`,
-        });
-        return;
-      }
+  // Handle trends subcommand
+  if (subcommand === "trends") {
+    await withStep(ctx, "handle_trends", async () => {
+      // Already deferred above
 
-      // Unacknowledge the issue
-      const removed = unacknowledgeIssue(guildId, issue.issueKey);
+      const days = interaction.options.getInteger("days") ?? 7;
 
-      if (removed) {
+      try {
+        const history = getIssueHistory(guildId, days);
+
+        if (history.length === 0) {
+          await interaction.editReply({
+            content: `📊 No audit history found for the past ${days} days. Run \`/audit security\` to start tracking.`,
+          });
+          return;
+        }
+
+        // Build trend data
+        const latestEntry = history[0];
+        const oldestEntry = history[history.length - 1];
+
+        // Calculate changes
+        const criticalChange = latestEntry.criticalCount - oldestEntry.criticalCount;
+        const highChange = latestEntry.highCount - oldestEntry.highCount;
+        const mediumChange = latestEntry.mediumCount - oldestEntry.mediumCount;
+        const lowChange = latestEntry.lowCount - oldestEntry.lowCount;
+
+        const formatChange = (change: number) => {
+          if (change > 0) return `↑ +${change}`;
+          if (change < 0) return `↓ ${change}`;
+          return "→ 0";
+        };
+
         const embed = new EmbedBuilder()
-          .setTitle("🔄 Acknowledgment Removed")
-          .setColor(0xF59E0B)
+          .setTitle(`📊 Security Audit Trends (${days} days)`)
+          .setColor(0x3B82F6)
+          .setDescription(`Showing ${history.length} audit records from the past ${days} days.`)
           .addFields(
-            { name: "Issue", value: `[${issue.id}] ${issue.title}`, inline: false },
-            { name: "Affected", value: issue.affected, inline: false },
-            { name: "Removed by", value: `<@${user.id}>`, inline: true }
+            {
+              name: "Current Issue Counts",
+              value: [
+                `🔴 Critical: ${latestEntry.criticalCount} (${formatChange(criticalChange)})`,
+                `🟠 High: ${latestEntry.highCount} (${formatChange(highChange)})`,
+                `🟡 Medium: ${latestEntry.mediumCount} (${formatChange(mediumChange)})`,
+                `🟢 Low: ${latestEntry.lowCount} (${formatChange(lowChange)})`,
+                `✅ Acknowledged: ${latestEntry.acknowledgedCount}`,
+              ].join("\n"),
+              inline: false,
+            },
+            {
+              name: "Issue Categories",
+              value: [
+                `Roles: ${latestEntry.roleIssues}`,
+                `Channels: ${latestEntry.channelIssues}`,
+                `Hierarchy: ${latestEntry.hierarchyIssues}`,
+                `Verification: ${latestEntry.verificationIssues}`,
+              ].join("\n"),
+              inline: true,
+            },
+            {
+              name: "Audit Range",
+              value: [
+                `First: <t:${oldestEntry.recordedAt}:R>`,
+                `Latest: <t:${latestEntry.recordedAt}:R>`,
+              ].join("\n"),
+              inline: true,
+            }
           )
-          .setFooter({ text: "This issue will appear in future audits again." })
+          .setFooter({ text: "Run /audit security to refresh data" })
           .setTimestamp();
 
         await interaction.editReply({ embeds: [embed] });
 
         logger.info(
-          { userId: user.id, guildId, issueId, issueKey: issue.issueKey },
-          "[audit:unacknowledge] Acknowledgment removed"
+          { userId: user.id, guildId, days, recordCount: history.length },
+          "[audit:trends] Trends displayed"
         );
-      } else {
+      } catch (err) {
+        logger.error({ err, userId: user.id, guildId }, "[audit:trends] Failed to get trends");
         await interaction.editReply({
-          content: `⚠️ Could not remove acknowledgment for \`${issueId}\`.`,
+          content: `❌ Failed to fetch trends: ${err instanceof Error ? err.message : "Unknown error"}`,
         });
       }
-    } catch (err) {
-      logger.error({ err, userId: user.id, guildId, issueId }, "[audit:unacknowledge] Failed to unacknowledge");
-      await interaction.editReply({
-        content: `❌ Failed to unacknowledge issue: ${err instanceof Error ? err.message : "Unknown error"}`,
-      });
-    }
+    });
+    return;
+  }
+
+  // Handle diff subcommand
+  if (subcommand === "diff") {
+    await withStep(ctx, "handle_diff", async () => {
+      // Already deferred above
+
+      try {
+        const snapshots = getSnapshotHistory(guildId, 2);
+
+        if (snapshots.length < 2) {
+          await interaction.editReply({
+            content: `📊 Need at least 2 audit snapshots to show diff. Run \`/audit security\` twice to start tracking changes.`,
+          });
+          return;
+        }
+
+        const [newSnapshot, oldSnapshot] = snapshots;
+        const diff = computeSnapshotDiff(oldSnapshot, newSnapshot);
+        const dangerousChanges = getDangerousChanges(diff);
+
+        if (!hasMeaningfulChanges(diff)) {
+          await interaction.editReply({
+            content: `✅ No permission changes detected between the last two audits.`,
+          });
+          return;
+        }
+
+        const embed = new EmbedBuilder()
+          .setTitle("🔄 Permission Changes Since Last Audit")
+          .setColor(dangerousChanges.length > 0 ? 0xFF4500 : 0x3B82F6)
+          .setDescription(
+            `Comparing audit from <t:${oldSnapshot.createdAt}:R> to <t:${newSnapshot.createdAt}:R>`
+          )
+          .addFields(
+            {
+              name: "Role Changes",
+              value: [
+                `Added: ${diff.rolesAdded.length}`,
+                `Removed: ${diff.rolesRemoved.length}`,
+                `Modified: ${diff.rolesChanged.length}`,
+              ].join("\n"),
+              inline: true,
+            },
+            {
+              name: "Channel Changes",
+              value: [
+                `Added: ${diff.channelsAdded.length}`,
+                `Removed: ${diff.channelsRemoved.length}`,
+                `Modified: ${diff.channelsChanged.length}`,
+              ].join("\n"),
+              inline: true,
+            },
+            {
+              name: "Issue Changes",
+              value: [
+                `New: ${diff.issuesNew.length}`,
+                `Resolved: ${diff.issuesResolved.length}`,
+              ].join("\n"),
+              inline: true,
+            }
+          )
+          .setTimestamp();
+
+        // Add dangerous changes if any
+        if (dangerousChanges.length > 0) {
+          const dangerousSummary = dangerousChanges
+            .slice(0, 5)
+            .map((c) => {
+              const emoji = c.severity === "critical" ? "🔴" : c.severity === "high" ? "🟠" : "🟡";
+              return `${emoji} ${c.description}`;
+            })
+            .join("\n");
+
+          embed.addFields({
+            name: `⚠️ Dangerous Changes (${dangerousChanges.length})`,
+            value: dangerousSummary + (dangerousChanges.length > 5 ? `\n...and ${dangerousChanges.length - 5} more` : ""),
+            inline: false,
+          });
+        }
+
+        // Add role change details if any
+        if (diff.rolesChanged.length > 0) {
+          const roleChangeSummary = diff.rolesChanged
+            .slice(0, 3)
+            .map((r) => {
+              const added = r.permissionsAdded.length > 0 ? `+${r.permissionsAdded.join(", ")}` : "";
+              const removed = r.permissionsRemoved.length > 0 ? `-${r.permissionsRemoved.join(", ")}` : "";
+              return `**${r.roleName}**: ${added} ${removed}`.trim();
+            })
+            .join("\n");
+
+          embed.addFields({
+            name: "Role Permission Changes",
+            value: roleChangeSummary + (diff.rolesChanged.length > 3 ? `\n...and ${diff.rolesChanged.length - 3} more` : ""),
+            inline: false,
+          });
+        }
+
+        // Add new issues if any
+        if (diff.issuesNew.length > 0) {
+          const newIssuesSummary = diff.issuesNew
+            .slice(0, 3)
+            .map((i) => `• **${i.severity.toUpperCase()}**: ${i.title}`)
+            .join("\n");
+
+          embed.addFields({
+            name: "New Security Issues",
+            value: newIssuesSummary + (diff.issuesNew.length > 3 ? `\n...and ${diff.issuesNew.length - 3} more` : ""),
+            inline: false,
+          });
+        }
+
+        embed.setFooter({ text: "See DIFF.md in docs for full details" });
+
+        await interaction.editReply({ embeds: [embed] });
+
+        logger.info(
+          { userId: user.id, guildId, dangerousChanges: dangerousChanges.length },
+          "[audit:diff] Diff displayed"
+        );
+      } catch (err) {
+        logger.error({ err, userId: user.id, guildId }, "[audit:diff] Failed to compute diff");
+        await interaction.editReply({
+          content: `❌ Failed to compute diff: ${err instanceof Error ? err.message : "Unknown error"}`,
+        });
+      }
+    });
     return;
   }
 
@@ -411,137 +668,141 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   // Fetch member count for confirmation message
   // WHY deferReply: The member fetch below can take several seconds for large
   // guilds, and Discord's 3-second interaction timeout is merciless.
-  await interaction.deferReply();
+  await withStep(ctx, "defer_confirmation", async () => {
+    await interaction.deferReply();
+  });
 
-  try {
-    // Check for active session that can be resumed
-    // WHY: NSFW audits can take 20+ minutes for large guilds. If the bot restarts
-    // mid-scan (deploy, crash, Discord hiccup), we don't want to re-scan everyone.
-    // The session tracks which users were already checked.
-    const activeSession = getActiveSession(guildId, subcommand as "members" | "nsfw");
+  await withStep(ctx, "build_confirmation", async () => {
+    try {
+      // Check for active session that can be resumed
+      // WHY: NSFW audits can take 20+ minutes for large guilds. If the bot restarts
+      // mid-scan (deploy, crash, Discord hiccup), we don't want to re-scan everyone.
+      // The session tracks which users were already checked.
+      const activeSession = getActiveSession(guildId, subcommand as "members" | "nsfw");
 
-    if (activeSession) {
-      // Offer to resume the active session
-      const elapsed = Math.round((Date.now() - new Date(activeSession.started_at).getTime()) / 1000);
-      const remaining = activeSession.total_to_scan - activeSession.scanned_count;
+      if (activeSession) {
+        // Offer to resume the active session
+        const elapsed = Math.round((Date.now() - new Date(activeSession.started_at).getTime()) / 1000);
+        const remaining = activeSession.total_to_scan - activeSession.scanned_count;
 
-      const resumeEmbed = new EmbedBuilder()
-        .setTitle("🔄 Resume Previous Audit?")
-        .setDescription(
-          `Found an incomplete ${subcommand} audit that was interrupted.\n\n` +
-          `**Progress**: ${activeSession.scanned_count.toLocaleString()}/${activeSession.total_to_scan.toLocaleString()} scanned\n` +
-          `**Flagged**: ${activeSession.flagged_count}\n` +
-          `**Remaining**: ~${remaining.toLocaleString()} members\n` +
-          `**Started**: ${elapsed > 3600 ? `${Math.round(elapsed / 3600)}h ago` : `${Math.round(elapsed / 60)}m ago`}\n\n` +
-          `Do you want to **resume** where it left off or **start fresh**?`
-        )
-        .setColor(0x3B82F6)
-        .setFooter({ text: "Resume will skip already-scanned members." });
+        const resumeEmbed = new EmbedBuilder()
+          .setTitle("🔄 Resume Previous Audit?")
+          .setDescription(
+            `Found an incomplete ${subcommand} audit that was interrupted.\n\n` +
+            `**Progress**: ${activeSession.scanned_count.toLocaleString()}/${activeSession.total_to_scan.toLocaleString()} scanned\n` +
+            `**Flagged**: ${activeSession.flagged_count}\n` +
+            `**Remaining**: ~${remaining.toLocaleString()} members\n` +
+            `**Started**: ${elapsed > 3600 ? `${Math.round(elapsed / 3600)}h ago` : `${Math.round(elapsed / 60)}m ago`}\n\n` +
+            `Do you want to **resume** where it left off or **start fresh**?`
+          )
+          .setColor(0x3B82F6)
+          .setFooter({ text: "Resume will skip already-scanned members." });
+
+        const nonce = generateNonce();
+        const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`audit:${subcommand}:${nsfwScope ?? "none"}:resume:${activeSession.id}:${nonce}`)
+            .setLabel("Resume")
+            .setStyle(ButtonStyle.Primary)
+            .setEmoji("▶️"),
+          new ButtonBuilder()
+            .setCustomId(`audit:${subcommand}:${nsfwScope ?? "none"}:fresh:${activeSession.id}:${nonce}`)
+            .setLabel("Start Fresh")
+            .setStyle(ButtonStyle.Danger)
+            .setEmoji("🔄"),
+          new ButtonBuilder()
+            .setCustomId(`audit:${subcommand}:${nsfwScope ?? "none"}:cancel:0:${nonce}`)
+            .setLabel("Cancel")
+            .setStyle(ButtonStyle.Secondary)
+            .setEmoji("❌")
+        );
+
+        await interaction.editReply({
+          embeds: [resumeEmbed],
+          components: [row],
+        });
+
+        logger.info(
+          { userId: user.id, guildId, subcommand, sessionId: activeSession.id },
+          "[audit] Found active session, showing resume prompt"
+        );
+        return;
+      }
+
+      // No active session - show normal confirmation
+      // NOTE: This fetches ALL members into memory at once. For a 10k member guild,
+      // that's fine. For 100k+, this could be problematic. The actual scan uses
+      // pagination (guild.members.list), but this confirmation count doesn't.
+      // Could be optimized if we ever run this on massive guilds.
+      const members = await guild.members.fetch();
+      const memberCount = members.size;
+
+      // For NSFW flagged scope, count flagged members
+      let targetCount = memberCount;
+      if (nsfwScope === "flagged") {
+        const flaggedMembers = getFlaggedUserIds(guildId);
+        targetCount = flaggedMembers.length;
+      }
 
       const nonce = generateNonce();
+
+      // Build confirmation embed based on subcommand
+      let confirmEmbed: EmbedBuilder;
+      if (subcommand === "nsfw") {
+        const scopeLabel = nsfwScope === "flagged" ? "flagged" : "all";
+        confirmEmbed = new EmbedBuilder()
+          .setTitle("⚠️ NSFW Avatar Audit")
+          .setDescription(
+            `This will scan **${targetCount.toLocaleString()}** ${scopeLabel} member avatars for NSFW content using Google Vision API.\n\n` +
+            `**Scope**: ${nsfwScope === "flagged" ? "Flagged members only" : "All members"}\n` +
+            `**Threshold**: 80%+ (Hard Evidence)\n` +
+            `**Note**: This will make API calls for each member with an avatar.\n\n` +
+            `This may send many messages. Are you sure?`
+          )
+          .setColor(0xE74C3C) // Red for NSFW
+          .setFooter({ text: "Flagged users will need manual review." });
+      } else {
+        confirmEmbed = new EmbedBuilder()
+          .setTitle("⚠️ Member Audit")
+          .setDescription(
+            `This will scan **${memberCount.toLocaleString()}** server members and flag suspicious accounts.\n\n` +
+            `This may send many messages. Are you sure?`
+          )
+          .setColor(0xFBBF24) // Amber warning color
+          .setFooter({ text: "This action cannot be easily undone." });
+      }
+
+      // Build action row with Confirm/Cancel buttons (include subcommand and scope in customId)
+      const customIdBase = nsfwScope ? `audit:${subcommand}:${nsfwScope}` : `audit:${subcommand}`;
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
-          .setCustomId(`audit:${subcommand}:${nsfwScope ?? "none"}:resume:${activeSession.id}:${nonce}`)
-          .setLabel("Resume")
-          .setStyle(ButtonStyle.Primary)
-          .setEmoji("▶️"),
-        new ButtonBuilder()
-          .setCustomId(`audit:${subcommand}:${nsfwScope ?? "none"}:fresh:${activeSession.id}:${nonce}`)
-          .setLabel("Start Fresh")
+          .setCustomId(`${customIdBase}:confirm:${nonce}`)
+          .setLabel("Confirm")
           .setStyle(ButtonStyle.Danger)
-          .setEmoji("🔄"),
+          .setEmoji("✅"),
         new ButtonBuilder()
-          .setCustomId(`audit:${subcommand}:${nsfwScope ?? "none"}:cancel:0:${nonce}`)
+          .setCustomId(`${customIdBase}:cancel:${nonce}`)
           .setLabel("Cancel")
           .setStyle(ButtonStyle.Secondary)
           .setEmoji("❌")
       );
 
       await interaction.editReply({
-        embeds: [resumeEmbed],
+        embeds: [confirmEmbed],
         components: [row],
       });
 
       logger.info(
-        { userId: user.id, guildId, subcommand, sessionId: activeSession.id },
-        "[audit] Found active session, showing resume prompt"
+        { userId: user.id, guildId, memberCount, targetCount, nonce, subcommand, nsfwScope },
+        "[audit] Confirmation prompt sent"
       );
-      return;
+    } catch (err) {
+      logger.error({ err, guildId, subcommand }, "[audit] Failed to fetch members for confirmation");
+      await interaction.editReply({
+        content: "❌ Failed to fetch server members. Please try again.",
+      });
     }
-
-    // No active session - show normal confirmation
-    // NOTE: This fetches ALL members into memory at once. For a 10k member guild,
-    // that's fine. For 100k+, this could be problematic. The actual scan uses
-    // pagination (guild.members.list), but this confirmation count doesn't.
-    // Could be optimized if we ever run this on massive guilds.
-    const members = await guild.members.fetch();
-    const memberCount = members.size;
-
-    // For NSFW flagged scope, count flagged members
-    let targetCount = memberCount;
-    if (nsfwScope === "flagged") {
-      const flaggedMembers = getFlaggedUserIds(guildId);
-      targetCount = flaggedMembers.length;
-    }
-
-    const nonce = generateNonce();
-
-    // Build confirmation embed based on subcommand
-    let confirmEmbed: EmbedBuilder;
-    if (subcommand === "nsfw") {
-      const scopeLabel = nsfwScope === "flagged" ? "flagged" : "all";
-      confirmEmbed = new EmbedBuilder()
-        .setTitle("⚠️ NSFW Avatar Audit")
-        .setDescription(
-          `This will scan **${targetCount.toLocaleString()}** ${scopeLabel} member avatars for NSFW content using Google Vision API.\n\n` +
-          `**Scope**: ${nsfwScope === "flagged" ? "Flagged members only" : "All members"}\n` +
-          `**Threshold**: 80%+ (Hard Evidence)\n` +
-          `**Note**: This will make API calls for each member with an avatar.\n\n` +
-          `This may send many messages. Are you sure?`
-        )
-        .setColor(0xE74C3C) // Red for NSFW
-        .setFooter({ text: "Flagged users will need manual review." });
-    } else {
-      confirmEmbed = new EmbedBuilder()
-        .setTitle("⚠️ Member Audit")
-        .setDescription(
-          `This will scan **${memberCount.toLocaleString()}** server members and flag suspicious accounts.\n\n` +
-          `This may send many messages. Are you sure?`
-        )
-        .setColor(0xFBBF24) // Amber warning color
-        .setFooter({ text: "This action cannot be easily undone." });
-    }
-
-    // Build action row with Confirm/Cancel buttons (include subcommand and scope in customId)
-    const customIdBase = nsfwScope ? `audit:${subcommand}:${nsfwScope}` : `audit:${subcommand}`;
-    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder()
-        .setCustomId(`${customIdBase}:confirm:${nonce}`)
-        .setLabel("Confirm")
-        .setStyle(ButtonStyle.Danger)
-        .setEmoji("✅"),
-      new ButtonBuilder()
-        .setCustomId(`${customIdBase}:cancel:${nonce}`)
-        .setLabel("Cancel")
-        .setStyle(ButtonStyle.Secondary)
-        .setEmoji("❌")
-    );
-
-    await interaction.editReply({
-      embeds: [confirmEmbed],
-      components: [row],
-    });
-
-    logger.info(
-      { userId: user.id, guildId, memberCount, targetCount, nonce, subcommand, nsfwScope },
-      "[audit] Confirmation prompt sent"
-    );
-  } catch (err) {
-    logger.error({ err, guildId, subcommand }, "[audit] Failed to fetch members for confirmation");
-    await interaction.editReply({
-      content: "❌ Failed to fetch server members. Please try again.",
-    });
-  }
+  });
 }
 
 /**

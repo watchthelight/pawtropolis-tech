@@ -19,6 +19,7 @@ import { withStep, type CommandContext } from "../lib/cmdWrap.js";
 import { isOwner } from "../lib/owner.js";
 import { logger } from "../lib/logger.js";
 import { getConfig } from "../lib/config.js";
+import { checkCooldown, formatCooldown, COOLDOWNS } from "../lib/rateLimiter.js";
 
 export const data = new SlashCommandBuilder()
   .setName("poke")
@@ -130,6 +131,16 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   if (!isOwner(interaction.user.id)) {
     await interaction.reply({
       content: "❌ This command is only available to bot owners.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  // Rate limit: 60 seconds per user (prevents notification spam)
+  const cooldownResult = checkCooldown("poke", interaction.user.id, COOLDOWNS.POKE_MS);
+  if (!cooldownResult.allowed) {
+    await interaction.reply({
+      content: `⏱️ Please wait ${formatCooldown(cooldownResult.remainingMs!)} before using /poke again.`,
       flags: MessageFlags.Ephemeral,
     });
     return;

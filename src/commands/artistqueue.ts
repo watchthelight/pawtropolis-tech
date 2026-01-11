@@ -115,7 +115,8 @@ export const data = new SlashCommandBuilder()
     sub
       .setName("setup")
       .setDescription("Initial setup - sync queue and configure permissions")
-  );
+  )
+  .setDMPermission(false);
 
 /**
  * Execute /artistqueue command
@@ -254,29 +255,36 @@ async function handleSync(
     return;
   }
 
-  await interaction.deferReply({ ephemeral: false });
-
-  ctx.step("fetch_role_members");
+  await withStep(ctx, "defer", async () => {
+    await interaction.deferReply({ ephemeral: false });
+  });
 
   // Fetch all members with Server Artist role (using guild-specific config)
   const artistConfig = getArtistConfig(guild.id);
-  const role = await guild.roles.fetch(artistConfig.artistRoleId);
-  if (!role) {
+
+  const roleHolderIds = await withStep(ctx, "fetch_role_members", async () => {
+    const role = await guild.roles.fetch(artistConfig.artistRoleId);
+    if (!role) {
+      return null;
+    }
+    // GOTCHA: role.members is cached and may be stale. We need to fetch the full
+    // member list and filter manually. Yes, this means fetching ALL members.
+    // For large servers this is expensive. Discord rate limits are not our friend.
+    const members = await guild.members.fetch();
+    const ignoredUsers = getIgnoredArtistUsers(guild.id);
+    return members
+      .filter((m) => m.roles.cache.has(artistConfig.artistRoleId) && !ignoredUsers.has(m.id))
+      .map((m) => m.id);
+  });
+
+  if (roleHolderIds === null) {
     await interaction.editReply(`Server Artist role (${artistConfig.artistRoleId}) not found.`);
     return;
   }
 
-  // GOTCHA: role.members is cached and may be stale. We need to fetch the full
-  // member list and filter manually. Yes, this means fetching ALL members.
-  // For large servers this is expensive. Discord rate limits are not our friend.
-  const members = await guild.members.fetch();
-  const ignoredUsers = getIgnoredArtistUsers(guild.id);
-  const roleHolderIds = members
-    .filter((m) => m.roles.cache.has(artistConfig.artistRoleId) && !ignoredUsers.has(m.id))
-    .map((m) => m.id);
-
-  ctx.step("sync_queue");
-  const result = syncWithRoleMembers(guild.id, roleHolderIds);
+  const result = await withStep(ctx, "sync_queue", async () => {
+    return withSql(ctx, "SYNC artist_queue", () => syncWithRoleMembers(guild.id, roleHolderIds));
+  });
 
   // Build response
   const lines: string[] = [];
@@ -334,7 +342,12 @@ async function handleMove(
   const user = interaction.options.getUser("user", true);
   const newPosition = interaction.options.getInteger("position", true);
 
-  const artist = getArtist(guildId, user.id);
+  const artist = await withStep(ctx, "find_artist", async () => {
+    return withSql(ctx, "SELECT * FROM artist_queue WHERE user_id = ?", () =>
+      getArtist(guildId, user.id)
+    );
+  });
+
   if (!artist) {
     await interaction.reply({
       content: `<@${user.id}> is not in the artist queue.`,
@@ -344,9 +357,14 @@ async function handleMove(
   }
 
   const oldPosition = artist.position;
-  // moveToPosition handles the cascade of position updates for everyone between
-  // old and new positions. It's doing a lot more work than this call suggests.
-  const success = moveToPosition(guildId, user.id, newPosition);
+
+  const success = await withStep(ctx, "move_position", async () => {
+    // moveToPosition handles the cascade of position updates for everyone between
+    // old and new positions. It's doing a lot more work than this call suggests.
+    return withSql(ctx, "UPDATE artist_queue positions", () =>
+      moveToPosition(guildId, user.id, newPosition)
+    );
+  });
 
   if (!success) {
     // Unhelpfully vague error message. The store function doesn't tell us why
@@ -355,12 +373,14 @@ async function handleMove(
     return;
   }
 
-  const embed = new EmbedBuilder()
-    .setTitle("Queue Updated")
-    .setDescription(`<@${user.id}> moved from position **#${oldPosition}** to **#${newPosition}**`)
-    .setColor(0x00cc00);
+  await withStep(ctx, "reply", async () => {
+    const embed = new EmbedBuilder()
+      .setTitle("Queue Updated")
+      .setDescription(`<@${user.id}> moved from position **#${oldPosition}** to **#${newPosition}**`)
+      .setColor(0x00cc00);
 
-  await interaction.reply({ embeds: [embed], ephemeral: false });
+    await interaction.reply({ embeds: [embed], ephemeral: false });
+  });
 }
 
 /**
@@ -385,7 +405,12 @@ async function handleSkip(
   // wants string | undefined. TypeScript pedantry at its finest.
   const reason = interaction.options.getString("reason") ?? undefined;
 
-  const artist = getArtist(guildId, user.id);
+  const artist = await withStep(ctx, "find_artist", async () => {
+    return withSql(ctx, "SELECT * FROM artist_queue WHERE user_id = ?", () =>
+      getArtist(guildId, user.id)
+    );
+  });
+
   if (!artist) {
     await interaction.reply({
       content: `<@${user.id}> is not in the artist queue.`,
@@ -402,21 +427,27 @@ async function handleSkip(
     return;
   }
 
-  const success = skipArtist(guildId, user.id, reason);
+  const success = await withStep(ctx, "skip_artist", async () => {
+    return withSql(ctx, "UPDATE artist_queue SET skipped = 1", () =>
+      skipArtist(guildId, user.id, reason)
+    );
+  });
 
   if (!success) {
     await interaction.reply({ content: "Failed to skip artist.", ephemeral: true });
     return;
   }
 
-  const embed = new EmbedBuilder()
-    .setTitle("Artist Skipped")
-    .setDescription(
-      `<@${user.id}> will be skipped in rotation.\n${reason ? `**Reason:** ${reason}` : ""}\n\nUse \`/artistqueue unskip\` to restore.`
-    )
-    .setColor(0xffaa00);
+  await withStep(ctx, "reply", async () => {
+    const embed = new EmbedBuilder()
+      .setTitle("Artist Skipped")
+      .setDescription(
+        `<@${user.id}> will be skipped in rotation.\n${reason ? `**Reason:** ${reason}` : ""}\n\nUse \`/artistqueue unskip\` to restore.`
+      )
+      .setColor(0xffaa00);
 
-  await interaction.reply({ embeds: [embed], ephemeral: false });
+    await interaction.reply({ embeds: [embed], ephemeral: false });
+  });
 }
 
 /**
@@ -437,7 +468,12 @@ async function handleUnskip(
 
   const user = interaction.options.getUser("user", true);
 
-  const artist = getArtist(guildId, user.id);
+  const artist = await withStep(ctx, "find_artist", async () => {
+    return withSql(ctx, "SELECT * FROM artist_queue WHERE user_id = ?", () =>
+      getArtist(guildId, user.id)
+    );
+  });
+
   if (!artist) {
     await interaction.reply({
       content: `<@${user.id}> is not in the artist queue.`,
@@ -454,19 +490,25 @@ async function handleUnskip(
     return;
   }
 
-  const success = unskipArtist(guildId, user.id);
+  const success = await withStep(ctx, "unskip_artist", async () => {
+    return withSql(ctx, "UPDATE artist_queue SET skipped = 0", () =>
+      unskipArtist(guildId, user.id)
+    );
+  });
 
   if (!success) {
     await interaction.reply({ content: "Failed to unskip artist.", ephemeral: true });
     return;
   }
 
-  const embed = new EmbedBuilder()
-    .setTitle("Artist Unskipped")
-    .setDescription(`<@${user.id}> is back in rotation at position **#${artist.position}**.`)
-    .setColor(0x00cc00);
+  await withStep(ctx, "reply", async () => {
+    const embed = new EmbedBuilder()
+      .setTitle("Artist Unskipped")
+      .setDescription(`<@${user.id}> is back in rotation at position **#${artist.position}**.`)
+      .setColor(0x00cc00);
 
-  await interaction.reply({ embeds: [embed], ephemeral: false });
+    await interaction.reply({ embeds: [embed], ephemeral: false });
+  });
 }
 
 /**
@@ -481,7 +523,9 @@ async function handleHistory(
   interaction: ChatInputCommandInteraction,
   ctx: CommandContext
 ): Promise<void> {
-  await interaction.deferReply({ ephemeral: false });
+  await withStep(ctx, "defer", async () => {
+    await interaction.deferReply({ ephemeral: false });
+  });
 
   const guildId = interaction.guildId;
   if (!guildId) {
@@ -493,7 +537,11 @@ async function handleHistory(
   // 10 is a reasonable default. 50 max prevents embed size explosions.
   const limit = interaction.options.getInteger("limit") ?? 10;
 
-  const history = getAssignmentHistory(guildId, user?.id, limit);
+  const history = await withStep(ctx, "fetch_history", async () => {
+    return withSql(ctx, "SELECT * FROM art_assignment_history", () =>
+      getAssignmentHistory(guildId, user?.id, limit)
+    );
+  });
 
   if (history.length === 0) {
     const embed = new EmbedBuilder()
@@ -524,7 +572,9 @@ async function handleHistory(
   // If filtering by user, include stats
   let footer = `Showing ${history.length} entries`;
   if (user) {
-    const stats = getArtistStats(guildId, user.id);
+    const stats = await withStep(ctx, "fetch_stats", async () => {
+      return withSql(ctx, "SELECT artist stats", () => getArtistStats(guildId, user.id));
+    });
     footer = `Total: ${stats.totalAssignments} assignments`;
   }
 
@@ -551,7 +601,9 @@ async function handleSetup(
   interaction: ChatInputCommandInteraction,
   ctx: CommandContext
 ): Promise<void> {
-  await interaction.deferReply({ ephemeral: false });
+  await withStep(ctx, "defer", async () => {
+    await interaction.deferReply({ ephemeral: false });
+  });
 
   const guild = interaction.guild;
   if (!guild) {
@@ -569,51 +621,55 @@ async function handleSetup(
   // Step 1: Update channel permissions
   // The bot needs ManageChannels + ManageRoles permissions on the target channel.
   // If this fails, it's usually a bot permission issue, not a code issue.
-  ctx.step("update_permissions");
-  try {
-    const channel = await guild.channels.fetch(artistConfig.serverArtistChannelId);
-    // The "permissionOverwrites" in channel check is for TypeScript narrowing.
-    // Text channels have it, but we need to guard against voice channels etc.
-    if (channel && channel.isTextBased() && "permissionOverwrites" in channel) {
-      await channel.permissionOverwrites.edit(artistConfig.ambassadorRoleId, {
-        ViewChannel: true,
-        SendMessages: true,
-        ReadMessageHistory: true,
-      });
-      results.push("Channel permissions updated for Community Ambassador");
-    } else {
-      results.push("Could not find #server-artist channel or update permissions");
+  await withStep(ctx, "update_permissions", async () => {
+    try {
+      const channel = await guild.channels.fetch(artistConfig.serverArtistChannelId);
+      // The "permissionOverwrites" in channel check is for TypeScript narrowing.
+      // Text channels have it, but we need to guard against voice channels etc.
+      if (channel && channel.isTextBased() && "permissionOverwrites" in channel) {
+        await channel.permissionOverwrites.edit(artistConfig.ambassadorRoleId, {
+          ViewChannel: true,
+          SendMessages: true,
+          ReadMessageHistory: true,
+        });
+        results.push("Channel permissions updated for Community Ambassador");
+      } else {
+        results.push("Could not find #server-artist channel or update permissions");
+      }
+    } catch (err) {
+      // Most common failure: bot doesn't have ManageRoles permission on the channel.
+      logger.warn({ err, guildId: guild.id }, "[artistqueue] Failed to update channel permissions");
+      results.push("Failed to update channel permissions (check bot permissions)");
     }
-  } catch (err) {
-    // Most common failure: bot doesn't have ManageRoles permission on the channel.
-    logger.warn({ err, guildId: guild.id }, "[artistqueue] Failed to update channel permissions");
-    results.push("Failed to update channel permissions (check bot permissions)");
-  }
+  });
 
   // Step 2: Sync queue with role holders
   // This duplicates the logic from handleSync. Would be nice to extract, but
   // setup has slightly different error handling (accumulate vs return early).
-  ctx.step("sync_queue");
-  try {
-    const role = await guild.roles.fetch(artistConfig.artistRoleId);
-    if (role) {
-      // Same full-member-fetch as in handleSync. Yes, we hit the API hard here.
-      const members = await guild.members.fetch();
-      const ignoredUsers = getIgnoredArtistUsers(guild.id);
-      const roleHolderIds = members
-        .filter((m) => m.roles.cache.has(artistConfig.artistRoleId) && !ignoredUsers.has(m.id))
-        .map((m) => m.id);
-      const syncResult = syncWithRoleMembers(guild.id, roleHolderIds);
-      results.push(
-        `Queue synced: ${syncResult.added.length} added, ${syncResult.removed.length} removed, ${syncResult.unchanged.length} unchanged`
-      );
-    } else {
-      results.push("Server Artist role not found");
+  await withStep(ctx, "sync_queue", async () => {
+    try {
+      const role = await guild.roles.fetch(artistConfig.artistRoleId);
+      if (role) {
+        // Same full-member-fetch as in handleSync. Yes, we hit the API hard here.
+        const members = await guild.members.fetch();
+        const ignoredUsers = getIgnoredArtistUsers(guild.id);
+        const roleHolderIds = members
+          .filter((m) => m.roles.cache.has(artistConfig.artistRoleId) && !ignoredUsers.has(m.id))
+          .map((m) => m.id);
+        const syncResult = withSql(ctx, "SYNC artist_queue", () =>
+          syncWithRoleMembers(guild.id, roleHolderIds)
+        );
+        results.push(
+          `Queue synced: ${syncResult.added.length} added, ${syncResult.removed.length} removed, ${syncResult.unchanged.length} unchanged`
+        );
+      } else {
+        results.push("Server Artist role not found");
+      }
+    } catch (err) {
+      logger.warn({ err, guildId: guild.id }, "[artistqueue] Failed to sync queue");
+      results.push("Failed to sync queue");
     }
-  } catch (err) {
-    logger.warn({ err, guildId: guild.id }, "[artistqueue] Failed to sync queue");
-    results.push("Failed to sync queue");
-  }
+  });
 
   // Always green even if some steps failed. Title says "Complete" not "Success".
   // The individual step results tell the real story.

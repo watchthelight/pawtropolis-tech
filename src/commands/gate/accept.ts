@@ -27,6 +27,8 @@ import {
   type CommandContext,
   ensureDeferred,
   replyOrEdit,
+  withStep,
+  withSql,
   shortCode,
   logger,
   type ApplicationRow,
@@ -70,8 +72,9 @@ export async function executeAccept(ctx: CommandContext<ChatInputCommandInteract
     "Approves an application by short code, user mention, or user ID."
   )) return;
 
-  ctx.step("defer");
-  await ensureDeferred(interaction);
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
   const codeRaw = interaction.options.getString("app", false);
   const userOption = interaction.options.getUser("user", false);
@@ -93,185 +96,205 @@ export async function executeAccept(ctx: CommandContext<ChatInputCommandInteract
     return;
   }
 
-  ctx.step("lookup_app");
-  let app: ApplicationRow | null = null;
-  if (codeRaw) {
-    const code = codeRaw.trim().toUpperCase();
-    app = findAppByShortCode(interaction.guildId, code);
-    if (!app) {
-      await replyOrEdit(interaction, { content: `No application with code ${code}.` });
-      return;
+  const lookupResult = await withStep(ctx, "lookup_app", async () => {
+    let app: ApplicationRow | null = null;
+    if (codeRaw) {
+      const code = codeRaw.trim().toUpperCase();
+      app = withSql(ctx, "SELECT application by short_code", () =>
+        findAppByShortCode(interaction.guildId!, code)
+      );
+      if (!app) {
+        return { found: false as const, error: `No application with code ${code}.` };
+      }
+    } else if (userOption) {
+      // User mention/picker - get their ID
+      app = withSql(ctx, "SELECT application by user_id", () =>
+        findPendingAppByUserId(interaction.guildId!, userOption.id)
+      );
+      if (!app) {
+        return { found: false as const, error: `No pending application found for ${userOption}.` };
+      }
+    } else if (uidRaw) {
+      const uid = uidRaw.trim();
+      // Validate UID format. Snowflakes are actually 17-20 digits these days, but we're
+      // generous with the lower bound because who knows what cursed old accounts lurk.
+      if (!/^[0-9]{5,20}$/.test(uid)) {
+        return { found: false as const, error: "Invalid user ID. Must be 5-20 digits." };
+      }
+      app = withSql(ctx, "SELECT application by user_id", () =>
+        findPendingAppByUserId(interaction.guildId!, uid)
+      );
+      if (!app) {
+        return { found: false as const, error: `No pending application found for user ID ${uid}.` };
+      }
     }
-  } else if (userOption) {
-    // User mention/picker - get their ID
-    app = findPendingAppByUserId(interaction.guildId, userOption.id);
-    if (!app) {
-      await replyOrEdit(interaction, {
-        content: `No pending application found for ${userOption}.`,
-      });
-      return;
-    }
-  } else if (uidRaw) {
-    const uid = uidRaw.trim();
-    // Validate UID format. Snowflakes are actually 17-20 digits these days, but we're
-    // generous with the lower bound because who knows what cursed old accounts lurk.
-    if (!/^[0-9]{5,20}$/.test(uid)) {
-      await replyOrEdit(interaction, { content: "Invalid user ID. Must be 5-20 digits." });
-      return;
-    }
-    app = findPendingAppByUserId(interaction.guildId, uid);
-    if (!app) {
-      await replyOrEdit(interaction, {
-        content: `No pending application found for user ID ${uid}.`,
-      });
-      return;
-    }
+    return { found: true as const, app: app! };
+  });
+
+  if (!lookupResult.found) {
+    await replyOrEdit(interaction, { content: lookupResult.error });
+    return;
   }
+  const resolvedApp = lookupResult.app;
 
-  // At this point app is guaranteed to be non-null due to early return above.
-  // The non-null assertion is ugly but TypeScript can't follow the control flow
-  // through three separate if/else branches with early returns. I've tried.
-  const resolvedApp = app!;
+  const claimResult = await withStep(ctx, "claim_check", async () => {
+    // WHY: Claims prevent two mods from approving/rejecting simultaneously.
+    // Without this, you get fun race conditions where someone gets approved
+    // then rejected, or vice versa. Deny politely; chaos later is worse.
+    const claim = withSql(ctx, "SELECT review_claim", () => getClaim(resolvedApp.id));
+    const claimError = claimGuard(claim, interaction.user.id);
+    return { claimError };
+  });
 
-  ctx.step("claim_check");
-  // WHY: Claims prevent two mods from approving/rejecting simultaneously.
-  // Without this, you get fun race conditions where someone gets approved
-  // then rejected, or vice versa. Deny politely; chaos later is worse.
-  const claim = getClaim(resolvedApp.id);
-  const claimError = claimGuard(claim, interaction.user.id);
-  if (claimError) {
-    await replyOrEdit(interaction, { content: claimError });
+  if (claimResult.claimError) {
+    await replyOrEdit(interaction, { content: claimResult.claimError });
     return;
   }
 
-  ctx.step("approve_tx");
-  // This is a database transaction. If it succeeds, the app is marked approved
-  // regardless of what happens next. We can fail to assign roles, fail to DM,
-  // fail to post welcome - the approval still stands. Design choice, not a bug.
-  const result = approveTx(resolvedApp.id, interaction.user.id);
-  if (result.kind === "already") {
+  const approveResult = await withStep(ctx, "approve_tx", async () => {
+    // This is a database transaction. If it succeeds, the app is marked approved
+    // regardless of what happens next. We can fail to assign roles, fail to DM,
+    // fail to post welcome - the approval still stands. Design choice, not a bug.
+    return withSql(ctx, "UPDATE application status=approved", () =>
+      approveTx(resolvedApp.id, interaction.user.id)
+    );
+  });
+
+  if (approveResult.kind === "already") {
     await replyOrEdit(interaction, { content: "Already approved." });
     return;
   }
-  if (result.kind === "terminal") {
-    await replyOrEdit(interaction, { content: `Already resolved (${result.status}).` });
+  if (approveResult.kind === "terminal") {
+    await replyOrEdit(interaction, { content: `Already resolved (${approveResult.status}).` });
     return;
   }
-  if (result.kind === "invalid") {
+  if (approveResult.kind === "invalid") {
     await replyOrEdit(interaction, { content: "Application is not ready for approval." });
     return;
   }
 
-  ctx.step("approve_flow");
-  const cfg = getConfig(interaction.guildId);
-  let approvedMember: GuildMember | null = null;
-  let roleApplied = false;
-  let roleError: { code?: number; message?: string } | null = null;
-  if (cfg) {
-    /*
-     * approveFlow handles the Discord side: fetching the member and applying
-     * the accepted_role. It returns roleError if the bot lacks permissions
-     * (error code 50013) or the role is higher in hierarchy than the bot's role.
-     *
-     * We proceed even if role assignment fails - the app is marked approved in
-     * the database, and we report the failure to the reviewer so they can fix
-     * permissions or assign the role manually.
-     */
-    const flow = await approveFlow(interaction.guild, resolvedApp.user_id, cfg);
-    approvedMember = flow.member;
-    roleApplied = flow.roleApplied;
-    roleError = flow.roleError ?? null;
-  }
+  const flowResult = await withStep(ctx, "approve_flow", async () => {
+    const cfg = withSql(ctx, "SELECT guild_config", () => getConfig(interaction.guildId!));
+    let approvedMember: GuildMember | null = null;
+    let roleApplied = false;
+    let roleError: { code?: number; message?: string } | null = null;
+    if (cfg) {
+      /*
+       * approveFlow handles the Discord side: fetching the member and applying
+       * the accepted_role. It returns roleError if the bot lacks permissions
+       * (error code 50013) or the role is higher in hierarchy than the bot's role.
+       *
+       * We proceed even if role assignment fails - the app is marked approved in
+       * the database, and we report the failure to the reviewer so they can fix
+       * permissions or assign the role manually.
+       */
+      const flow = await approveFlow(interaction.guild!, resolvedApp.user_id, cfg);
+      approvedMember = flow.member;
+      roleApplied = flow.roleApplied;
+      roleError = flow.roleError ?? null;
+    }
+    return { cfg, approvedMember, roleApplied, roleError };
+  });
   // Note: Claim preserved for review card display
 
-  ctx.step("close_modmail");
-  const code = shortCode(resolvedApp.id);
-  // If there's an open modmail thread, close it. Not fatal if this fails -
-  // worst case the mod has to close it manually. Swallow the error and move on.
-  try {
-    await closeModmailForApplication(interaction.guildId, resolvedApp.user_id, code, {
-      reason: "approved",
-      client: interaction.client,
-      guild: interaction.guild,
-    });
-  } catch (mmErr) {
-    logger.warn({ err: mmErr, appId: resolvedApp.id }, "[accept] Failed to close modmail (non-fatal)");
-  }
-
-  ctx.step("refresh_review");
-  try {
-    await ensureReviewMessage(interaction.client, resolvedApp.id);
-  } catch (err) {
-    logger.warn({ err, appId: resolvedApp.id }, "Failed to refresh review card after /accept");
-  }
-
-  ctx.step("dm_and_welcome");
-  let dmDelivered = false;
-  if (approvedMember) {
-    dmDelivered = await deliverApprovalDm(approvedMember, interaction.guild.name);
-  }
-
-  let welcomeNote: string | null = null;
-  let roleNote: string | null = null;
-  // This condition is gnarly: post welcome only if we have config, have a member,
-  // AND (either no role is configured, OR the role was successfully applied).
-  // We skip welcome if role assignment failed because showing up in general
-  // without the verified role looks weird and confuses everyone.
-  if (cfg && approvedMember && (cfg.accepted_role_id ? roleApplied : true)) {
+  await withStep(ctx, "close_modmail", async () => {
+    const code = shortCode(resolvedApp.id);
+    // If there's an open modmail thread, close it. Not fatal if this fails -
+    // worst case the mod has to close it manually. Swallow the error and move on.
     try {
-      await postWelcomeCard({
-        guild: interaction.guild,
-        user: approvedMember,
-        config: cfg,
-        memberCount: interaction.guild.memberCount,
+      await closeModmailForApplication(interaction.guildId!, resolvedApp.user_id, code, {
+        reason: "approved",
+        client: interaction.client,
+        guild: interaction.guild!,
       });
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "unknown error";
-      logger.warn(
-        { err, guildId: interaction.guildId, userId: approvedMember.id },
-        "[accept] failed to post welcome card"
-      );
-      if (errorMessage.includes("not configured")) {
-        welcomeNote = "Welcome message failed: general channel not configured.";
-      } else if (errorMessage.includes("missing permissions")) {
-        const channelMention = cfg.general_channel_id
-          ? `<#${cfg.general_channel_id}>`
-          : "the channel";
-        welcomeNote = `Welcome message failed: missing permissions in ${channelMention}.`;
-      } else {
-        welcomeNote = `Welcome message failed: ${errorMessage}`;
-      }
+    } catch (mmErr) {
+      logger.warn({ err: mmErr, appId: resolvedApp.id }, "[accept] Failed to close modmail (non-fatal)");
     }
-  } else if (!cfg?.general_channel_id) {
-    welcomeNote = "Welcome message not posted: general channel not configured.";
-  }
+  });
+
+  await withStep(ctx, "refresh_review", async () => {
+    try {
+      await ensureReviewMessage(interaction.client, resolvedApp.id);
+    } catch (err) {
+      logger.warn({ err, appId: resolvedApp.id }, "Failed to refresh review card after /accept");
+    }
+  });
+
+  const { dmDelivered, welcomeNote } = await withStep(ctx, "dm_and_welcome", async () => {
+    const { cfg, approvedMember, roleApplied } = flowResult;
+    let delivered = false;
+    if (approvedMember) {
+      delivered = await deliverApprovalDm(approvedMember, interaction.guild!.name);
+    }
+
+    let note: string | null = null;
+    // This condition is gnarly: post welcome only if we have config, have a member,
+    // AND (either no role is configured, OR the role was successfully applied).
+    // We skip welcome if role assignment failed because showing up in general
+    // without the verified role looks weird and confuses everyone.
+    if (cfg && approvedMember && (cfg.accepted_role_id ? roleApplied : true)) {
+      try {
+        await postWelcomeCard({
+          guild: interaction.guild!,
+          user: approvedMember,
+          config: cfg,
+          memberCount: interaction.guild!.memberCount,
+        });
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : "unknown error";
+        logger.warn(
+          { err, guildId: interaction.guildId, userId: approvedMember.id },
+          "[accept] failed to post welcome card"
+        );
+        if (errorMessage.includes("not configured")) {
+          note = "Welcome message failed: general channel not configured.";
+        } else if (errorMessage.includes("missing permissions")) {
+          const channelMention = cfg.general_channel_id
+            ? `<#${cfg.general_channel_id}>`
+            : "the channel";
+          note = `Welcome message failed: missing permissions in ${channelMention}.`;
+        } else {
+          note = `Welcome message failed: ${errorMessage}`;
+        }
+      }
+    } else if (!cfg?.general_channel_id) {
+      note = "Welcome message not posted: general channel not configured.";
+    }
+
+    return { dmDelivered: delivered, welcomeNote: note };
+  });
 
   // Store metadata about how this approval happened for analytics later.
   // The "via" field helps track whether mods prefer short codes or user IDs.
-  updateReviewActionMeta(result.reviewActionId, {
-    roleApplied,
-    dmDelivered,
-    source: "slash",
-    via: uidRaw ? "uid" : "code",
-  });
+  withSql(ctx, "UPDATE review_action meta", () =>
+    updateReviewActionMeta(approveResult.reviewActionId, {
+      roleApplied: flowResult.roleApplied,
+      dmDelivered,
+      source: "slash",
+      via: uidRaw ? "uid" : "code",
+    })
+  );
 
-  ctx.step("reply");
-  // Build the response message. We always say "approved" even if subsequent
-  // steps failed, because the database approval is what matters. Everything
-  // else is just nice-to-have that we surface as warnings.
-  const messages = ["Application approved."];
-  if (cfg?.accepted_role_id && roleError) {
-    const roleMention = `<@&${cfg.accepted_role_id}>`;
-    // 50013 is Discord's "Missing Permissions" error code. We get this when
-    // the bot role is lower than the target role in the hierarchy.
-    if (roleError.code === 50013) {
-      roleNote = `Failed to grant verification role ${roleMention} (missing permissions).`;
-    } else {
-      const reason = roleError.message ?? "unknown error";
-      roleNote = `Failed to grant verification role ${roleMention}: ${reason}.`;
+  await withStep(ctx, "reply", async () => {
+    const { cfg, roleError } = flowResult;
+    // Build the response message. We always say "approved" even if subsequent
+    // steps failed, because the database approval is what matters. Everything
+    // else is just nice-to-have that we surface as warnings.
+    const messages = ["Application approved."];
+    let roleNote: string | null = null;
+    if (cfg?.accepted_role_id && roleError) {
+      const roleMention = `<@&${cfg.accepted_role_id}>`;
+      // 50013 is Discord's "Missing Permissions" error code. We get this when
+      // the bot role is lower than the target role in the hierarchy.
+      if (roleError.code === 50013) {
+        roleNote = `Failed to grant verification role ${roleMention} (missing permissions).`;
+      } else {
+        const reason = roleError.message ?? "unknown error";
+        roleNote = `Failed to grant verification role ${roleMention}: ${reason}.`;
+      }
     }
-  }
-  if (roleNote) messages.push(roleNote);
-  if (welcomeNote) messages.push(welcomeNote);
-  await replyOrEdit(interaction, { content: messages.join("\n") });
+    if (roleNote) messages.push(roleNote);
+    if (welcomeNote) messages.push(welcomeNote);
+    await replyOrEdit(interaction, { content: messages.join("\n") });
+  });
 }

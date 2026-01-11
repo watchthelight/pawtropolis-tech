@@ -9,7 +9,7 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import type { ChatInputCommandInteraction } from "discord.js";
-import type { CommandContext } from "../../lib/cmdWrap.js";
+import { type CommandContext, withStep } from "../../lib/cmdWrap.js";
 import { requireMinRole, ROLE_IDS } from "../../lib/config.js";
 import { data } from "./data.js";
 import { handleMovieSubcommand } from "./movie.js";
@@ -29,26 +29,32 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   }
 
   // Require Moderator+ role
-  if (!requireMinRole(interaction, ROLE_IDS.MODERATOR, {
-    command: "event",
-    description: "Event attendance tracking and tier role management.",
-    requirements: [{ type: "hierarchy", minRoleId: ROLE_IDS.MODERATOR }],
-  })) return;
+  const hasPermission = await withStep(ctx, "permission_check", async () => {
+    return requireMinRole(interaction, ROLE_IDS.MODERATOR, {
+      command: "event",
+      description: "Event attendance tracking and tier role management.",
+      requirements: [{ type: "hierarchy", minRoleId: ROLE_IDS.MODERATOR }],
+    });
+  });
 
-  const group = interaction.options.getSubcommandGroup(true);
-  const subcommand = interaction.options.getSubcommand(true);
+  if (!hasPermission) return;
 
-  switch (group) {
-    case "movie":
-      await handleMovieSubcommand(interaction, subcommand);
-      break;
-    case "game":
-      await handleGameSubcommand(interaction, subcommand);
-      break;
-    default:
-      await interaction.reply({
-        content: "Unknown subcommand group.",
-        ephemeral: true,
-      });
-  }
+  await withStep(ctx, "route_subcommand", async () => {
+    const group = interaction.options.getSubcommandGroup(true);
+    const subcommand = interaction.options.getSubcommand(true);
+
+    switch (group) {
+      case "movie":
+        await handleMovieSubcommand(ctx, subcommand);
+        break;
+      case "game":
+        await handleGameSubcommand(ctx, subcommand);
+        break;
+      default:
+        await interaction.reply({
+          content: "Unknown subcommand group.",
+          ephemeral: true,
+        });
+    }
+  });
 }

@@ -23,6 +23,8 @@ import {
   type CommandContext,
   ensureDeferred,
   replyOrEdit,
+  withStep,
+  withSql,
   shortCode,
   logger,
   type ApplicationRow,
@@ -76,8 +78,9 @@ export async function executeReject(ctx: CommandContext<ChatInputCommandInteract
     "Rejects an application by short code, user mention, or user ID."
   )) return;
 
-  ctx.step("defer");
-  await ensureDeferred(interaction);
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
   const codeRaw = interaction.options.getString("app", false);
   const userOption = interaction.options.getUser("user", false);
@@ -117,59 +120,67 @@ export async function executeReject(ctx: CommandContext<ChatInputCommandInteract
     return;
   }
 
-  ctx.step("lookup_app");
-  let app: ApplicationRow | null = null;
-  if (codeRaw) {
-    const code = codeRaw.trim().toUpperCase();
-    app = findAppByShortCode(interaction.guildId, code);
-    if (!app) {
-      await replyOrEdit(interaction, { content: `No application with code ${code}.` });
-      return;
+  const lookupResult = await withStep(ctx, "lookup_app", async () => {
+    let app: ApplicationRow | null = null;
+    if (codeRaw) {
+      const code = codeRaw.trim().toUpperCase();
+      app = withSql(ctx, "SELECT application by short_code", () =>
+        findAppByShortCode(interaction.guildId!, code)
+      );
+      if (!app) {
+        return { found: false as const, error: `No application with code ${code}.` };
+      }
+    } else if (userOption) {
+      // User mention/picker - get their ID
+      app = withSql(ctx, "SELECT application by user_id", () =>
+        findPendingAppByUserId(interaction.guildId!, userOption.id)
+      );
+      if (!app) {
+        return { found: false as const, error: `No pending application found for ${userOption}.` };
+      }
+    } else if (uidRaw) {
+      const uid = uidRaw.trim();
+      // Validate UID format
+      // Discord snowflakes are 17-19 digits currently, but we're generous with 5-20
+      // because Discord's docs are vague and snowflakes could theoretically grow.
+      if (!/^[0-9]{5,20}$/.test(uid)) {
+        return { found: false as const, error: "Invalid user ID. Must be 5-20 digits." };
+      }
+      app = withSql(ctx, "SELECT application by user_id", () =>
+        findPendingAppByUserId(interaction.guildId!, uid)
+      );
+      if (!app) {
+        return { found: false as const, error: `No pending application found for user ID ${uid}.` };
+      }
     }
-  } else if (userOption) {
-    // User mention/picker - get their ID
-    app = findPendingAppByUserId(interaction.guildId, userOption.id);
-    if (!app) {
-      await replyOrEdit(interaction, {
-        content: `No pending application found for ${userOption}.`,
-      });
-      return;
-    }
-  } else if (uidRaw) {
-    const uid = uidRaw.trim();
-    // Validate UID format
-    // Discord snowflakes are 17-19 digits currently, but we're generous with 5-20
-    // because Discord's docs are vague and snowflakes could theoretically grow.
-    if (!/^[0-9]{5,20}$/.test(uid)) {
-      await replyOrEdit(interaction, { content: "Invalid user ID. Must be 5-20 digits." });
-      return;
-    }
-    app = findPendingAppByUserId(interaction.guildId, uid);
-    if (!app) {
-      await replyOrEdit(interaction, {
-        content: `No pending application found for user ID ${uid}.`,
-      });
-      return;
-    }
+    return { found: true as const, app: app! };
+  });
+
+  if (!lookupResult.found) {
+    await replyOrEdit(interaction, { content: lookupResult.error });
+    return;
   }
+  const resolvedApp = lookupResult.app;
 
-  // The non-null assertion is ugly but TypeScript can't track the early returns
-  // through the if/else-if chain above. Refactoring to satisfy the type checker
-  // would make the code harder to follow, so we pick our battles.
-  const resolvedApp = app!;
+  const claimResult = await withStep(ctx, "claim_check", async () => {
+    const claim = withSql(ctx, "SELECT review_claim", () => getClaim(resolvedApp.id));
+    const claimError = claimGuard(claim, interaction.user.id);
+    return { claimError };
+  });
 
-  ctx.step("claim_check");
-  const claim = getClaim(resolvedApp.id);
-  const claimError = claimGuard(claim, interaction.user.id);
-  if (claimError) {
-    await replyOrEdit(interaction, { content: claimError });
+  if (claimResult.claimError) {
+    await replyOrEdit(interaction, { content: claimResult.claimError });
     return;
   }
 
   // rejectTx does the actual database write. It returns a discriminated union
   // so we can give specific error messages instead of a generic "something broke".
-  ctx.step("reject_tx");
-  const tx = rejectTx(resolvedApp.id, interaction.user.id, reason, permanent);
+  const tx = await withStep(ctx, "reject_tx", async () => {
+    return withSql(ctx, "UPDATE application status=rejected", () =>
+      rejectTx(resolvedApp.id, interaction.user.id, reason, permanent)
+    );
+  });
+
   if (tx.kind === "already") {
     await replyOrEdit(interaction, { content: "Already rejected." });
     return;
@@ -183,31 +194,37 @@ export async function executeReject(ctx: CommandContext<ChatInputCommandInteract
     return;
   }
 
-  ctx.step("reject_flow");
-  // Fetch can fail if user deleted their account, got banned globally, etc.
-  // We still want to record the rejection even if we can't DM them.
-  const user = await interaction.client.users.fetch(resolvedApp.user_id).catch(() => null);
-  let dmDelivered = false;
-  if (user) {
-    const dmResult = await rejectFlow(user, {
-      guildName: interaction.guild.name,
-      reason,
-      permanent,
-    });
-    dmDelivered = dmResult.dmDelivered;
-    updateReviewActionMeta(tx.reviewActionId, {
-      ...dmResult,
-      source: "slash",
-      via: uidRaw ? "uid" : "code",
-    });
-  } else {
-    logger.warn({ userId: resolvedApp.user_id }, "Failed to fetch user for rejection DM");
-    updateReviewActionMeta(tx.reviewActionId, {
-      dmDelivered,
-      source: "slash",
-      via: uidRaw ? "uid" : "code",
-    });
-  }
+  const dmDelivered = await withStep(ctx, "reject_flow", async () => {
+    // Fetch can fail if user deleted their account, got banned globally, etc.
+    // We still want to record the rejection even if we can't DM them.
+    const user = await interaction.client.users.fetch(resolvedApp.user_id).catch(() => null);
+    let delivered = false;
+    if (user) {
+      const dmResult = await rejectFlow(user, {
+        guildName: interaction.guild!.name,
+        reason,
+        permanent,
+      });
+      delivered = dmResult.dmDelivered;
+      withSql(ctx, "UPDATE review_action meta", () =>
+        updateReviewActionMeta(tx.reviewActionId, {
+          ...dmResult,
+          source: "slash",
+          via: uidRaw ? "uid" : "code",
+        })
+      );
+    } else {
+      logger.warn({ userId: resolvedApp.user_id }, "Failed to fetch user for rejection DM");
+      withSql(ctx, "UPDATE review_action meta", () =>
+        updateReviewActionMeta(tx.reviewActionId, {
+          dmDelivered: delivered,
+          source: "slash",
+          via: uidRaw ? "uid" : "code",
+        })
+      );
+    }
+    return delivered;
+  });
 
   /*
    * We intentionally keep the claim around after rejection. Releasing it
@@ -215,34 +232,37 @@ export async function executeReject(ctx: CommandContext<ChatInputCommandInteract
    * since the case is resolved. The claim just... hangs out, inert.
    */
 
-  ctx.step("close_modmail");
-  const code = shortCode(resolvedApp.id);
-  // Non-fatal: if modmail close fails, we still completed the rejection.
-  // This can happen if the modmail ticket was already closed, deleted, or never existed.
-  try {
-    await closeModmailForApplication(interaction.guildId, resolvedApp.user_id, code, {
-      reason: permanent ? "permanently rejected" : "rejected",
-      client: interaction.client,
-      guild: interaction.guild,
-    });
-  } catch (mmErr) {
-    logger.warn({ err: mmErr, appId: resolvedApp.id }, "[reject] Failed to close modmail (non-fatal)");
-  }
+  await withStep(ctx, "close_modmail", async () => {
+    const code = shortCode(resolvedApp.id);
+    // Non-fatal: if modmail close fails, we still completed the rejection.
+    // This can happen if the modmail ticket was already closed, deleted, or never existed.
+    try {
+      await closeModmailForApplication(interaction.guildId!, resolvedApp.user_id, code, {
+        reason: permanent ? "permanently rejected" : "rejected",
+        client: interaction.client,
+        guild: interaction.guild!,
+      });
+    } catch (mmErr) {
+      logger.warn({ err: mmErr, appId: resolvedApp.id }, "[reject] Failed to close modmail (non-fatal)");
+    }
+  });
 
   // Update the review card to show the new rejected status. This is also non-fatal
   // because the rejection itself already succeeded in the database.
-  ctx.step("refresh_review");
-  try {
-    await ensureReviewMessage(interaction.client, resolvedApp.id);
-  } catch (err) {
-    logger.warn({ err, appId: resolvedApp.id }, "Failed to refresh review card after /reject");
-  }
+  await withStep(ctx, "refresh_review", async () => {
+    try {
+      await ensureReviewMessage(interaction.client, resolvedApp.id);
+    } catch (err) {
+      logger.warn({ err, appId: resolvedApp.id }, "Failed to refresh review card after /reject");
+    }
+  });
 
-  ctx.step("reply");
-  const rejectType = permanent ? "permanently rejected" : "rejected";
-  await replyOrEdit(interaction, {
-    content: dmDelivered
-      ? `Application ${rejectType}.`
-      : `Application ${rejectType}. (DM delivery failed)`,
+  await withStep(ctx, "reply", async () => {
+    const rejectType = permanent ? "permanently rejected" : "rejected";
+    await replyOrEdit(interaction, {
+      content: dmDelivered
+        ? `Application ${rejectType}.`
+        : `Application ${rejectType}. (DM delivery failed)`,
+    });
   });
 }

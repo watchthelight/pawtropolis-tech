@@ -13,6 +13,8 @@ import {
   type CommandContext,
   replyOrEdit,
   ensureDeferred,
+  withStep,
+  withSql,
   getLoggingChannelId,
   getFlaggerConfig,
 } from "./shared.js";
@@ -22,45 +24,54 @@ export async function executeGetLogging(ctx: CommandContext<ChatInputCommandInte
    * Shows current logging config with the full resolution chain.
    */
   const { interaction } = ctx;
-  await ensureDeferred(interaction);
 
-  ctx.step("get_logging_config");
-  const loggingChannelId = getLoggingChannelId(interaction.guildId!);
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
-  const lines = ["**Action Logging Configuration**", ""];
+  const lines = await withStep(ctx, "get_logging_config", async () => {
+    const loggingChannelId = withSql(ctx, "SELECT logging_channel", () =>
+      getLoggingChannelId(interaction.guildId!)
+    );
 
-  if (loggingChannelId) {
-    lines.push(`**Logging Channel:** <#${loggingChannelId}>`);
-    lines.push("");
-    lines.push("All moderator actions (accept, reject, claim, modmail, etc.) are logged here.");
-    lines.push("");
-    lines.push("**Resolution Priority:**");
-    lines.push("1. Guild-specific database configuration (current)");
-    lines.push("2. Environment variable `LOGGING_CHANNEL` (if set)");
-    lines.push("3. JSON console fallback (if no channel available)");
-  } else {
-    const envChannel = process.env.LOGGING_CHANNEL;
-    if (envChannel) {
-      lines.push(`**Logging Channel:** <#${envChannel}> (from environment variable)`);
-      lines.push("");
-      lines.push("Using fallback from `LOGGING_CHANNEL` env var.");
-      lines.push("");
-      lines.push("**To set a guild-specific channel:**");
-      lines.push("`/config set logging channel:#your-channel`");
+    const result = ["**Action Logging Configuration**", ""];
+
+    if (loggingChannelId) {
+      result.push(`**Logging Channel:** <#${loggingChannelId}>`);
+      result.push("");
+      result.push("All moderator actions (accept, reject, claim, modmail, etc.) are logged here.");
+      result.push("");
+      result.push("**Resolution Priority:**");
+      result.push("1. Guild-specific database configuration (current)");
+      result.push("2. Environment variable `LOGGING_CHANNEL` (if set)");
+      result.push("3. JSON console fallback (if no channel available)");
     } else {
-      lines.push("**No logging channel configured**");
-      lines.push("");
-      lines.push("Actions are being logged as JSON to console only.");
-      lines.push("");
-      lines.push("**To enable pretty embed logging:**");
-      lines.push("`/config set logging channel:#your-channel`");
+      const envChannel = process.env.LOGGING_CHANNEL;
+      if (envChannel) {
+        result.push(`**Logging Channel:** <#${envChannel}> (from environment variable)`);
+        result.push("");
+        result.push("Using fallback from `LOGGING_CHANNEL` env var.");
+        result.push("");
+        result.push("**To set a guild-specific channel:**");
+        result.push("`/config set logging channel:#your-channel`");
+      } else {
+        result.push("**No logging channel configured**");
+        result.push("");
+        result.push("Actions are being logged as JSON to console only.");
+        result.push("");
+        result.push("**To enable pretty embed logging:**");
+        result.push("`/config set logging channel:#your-channel`");
+      }
     }
-  }
 
-  ctx.step("reply");
-  await replyOrEdit(interaction, {
-    content: lines.join("\n"),
-    flags: interaction.replied ? undefined : MessageFlags.Ephemeral,
+    return result;
+  });
+
+  await withStep(ctx, "reply", async () => {
+    await replyOrEdit(interaction, {
+      content: lines.join("\n"),
+      flags: interaction.replied ? undefined : MessageFlags.Ephemeral,
+    });
   });
 }
 
@@ -69,65 +80,74 @@ export async function executeGetFlags(ctx: CommandContext<ChatInputCommandIntera
    * Shows flag config with health checks.
    */
   const { interaction } = ctx;
-  await ensureDeferred(interaction);
 
-  ctx.step("get_flags_config");
-  const config = getFlaggerConfig(interaction.guildId!);
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
-  const lines = ["**Silent-Since-Join Flagger Configuration (PR8)**", ""];
+  const lines = await withStep(ctx, "get_flags_config", async () => {
+    const config = withSql(ctx, "SELECT flagger_config", () =>
+      getFlaggerConfig(interaction.guildId!)
+    );
 
-  if (config.channelId) {
-    // Verify the channel still exists
-    const channel = await interaction.guild!.channels.fetch(config.channelId).catch(() => null);
-    if (channel) {
-      const botMember = await interaction.guild!.members.fetchMe();
-      const permissions = channel.permissionsFor(botMember);
-      const hasPerms = permissions?.has("SendMessages") && permissions?.has("EmbedLinks");
+    const result = ["**Silent-Since-Join Flagger Configuration (PR8)**", ""];
 
-      if (hasPerms) {
-        lines.push(`**Flags Channel:** <#${config.channelId}> (healthy)`);
+    if (config.channelId) {
+      // Verify the channel still exists
+      const channel = await interaction.guild!.channels.fetch(config.channelId).catch(() => null);
+      if (channel) {
+        const botMember = await interaction.guild!.members.fetchMe();
+        const permissions = channel.permissionsFor(botMember);
+        const hasPerms = permissions?.has("SendMessages") && permissions?.has("EmbedLinks");
+
+        if (hasPerms) {
+          result.push(`**Flags Channel:** <#${config.channelId}> (healthy)`);
+        } else {
+          result.push(`**Flags Channel:** <#${config.channelId}> (missing permissions)`);
+          result.push("   Bot needs SendMessages + EmbedLinks permissions");
+        }
       } else {
-        lines.push(`**Flags Channel:** <#${config.channelId}> (missing permissions)`);
-        lines.push("   Bot needs SendMessages + EmbedLinks permissions");
+        result.push(`**Flags Channel:** <#${config.channelId}> (channel not found)`);
       }
     } else {
-      lines.push(`**Flags Channel:** <#${config.channelId}> (channel not found)`);
+      const envChannel = process.env.FLAGGED_REPORT_CHANNEL_ID;
+      if (envChannel) {
+        result.push(`**Flags Channel:** <#${envChannel}> (from environment variable)`);
+        result.push("");
+        result.push("Using fallback from `FLAGGED_REPORT_CHANNEL_ID` env var.");
+        result.push("");
+        result.push("**To set a guild-specific channel:**");
+        result.push("`/config set flags_channel channel:#your-channel`");
+      } else {
+        result.push("**No flags channel configured**");
+        result.push("");
+        result.push("Silent-Since-Join detection is disabled until a channel is configured.");
+        result.push("");
+        result.push("**To enable flagging:**");
+        result.push("`/config set flags_channel channel:#your-channel`");
+      }
     }
-  } else {
-    const envChannel = process.env.FLAGGED_REPORT_CHANNEL_ID;
-    if (envChannel) {
-      lines.push(`**Flags Channel:** <#${envChannel}> (from environment variable)`);
-      lines.push("");
-      lines.push("Using fallback from `FLAGGED_REPORT_CHANNEL_ID` env var.");
-      lines.push("");
-      lines.push("**To set a guild-specific channel:**");
-      lines.push("`/config set flags_channel channel:#your-channel`");
-    } else {
-      lines.push("**No flags channel configured**");
-      lines.push("");
-      lines.push("Silent-Since-Join detection is disabled until a channel is configured.");
-      lines.push("");
-      lines.push("**To enable flagging:**");
-      lines.push("`/config set flags_channel channel:#your-channel`");
-    }
-  }
 
-  // Threshold configuration
-  lines.push("");
-  lines.push(`**Silent Days Threshold:** ${config.silentDays} days`);
-  lines.push("");
-  lines.push("**Resolution Priority:**");
-  lines.push("1. Guild-specific database configuration");
-  lines.push("2. Environment variable `SILENT_FIRST_MSG_DAYS` (if set)");
-  lines.push("3. Default: 90 days");
-  lines.push("");
-  lines.push("**To change threshold:**");
-  lines.push("`/config set flags_threshold days:120`");
+    // Threshold configuration
+    result.push("");
+    result.push(`**Silent Days Threshold:** ${config.silentDays} days`);
+    result.push("");
+    result.push("**Resolution Priority:**");
+    result.push("1. Guild-specific database configuration");
+    result.push("2. Environment variable `SILENT_FIRST_MSG_DAYS` (if set)");
+    result.push("3. Default: 90 days");
+    result.push("");
+    result.push("**To change threshold:**");
+    result.push("`/config set flags_threshold days:120`");
 
-  ctx.step("reply");
-  await replyOrEdit(interaction, {
-    content: lines.join("\n"),
-    flags: interaction.replied ? undefined : MessageFlags.Ephemeral,
+    return result;
+  });
+
+  await withStep(ctx, "reply", async () => {
+    await replyOrEdit(interaction, {
+      content: lines.join("\n"),
+      flags: interaction.replied ? undefined : MessageFlags.Ephemeral,
+    });
   });
 }
 
@@ -137,20 +157,24 @@ export async function executeView(ctx: CommandContext<ChatInputCommandInteractio
    */
   const { interaction } = ctx;
 
-  // Defer reply without ephemeral flag so everyone can see it
-  if (!interaction.deferred && !interaction.replied) {
-    await interaction.deferReply();
-  }
+  await withStep(ctx, "defer", async () => {
+    // Defer reply without ephemeral flag so everyone can see it
+    if (!interaction.deferred && !interaction.replied) {
+      await interaction.deferReply();
+    }
+  });
 
-  ctx.step("load_config");
-  const cfg = getConfig(interaction.guildId!);
+  const cfg = await withStep(ctx, "load_config", async () => {
+    return withSql(ctx, "SELECT guild_config", () => getConfig(interaction.guildId!));
+  });
+
   if (!cfg) {
     await replyOrEdit(interaction, { content: "No configuration found. Run /gate setup first." });
     return;
   }
 
-  ctx.step("format_display");
-  const embeds: EmbedBuilder[] = [];
+  const embeds = await withStep(ctx, "format_display", async () => {
+    const result: EmbedBuilder[] = [];
 
   // Helper to format value
   const fmt = (v: unknown, type?: "channel" | "role" | "user"): string => {
@@ -198,7 +222,7 @@ export async function executeView(ctx: CommandContext<ChatInputCommandInteractio
   channelValue += `- server_artist_channel_id: ${fmt(cfg.server_artist_channel_id, "channel")}`;
   embed1.addFields({ name: "Channel Settings", value: channelValue, inline: false });
 
-  embeds.push(embed1);
+    result.push(embed1);
 
   // EMBED 2: Role & Feature Settings
   const embed2 = new EmbedBuilder()
@@ -238,7 +262,7 @@ export async function executeView(ctx: CommandContext<ChatInputCommandInteractio
   timingValue += `- gate_answer_max_length: ${cfg.gate_answer_max_length ?? 1000} chars`;
   embed2.addFields({ name: "Timing & Limits", value: timingValue, inline: false });
 
-  embeds.push(embed2);
+    result.push(embed2);
 
   // EMBED 3: Advanced Settings
   const embed3 = new EmbedBuilder()
@@ -294,8 +318,12 @@ export async function executeView(ctx: CommandContext<ChatInputCommandInteractio
   jsonValue += `- poke_excluded_channel_ids_json: ${safeJsonLen(cfg.poke_excluded_channel_ids_json)}`;
   embed3.addFields({ name: "JSON Configs", value: jsonValue, inline: false });
 
-  embeds.push(embed3);
+    result.push(embed3);
 
-  ctx.step("reply");
-  await replyOrEdit(interaction, { embeds });
+    return result;
+  });
+
+  await withStep(ctx, "reply", async () => {
+    await replyOrEdit(interaction, { embeds });
+  });
 }

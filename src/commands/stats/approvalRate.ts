@@ -13,6 +13,7 @@ import {
   nowUtc,
   logger,
   captureException,
+  withStep,
   type CommandContext,
   type GuildMember,
 } from "./shared.js";
@@ -32,7 +33,9 @@ export async function handleApprovalRate(
   const start = Date.now();
 
   try {
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await withStep(ctx, "defer_reply", async () => {
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    });
 
     if (!interaction.guildId) {
       await interaction.editReply({
@@ -61,16 +64,20 @@ export async function handleApprovalRate(
       tags: { days, from, to, guildId: interaction.guildId },
     });
 
-    const trend = getApprovalRateTrend({
-      guildId: interaction.guildId,
-      from,
-      to,
-    });
+    const { trend, rejectionReasons } = await withStep(ctx, "fetch_analytics", () => {
+      const trend = getApprovalRateTrend({
+        guildId: interaction.guildId!,
+        from,
+        to,
+      });
 
-    const rejectionReasons = getTopRejectionReasons(
-      { guildId: interaction.guildId, from, to },
-      5
-    );
+      const rejectionReasons = getTopRejectionReasons(
+        { guildId: interaction.guildId!, from, to },
+        5
+      );
+
+      return { trend, rejectionReasons };
+    });
 
     const { current, previous, approvalRateDelta, trendDirection } = trend;
 
@@ -139,6 +146,7 @@ export async function handleApprovalRate(
     const elapsed = Date.now() - start;
     logger.info(
       {
+        evt: "stats_approval_rate_view",
         render: "stats:approval-rate",
         ms: elapsed,
         days,
@@ -150,7 +158,9 @@ export async function handleApprovalRate(
       "[stats:approval-rate] render completed"
     );
 
-    await interaction.editReply({ embeds: [embed] });
+    await withStep(ctx, "reply", async () => {
+      await interaction.editReply({ embeds: [embed] });
+    });
   } catch (err) {
     const traceId = ctx.traceId;
     logger.error({ err, traceId }, "[stats:approval-rate] command failed");

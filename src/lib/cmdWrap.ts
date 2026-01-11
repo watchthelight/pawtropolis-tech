@@ -373,7 +373,7 @@ export function wrapCommand<I extends InstrumentedInteraction>(
 }
 
 export async function withStep<T>(
-  ctx: CommandContext,
+  ctx: CommandContext<InstrumentedInteraction>,
   phase: Phase,
   fn: () => Promise<T> | T
 ): Promise<T> {

@@ -22,6 +22,8 @@ import {
   type CommandContext,
   ensureDeferred,
   replyOrEdit,
+  withStep,
+  withSql,
   logger,
   type ApplicationRow,
 } from "./shared.js";
@@ -61,8 +63,9 @@ export async function executeKick(ctx: CommandContext<ChatInputCommandInteractio
     "Kicks an applicant from the server with a reason."
   )) return;
 
-  ctx.step("defer");
-  await ensureDeferred(interaction);
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
   const codeRaw = interaction.options.getString("app", false);
   const userOption = interaction.options.getUser("user", false);
@@ -92,53 +95,64 @@ export async function executeKick(ctx: CommandContext<ChatInputCommandInteractio
     return;
   }
 
-  ctx.step("lookup_app");
-  let app: ApplicationRow | null = null;
-  if (codeRaw) {
-    const code = codeRaw.trim().toUpperCase();
-    app = findAppByShortCode(interaction.guildId, code);
+  const lookupResult = await withStep(ctx, "lookup_app", async () => {
+    let app: ApplicationRow | null = null;
+    if (codeRaw) {
+      const code = codeRaw.trim().toUpperCase();
+      app = withSql(ctx, "SELECT application by short_code", () =>
+        findAppByShortCode(interaction.guildId!, code)
+      );
+      if (!app) {
+        return { found: false as const, error: `No application with code ${code}.` };
+      }
+    } else if (userOption) {
+      app = withSql(ctx, "SELECT application by user_id", () =>
+        findPendingAppByUserId(interaction.guildId!, userOption.id)
+      );
+      if (!app) {
+        return { found: false as const, error: `No pending application found for ${userOption}.` };
+      }
+    } else if (uidRaw) {
+      const uid = uidRaw.trim();
+      if (!/^[0-9]{5,20}$/.test(uid)) {
+        return { found: false as const, error: "Invalid user ID. Must be 5-20 digits." };
+      }
+      app = withSql(ctx, "SELECT application by user_id", () =>
+        findPendingAppByUserId(interaction.guildId!, uid)
+      );
+      if (!app) {
+        return { found: false as const, error: `No pending application found for user ID ${uid}.` };
+      }
+    }
     if (!app) {
-      await replyOrEdit(interaction, { content: `No application with code ${code}.` });
-      return;
+      return { found: false as const, error: "Could not find application." };
     }
-  } else if (userOption) {
-    app = findPendingAppByUserId(interaction.guildId, userOption.id);
-    if (!app) {
-      await replyOrEdit(interaction, {
-        content: `No pending application found for ${userOption}.`,
-      });
-      return;
-    }
-  } else if (uidRaw) {
-    const uid = uidRaw.trim();
-    if (!/^[0-9]{5,20}$/.test(uid)) {
-      await replyOrEdit(interaction, { content: "Invalid user ID. Must be 5-20 digits." });
-      return;
-    }
-    app = findPendingAppByUserId(interaction.guildId, uid);
-    if (!app) {
-      await replyOrEdit(interaction, {
-        content: `No pending application found for user ID ${uid}.`,
-      });
-      return;
-    }
-  }
+    return { found: true as const, app };
+  });
 
-  if (!app) {
-    await replyOrEdit(interaction, { content: "Could not find application." });
+  if (!lookupResult.found) {
+    await replyOrEdit(interaction, { content: lookupResult.error });
+    return;
+  }
+  const app = lookupResult.app;
+
+  const claimResult = await withStep(ctx, "claim_check", async () => {
+    const claim = withSql(ctx, "SELECT review_claim", () => getClaim(app.id));
+    const claimError = claimGuard(claim, interaction.user.id);
+    return { claimError };
+  });
+
+  if (claimResult.claimError) {
+    await replyOrEdit(interaction, { content: claimResult.claimError });
     return;
   }
 
-  ctx.step("claim_check");
-  const claim = getClaim(app.id);
-  const claimError = claimGuard(claim, interaction.user.id);
-  if (claimError) {
-    await replyOrEdit(interaction, { content: claimError });
-    return;
-  }
+  const tx = await withStep(ctx, "kick_tx", async () => {
+    return withSql(ctx, "UPDATE application status=kicked", () =>
+      kickTx(app.id, interaction.user.id, reason.length > 0 ? reason : null)
+    );
+  });
 
-  ctx.step("kick_tx");
-  const tx = kickTx(app.id, interaction.user.id, reason.length > 0 ? reason : null);
   if (tx.kind === "already") {
     await replyOrEdit(interaction, { content: "Already kicked." });
     return;
@@ -152,32 +166,37 @@ export async function executeKick(ctx: CommandContext<ChatInputCommandInteractio
     return;
   }
 
-  ctx.step("kick_flow");
-  const flow = await kickFlow(interaction.guild, app.user_id, reason.length > 0 ? reason : null);
-  updateReviewActionMeta(tx.reviewActionId, flow);
+  const flow = await withStep(ctx, "kick_flow", async () => {
+    const result = await kickFlow(interaction.guild!, app.user_id, reason.length > 0 ? reason : null);
+    withSql(ctx, "UPDATE review_action meta", () =>
+      updateReviewActionMeta(tx.reviewActionId, result)
+    );
+    return result;
+  });
 
   // Note: Claim preserved for review card display
 
-  ctx.step("refresh_review");
-  try {
-    await ensureReviewMessage(interaction.client, app.id);
-  } catch (err) {
-    logger.warn({ err, appId: app.id }, "Failed to refresh review card after /kick");
-  }
+  await withStep(ctx, "refresh_review", async () => {
+    try {
+      await ensureReviewMessage(interaction.client, app.id);
+    } catch (err) {
+      logger.warn({ err, appId: app.id }, "Failed to refresh review card after /kick");
+    }
+  });
 
-  // Build user-friendly response based on kick result
-  let message: string;
-  if (flow.kickSucceeded) {
-    message = flow.dmDelivered
-      ? "Member kicked and notified via DM."
-      : "Member kicked (DM delivery failed, user may have DMs disabled).";
-  } else if (flow.error) {
-    // Provide specific error context to staff
-    message = `Kick failed: ${flow.error}`;
-  } else {
-    message = "Kick attempted; check logs for details.";
-  }
-
-  ctx.step("reply");
-  await replyOrEdit(interaction, { content: message });
+  await withStep(ctx, "reply", async () => {
+    // Build user-friendly response based on kick result
+    let message: string;
+    if (flow.kickSucceeded) {
+      message = flow.dmDelivered
+        ? "Member kicked and notified via DM."
+        : "Member kicked (DM delivery failed, user may have DMs disabled).";
+    } else if (flow.error) {
+      // Provide specific error context to staff
+      message = `Kick failed: ${flow.error}`;
+    } else {
+      message = "Kick attempted; check logs for details.";
+    }
+    await replyOrEdit(interaction, { content: message });
+  });
 }

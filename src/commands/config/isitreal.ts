@@ -23,7 +23,7 @@ import {
   type ModalSubmitInteraction,
   MessageFlags,
 } from "discord.js";
-import { type CommandContext } from "../../lib/cmdWrap.js";
+import { type CommandContext, withStep } from "../../lib/cmdWrap.js";
 import { isOwner } from "../../lib/owner.js";
 import { requireAdminOrLeadership, getConfig } from "../../lib/config.js";
 import { logger } from "../../lib/logger.js";
@@ -125,24 +125,29 @@ export async function executeIsitreal(ctx: CommandContext<ChatInputCommandIntera
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await withStep(ctx, "defer", async () => {
+    await interaction.deferReply({ ephemeral: true });
+  });
 
   // Get enabled services for this guild
   const guildId = interaction.guildId!;
   const enabledServiceIds = getEnabledServices(guildId);
 
   // Get and test all services, then filter to only enabled ones
-  ctx.step("testing_services");
-  const allServices = await testAllConfigured();
-  const services = allServices.filter((s) => enabledServiceIds.includes(s.service));
+  const services = await withStep(ctx, "testing_services", async () => {
+    const allServices = await testAllConfigured();
+    return allServices.filter((s) => enabledServiceIds.includes(s.service));
+  });
 
-  // Build status embed
-  const embed = buildStatusEmbed(services, enabledServiceIds.length < 4);
+  await withStep(ctx, "reply", async () => {
+    // Build status embed
+    const embed = buildStatusEmbed(services, enabledServiceIds.length < 4);
 
-  // Build setup buttons
-  const rows = buildSetupButtons(services);
+    // Build setup buttons
+    const rows = buildSetupButtons(services);
 
-  await interaction.editReply({ embeds: [embed], components: rows });
+    await interaction.editReply({ embeds: [embed], components: rows });
+  });
 }
 
 // ============================================================================

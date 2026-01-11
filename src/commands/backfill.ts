@@ -15,7 +15,7 @@ import {
   type ChatInputCommandInteraction,
 } from 'discord.js';
 import { spawn } from 'child_process';
-import { type CommandContext } from '../lib/cmdWrap.js';
+import { type CommandContext, withStep } from '../lib/cmdWrap.js';
 import { requireMinRole, ROLE_IDS, getConfig } from '../lib/config.js';
 import { logger } from '../lib/logger.js';
 import { checkCooldown, formatCooldown, COOLDOWNS } from '../lib/rateLimiter.js';
@@ -70,11 +70,14 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   }
 
   // Require Community Manager+ role
-  if (!requireMinRole(interaction, ROLE_IDS.COMMUNITY_MANAGER, {
-    command: "backfill",
-    description: "Backfills historical message activity data for the heatmap.",
-    requirements: [{ type: "hierarchy", minRoleId: ROLE_IDS.COMMUNITY_MANAGER }],
-  })) return;
+  const hasPermission = await withStep(ctx, "permission_check", async () => {
+    return requireMinRole(interaction, ROLE_IDS.COMMUNITY_MANAGER, {
+      command: "backfill",
+      description: "Backfills historical message activity data for the heatmap.",
+      requirements: [{ type: "hierarchy", minRoleId: ROLE_IDS.COMMUNITY_MANAGER }],
+    });
+  });
+  if (!hasPermission) return;
 
   // Rate limit: 30 minutes per guild to prevent resource exhaustion
   const cooldownResult = checkCooldown("backfill", guildId, COOLDOWNS.BACKFILL_MS);
@@ -110,9 +113,11 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   }
 
   // Acknowledge command
-  await interaction.reply({
-    content: `🔄 Starting backfill for ${weeks} weeks${dryRun ? ' (DRY RUN)' : ''}...\n\nThis will take 15-20 minutes. You'll be pinged when complete.`,
-    ephemeral: false,
+  await withStep(ctx, "reply", async () => {
+    await interaction.reply({
+      content: `🔄 Starting backfill for ${weeks} weeks${dryRun ? ' (DRY RUN)' : ''}...\n\nThis will take 15-20 minutes. You'll be pinged when complete.`,
+      ephemeral: false,
+    });
   });
 
   // Build command arguments

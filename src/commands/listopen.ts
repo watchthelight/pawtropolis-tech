@@ -279,14 +279,6 @@ function countDraftApplications(guildId: string): number {
 }
 
 /**
- * WHAT: Invalidate drafts cache for a guild.
- * WHY: Call when a draft is created/submitted/deleted.
- */
-export function invalidateDraftsCache(guildId: string): void {
-  draftsCache.delete(guildId);
-}
-
-/**
  * WHAT: Build the main embed showing open applications with clickable links.
  * WHY: Visual display of claimed apps needing review with direct navigation to review cards.
  *

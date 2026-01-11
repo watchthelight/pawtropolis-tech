@@ -20,7 +20,7 @@ import {
   EmbedBuilder,
   Role,
 } from "discord.js";
-import { type CommandContext, withStep, withSql, ensureDeferred } from "../lib/cmdWrap.js";
+import { type CommandContext, withStep, withSql } from "../lib/cmdWrap.js";
 import { db } from "../db/db.js";
 import { logger } from "../lib/logger.js";
 import { getRoleTiers, canManageRoleSync, type RoleTier, type LevelReward } from "../features/roleAutomation.js";
@@ -132,7 +132,8 @@ export const data = new SlashCommandBuilder()
       .addStringOption((opt) =>
         opt.setName("tier_name").setDescription("Tier name to remove").setRequired(true)
       )
-  );
+  )
+  .setDMPermission(false);
 
 export async function execute(ctx: CommandContext<ChatInputCommandInteraction>): Promise<void> {
   const { interaction } = ctx;

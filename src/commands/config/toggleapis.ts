@@ -17,7 +17,7 @@ import {
   type ButtonInteraction,
   MessageFlags,
 } from "discord.js";
-import { type CommandContext } from "../../lib/cmdWrap.js";
+import { type CommandContext, withStep } from "../../lib/cmdWrap.js";
 import { requireAdminOrLeadership } from "../../lib/config.js";
 import { logger } from "../../lib/logger.js";
 import {
@@ -143,13 +143,15 @@ export async function executeToggleApis(ctx: CommandContext<ChatInputCommandInte
     return;
   }
 
-  const embed = buildStatusEmbed(guildId);
-  const rows = buildToggleButtons(guildId);
+  await withStep(ctx, "build_response", async () => {
+    const embed = buildStatusEmbed(guildId);
+    const rows = buildToggleButtons(guildId);
 
-  await interaction.reply({
-    embeds: [embed],
-    components: rows,
-    flags: MessageFlags.Ephemeral,
+    await interaction.reply({
+      embeds: [embed],
+      components: rows,
+      flags: MessageFlags.Ephemeral,
+    });
   });
 }
 

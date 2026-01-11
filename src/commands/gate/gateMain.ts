@@ -36,6 +36,7 @@ import {
   type CommandContext,
   ensureDeferred,
   replyOrEdit,
+  withStep,
   withSql,
 } from "../../lib/cmdWrap.js";
 import { db } from "../../db/db.js";
@@ -149,64 +150,73 @@ export const data = new SlashCommandBuilder()
 async function executeSetup(ctx: CommandContext<ChatInputCommandInteraction>) {
   const { interaction } = ctx;
 
-  await ensureDeferred(interaction);
-
-  ctx.step("validate_input");
-  const reviewerRole = interaction.options.getRole("reviewer_role");
-  const unverifiedChannel = interaction.options.getChannel("unverified_channel");
-  const channels = {
-    review: interaction.options.getChannel("review_channel", true).id,
-    gate: interaction.options.getChannel("gate_channel", true).id,
-    general: interaction.options.getChannel("general_channel", true).id,
-    unverified: unverifiedChannel?.id ?? null,
-    accepted: interaction.options.getRole("accepted_role", true).id,
-    reviewer: reviewerRole?.id ?? null,
-  };
-
-  ctx.step("db_write");
-  upsertConfig(interaction.guildId!, {
-    review_channel_id: channels.review,
-    gate_channel_id: channels.gate,
-    general_channel_id: channels.general,
-    unverified_channel_id: channels.unverified,
-    accepted_role_id: channels.accepted,
-    reviewer_role_id: channels.reviewer,
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
   });
 
-  ctx.step("seed_questions");
-  const { inserted, total } = seedDefaultQuestionsIfEmpty(interaction.guildId!, ctx);
-  logger.info(
-    { evt: "gate_questions_seed", guildId: interaction.guildId!, inserted, total },
-    "[gate] questions seeded (if empty)"
-  );
+  const channels = await withStep(ctx, "validate_input", async () => {
+    const reviewerRole = interaction.options.getRole("reviewer_role");
+    const unverifiedChannel = interaction.options.getChannel("unverified_channel");
+    return {
+      review: interaction.options.getChannel("review_channel", true).id,
+      gate: interaction.options.getChannel("gate_channel", true).id,
+      general: interaction.options.getChannel("general_channel", true).id,
+      unverified: unverifiedChannel?.id ?? null,
+      accepted: interaction.options.getRole("accepted_role", true).id,
+      reviewer: reviewerRole?.id ?? null,
+    };
+  });
 
-  ctx.step("ensure_entry");
-  await ensureGateEntry(ctx, interaction.guildId!);
+  await withStep(ctx, "db_write", async () => {
+    withSql(ctx, "INSERT/UPDATE guild_config gate channels/roles", () =>
+      upsertConfig(interaction.guildId!, {
+        review_channel_id: channels.review,
+        gate_channel_id: channels.gate,
+        general_channel_id: channels.general,
+        unverified_channel_id: channels.unverified,
+        accepted_role_id: channels.accepted,
+        reviewer_role_id: channels.reviewer,
+      })
+    );
+  });
 
-  ctx.step("count_questions");
-  const questionCount = total;
+  const { inserted, total } = await withStep(ctx, "seed_questions", async () => {
+    const result = seedDefaultQuestionsIfEmpty(interaction.guildId!, ctx);
+    logger.info(
+      { evt: "gate_questions_seed", guildId: interaction.guildId!, inserted: result.inserted, total: result.total },
+      "[gate] questions seeded (if empty)"
+    );
+    return result;
+  });
 
-  ctx.step("post_config_card");
-  await postGateConfigCard(
-    interaction,
-    interaction.guild!,
-    {
-      reviewChannelId: channels.review,
-      gateChannelId: channels.gate,
-      generalChannelId: channels.general,
-      unverifiedChannelId: channels.unverified,
-      acceptedRoleId: channels.accepted,
-      reviewerRoleId: channels.reviewer,
-    },
-    questionCount
-  );
+  await withStep(ctx, "ensure_entry", async () => {
+    await ensureGateEntry(ctx, interaction.guildId!);
+  });
+
+  await withStep(ctx, "post_config_card", async () => {
+    await postGateConfigCard(
+      interaction,
+      interaction.guild!,
+      {
+        reviewChannelId: channels.review,
+        gateChannelId: channels.gate,
+        generalChannelId: channels.general,
+        unverifiedChannelId: channels.unverified,
+        acceptedRoleId: channels.accepted,
+        reviewerRoleId: channels.reviewer,
+      },
+      total
+    );
+  });
 }
 
 async function executeReset(ctx: CommandContext<ChatInputCommandInteraction>) {
   const { interaction } = ctx;
 
-  ctx.step("check_config");
-  const cfg = getConfig(interaction.guildId!);
+  const cfg = await withStep(ctx, "check_config", async () => {
+    return withSql(ctx, "SELECT guild_config", () => getConfig(interaction.guildId!));
+  });
+
   if (!cfg) {
     await interaction.reply({
       flags: MessageFlags.Ephemeral,
@@ -215,30 +225,31 @@ async function executeReset(ctx: CommandContext<ChatInputCommandInteraction>) {
     return;
   }
 
-  ctx.step("show_confirmation_modal");
-  const modal = new ModalBuilder()
-    .setCustomId(`v1:gate:reset:${interaction.guildId}`)
-    .setTitle("⚠️ Reset Guild Data");
+  await withStep(ctx, "show_confirmation_modal", async () => {
+    const modal = new ModalBuilder()
+      .setCustomId(`v1:gate:reset:${interaction.guildId}`)
+      .setTitle("⚠️ Reset Guild Data");
 
-  const confirmInput = new TextInputBuilder()
-    .setCustomId("v1:gate:reset:confirm")
-    .setLabel('Type "RESET" to confirm')
-    .setStyle(TextInputStyle.Short)
-    .setRequired(true)
-    .setPlaceholder("RESET");
+    const confirmInput = new TextInputBuilder()
+      .setCustomId("v1:gate:reset:confirm")
+      .setLabel('Type "RESET" to confirm')
+      .setStyle(TextInputStyle.Short)
+      .setRequired(true)
+      .setPlaceholder("RESET");
 
-  const passwordInput = new TextInputBuilder()
-    .setCustomId("v1:gate:reset:password")
-    .setLabel("Enter reset password (from env)")
-    .setStyle(TextInputStyle.Short)
-    .setRequired(true);
+    const passwordInput = new TextInputBuilder()
+      .setCustomId("v1:gate:reset:password")
+      .setLabel("Enter reset password (from env)")
+      .setStyle(TextInputStyle.Short)
+      .setRequired(true);
 
-  modal.addComponents(
-    new ActionRowBuilder<TextInputBuilder>().addComponents(confirmInput),
-    new ActionRowBuilder<TextInputBuilder>().addComponents(passwordInput)
-  );
+    modal.addComponents(
+      new ActionRowBuilder<TextInputBuilder>().addComponents(confirmInput),
+      new ActionRowBuilder<TextInputBuilder>().addComponents(passwordInput)
+    );
 
-  await interaction.showModal(modal);
+    await interaction.showModal(modal);
+  });
 }
 
 export const handleResetModal = wrapCommand<ModalSubmitInteraction>("gate:reset", async (ctx) => {
@@ -249,13 +260,16 @@ export const handleResetModal = wrapCommand<ModalSubmitInteraction>("gate:reset"
     return;
   }
 
-  ctx.step("permission_check");
-  const member = isGuildMember(interaction.member) ? interaction.member : null;
-  const hasPermission =
-    canRunAllCommands(member, interaction.guildId) ||
-    hasManageGuild(member) ||
-    isReviewer(interaction.guildId, member);
-  if (!hasPermission) {
+  const permissionResult = await withStep(ctx, "permission_check", async () => {
+    const member = isGuildMember(interaction.member) ? interaction.member : null;
+    const hasPermission =
+      canRunAllCommands(member, interaction.guildId) ||
+      hasManageGuild(member) ||
+      isReviewer(interaction.guildId, member);
+    return { hasPermission };
+  });
+
+  if (!permissionResult.hasPermission) {
     await interaction.reply({
       flags: MessageFlags.Ephemeral,
       content: "You don't have permission for this.",
@@ -263,9 +277,12 @@ export const handleResetModal = wrapCommand<ModalSubmitInteraction>("gate:reset"
     return;
   }
 
-  ctx.step("validate_confirm");
-  const confirmText = interaction.fields.getTextInputValue("v1:gate:reset:confirm").trim();
-  if (confirmText !== "RESET") {
+  const confirmResult = await withStep(ctx, "validate_confirm", async () => {
+    const confirmText = interaction.fields.getTextInputValue("v1:gate:reset:confirm").trim();
+    return { valid: confirmText === "RESET" };
+  });
+
+  if (!confirmResult.valid) {
     await interaction.reply({
       flags: MessageFlags.Ephemeral,
       content: "Confirmation word incorrect.",
@@ -273,45 +290,52 @@ export const handleResetModal = wrapCommand<ModalSubmitInteraction>("gate:reset"
     return;
   }
 
-  ctx.step("validate_password");
-  const password = interaction.fields.getTextInputValue("v1:gate:reset:password").trim();
+  const passwordResult = await withStep(ctx, "validate_password", async () => {
+    const password = interaction.fields.getTextInputValue("v1:gate:reset:password").trim();
 
-  if (!env.RESET_PASSWORD) {
+    if (!env.RESET_PASSWORD) {
+      return { valid: false, reason: "not_configured" as const };
+    }
+
+    if (!secureCompare(password, env.RESET_PASSWORD)) {
+      logger.warn(
+        {
+          evt: "gate_reset_denied",
+          guildId: interaction.guildId,
+          userId: interaction.user.id,
+        },
+        "[gate] Reset denied: invalid password"
+      );
+      return { valid: false, reason: "incorrect" as const };
+    }
+
+    return { valid: true, reason: null };
+  });
+
+  if (!passwordResult.valid) {
     await interaction.reply({
       flags: MessageFlags.Ephemeral,
-      content: "RESET_PASSWORD not configured.",
+      content: passwordResult.reason === "not_configured" ? "RESET_PASSWORD not configured." : "Password incorrect.",
     });
     return;
   }
 
-  if (!secureCompare(password, env.RESET_PASSWORD)) {
-    logger.warn(
-      {
-        evt: "gate_reset_denied",
-        guildId: interaction.guildId,
-        userId: interaction.user.id,
-      },
-      "[gate] Reset denied: invalid password"
-    );
-    await interaction.reply({
-      flags: MessageFlags.Ephemeral,
-      content: "Password incorrect.",
-    });
-    return;
-  }
-
-  ctx.step("defer_reply");
-  await ensureDeferred(interaction);
+  await withStep(ctx, "defer_reply", async () => {
+    await ensureDeferred(interaction);
+  });
 
   const guildId = interaction.guildId;
 
-  ctx.step("permission_recheck");
-  const memberRecheck = isGuildMember(interaction.member) ? interaction.member : null;
-  const stillHasPermission =
-    canRunAllCommands(memberRecheck, guildId) ||
-    hasManageGuild(memberRecheck) ||
-    isReviewer(guildId, memberRecheck);
-  if (!stillHasPermission) {
+  const recheckResult = await withStep(ctx, "permission_recheck", async () => {
+    const memberRecheck = isGuildMember(interaction.member) ? interaction.member : null;
+    const stillHasPermission =
+      canRunAllCommands(memberRecheck, guildId) ||
+      hasManageGuild(memberRecheck) ||
+      isReviewer(guildId, memberRecheck);
+    return { stillHasPermission };
+  });
+
+  if (!recheckResult.stillHasPermission) {
     logger.warn(
       { evt: "gate_reset_permission_revoked", guildId, userId: interaction.user.id },
       "[gate] Permission revoked between modal open and submit"
@@ -320,74 +344,80 @@ export const handleResetModal = wrapCommand<ModalSubmitInteraction>("gate:reset"
     return;
   }
 
-  const resetAll = db.transaction(() => {
-    const runDelete = (phase: string, sql: string, optional = false) => {
-      ctx.step(phase);
-      try {
-        withSql(ctx, sql, () => db.prepare(sql).run());
-      } catch (err) {
-        if (optional && err instanceof Error && /no such table/i.test(err.message ?? "")) {
-          logger.warn(
-            { evt: "gate_reset_optional_missing", sql, err },
-            "[gate] optional table missing during reset"
-          );
-          return;
+  await withStep(ctx, "wipe_tables", async () => {
+    const resetAll = db.transaction(() => {
+      const runDelete = (sql: string, optional = false) => {
+        try {
+          withSql(ctx, sql, () => db.prepare(sql).run());
+        } catch (err) {
+          if (optional && err instanceof Error && /no such table/i.test(err.message ?? "")) {
+            logger.warn(
+              { evt: "gate_reset_optional_missing", sql, err },
+              "[gate] optional table missing during reset"
+            );
+            return;
+          }
+          throw err;
         }
-        throw err;
-      }
-    };
+      };
 
-    runDelete("wipe_application", "DELETE FROM application");
-    runDelete("wipe_application_response", "DELETE FROM application_response");
-    runDelete("wipe_review_action", "DELETE FROM review_action");
-    runDelete("wipe_modmail_bridge", "DELETE FROM modmail_bridge");
-    runDelete("wipe_review_card", "DELETE FROM review_card", true);
-    runDelete("wipe_avatar_scan", "DELETE FROM avatar_scan", true);
-    runDelete("wipe_review_claim", "DELETE FROM review_claim", true);
+      runDelete("DELETE FROM application");
+      runDelete("DELETE FROM application_response");
+      runDelete("DELETE FROM review_action");
+      runDelete("DELETE FROM modmail_bridge");
+      runDelete("DELETE FROM review_card", true);
+      runDelete("DELETE FROM avatar_scan", true);
+      runDelete("DELETE FROM review_claim", true);
+    });
+
+    resetAll();
   });
 
-  resetAll();
-
-  const wipeQuestionsSql = "DELETE FROM guild_question WHERE guild_id = ?";
-  ctx.step("wipe_guild_question");
-  try {
-    withSql(ctx, wipeQuestionsSql, () => db.prepare(wipeQuestionsSql).run(guildId));
-  } catch (err) {
-    if (err instanceof Error && /no such table/i.test(err.message ?? "")) {
-      logger.warn(
-        { evt: "gate_reset_optional_missing", sql: wipeQuestionsSql, err },
-        "[gate] questions table missing during reset"
-      );
-    } else {
-      throw err;
-    }
-  }
-
-  ctx.step("reseed_questions");
-  const { inserted, total } = seedDefaultQuestionsIfEmpty(guildId, ctx);
-  logger.info(
-    { evt: "gate_questions_seed", guildId, inserted, total },
-    "[gate] questions seeded (if empty)"
-  );
-
-  logger.info(
-    {
-      evt: "gate_reset_completed",
-      guildId,
-      userId: interaction.user.id,
-    },
-    `[gate] Reset completed for guild=${guildId}`
-  );
-
-  ctx.step("ensure_entry");
-  const cfg = getConfig(guildId);
-  if (cfg && cfg.gate_channel_id) {
+  await withStep(ctx, "wipe_guild_question", async () => {
+    const wipeQuestionsSql = "DELETE FROM guild_question WHERE guild_id = ?";
     try {
-      await ensureGateEntry(ctx, guildId!);
+      withSql(ctx, wipeQuestionsSql, () => db.prepare(wipeQuestionsSql).run(guildId));
     } catch (err) {
-      logger.warn({ err, guildId }, "Failed to ensure gate entry after reset");
+      if (err instanceof Error && /no such table/i.test(err.message ?? "")) {
+        logger.warn(
+          { evt: "gate_reset_optional_missing", sql: wipeQuestionsSql, err },
+          "[gate] questions table missing during reset"
+        );
+      } else {
+        throw err;
+      }
     }
-  }
+  });
+
+  const { inserted, total } = await withStep(ctx, "reseed_questions", async () => {
+    const result = seedDefaultQuestionsIfEmpty(guildId, ctx);
+    logger.info(
+      { evt: "gate_questions_seed", guildId, inserted: result.inserted, total: result.total },
+      "[gate] questions seeded (if empty)"
+    );
+
+    logger.info(
+      {
+        evt: "gate_reset_completed",
+        guildId,
+        userId: interaction.user.id,
+      },
+      `[gate] Reset completed for guild=${guildId}`
+    );
+
+    return result;
+  });
+
+  await withStep(ctx, "ensure_entry", async () => {
+    const cfg = withSql(ctx, "SELECT guild_config", () => getConfig(guildId));
+    if (cfg && cfg.gate_channel_id) {
+      try {
+        await ensureGateEntry(ctx, guildId!);
+      } catch (err) {
+        logger.warn({ err, guildId }, "Failed to ensure gate entry after reset");
+      }
+    }
+  });
 
   await interaction.editReply({
     content: `Guild data reset. Questions seeded: ${total}. Gate Entry ensured.`,
@@ -396,68 +426,91 @@ export const handleResetModal = wrapCommand<ModalSubmitInteraction>("gate:reset"
 
 async function executeStatus(ctx: CommandContext<ChatInputCommandInteraction>) {
   const { interaction } = ctx;
-  await ensureDeferred(interaction);
 
-  ctx.step("query_stats");
-  const guildId = interaction.guildId!;
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
-  const statusCounts = db
-    .prepare(
-      `SELECT status, COUNT(*) as count
-       FROM application
-       WHERE guild_id = ?
-       GROUP BY status`
-    )
-    .all(guildId) as Array<{ status: string; count: number }>;
+  const { statusCounts, claimedCount } = await withStep(ctx, "query_stats", async () => {
+    const guildId = interaction.guildId!;
 
-  const claimedCount = db
-    .prepare(`SELECT COUNT(DISTINCT app_id) as count FROM review_claim`)
-    .get() as { count: number };
+    const counts = withSql(ctx, "SELECT application status counts", () =>
+      db
+        .prepare(
+          `SELECT status, COUNT(*) as count
+           FROM application
+           WHERE guild_id = ?
+           GROUP BY status`
+        )
+        .all(guildId) as Array<{ status: string; count: number }>
+    );
 
-  const lines = ["**Application Statistics**", ""];
-  for (const row of statusCounts) {
-    lines.push(`${row.status}: ${row.count}`);
-  }
-  lines.push("", `Claimed: ${claimedCount.count}`);
+    const claimed = withSql(ctx, "SELECT review_claim count", () =>
+      db
+        .prepare(`SELECT COUNT(DISTINCT app_id) as count FROM review_claim`)
+        .get() as { count: number }
+    );
 
-  await replyOrEdit(interaction, { content: lines.join("\n") });
+    return { statusCounts: counts, claimedCount: claimed };
+  });
+
+  await withStep(ctx, "reply", async () => {
+    const lines = ["**Application Statistics**", ""];
+    for (const row of statusCounts) {
+      lines.push(`${row.status}: ${row.count}`);
+    }
+    lines.push("", `Claimed: ${claimedCount.count}`);
+
+    await replyOrEdit(interaction, { content: lines.join("\n") });
+  });
 }
 
 async function executeConfigView(ctx: CommandContext<ChatInputCommandInteraction>) {
   const { interaction } = ctx;
-  await ensureDeferred(interaction);
 
-  ctx.step("load_config");
-  const cfg = getConfig(interaction.guildId!);
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
+
+  const cfg = await withStep(ctx, "load_config", async () => {
+    return withSql(ctx, "SELECT guild_config", () => getConfig(interaction.guildId!));
+  });
+
   if (!cfg) {
     await replyOrEdit(interaction, { content: "No configuration found. Run /gate setup first." });
     return;
   }
 
-  const lines = [
-    "**Gate Configuration**",
-    "",
-    `Review channel: ${cfg.review_channel_id ? `<#${cfg.review_channel_id}>` : "not set"}`,
-    `Gate channel: ${cfg.gate_channel_id ? `<#${cfg.gate_channel_id}>` : "not set"}`,
-    `General channel: ${cfg.general_channel_id ? `<#${cfg.general_channel_id}>` : "not set"}`,
-    `Unverified channel: ${cfg.unverified_channel_id ? `<#${cfg.unverified_channel_id}>` : "not set"}`,
-    `Accepted role: ${cfg.accepted_role_id ? `<@&${cfg.accepted_role_id}>` : "not set"}`,
-    `Reviewer role: ${cfg.reviewer_role_id ? `<@&${cfg.reviewer_role_id}>` : "not set (uses channel perms)"}`,
-    "",
-    `Avatar scan enabled: ${cfg.avatar_scan_enabled ? "yes" : "no"}`,
-  ];
+  await withStep(ctx, "reply", async () => {
+    const lines = [
+      "**Gate Configuration**",
+      "",
+      `Review channel: ${cfg.review_channel_id ? `<#${cfg.review_channel_id}>` : "not set"}`,
+      `Gate channel: ${cfg.gate_channel_id ? `<#${cfg.gate_channel_id}>` : "not set"}`,
+      `General channel: ${cfg.general_channel_id ? `<#${cfg.general_channel_id}>` : "not set"}`,
+      `Unverified channel: ${cfg.unverified_channel_id ? `<#${cfg.unverified_channel_id}>` : "not set"}`,
+      `Accepted role: ${cfg.accepted_role_id ? `<@&${cfg.accepted_role_id}>` : "not set"}`,
+      `Reviewer role: ${cfg.reviewer_role_id ? `<@&${cfg.reviewer_role_id}>` : "not set (uses channel perms)"}`,
+      "",
+      `Avatar scan enabled: ${cfg.avatar_scan_enabled ? "yes" : "no"}`,
+    ];
 
-  await replyOrEdit(interaction, { content: lines.join("\n") });
+    await replyOrEdit(interaction, { content: lines.join("\n") });
+  });
 }
 
 async function executeSetQuestions(ctx: CommandContext<ChatInputCommandInteraction>) {
   const { interaction } = ctx;
 
-  ctx.step("defer");
-  await ensureDeferred(interaction);
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
-  ctx.step("validate_permission");
-  if (!(await hasGateAdmin(interaction))) {
+  const hasPermission = await withStep(ctx, "validate_permission", async () => {
+    return await hasGateAdmin(interaction);
+  });
+
+  if (!hasPermission) {
     await replyOrEdit(interaction, {
       flags: MessageFlags.Ephemeral,
       content:
@@ -468,21 +521,26 @@ async function executeSetQuestions(ctx: CommandContext<ChatInputCommandInteracti
 
   const guildId = interaction.guildId!;
 
-  ctx.step("parse_input");
-  const updates: Array<{ index: number; prompt: string }> = [];
-  for (let i = 1; i <= 5; i++) {
-    const val = interaction.options.getString(`q${i}`, false);
-    if (val && val.trim()) {
-      updates.push({ index: i - 1, prompt: val.trim() });
+  const updates = await withStep(ctx, "parse_input", async () => {
+    const result: Array<{ index: number; prompt: string }> = [];
+    for (let i = 1; i <= 5; i++) {
+      const val = interaction.options.getString(`q${i}`, false);
+      if (val && val.trim()) {
+        result.push({ index: i - 1, prompt: val.trim() });
+      }
     }
-  }
+    return result;
+  });
 
   if (updates.length === 0) {
-    ctx.step("load_current");
-    const current = getQuestions(guildId).filter(q => q.q_index >= 0 && q.q_index <= 4);
-    const preview = current.length > 0
-      ? current.map((q, i) => `${i + 1}) ${q.prompt}`).join("\n")
-      : "(No questions set)";
+    const preview = await withStep(ctx, "load_current", async () => {
+      const current = withSql(ctx, "SELECT guild_question", () =>
+        getQuestions(guildId).filter(q => q.q_index >= 0 && q.q_index <= 4)
+      );
+      return current.length > 0
+        ? current.map((q, i) => `${i + 1}) ${q.prompt}`).join("\n")
+        : "(No questions set)";
+    });
     await replyOrEdit(interaction, {
       flags: MessageFlags.Ephemeral,
       content: `No changes provided.\n\n**Current questions:**\n${preview}\n\nTo update, use: \`/gate set-questions q1:"Your question here"\``,
@@ -490,56 +548,79 @@ async function executeSetQuestions(ctx: CommandContext<ChatInputCommandInteracti
     return;
   }
 
-  ctx.step("upsert_questions");
-  const tx = db.transaction(() => {
-    for (const u of updates) {
-      upsertQuestion(guildId, u.index, u.prompt, 1, ctx);
-    }
+  await withStep(ctx, "upsert_questions", async () => {
+    const tx = db.transaction(() => {
+      for (const u of updates) {
+        upsertQuestion(guildId, u.index, u.prompt, 1, ctx);
+      }
+    });
+    tx();
   });
-  tx();
 
-  ctx.step("load_updated");
-  const current = getQuestions(guildId).filter(q => q.q_index >= 0 && q.q_index <= 4);
-  const updated = updates.map((u) => `q${u.index + 1}`).join(", ");
-  const preview = current.length > 0
-    ? current.map((q, i) => `${i + 1}) ${q.prompt}`).join("\n")
-    : "(No questions)";
+  const { updated, preview } = await withStep(ctx, "load_updated", async () => {
+    const current = withSql(ctx, "SELECT guild_question", () =>
+      getQuestions(guildId).filter(q => q.q_index >= 0 && q.q_index <= 4)
+    );
+    const updatedStr = updates.map((u) => `q${u.index + 1}`).join(", ");
+    const previewStr = current.length > 0
+      ? current.map((q, i) => `${i + 1}) ${q.prompt}`).join("\n")
+      : "(No questions)";
+    return { updated: updatedStr, preview: previewStr };
+  });
 
-  ctx.step("reply");
-  await replyOrEdit(interaction, {
-    flags: MessageFlags.Ephemeral,
-    content: `✅ Updated: **${updated}**\n\n**Current questions:**\n${preview}`,
+  await withStep(ctx, "reply", async () => {
+    await replyOrEdit(interaction, {
+      flags: MessageFlags.Ephemeral,
+      content: `✅ Updated: **${updated}**\n\n**Current questions:**\n${preview}`,
+    });
   });
 }
 
 async function executeWelcomeSet(ctx: CommandContext<ChatInputCommandInteraction>) {
   const { interaction } = ctx;
-  ctx.step("defer");
-  await ensureDeferred(interaction);
 
-  ctx.step("validate_template");
-  const raw = interaction.options.getString("content", true);
-  const content = raw.trim();
-  if (content.length === 0) {
-    await replyOrEdit(interaction, { content: "Template must include some text." });
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
+
+  const validationResult = await withStep(ctx, "validate_template", async () => {
+    const raw = interaction.options.getString("content", true);
+    const content = raw.trim();
+    if (content.length === 0) {
+      return { valid: false, reason: "empty" as const, content: "" };
+    }
+    if (content.length > 2000) {
+      return { valid: false, reason: "too_long" as const, content: "" };
+    }
+    return { valid: true, reason: null, content };
+  });
+
+  if (!validationResult.valid) {
+    await replyOrEdit(interaction, {
+      content: validationResult.reason === "empty"
+        ? "Template must include some text."
+        : "Template is too long (limit 2000 characters).",
+    });
     return;
   }
-  if (content.length > 2000) {
-    await replyOrEdit(interaction, { content: "Template is too long (limit 2000 characters)." });
-    return;
-  }
 
-  ctx.step("persist_template");
-  upsertConfig(interaction.guildId!, { welcome_template: content });
+  await withStep(ctx, "persist_template", async () => {
+    withSql(ctx, "INSERT/UPDATE guild_config welcome_template", () =>
+      upsertConfig(interaction.guildId!, { welcome_template: validationResult.content })
+    );
+  });
 
-  ctx.step("reply");
-  await replyOrEdit(interaction, { content: "Welcome template updated." });
+  await withStep(ctx, "reply", async () => {
+    await replyOrEdit(interaction, { content: "Welcome template updated." });
+  });
 }
 
 async function executeWelcomePreview(ctx: CommandContext<ChatInputCommandInteraction>) {
   const { interaction } = ctx;
-  ctx.step("defer");
-  await ensureDeferred(interaction);
+
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
   const member = interaction.member as GuildMember | null;
   if (!member) {
@@ -547,101 +628,144 @@ async function executeWelcomePreview(ctx: CommandContext<ChatInputCommandInterac
     return;
   }
 
-  ctx.step("load_config");
-  const cfg = getConfig(interaction.guildId!);
+  const content = await withStep(ctx, "render_preview", async () => {
+    const cfg = withSql(ctx, "SELECT guild_config", () => getConfig(interaction.guildId!));
 
-  ctx.step("render_preview");
-  const content = renderWelcomeTemplate({
-    template: cfg?.welcome_template ?? null,
-    guildName: interaction.guild!.name,
-    applicant: {
-      id: member.id,
-      tag: member.user?.tag ?? member.user.username,
-      display: member.displayName,
-    },
+    return renderWelcomeTemplate({
+      template: cfg?.welcome_template ?? null,
+      guildName: interaction.guild!.name,
+      applicant: {
+        id: member.id,
+        tag: member.user?.tag ?? member.user.username,
+        display: member.displayName,
+      },
+    });
   });
 
-  ctx.step("reply");
-  await replyOrEdit(interaction, { content });
+  await withStep(ctx, "reply", async () => {
+    await replyOrEdit(interaction, { content });
+  });
 }
 
 async function executeWelcomeChannels(ctx: CommandContext<ChatInputCommandInteraction>) {
   const { interaction } = ctx;
-  await ensureDeferred(interaction);
 
-  const infoChannel = interaction.options.getChannel("info_channel");
-  const rulesChannel = interaction.options.getChannel("rules_channel");
-  const pingRole = interaction.options.getRole("ping_role");
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
-  const updates: Partial<GuildConfig> = {};
-  if (infoChannel) updates.info_channel_id = infoChannel.id;
-  if (rulesChannel) updates.rules_channel_id = rulesChannel.id;
-  if (pingRole) updates.welcome_ping_role_id = pingRole.id;
+  const updates = await withStep(ctx, "gather_options", async () => {
+    const infoChannel = interaction.options.getChannel("info_channel");
+    const rulesChannel = interaction.options.getChannel("rules_channel");
+    const pingRole = interaction.options.getRole("ping_role");
+
+    const result: Partial<GuildConfig> = {};
+    if (infoChannel) result.info_channel_id = infoChannel.id;
+    if (rulesChannel) result.rules_channel_id = rulesChannel.id;
+    if (pingRole) result.welcome_ping_role_id = pingRole.id;
+    return result;
+  });
 
   if (Object.keys(updates).length === 0) {
     await replyOrEdit(interaction, { content: "No changes specified." });
     return;
   }
 
-  upsertConfig(interaction.guildId!, updates);
-  await replyOrEdit(interaction, { content: "Welcome channels updated." });
+  await withStep(ctx, "persist_config", async () => {
+    withSql(ctx, "INSERT/UPDATE guild_config welcome channels", () =>
+      upsertConfig(interaction.guildId!, updates)
+    );
+  });
+
+  await withStep(ctx, "reply", async () => {
+    await replyOrEdit(interaction, { content: "Welcome channels updated." });
+  });
 }
 
 async function executeWelcomeRole(ctx: CommandContext<ChatInputCommandInteraction>) {
   const { interaction } = ctx;
-  await ensureDeferred(interaction);
 
-  const role = interaction.options.getRole("role", true);
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
-  upsertConfig(interaction.guildId!, { welcome_ping_role_id: role.id });
-  await replyOrEdit(interaction, { content: "Welcome ping role updated." });
+  const role = await withStep(ctx, "get_role", async () => {
+    return interaction.options.getRole("role", true);
+  });
+
+  await withStep(ctx, "persist_config", async () => {
+    withSql(ctx, "INSERT/UPDATE guild_config welcome_ping_role_id", () =>
+      upsertConfig(interaction.guildId!, { welcome_ping_role_id: role.id })
+    );
+  });
+
+  await withStep(ctx, "reply", async () => {
+    await replyOrEdit(interaction, { content: "Welcome ping role updated." });
+  });
 }
 
 export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) {
   const { interaction } = ctx;
   if (!interaction.guildId || !interaction.guild) {
-    ctx.step("invalid_scope");
-    await interaction.reply({ flags: MessageFlags.Ephemeral, content: "Guild only." });
+    await withStep(ctx, "invalid_scope", async () => {
+      await interaction.reply({ flags: MessageFlags.Ephemeral, content: "Guild only." });
+    });
     return;
   }
 
-  ctx.step("permission_check");
-  if (!requireStaff(interaction, {
-    command: "gate",
-    description: "Manages guild gate and verification settings.",
-    requirements: [
-      { type: "config", field: "mod_role_ids" },
-      { type: "permission", permission: "ManageGuild" },
-    ],
-  })) return;
+  const hasPermission = await withStep(ctx, "permission_check", async () => {
+    return requireStaff(interaction, {
+      command: "gate",
+      description: "Manages guild gate and verification settings.",
+      requirements: [
+        { type: "config", field: "mod_role_ids" },
+        { type: "permission", permission: "ManageGuild" },
+      ],
+    });
+  });
 
-  const subcommandGroup = interaction.options.getSubcommandGroup(false);
-  if (!subcommandGroup) {
-    const subcommand = interaction.options.getSubcommand();
-    if (subcommand === "setup") {
-      await executeSetup(ctx);
-    } else if (subcommand === "reset") {
-      await executeReset(ctx);
-    } else if (subcommand === "status") {
-      await executeStatus(ctx);
-    } else if (subcommand === "config") {
-      await executeConfigView(ctx);
-    } else if (subcommand === "set-questions") {
-      await executeSetQuestions(ctx);
-    }
-    return;
-  }
+  if (!hasPermission) return;
 
-  if (subcommandGroup === "welcome") {
-    const subcommand = interaction.options.getSubcommand();
-    if (subcommand === "set") {
-      await executeWelcomeSet(ctx);
-    } else if (subcommand === "preview") {
-      await executeWelcomePreview(ctx);
-    } else if (subcommand === "channels") {
-      await executeWelcomeChannels(ctx);
-    } else if (subcommand === "role") {
-      await executeWelcomeRole(ctx);
+  await withStep(ctx, "route_subcommand", async () => {
+    const subcommandGroup = interaction.options.getSubcommandGroup(false);
+    if (!subcommandGroup) {
+      const subcommand = interaction.options.getSubcommand();
+      switch (subcommand) {
+        case "setup":
+          await executeSetup(ctx);
+          break;
+        case "reset":
+          await executeReset(ctx);
+          break;
+        case "status":
+          await executeStatus(ctx);
+          break;
+        case "config":
+          await executeConfigView(ctx);
+          break;
+        case "set-questions":
+          await executeSetQuestions(ctx);
+          break;
+      }
+      return;
     }
-  }
+
+    if (subcommandGroup === "welcome") {
+      const subcommand = interaction.options.getSubcommand();
+      switch (subcommand) {
+        case "set":
+          await executeWelcomeSet(ctx);
+          break;
+        case "preview":
+          await executeWelcomePreview(ctx);
+          break;
+        case "channels":
+          await executeWelcomeChannels(ctx);
+          break;
+        case "role":
+          await executeWelcomeRole(ctx);
+          break;
+      }
+    }
+  });
 }

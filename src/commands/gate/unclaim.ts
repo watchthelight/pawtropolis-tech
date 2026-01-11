@@ -21,6 +21,8 @@ import {
   type CommandContext,
   ensureDeferred,
   replyOrEdit,
+  withStep,
+  withSql,
   logger,
   type ApplicationRow,
   hasRoleOrAbove,
@@ -69,8 +71,9 @@ export async function executeUnclaim(ctx: CommandContext<ChatInputCommandInterac
 
   // Defer early. Even though this command is fast, we might hit Discord API
   // latency on the review card refresh, and the 3-second SLA is unforgiving.
-  ctx.step("defer");
-  await ensureDeferred(interaction);
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
 
   const codeRaw = interaction.options.getString("app", false);
   const userOption = interaction.options.getUser("user", false);
@@ -93,83 +96,97 @@ export async function executeUnclaim(ctx: CommandContext<ChatInputCommandInterac
     return;
   }
 
-  ctx.step("lookup_app");
-  // Yes, this could be a switch or early-return chain. The if-else ladder
-  // is ugly but explicit, and matches the other gate commands. Consistency > elegance.
-  let app: ApplicationRow | null = null;
-  if (codeRaw) {
-    const code = codeRaw.trim().toUpperCase();
-    app = findAppByShortCode(interaction.guildId, code);
+  const lookupResult = await withStep(ctx, "lookup_app", async () => {
+    // Yes, this could be a switch or early-return chain. The if-else ladder
+    // is ugly but explicit, and matches the other gate commands. Consistency > elegance.
+    let app: ApplicationRow | null = null;
+    if (codeRaw) {
+      const code = codeRaw.trim().toUpperCase();
+      app = withSql(ctx, "SELECT application by short_code", () =>
+        findAppByShortCode(interaction.guildId!, code)
+      );
+      if (!app) {
+        return { found: false as const, error: `No application with code ${code}.` };
+      }
+    } else if (userOption) {
+      app = withSql(ctx, "SELECT application by user_id", () =>
+        findPendingAppByUserId(interaction.guildId!, userOption.id)
+      );
+      if (!app) {
+        return { found: false as const, error: `No pending application found for ${userOption}.` };
+      }
+    } else if (uidRaw) {
+      const uid = uidRaw.trim();
+      // Discord snowflakes are 18-19 digits currently, but the spec allows for growth.
+      // 5 is a floor to catch obvious typos; 20 gives us headroom until 2090 or so.
+      if (!/^[0-9]{5,20}$/.test(uid)) {
+        return { found: false as const, error: "Invalid user ID. Must be 5-20 digits." };
+      }
+      app = withSql(ctx, "SELECT application by user_id", () =>
+        findPendingAppByUserId(interaction.guildId!, uid)
+      );
+      if (!app) {
+        return { found: false as const, error: `No pending application found for user ID ${uid}.` };
+      }
+    }
+    // Defensive check. If we get here with null, the if-else above has a hole.
+    // TypeScript can't prove exhaustiveness here because of the early returns.
     if (!app) {
-      await replyOrEdit(interaction, { content: `No application with code ${code}.` });
-      return;
+      return { found: false as const, error: "Could not find application." };
     }
-  } else if (userOption) {
-    app = findPendingAppByUserId(interaction.guildId, userOption.id);
-    if (!app) {
-      await replyOrEdit(interaction, {
-        content: `No pending application found for ${userOption}.`,
-      });
-      return;
-    }
-  } else if (uidRaw) {
-    const uid = uidRaw.trim();
-    // Discord snowflakes are 18-19 digits currently, but the spec allows for growth.
-    // 5 is a floor to catch obvious typos; 20 gives us headroom until 2090 or so.
-    if (!/^[0-9]{5,20}$/.test(uid)) {
-      await replyOrEdit(interaction, { content: "Invalid user ID. Must be 5-20 digits." });
-      return;
-    }
-    app = findPendingAppByUserId(interaction.guildId, uid);
-    if (!app) {
-      await replyOrEdit(interaction, {
-        content: `No pending application found for user ID ${uid}.`,
-      });
-      return;
-    }
-  }
+    return { found: true as const, app };
+  });
 
-  // Defensive check. If we get here with null, the if-else above has a hole.
-  // TypeScript can't prove exhaustiveness here because of the early returns.
-  if (!app) {
-    await replyOrEdit(interaction, { content: "Could not find application." });
+  if (!lookupResult.found) {
+    await replyOrEdit(interaction, { content: lookupResult.error });
     return;
   }
+  const app = lookupResult.app;
 
-  ctx.step("claim_fetch");
-  const claim = getClaim(app.id);
-  if (!claim) {
+  const claimResult = await withStep(ctx, "claim_fetch", async () => {
+    const claim = withSql(ctx, "SELECT review_claim", () => getClaim(app.id));
+    if (!claim) {
+      return { hasClaim: false as const };
+    }
+
+    // claim ≠ forever. use /unclaim like an adult
+    // The claimer can always release their own claim.
+    // Administrators+ can unclaim anyone's application to resolve stalemates
+    // without needing direct DB access.
+    const isOwnClaim = claim.reviewer_id === interaction.user.id;
+    const member = interaction.member as GuildMember | null;
+    const isAdminPlus = shouldBypass(interaction.user.id, member) ||
+      hasRoleOrAbove(member, ROLE_IDS.ADMINISTRATOR);
+
+    return { hasClaim: true as const, claim, canUnclaim: isOwnClaim || isAdminPlus };
+  });
+
+  if (!claimResult.hasClaim) {
     await replyOrEdit(interaction, { content: "This application is not currently claimed." });
     return;
   }
 
-  // claim ≠ forever. use /unclaim like an adult
-  // The claimer can always release their own claim.
-  // Administrators+ can unclaim anyone's application to resolve stalemates
-  // without needing direct DB access.
-  const isOwnClaim = claim.reviewer_id === interaction.user.id;
-  const member = interaction.member as GuildMember | null;
-  const isAdminPlus = shouldBypass(interaction.user.id, member) ||
-    hasRoleOrAbove(member, ROLE_IDS.ADMINISTRATOR);
-
-  if (!isOwnClaim && !isAdminPlus) {
-    await replyOrEdit(interaction, { content: CLAIMED_MESSAGE(claim.reviewer_id) });
+  if (!claimResult.canUnclaim) {
+    await replyOrEdit(interaction, { content: CLAIMED_MESSAGE(claimResult.claim.reviewer_id) });
     return;
   }
 
-  ctx.step("clear_claim");
-  clearClaim(app.id);
+  await withStep(ctx, "clear_claim", async () => {
+    withSql(ctx, "DELETE review_claim", () => clearClaim(app.id));
+  });
 
-  ctx.step("refresh_review");
-  // Refresh the review card so other mods see it's available again.
-  // If Discord's having a bad day, we still report success -- the claim
-  // is cleared, and the card will catch up eventually.
-  try {
-    await ensureReviewMessage(interaction.client, app.id);
-  } catch (err) {
-    logger.warn({ err, appId: app.id }, "Failed to refresh review card after /unclaim");
-  }
+  await withStep(ctx, "refresh_review", async () => {
+    // Refresh the review card so other mods see it's available again.
+    // If Discord's having a bad day, we still report success -- the claim
+    // is cleared, and the card will catch up eventually.
+    try {
+      await ensureReviewMessage(interaction.client, app.id);
+    } catch (err) {
+      logger.warn({ err, appId: app.id }, "Failed to refresh review card after /unclaim");
+    }
+  });
 
-  ctx.step("reply");
-  await replyOrEdit(interaction, { content: "Claim removed." });
+  await withStep(ctx, "reply", async () => {
+    await replyOrEdit(interaction, { content: "Claim removed." });
+  });
 }

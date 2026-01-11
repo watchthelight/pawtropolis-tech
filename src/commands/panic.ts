@@ -13,7 +13,7 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
 } from "discord.js";
-import type { CommandContext } from "../lib/cmdWrap.js";
+import { type CommandContext, withStep, withSql } from "../lib/cmdWrap.js";
 import { setPanicMode, getPanicDetails } from "../features/panicStore.js";
 import { logger } from "../lib/logger.js";
 import { logActionPretty } from "../logging/pretty.js";
@@ -82,104 +82,115 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   }
 
   // Require Senior Administrator+ role
-  if (!requireMinRole(interaction, ROLE_IDS.SENIOR_ADMIN, {
-    command: "panic",
-    description: "Emergency shutoff for role automation system.",
-    requirements: [{ type: "hierarchy", minRoleId: ROLE_IDS.SENIOR_ADMIN }],
-  })) return;
+  const hasPermission = await withStep(ctx, "permission_check", async () => {
+    return requireMinRole(interaction, ROLE_IDS.SENIOR_ADMIN, {
+      command: "panic",
+      description: "Emergency shutoff for role automation system.",
+      requirements: [{ type: "hierarchy", minRoleId: ROLE_IDS.SENIOR_ADMIN }],
+    });
+  });
+  if (!hasPermission) return;
 
   const guildId = interaction.guild.id;
   const subcommand = interaction.options.getSubcommand();
 
-  switch (subcommand) {
-    case "on": {
-      // Reply immediately, then do audit logging in background
-      await interaction.reply({
-        content: "🚨 **PANIC MODE ENABLED**\n\nAll automatic role grants are now **stopped**.\nUse `/panic off` to resume normal operation.",
-        ephemeral: false,
-      });
-
-      setPanicMode(guildId, true, interaction.user.id);
-      /*
-       * Log level is WARN, not INFO, because enabling panic mode is an
-       * exceptional situation that warrants attention in log monitoring.
-       * If you're seeing this in prod, something probably went wrong.
-       */
-      logger.warn({
-        evt: "panic_command",
-        guildId,
-        userId: interaction.user.id,
-        action: "on",
-      }, `Panic mode enabled by ${interaction.user.tag}`);
-
-      // Log to Discord channel - non-fatal if it fails (still log warning)
-      logActionPretty(interaction.guild, {
-        actorId: interaction.user.id,
-        action: "panic_enabled",
-        reason: "Manual activation via /panic on",
-      }).catch((err) => {
-        logger.warn({ err, guildId, action: "panic_enabled" },
-          "[panic] Failed to log action - audit trail incomplete");
-      });
-      break;
-    }
-
-    case "off": {
-      // Reply immediately, then do audit logging in background
-      await interaction.reply({
-        content: "✅ **Panic mode disabled**\n\nRole automation has resumed normal operation.",
-        ephemeral: false,
-      });
-
-      setPanicMode(guildId, false, interaction.user.id);
-      logger.info({
-        evt: "panic_command",
-        guildId,
-        userId: interaction.user.id,
-        action: "off",
-      }, `Panic mode disabled by ${interaction.user.tag}`);
-
-      // Log to Discord channel (non-blocking)
-      logActionPretty(interaction.guild, {
-        actorId: interaction.user.id,
-        action: "panic_disabled",
-        reason: "Manual deactivation via /panic off",
-      }).catch((err) => {
-        logger.warn({ err, guildId, action: "panic_disabled" },
-          "[panic] Failed to log action - audit trail incomplete");
-      });
-      break;
-    }
-
-    case "status": {
-      /*
-       * Status is ephemeral because it's informational only - no need to
-       * broadcast to the channel. Staff can share the info if needed.
-       *
-       * The <t:...:F> format is Discord's timestamp formatting - renders as
-       * a full date/time in the user's local timezone.
-       */
-      const details = getPanicDetails(guildId);
-      if (details?.enabled) {
-        let statusMsg = "🚨 **Panic mode is ACTIVE** - Role automation is stopped.";
-        if (details.enabledBy) {
-          statusMsg += `\nEnabled by: <@${details.enabledBy}>`;
-        }
-        if (details.enabledAt) {
-          statusMsg += `\nEnabled at: <t:${Math.floor(details.enabledAt.getTime() / 1000)}:F>`;
-        }
-        statusMsg += "\n\nUse `/panic off` to resume.";
+  await withStep(ctx, "route_subcommand", async () => {
+    switch (subcommand) {
+      case "on": {
+        // Reply immediately, then do audit logging in background
         await interaction.reply({
-          content: statusMsg,
-          ephemeral: true,
+          content: "🚨 **PANIC MODE ENABLED**\n\nAll automatic role grants are now **stopped**.\nUse `/panic off` to resume normal operation.",
+          ephemeral: false,
         });
-      } else {
-        await interaction.reply({
-          content: "✅ **Panic mode is OFF** - Role automation is running normally.",
-          ephemeral: true,
+
+        withSql(ctx, "UPDATE panic_mode SET enabled = true", () =>
+          setPanicMode(guildId, true, interaction.user.id)
+        );
+        /*
+         * Log level is WARN, not INFO, because enabling panic mode is an
+         * exceptional situation that warrants attention in log monitoring.
+         * If you're seeing this in prod, something probably went wrong.
+         */
+        logger.warn({
+          evt: "panic_command",
+          guildId,
+          userId: interaction.user.id,
+          action: "on",
+        }, `Panic mode enabled by ${interaction.user.tag}`);
+
+        // Log to Discord channel - non-fatal if it fails (still log warning)
+        logActionPretty(interaction.guild, {
+          actorId: interaction.user.id,
+          action: "panic_enabled",
+          reason: "Manual activation via /panic on",
+        }).catch((err) => {
+          logger.warn({ err, guildId, action: "panic_enabled" },
+            "[panic] Failed to log action - audit trail incomplete");
         });
+        break;
       }
-      break;
+
+      case "off": {
+        // Reply immediately, then do audit logging in background
+        await interaction.reply({
+          content: "✅ **Panic mode disabled**\n\nRole automation has resumed normal operation.",
+          ephemeral: false,
+        });
+
+        withSql(ctx, "UPDATE panic_mode SET enabled = false", () =>
+          setPanicMode(guildId, false, interaction.user.id)
+        );
+        logger.info({
+          evt: "panic_command",
+          guildId,
+          userId: interaction.user.id,
+          action: "off",
+        }, `Panic mode disabled by ${interaction.user.tag}`);
+
+        // Log to Discord channel (non-blocking)
+        logActionPretty(interaction.guild, {
+          actorId: interaction.user.id,
+          action: "panic_disabled",
+          reason: "Manual deactivation via /panic off",
+        }).catch((err) => {
+          logger.warn({ err, guildId, action: "panic_disabled" },
+            "[panic] Failed to log action - audit trail incomplete");
+        });
+        break;
+      }
+
+      case "status": {
+        /*
+         * Status is ephemeral because it's informational only - no need to
+         * broadcast to the channel. Staff can share the info if needed.
+         *
+         * The <t:...:F> format is Discord's timestamp formatting - renders as
+         * a full date/time in the user's local timezone.
+         */
+        const details = withSql(ctx, "SELECT * FROM panic_mode", () =>
+          getPanicDetails(guildId)
+        );
+        if (details?.enabled) {
+          let statusMsg = "🚨 **Panic mode is ACTIVE** - Role automation is stopped.";
+          if (details.enabledBy) {
+            statusMsg += `\nEnabled by: <@${details.enabledBy}>`;
+          }
+          if (details.enabledAt) {
+            statusMsg += `\nEnabled at: <t:${Math.floor(details.enabledAt.getTime() / 1000)}:F>`;
+          }
+          statusMsg += "\n\nUse `/panic off` to resume.";
+          await interaction.reply({
+            content: statusMsg,
+            ephemeral: true,
+          });
+        } else {
+          await interaction.reply({
+            content: "✅ **Panic mode is OFF** - Role automation is running normally.",
+            ephemeral: true,
+          });
+        }
+        break;
+      }
     }
-  }
+  });
 }
