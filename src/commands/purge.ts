@@ -18,10 +18,11 @@ import {
   type TextChannel,
   ChannelType,
 } from "discord.js";
-import type { CommandContext } from "../lib/cmdWrap.js";
+import { type CommandContext, withStep } from "../lib/cmdWrap.js";
 import { logger } from "../lib/logger.js";
 import { secureCompare } from "../lib/secureCompare.js";
 import { checkCooldown, formatCooldown, COOLDOWNS } from "../lib/rateLimiter.js";
+import { logActionPretty } from "../logging/pretty.js";
 import {
   DISCORD_BULK_DELETE_AGE_LIMIT_MS,
   MESSAGE_DELETE_BATCH_DELAY_MS,
@@ -154,7 +155,9 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   }
 
   // Defer reply - this will take time
-  await interaction.deferReply({ ephemeral: true });
+  await withStep(ctx, "defer", async () => {
+    await interaction.deferReply({ ephemeral: true });
+  });
 
   const targetCount = count ?? Infinity;
   let totalDeleted = 0;
@@ -165,13 +168,14 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
     "[purge] starting bulk delete"
   );
 
-  try {
-    const twoWeeksAgo = Date.now() - DISCORD_BULK_DELETE_AGE_LIMIT_MS;
-    let oldMessagesDeleted = 0;
+  const deleteResult = await withStep(ctx, "delete_messages", async () => {
+    try {
+      const twoWeeksAgo = Date.now() - DISCORD_BULK_DELETE_AGE_LIMIT_MS;
+      let oldMessagesDeleted = 0;
 
-    // Main deletion loop - handles both bulk (fast) and individual (slow) deletion.
-    // We fetch, partition by age, then delete appropriately.
-    while (totalDeleted < targetCount && iterations < MAX_ITERATIONS) {
+      // Main deletion loop - handles both bulk (fast) and individual (slow) deletion.
+      // We fetch, partition by age, then delete appropriately.
+      while (totalDeleted < targetCount && iterations < MAX_ITERATIONS) {
       iterations++;
 
       // Fetch exactly what we need, up to Discord's 100-message limit.
@@ -236,36 +240,61 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
       }
     }
 
-    logger.info(
-      { userId: interaction.user.id, guildId, channelId: channel.id, totalDeleted, oldMessagesDeleted },
-      "[purge] delete complete"
-    );
+      logger.info(
+        { userId: interaction.user.id, guildId, channelId: channel.id, totalDeleted, oldMessagesDeleted },
+        "[purge] delete complete"
+      );
 
-    // Success response
+      return { success: true as const, totalDeleted, oldMessagesDeleted };
+    } catch (err) {
+      logger.error({ err, channelId: channel.id, totalDeleted }, "[purge] error during delete");
+      return { success: false as const, totalDeleted, err };
+    }
+  });
+
+  if (!deleteResult.success) {
+    await interaction.editReply({
+      content: `Error during purge. Deleted ${deleteResult.totalDeleted} messages before error occurred.`,
+    });
+    return;
+  }
+
+  // Log to audit trail
+  if (interaction.guild && deleteResult.totalDeleted > 0) {
+    await withStep(ctx, "audit_log", async () => {
+      await logActionPretty(interaction.guild!, {
+        actorId: interaction.user.id,
+        action: "message_purge",
+        meta: {
+          channel_id: channel.id,
+          channel_name: textChannel.name,
+          count: deleteResult.totalDeleted,
+          old_messages: deleteResult.oldMessagesDeleted,
+        },
+      });
+    });
+  }
+
+  // Success response
+  await withStep(ctx, "reply", async () => {
     const embed = new EmbedBuilder()
       .setTitle("Purge Complete")
-      .setDescription(`Deleted **${totalDeleted.toLocaleString()}** messages from this channel.`)
+      .setDescription(`Deleted **${deleteResult.totalDeleted.toLocaleString()}** messages from this channel.`)
       .setColor(0x57f287)
       .setTimestamp();
 
-    if (oldMessagesDeleted > 0) {
+    if (deleteResult.oldMessagesDeleted > 0) {
       embed.addFields({
         name: "Note",
-        value: `${oldMessagesDeleted} messages were older than 14 days and deleted individually (slower).`,
+        value: `${deleteResult.oldMessagesDeleted} messages were older than 14 days and deleted individually (slower).`,
       });
     }
 
-    if (totalDeleted === 0) {
+    if (deleteResult.totalDeleted === 0) {
       embed.setDescription("No messages were deleted. The channel may be empty.");
       embed.setColor(0xfee75c);
     }
 
     await interaction.editReply({ embeds: [embed] });
-  } catch (err) {
-    logger.error({ err, channelId: channel.id, totalDeleted }, "[purge] error during delete");
-
-    await interaction.editReply({
-      content: `Error during purge. Deleted ${totalDeleted} messages before error occurred.`,
-    });
-  }
+  });
 }

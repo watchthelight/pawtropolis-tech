@@ -62,7 +62,13 @@ export type ActionType =
   | "movie_tier_progress"
   | "movie_manual_add"
   | "movie_credit"
-  | "movie_bump";
+  | "movie_bump"
+  | "metrics_reset"
+  | "flag_added"
+  | "flag_removed"
+  | "message_purge"
+  | "dm_sent"
+  | "user_unblocked";
 
 /**
  * Parameters for logging an action
@@ -280,6 +286,36 @@ function getActionMeta(action: ActionType): ActionMeta {
       title: "Movie Attendance Bump",
       color: 0x57f287, // Green
       emoji: "⬆️",
+    },
+    metrics_reset: {
+      title: "Metrics Data Reset",
+      color: 0xfbbf24, // Amber (warning - admin action)
+      emoji: "🔄",
+    },
+    flag_added: {
+      title: "User Flagged",
+      color: 0xed4245, // Red
+      emoji: "🚩",
+    },
+    flag_removed: {
+      title: "User Unflagged",
+      color: 0x57f287, // Green
+      emoji: "🏳️",
+    },
+    message_purge: {
+      title: "Messages Purged",
+      color: 0xed4245, // Red
+      emoji: "🗑️",
+    },
+    dm_sent: {
+      title: "Anonymous DM Sent",
+      color: 0x5865f2, // Discord blurple
+      emoji: "📨",
+    },
+    user_unblocked: {
+      title: "User Unblocked",
+      color: 0x57f287, // Green
+      emoji: "🔓",
     },
   };
 

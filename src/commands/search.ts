@@ -157,7 +157,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
       });
 
       logger.warn(
-        { userId: reviewerId, guildId, isOwner: isOwnerUser, isStaff, isReviewer: isReviewerUser },
+        { evt: "search_unauthorized", userId: reviewerId, guildId, isOwner: isOwnerUser, isStaff, isReviewer: isReviewerUser },
         "[search] unauthorized access attempt"
       );
       return false;
@@ -429,12 +429,12 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
       await interaction.editReply({ embeds: [embed] });
 
       logger.info(
-        { guildId, reviewerId, targetUserId, applicationCount: applications.length },
+        { evt: "search_executed", guildId, reviewerId, targetUserId, applicationCount: applications.length },
         "[search] moderator searched user application history"
       );
     });
   } catch (err) {
-    logger.error({ err, guildId, reviewerId, targetUserId: targetUserId ?? queryString }, "[search] command failed");
+    logger.error({ evt: "search_error", err, guildId, reviewerId, targetUserId: targetUserId ?? queryString }, "[search] command failed");
 
     await interaction.editReply({
       content: "❌ Failed to fetch application history. Please try again later.",

@@ -24,10 +24,12 @@ import {
   MessageCreateOptions,
   Message,
 } from "discord.js";
-import type { CommandContext } from "../lib/cmdWrap.js";
+import { type CommandContext, withStep } from "../lib/cmdWrap.js";
 import { isOwner } from "../lib/owner.js";
 import { SAFE_ALLOWED_MENTIONS } from "../lib/constants.js";
 import { logger } from "../lib/logger.js";
+import { checkCooldown, formatCooldown, COOLDOWNS } from "../lib/rateLimiter.js";
+import { logActionPretty } from "../logging/pretty.js";
 
 // Discord API hard limits. Exceeding these causes 400 Bad Request.
 // The embed limit is particularly useful for longer announcements.
@@ -238,6 +240,16 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
     return;
   }
 
+  // Rate limit: 60 seconds per user (prevents DM spam abuse)
+  const cooldownResult = checkCooldown("send", interaction.user.id, COOLDOWNS.SEND_MS);
+  if (!cooldownResult.allowed) {
+    await interaction.reply({
+      content: `❌ You're sending messages too quickly. Please wait ${formatCooldown(cooldownResult.remainingMs!)}.`,
+      ephemeral: true,
+    });
+    return;
+  }
+
   // Parse command options
   const rawMessage = interaction.options.getString("message", true);
   const useEmbed = interaction.options.getBoolean("embed") ?? false;
@@ -296,71 +308,98 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   // GOTCHA: Discord's 3-second interaction timeout is not negotiable. If you try to
   // be clever and skip the defer for "fast" operations, Murphy's Law kicks in and
   // the one time Discord's API hiccups, you get "This interaction failed".
-  await interaction.deferReply({ ephemeral: true });
+  await withStep(ctx, "defer", async () => {
+    await interaction.deferReply({ ephemeral: true });
+  });
 
   // Reply threading: if reply_to is specified, we try to make this message
   // a reply to that message. This preserves context in conversations.
-  let replyToMessage: Message | null = null;
   if (replyToId) {
-    try {
-      replyToMessage = await (interaction.channel as TextChannel).messages.fetch(replyToId);
-      // failIfNotExists: false is crucial. Without it, if someone deletes the target
-      // message between the time you type the command and hit enter, the entire
-      // /send fails with a cryptic "Unknown Message" error. Been there.
-      messagePayload.reply = {
-        messageReference: replyToMessage.id,
-        failIfNotExists: false,
-      };
-    } catch (err) {
-      // Message doesn't exist or bot can't see it. Silent fallback - don't bother
-      // the user with an error for a convenience feature.
-      logger.warn({ err, replyToId, channelId: interaction.channelId },
-        "[send] Failed to fetch reply_to message");
-    }
+    await withStep(ctx, "fetch_reply_target", async () => {
+      try {
+        const replyToMessage = await (interaction.channel as TextChannel).messages.fetch(replyToId);
+        // failIfNotExists: false is crucial. Without it, if someone deletes the target
+        // message between the time you type the command and hit enter, the entire
+        // /send fails with a cryptic "Unknown Message" error. Been there.
+        messagePayload.reply = {
+          messageReference: replyToMessage.id,
+          failIfNotExists: false,
+        };
+      } catch (err) {
+        // Message doesn't exist or bot can't see it. Silent fallback - don't bother
+        // the user with an error for a convenience feature.
+        logger.warn({ err, replyToId, channelId: interaction.channelId },
+          "[send] Failed to fetch reply_to message");
+      }
+    });
   }
 
   // Send the anonymous message
-  try {
-    await (interaction.channel as TextChannel).send(messagePayload);
+  const sendResult = await withStep(ctx, "send_message", async () => {
+    try {
+      await (interaction.channel as TextChannel).send(messagePayload);
+      return { success: true as const };
+    } catch (err) {
+      /*
+       * Handle send failures (permissions, channel issues, etc.)
+       * Most common causes:
+       * 1. Bot lacks Send Messages in that specific channel (overwrites!)
+       * 2. Channel was deleted between defer and send (race condition)
+       * 3. Discord is having a bad day (retry won't help)
+       *
+       * The vague error message is intentional - we log the real error but don't
+       * expose Discord API internals to the user. "Check bot permissions" is almost
+       * always the right first step anyway.
+       */
+      logger.error({ err, channelId: interaction.channelId, userId: interaction.user.id, guildId: interaction.guildId },
+        "[send] Failed to send message");
+      return { success: false as const };
+    }
+  });
 
-    // Acknowledge to invoker ephemerally (never reveals identity in public)
-    await interaction.editReply({
-      content: "Sent ✅",
-    });
-
-    /*
-     * Best-effort audit logging (non-blocking)
-     * Log failures to detect audit trail gaps (Issue #88)
-     *
-     * WHY .catch() instead of await? The message already sent successfully.
-     * If audit logging fails, that's a problem for later - the staff member
-     * shouldn't see an error for a successful send. We log it so someone
-     * can notice the gap during incident review.
-     */
-    sendAuditLog(interaction, sanitizedMessage, useEmbed, silent).catch((err) => {
-      logger.warn({
-        err,
-        guildId: interaction.guildId,
-        userId: interaction.user.id,
-        action: "send",
-      }, "[send] Audit log failed - audit trail incomplete");
-    });
-  } catch (err) {
-    /*
-     * Handle send failures (permissions, channel issues, etc.)
-     * Most common causes:
-     * 1. Bot lacks Send Messages in that specific channel (overwrites!)
-     * 2. Channel was deleted between defer and send (race condition)
-     * 3. Discord is having a bad day (retry won't help)
-     *
-     * The vague error message is intentional - we log the real error but don't
-     * expose Discord API internals to the user. "Check bot permissions" is almost
-     * always the right first step anyway.
-     */
-    logger.error({ err, channelId: interaction.channelId, userId: interaction.user.id, guildId: interaction.guildId },
-      "[send] Failed to send message");
+  if (!sendResult.success) {
     await interaction.editReply({
       content: "Failed to send message. Check bot permissions in this channel.",
     });
+    return;
   }
+
+  // Acknowledge to invoker ephemerally (never reveals identity in public)
+  await withStep(ctx, "reply", async () => {
+    await interaction.editReply({
+      content: "Sent ✅",
+    });
+  });
+
+  /*
+   * Best-effort audit logging (non-blocking)
+   * Log failures to detect audit trail gaps (Issue #88)
+   *
+   * WHY .catch() instead of await? The message already sent successfully.
+   * If audit logging fails, that's a problem for later - the staff member
+   * shouldn't see an error for a successful send. We log it so someone
+   * can notice the gap during incident review.
+   */
+  sendAuditLog(interaction, sanitizedMessage, useEmbed, silent).catch((err) => {
+    logger.warn({
+      err,
+      guildId: interaction.guildId,
+      userId: interaction.user.id,
+      action: "send",
+    }, "[send] Audit log failed - audit trail incomplete");
+  });
+
+  // Log to unified audit trail
+  await withStep(ctx, "audit_log", async () => {
+    await logActionPretty(interaction.guild!, {
+      actorId: interaction.user.id,
+      action: "dm_sent",
+      meta: {
+        channel_id: interaction.channelId,
+        embed: useEmbed,
+        silent,
+        length: sanitizedMessage.length,
+      },
+    });
+  });
 }

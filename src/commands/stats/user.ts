@@ -137,7 +137,7 @@ export async function handleUser(
     });
 
     logger.info(
-      { guildId: interaction.guildId, moderatorId: moderator.id, days },
+      { evt: "stats_user_view", guildId: interaction.guildId, moderatorId: moderator.id, days },
       "[stats:user] displayed"
     );
   });

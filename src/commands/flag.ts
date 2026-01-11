@@ -21,6 +21,7 @@ import { requireMinRole, ROLE_IDS, JUNIOR_MOD_PLUS } from "../lib/config.js";
 import { env } from "../lib/env.js";
 import { getExistingFlag, isAlreadyFlagged, upsertManualFlag } from "../store/flagsStore.js";
 import { type CommandContext, withStep, withSql } from "../lib/cmdWrap.js";
+import { logActionPretty } from "../logging/pretty.js";
 
 /**
  * Rate limiter for flag command (per moderator per guild).
@@ -80,7 +81,8 @@ export const data = new SlashCommandBuilder()
   )
   .addStringOption((option) =>
     option.setName("reason").setDescription("Reason for flagging (optional)").setRequired(false)
-  );
+  )
+  .setDMPermission(false);
 
 export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) {
   const { interaction } = ctx;
@@ -198,6 +200,16 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
 
       flagCooldowns.set(cooldownKey, Date.now());
       return f;
+    });
+
+    // Log to audit trail
+    await withStep(ctx, "audit_log", async () => {
+      await logActionPretty(guild, {
+        actorId: interaction.user.id,
+        subjectId: targetUser.id,
+        action: "flag_added",
+        meta: { reason },
+      });
     });
 
     // Send confirmation to moderator

@@ -17,8 +17,9 @@ import {
 import { logger } from "../lib/logger.js";
 import { requireGatekeeper } from "../lib/config.js";
 import { db } from "../db/db.js";
-import { type CommandContext, withStep, withSql, ensureDeferred } from "../lib/cmdWrap.js";
+import { type CommandContext, withStep, withSql } from "../lib/cmdWrap.js";
 import { postAuditEmbed } from "../features/logger.js";
+import { logActionPretty } from "../logging/pretty.js";
 
 // Multiple input options because blocked users often leave the server.
 // Priority: target (mention) > user_id (string) > username (DB lookup, not implemented)
@@ -101,7 +102,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
         try {
           targetUser = await interaction.client.users.fetch(targetUserId);
         } catch (err) {
-          logger.debug({ err, userId: targetUserId }, "[unblock] Could not fetch user by ID");
+          logger.debug({ evt: "unblock_user_fetch_fail", err, userId: targetUserId }, "[unblock] Could not fetch user by ID");
           // Continue anyway - we can still unblock by ID alone
         }
       }
@@ -114,7 +115,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
         // Search database for applications with matching username
         // This is a fallback and may not be accurate if usernames change
         logger.warn(
-          { guildId, username },
+          { evt: "unblock_username_unsupported", guildId, username },
           "[unblock] Username lookup not implemented - use user mention or ID instead"
         );
         return { targetUser: null, targetUserId: null, unsupported: true };
@@ -185,7 +186,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
 
     if (updateResult.changes === 0) {
       logger.error(
-        { guildId, userId: targetUserId, moderatorId: interaction.user.id },
+        { evt: "unblock_db_error", guildId, userId: targetUserId, moderatorId: interaction.user.id },
         "[unblock] Database update failed - no rows changed"
       );
       await interaction.editReply({
@@ -196,6 +197,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
 
     logger.info(
       {
+        evt: "unblock_success",
         guildId,
         userId: targetUserId,
         moderatorId: interaction.user.id,
@@ -216,6 +218,16 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
       });
     });
 
+    // Log to unified audit trail
+    await withStep(ctx, "pretty_log", async () => {
+      await logActionPretty(guild, {
+        actorId: interaction.user.id,
+        subjectId: targetUserId,
+        action: "user_unblocked",
+        meta: { reason },
+      });
+    });
+
     // Send confirmation to moderator (public message as requested)
     await withStep(ctx, "reply", async () => {
       const userDisplay = targetUser ? `${targetUser.tag}` : `User ID ${targetUserId}`;
@@ -233,27 +245,27 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
             content: `Your permanent rejection from **${guild.name}** has been lifted by the moderation team. You may reapply or participate again, subject to the current rules.`,
           });
           logger.info(
-            { guildId, userId: targetUserId },
+            { evt: "unblock_dm_sent", guildId, userId: targetUserId },
             "[unblock] DM notification sent to user"
           );
         } catch (err) {
           // Common failure modes: DMs disabled, bot blocked, user deleted account
           logger.warn(
-            { err, guildId, userId: targetUserId },
+            { evt: "unblock_dm_failed", err, guildId, userId: targetUserId },
             "[unblock] Failed to DM user (may have DMs disabled or blocked bot)"
           );
           // Intentionally not notifying the mod - DM failures are expected
         }
       } else {
         logger.debug(
-          { guildId, userId: targetUserId },
+          { evt: "unblock_dm_skipped", guildId, userId: targetUserId },
           "[unblock] Skipped DM - user not found in Discord API"
         );
       }
     });
   } catch (err) {
     logger.error(
-      { err, guildId, userId: targetUserId, moderatorId: interaction.user.id },
+      { evt: "unblock_error", err, guildId, userId: targetUserId, moderatorId: interaction.user.id },
       "[unblock] Failed to unblock user"
     );
     await interaction.editReply({

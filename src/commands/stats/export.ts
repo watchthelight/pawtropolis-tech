@@ -23,6 +23,7 @@ import {
   ensureDeferred,
   type CommandContext,
 } from "./shared.js";
+import { checkCooldown, formatCooldown, COOLDOWNS } from "../../lib/rateLimiter.js";
 
 /**
  * Handle /stats export subcommand.
@@ -47,6 +48,16 @@ export async function handleExport(
     description: "Exports moderator metrics as CSV.",
     requirements: [{ type: "hierarchy", minRoleId: ROLE_IDS.SENIOR_ADMIN }],
   })) return;
+
+  // Rate limit: 5 minutes per user (expensive CSV generation)
+  const cooldownResult = checkCooldown("stats:export", interaction.user.id, COOLDOWNS.STATS_EXPORT_MS);
+  if (!cooldownResult.allowed) {
+    await interaction.reply({
+      content: `⏱️ Please wait ${formatCooldown(cooldownResult.remainingMs!)} before exporting stats again.`,
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
 
   await withStep(ctx, "defer", async () => {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
@@ -126,7 +137,7 @@ export async function handleExport(
     });
 
     logger.info(
-      { guildId: interaction.guildId, days, count: rows.length },
+      { evt: "stats_export", guildId: interaction.guildId, days, count: rows.length },
       "[stats:export] full CSV export generated"
     );
   });
