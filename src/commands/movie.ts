@@ -21,7 +21,7 @@ import {
   EmbedBuilder,
   ChannelType,
 } from "discord.js";
-import { type CommandContext, withStep, withSql, ensureDeferred } from "../lib/cmdWrap.js";
+import { type CommandContext, withStep, withSql } from "../lib/cmdWrap.js";
 import { db } from "../db/db.js";
 import { logger } from "../lib/logger.js";
 import { requireMinRole, ROLE_IDS, MODERATOR_PLUS } from "../lib/config.js";
@@ -39,6 +39,12 @@ import {
   getMovieQualificationThreshold,
 } from "../features/movieNight.js";
 import { logActionPretty } from "../logging/pretty.js";
+
+/**
+ * Deprecation notice shown in all responses.
+ * Target removal: v5.0.0 (Q2 2026)
+ */
+const DEPRECATION_FOOTER = "⚠️ /movie is deprecated. Please use /event movie instead.";
 
 /*
  * Movie Night Attendance System
@@ -293,6 +299,8 @@ async function handleStart(ctx: CommandContext<ChatInputCommandInteraction>): Pr
       });
     }
 
+    embed.setFooter({ text: DEPRECATION_FOOTER });
+
     await interaction.editReply({ embeds: [embed] });
   });
 }
@@ -384,6 +392,8 @@ async function handleEnd(ctx: CommandContext<ChatInputCommandInteraction>): Prom
       embed.addFields({ name: "Top Attendees", value: topAttendees });
     }
 
+    embed.setFooter({ text: DEPRECATION_FOOTER });
+
     await interaction.editReply({ embeds: [embed] });
   });
 }
@@ -462,7 +472,7 @@ async function handleAttendance(ctx: CommandContext<ChatInputCommandInteraction>
       }
 
       const qualifiedCount = allAttendees.filter(a => a.qualified).length;
-      embed.setFooter({ text: `${qualifiedCount} qualified (30+ min) out of ${allAttendees.length} total` });
+      embed.setFooter({ text: `${qualifiedCount} qualified (30+ min) | ${DEPRECATION_FOOTER}` });
 
       await interaction.editReply({ embeds: [embed] });
     });
@@ -544,6 +554,8 @@ async function handleAttendance(ctx: CommandContext<ChatInputCommandInteraction>
       embed.addFields({ name: "Recent Attendance", value: "No attendance records yet" });
     }
 
+    embed.setFooter({ text: DEPRECATION_FOOTER });
+
     await interaction.editReply({ embeds: [embed] });
   });
 }
@@ -597,6 +609,8 @@ async function handleAdd(ctx: CommandContext<ChatInputCommandInteraction>): Prom
     if (reason) {
       embed.addFields({ name: "Reason", value: reason });
     }
+
+    embed.setFooter({ text: DEPRECATION_FOOTER });
 
     await interaction.reply({ embeds: [embed], ephemeral: true });
   });
@@ -679,6 +693,8 @@ async function handleCredit(ctx: CommandContext<ChatInputCommandInteraction>): P
       embed.addFields({ name: "Reason", value: reason });
     }
 
+    embed.setFooter({ text: DEPRECATION_FOOTER });
+
     await interaction.editReply({ embeds: [embed] });
   });
 }
@@ -754,6 +770,8 @@ async function handleBump(ctx: CommandContext<ChatInputCommandInteraction>): Pro
       embed.addFields({ name: "Reason", value: reason });
     }
 
+    embed.setFooter({ text: DEPRECATION_FOOTER });
+
     await interaction.editReply({ embeds: [embed] });
   });
 }
@@ -784,6 +802,7 @@ async function handleResume(ctx: CommandContext<ChatInputCommandInteraction>): P
         { name: "Total Recovered Minutes", value: status.totalRecoveredMinutes.toString(), inline: true }
       )
       .setColor(0x5865F2)
+      .setFooter({ text: DEPRECATION_FOOTER })
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed], ephemeral: true });
