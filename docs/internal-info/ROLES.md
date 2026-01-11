@@ -1,6 +1,6 @@
 # Server Roles — 🎆 Pawtropolis™ | Furry • LGBTQ+
 
-**Generated:** 2026-01-11T19:17:11.673Z
+**Generated:** 2026-01-11T20:35:22.426Z
 **Guild ID:** 896070888594759740
 **Total Roles:** 223
 
@@ -115,7 +115,7 @@
 | 130 | Staff Emeritus | #9b8666 | 1 |  | - |
 | 129 | Eternal Fur ‹‹ LVL 100+ ›› | #a9c9ff | 5 |  | - |
 | 128 | Mythic Fur ‹‹ LVL 90 ›› | #b746f0 | 0 |  | - |
-| 127 | Legendary Fur ‹‹ LVL 80 ›› | #9469ff | 5 |  | - |
+| 127 | Legendary Fur ‹‹ LVL 80 ›› | #9469ff | 4 |  | - |
 | 126 | Elite Fur ‹‹ LVL 70 ›› | #ffbdf8 | 6 |  | - |
 | 125 | Veteran Fur ‹‹ LVL 60 ›› | #cf82ff | 2 |  | - |
 | 124 | Noble Fur ‹‹ LVL 50 ›› | #fa84ee | 9 |  | - |
