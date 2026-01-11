@@ -168,4 +168,10 @@ export const COOLDOWNS = {
   SEARCH_MS: 30 * 1000,
   /** Artist queue sync: 5 minutes per guild (expensive member fetch) */
   ARTISTQUEUE_SYNC_MS: 5 * 60 * 1000,
+  /** Send: 60 seconds per user (prevents DM spam abuse) */
+  SEND_MS: 60 * 1000,
+  /** Poke: 60 seconds per user (prevents notification spam) */
+  POKE_MS: 60 * 1000,
+  /** Stats export: 5 minutes per user (expensive CSV generation) */
+  STATS_EXPORT_MS: 5 * 60 * 1000,
 } as const;
