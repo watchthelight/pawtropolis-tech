@@ -9,8 +9,11 @@
  * GOTCHA: The order here matters. Commands that cycle status forward
  * rely on indexOf to find the "next" state. If you reorder this,
  * artists might go from sketching straight to done. Ask me how I know.
+ *
+ * "cancelled" is a terminal state like "done" but doesn't count towards
+ * the artist's completed count. Used for reassignments or when members leave.
  */
-export const JOB_STATUSES = ["assigned", "sketching", "lining", "coloring", "done"] as const;
+export const JOB_STATUSES = ["assigned", "sketching", "lining", "coloring", "done", "cancelled"] as const;
 export type JobStatus = (typeof JOB_STATUSES)[number];
 
 /*

@@ -52,27 +52,28 @@ const getJobByArtistNumberStmt = db.prepare(
 // Finds active jobs by @mentioning the recipient. Handy when artists can't
 // remember job numbers but know "I'm doing the icon for that fox person."
 // Returns ALL matches so we can detect ambiguity (multiple jobs for same recipient+type).
+// Note: Both 'done' and 'cancelled' are terminal states.
 const getJobsByRecipientStmt = db.prepare(
   `SELECT * FROM art_job
-   WHERE guild_id = ? AND artist_id = ? AND recipient_id = ? AND ticket_type = ? AND status != 'done'
+   WHERE guild_id = ? AND artist_id = ? AND recipient_id = ? AND ticket_type = ? AND status NOT IN ('done', 'cancelled')
    ORDER BY assigned_at DESC`
 );
 
 const getActiveJobsForArtistStmt = db.prepare(
   `SELECT * FROM art_job
-   WHERE guild_id = ? AND artist_id = ? AND status != 'done'
+   WHERE guild_id = ? AND artist_id = ? AND status NOT IN ('done', 'cancelled')
    ORDER BY artist_job_number ASC`
 );
 
 const getAllActiveJobsStmt = db.prepare(
   `SELECT * FROM art_job
-   WHERE guild_id = ? AND status != 'done'
+   WHERE guild_id = ? AND status NOT IN ('done', 'cancelled')
    ORDER BY job_number ASC`
 );
 
 const getActiveJobsForRecipientStmt = db.prepare(
   `SELECT * FROM art_job
-   WHERE guild_id = ? AND recipient_id = ? AND status != 'done'
+   WHERE guild_id = ? AND recipient_id = ? AND status NOT IN ('done', 'cancelled')
    ORDER BY assigned_at DESC`
 );
 
@@ -303,6 +304,49 @@ export function updateJobStatus(jobId: number, options: UpdateJobOptions): boole
  */
 export function finishJob(jobId: number): boolean {
   return updateJobStatus(jobId, { status: "done" });
+}
+
+/**
+ * cancelJob
+ * WHAT: Mark a job as cancelled without counting towards artist stats.
+ * WHY: For cases like reassignment or when the recipient leaves the server.
+ *      Unlike finishJob, this does NOT set completed_at, so it won't count
+ *      in leaderboards or monthly stats.
+ */
+export function cancelJob(jobId: number, reason?: string): boolean {
+  const job = getJobByIdStmt.get(jobId) as ArtJobRow | undefined;
+  if (!job) return false;
+
+  // Don't cancel already-completed jobs
+  if (job.status === "done") {
+    logger.warn({ jobId }, "[artJobs] Cannot cancel a completed job");
+    return false;
+  }
+
+  // Don't cancel already-cancelled jobs
+  if (job.status === "cancelled") {
+    return true; // Idempotent
+  }
+
+  const notes = reason ? `Cancelled: ${reason}` : "Cancelled";
+
+  db.prepare(
+    `UPDATE art_job SET status = 'cancelled', notes = ?, updated_at = datetime('now') WHERE id = ?`
+  ).run(notes, jobId);
+
+  logger.info(
+    {
+      evt: "art_job_cancelled",
+      jobId,
+      artistId: job.artist_id,
+      recipientId: job.recipient_id,
+      previousStatus: job.status,
+      reason,
+    },
+    "[artJobs] Job cancelled"
+  );
+
+  return true;
 }
 
 /**

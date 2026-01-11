@@ -64,7 +64,8 @@ describe("artJobs/index", () => {
     expect(JOB_STATUSES).toContain("lining");
     expect(JOB_STATUSES).toContain("coloring");
     expect(JOB_STATUSES).toContain("done");
-    expect(JOB_STATUSES).toHaveLength(5);
+    expect(JOB_STATUSES).toContain("cancelled");
+    expect(JOB_STATUSES).toHaveLength(6);
   });
 
   it("exports functions that are callable", async () => {

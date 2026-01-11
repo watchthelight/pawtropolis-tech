@@ -27,8 +27,10 @@ import {
   getAllActiveJobs,
   getJobByArtistNumber,
   getJobByRecipient,
+  getJobByNumber,
   updateJobStatus,
   finishJob,
+  cancelJob,
   getMonthlyLeaderboard,
   getAllTimeLeaderboard,
   formatJobNumber,
@@ -170,7 +172,19 @@ export const data = new SlashCommandBuilder()
   )
   .addSubcommand((sub) =>
     sub.setName("getstatus").setDescription("Check the progress of your art reward")
-  );
+  )
+  .addSubcommand((sub) =>
+    sub
+      .setName("cancel")
+      .setDescription("Cancel a job without counting towards artist stats (staff only)")
+      .addIntegerOption((opt) =>
+        opt.setName("id").setDescription("Job number (global)").setMinValue(1).setRequired(true)
+      )
+      .addStringOption((opt) =>
+        opt.setName("reason").setDescription("Reason for cancellation (e.g., reassignment, member left)")
+      )
+  )
+  .setDMPermission(false);
 
 /**
  * Execute /art command
@@ -209,6 +223,9 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
       break;
     case "getstatus":
       await handleGetStatus(interaction, ctx);
+      break;
+    case "cancel":
+      await handleCancel(interaction, ctx);
       break;
     default:
       // This should be unreachable if Discord is doing its job, but Discord
@@ -429,15 +446,21 @@ async function handleBump(
     return;
   }
 
-  if (!isServerArtist(member, guildId)) {
-    await interaction.reply({
-      content: "You must be a Server Artist to use this command.",
-      ephemeral: true,
-    });
-    return;
-  }
+  const hasPermission = await withStep(ctx, "permission_check", async () => {
+    if (!isServerArtist(member, guildId)) {
+      await interaction.reply({
+        content: "You must be a Server Artist to use this command.",
+        ephemeral: true,
+      });
+      return false;
+    }
+    return true;
+  });
+  if (!hasPermission) return;
 
-  const jobResult = findJob(guildId, member.id, interaction);
+  const jobResult = await withStep(ctx, "find_job", async () => {
+    return findJob(guildId, member.id, interaction);
+  });
 
   if (jobResult.status === "no_identifier") {
     await interaction.reply({
@@ -492,18 +515,24 @@ async function handleBump(
 
   // Note: nullish coalescing to undefined because the store function uses
   // undefined to mean "don't update this field" vs null meaning "clear it".
-  updateJobStatus(job.id, { status: stage ?? undefined, notes: notes ?? undefined });
+  await withStep(ctx, "update_job", async () => {
+    withSql(ctx, "UPDATE art_jobs SET status = ?, notes = ?", () => {
+      updateJobStatus(job.id, { status: stage ?? undefined, notes: notes ?? undefined });
+    });
+  });
 
-  const embed = new EmbedBuilder()
-    .setTitle("Job Updated")
-    .setDescription(
-      `**#${formatJobNumber(job.artist_job_number)}** | ${formatJobDescription(job)}\n\n` +
-        (stage ? `Status: ${formatStatus(stage)}\n` : "") +
-        (notes ? `Notes: "${notes}"` : "")
-    )
-    .setColor(0x00cc00);
+  await withStep(ctx, "reply", async () => {
+    const embed = new EmbedBuilder()
+      .setTitle("Job Updated")
+      .setDescription(
+        `**#${formatJobNumber(job.artist_job_number)}** | ${formatJobDescription(job)}\n\n` +
+          (stage ? `Status: ${formatStatus(stage)}\n` : "") +
+          (notes ? `Notes: "${notes}"` : "")
+      )
+      .setColor(0x00cc00);
 
-  await interaction.reply({ embeds: [embed] });
+    await interaction.reply({ embeds: [embed] });
+  });
 }
 
 /**
@@ -525,15 +554,21 @@ async function handleFinish(
     return;
   }
 
-  if (!isServerArtist(member, guildId)) {
-    await interaction.reply({
-      content: "You must be a Server Artist to use this command.",
-      ephemeral: true,
-    });
-    return;
-  }
+  const hasPermission = await withStep(ctx, "permission_check", async () => {
+    if (!isServerArtist(member, guildId)) {
+      await interaction.reply({
+        content: "You must be a Server Artist to use this command.",
+        ephemeral: true,
+      });
+      return false;
+    }
+    return true;
+  });
+  if (!hasPermission) return;
 
-  const jobResult = findJob(guildId, member.id, interaction);
+  const jobResult = await withStep(ctx, "find_job", async () => {
+    return findJob(guildId, member.id, interaction);
+  });
 
   if (jobResult.status === "no_identifier") {
     await interaction.reply({
@@ -572,7 +607,11 @@ async function handleFinish(
     return;
   }
 
-  finishJob(job.id);
+  await withStep(ctx, "finish_job", async () => {
+    withSql(ctx, "UPDATE art_jobs SET status = 'done'", () => {
+      finishJob(job.id);
+    });
+  });
 
   // Calculate time taken. We show this as a fun stat, not to shame anyone.
   // Art takes as long as art takes. Though if it's 0 days, someone might
@@ -581,16 +620,18 @@ async function handleFinish(
   const now = Date.now();
   const daysToComplete = Math.floor((now - assignedAt) / (1000 * 60 * 60 * 24));
 
-  const embed = new EmbedBuilder()
-    .setTitle("Job Completed!")
-    .setDescription(
-      `**#${formatJobNumber(job.artist_job_number)}** | ${formatJobDescription(job)}\n\n` +
-        `✅ Marked as done\n` +
-        `⏱️ Completed in ${daysToComplete} day${daysToComplete === 1 ? "" : "s"}`
-    )
-    .setColor(0x00cc00);
+  await withStep(ctx, "reply", async () => {
+    const embed = new EmbedBuilder()
+      .setTitle("Job Completed!")
+      .setDescription(
+        `**#${formatJobNumber(job.artist_job_number)}** | ${formatJobDescription(job)}\n\n` +
+          `✅ Marked as done\n` +
+          `⏱️ Completed in ${daysToComplete} day${daysToComplete === 1 ? "" : "s"}`
+      )
+      .setColor(0x00cc00);
 
-  await interaction.reply({ embeds: [embed] });
+    await interaction.reply({ embeds: [embed] });
+  });
 }
 
 /**
@@ -608,15 +649,21 @@ async function handleView(
     return;
   }
 
-  if (!isServerArtist(member, guildId)) {
-    await interaction.reply({
-      content: "You must be a Server Artist to use this command.",
-      ephemeral: true,
-    });
-    return;
-  }
+  const hasPermission = await withStep(ctx, "permission_check", async () => {
+    if (!isServerArtist(member, guildId)) {
+      await interaction.reply({
+        content: "You must be a Server Artist to use this command.",
+        ephemeral: true,
+      });
+      return false;
+    }
+    return true;
+  });
+  if (!hasPermission) return;
 
-  const jobResult = findJob(guildId, member.id, interaction);
+  const jobResult = await withStep(ctx, "find_job", async () => {
+    return findJob(guildId, member.id, interaction);
+  });
 
   if (jobResult.status === "no_identifier") {
     await interaction.reply({
@@ -670,12 +717,14 @@ async function handleView(
     fields.push({ name: "Completed", value: `<t:${completedAt}:f>`, inline: false });
   }
 
-  const embed = new EmbedBuilder()
-    .setTitle(`Job #${formatJobNumber(job.artist_job_number)} (Global #${formatJobNumber(job.job_number)})`)
-    .setColor(job.status === "done" ? 0x00cc00 : 0x2f0099)
-    .addFields(fields);
+  await withStep(ctx, "reply", async () => {
+    const embed = new EmbedBuilder()
+      .setTitle(`Job #${formatJobNumber(job.artist_job_number)} (Global #${formatJobNumber(job.job_number)})`)
+      .setColor(job.status === "done" ? 0x00cc00 : 0x2f0099)
+      .addFields(fields);
 
-  await interaction.reply({ embeds: [embed] });
+    await interaction.reply({ embeds: [embed] });
+  });
 }
 
 /**
@@ -766,17 +815,24 @@ async function handleAll(
 
   // requireStaff handles the "nope" reply internally and returns false.
   // Pattern borrowed from the config commands. Slightly magical but consistent.
-  if (!requireStaff(interaction, {
-    command: "art all",
-    description: "Views all active art jobs across all artists (staff dashboard).",
-    requirements: [{ type: "config", field: "mod_role_ids" }],
-  })) {
-    return;
-  }
+  const hasPermission = await withStep(ctx, "permission_check", async () => {
+    return requireStaff(interaction, {
+      command: "art all",
+      description: "Views all active art jobs across all artists (staff dashboard).",
+      requirements: [{ type: "config", field: "mod_role_ids" }],
+    });
+  });
+  if (!hasPermission) return;
 
-  await interaction.deferReply({ ephemeral: false });
+  await withStep(ctx, "defer", async () => {
+    await interaction.deferReply({ ephemeral: false });
+  });
 
-  const jobs = getAllActiveJobs(guildId);
+  const jobs = await withStep(ctx, "fetch_jobs", async () => {
+    return withSql(ctx, "SELECT * FROM art_jobs WHERE status != 'done'", () =>
+      getAllActiveJobs(guildId)
+    );
+  });
 
   if (jobs.length === 0) {
     const embed = new EmbedBuilder()
@@ -831,13 +887,14 @@ async function handleAssign(
     return;
   }
 
-  if (!requireStaff(interaction, {
-    command: "art assign",
-    description: "Manually assigns an art job to an artist.",
-    requirements: [{ type: "config", field: "mod_role_ids" }],
-  })) {
-    return;
-  }
+  const hasPermission = await withStep(ctx, "permission_check", async () => {
+    return requireStaff(interaction, {
+      command: "art assign",
+      description: "Manually assigns an art job to an artist.",
+      requirements: [{ type: "config", field: "mod_role_ids" }],
+    });
+  });
+  if (!hasPermission) return;
 
   const artist = interaction.options.getUser("artist", true);
   const scope = interaction.options.getString("scope", true);
@@ -867,37 +924,43 @@ async function handleAssign(
   // Dynamic import here to avoid a circular dependency nightmare.
   // artJobs/index.js imports config stuff that imports... you get the idea.
   // TODO: Might be worth refactoring this out, but it works for now.
-  const { createJob } = await import("../features/artJobs/index.js");
+  const job = await withStep(ctx, "create_job", async () => {
+    const { createJob } = await import("../features/artJobs/index.js");
 
-  // The ! assertions are safe here because we validated above. TypeScript
-  // doesn't track control flow across if-return patterns perfectly.
-  const job = createJob({
-    guildId,
-    artistId: artist.id,
-    recipientId: scope === "user" ? recipient!.id : "special",
-    ticketType: scope === "user" ? artType! : `special:${description}`,
+    // The ! assertions are safe here because we validated above. TypeScript
+    // doesn't track control flow across if-return patterns perfectly.
+    return withSql(ctx, "INSERT INTO art_jobs ...", () =>
+      createJob({
+        guildId,
+        artistId: artist.id,
+        recipientId: scope === "user" ? recipient!.id : "special",
+        ticketType: scope === "user" ? artType! : `special:${description}`,
+      })
+    );
   });
 
-  const embed = new EmbedBuilder()
-    .setTitle("Job Assigned")
-    .setColor(0x00cc00);
+  await withStep(ctx, "reply", async () => {
+    const embed = new EmbedBuilder()
+      .setTitle("Job Assigned")
+      .setColor(0x00cc00);
 
-  if (scope === "user") {
-    embed.setDescription(
-      `**Job #${formatJobNumber(job.jobNumber)}** created\n\n` +
-        `**Artist:** <@${artist.id}>\n` +
-        `**Recipient:** <@${recipient!.id}>\n` +
-        `**Type:** ${formatTicketType(artType!)}`
-    );
-  } else {
-    embed.setDescription(
-      `**Job #${formatJobNumber(job.jobNumber)}** created\n\n` +
-        `**Artist:** <@${artist.id}>\n` +
-        `**Special Task:** ${description}`
-    );
-  }
+    if (scope === "user") {
+      embed.setDescription(
+        `**Job #${formatJobNumber(job.jobNumber)}** created\n\n` +
+          `**Artist:** <@${artist.id}>\n` +
+          `**Recipient:** <@${recipient!.id}>\n` +
+          `**Type:** ${formatTicketType(artType!)}`
+      );
+    } else {
+      embed.setDescription(
+        `**Job #${formatJobNumber(job.jobNumber)}** created\n\n` +
+          `**Artist:** <@${artist.id}>\n` +
+          `**Special Task:** ${description}`
+      );
+    }
 
-  await interaction.reply({ embeds: [embed] });
+    await interaction.reply({ embeds: [embed] });
+  });
 }
 
 /**
@@ -922,9 +985,15 @@ async function handleGetStatus(
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await withStep(ctx, "defer", async () => {
+    await interaction.deferReply({ ephemeral: true });
+  });
 
-  const jobs = getActiveJobsForRecipient(guildId, interaction.user.id);
+  const jobs = await withStep(ctx, "fetch_jobs", async () => {
+    return withSql(ctx, "SELECT * FROM art_jobs WHERE recipient_id = ?", () =>
+      getActiveJobsForRecipient(guildId, interaction.user.id)
+    );
+  });
 
   if (jobs.length === 0) {
     await interaction.editReply({ content: "You don't have any art being worked on!" });
@@ -948,11 +1017,111 @@ async function handleGetStatus(
     lines.push("");
   }
 
-  const embed = new EmbedBuilder()
-    .setTitle("Your Art Status")
-    .setDescription(lines.join("\n"))
-    .setColor(0x2f0099)
-    .setFooter({ text: `${jobs.length} piece${jobs.length === 1 ? "" : "s"} in progress` });
+  await withStep(ctx, "reply", async () => {
+    const embed = new EmbedBuilder()
+      .setTitle("Your Art Status")
+      .setDescription(lines.join("\n"))
+      .setColor(0x2f0099)
+      .setFooter({ text: `${jobs.length} piece${jobs.length === 1 ? "" : "s"} in progress` });
 
-  await interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
+  });
+}
+
+/**
+ * /art cancel - Staff only: Cancel a job without counting towards artist stats
+ *
+ * Use cases:
+ * - Job reassignment (artist unavailable, job goes to another artist)
+ * - Recipient left the server before art was completed
+ * - Request withdrawn by recipient
+ * - Duplicate/erroneous job creation
+ *
+ * Unlike /art finish, cancelled jobs do NOT count towards the artist's completed count.
+ */
+async function handleCancel(
+  interaction: ChatInputCommandInteraction,
+  ctx: CommandContext
+): Promise<void> {
+  const guildId = interaction.guildId;
+
+  if (!guildId) {
+    await interaction.reply({ content: "This command must be run in a server.", ephemeral: true });
+    return;
+  }
+
+  // Staff only
+  if (!requireStaff(interaction)) return;
+
+  const jobNumber = interaction.options.getInteger("id", true);
+  const reason = interaction.options.getString("reason") ?? undefined;
+
+  // Look up by global job number
+  const job = await withStep(ctx, "fetch_job", () => {
+    return withSql(ctx, "SELECT * FROM art_job WHERE job_number = ?", () =>
+      getJobByNumber(guildId, jobNumber)
+    );
+  });
+
+  if (!job) {
+    await interaction.reply({
+      content: `Job #${formatJobNumber(jobNumber)} not found.`,
+      ephemeral: true,
+    });
+    return;
+  }
+
+  if (job.status === "done") {
+    await interaction.reply({
+      content: `Job #${formatJobNumber(jobNumber)} is already completed. Cannot cancel completed jobs.`,
+      ephemeral: true,
+    });
+    return;
+  }
+
+  if (job.status === "cancelled") {
+    await interaction.reply({
+      content: `Job #${formatJobNumber(jobNumber)} is already cancelled.`,
+      ephemeral: true,
+    });
+    return;
+  }
+
+  // Cancel the job
+  const success = await withStep(ctx, "cancel_job", () => {
+    return withSql(ctx, "UPDATE art_job SET status = 'cancelled'", () =>
+      cancelJob(job.id, reason)
+    );
+  });
+
+  if (!success) {
+    await interaction.reply({
+      content: "Failed to cancel job. Please try again.",
+      ephemeral: true,
+    });
+    return;
+  }
+
+  await withStep(ctx, "reply", async () => {
+    const embed = new EmbedBuilder()
+      .setTitle("Job Cancelled")
+      .setDescription(
+        `Job #${formatJobNumber(jobNumber)} has been cancelled.\n` +
+        `This will **not** count towards <@${job.artist_id}>'s completed jobs.`
+      )
+      .addFields(
+        { name: "Artist", value: `<@${job.artist_id}>`, inline: true },
+        { name: "Client", value: `<@${job.recipient_id}>`, inline: true },
+        { name: "Type", value: formatTicketType(job.ticket_type), inline: true },
+        { name: "Previous Status", value: formatStatus(job.status), inline: true }
+      )
+      .setColor(0xed4245) // Red for cancellation
+      .setTimestamp();
+
+    if (reason) {
+      embed.addFields({ name: "Reason", value: reason });
+    }
+
+    await interaction.reply({ embeds: [embed] });
+  });
 }
