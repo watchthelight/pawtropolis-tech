@@ -19,7 +19,7 @@ import {
   PermissionFlagsBits,
   type GuildMember,
 } from "discord.js";
-import type { CommandContext } from "../lib/cmdWrap.js";
+import { withStep, type CommandContext } from "../lib/cmdWrap.js";
 import { logger } from "../lib/logger.js";
 import { randomUUID } from "node:crypto";
 import {
@@ -125,13 +125,16 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   const artType = interaction.options.getString("type", true) as ArtType;
   const overrideArtist = interaction.options.getUser("artist");
 
-  ctx.step("fetch_member");
-
   // Fetch target member
-  let targetMember: GuildMember;
-  try {
-    targetMember = await guild.members.fetch(targetUser.id);
-  } catch {
+  const targetMember = await withStep(ctx, "fetch_member", async () => {
+    try {
+      return await guild.members.fetch(targetUser.id);
+    } catch {
+      return null;
+    }
+  });
+
+  if (!targetMember) {
     await interaction.reply({
       content: `Could not find <@${targetUser.id}> in this server.`,
       ephemeral: false,
@@ -139,151 +142,157 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
     return;
   }
 
-  ctx.step("inspect_roles");
-
-  // Get guild-specific ticket roles config
-  const ticketRoles = getTicketRoles(guild.id);
-
-  // Inspect ticket roles
-  const ticketInfo = inspectTicketRoles(targetMember, artType, ticketRoles);
-
-  ctx.step("get_artist");
+  // Get guild-specific ticket roles config and inspect ticket roles
+  const ticketInfo = await withStep(ctx, "inspect_roles", () => {
+    const ticketRoles = getTicketRoles(guild.id);
+    return inspectTicketRoles(targetMember, artType, ticketRoles);
+  });
 
   // Determine which artist to use.
   // Two paths: queue rotation (fair, round-robin) or manual override.
   // Override is tracked separately so the confirmation UI can flag it.
-  let artistId: string;
-  let artistPosition: number | null = null;
-  let isOverride = false;
+  const artistResult = await withStep(ctx, "get_artist", async () => {
+    let artistId: string;
+    let artistPosition: number | null = null;
+    let isOverride = false;
+    let error: string | null = null;
 
-  if (overrideArtist) {
-    // Verify override artist has Server Artist role (using guild-specific config)
-    const artistRoleId = getArtistRoleId(guild.id);
-    const overrideMember = await guild.members.fetch(overrideArtist.id).catch(() => null);
-    if (!overrideMember?.roles.cache.has(artistRoleId)) {
-      await interaction.reply({
-        content: `<@${overrideArtist.id}> does not have the Server Artist role.`,
-        ephemeral: false,
-      });
-      return;
+    if (overrideArtist) {
+      // Verify override artist has Server Artist role (using guild-specific config)
+      const artistRoleId = getArtistRoleId(guild.id);
+      const overrideMember = await guild.members.fetch(overrideArtist.id).catch(() => null);
+      if (!overrideMember?.roles.cache.has(artistRoleId)) {
+        error = `<@${overrideArtist.id}> does not have the Server Artist role.`;
+        return { artistId: "", artistPosition: null, isOverride: false, error };
+      }
+      artistId = overrideArtist.id;
+      isOverride = true;
+
+      // Get their position if in queue
+      const artistInfo = getArtist(guild.id, artistId);
+      artistPosition = artistInfo?.position ?? null;
+    } else {
+      // Get next artist from queue
+      const nextArtist = getNextArtist(guild.id);
+      if (!nextArtist) {
+        error = "No artists available in queue. Run `/artistqueue sync` to populate the queue.";
+        return { artistId: "", artistPosition: null, isOverride: false, error };
+      }
+      artistId = nextArtist.userId;
+      artistPosition = nextArtist.position;
     }
-    artistId = overrideArtist.id;
-    isOverride = true;
 
-    // Get their position if in queue
-    const artistInfo = getArtist(guild.id, artistId);
-    artistPosition = artistInfo?.position ?? null;
-  } else {
-    // Get next artist from queue
-    const nextArtist = getNextArtist(guild.id);
-    if (!nextArtist) {
-      await interaction.reply({
-        content: "No artists available in queue. Run `/artistqueue sync` to populate the queue.",
-        ephemeral: false,
-      });
-      return;
-    }
-    artistId = nextArtist.userId;
-    artistPosition = nextArtist.position;
-  }
-
-  ctx.step("build_confirmation");
-
-  // Generate unique ID for this confirmation flow.
-  // Truncated UUID is enough - we only need to match buttons for ~15 minutes
-  // until Discord's component interaction expires. Collisions are astronomical.
-  const confirmId = randomUUID().slice(0, 8);
-
-  // Build confirmation embed
-  const embed = new EmbedBuilder()
-    .setTitle("Art Reward Redemption")
-    .setColor(ticketInfo.hasRequestedType ? 0x00cc00 : 0xffaa00);
-
-  const descLines: string[] = [
-    `**Recipient:** <@${targetUser.id}>`,
-    `**Requested Type:** ${ART_TYPE_DISPLAY[artType]}`,
-    "",
-  ];
-
-  // Show ticket role status
-  if (ticketInfo.hasRequestedType) {
-    const roleName = ticketInfo.matchingRoleId
-      ? TICKET_ROLE_NAMES[ticketInfo.matchingRoleId] ?? artType
-      : artType;
-    descLines.push(`User has: ${roleName}`);
-  } else if (ticketInfo.matchingRoleId) {
-    const roleName = TICKET_ROLE_NAMES[ticketInfo.matchingRoleId] ?? artType;
-    descLines.push(`User does NOT have: ${roleName}`);
-  } else {
-    descLines.push(`No ticket role defined for ${artType}`);
-  }
-
-  // Show other ticket roles user has
-  const otherRoles = ticketInfo.allTicketRoles.filter((r) => r !== artType);
-  if (otherRoles.length > 0) {
-    const otherNames = otherRoles.map((r) => {
-      const roleId = ticketInfo.ticketRoles[r as ArtType];
-      return roleId ? (TICKET_ROLE_NAMES[roleId] ?? r) : r;
-    });
-    descLines.push(`*User also has: ${otherNames.join(", ")}*`);
-  }
-
-  descLines.push("");
-
-  // Show artist info
-  if (isOverride) {
-    descLines.push(`**Artist (Override):** <@${artistId}>`);
-    if (artistPosition) {
-      descLines.push(`*Current queue position: #${artistPosition}*`);
-    }
-  } else {
-    descLines.push(`**Next Artist:** <@${artistId}> (#${artistPosition} in queue)`);
-  }
-
-  embed.setDescription(descLines.join("\n"));
-
-  // Warning for mismatched type
-  if (!ticketInfo.hasRequestedType && ticketInfo.matchingRoleId) {
-    embed.addFields({
-      name: "Type Mismatch Warning",
-      value: `User does not have the ${ART_TYPE_DISPLAY[artType]} ticket role. Proceed anyway?`,
-    });
-  }
-
-  // Build buttons.
-  // Custom ID encodes all state needed to execute the action later.
-  // Format: redeemreward:CONFIRM_ID:ACTION:TARGET:TYPE:ARTIST:OVERRIDE
-  // Yes, this is cramped - Discord has a 100-char customId limit.
-  // The button handler parses this back out when clicked.
-  const buttons = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId(`redeemreward:${confirmId}:confirm:${targetUser.id}:${artType}:${artistId}:${isOverride ? "1" : "0"}`)
-      .setLabel("Confirm & Assign")
-      .setStyle(ticketInfo.hasRequestedType ? ButtonStyle.Success : ButtonStyle.Primary)
-      .setEmoji("✅"),
-    new ButtonBuilder()
-      .setCustomId(`redeemreward:${confirmId}:cancel`)
-      .setLabel("Cancel")
-      .setStyle(ButtonStyle.Secondary)
-      .setEmoji("❌")
-  );
-
-  await interaction.reply({
-    embeds: [embed],
-    components: [buttons],
-    ephemeral: false,
+    return { artistId, artistPosition, isOverride, error };
   });
 
-  logger.info(
-    {
-      guildId: guild.id,
-      recipientId: targetUser.id,
-      artType,
-      artistId,
-      isOverride,
-      hasTicketRole: ticketInfo.hasRequestedType,
-      confirmId,
-    },
-    "[redeemreward] Confirmation shown"
-  );
+  if (artistResult.error) {
+    await interaction.reply({
+      content: artistResult.error,
+      ephemeral: false,
+    });
+    return;
+  }
+
+  const { artistId, artistPosition, isOverride } = artistResult;
+
+  // Build and send confirmation
+  await withStep(ctx, "build_confirmation", async () => {
+    // Generate unique ID for this confirmation flow.
+    // Truncated UUID is enough - we only need to match buttons for ~15 minutes
+    // until Discord's component interaction expires. Collisions are astronomical.
+    const confirmId = randomUUID().slice(0, 8);
+
+    // Build confirmation embed
+    const embed = new EmbedBuilder()
+      .setTitle("Art Reward Redemption")
+      .setColor(ticketInfo.hasRequestedType ? 0x00cc00 : 0xffaa00);
+
+    const descLines: string[] = [
+      `**Recipient:** <@${targetUser.id}>`,
+      `**Requested Type:** ${ART_TYPE_DISPLAY[artType]}`,
+      "",
+    ];
+
+    // Show ticket role status
+    if (ticketInfo.hasRequestedType) {
+      const roleName = ticketInfo.matchingRoleId
+        ? TICKET_ROLE_NAMES[ticketInfo.matchingRoleId] ?? artType
+        : artType;
+      descLines.push(`User has: ${roleName}`);
+    } else if (ticketInfo.matchingRoleId) {
+      const roleName = TICKET_ROLE_NAMES[ticketInfo.matchingRoleId] ?? artType;
+      descLines.push(`User does NOT have: ${roleName}`);
+    } else {
+      descLines.push(`No ticket role defined for ${artType}`);
+    }
+
+    // Show other ticket roles user has
+    const otherRoles = ticketInfo.allTicketRoles.filter((r) => r !== artType);
+    if (otherRoles.length > 0) {
+      const otherNames = otherRoles.map((r) => {
+        const roleId = ticketInfo.ticketRoles[r as ArtType];
+        return roleId ? (TICKET_ROLE_NAMES[roleId] ?? r) : r;
+      });
+      descLines.push(`*User also has: ${otherNames.join(", ")}*`);
+    }
+
+    descLines.push("");
+
+    // Show artist info
+    if (isOverride) {
+      descLines.push(`**Artist (Override):** <@${artistId}>`);
+      if (artistPosition) {
+        descLines.push(`*Current queue position: #${artistPosition}*`);
+      }
+    } else {
+      descLines.push(`**Next Artist:** <@${artistId}> (#${artistPosition} in queue)`);
+    }
+
+    embed.setDescription(descLines.join("\n"));
+
+    // Warning for mismatched type
+    if (!ticketInfo.hasRequestedType && ticketInfo.matchingRoleId) {
+      embed.addFields({
+        name: "Type Mismatch Warning",
+        value: `User does not have the ${ART_TYPE_DISPLAY[artType]} ticket role. Proceed anyway?`,
+      });
+    }
+
+    // Build buttons.
+    // Custom ID encodes all state needed to execute the action later.
+    // Format: redeemreward:CONFIRM_ID:ACTION:TARGET:TYPE:ARTIST:OVERRIDE
+    // Yes, this is cramped - Discord has a 100-char customId limit.
+    // The button handler parses this back out when clicked.
+    const buttons = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`redeemreward:${confirmId}:confirm:${targetUser.id}:${artType}:${artistId}:${isOverride ? "1" : "0"}`)
+        .setLabel("Confirm & Assign")
+        .setStyle(ticketInfo.hasRequestedType ? ButtonStyle.Success : ButtonStyle.Primary)
+        .setEmoji("✅"),
+      new ButtonBuilder()
+        .setCustomId(`redeemreward:${confirmId}:cancel`)
+        .setLabel("Cancel")
+        .setStyle(ButtonStyle.Secondary)
+        .setEmoji("❌")
+    );
+
+    await interaction.reply({
+      embeds: [embed],
+      components: [buttons],
+      ephemeral: false,
+    });
+
+    logger.info(
+      {
+        guildId: guild.id,
+        recipientId: targetUser.id,
+        artType,
+        artistId,
+        isOverride,
+        hasTicketRole: ticketInfo.hasRequestedType,
+        confirmId,
+      },
+      "[redeemreward] Confirmation shown"
+    );
+  });
 }

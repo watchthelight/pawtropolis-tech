@@ -13,7 +13,7 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, PermissionFlagsBits } from "discord.js";
-import type { CommandContext } from "../../lib/cmdWrap.js";
+import { withStep, withSql, type CommandContext } from "../../lib/cmdWrap.js";
 import { getNotifyConfig } from "../../features/notifyConfig.js";
 import { logActionPretty } from "../../logging/pretty.js";
 import { logger } from "../../lib/logger.js";
@@ -40,7 +40,10 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   }
 
   // Authorization check
-  const authorized = await requireAdminOrLeadership(interaction);
+  const authorized = await withStep(ctx, "auth_check", async () => {
+    return requireAdminOrLeadership(interaction);
+  });
+
   if (!authorized) {
     await interaction.reply({
       content: "❌ You must be a server administrator to use this command.",
@@ -49,81 +52,91 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await withStep(ctx, "defer_reply", async () => {
+    await interaction.deferReply({ ephemeral: true });
+  });
 
   try {
-    const config = getNotifyConfig(guildId);
+    const config = await withStep(ctx, "get_config", () => getNotifyConfig(guildId));
 
     // Build embed
-    const embed = new EmbedBuilder()
-      .setTitle("📬 Forum Post Notification Configuration")
-      .setColor(0x5865f2)
-      .addFields(
-        {
-          name: "Mode",
-          value: config.notify_mode === "post" ? "🔗 In-thread (post)" : "📢 Separate channel",
-          inline: true,
-        },
-        {
-          name: "Status",
-          value: config.notify_role_id ? "✅ Enabled" : "⚠️ Not configured",
-          inline: true,
-        },
-        {
-          name: "Role",
-          value: config.notify_role_id ? `<@&${config.notify_role_id}>` : "*Not set*",
-          inline: true,
-        },
-        {
-          name: "Forum Channel",
-          value: config.forum_channel_id ? `<#${config.forum_channel_id}>` : "*All forums*",
-          inline: true,
-        },
-        {
-          name: "Notification Channel",
-          value: config.notification_channel_id
-            ? `<#${config.notification_channel_id}>`
-            : "*Not set (uses thread)*",
-          inline: true,
-        },
-        {
-          name: "Rate Limits",
-          value: `Cooldown: **${config.notify_cooldown_seconds}s**\nMax/hour: **${config.notify_max_per_hour}**`,
-          inline: true,
-        }
-      )
-      .setFooter({ text: "Use /review-set-notify-config to update settings" })
-      .setTimestamp();
+    const embed = await withStep(ctx, "build_embed", async () => {
+      return new EmbedBuilder()
+        .setTitle("📬 Forum Post Notification Configuration")
+        .setColor(0x5865f2)
+        .addFields(
+          {
+            name: "Mode",
+            value: config.notify_mode === "post" ? "🔗 In-thread (post)" : "📢 Separate channel",
+            inline: true,
+          },
+          {
+            name: "Status",
+            value: config.notify_role_id ? "✅ Enabled" : "⚠️ Not configured",
+            inline: true,
+          },
+          {
+            name: "Role",
+            value: config.notify_role_id ? `<@&${config.notify_role_id}>` : "*Not set*",
+            inline: true,
+          },
+          {
+            name: "Forum Channel",
+            value: config.forum_channel_id ? `<#${config.forum_channel_id}>` : "*All forums*",
+            inline: true,
+          },
+          {
+            name: "Notification Channel",
+            value: config.notification_channel_id
+              ? `<#${config.notification_channel_id}>`
+              : "*Not set (uses thread)*",
+            inline: true,
+          },
+          {
+            name: "Rate Limits",
+            value: `Cooldown: **${config.notify_cooldown_seconds}s**\nMax/hour: **${config.notify_max_per_hour}**`,
+            inline: true,
+          }
+        )
+        .setFooter({ text: "Use /review-set-notify-config to update settings" })
+        .setTimestamp();
+    });
 
-    await interaction.editReply({ embeds: [embed] });
+    await withStep(ctx, "edit_reply", async () => {
+      await interaction.editReply({ embeds: [embed] });
+    });
 
     // Dual logging: pretty log to Discord audit channel + structured log to DB.
     // This is intentional redundancy - Discord channel can be cleared, DB persists.
     if (interaction.guild) {
-      await logActionPretty(interaction.guild, {
-        actorId: userId,
-        action: "forum_post_ping", // Reusing existing action type, not ideal but works
-        reason: "Viewed forum post notification configuration",
-        meta: { config },
+      await withStep(ctx, "log_action", async () => {
+        await logActionPretty(interaction.guild!, {
+          actorId: userId,
+          action: "forum_post_ping", // Reusing existing action type, not ideal but works
+          reason: "Viewed forum post notification configuration",
+          meta: { config },
+        });
       });
     }
 
     // Direct DB insert for the action_log table. This gives us queryable
     // audit history independent of the Discord audit channel.
     // Schema: guild_id, app_id, app_code, actor_id, subject_id, action, reason, meta_json, created_at_s
-    db.prepare(
+    withSql(ctx, "INSERT action_log", () => {
+      db.prepare(
+        `
+        INSERT INTO action_log (guild_id, actor_id, action, reason, meta_json, created_at_s)
+        VALUES (?, ?, ?, ?, ?, ?)
       `
-      INSERT INTO action_log (guild_id, actor_id, action, reason, meta_json, created_at_s)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `
-    ).run(
-      guildId,
-      userId,
-      "forum_post_ping", // Using existing action type for config views
-      "Viewed forum post notification configuration",
-      JSON.stringify({ config }),
-      Math.floor(Date.now() / 1000)
-    );
+      ).run(
+        guildId,
+        userId,
+        "forum_post_ping", // Using existing action type for config views
+        "Viewed forum post notification configuration",
+        JSON.stringify({ config }),
+        Math.floor(Date.now() / 1000)
+      );
+    });
 
     logger.info({ guildId, userId, config }, "[getNotifyConfig] config viewed by admin");
   } catch (err) {

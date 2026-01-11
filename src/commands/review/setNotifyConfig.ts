@@ -14,7 +14,7 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import { SlashCommandBuilder, ChatInputCommandInteraction, PermissionFlagsBits } from "discord.js";
-import type { CommandContext } from "../../lib/cmdWrap.js";
+import { withStep, withSql, type CommandContext } from "../../lib/cmdWrap.js";
 import { setNotifyConfig, getNotifyConfig, type NotifyConfig } from "../../features/notifyConfig.js";
 import { logActionPretty } from "../../logging/pretty.js";
 import { logger } from "../../lib/logger.js";
@@ -96,7 +96,10 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   }
 
   // Authorization check
-  const authorized = await requireAdminOrLeadership(interaction);
+  const authorized = await withStep(ctx, "auth_check", async () => {
+    return requireAdminOrLeadership(interaction);
+  });
+
   if (!authorized) {
     await interaction.reply({
       content: "❌ You must be a server administrator to use this command.",
@@ -105,11 +108,13 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await withStep(ctx, "defer_reply", async () => {
+    await interaction.deferReply({ ephemeral: true });
+  });
 
   try {
     // Get current config for comparison
-    const oldConfig = getNotifyConfig(guildId);
+    const oldConfig = await withStep(ctx, "get_old_config", () => getNotifyConfig(guildId));
 
     // Parse options
     const mode = interaction.options.getString("mode") as "post" | "channel" | null;
@@ -160,8 +165,10 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
     }
 
     // Update config
-    setNotifyConfig(guildId, updateConfig);
-    const newConfig = getNotifyConfig(guildId);
+    const newConfig = await withStep(ctx, "update_config", () => {
+      setNotifyConfig(guildId, updateConfig);
+      return getNotifyConfig(guildId);
+    });
 
     // Build summary
     const summary = [
@@ -174,41 +181,47 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
       `• Max per hour: **${newConfig.notify_max_per_hour}**`,
     ].join("\n");
 
-    await interaction.editReply({ content: summary });
+    await withStep(ctx, "edit_reply", async () => {
+      await interaction.editReply({ content: summary });
+    });
 
     // Log action
     if (interaction.guild) {
-      await logActionPretty(interaction.guild, {
-        actorId: userId,
-        action: "forum_post_ping",
-        reason: "Updated forum post notification configuration",
-        meta: {
-          old_config: oldConfig,
-          new_config: newConfig,
-          updated_fields: Object.keys(updateConfig),
-        },
+      await withStep(ctx, "log_action", async () => {
+        await logActionPretty(interaction.guild!, {
+          actorId: userId,
+          action: "forum_post_ping",
+          reason: "Updated forum post notification configuration",
+          meta: {
+            old_config: oldConfig,
+            new_config: newConfig,
+            updated_fields: Object.keys(updateConfig),
+          },
+        });
       });
     }
 
     // Insert action_log entry
     // Schema: guild_id, app_id, app_code, actor_id, subject_id, action, reason, meta_json, created_at_s
-    db.prepare(
+    withSql(ctx, "INSERT action_log", () => {
+      db.prepare(
+        `
+        INSERT INTO action_log (guild_id, actor_id, action, reason, meta_json, created_at_s)
+        VALUES (?, ?, ?, ?, ?, ?)
       `
-      INSERT INTO action_log (guild_id, actor_id, action, reason, meta_json, created_at_s)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `
-    ).run(
-      guildId,
-      userId,
-      "forum_post_ping", // Using existing action type for config changes
-      "Updated forum post notification configuration",
-      JSON.stringify({
-        old_config: oldConfig,
-        new_config: newConfig,
-        updated_fields: Object.keys(updateConfig),
-      }),
-      Math.floor(Date.now() / 1000)
-    );
+      ).run(
+        guildId,
+        userId,
+        "forum_post_ping", // Using existing action type for config changes
+        "Updated forum post notification configuration",
+        JSON.stringify({
+          old_config: oldConfig,
+          new_config: newConfig,
+          updated_fields: Object.keys(updateConfig),
+        }),
+        Math.floor(Date.now() / 1000)
+      );
+    });
 
     logger.info(
       { guildId, userId, oldConfig, newConfig },

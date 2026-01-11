@@ -15,7 +15,7 @@ import { ChatInputCommandInteraction, SlashCommandBuilder, PermissionFlagsBits, 
 import { upsertConfig, getConfig } from "../lib/config.js";
 import { logger } from "../lib/logger.js";
 import { logActionPretty } from "../logging/pretty.js";
-import type { CommandContext } from "../lib/cmdWrap.js";
+import { withStep, type CommandContext } from "../lib/cmdWrap.js";
 import { hasManageGuild } from "../lib/config.js";
 import { isOwner } from "../lib/owner.js";
 
@@ -86,12 +86,14 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   const newValue = mode === "public" ? 1 : 0;
 
   // Capture old value for before/after logging - helpful for audit trails
-  const oldConfig = getConfig(guildId);
+  const oldConfig = await withStep(ctx, "get_old_config", () => getConfig(guildId));
   const oldValue = oldConfig?.listopen_public_output ?? 1;
 
   try {
     // Update config
-    upsertConfig(guildId, { listopen_public_output: newValue });
+    await withStep(ctx, "update_config", () => {
+      upsertConfig(guildId, { listopen_public_output: newValue });
+    });
 
     logger.info(
       { guildId, userId: interaction.user.id, oldValue, newValue, mode },
@@ -99,23 +101,27 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
     );
 
     // Log to action_log and audit channel
-    await logActionPretty(interaction.guild, {
-      actorId: interaction.user.id,
-      action: "set_listopen_output",
-      meta: {
-        mode,
-        oldMode: oldValue === 1 ? "public" : "ephemeral",
-        newMode: mode,
-      },
+    await withStep(ctx, "log_action", async () => {
+      await logActionPretty(interaction.guild!, {
+        actorId: interaction.user.id,
+        action: "set_listopen_output",
+        meta: {
+          mode,
+          oldMode: oldValue === 1 ? "public" : "ephemeral",
+          newMode: mode,
+        },
+      });
     });
 
-    await interaction.reply({
-      content: `✅ Set **/listopen** output mode to **${mode}**.\n\n${
-        mode === "public"
-          ? "Moderators' claimed application lists will now be **visible to everyone** in the channel."
-          : "Moderators' claimed application lists will now be **ephemeral** (only visible to the command invoker)."
-      }`,
-      ephemeral: true,
+    await withStep(ctx, "reply", async () => {
+      await interaction.reply({
+        content: `✅ Set **/listopen** output mode to **${mode}**.\n\n${
+          mode === "public"
+            ? "Moderators' claimed application lists will now be **visible to everyone** in the channel."
+            : "Moderators' claimed application lists will now be **ephemeral** (only visible to the command invoker)."
+        }`,
+        ephemeral: true,
+      });
     });
   } catch (err) {
     logger.error({ err, guildId, userId: interaction.user.id, mode }, "[review-set-listopen-output] failed");
