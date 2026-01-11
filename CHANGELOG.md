@@ -8,6 +8,43 @@ All changes to Pawtropolis Tech are tracked here.
 
 ### Added
 
+- **`/art cancel` Subcommand** — Staff-only command to cancel an art job without counting towards the artist's completed pieces:
+  - Use case: Job reassignment, recipient left server, request withdrawn
+  - Adds new "cancelled" status to job workflow (separate from "done")
+  - Cancelled jobs don't appear in `/art jobs`, `/art all`, or leaderboards
+  - Usage: `/art cancel id:<job_number> [reason:<text>]`
+
+- **Security Audit Overhaul** — Major enhancement to `/audit security` with comprehensive permission analysis:
+  - **Snapshot & Diff Tracking** — Each audit stores a snapshot for change detection between runs
+  - **New Subcommands:**
+    - `/audit trends [days]` — Show security issue trends over 7/30 days
+    - `/audit diff` — Show permission changes since last audit with dangerous change highlights
+  - **New Security Checks:**
+    - Role hierarchy inversions (lower role with more perms than higher)
+    - ManageRoles scope warnings (position vs assignable roles)
+    - Channel sync validation (overrides category denials)
+    - Webhook access to sensitive channels detection
+    - Gate channel exposure detection
+    - Unverified role dangerous permission detection
+  - **New Documentation:**
+    - `HIERARCHY.md` — Visual role hierarchy with permission analysis
+    - `DIFF.md` — Permission changes since last audit (auto-generated)
+  - **Enhanced Scheduler:**
+    - Now posts diff alerts when dangerous permissions are added
+    - Pings leadership for critical issues AND dangerous permission changes
+    - Stores snapshots for trend tracking
+  - **Database Tables:**
+    - `security_audit_snapshots` — Complete audit state for diff tracking
+    - `security_issue_history` — Issue counts over time for trends
+    - `bot_permission_requirements` — Document expected bot permissions (future)
+  - See `migrations/042_security_audit_snapshots.ts`, `src/features/securityDiff.ts`, `src/store/securitySnapshotStore.ts`
+
+- **Automated Security Audit Scheduler** — New scheduler that runs `/audit security` automatically every 30 minutes:
+  - Posts results to the logging channel (#bot-logs)
+  - Pings Server Dev, Community Manager, and Senior Administrator roles for unacknowledged critical issues
+  - Helps catch dangerous permission misconfigurations like INC-002 (Community Apps with Admin)
+  - See `src/scheduler/securityAuditScheduler.ts`
+- **`/skullmode` Command Registration** — The `/skullmode` command was missing from Discord command registration. Now properly registered in `buildCommands.ts` and `index.ts`.
 - **`/utility` Command** — Internal command for community managers and bot developers to perform mass role operations. Not relevant for general staff use.
 - **`/developer trace` Command** — Staff can now look up verbose trace details from error card trace IDs:
   - Request overview (command, user, guild, outcome, duration)
@@ -25,6 +62,66 @@ All changes to Pawtropolis Tech are tracked here.
   - Interaction handlers (buttons, modals, autocomplete)
   - Helper patterns (withStep, withSql, permissions)
   - Troubleshooting guide and checklist for new commands
+- **`metrics_reset` ActionType** — New audit trail action type for `/resetdata` command. Previously used `modmail_close` as a workaround.
+- **New Audit ActionTypes** — Added 5 new action types for unified audit trail logging:
+  - `flag_added` — User manually flagged as suspicious
+  - `flag_removed` — User unflagged
+  - `message_purge` — Bulk message deletion
+  - `dm_sent` — Anonymous DM sent via `/send`
+  - `user_unblocked` — Permanent rejection removed
+- **Audit Trail Logging** — Added `logActionPretty` calls to `/flag`, `/purge`, `/send`, and `/unblock` commands for unified audit trail visibility.
+
+### Security
+
+- **Rate Limit on `/send`** — Added 60-second cooldown per user to prevent DM spam abuse via the anonymous message command.
+- **Rate Limit on `/poke`** — Added 60-second cooldown per user to prevent notification spam.
+- **Rate Limit on `/stats export`** — Added 5-minute cooldown per user to prevent expensive CSV generation abuse.
+- **DM Permission Restrictions** — Added `.setDMPermission(false)` to prevent guild-only commands from being used in DMs:
+  - `/roles` — Role automation configuration
+  - `/flag` — User flagging system
+  - `/art` — Artist job management
+  - `/artistqueue` — Artist rotation queue management
+
+### Fixed
+
+- **`/resetdata` ActionType** — Changed from incorrect `"modmail_close"` to proper `"metrics_reset"` action type for accurate audit logging.
+
+### Changed
+
+- **Command Instrumentation Unification (Complete: 10 Phases)** — Standardized execution tracing across 50+ command handlers using `withStep()` and `withSql()` patterns:
+  - **Config Handlers (11 files)**: setRoles, setChannels, setAdvanced, setFeatures, get, artist, movie, game, poke, isitreal, toggleapis
+  - **Gate Commands (5 files)**: gateMain (10 subcommands), accept, reject, kick, unclaim
+  - **Event Commands (3 files)**: event/index (router), event/movie (7 handlers), event/game (7 handlers)
+  - **Complex Commands (9 files)**: send, purge, backfill, resetdata, panic, audit (5 subcommands), database, update (4 subcommands), help
+  - **Remaining Commands (5 files)**: poke (verified), redeemreward (4 phases), review/setNotifyConfig (6 phases), review/getNotifyConfig (6 phases), review-set-listopen-output (4 phases)
+  - All commands now have consistent phase tracking for debugging via `/developer trace`
+  - Database operations are properly instrumented for query timing in error cards
+  - Updated `withStep()` to accept all interaction types (ChatInput, Modal, Button)
+- **Structured Logging `evt` Fields** — Added `evt` (event type) field to all logger calls in commands for consistent log aggregation and filtering:
+  - `/unblock` — 8 event types: `unblock_success`, `unblock_error`, `unblock_dm_sent`, `unblock_dm_failed`, etc.
+  - `/search` — 3 event types: `search_executed`, `search_unauthorized`, `search_error`
+  - `/stats user` — Added `stats_user_view` event
+  - `/stats export` — Added `stats_export` event
+- **Deployment Script Robustness** — Improved `deploy.sh` reliability:
+  - Added `set -euo pipefail` for stricter error handling
+  - Added post-deploy health check (waits 3s, verifies PM2 process status)
+  - Added remote tarball cleanup step
+  - Updated step count from 7 to 9 steps
+
+### Deprecated
+
+- **`/movie` Command** — This command is deprecated in favor of `/event movie`. All subcommands (start, end, attendance, add, credit, bump, resume) now show a deprecation notice in the response footer. Target removal: **v5.0.0 (Q2 2026)**. Migration path: Use the equivalent `/event movie *` subcommands which are part of the unified event tracking system.
+
+### Removed
+
+- **Dead Code Cleanup** — Removed 9 unused exports and 2 unused imports:
+  - `invalidateDraftsCache` from listopen.ts
+  - `clearMetricsEpoch` from metricsEpoch.ts
+  - `APPLICANT_ACTIONS`, `getModeratorMetrics`, `getTopModerators` from modPerformance.ts
+  - `getConfiguredGuilds` from notifyConfig.ts
+  - `getAssignmentHistory`, `getRecentAssignments` from roleAutomation.ts
+  - `OAUTH_RATE_LIMIT_MAX_REQUESTS` from constants.ts
+  - Unused `ensureDeferred` imports from movie.ts and unblock.ts
 
 ---
 
