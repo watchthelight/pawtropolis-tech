@@ -1,8 +1,8 @@
 # Permission Changes Since Last Audit
 
 **Guild:** 🎆 Pawtropolis™ | Furry • LGBTQ+
-**Previous Audit:** 2026-01-11
-**Current Audit:** 2026-01-11
+**Previous Audit:** 2026-01-12
+**Current Audit:** 2026-01-12
 
 ## Summary
 
@@ -12,16 +12,15 @@
 | Roles Removed | 0 |
 | Roles Modified | 0 |
 | Channels Added | 0 |
-| Channels Removed | 0 |
+| Channels Removed | 1 |
 | Channels Modified | 0 |
 | New Issues | 0 |
-| Resolved Issues | 1 |
+| Resolved Issues | 0 |
 | Dangerous Changes | 0 |
 
-## Issue Changes
+## Channel Changes
 
-### [RESOLVED] MEDIUM: ManageRoles Scope Warning
-- Target: Administrator (position 212)
+### [REMOVED] 2d-artist-0086
 
 ---
 
