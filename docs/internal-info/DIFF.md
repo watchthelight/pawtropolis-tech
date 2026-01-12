@@ -11,8 +11,8 @@
 | Roles Added | 0 |
 | Roles Removed | 0 |
 | Roles Modified | 0 |
-| Channels Added | 0 |
-| Channels Removed | 1 |
+| Channels Added | 1 |
+| Channels Removed | 0 |
 | Channels Modified | 0 |
 | New Issues | 0 |
 | Resolved Issues | 0 |
@@ -20,7 +20,9 @@
 
 ## Channel Changes
 
-### [REMOVED] 2d-artist-0086
+### [ADDED] user-0427
+- Type: Text
+- Overwrites: 4
 
 ---
 

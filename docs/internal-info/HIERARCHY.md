@@ -1,6 +1,6 @@
 # Role Hierarchy — 🎆 Pawtropolis™ | Furry • LGBTQ+
 
-**Generated:** 2026-01-12T07:35:56.907Z
+**Generated:** 2026-01-12T16:34:51.757Z
 
 This document shows the complete role hierarchy from highest to lowest position.
 Roles higher in the list can manage roles lower in the list (if they have ManageRoles permission).
@@ -14,7 +14,7 @@ Roles higher in the list can manage roles lower in the list (if they have Manage
 221│ Quarantined                    (0 members)
 220│ Server Owner                   [BOT] [ADMIN] (1 members)
 219│ Community Manager              [ADMIN] (2 members)
-218│ Enter Key                      [ADMIN] (1 members)
+218│ Enter Key                      (1 members)
 217│ Community Development Lead     (0 members)
 216│ Server Dev                     [BOT] [ADMIN] (1 members)
 215│ Mooster                        (1 members)
@@ -79,8 +79,8 @@ Roles higher in the list can manage roles lower in the list (if they have Manage
 156│ Yellow                         (56 members)
 155│ Green                          (91 members)
 154│ Blue                           (163 members)
-153│ Purple                         (222 members)
-152│ Pink                           (178 members)
+153│ Purple                         (223 members)
+152│ Pink                           (179 members)
 151│ Black                          (80 members)
 150│ ⠀⠀⠀⠀⠀‎⠀⠀⠀⠀ Membership ⠀⠀⠀⠀⠀... (53 members)
 149│ Server Artist                  (6 members)
@@ -94,7 +94,7 @@ Roles higher in the list can manage roles lower in the list (if they have Manage
 141│ Donator                        (3 members)
 140│ Booster Fur                    [BOT] (31 members)
 139│ VIP Fur                        (24 members)
-138│ ⠀⠀⠀⠀⠀‎⠀⠀⠀⠀ Community ⠀⠀⠀⠀⠀‎... (5810 members)
+138│ ⠀⠀⠀⠀⠀‎⠀⠀⠀⠀ Community ⠀⠀⠀⠀⠀‎... (5809 members)
 137│ OG Verified 2D Artist          (11 members)
 136│ Verified 2D Artist             (165 members)
 135│ Verified 3D Artist             (0 members)
@@ -112,21 +112,21 @@ Roles higher in the list can manage roles lower in the list (if they have Manage
 123│ Experienced Fur ‹‹ LVL 40 ››   (6 members)
 122│ Known Fur ‹‹ LVL 30 ››         (22 members)
 121│ Active Fur ‹‹ LVL 20 ››        (36 members)
-120│ Engaged Fur ‹‹ LVL 15 ››       (31 members)
-119│ Chatty Fur ‹‹ LVL 10 ››        (100 members)
-118│ Beginner Fur ‹‹ LVL 5 ››       (258 members)
+120│ Engaged Fur ‹‹ LVL 15 ››       (32 members)
+119│ Chatty Fur ‹‹ LVL 10 ››        (99 members)
+118│ Beginner Fur ‹‹ LVL 5 ››       (259 members)
 117│ Newcomer Fur ‹‹ LVL 1 ››       (693 members)
-116│ Fresh Fur ‹‹ LVL 0 ››          (4672 members)
+116│ Fresh Fur ‹‹ LVL 0 ››          (4670 members)
 115│ OG Citizen                     (114 members)
 114│ Community Contributor          (84 members)
 113│ Community Member               (2669 members)
-112│ Pings Ok                       (633 members)
-111│ Important Pings only           (243 members)
-110│ No Pings                       (71 members)
-109│ DM's Open                      (767 members)
+112│ Pings Ok                       (632 members)
+111│ Important Pings only           (244 members)
+110│ No Pings                       (72 members)
+109│ DM's Open                      (769 members)
 108│ Important DM's Only            (142 members)
-107│ DM's Closed                    (27 members)
-106│ ⠀⠀⠀‎⠀⠀⠀⠀Exclusive/Items⠀⠀⠀⠀⠀‎⠀ (5833 members)
+107│ DM's Closed                    (26 members)
+106│ ⠀⠀⠀‎⠀⠀⠀⠀Exclusive/Items⠀⠀⠀⠀⠀‎⠀ (5832 members)
 105│ Fur Voter [ 2x EXP ]           (0 members)
 104│ Spooktober 2025 Participant    (25 members)
 103│ Cinematic Royalty              (0 members)
@@ -166,33 +166,33 @@ Roles higher in the list can manage roles lower in the list (if they have Manage
  69│ OC Half-body Ticket            (9 members)
  68│ OC Emoji Ticket                (1 members)
  67│ OC Headshot Ticket             (10 members)
- 66│ ⠀⠀⠀⠀⠀‎⠀⠀⠀⠀‎About Me⠀⠀⠀⠀⠀‎⠀⠀⠀⠀  (5782 members)
- 65│ He/Him                         (1811 members)
- 64│ She/Her                        (1354 members)
+ 66│ ⠀⠀⠀⠀⠀‎⠀⠀⠀⠀‎About Me⠀⠀⠀⠀⠀‎⠀⠀⠀⠀  (5781 members)
+ 65│ He/Him                         (1810 members)
+ 64│ She/Her                        (1355 members)
  63│ They/Them                      (691 members)
- 62│ Any/All                        (59 members)
+ 62│ Any/All                        (60 members)
  61│ Questioning                    (0 members)
  60│ Other/Ask                      (308 members)
  59│ Male                           (980 members)
- 58│ Female                         (594 members)
- 57│ Non-Binary                     (188 members)
- 56│ Gender-Fluid                   (188 members)
+ 58│ Female                         (595 members)
+ 57│ Non-Binary                     (190 members)
+ 56│ Gender-Fluid                   (187 members)
  55│ Transgender                    (218 members)
  54│ Questioning                    (0 members)
  53│ Unique                         (3 members)
- 52│ Hetero                         (138 members)
- 51│ Homo                           (243 members)
- 50│ Bi                             (445 members)
+ 52│ Hetero                         (141 members)
+ 51│ Homo                           (244 members)
+ 50│ Bi                             (444 members)
  49│ Ace                            (88 members)
  48│ Questioning                    (75 members)
  47│ Other/Ask                      (177 members)
- 46│ PC                             (802 members)
+ 46│ PC                             (804 members)
  45│ Virtual Reality                (359 members)
  44│ Nintendo                       (261 members)
  43│ Xbox                           (287 members)
  42│ Playstation                    (238 members)
- 41│ Mobile                         (515 members)
- 40│ Furry                          (1000 members)
+ 41│ Mobile                         (516 members)
+ 40│ Furry                          (1002 members)
  39│ Gamer                          (841 members)
  38│ VRChat Enthusiast              (434 members)
  37│ Content Creator                (175 members)
@@ -200,39 +200,39 @@ Roles higher in the list can manage roles lower in the list (if they have Manage
  35│ Programmer                     (136 members)
  34│ Streamer                       (107 members)
  33│ Musician                       (361 members)
- 32│ Artist                         (583 members)
+ 32│ Artist                         (584 members)
  31│ Writer                         (266 members)
  30│ Gymnast                        (85 members)
  29│ Cosplay                        (120 members)
- 28│ North America                  (1503 members)
+ 28│ North America                  (1504 members)
  27│ Europe                         (648 members)
  26│ Oceania                        (130 members)
  25│ Asia                           (183 members)
  24│ South America                  (208 members)
  23│ Africa                         (99 members)
- 22│ ⠀⠀⠀⠀⠀‎⠀⠀⠀⠀Pings Roles⠀⠀⠀⠀⠀‎... (5740 members)
- 21│ Announcements                  (756 members)
+ 22│ ⠀⠀⠀⠀⠀‎⠀⠀⠀⠀Pings Roles⠀⠀⠀⠀⠀‎... (5739 members)
+ 21│ Announcements                  (755 members)
  20│ World Updates                  (23 members)
  19│ Community Updates              (527 members)
  18│ Xp Announcement Ping           (13 members)
  17│ Events                         (578 members)
- 16│ VRChat Events                  (203 members)
- 15│ Giveaways                      (673 members)
+ 16│ VRChat Events                  (204 members)
+ 15│ Giveaways                      (674 members)
  14│ Reminders                      (134 members)
  13│ Polls                          (433 members)
- 12│ Welcome Party                  (396 members)
+ 12│ Welcome Party                  (397 members)
  11│ Affiliates                     (205 members)
- 10│ Bump Remind                    (245 members)
-  9│ Looking to VC                  (190 members)
+ 10│ Bump Remind                    (246 members)
+  9│ Looking to VC                  (191 members)
   8│ Important!                     (572 members)
-  7│ QOTD                           (427 members)
-  6│ Chat Reviver                   (572 members)
+  7│ QOTD                           (429 members)
+  6│ Chat Reviver                   (574 members)
   5│ Ping Squad                     (249 members)
   4│ Verified Art                   (172 members)
   3│ Art Comms                      (138 members)
   2│ Art Adopts                     (102 members)
-  1│ [ The Pawtropolis Community ]  (5809 members)
-  0│ @everyone                      (5862 members)
+  1│ [ The Pawtropolis Community ]  (5808 members)
+  0│ @everyone                      (5861 members)
 ```
 
 ---
@@ -246,7 +246,6 @@ Shows which roles each ManageRoles-capable role can assign/remove:
 | Wick | 222 | 221 roles | 0 roles |
 | Server Owner | 220 | 219 roles | 2 roles |
 | Community Manager | 219 | 218 roles | 3 roles |
-| Enter Key | 218 | 217 roles | 4 roles |
 | Server Dev | 216 | 215 roles | 6 roles |
 | Senior Administrator | 214 | 213 roles | 8 roles |
 | Administrator | 212 | 211 roles | 10 roles |
@@ -287,6 +286,7 @@ Roles where a lower-positioned role has more dangerous permissions than a higher
 ### Senior Administrator (pos 214) > Enter Key (pos 218)
 
 **Permissions Senior Administrator has that Enter Key lacks:**
+- Administrator
 - BanMembers
 - KickMembers
 - ManageChannels
@@ -493,20 +493,6 @@ Detailed permission breakdown for roles with moderation capabilities:
 - ManageNicknames
 - MoveMembers
 - ...and 12 more
-
----
-
-### Enter Key
-
-- **Position:** 218
-- **Members:** 1
-- **Color:** #e86f01
-
-**Dangerous Permissions:**
-- Administrator
-
-**Other Permissions:**
-
 
 ---
 
