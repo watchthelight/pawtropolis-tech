@@ -1,9 +1,9 @@
 # Permission Conflicts & Security Concerns — 🎆 Pawtropolis™ | Furry • LGBTQ+
 
-**Generated:** 2026-01-12T16:34:51.755Z
+**Generated:** 2026-01-14T01:59:52.523Z
 **Guild ID:** 896070888594759740
-**Active Issues:** 0
-**Acknowledged:** 54
+**Active Issues:** 5
+**Acknowledged:** 49
 
 ## Summary
 
@@ -11,15 +11,56 @@
 |----------|-------|
 | 🔴 Critical | 0 |
 | 🟠 High | 0 |
-| 🟡 Medium | 0 |
+| 🟡 Medium | 5 |
 | 🟢 Low | 0 |
-| ✅ Acknowledged | 54 |
+| ✅ Acknowledged | 49 |
 
 ---
 
-## ✅ All Issues Acknowledged
+## 🟡 Medium Priority Issues
 
-All detected issues have been reviewed and acknowledged by staff.
+### [MED-030] ManageRoles Scope Warning
+
+- **Affected:** Role: VRC Group Lead (position 212)
+- **Issue:** Role can assign/remove 212 roles below it. 11 roles are protected above.
+- **Risk:** Ensure position is intentional. Lower positions = more assignable roles.
+- **Recommendation:** Review role position. Move up if this is a senior staff role.
+
+---
+
+### [MED-031] ManageRoles Scope Warning
+
+- **Affected:** Role: Senior Moderator (position 211)
+- **Issue:** Role can assign/remove 211 roles below it. 12 roles are protected above.
+- **Risk:** Ensure position is intentional. Lower positions = more assignable roles.
+- **Recommendation:** Review role position. Move up if this is a senior staff role.
+
+---
+
+### [MED-032] ManageRoles Scope Warning
+
+- **Affected:** Role: Community Apps (position 203)
+- **Issue:** Role can assign/remove 203 roles below it. 20 roles are protected above.
+- **Risk:** Ensure position is intentional. Lower positions = more assignable roles.
+- **Recommendation:** Review role position. Move up if this is a senior staff role.
+
+---
+
+### [MED-033] ManageRoles Scope Warning
+
+- **Affected:** Role: Patreon (position 149)
+- **Issue:** Role can assign/remove 149 roles below it. 74 roles are protected above.
+- **Risk:** Ensure position is intentional. Lower positions = more assignable roles.
+- **Recommendation:** Review role position. Move up if this is a senior staff role.
+
+---
+
+### [MED-034] ManageRoles Scope Warning
+
+- **Affected:** Role: DS.ME (position 132)
+- **Issue:** Role can assign/remove 132 roles below it. 91 roles are protected above.
+- **Risk:** Ensure position is intentional. Lower positions = more assignable roles.
+- **Recommendation:** Review role position. Move up if this is a senior staff role.
 
 ---
 
@@ -62,7 +103,7 @@ These issues have been reviewed by staff and marked as intentional.
 
 ### [HIGH-011] Hierarchy Inversion *(Acknowledged)*
 
-- **Affected:** Roles: Community Manager (pos 219) > Quarantined (pos 221)
+- **Affected:** Roles: Community Manager (pos 220) > Quarantined (pos 222)
 - **Issue:** Lower-positioned role "Community Manager" has dangerous permissions that "Quarantined" lacks: Administrator, BanMembers, ManageChannels, ManageGuild, ManageMessages, ManageRoles, ManageWebhooks, MentionEveryone, ModerateMembers
 - **Acknowledged by:** <@697169405422862417> on 2026-01-12
 - **Reason:** Intentional resolution
@@ -73,7 +114,7 @@ These issues have been reviewed by staff and marked as intentional.
 
 ### [HIGH-012] Hierarchy Inversion *(Acknowledged)*
 
-- **Affected:** Roles: Senior Administrator (pos 214) > Community Manager (pos 219)
+- **Affected:** Roles: Senior Administrator (pos 215) > Community Manager (pos 220)
 - **Issue:** Lower-positioned role "Senior Administrator" has dangerous permissions that "Community Manager" lacks: KickMembers
 - **Acknowledged by:** <@697169405422862417> on 2026-01-12
 - **Reason:** Intentional resolution
@@ -84,7 +125,7 @@ These issues have been reviewed by staff and marked as intentional.
 
 ### [HIGH-013] Hierarchy Inversion *(Acknowledged)*
 
-- **Affected:** Roles: Senior Administrator (pos 214) > Enter Key (pos 218)
+- **Affected:** Roles: Senior Administrator (pos 215) > Enter Key (pos 219)
 - **Issue:** Lower-positioned role "Senior Administrator" has dangerous permissions that "Enter Key" lacks: Administrator, BanMembers, KickMembers, ManageChannels, ManageGuild, ManageMessages, ManageRoles, ManageWebhooks, MentionEveryone, ModerateMembers
 - **Acknowledged by:** <@697169405422862417> on 2026-01-12
 - **Reason:** Intentional resolution
@@ -95,7 +136,7 @@ These issues have been reviewed by staff and marked as intentional.
 
 ### [HIGH-014] Hierarchy Inversion *(Acknowledged)*
 
-- **Affected:** Roles: Senior Administrator (pos 214) > Community Development Lead (pos 217)
+- **Affected:** Roles: Senior Administrator (pos 215) > Community Development Lead (pos 218)
 - **Issue:** Lower-positioned role "Senior Administrator" has dangerous permissions that "Community Development Lead" lacks: Administrator, BanMembers, KickMembers, ManageChannels, ManageGuild, ManageMessages, ManageRoles, ManageWebhooks, MentionEveryone, ModerateMembers
 - **Acknowledged by:** <@697169405422862417> on 2026-01-12
 - **Reason:** Intentional resolution
@@ -106,7 +147,7 @@ These issues have been reviewed by staff and marked as intentional.
 
 ### [HIGH-015] Hierarchy Inversion *(Acknowledged)*
 
-- **Affected:** Roles: Senior Administrator (pos 214) > Mooster (pos 215)
+- **Affected:** Roles: Senior Administrator (pos 215) > Mooster (pos 216)
 - **Issue:** Lower-positioned role "Senior Administrator" has dangerous permissions that "Mooster" lacks: Administrator, BanMembers, KickMembers, ManageChannels, ManageGuild, ManageMessages, ManageRoles, ManageWebhooks, MentionEveryone, ModerateMembers
 - **Acknowledged by:** <@697169405422862417> on 2026-01-12
 - **Reason:** Intentional resolution
@@ -117,7 +158,7 @@ These issues have been reviewed by staff and marked as intentional.
 
 ### [HIGH-016] Hierarchy Inversion *(Acknowledged)*
 
-- **Affected:** Roles: Administrator (pos 212) > Staff of the Month (pos 213)
+- **Affected:** Roles: Administrator (pos 213) > Staff of the Month (pos 214)
 - **Issue:** Lower-positioned role "Administrator" has dangerous permissions that "Staff of the Month" lacks: BanMembers, KickMembers, ManageChannels, ManageGuild, ManageMessages, ManageRoles, MentionEveryone, ModerateMembers
 - **Acknowledged by:** <@697169405422862417> on 2026-01-12
 - **Reason:** Intentional resolution
@@ -128,7 +169,7 @@ These issues have been reviewed by staff and marked as intentional.
 
 ### [HIGH-017] Hierarchy Inversion *(Acknowledged)*
 
-- **Affected:** Roles: Moderation Team (pos 205) > VRC Group Lead (pos 211)
+- **Affected:** Roles: Moderation Team (pos 206) > VRC Group Lead (pos 212)
 - **Issue:** Lower-positioned role "Moderation Team" has dangerous permissions that "VRC Group Lead" lacks: ManageMessages, MentionEveryone, ModerateMembers
 - **Acknowledged by:** <@697169405422862417> on 2026-01-12
 - **Reason:** Intentional resolution
@@ -139,7 +180,7 @@ These issues have been reviewed by staff and marked as intentional.
 
 ### [HIGH-018] Hierarchy Inversion *(Acknowledged)*
 
-- **Affected:** Roles: Moderation Team (pos 205) > Senior Moderator (pos 210)
+- **Affected:** Roles: Moderation Team (pos 206) > Senior Moderator (pos 211)
 - **Issue:** Lower-positioned role "Moderation Team" has dangerous permissions that "Senior Moderator" lacks: ManageMessages, MentionEveryone, ModerateMembers
 - **Acknowledged by:** <@697169405422862417> on 2026-01-12
 - **Reason:** Intentional resolution
@@ -150,7 +191,7 @@ These issues have been reviewed by staff and marked as intentional.
 
 ### [HIGH-019] Hierarchy Inversion *(Acknowledged)*
 
-- **Affected:** Roles: Moderation Team (pos 205) > Moderator (pos 209)
+- **Affected:** Roles: Moderation Team (pos 206) > Moderator (pos 210)
 - **Issue:** Lower-positioned role "Moderation Team" has dangerous permissions that "Moderator" lacks: ManageMessages, MentionEveryone, ModerateMembers
 - **Acknowledged by:** <@697169405422862417> on 2026-01-12
 - **Reason:** Intentional resolution
@@ -161,7 +202,7 @@ These issues have been reviewed by staff and marked as intentional.
 
 ### [HIGH-020] Hierarchy Inversion *(Acknowledged)*
 
-- **Affected:** Roles: Moderation Team (pos 205) > Junior Moderator (pos 208)
+- **Affected:** Roles: Moderation Team (pos 206) > Junior Moderator (pos 209)
 - **Issue:** Lower-positioned role "Moderation Team" has dangerous permissions that "Junior Moderator" lacks: ManageMessages, MentionEveryone, ModerateMembers
 - **Acknowledged by:** <@697169405422862417> on 2026-01-12
 - **Reason:** Intentional resolution
@@ -172,7 +213,7 @@ These issues have been reviewed by staff and marked as intentional.
 
 ### [HIGH-021] Hierarchy Inversion *(Acknowledged)*
 
-- **Affected:** Roles: Community Apps (pos 202) > Moderation Team (pos 205)
+- **Affected:** Roles: Community Apps (pos 203) > Moderation Team (pos 206)
 - **Issue:** Lower-positioned role "Community Apps" has dangerous permissions that "Moderation Team" lacks: ManageChannels, ManageRoles
 - **Acknowledged by:** <@697169405422862417> on 2026-01-12
 - **Reason:** Intentional resolution
@@ -183,7 +224,7 @@ These issues have been reviewed by staff and marked as intentional.
 
 ### [HIGH-022] Hierarchy Inversion *(Acknowledged)*
 
-- **Affected:** Roles: Gatekeeper (pos 203) > Staff on Break (pos 204)
+- **Affected:** Roles: Gatekeeper (pos 204) > Staff on Break (pos 205)
 - **Issue:** Lower-positioned role "Gatekeeper" has dangerous permissions that "Staff on Break" lacks: MentionEveryone
 - **Acknowledged by:** <@697169405422862417> on 2026-01-12
 - **Reason:** Intentional resolution
@@ -194,7 +235,7 @@ These issues have been reviewed by staff and marked as intentional.
 
 ### [HIGH-023] Hierarchy Inversion *(Acknowledged)*
 
-- **Affected:** Roles: Community Apps (pos 202) > Gatekeeper (pos 203)
+- **Affected:** Roles: Community Apps (pos 203) > Gatekeeper (pos 204)
 - **Issue:** Lower-positioned role "Community Apps" has dangerous permissions that "Gatekeeper" lacks: ManageChannels, ManageRoles, ModerateMembers
 - **Acknowledged by:** <@697169405422862417> on 2026-01-12
 - **Reason:** Intentional resolution
@@ -205,7 +246,7 @@ These issues have been reviewed by staff and marked as intentional.
 
 ### [HIGH-024] Hierarchy Inversion *(Acknowledged)*
 
-- **Affected:** Roles: Community Ambassador (pos 196) > Community Apps (pos 202)
+- **Affected:** Roles: Community Ambassador (pos 197) > Community Apps (pos 203)
 - **Issue:** Lower-positioned role "Community Ambassador" has dangerous permissions that "Community Apps" lacks: ManageMessages, MentionEveryone
 - **Acknowledged by:** <@697169405422862417> on 2026-01-12
 - **Reason:** Intentional resolution
@@ -216,7 +257,7 @@ These issues have been reviewed by staff and marked as intentional.
 
 ### [HIGH-025] Hierarchy Inversion *(Acknowledged)*
 
-- **Affected:** Roles: Community Ambassador (pos 196) > VRC Group Team (pos 201)
+- **Affected:** Roles: Community Ambassador (pos 197) > VRC Group Team (pos 202)
 - **Issue:** Lower-positioned role "Community Ambassador" has dangerous permissions that "VRC Group Team" lacks: ManageMessages, MentionEveryone, ModerateMembers
 - **Acknowledged by:** <@697169405422862417> on 2026-01-12
 - **Reason:** Intentional resolution
@@ -227,7 +268,7 @@ These issues have been reviewed by staff and marked as intentional.
 
 ### [HIGH-026] Hierarchy Inversion *(Acknowledged)*
 
-- **Affected:** Roles: Community Ambassador (pos 196) > Events Manager (pos 200)
+- **Affected:** Roles: Community Ambassador (pos 197) > Events Manager (pos 201)
 - **Issue:** Lower-positioned role "Community Ambassador" has dangerous permissions that "Events Manager" lacks: ManageMessages, MentionEveryone, ModerateMembers
 - **Acknowledged by:** <@697169405422862417> on 2026-01-12
 - **Reason:** Intentional resolution
@@ -238,7 +279,7 @@ These issues have been reviewed by staff and marked as intentional.
 
 ### [HIGH-027] Hierarchy Inversion *(Acknowledged)*
 
-- **Affected:** Roles: Community Ambassador (pos 196) > Event Host (pos 199)
+- **Affected:** Roles: Community Ambassador (pos 197) > Event Host (pos 200)
 - **Issue:** Lower-positioned role "Community Ambassador" has dangerous permissions that "Event Host" lacks: ManageMessages, MentionEveryone, ModerateMembers
 - **Acknowledged by:** <@697169405422862417> on 2026-01-12
 - **Reason:** Intentional resolution
@@ -249,7 +290,7 @@ These issues have been reviewed by staff and marked as intentional.
 
 ### [HIGH-028] Hierarchy Inversion *(Acknowledged)*
 
-- **Affected:** Roles: Community Ambassador (pos 196) > Ness :3 (pos 198)
+- **Affected:** Roles: Community Ambassador (pos 197) > Ness :3 (pos 199)
 - **Issue:** Lower-positioned role "Community Ambassador" has dangerous permissions that "Ness :3" lacks: ManageMessages, MentionEveryone, ModerateMembers
 - **Acknowledged by:** <@697169405422862417> on 2026-01-12
 - **Reason:** Intentional resolution
@@ -260,7 +301,7 @@ These issues have been reviewed by staff and marked as intentional.
 
 ### [HIGH-029] Hierarchy Inversion *(Acknowledged)*
 
-- **Affected:** Roles: Community Ambassador (pos 196) > vroom vroom (pos 197)
+- **Affected:** Roles: Community Ambassador (pos 197) > vroom vroom (pos 198)
 - **Issue:** Lower-positioned role "Community Ambassador" has dangerous permissions that "vroom vroom" lacks: ManageMessages, MentionEveryone, ModerateMembers
 - **Acknowledged by:** <@697169405422862417> on 2026-01-12
 - **Reason:** Intentional resolution
@@ -332,61 +373,6 @@ These issues have been reviewed by staff and marked as intentional.
 - **Reason:** Intentional resolution
 
 *To unacknowledge, use `/audit unacknowledge MED-010`*
-
----
-
-### [MED-030] ManageRoles Scope Warning *(Acknowledged)*
-
-- **Affected:** Role: VRC Group Lead (position 211)
-- **Issue:** Role can assign/remove 211 roles below it. 11 roles are protected above.
-- **Acknowledged by:** <@697169405422862417> on 2026-01-12
-- **Reason:** Intentional resolution
-
-*To unacknowledge, use `/audit unacknowledge MED-030`*
-
----
-
-### [MED-031] ManageRoles Scope Warning *(Acknowledged)*
-
-- **Affected:** Role: Senior Moderator (position 210)
-- **Issue:** Role can assign/remove 210 roles below it. 12 roles are protected above.
-- **Acknowledged by:** <@697169405422862417> on 2026-01-12
-- **Reason:** Intentional resolution
-
-*To unacknowledge, use `/audit unacknowledge MED-031`*
-
----
-
-### [MED-032] ManageRoles Scope Warning *(Acknowledged)*
-
-- **Affected:** Role: Community Apps (position 202)
-- **Issue:** Role can assign/remove 202 roles below it. 20 roles are protected above.
-- **Acknowledged by:** <@697169405422862417> on 2026-01-12
-- **Reason:** Intentional resolution
-
-*To unacknowledge, use `/audit unacknowledge MED-032`*
-
----
-
-### [MED-033] ManageRoles Scope Warning *(Acknowledged)*
-
-- **Affected:** Role: Patreon (position 148)
-- **Issue:** Role can assign/remove 148 roles below it. 74 roles are protected above.
-- **Acknowledged by:** <@697169405422862417> on 2026-01-12
-- **Reason:** Intentional resolution
-
-*To unacknowledge, use `/audit unacknowledge MED-033`*
-
----
-
-### [MED-034] ManageRoles Scope Warning *(Acknowledged)*
-
-- **Affected:** Role: DS.ME (position 131)
-- **Issue:** Role can assign/remove 131 roles below it. 91 roles are protected above.
-- **Acknowledged by:** <@697169405422862417> on 2026-01-12
-- **Reason:** Intentional resolution
-
-*To unacknowledge, use `/audit unacknowledge MED-034`*
 
 ---
 
