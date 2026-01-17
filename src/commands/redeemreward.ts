@@ -25,6 +25,7 @@ import { randomUUID } from "node:crypto";
 import {
   getTicketRoles,
   getArtistRoleId,
+  getAmbassadorRoleId,
   TICKET_ROLE_NAMES,
   ART_TYPE_DISPLAY,
   type ArtType,
@@ -69,7 +70,8 @@ export const data = new SlashCommandBuilder()
       .setName("artist")
       .setDescription("Override: Assign specific artist instead of next in queue")
       .setRequired(false)
-  );
+  )
+  .setDMPermission(false);
 
 /**
  * Inspect a user's ticket roles.
@@ -118,6 +120,19 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   const guild = interaction.guild;
   if (!guild) {
     await interaction.reply({ content: "This command must be run in a server.", ephemeral: false });
+    return;
+  }
+
+  // Permission check: ManageRoles OR Ambassador role
+  const ambassadorRoleId = getAmbassadorRoleId(guild.id);
+  const hasAmbassadorRole = (interaction.member as GuildMember)?.roles?.cache?.has(ambassadorRoleId);
+  const hasManageRoles = interaction.memberPermissions?.has(PermissionFlagsBits.ManageRoles);
+
+  if (!hasAmbassadorRole && !hasManageRoles) {
+    await interaction.reply({
+      content: "You need the Ambassador role or Manage Roles permission to use this command.",
+      ephemeral: true,
+    });
     return;
   }
 
