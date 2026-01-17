@@ -6,7 +6,14 @@ All changes to Pawtropolis Tech are tracked here.
 
 ## [Unreleased]
 
-*No changes yet.*
+### Changed
+
+- **`/report` Command Enhancements** — Updated per manager feedback:
+  - **Thread title is now the user ID** — Makes searching for existing reports easier
+  - **Mod team ping** — Automatically pings `@Moderation Team` when a report is created
+  - **Reuses existing threads** — If a user already has a report thread, new reports post there instead of creating a new thread
+  - **Default channel fallback** — Now defaults to `#reports` if no report forum is configured via `/config set report_forum`
+  - **New `actions` option** — Reporters can document what actions they took (e.g., "Deleted message", "Issued warning")
 
 ---
 

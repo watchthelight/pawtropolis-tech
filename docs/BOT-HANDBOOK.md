@@ -601,30 +601,32 @@ Flags don't automatically reject people — they just warn other reviewers to pa
 ### `/report`
 **Who can use it:** Ambassadors and Staff
 
-Report content violations with screenshot evidence. Creates a forum thread for staff to review and resolve.
+Report content violations with screenshot evidence. Creates a forum thread for staff to review and resolve. Automatically pings the Moderation Team and consolidates multiple reports for the same user.
 
 | Option | Required? | What it does |
 |--------|-----------|--------------|
 | `user` | **Yes** | User who violated the rules |
 | `reason` | **Yes** | Description of the violation (max 500 chars) |
 | `evidence` | No | Screenshot attachment (must be an image) |
+| `actions` | No | What actions you took (e.g., "Deleted message", max 300 chars) |
 
 **Workflow:**
 1. Ambassador sees rule violation
-2. Takes screenshot before deleting the message
-3. Runs `/report user:@Violator reason:What they did evidence:<screenshot>`
-4. Bot creates forum thread in the report forum with embed + screenshot
-5. Staff clicks **Resolve** button when handled
-6. Thread gets archived automatically
+2. Takes action (e.g., deletes the message) and screenshots as evidence
+3. Runs `/report user:@Violator reason:What they did actions:What I did evidence:<screenshot>`
+4. Bot posts to the report forum — if the user already has a report thread, it adds to that thread; otherwise creates a new one
+5. Moderation Team gets pinged automatically
+6. Staff clicks **Resolve** button when handled
+7. Thread gets archived automatically
 
-**Why this exists:** Ambassadors can delete rule-violating content immediately without exposing gatekeepers to inappropriate material. They screenshot first, delete the message, then report so staff can review later.
+**Why this exists:** Ambassadors can delete rule-violating content immediately without exposing gatekeepers to inappropriate material. They screenshot first, delete the message, then report so staff can review later. The `actions` field lets them document what they already did.
 
-**Setup required:** An admin needs to run `/config set report_forum channel:#content-reports` to designate the forum channel.
+**Setup:** Defaults to `#reports` forum. Optionally configure a different channel with `/config set report_forum channel:#custom-forum`.
 
 **Examples:**
 ```
-/report user:@Spammer reason:Posted advertising links in general
-/report user:@TrollAccount reason:NSFW content in art channel evidence:<screenshot.png>
+/report user:@Spammer reason:Posted advertising links in general actions:Deleted message
+/report user:@TrollAccount reason:NSFW content in art channel actions:Deleted and warned user evidence:<screenshot.png>
 ```
 
 ---
