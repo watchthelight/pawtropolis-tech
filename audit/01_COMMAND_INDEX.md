@@ -52,7 +52,6 @@ The Pawtropolis Tech Discord bot has **37 registered slash commands** plus **1 c
 | 34 | `/unclaim` | `src/commands/gate/unclaim.ts` | 2025-11-25 | watchthelight | Low | No |
 | 35 | `/unblock` | `src/commands/unblock.ts` | 2025-11-25 | watchthelight | Medium | No |
 | 36 | `/update` | `src/commands/update.ts` | 2025-11-25 | watchthelight | Medium | No |
-| 37 | `/utility` | `src/commands/utility.ts` | 2026-01-11 | watchthelight | Low | No |
 
 ### Context Menu Commands
 
@@ -161,7 +160,6 @@ Detailed reports for each command are available in the `audit/commands/` directo
 | `/unclaim` | [unclaim.md](./commands/unclaim.md) | Audited |
 | `/unblock` | [unblock.md](./commands/unblock.md) | Audited |
 | `/update` | [update.md](./commands/update.md) | Audited |
-| `/utility` | [utility.md](./commands/utility.md) | Temporary |
 
 ## Summary Statistics
 

@@ -68,15 +68,6 @@
 
 **Deviations:** None significant.
 
-## Comparison: /health vs /developer vs /utility
-
-| Aspect | /health | /developer | /utility |
-|--------|---------|------------|----------|
-| Header | ✅ Complete | Likely incomplete | Likely incomplete |
-| withStep | ✅ Yes | Unknown | Unknown |
-| Permissions | None | Owner-only | Unknown |
-| Complexity | Low | Low | Low |
-
 ## Bugs / Dead Code
 
 - **None identified**
