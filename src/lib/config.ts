@@ -126,6 +126,8 @@ export type GuildConfig = {
   ambassador_role_id?: string | null;
   server_artist_channel_id?: string | null;
   artist_ticket_roles_json?: string | null;
+  // Content report forum channel (ambassador reports)
+  report_forum_id?: string | null;
   // Configurable settings (previously hardcoded)
   artist_ignored_users_json?: string | null; // JSON array of user IDs to exclude from artist queue
   backfill_notification_channel_id?: string | null; // Channel for backfill completion notifications
@@ -616,7 +618,7 @@ export function upsertConfig(guildId: string, partial: Partial<Omit<GuildConfig,
       "forum_channel_id", "notification_channel_id", "notify_cooldown_seconds",
       "notify_max_per_hour", "support_channel_id", "poke_category_ids_json", "poke_excluded_channel_ids_json",
       "artist_role_id", "ambassador_role_id", "server_artist_channel_id", "artist_ticket_roles_json",
-      "artist_ignored_users_json", "backfill_notification_channel_id", "bot_dev_role_id",
+      "report_forum_id", "artist_ignored_users_json", "backfill_notification_channel_id", "bot_dev_role_id",
       "gate_answer_max_length", "banner_sync_interval_minutes", "modmail_forward_max_size",
       "retry_max_attempts", "retry_initial_delay_ms", "retry_max_delay_ms",
       "circuit_breaker_threshold", "circuit_breaker_reset_ms",

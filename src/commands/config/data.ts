@@ -101,6 +101,10 @@ export const data = new SlashCommandBuilder()
         sc.setName("support_channel").setDescription("Set the support channel")
           .addChannelOption((o) => o.setName("channel").setDescription("Support channel").setRequired(true))
       )
+      .addSubcommand((sc) =>
+        sc.setName("report_forum").setDescription("Set forum for content violation reports")
+          .addChannelOption((o) => o.setName("channel").setDescription("Forum channel for reports").setRequired(true))
+      )
       // Feature toggles
       .addSubcommand((sc) =>
         sc.setName("review_roles").setDescription("Set how roles are displayed in review cards")

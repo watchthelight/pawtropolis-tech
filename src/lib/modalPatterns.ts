@@ -70,6 +70,10 @@ export const MODAL_UNCLAIM_RE = /^v1:modal:unclaim:code([0-9A-F]{6})$/;
 // Age verification modal - requires explicit confirmation before showing NSFW avatar source
 export const MODAL_18_RE = /^v1:avatar:confirm18:code([0-9A-F]{6})$/;
 
+// Content report system - ambassador reports with resolve workflow
+export const BTN_REPORT_RESOLVE_RE = /^v1:report:resolve:([0-9A-F]{6})$/;
+export const MODAL_REPORT_RESOLVE_RE = /^v1:modal:report:resolve:([0-9A-F]{6})$/;
+
 /**
  * Discriminated union for routed modal types. Allows type-safe handling
  * in the modal submission handler via switch on `type`.
@@ -81,7 +85,8 @@ export type ModalRoute =
   | { type: "review_accept"; code: string }
   | { type: "review_kick"; code: string }
   | { type: "review_unclaim"; code: string }
-  | { type: "avatar_confirm18"; code: string };
+  | { type: "avatar_confirm18"; code: string }
+  | { type: "report_resolve"; code: string };
 
 /**
  * Routes a modal customId to a typed handler. Returns null if the ID doesn't
@@ -127,6 +132,11 @@ export function identifyModalRoute(id: string): ModalRoute | null {
   const confirm18 = id.match(MODAL_18_RE);
   if (confirm18) {
     return { type: "avatar_confirm18", code: confirm18[1] };
+  }
+
+  const reportResolve = id.match(MODAL_REPORT_RESOLVE_RE);
+  if (reportResolve) {
+    return { type: "report_resolve", code: reportResolve[1] };
   }
 
   return null;

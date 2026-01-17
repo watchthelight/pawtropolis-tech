@@ -47,6 +47,7 @@ import {
   executeSetForumChannel,
   executeSetNotificationChannel,
   executeSetSupportChannel,
+  executeSetReportForum,
 } from "./setChannels.js";
 
 // Set: Features
@@ -212,6 +213,9 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
       break;
     case "set:support_channel":
       await executeSetSupportChannel(ctx);
+      break;
+    case "set:report_forum":
+      await executeSetReportForum(ctx);
       break;
     case "set:avatar_scan_toggle":
       await executeSetAvatarScanToggle(ctx);
