@@ -598,6 +598,37 @@ Flags don't automatically reject people — they just warn other reviewers to pa
 
 ---
 
+### `/report`
+**Who can use it:** Ambassadors and Staff
+
+Report content violations with screenshot evidence. Creates a forum thread for staff to review and resolve.
+
+| Option | Required? | What it does |
+|--------|-----------|--------------|
+| `user` | **Yes** | User who violated the rules |
+| `reason` | **Yes** | Description of the violation (max 500 chars) |
+| `evidence` | No | Screenshot attachment (must be an image) |
+
+**Workflow:**
+1. Ambassador sees rule violation
+2. Takes screenshot before deleting the message
+3. Runs `/report user:@Violator reason:What they did evidence:<screenshot>`
+4. Bot creates forum thread in the report forum with embed + screenshot
+5. Staff clicks **Resolve** button when handled
+6. Thread gets archived automatically
+
+**Why this exists:** Ambassadors can delete rule-violating content immediately without exposing gatekeepers to inappropriate material. They screenshot first, delete the message, then report so staff can review later.
+
+**Setup required:** An admin needs to run `/config set report_forum channel:#content-reports` to designate the forum channel.
+
+**Examples:**
+```
+/report user:@Spammer reason:Posted advertising links in general
+/report user:@TrollAccount reason:NSFW content in art channel evidence:<screenshot.png>
+```
+
+---
+
 ### `/audit`
 
 > 📚 **Reference Section** — Leadership-only command. Skip unless you're Community Manager or above.
@@ -1926,6 +1957,46 @@ The workflow tips are particularly helpful — they tell you things like "After 
 
 ---
 
+### `/usebyte`
+**Who can use it:** Everyone (members with Byte Token roles)
+
+Redeem your Byte Token for an XP multiplier. This is a self-service command — no need to open a ticket.
+
+| Option | Required? | What it does |
+|--------|-----------|--------------|
+| `rarity` | No | Which token to redeem (Common, Rare, Epic, Legendary, Mythic) |
+
+**How it works:**
+
+1. You must have a Byte Token role (earned from giveaways, events, level rewards, or the Paw Bank shop)
+2. Run `/usebyte` — if you have multiple tokens, a dropdown menu lets you choose which to use
+3. Review the confirmation and click Confirm to redeem
+4. The token role is removed and the multiplier role is added
+5. The multiplier role is automatically removed when it expires
+
+**Token rarities and what you get:**
+
+| Token | Multiplier | Duration |
+|-------|------------|----------|
+| Byte Token [Common] | 2x XP | 12 hours |
+| Byte Token [Rare] | 3x XP | 24 hours |
+| Byte Token [Epic] | 5x XP | 48 hours |
+| Byte Token [Legendary] | 5x XP | 72 hours |
+| Byte Token [Mythic] | 10x XP | 168 hours (1 week) |
+
+**Upgrading:** If you already have an active multiplier and use another token, the new one replaces the old one. Time remaining on the old multiplier is lost — you'll see a warning before confirming.
+
+**Multiple tokens:** If you have multiple token rarities, you can choose which one to use via the dropdown menu, or specify directly with `/usebyte rarity:common`.
+
+**Examples:**
+```
+/usebyte
+/usebyte rarity:common
+/usebyte rarity:mythic
+```
+
+---
+
 ### `/update`
 **Who can use it:** Bot Owner only
 
@@ -1935,7 +2006,7 @@ Change the bot's Discord presence and profile. This affects how the bot appears 
 |------------|--------------|
 | `activity` | What the bot is "doing" (Playing, Watching, Listening, Competing) |
 | `status` | Custom status text (the green text below the username) |
-| `banner` | Update banners (profile, gate embed, welcome embed, website) |
+| `banner` | Update banners (profile, gate embed, welcome embed) |
 | `avatar` | Change the bot's profile picture (supports animated GIFs) |
 
 #### Activity Types

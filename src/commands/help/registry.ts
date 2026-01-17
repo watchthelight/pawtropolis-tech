@@ -390,6 +390,30 @@ export const COMMAND_REGISTRY: CommandMetadata[] = [
     relatedCommands: ["reject", "flag"],
     aliases: ["unpermban", "unban"],
   },
+  {
+    name: "report",
+    description: "Report a content violation with evidence",
+    category: "moderation",
+    permissionLevel: "staff",
+    usage: "/report user:<@user> reason:<text> [evidence:<attachment>]",
+    options: [
+      { name: "user", description: "User who violated the rules", type: "user", required: true },
+      { name: "reason", description: "Description of the violation (max 500 chars)", type: "string", required: true },
+      { name: "evidence", description: "Screenshot of the violation", type: "attachment", required: false },
+    ],
+    examples: [
+      "/report user:@RuleBreaker reason:Posting NSFW content in general",
+      "/report user:@Spammer reason:Advertising links evidence:<screenshot.png>",
+    ],
+    notes: "Available to ambassadors and staff. Creates a forum thread for staff review with a Resolve button.",
+    workflowTips: [
+      "Attach a screenshot as evidence when possible",
+      "Delete the violating message before reporting (screenshot first)",
+      "Staff can resolve reports via the Resolve button in the thread",
+    ],
+    relatedCommands: ["flag", "audit"],
+    aliases: ["violation", "content-report"],
+  },
 
   // ============================================================================
   // QUEUE MANAGEMENT
@@ -728,6 +752,41 @@ export const COMMAND_REGISTRY: CommandMetadata[] = [
     aliases: ["movienight"],
   },
   {
+    name: "usebyte",
+    description: "Redeem byte token for XP multiplier",
+    category: "roles",
+    permissionLevel: "public",
+    usage: "/usebyte [rarity:<token>]",
+    options: [
+      {
+        name: "rarity",
+        description: "Which token to redeem (optional)",
+        type: "string",
+        required: false,
+        choices: [
+          { name: "Common", value: "common" },
+          { name: "Rare", value: "rare" },
+          { name: "Epic", value: "epic" },
+          { name: "Legendary", value: "legendary" },
+          { name: "Mythic", value: "mythic" },
+        ],
+      },
+    ],
+    examples: ["/usebyte", "/usebyte rarity:common", "/usebyte rarity:mythic"],
+    notes:
+      "Self-service command for members with Byte Token roles. " +
+      "Tokens are earned from giveaways, events, level rewards, and the Paw Bank shop. " +
+      "Multiplier roles are automatically removed when they expire.",
+    workflowTips: [
+      "Run /usebyte to see your available tokens and pick which to use",
+      "Specify rarity directly to skip the selection menu",
+      "Higher rarity tokens give better multipliers and longer durations",
+      "Upgrading to a higher multiplier replaces your current one (remaining time is lost)",
+    ],
+    relatedCommands: ["roles"],
+    aliases: ["byte", "redeem", "multiplier"],
+  },
+  {
     name: "panic",
     // Named "panic" because that's exactly what you'll be doing when you need it.
     description: "Emergency halt for role automation",
@@ -811,8 +870,88 @@ export const COMMAND_REGISTRY: CommandMetadata[] = [
   },
 
   // ============================================================================
+  // EVENTS
+  // ============================================================================
+  {
+    name: "event",
+    description: "Event attendance tracking for movie and game nights",
+    category: "roles",
+    permissionLevel: "staff",
+    usage: "/event <movie|game> <subcommand>",
+    subcommandGroups: [
+      {
+        name: "movie",
+        description: "Movie night attendance tracking",
+        subcommands: [
+          { name: "start", description: "Start tracking in a voice channel" },
+          { name: "end", description: "End tracking and finalize attendance" },
+          { name: "attendance", description: "View attendance stats" },
+          { name: "add", description: "Manually add minutes to current event" },
+          { name: "credit", description: "Credit minutes to any event date" },
+          { name: "bump", description: "Give full credit (compensation)" },
+          { name: "resume", description: "Check recovered session status" },
+        ],
+      },
+      {
+        name: "game",
+        description: "Game night attendance tracking",
+        subcommands: [
+          { name: "start", description: "Start tracking in a voice channel" },
+          { name: "end", description: "End tracking and finalize attendance" },
+          { name: "attendance", description: "View attendance stats" },
+          { name: "add", description: "Manually add minutes to current event" },
+          { name: "credit", description: "Credit minutes to any event date" },
+          { name: "bump", description: "Give full credit (compensation)" },
+          { name: "resume", description: "Check recovered session status" },
+        ],
+      },
+    ],
+    examples: [
+      "/event movie start channel:#movie-night-vc",
+      "/event movie end",
+      "/event game attendance user:@User",
+      "/event movie credit user:@User date:2025-12-25 minutes:120",
+    ],
+    notes: "Unified event tracking for both movie and game nights. Users need 30+ minutes to qualify for tier roles.",
+    workflowTips: [
+      "Start tracking before the event begins",
+      "End when event concludes to finalize attendance",
+      "Use credit/bump to fix attendance issues retroactively",
+      "Session persists if bot restarts - use resume to check status",
+    ],
+    relatedCommands: ["roles", "panic"],
+    aliases: ["movienight", "gamenight", "attendance"],
+  },
+
+  // ============================================================================
   // SYSTEM & MAINTENANCE
   // ============================================================================
+  {
+    name: "help",
+    description: "Interactive help system for Pawtropolis Tech",
+    category: "system",
+    permissionLevel: "public",
+    usage: "/help [command:<name>] [search:<keyword>] [category:<name>]",
+    options: [
+      { name: "command", description: "Get detailed help for a specific command", type: "string", required: false },
+      { name: "search", description: "Search commands by keyword", type: "string", required: false },
+      { name: "category", description: "Browse commands by category", type: "string", required: false },
+    ],
+    examples: [
+      "/help",
+      "/help command:accept",
+      "/help search:role",
+      "/help category:gate",
+    ],
+    notes: "Shows commands filtered by your permission level. Use autocomplete for faster navigation.",
+    workflowTips: [
+      "Use command: for detailed documentation on any command",
+      "Search: finds commands by name, alias, or description",
+      "Click category buttons to browse related commands",
+    ],
+    relatedCommands: ["health", "config"],
+    aliases: ["commands", "?"],
+  },
   {
     name: "health",
     description: "Check bot health, uptime, and latency",
@@ -927,6 +1066,56 @@ export const COMMAND_REGISTRY: CommandMetadata[] = [
     ],
     relatedCommands: ["activity"],
     aliases: ["populate", "filldata"],
+  },
+  {
+    name: "developer",
+    description: "Developer tools for debugging and trace inspection",
+    category: "system",
+    permissionLevel: "staff",
+    usage: "/developer <subcommand>",
+    subcommands: [
+      {
+        name: "trace",
+        description: "Look up a trace by ID from an error card",
+        options: [
+          { name: "trace_id", description: "Trace ID from error card footer", type: "string", required: true },
+        ],
+      },
+      { name: "stats", description: "Show trace cache statistics" },
+    ],
+    examples: [
+      "/developer trace trace_id:xd6i6lUUV6g",
+      "/developer stats",
+    ],
+    notes: "Staff-only debugging tools. Trace IDs are found in error card footers and stored for 30 minutes.",
+    workflowTips: [
+      "Copy trace ID from error card footer when investigating issues",
+      "Trace shows full execution timeline, database queries, and error details",
+      "Use stats to monitor trace cache health",
+    ],
+    relatedCommands: ["health", "database"],
+    aliases: ["dev", "debug", "trace"],
+  },
+  {
+    name: "skullmode",
+    description: "Configure skull emoji reaction chance",
+    category: "system",
+    permissionLevel: "owner",
+    usage: "/skullmode chance:<1-1000>",
+    options: [
+      { name: "chance", description: "Odds: 1 in N messages get skulled", type: "integer", required: true },
+    ],
+    examples: [
+      "/skullmode chance:100",
+      "/skullmode chance:1000",
+    ],
+    notes: "Owner-only fun command. Sets odds for bot to react with skull emoji. 1 = every message, 1000 = rare.",
+    workflowTips: [
+      "Lower numbers = more frequent skulls",
+      "Set to 1000 for occasional surprise reactions",
+    ],
+    relatedCommands: ["config"],
+    aliases: ["skull"],
   },
 ];
 

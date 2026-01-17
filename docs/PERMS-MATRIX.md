@@ -95,7 +95,6 @@ Commands restricted to the Gatekeeper role specifically. Higher roles do NOT aut
 | `/unclaim` | Release your claim on an application (Admin+ can unclaim anyone's) |
 | `/listopen` | View your currently claimed applications |
 | `/unblock` | Remove a permanent rejection from a user |
-| `/search` | Search application history by user |
 
 **Why Gatekeeper only?** Application handling is a specialized role. Higher-ranked staff who don't handle applications shouldn't accidentally process them.
 
@@ -105,6 +104,7 @@ Commands restricted to the Gatekeeper role specifically. Higher roles do NOT aut
 
 | Command | Description |
 |---------|-------------|
+| `/search` | Search application history by user (also available to all Staff) |
 | `/stats leaderboard` | View ranked list of moderators by application decisions |
 | `/stats user @moderator` | View detailed stats for a specific moderator |
 
@@ -222,7 +222,8 @@ These commands use Discord's built-in permission system rather than role-based c
 | `/purge` | ManageMessages + Password | Bulk delete messages (up to 100, max 14 days old) |
 | `/roles` | ManageRoles | Configure role automation mappings |
 | `/artistqueue` | ManageRoles | Manage the artist rotation queue |
-| `/redeemreward` | ManageRoles | Assign an art reward to a user |
+| `/redeemreward` | ManageRoles OR Ambassador Role | Assign an art reward to a user |
+| `/report` | Ambassador Role OR Gatekeeper+ | Report content violations with evidence |
 | `/resetdata` | ManageGuild + Password | Reset metrics data from now forward |
 | `/review-set-listopen-output` | ManageGuild | Configure listopen visibility |
 | `/stats history` | Administrator | View detailed mod action history |
@@ -360,8 +361,8 @@ The permission system always checks bypass conditions first:
 | Level | Notation | Example Commands |
 |-------|----------|------------------|
 | Public | Anyone | `/help`, `/health` |
-| Gatekeeper | [GK] | `/accept`, `/reject`, `/kick`, `/search` |
-| Gatekeeper+ | GK+ | `/stats leaderboard`, `/stats user` |
+| Gatekeeper | [GK] | `/accept`, `/reject`, `/kick` |
+| Gatekeeper+ | GK+ | `/search`, `/stats leaderboard`, `/stats user` |
 | Junior Mod+ | JM+ | `/flag`, `/isitreal` |
 | Moderator+ | M+ | `/movie`, `/event` |
 | Senior Mod+ | SM+ | `/stats activity`, `/skullmode` |
@@ -370,7 +371,9 @@ The permission system always checks bypass conditions first:
 | Community Manager+ | CM+ | `/backfill`, `/gate setup` |
 | Owner Only | [BO/SD] | `/database`, `/poke` |
 | Discord Perm | ManageMessages | `/send`, `/purge` |
-| Discord Perm | ManageRoles | `/roles`, `/artistqueue`, `/redeemreward` |
+| Discord Perm | ManageRoles | `/roles`, `/artistqueue` |
+| Hybrid | ManageRoles OR Ambassador | `/redeemreward` |
+| Hybrid | Ambassador OR Gatekeeper+ | `/report` |
 
 ---
 
