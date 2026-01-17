@@ -28,6 +28,7 @@ import { nowUtc } from "../../../lib/time.js";
 import { autoDelete } from "../../../lib/autoDelete.js";
 import { findAppByShortCode } from "../../appLookup.js";
 import { SAFE_ALLOWED_MENTIONS } from "../../../lib/constants.js";
+import { newTraceId, ctx } from "../../../lib/reqctx.js";
 
 import {
   BUTTON_RE,
@@ -108,7 +109,7 @@ export async function handleReviewButton(interaction: ButtonInteraction) {
       await handleClaimToggle(interaction, app);
     }
   } catch (err) {
-    const traceId = interaction.id.slice(-8).toUpperCase();
+    const traceId = ctx().traceId ?? newTraceId();
     logger.error({ err, action, code, traceId }, "Review button handling failed");
     captureException(err, { area: "handleReviewButton", action, code, traceId });
     // Modal-opening actions (reject, approve, accept, kick, unclaim) don't defer
@@ -185,7 +186,7 @@ export async function handleModmailButton(interaction: ButtonInteraction) {
         });
     }
   } catch (err) {
-    const traceId = interaction.id.slice(-8).toUpperCase();
+    const traceId = ctx().traceId ?? newTraceId();
     logger.error({ err, code, traceId }, "Modmail button handling failed");
     captureException(err, { area: "handleModmailButton", code, traceId });
     await replyOrEdit(interaction, {
@@ -213,7 +214,7 @@ export async function handlePermRejectButton(interaction: ButtonInteraction) {
     if (!app) return;
     await openPermRejectModal(interaction, app);
   } catch (err) {
-    const traceId = interaction.id.slice(-8).toUpperCase();
+    const traceId = ctx().traceId ?? newTraceId();
     logger.error({ err, code, traceId }, "Permanent reject button handling failed");
     captureException(err, { area: "handlePermRejectButton", code, traceId });
     if (!interaction.deferred && !interaction.replied) {
@@ -284,7 +285,7 @@ export async function handleCopyUidButton(interaction: ButtonInteraction) {
       logger.error({ err: auditErr, appId: appRow.id }, "[review] Failed to log copy_uid action");
     }
   } catch (err) {
-    const traceId = interaction.id.slice(-8).toUpperCase();
+    const traceId = ctx().traceId ?? newTraceId();
     logger.error({ err, code, userId, traceId }, "Copy UID button handling failed");
     captureException(err, { area: "handleCopyUidButton", code, userId, traceId });
     await interaction

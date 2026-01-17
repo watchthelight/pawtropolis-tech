@@ -15,6 +15,7 @@ import { logger } from "../../../lib/logger.js";
 import { captureException } from "../../../lib/sentry.js";
 import { replyOrEdit } from "../../../lib/cmdWrap.js";
 import { MODAL_PERM_REJECT_RE, MODAL_KICK_RE, MODAL_UNCLAIM_RE } from "../../../lib/modalPatterns.js";
+import { newTraceId, ctx } from "../../../lib/reqctx.js";
 
 import {
   MODAL_RE,
@@ -61,7 +62,7 @@ export async function handleRejectModal(interaction: ModalSubmitInteraction) {
 
     await runRejectAction(interaction, app, reason);
   } catch (err) {
-    const traceId = interaction.id.slice(-8).toUpperCase();
+    const traceId = ctx().traceId ?? newTraceId();
     logger.error({ err, code, traceId }, "Reject modal handling failed");
     captureException(err, { area: "handleRejectModal", code, traceId });
     await replyOrEdit(interaction, {
@@ -99,7 +100,7 @@ export async function handleAcceptModal(interaction: ModalSubmitInteraction) {
 
     await runApproveAction(interaction, app, reason);
   } catch (err) {
-    const traceId = interaction.id.slice(-8).toUpperCase();
+    const traceId = ctx().traceId ?? newTraceId();
     logger.error({ err, code, traceId }, "Accept modal handling failed");
     captureException(err, { area: "handleAcceptModal", code, traceId });
     await replyOrEdit(interaction, {
@@ -138,7 +139,7 @@ export async function handlePermRejectModal(interaction: ModalSubmitInteraction)
 
     await runPermRejectAction(interaction, app, reason);
   } catch (err) {
-    const traceId = interaction.id.slice(-8).toUpperCase();
+    const traceId = ctx().traceId ?? newTraceId();
     logger.error({ err, code, traceId }, "Permanent reject modal handling failed");
     captureException(err, { area: "handlePermRejectModal", code, traceId });
     await replyOrEdit(interaction, {
@@ -177,7 +178,7 @@ export async function handleKickModal(interaction: ModalSubmitInteraction) {
 
     await runKickAction(interaction, app, reason);
   } catch (err) {
-    const traceId = interaction.id.slice(-8).toUpperCase();
+    const traceId = ctx().traceId ?? newTraceId();
     logger.error({ err, code, traceId }, "Kick modal handling failed");
     captureException(err, { area: "handleKickModal", code, traceId });
     await replyOrEdit(interaction, {
@@ -229,7 +230,7 @@ export async function handleUnclaimModal(interaction: ModalSubmitInteraction) {
     const { handleUnclaimAction } = await import("./claimHandlers.js");
     await handleUnclaimAction(interaction, app);
   } catch (err) {
-    const traceId = interaction.id.slice(-8).toUpperCase();
+    const traceId = ctx().traceId ?? newTraceId();
     logger.error({ err, code, traceId }, "Unclaim modal handling failed");
     captureException(err, { area: "handleUnclaimModal", code, traceId });
     await replyOrEdit(interaction, {

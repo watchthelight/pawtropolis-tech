@@ -19,6 +19,7 @@ import {
 import { logger } from "./logger.js";
 import { ROLE_NAMES, getRolesAtOrAbove, getMinRoleDescription } from "./roles.js";
 import { getConfig } from "./config.js";
+import { newTraceId, ctx } from "./reqctx.js";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -173,7 +174,9 @@ export async function postPermissionDenied(
   options: PermissionDenialOptions
 ): Promise<void> {
   const { command, description, requirements } = options;
-  const traceId = interaction.id.slice(-8).toUpperCase();
+  // Use request context's trace ID if available, otherwise generate new one
+  // This ensures the trace ID shown matches the one stored in traceStore
+  const traceId = ctx().traceId ?? newTraceId();
 
   // Resolve all requirements to displayable strings
   const resolvedReqs: string[] = [];

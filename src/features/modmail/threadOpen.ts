@@ -27,7 +27,7 @@ import type { GuildMember } from "discord.js";
 import { db } from "../../db/db.js";
 import { logger } from "../../lib/logger.js";
 import { captureException } from "../../lib/sentry.js";
-import { enrichEvent } from "../../lib/reqctx.js";
+import { enrichEvent, newTraceId, ctx } from "../../lib/reqctx.js";
 import { shortCode } from "../../lib/ids.js";
 import { hasManageGuild, isReviewer, canRunAllCommands } from "../../lib/config.js";
 import { logActionPretty } from "../../logging/pretty.js";
@@ -478,7 +478,7 @@ export async function openPublicModmailThreadFor(params: {
     }
 
     // Unknown error - log and return generic message
-    const traceId = interaction.id.slice(-8).toUpperCase();
+    const traceId = ctx().traceId ?? newTraceId();
     logger.error({ err, userId, traceId }, "[modmail] failed to open thread");
     captureException(err, { area: "modmail:openThread", userId, traceId });
     return {
