@@ -124,6 +124,7 @@ import {
   BTN_PING_UNVERIFIED_RE,
   BTN_DBRECOVER_RE,
   BTN_AUDIT_RE,
+  BTN_REPORT_RESOLVE_RE,
   identifyModalRoute,
 } from "./lib/modalPatterns.js";
 import { REST, Routes } from "discord.js";
@@ -261,10 +262,6 @@ commands.set(art.data.name, wrapCommand("art", art.execute));
 import * as help from "./commands/help/index.js";
 commands.set(help.data.name, wrapCommand("help", help.execute));
 
-// One-time commands (delete after use)
-import * as utility from "./commands/utility.js";
-commands.set(utility.data.name, wrapCommand("utility", utility.execute));
-
 // Developer/debugging tools
 import * as developer from "./commands/developer.js";
 commands.set(developer.data.name, wrapCommand("developer", developer.execute));
@@ -276,6 +273,14 @@ commands.set(test.data.name, wrapCommand("test", test.execute));
 // Skull mode command (random skull reactions)
 import * as skullmode from "./commands/skullmode.js";
 commands.set(skullmode.data.name, wrapCommand("skullmode", skullmode.execute));
+
+// Byte token self-service redemption
+import * as usebyte from "./commands/usebyte.js";
+commands.set(usebyte.data.name, wrapCommand("usebyte", usebyte.execute));
+
+// Content report command (ambassador violation reports)
+import * as report from "./commands/report.js";
+commands.set(report.data.name, wrapCommand("report", report.execute));
 
 client.once(Events.ClientReady, async () => {
   // schema self-heal before anything else
@@ -490,6 +495,32 @@ client.once(Events.ClientReady, async () => {
     );
   }
 
+  // Start byte multiplier expiration scheduler
+  // WHAT: Removes expired XP multiplier roles every 60 seconds
+  // WHY: Auto-cleanup byte token redemptions without staff intervention
+  // DOCS: See src/scheduler/byteMultiplierScheduler.ts
+  try {
+    const { startByteMultiplierCleanup } = await import("./scheduler/byteMultiplierScheduler.js");
+    startByteMultiplierCleanup(client);
+  } catch (err) {
+    logger.warn(
+      { err },
+      "[startup] byte multiplier scheduler failed to start - continuing without auto-expiration"
+    );
+  }
+
+  // WHY: Alert dev before disk fills up and causes outages (migration failures, etc.)
+  // DOCS: See src/scheduler/diskSpaceScheduler.ts
+  try {
+    const { startDiskSpaceScheduler } = await import("./scheduler/diskSpaceScheduler.js");
+    startDiskSpaceScheduler(client);
+  } catch (err) {
+    logger.warn(
+      { err },
+      "[startup] disk space scheduler failed to start - continuing without disk monitoring"
+    );
+  }
+
   // Initialize banner sync (bot profile + website)
   try {
     await initializeBannerSync(client);
@@ -528,6 +559,12 @@ client.once(Events.ClientReady, async () => {
 
       const { stopSecurityAuditScheduler } = await import("./scheduler/securityAuditScheduler.js");
       stopSecurityAuditScheduler();
+
+      const { stopByteMultiplierCleanup } = await import("./scheduler/byteMultiplierScheduler.js");
+      stopByteMultiplierCleanup();
+
+      const { stopDiskSpaceScheduler } = await import("./scheduler/diskSpaceScheduler.js");
+      stopDiskSpaceScheduler();
 
       // 2. Flush message activity buffer before shutdown
       try {
@@ -1459,6 +1496,43 @@ client.on("interactionCreate", wrapEvent("interactionCreate", async (interaction
             return;
           }
 
+          // Byte token redemption buttons
+          if (customId.startsWith("usebyte:")) {
+            logger.info(
+              {
+                evt: "ix_route_match",
+                kind: "button",
+                route: "usebyte",
+                id: customId,
+                traceId,
+              },
+              "route: use byte token"
+            );
+            const { handleUseByteButton } = await import("./features/byteTokenHandler.js");
+            await handleUseByteButton(interaction);
+            succeeded = true;
+            return;
+          }
+
+          // Content report resolve button
+          const reportResolveMatch = customId.match(BTN_REPORT_RESOLVE_RE);
+          if (reportResolveMatch) {
+            logger.info(
+              {
+                evt: "ix_route_match",
+                kind: "button",
+                route: "report_resolve",
+                code: reportResolveMatch[1],
+                traceId,
+              },
+              "route: report resolve"
+            );
+            const { handleReportResolveButton } = await import("./features/report/handlers.js");
+            await handleReportResolveButton(interaction);
+            succeeded = true;
+            return;
+          }
+
           // Help navigation buttons - catch-all for the help system.
           // GOTCHA: This must come AFTER more specific help: patterns if we add any.
           if (customId.startsWith("help:")) {
@@ -1515,6 +1589,24 @@ client.on("interactionCreate", wrapEvent("interactionCreate", async (interaction
               "route: help select menu"
             );
             await help.handleHelpSelectMenu(interaction);
+            succeeded = true;
+            return;
+          }
+
+          // Byte token selection menu
+          if (customId.startsWith("usebyte:") && customId.includes(":select:")) {
+            logger.info(
+              {
+                evt: "ix_route_match",
+                kind: "select_menu",
+                route: "usebyte_select",
+                id: customId,
+                traceId,
+              },
+              "route: use byte token select"
+            );
+            const { handleUseByteSelectMenu } = await import("./features/byteTokenHandler.js");
+            await handleUseByteSelectMenu(interaction);
             succeeded = true;
             return;
           }
@@ -1684,6 +1776,30 @@ client.on("interactionCreate", wrapEvent("interactionCreate", async (interaction
                 "review_unclaim",
                 async (commandCtx) => {
                   await handleUnclaimModal(commandCtx.interaction);
+                }
+              );
+              await executor(interaction);
+              succeeded = true;
+              return;
+            }
+
+            if (route?.type === "report_resolve") {
+              logger.info(
+                {
+                  evt: "ix_route_match",
+                  kind: "modal",
+                  route: "report_resolve",
+                  id: customId,
+                  code: route.code,
+                  traceId,
+                },
+                "route: report resolve modal"
+              );
+              const { handleReportResolveModal } = await import("./features/report/handlers.js");
+              const executor = wrapCommand<ModalSubmitInteraction>(
+                "report_resolve",
+                async (commandCtx) => {
+                  await handleReportResolveModal(commandCtx.interaction, route.code);
                 }
               );
               await executor(interaction);

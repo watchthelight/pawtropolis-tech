@@ -46,14 +46,15 @@ import { data as panicData } from "./panic.js";
 import { data as searchData } from "./search.js";
 import { data as artistqueueData } from "./artistqueue.js";
 import { data as redeemrewardData } from "./redeemreward.js";
+import { data as usebyteData } from "./usebyte.js";
 import { data as artData } from "./art.js";
 import { data as auditData } from "./audit.js";
 import { data as isitrealData } from "./isitreal.js";
 import { data as helpData } from "./help/index.js";
-import { data as utilityData } from "./utility.js";
 import { data as developerData } from "./developer.js";
 import { data as testData } from "./test.js";
 import { data as skullmodeData } from "./skullmode.js";
+import { data as reportData } from "./report.js";
 
 // Returns an array of command JSON objects for Discord's bulk command registration.
 // Discord has a limit of 100 slash commands per bot per guild, so we're fine here.
@@ -102,6 +103,9 @@ export function buildCommands() {
     redeemrewardData.toJSON(),
     artData.toJSON(),
 
+    // Byte token redemption - self-service XP multipliers
+    usebyteData.toJSON(),
+
     // Admin utilities
     auditData.toJSON(),
     isitrealData.toJSON(),
@@ -109,13 +113,13 @@ export function buildCommands() {
     // Help system
     helpData.toJSON(),
 
-    // One-time commands
-    utilityData.toJSON(),
-
     // Developer/debugging tools
     developerData.toJSON(),
     testData.toJSON(),
     skullmodeData.toJSON(),
+
+    // Content report system - ambassador violation reports
+    reportData.toJSON(),
 
     /*
      * Context menu commands are registered alongside slash commands in Discord.js v14.
