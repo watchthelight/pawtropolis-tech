@@ -16,6 +16,7 @@ TARBALL="deploy.tar.gz"
 SHOW_LOGS=false
 RESTART_ONLY=false
 STATUS_ONLY=false
+SKIP_TESTS=false
 
 for arg in "$@"; do
   case $arg in
@@ -31,9 +32,13 @@ for arg in "$@"; do
       STATUS_ONLY=true
       shift
       ;;
+    --fast|--no-tests)
+      SKIP_TESTS=true
+      shift
+      ;;
     *)
       echo "Unknown argument: $arg"
-      echo "Usage: $0 [--logs] [--restart] [--status]"
+      echo "Usage: $0 [--logs] [--restart] [--status] [--fast]"
       exit 1
       ;;
   esac
@@ -57,9 +62,13 @@ fi
 # Full deployment
 echo "Starting deployment to ${REMOTE_HOST}..."
 
-# Step 1: Run tests
-echo "Step 1/9: Running tests..."
-npm test
+# Step 1: Run tests (unless --fast)
+if [ "$SKIP_TESTS" = true ]; then
+  echo "Step 1/9: Skipping tests (--fast mode)..."
+else
+  echo "Step 1/9: Running tests..."
+  npm test
+fi
 
 # Step 2: Build
 echo "Step 2/9: Building project..."
@@ -98,6 +107,17 @@ ssh ${REMOTE_USER}@${REMOTE_HOST} "cd ${REMOTE_PATH} && tar -xzf ${TARBALL} && n
 echo "Step 6.5/9: Running migrations on remote..."
 ssh ${REMOTE_USER}@${REMOTE_HOST} "cd ${REMOTE_PATH} && node scripts/migrate-remote.js" || echo "Migration step completed (may have warnings)"
 
+# Step 6.6: Register slash commands with Discord
+# ─────────────────────────────────────────────────────────────────────────────
+# Slash commands must be registered with Discord's API separately from code
+# deployment. This step syncs the local command definitions to Discord.
+# Without this, new commands will show "Unknown interaction" errors.
+# ─────────────────────────────────────────────────────────────────────────────
+echo "Step 6.6/9: Registering slash commands with Discord..."
+npx dotenvx run -- tsx scripts/commands.ts --all || {
+  echo "WARNING: Command registration failed. Run 'npm run deploy:cmds' manually."
+}
+
 # Step 7: Restart PM2
 echo "Step 7/9: Restarting PM2 process..."
 ssh ${REMOTE_USER}@${REMOTE_HOST} "pm2 restart ${PM2_PROCESS}"
@@ -119,8 +139,13 @@ echo "Cleaning up local tarball..."
 rm ${TARBALL}
 
 echo ""
-echo "Deployment completed successfully!"
+echo "╔══════════════════════════════════════════════════════════════╗"
+echo "║                                                              ║"
+echo "║   ✅ DEPLOYMENT COMPLETE - BOT IS ONLINE AND RUNNING ✅     ║"
+echo "║                                                              ║"
+echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
+echo "::DEPLOY_DONE::"
 
 # Show logs if requested
 if [ "$SHOW_LOGS" = true ]; then

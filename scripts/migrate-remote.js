@@ -4,12 +4,15 @@
  * Doesn't require dotenvx - uses dotenv directly.
  */
 
-require('dotenv').config();
-if (require('fs').existsSync('.env.build')) {
-  require('dotenv').config({ path: '.env.build' });
-}
+import 'dotenv/config.js';
+import { existsSync } from 'fs';
+import { spawnSync } from 'child_process';
+import dotenv from 'dotenv';
 
-const { spawnSync } = require('child_process');
+// Load build env if present
+if (existsSync('.env.build')) {
+  dotenv.config({ path: '.env.build' });
+}
 
 // Run the TypeScript migration script with tsx
 const result = spawnSync('npx', ['tsx', 'scripts/migrate.ts'], {
