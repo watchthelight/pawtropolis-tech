@@ -2,9 +2,63 @@
 
 All changes to Pawtropolis Tech are tracked here.
 
-**Versions:** [Unreleased](#unreleased) | [4.9.2](#492---2026-01-07) | [4.9.1](#491---2026-01-07) | [4.9.0](#490---2026-01-04) | [4.8.0](#480---2025-12-08) | [4.7.1](#471---2025-12-03) | [4.7.0](#470---2025-12-03) | [4.6.0](#460---2025-12-03) | [4.5.0](#450---2025-12-02) | [4.4.4](#444---2025-12-03) | [4.4.3](#443---2025-12-03) | [4.4.2](#442---2025-12-03) | [4.4.1](#441---2025-12-03) | [4.4.0](#440---2025-12-03) | [4.3.0](#430---2025-12-02) | [4.2.0](#420---2025-12-01) | [4.1.0](#410---2025-12-01) | [4.0.3](#403---2025-12-01) | [4.0.2](#402---2025-12-01) | [4.0.1](#401---2025-12-01) | [4.0.0](#400---2025-12-01) | [Earlier versions](#earlier-versions)
+**Versions:** [Unreleased](#unreleased) | [5.1.0](#510---2026-01-17) | [5.0.0](#500---2026-01-12) | [4.9.2](#492---2026-01-07) | [4.9.1](#491---2026-01-07) | [4.9.0](#490---2026-01-04) | [4.8.0](#480---2025-12-08) | [4.7.1](#471---2025-12-03) | [4.7.0](#470---2025-12-03) | [4.6.0](#460---2025-12-03) | [4.5.0](#450---2025-12-02) | [4.4.4](#444---2025-12-03) | [4.4.3](#443---2025-12-03) | [4.4.2](#442---2025-12-03) | [4.4.1](#441---2025-12-03) | [4.4.0](#440---2025-12-03) | [4.3.0](#430---2025-12-02) | [4.2.0](#420---2025-12-01) | [4.1.0](#410---2025-12-01) | [4.0.3](#403---2025-12-01) | [4.0.2](#402---2025-12-01) | [4.0.1](#401---2025-12-01) | [4.0.0](#400---2025-12-01) | [Earlier versions](#earlier-versions)
 
 ## [Unreleased]
+
+*No changes yet.*
+
+---
+
+## [5.1.0] - 2026-01-17
+
+### Added
+
+- **`/report` Command** — Ambassador content violation reporting system:
+  - Ambassadors and staff can report rule violations with screenshot evidence
+  - Creates forum thread in configurable report forum channel
+  - Staff resolves reports via Resolve button with optional note
+  - Thread automatically archived on resolution
+  - Configure with `/config set report_forum channel:#content-reports`
+  - See `src/commands/report.ts`, `src/features/report/`
+
+- **Disk Space Monitor** — Scheduler that monitors server disk usage and alerts before outages:
+  - Runs every 30 minutes (configurable via `DISK_SPACE_CHECK_INTERVAL_MINUTES`)
+  - Warning alert at 80% usage, critical alert at 90%
+  - Critical alerts ping bot_dev_role
+  - Includes suggested cleanup commands in alert embed
+  - 4-hour cooldown between repeated alerts (unless escalating from warning to critical)
+  - See `src/scheduler/diskSpaceScheduler.ts`
+
+- **`/usebyte` Command** — Self-service byte token redemption for XP multipliers:
+  - Members with Byte Token roles can redeem them without opening support tickets
+  - Supports 5 token rarities: Common (2x/12h), Rare (3x/24h), Epic (5x/48h), Legendary (5x/72h), Mythic (10x/168h)
+  - Confirmation flow shows token info, multiplier details, and expiration time
+  - Warning displayed when redemption would replace an active multiplier
+  - Automatic expiration cleanup via scheduler (runs every 60 seconds)
+  - Full audit trail logging with new action types
+  - See `src/commands/usebyte.ts`, `src/features/byteTokenHandler.ts`, `src/scheduler/byteMultiplierScheduler.ts`
+- **New Audit ActionTypes** for byte token system:
+  - `byte_token_redeemed` — User redeemed a byte token
+  - `byte_multiplier_applied` — Multiplier role granted to user
+  - `byte_multiplier_expired` — Scheduler removed expired multiplier role
+  - `byte_multiplier_replaced` — User upgraded to higher multiplier
+- **Database Table** `active_byte_multipliers` — Tracks active XP multipliers with expiration times
+- **Ambassador `/redeemreward` access** — Community Ambassadors can now use `/redeemreward` to assign art rewards, improving ticket response time
+
+### Fixed
+
+- **Trace ID consistency** — Permission denied embeds now use the request context trace ID instead of generating a new one. This ensures `/developer trace` can find the trace for any error. Fixed in:
+  - `src/lib/permissionCard.ts`
+  - `src/features/review/handlers/buttons.ts`
+  - `src/features/review/handlers/modals.ts`
+  - `src/features/modmail/threadOpen.ts`
+
+- **Byte token stacking race condition** — Fixed issue where rapidly clicking multiple confirm buttons could stack multiplier roles. Now removes ALL multiplier roles before adding the new one, with post-add cleanup for concurrent requests.
+
+---
+
+## [5.0.0] - 2026-01-12
 
 ### Added
 
@@ -45,7 +99,6 @@ All changes to Pawtropolis Tech are tracked here.
   - Helps catch dangerous permission misconfigurations like INC-002 (Community Apps with Admin)
   - See `src/scheduler/securityAuditScheduler.ts`
 - **`/skullmode` Command Registration** — The `/skullmode` command was missing from Discord command registration. Now properly registered in `buildCommands.ts` and `index.ts`.
-- **`/utility` Command** — Internal command for community managers and bot developers to perform mass role operations. Not relevant for general staff use.
 - **`/developer trace` Command** — Staff can now look up verbose trace details from error card trace IDs:
   - Request overview (command, user, guild, outcome, duration)
   - Execution timeline with individual phase timings
@@ -110,7 +163,7 @@ All changes to Pawtropolis Tech are tracked here.
 
 ### Deprecated
 
-- **`/movie` Command** — This command is deprecated in favor of `/event movie`. All subcommands (start, end, attendance, add, credit, bump, resume) now show a deprecation notice in the response footer. Target removal: **v5.0.0 (Q2 2026)**. Migration path: Use the equivalent `/event movie *` subcommands which are part of the unified event tracking system.
+- **`/movie` Command** — This command is deprecated in favor of `/event movie`. All subcommands (start, end, attendance, add, credit, bump, resume) show a deprecation notice in the response footer. Target removal: **v6.0.0**. Migration path: Use the equivalent `/event movie *` subcommands which are part of the unified event tracking system.
 
 ### Removed
 
