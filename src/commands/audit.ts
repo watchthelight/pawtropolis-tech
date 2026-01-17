@@ -148,6 +148,29 @@ export const data = new SlashCommandBuilder()
     sub
       .setName("diff")
       .setDescription("Show permission changes since last audit")
+  )
+  .addSubcommand((sub) =>
+    sub
+      .setName("acknowledge-all")
+      .setDescription("Acknowledge all security warnings of a given severity")
+      .addStringOption((opt) =>
+        opt
+          .setName("severity")
+          .setDescription("Which severity level to acknowledge")
+          .setRequired(true)
+          .addChoices(
+            { name: "High only", value: "high" },
+            { name: "Medium only", value: "medium" },
+            { name: "Low only", value: "low" },
+            { name: "All severities", value: "all" }
+          )
+      )
+      .addStringOption((opt) =>
+        opt
+          .setName("reason")
+          .setDescription("Why these are intentional/acceptable")
+          .setRequired(false)
+      )
   );
 
 export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) {
@@ -166,7 +189,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
 
   // IMPORTANT: Defer EARLY for slow subcommands to avoid 3-second timeout
   // Members/NSFW show confirmation buttons first, so they defer later
-  const deferEarly = ["security", "acknowledge", "unacknowledge", "trends", "diff"].includes(subcommand);
+  const deferEarly = ["security", "acknowledge", "unacknowledge", "acknowledge-all", "trends", "diff"].includes(subcommand);
   if (deferEarly) {
     await withStep(ctx, "defer_early", async () => {
       const isEphemeral = subcommand === "unacknowledge";
@@ -191,6 +214,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
       security: "Generates server permission/security documentation.",
       acknowledge: "Acknowledges a security warning as intentional.",
       unacknowledge: "Removes acknowledgment from a security warning.",
+      "acknowledge-all": "Bulk acknowledges all security warnings of a severity level.",
     };
     // Use editReply if already deferred, otherwise use postPermissionDenied
     if (deferEarly) {
@@ -281,9 +305,13 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
           embed.setDescription("Server documentation regenerated. No changes detected since last audit.");
         } else if (pushResult.error) {
           embed.setDescription("Server documentation regenerated but push to GitHub failed.");
+          // Truncate error to fit Discord's 1024 char field limit
+          const truncatedError = pushResult.error.length > 1000
+            ? pushResult.error.slice(0, 997) + "..."
+            : pushResult.error;
           embed.addFields({
             name: "⚠️ Push Error",
-            value: pushResult.error,
+            value: truncatedError || "Unknown error",
             inline: false,
           });
           embed.setColor(0xF59E0B); // Warning color
@@ -291,7 +319,38 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
           embed.setDescription("Server documentation regenerated. GitHub push not configured.");
         }
 
-        await interaction.editReply({ embeds: [embed] });
+        logger.debug(
+          { embedJson: JSON.stringify(embed.toJSON()) },
+          "[audit:security] About to send final embed"
+        );
+
+        try {
+          await interaction.editReply({ embeds: [embed] });
+          logger.info("[audit:security] Final embed sent successfully");
+        } catch (editErr: any) {
+          logger.error(
+            { err: editErr?.message, code: editErr?.code, rawError: editErr?.rawError },
+            "[audit:security] Failed to send final embed"
+          );
+          // Try sending a simpler fallback embed
+          const fallbackEmbed = new EmbedBuilder()
+            .setTitle("✅ Security Audit Complete")
+            .setColor(0x22C55E)
+            .setDescription(
+              `**Roles:** ${result.roleCount}\n` +
+              `**Channels:** ${result.channelCount}\n` +
+              `**Issues:** ${result.issueCount} (${result.criticalCount} critical)`
+            )
+            .setTimestamp();
+
+          try {
+            await interaction.editReply({ embeds: [fallbackEmbed] });
+            logger.info("[audit:security] Fallback embed sent");
+          } catch (fallbackErr) {
+            logger.error({ err: fallbackErr }, "[audit:security] Fallback embed also failed");
+            throw editErr;
+          }
+        }
 
         logger.info(
           { userId: user.id, guildId, ...result, pushResult },
@@ -441,6 +500,108 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
         logger.error({ err, userId: user.id, guildId, issueId }, "[audit:unacknowledge] Failed to unacknowledge");
         await interaction.editReply({
           content: `❌ Failed to unacknowledge issue: ${err instanceof Error ? err.message : "Unknown error"}`,
+        });
+      }
+    });
+    return;
+  }
+
+  // Handle acknowledge-all subcommand (bulk acknowledge)
+  if (subcommand === "acknowledge-all") {
+    await withStep(ctx, "handle_acknowledge_all", async () => {
+      // Already deferred above
+
+      const severityFilter = interaction.options.getString("severity", true).toUpperCase();
+      const reason = interaction.options.getString("reason") ?? undefined;
+
+      try {
+        // Run fresh analysis to get current issues
+        const issues = await analyzeSecurityOnly(guild);
+        const existingAcks = getAcknowledgedIssues(guildId);
+
+        // Filter issues by severity
+        const targetIssues = issues.filter((issue) => {
+          if (severityFilter === "ALL") return true;
+          return issue.severity === severityFilter;
+        });
+
+        if (targetIssues.length === 0) {
+          await interaction.editReply({
+            content: `⚠️ No ${severityFilter === "ALL" ? "" : severityFilter + " severity "}issues found to acknowledge.`,
+          });
+          return;
+        }
+
+        // Filter out already-acknowledged issues (with same hash)
+        const toAcknowledge = targetIssues.filter((issue) => {
+          const existingAck = existingAcks.get(issue.issueKey);
+          return !existingAck || existingAck.permissionHash !== issue.permissionHash;
+        });
+
+        if (toAcknowledge.length === 0) {
+          await interaction.editReply({
+            content: `✅ All ${targetIssues.length} ${severityFilter === "ALL" ? "" : severityFilter + " severity "}issue(s) are already acknowledged.`,
+          });
+          return;
+        }
+
+        // Acknowledge all matching issues
+        let acknowledged = 0;
+        for (const issue of toAcknowledge) {
+          acknowledgeIssue({
+            guildId,
+            issueKey: issue.issueKey,
+            severity: issue.severity,
+            title: issue.title,
+            permissionHash: issue.permissionHash,
+            acknowledgedBy: user.id,
+            reason,
+          });
+          acknowledged++;
+        }
+
+        // Build summary by severity
+        const bySeverity = toAcknowledge.reduce((acc, issue) => {
+          acc[issue.severity] = (acc[issue.severity] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+
+        const severityBreakdown = Object.entries(bySeverity)
+          .map(([sev, count]) => `${sev}: ${count}`)
+          .join(", ");
+
+        const embed = new EmbedBuilder()
+          .setTitle("✅ Bulk Acknowledgment Complete")
+          .setColor(0x22C55E)
+          .addFields(
+            { name: "Issues Acknowledged", value: `${acknowledged} issue(s)`, inline: true },
+            { name: "Severity Filter", value: severityFilter === "ALL" ? "All" : severityFilter, inline: true },
+            { name: "Breakdown", value: severityBreakdown || "None", inline: false },
+            { name: "Acknowledged by", value: `<@${user.id}>`, inline: true }
+          )
+          .setTimestamp();
+
+        if (reason) {
+          embed.addFields({ name: "Reason", value: reason, inline: false });
+        }
+
+        const alreadyAcked = targetIssues.length - toAcknowledge.length;
+        if (alreadyAcked > 0) {
+          embed.setFooter({ text: `${alreadyAcked} issue(s) were already acknowledged and skipped.` });
+        } else {
+          embed.setFooter({ text: "These issues will be marked as acknowledged in future audits." });
+        }
+
+        await interaction.editReply({ embeds: [embed] });
+
+        logger.info(
+          { userId: user.id, guildId, severityFilter, acknowledged, reason },
+          "[audit:acknowledge-all] Bulk acknowledgment complete"
+        );
+      } catch (err) {
+        logger.error({ err, userId: user.id, guildId, severityFilter }, "[audit:acknowledge-all] Failed to bulk acknowledge");
+        await interaction.editReply({
+          content: `❌ Failed to acknowledge issues: ${err instanceof Error ? err.message : "Unknown error"}`,
         });
       }
     });

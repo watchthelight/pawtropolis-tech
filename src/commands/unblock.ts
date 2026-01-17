@@ -17,6 +17,7 @@ import {
 import { logger } from "../lib/logger.js";
 import { requireGatekeeper } from "../lib/config.js";
 import { db } from "../db/db.js";
+import { checkCooldown, formatCooldown, COOLDOWNS } from "../lib/rateLimiter.js";
 import { type CommandContext, withStep, withSql } from "../lib/cmdWrap.js";
 import { postAuditEmbed } from "../features/logger.js";
 import { logActionPretty } from "../logging/pretty.js";
@@ -50,7 +51,8 @@ export const data = new SlashCommandBuilder()
       .setName("reason")
       .setDescription("Reason for unblocking (optional)")
       .setRequired(false)
-  );
+  )
+  .setDMPermission(false);
 
 interface PermRejectRow {
   permanently_rejected: number;
@@ -79,6 +81,16 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
     );
   });
   if (!hasPermission) return;
+
+  // Rate limit check to prevent spam
+  const cooldownResult = checkCooldown("unblock", interaction.user.id, COOLDOWNS.UNBLOCK_MS);
+  if (!cooldownResult.allowed) {
+    await interaction.reply({
+      content: `Please wait ${formatCooldown(cooldownResult.remainingMs!)} before using /unblock again.`,
+      ephemeral: true,
+    });
+    return;
+  }
 
   // Resolve target user from options
   const resolved = await withStep(ctx, "resolve_target", async () => {

@@ -58,7 +58,8 @@ export const data = new SlashCommandBuilder()
       .setMinValue(1)
       .setMaxValue(10000)
   )
-  .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages);
+  .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages)
+  .setDMPermission(false);
 
 /**
  * execute

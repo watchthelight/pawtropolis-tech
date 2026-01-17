@@ -66,7 +66,8 @@ export const data = new SlashCommandBuilder()
   // One moderator learned the hard way that @here at 3am gets you "feedback".
   .addBooleanOption((option) =>
     option.setName("silent").setDescription("Block all mentions (default: true)").setRequired(false)
-  );
+  )
+  .setDMPermission(false);
 
 /**
  * WHAT: Check if invoker has required role (if SEND_ALLOWED_ROLE_IDS is set).

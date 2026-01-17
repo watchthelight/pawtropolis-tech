@@ -175,6 +175,8 @@ export interface AuditResult {
   dangerousChangeCount?: number;
   /** Snapshot ID for reference */
   snapshotId?: number;
+  /** Active (unacknowledged) issues for display purposes */
+  activeIssues?: SecurityIssue[];
 }
 
 export interface GitPushResult {
@@ -1511,6 +1513,7 @@ export async function generateAuditDocs(guild: Guild, outputDir?: string): Promi
     diff,
     dangerousChangeCount,
     snapshotId,
+    activeIssues: active,
   };
 }
 

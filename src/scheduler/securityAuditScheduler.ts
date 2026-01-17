@@ -14,6 +14,7 @@ import { type Client, type TextChannel, EmbedBuilder, roleMention } from "discor
 import {
   generateAuditDocs,
   type AuditResult,
+  type SecurityIssue,
 } from "../features/serverAuditDocs.js";
 import {
   getDangerousChanges,
@@ -37,6 +38,9 @@ const LEADERSHIP_ROLE_IDS = {
   communityManager: "1190093021170114680",
   seniorAdmin: "1420440472169746623",
 };
+
+// Link to CONFLICTS.md for role hierarchy documentation
+const CONFLICTS_DOC_URL = "https://github.com/watchthelight/pawtropolis-tech/blob/main/docs/internal-info/CONFLICTS.md";
 
 let _activeInterval: NodeJS.Timeout | null = null;
 
@@ -144,24 +148,23 @@ async function runSecurityAudit(client: Client): Promise<void> {
     // Run full security analysis with snapshot storage
     const result = await generateAuditDocs(guild);
 
-    // Build unacknowledged issues list for the regular audit embed
-    // The result already has acknowledgedCount, we need to reconstruct unacknowledged count
-    const totalIssueCount = result.issueCount + result.acknowledgedCount;
-    const unacknowledgedCount = result.issueCount; // issueCount is already unacknowledged
+    // Get critical issues from the same data source used for counts (ensures consistency)
+    const criticalIssues = (result.activeIssues ?? []).filter((i) => i.severity === "critical");
 
-    // Build the regular audit embed
-    // Note: We don't have the full issue list here, just counts - build a summary embed
-    const embed = buildAuditSummaryEmbed(result);
+    // Build the regular audit embed with critical issue details
+    const embed = buildAuditSummaryEmbed(result, criticalIssues);
 
     // Check for dangerous permission changes
     const dangerousChanges = result.diff ? getDangerousChanges(result.diff) : [];
     const hasDiff = result.diff && hasMeaningfulChanges(result.diff);
 
     // Build message content (pings for critical issues or dangerous changes)
+    // Use criticalIssues.length instead of result.criticalCount to ensure we only ping
+    // when there are actually critical issues to display
     let content = "";
-    const needsPing =
-      result.criticalCount > 0 ||
-      dangerousChanges.some((c) => c.severity === "critical" || c.severity === "high");
+    const hasCriticalIssues = criticalIssues.length > 0;
+    const hasDangerousChanges = dangerousChanges.some((c) => c.severity === "critical" || c.severity === "high");
+    const needsPing = hasCriticalIssues || hasDangerousChanges;
 
     if (needsPing) {
       const pings = [
@@ -170,9 +173,9 @@ async function runSecurityAudit(client: Client): Promise<void> {
         roleMention(LEADERSHIP_ROLE_IDS.seniorAdmin),
       ].join(" ");
 
-      if (result.criticalCount > 0 && dangerousChanges.length > 0) {
+      if (hasCriticalIssues && dangerousChanges.length > 0) {
         content = `${pings} **Critical security issue(s) and dangerous permission changes detected!**`;
-      } else if (result.criticalCount > 0) {
+      } else if (hasCriticalIssues) {
         content = `${pings} **Critical security issue(s) detected!**`;
       } else {
         content = `${pings} **Dangerous permission changes detected!**`;
@@ -197,8 +200,8 @@ async function runSecurityAudit(client: Client): Promise<void> {
     logger.info(
       {
         guildId,
-        totalIssues: totalIssueCount,
-        unacknowledged: unacknowledgedCount,
+        totalIssues: result.issueCount + result.acknowledgedCount,
+        unacknowledged: result.issueCount,
         critical: result.criticalCount,
         dangerousChanges: dangerousChanges.length,
         hasDiff,
@@ -216,9 +219,26 @@ async function runSecurityAudit(client: Client): Promise<void> {
 }
 
 /**
- * Build a summary embed from AuditResult (when we don't have full issue list).
+ * Build a summary embed from AuditResult with critical issue details.
  */
-function buildAuditSummaryEmbed(result: AuditResult): EmbedBuilder {
+function buildAuditSummaryEmbed(result: AuditResult, criticalIssues: SecurityIssue[] = []): EmbedBuilder {
+  // Consistency check: criticalIssues should match result.criticalCount
+  if (criticalIssues.length !== result.criticalCount) {
+    logger.warn(
+      { criticalIssuesLength: criticalIssues.length, resultCriticalCount: result.criticalCount },
+      "[security-audit:scheduler] Critical issue count mismatch detected"
+    );
+  }
+
+  // Consistency check: severity breakdown should sum to issueCount
+  const severitySum = result.criticalCount + result.highCount + result.mediumCount + result.lowCount;
+  if (severitySum !== result.issueCount) {
+    logger.warn(
+      { severitySum, issueCount: result.issueCount },
+      "[security-audit:scheduler] Severity breakdown does not match total issue count"
+    );
+  }
+
   const embed = new EmbedBuilder()
     .setTitle("Security Audit Results")
     .setTimestamp()
@@ -268,6 +288,27 @@ function buildAuditSummaryEmbed(result: AuditResult): EmbedBuilder {
     value: `**Roles:** ${result.roleCount}\n**Channels:** ${result.channelCount}`,
     inline: true,
   });
+
+  // Add critical issues details if any
+  if (criticalIssues.length > 0) {
+    const criticalList = criticalIssues
+      .slice(0, 5) // Limit to 5 to avoid embed size limits
+      .map((issue) => `🔴 **[${issue.id}]** ${issue.title}\n   └ ${issue.affected}`)
+      .join("\n");
+
+    embed.addFields({
+      name: `Critical Issues (${criticalIssues.length})`,
+      value: criticalList + (criticalIssues.length > 5 ? `\n...and ${criticalIssues.length - 5} more` : ""),
+      inline: false,
+    });
+
+    // Add link to documentation
+    embed.addFields({
+      name: "📚 Documentation",
+      value: `[View CONFLICTS.md](${CONFLICTS_DOC_URL}) for role hierarchy and permission documentation.`,
+      inline: false,
+    });
+  }
 
   return embed;
 }

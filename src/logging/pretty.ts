@@ -68,7 +68,13 @@ export type ActionType =
   | "flag_removed"
   | "message_purge"
   | "dm_sent"
-  | "user_unblocked";
+  | "user_unblocked"
+  | "art_job_assigned"
+  | "art_job_cancelled"
+  | "byte_token_redeemed"
+  | "byte_multiplier_applied"
+  | "byte_multiplier_expired"
+  | "byte_multiplier_replaced";
 
 /**
  * Parameters for logging an action
@@ -316,6 +322,37 @@ function getActionMeta(action: ActionType): ActionMeta {
       title: "User Unblocked",
       color: 0x57f287, // Green
       emoji: "🔓",
+    },
+    art_job_assigned: {
+      title: "Art Job Assigned",
+      color: 0x9b59b6, // Purple
+      emoji: "🎨",
+    },
+    art_job_cancelled: {
+      title: "Art Job Cancelled",
+      color: 0xed4245, // Red
+      emoji: "🚫",
+    },
+    // Byte token self-service redemption system
+    byte_token_redeemed: {
+      title: "Byte Token Redeemed",
+      color: 0x57f287, // Green
+      emoji: "🎮",
+    },
+    byte_multiplier_applied: {
+      title: "XP Multiplier Applied",
+      color: 0x57f287, // Green
+      emoji: "⚡",
+    },
+    byte_multiplier_expired: {
+      title: "XP Multiplier Expired",
+      color: 0x99aab5, // Gray
+      emoji: "⏰",
+    },
+    byte_multiplier_replaced: {
+      title: "XP Multiplier Upgraded",
+      color: 0xfee75c, // Yellow
+      emoji: "⬆️",
     },
   };
 

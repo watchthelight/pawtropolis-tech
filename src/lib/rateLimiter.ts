@@ -174,4 +174,6 @@ export const COOLDOWNS = {
   POKE_MS: 60 * 1000,
   /** Stats export: 5 minutes per user (expensive CSV generation) */
   STATS_EXPORT_MS: 5 * 60 * 1000,
+  /** Unblock: 30 seconds per user (prevents spam unblock operations) */
+  UNBLOCK_MS: 30 * 1000,
 } as const;

@@ -20,6 +20,7 @@ import {
 } from "discord.js";
 import { type CommandContext, withStep, withSql } from "../lib/cmdWrap.js";
 import { requireStaff } from "../lib/config.js";
+import { logActionPretty } from "../logging/pretty.js";
 import { getArtistConfig, ART_TYPE_DISPLAY } from "../features/artistRotation/index.js";
 import {
   getActiveJobsForArtist,
@@ -939,6 +940,20 @@ async function handleAssign(
     );
   });
 
+  // Audit log the assignment
+  await withStep(ctx, "audit_log", async () => {
+    await logActionPretty(interaction.guild!, {
+      actorId: interaction.user.id,
+      subjectId: artist.id,
+      action: "art_job_assigned",
+      meta: {
+        jobNumber: formatJobNumber(job.jobNumber),
+        recipientId: scope === "user" ? recipient!.id : "special",
+        artType: scope === "user" ? artType : `special:${description}`,
+      },
+    });
+  });
+
   await withStep(ctx, "reply", async () => {
     const embed = new EmbedBuilder()
       .setTitle("Job Assigned")
@@ -1101,6 +1116,22 @@ async function handleCancel(
     });
     return;
   }
+
+  // Audit log the cancellation
+  await withStep(ctx, "audit_log", async () => {
+    await logActionPretty(interaction.guild!, {
+      actorId: interaction.user.id,
+      subjectId: job.artist_id,
+      action: "art_job_cancelled",
+      reason: reason,
+      meta: {
+        jobNumber: formatJobNumber(jobNumber),
+        recipientId: job.recipient_id,
+        artType: job.ticket_type,
+        previousStatus: job.status,
+      },
+    });
+  });
 
   await withStep(ctx, "reply", async () => {
     const embed = new EmbedBuilder()
