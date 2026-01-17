@@ -61,6 +61,9 @@ vi.mock("../../../src/features/modmail.js", () => ({
 vi.mock("../../../src/lib/cmdWrap.js", () => ({
   ensureDeferred: vi.fn().mockResolvedValue(undefined),
   replyOrEdit: vi.fn().mockResolvedValue(undefined),
+  // CommandContext helpers - passthrough implementations
+  withStep: async <T>(_ctx: unknown, _phase: string, fn: () => Promise<T> | T) => fn(),
+  withSql: <T>(_ctx: unknown, _sql: string, fn: () => T) => fn(),
 }));
 
 // Mock ids

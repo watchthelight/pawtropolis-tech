@@ -36,7 +36,7 @@ vi.mock("../../src/lib/logger.js", () => ({
   },
 }));
 
-import { getNotifyConfig, setNotifyConfig, getConfiguredGuilds } from "../../src/features/notifyConfig.js";
+import { getNotifyConfig, setNotifyConfig } from "../../src/features/notifyConfig.js";
 import { logger } from "../../src/lib/logger.js";
 
 const MAIN_GUILD_ID = "896070888594759740";
@@ -311,48 +311,6 @@ describe("features/notifyConfig", () => {
       });
 
       expect(mockRun).toHaveBeenCalled();
-    });
-  });
-
-  describe("getConfiguredGuilds", () => {
-    it("returns guild IDs with notify_role_id set", () => {
-      mockAll.mockReturnValue([
-        { guild_id: "guild1" },
-        { guild_id: "guild2" },
-        { guild_id: "guild3" },
-      ]);
-
-      const result = getConfiguredGuilds();
-
-      expect(result).toEqual(["guild1", "guild2", "guild3"]);
-    });
-
-    it("returns empty array when no guilds configured", () => {
-      mockAll.mockReturnValue([]);
-
-      const result = getConfiguredGuilds();
-
-      expect(result).toEqual([]);
-    });
-
-    it("returns empty array on database error", () => {
-      mockAll.mockImplementation(() => {
-        throw new Error("Database error");
-      });
-
-      const result = getConfiguredGuilds();
-
-      expect(result).toEqual([]);
-      expect(logger.error).toHaveBeenCalled();
-    });
-
-    it("queries for guilds with notify_role_id", () => {
-      mockAll.mockReturnValue([]);
-
-      getConfiguredGuilds();
-
-      expect(mockPrepare).toHaveBeenCalled();
-      expect(mockAll).toHaveBeenCalled();
     });
   });
 });

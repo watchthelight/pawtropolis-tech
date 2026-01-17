@@ -41,6 +41,11 @@ vi.mock("../../../src/commands/stats/shared.js", async () => {
       warn: vi.fn(),
       error: vi.fn(),
     },
+    // CommandContext helpers - passthrough implementations
+    withStep: async <T>(_ctx: unknown, _phase: string, fn: () => Promise<T> | T) => fn(),
+    withSql: <T>(_ctx: unknown, _sql: string, fn: () => T) => fn(),
+    ensureDeferred: async (interaction: any) => { await interaction.deferReply(); },
+    replyOrEdit: async () => {},
   };
 });
 
@@ -49,6 +54,20 @@ vi.mock("../../../src/lib/leaderboardImage.js", () => ({
 }));
 
 import { handleLeaderboard } from "../../../src/commands/stats/leaderboard.js";
+import type { CommandContext } from "../../../src/lib/cmdWrap.js";
+
+/** Creates a mock CommandContext wrapping the interaction for handler calls */
+function createMockCtx(interaction: ChatInputCommandInteraction): CommandContext<ChatInputCommandInteraction> {
+  let currentPhase = "enter";
+  return {
+    interaction,
+    step: (phase: string) => { currentPhase = phase; },
+    currentPhase: () => currentPhase,
+    setLastSql: () => {},
+    getTraceId: () => "test-trace-id",
+    traceId: "test-trace-id",
+  };
+}
 
 describe("stats/leaderboard", () => {
   const mockRows = [
@@ -71,7 +90,7 @@ describe("stats/leaderboard", () => {
     it("replies with error when used outside a guild", async () => {
       const interaction = createMockInteraction({ guildId: null } as any);
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: "This command must be run in a guild.",
@@ -82,7 +101,7 @@ describe("stats/leaderboard", () => {
     it("does not defer reply when guild is missing", async () => {
       const interaction = createMockInteraction({ guildId: null } as any);
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(interaction.deferReply).not.toHaveBeenCalled();
     });
@@ -92,7 +111,7 @@ describe("stats/leaderboard", () => {
     it("calls requireMinRole with GATEKEEPER role", async () => {
       const interaction = createMockInteraction();
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(mockRequireMinRole).toHaveBeenCalledWith(
         interaction,
@@ -108,7 +127,7 @@ describe("stats/leaderboard", () => {
       mockRequireMinRole.mockReturnValue(false);
       const interaction = createMockInteraction();
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(interaction.deferReply).not.toHaveBeenCalled();
       expect(mockAll).not.toHaveBeenCalled();
@@ -121,7 +140,7 @@ describe("stats/leaderboard", () => {
         options: { getInteger: { days: null }, getBoolean: { export: null } },
       });
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(mockAll).toHaveBeenCalledWith("guild-123", 1700000000 - 30 * 86400);
     });
@@ -131,7 +150,7 @@ describe("stats/leaderboard", () => {
         options: { getInteger: { days: 60 }, getBoolean: { export: false } },
       });
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(mockAll).toHaveBeenCalledWith("guild-123", 1700000000 - 60 * 86400);
     });
@@ -141,7 +160,7 @@ describe("stats/leaderboard", () => {
         options: { getInteger: { days: 30 }, getBoolean: { export: null } },
       });
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       // Should generate image, not CSV
       expect(mockGenerateLeaderboardImage).toHaveBeenCalled();
@@ -154,7 +173,7 @@ describe("stats/leaderboard", () => {
         options: { getBoolean: { export: false } },
       });
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(interaction.deferReply).toHaveBeenCalledWith();
     });
@@ -165,7 +184,7 @@ describe("stats/leaderboard", () => {
         options: { getInteger: { days: 14 } },
       } as any);
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(mockAll).toHaveBeenCalledWith("test-guild-456", 1700000000 - 14 * 86400);
     });
@@ -175,7 +194,7 @@ describe("stats/leaderboard", () => {
         options: { getBoolean: { export: false } },
       });
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(mockGenerateLeaderboardImage).toHaveBeenCalled();
     });
@@ -185,7 +204,7 @@ describe("stats/leaderboard", () => {
         options: { getBoolean: { export: false } },
       });
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(interaction.editReply).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -200,7 +219,7 @@ describe("stats/leaderboard", () => {
         options: { getBoolean: { export: false } },
       });
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       expect(call.embeds[0].data.title).toBe("Moderator Leaderboard");
@@ -211,7 +230,7 @@ describe("stats/leaderboard", () => {
         options: { getInteger: { days: 45 }, getBoolean: { export: false } },
       });
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       expect(call.embeds[0].data.description).toContain("45 days");
@@ -234,7 +253,7 @@ describe("stats/leaderboard", () => {
         options: { getBoolean: { export: false } },
       });
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       expect(call.embeds[0].data.footer.text).toContain("Showing top 15");
@@ -257,7 +276,7 @@ describe("stats/leaderboard", () => {
         options: { getBoolean: { export: false } },
       });
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       // generateLeaderboardImage should be called with only 15 items
       expect(mockGenerateLeaderboardImage).toHaveBeenCalledWith(
@@ -274,7 +293,7 @@ describe("stats/leaderboard", () => {
         options: { getInteger: { days: 30 }, getBoolean: { export: true } },
       });
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(mockGenerateLeaderboardImage).not.toHaveBeenCalled();
       const call = (interaction.editReply as any).mock.calls[0][0];
@@ -286,7 +305,7 @@ describe("stats/leaderboard", () => {
         options: { getBoolean: { export: true } },
       });
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       expect(call.content).toContain("3 moderators");
@@ -297,7 +316,7 @@ describe("stats/leaderboard", () => {
         options: { getInteger: { days: 45 }, getBoolean: { export: true } },
       });
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       expect(call.files[0].name).toContain("45d");
@@ -308,7 +327,7 @@ describe("stats/leaderboard", () => {
         options: { getBoolean: { export: true } },
       });
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(mockGetAvgClaimToDecision).toHaveBeenCalledTimes(3);
     });
@@ -318,7 +337,7 @@ describe("stats/leaderboard", () => {
         options: { getBoolean: { export: true } },
       });
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       const { logger } = await import("../../../src/commands/stats/shared.js");
       expect(logger.info).toHaveBeenCalledWith(
@@ -335,7 +354,7 @@ describe("stats/leaderboard", () => {
         options: { getInteger: { days: 7 } },
       });
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(interaction.editReply).toHaveBeenCalledWith({
         content: "No decisions found in the last 7 days.",
@@ -346,7 +365,7 @@ describe("stats/leaderboard", () => {
       mockAll.mockReturnValue([]);
       const interaction = createMockInteraction();
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(mockGenerateLeaderboardImage).not.toHaveBeenCalled();
     });
@@ -361,7 +380,7 @@ describe("stats/leaderboard", () => {
         options: { getBoolean: { export: false } },
       } as any);
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(mockGuild.members.fetch).toHaveBeenCalled();
     });
@@ -374,7 +393,7 @@ describe("stats/leaderboard", () => {
         options: { getBoolean: { export: false } },
       } as any);
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       // Should still generate image with "Unknown" names
       expect(mockGenerateLeaderboardImage).toHaveBeenCalled();
@@ -392,7 +411,7 @@ describe("stats/leaderboard", () => {
         options: { getBoolean: { export: false } },
       } as any);
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       const callArg = mockGenerateLeaderboardImage.mock.calls[0][0];
       expect(callArg[0].displayName).toBe("CoolMod");
@@ -407,7 +426,7 @@ describe("stats/leaderboard", () => {
         options: { getBoolean: { export: false } },
       } as any);
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       const callArg = mockGenerateLeaderboardImage.mock.calls[0][0];
       expect(callArg[0].displayName).toBe("Unknown");
@@ -420,7 +439,7 @@ describe("stats/leaderboard", () => {
         options: { getBoolean: { export: false } },
       });
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       const callArg = mockGenerateLeaderboardImage.mock.calls[0][0];
       expect(callArg[0].rank).toBe(1);
@@ -433,7 +452,7 @@ describe("stats/leaderboard", () => {
         options: { getBoolean: { export: false } },
       });
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       const callArg = mockGenerateLeaderboardImage.mock.calls[0][0];
       // mod-001: rejections=20 + perm_reject=3 + kicks=2 = 25
@@ -446,7 +465,7 @@ describe("stats/leaderboard", () => {
         options: { getBoolean: { export: false } },
       });
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       const callArg = mockGenerateLeaderboardImage.mock.calls[0][0];
       expect(callArg[0].avgTimeSeconds).toBe(240);
@@ -458,7 +477,7 @@ describe("stats/leaderboard", () => {
         options: { getBoolean: { export: false } },
       });
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       const callArg = mockGenerateLeaderboardImage.mock.calls[0][0];
       expect(callArg[0].avgTimeSeconds).toBe(0);
@@ -472,7 +491,7 @@ describe("stats/leaderboard", () => {
         options: { getInteger: { days: 14 }, getBoolean: { export: false } },
       } as any);
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       const { logger } = await import("../../../src/commands/stats/shared.js");
       expect(logger.info).toHaveBeenCalledWith(
@@ -490,7 +509,7 @@ describe("stats/leaderboard", () => {
     it("limits to 100 results", async () => {
       const interaction = createMockInteraction();
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       const sqlQuery = mockPrepare.mock.calls[0][0];
       expect(sqlQuery).toContain("LIMIT 100");
@@ -499,7 +518,7 @@ describe("stats/leaderboard", () => {
     it("orders by total then approvals", async () => {
       const interaction = createMockInteraction();
 
-      await handleLeaderboard(interaction as ChatInputCommandInteraction);
+      await handleLeaderboard(createMockCtx(interaction as ChatInputCommandInteraction));
 
       const sqlQuery = mockPrepare.mock.calls[0][0];
       expect(sqlQuery).toContain("ORDER BY total DESC, approvals DESC");

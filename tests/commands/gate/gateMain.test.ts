@@ -45,6 +45,10 @@ vi.mock("../../../src/lib/cmdWrap.js", () => ({
   wrapCommand: vi.fn((name, fn) => fn),
   ensureDeferred: vi.fn().mockResolvedValue(undefined),
   replyOrEdit: vi.fn().mockResolvedValue(undefined),
+  withStep: async <T>(ctx: { step?: (phase: string) => void }, phase: string, fn: () => Promise<T> | T) => {
+    ctx.step?.(phase);
+    return fn();
+  },
   withSql: vi.fn((ctx, sql, fn) => fn()),
 }));
 
@@ -246,7 +250,8 @@ describe("commands/gate/gateMain", () => {
 
       await execute(ctx as any);
 
-      expect(ctx.step).toHaveBeenCalledWith("load_config");
+      // Verifies route_subcommand step is called (welcome preview routing)
+      expect(ctx.step).toHaveBeenCalledWith("route_subcommand");
     });
 
     it("routes to welcome channels subcommand", async () => {

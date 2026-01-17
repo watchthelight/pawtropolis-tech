@@ -44,10 +44,29 @@ vi.mock("../../../src/commands/stats/shared.js", async () => {
       warn: vi.fn(),
       error: vi.fn(),
     },
+    // CommandContext helpers - passthrough implementations
+    withStep: async <T>(_ctx: unknown, _phase: string, fn: () => Promise<T> | T) => fn(),
+    withSql: <T>(_ctx: unknown, _sql: string, fn: () => T) => fn(),
+    ensureDeferred: async (interaction: any) => { await interaction.deferReply(); },
+    replyOrEdit: async () => {},
   };
 });
 
 import { handleUser } from "../../../src/commands/stats/user.js";
+import type { CommandContext } from "../../../src/lib/cmdWrap.js";
+
+/** Creates a mock CommandContext wrapping the interaction for handler calls */
+function createMockCtx(interaction: ChatInputCommandInteraction): CommandContext<ChatInputCommandInteraction> {
+  let currentPhase = "enter";
+  return {
+    interaction,
+    step: (phase: string) => { currentPhase = phase; },
+    currentPhase: () => currentPhase,
+    setLastSql: () => {},
+    getTraceId: () => "test-trace-id",
+    traceId: "test-trace-id",
+  };
+}
 
 describe("stats/user", () => {
   const mockModeratorUser = createMockUser({ id: "mod-user-123", tag: "TestMod#0001" });
@@ -77,7 +96,7 @@ describe("stats/user", () => {
     it("replies with error when used outside a guild", async () => {
       const interaction = createMockInteraction({ guildId: null } as any);
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: "This command must be run in a guild.",
@@ -88,7 +107,7 @@ describe("stats/user", () => {
     it("does not defer reply when guild is missing", async () => {
       const interaction = createMockInteraction({ guildId: null } as any);
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(interaction.deferReply).not.toHaveBeenCalled();
     });
@@ -100,7 +119,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser } },
       });
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(mockRequireMinRole).toHaveBeenCalledWith(
         interaction,
@@ -118,7 +137,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser } },
       });
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(interaction.deferReply).not.toHaveBeenCalled();
       expect(mockGet).not.toHaveBeenCalled();
@@ -131,7 +150,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser } },
       });
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(mockGet).toHaveBeenCalledWith("guild-123", "mod-user-123", expect.any(Number));
     });
@@ -141,7 +160,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser }, getInteger: { days: null } },
       });
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(mockGet).toHaveBeenCalledWith("guild-123", "mod-user-123", 1700000000 - 30 * 86400);
     });
@@ -151,7 +170,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser }, getInteger: { days: 60 } },
       });
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(mockGet).toHaveBeenCalledWith("guild-123", "mod-user-123", 1700000000 - 60 * 86400);
     });
@@ -163,7 +182,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser } },
       });
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(interaction.deferReply).toHaveBeenCalledWith();
     });
@@ -174,7 +193,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser }, getInteger: { days: 14 } },
       } as any);
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(mockGet).toHaveBeenCalledWith("test-guild-456", "mod-user-123", expect.any(Number));
     });
@@ -184,7 +203,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser } },
       });
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(interaction.editReply).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -198,7 +217,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser } },
       });
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       expect(call.embeds[0].data.title).toBe("Moderator Stats: TestMod#0001");
@@ -209,7 +228,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser }, getInteger: { days: 45 } },
       });
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       expect(call.embeds[0].data.description).toContain("45 days");
@@ -220,7 +239,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser } },
       });
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       // The embed should have called displayAvatarURL on the moderator
       expect(mockModeratorUser.displayAvatarURL).toHaveBeenCalled();
@@ -231,7 +250,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser } },
       });
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       const fields = call.embeds[0].data.fields;
@@ -245,7 +264,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser } },
       });
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       const fields = call.embeds[0].data.fields;
@@ -259,7 +278,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser } },
       });
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       const fields = call.embeds[0].data.fields;
@@ -274,7 +293,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser } },
       });
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       const fields = call.embeds[0].data.fields;
@@ -289,7 +308,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser } },
       });
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       const fields = call.embeds[0].data.fields;
@@ -304,7 +323,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser } },
       });
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       const fields = call.embeds[0].data.fields;
@@ -318,7 +337,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser } },
       });
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(interaction.editReply).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -335,7 +354,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser }, getInteger: { days: 7 } },
       });
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(interaction.editReply).toHaveBeenCalledWith({
         content: "TestMod#0001 has no decisions in the last 7 days.",
@@ -355,7 +374,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser }, getInteger: { days: 14 } },
       });
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(interaction.editReply).toHaveBeenCalledWith({
         content: "TestMod#0001 has no decisions in the last 14 days.",
@@ -368,7 +387,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser } },
       });
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(mockGetAvgClaimToDecision).not.toHaveBeenCalled();
       expect(mockGetAvgSubmitToFirstClaim).not.toHaveBeenCalled();
@@ -382,7 +401,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser }, getInteger: { days: 45 } },
       } as any);
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(mockGetAvgClaimToDecision).toHaveBeenCalledWith(
         "test-guild-789",
@@ -397,7 +416,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser }, getInteger: { days: 45 } },
       } as any);
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(mockGetAvgSubmitToFirstClaim).toHaveBeenCalledWith(
         "test-guild-789",
@@ -411,7 +430,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser } },
       });
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(mockFormatDuration).toHaveBeenCalledWith(240);
     });
@@ -422,7 +441,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser } },
       });
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       expect(mockFormatDuration).toHaveBeenCalledWith(360);
     });
@@ -435,7 +454,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser }, getInteger: { days: 14 } },
       } as any);
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       const { logger } = await import("../../../src/commands/stats/shared.js");
       expect(logger.info).toHaveBeenCalledWith(
@@ -455,7 +474,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser } },
       });
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       expect(call.embeds[0].data.color).toBe(0x5865f2);
@@ -466,7 +485,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser } },
       });
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       expect(call.embeds[0].data.timestamp).toBeDefined();
@@ -477,7 +496,7 @@ describe("stats/user", () => {
         options: { getUser: { moderator: mockModeratorUser } },
       });
 
-      await handleUser(interaction as ChatInputCommandInteraction);
+      await handleUser(createMockCtx(interaction as ChatInputCommandInteraction));
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       const fields = call.embeds[0].data.fields;

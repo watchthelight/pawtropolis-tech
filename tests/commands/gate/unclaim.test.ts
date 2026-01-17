@@ -18,6 +18,9 @@ vi.mock("../../../src/commands/gate/shared.js", () => ({
   CLAIMED_MESSAGE: vi.fn((id: string) => `Claimed by <@${id}>.`),
   ensureDeferred: vi.fn().mockResolvedValue(undefined),
   replyOrEdit: vi.fn().mockResolvedValue(undefined),
+  // CommandContext helpers - passthrough implementations
+  withStep: async <T>(_ctx: unknown, _phase: string, fn: () => Promise<T> | T) => fn(),
+  withSql: <T>(_ctx: unknown, _sql: string, fn: () => T) => fn(),
   logger: {
     debug: vi.fn(),
     info: vi.fn(),

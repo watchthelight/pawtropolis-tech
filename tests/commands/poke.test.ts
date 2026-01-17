@@ -32,6 +32,15 @@ vi.mock("../../src/lib/config.js", () => ({
   getConfig: vi.fn(() => null),
 }));
 
+// Mock the rate limiter
+vi.mock("../../src/lib/rateLimiter.js", () => ({
+  checkCooldown: vi.fn(() => ({ allowed: true })),
+  formatCooldown: vi.fn((ms) => `${ms}ms`),
+  COOLDOWNS: {
+    POKE_MS: 60000,
+  },
+}));
+
 /**
  * Creates a Collection-like Map with filter method for mocking guild.channels.fetch()
  */

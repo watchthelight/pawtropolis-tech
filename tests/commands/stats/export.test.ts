@@ -7,23 +7,26 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createMockInteraction } from "../../utils/discordMocks.js";
-import type { ChatInputCommandInteraction } from "discord.js";
+import { createTestCommandContext } from "../../utils/contextFactory.js";
+import { MessageFlags, type ChatInputCommandInteraction } from "discord.js";
 
 // Hoisted mocks
-const { mockPrepare, mockAll, mockRequireMinRole, mockNowUtc, mockGetAvgClaimToDecision } = vi.hoisted(() => ({
+const { mockPrepare, mockAll, mockRequireMinRole, mockNowUtc, mockGetAvgClaimToDecision, mockCheckCooldown } = vi.hoisted(() => ({
   mockPrepare: vi.fn(),
   mockAll: vi.fn(),
   mockRequireMinRole: vi.fn(),
   mockNowUtc: vi.fn(),
   mockGetAvgClaimToDecision: vi.fn(),
+  mockCheckCooldown: vi.fn(),
 }));
 
 // Mock shared module
 vi.mock("../../../src/commands/stats/shared.js", async () => {
-  const { AttachmentBuilder } = await vi.importActual("discord.js");
+  const { AttachmentBuilder, MessageFlags } = await vi.importActual("discord.js");
   return {
     ChatInputCommandInteraction: {},
     AttachmentBuilder,
+    MessageFlags,
     db: { prepare: mockPrepare },
     nowUtc: mockNowUtc,
     requireMinRole: mockRequireMinRole,
@@ -44,8 +47,20 @@ vi.mock("../../../src/commands/stats/shared.js", async () => {
       warn: vi.fn(),
       error: vi.fn(),
     },
+    // CommandContext helpers - passthrough implementations
+    withStep: async <T>(_ctx: unknown, _phase: string, fn: () => Promise<T> | T) => fn(),
+    withSql: <T>(_ctx: unknown, _sql: string, fn: () => T) => fn(),
+    ensureDeferred: async (interaction: any) => { await interaction.deferReply({ ephemeral: true }); },
+    replyOrEdit: async () => {},
   };
 });
+
+// Mock rateLimiter
+vi.mock("../../../src/lib/rateLimiter.js", () => ({
+  checkCooldown: mockCheckCooldown,
+  formatCooldown: vi.fn((ms: number) => `${Math.ceil(ms / 1000)}s`),
+  COOLDOWNS: { STATS_EXPORT_MS: 300000 },
+}));
 
 import { handleExport } from "../../../src/commands/stats/export.js";
 
@@ -54,6 +69,7 @@ describe("stats/export", () => {
     vi.clearAllMocks();
     mockRequireMinRole.mockReturnValue(true);
     mockNowUtc.mockReturnValue(1700000000);
+    mockCheckCooldown.mockReturnValue({ allowed: true });
     mockPrepare.mockReturnValue({ all: mockAll });
     mockAll.mockReturnValue([
       {
@@ -82,7 +98,7 @@ describe("stats/export", () => {
     it("replies with error when used outside a guild", async () => {
       const interaction = createMockInteraction({ guildId: null } as any);
 
-      await handleExport(interaction as ChatInputCommandInteraction);
+      await handleExport(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: "This command must be run in a guild.",
@@ -93,7 +109,7 @@ describe("stats/export", () => {
     it("does not defer reply when guild is missing", async () => {
       const interaction = createMockInteraction({ guildId: null } as any);
 
-      await handleExport(interaction as ChatInputCommandInteraction);
+      await handleExport(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       expect(interaction.deferReply).not.toHaveBeenCalled();
     });
@@ -103,7 +119,7 @@ describe("stats/export", () => {
     it("calls requireMinRole with SENIOR_ADMIN role", async () => {
       const interaction = createMockInteraction();
 
-      await handleExport(interaction as ChatInputCommandInteraction);
+      await handleExport(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       expect(mockRequireMinRole).toHaveBeenCalledWith(
         interaction,
@@ -119,7 +135,7 @@ describe("stats/export", () => {
       mockRequireMinRole.mockReturnValue(false);
       const interaction = createMockInteraction();
 
-      await handleExport(interaction as ChatInputCommandInteraction);
+      await handleExport(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       expect(interaction.deferReply).not.toHaveBeenCalled();
       expect(mockAll).not.toHaveBeenCalled();
@@ -132,7 +148,7 @@ describe("stats/export", () => {
         options: { getInteger: { days: null } },
       });
 
-      await handleExport(interaction as ChatInputCommandInteraction);
+      await handleExport(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       expect(mockAll).toHaveBeenCalledWith("guild-123", 1700000000 - 30 * 86400);
     });
@@ -142,7 +158,7 @@ describe("stats/export", () => {
         options: { getInteger: { days: 60 } },
       });
 
-      await handleExport(interaction as ChatInputCommandInteraction);
+      await handleExport(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       expect(mockAll).toHaveBeenCalledWith("guild-123", 1700000000 - 60 * 86400);
     });
@@ -152,9 +168,9 @@ describe("stats/export", () => {
     it("defers reply ephemerally", async () => {
       const interaction = createMockInteraction();
 
-      await handleExport(interaction as ChatInputCommandInteraction);
+      await handleExport(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
-      expect(interaction.deferReply).toHaveBeenCalledWith({ ephemeral: true });
+      expect(interaction.deferReply).toHaveBeenCalledWith({ flags: MessageFlags.Ephemeral });
     });
 
     it("queries database with correct parameters", async () => {
@@ -163,7 +179,7 @@ describe("stats/export", () => {
         options: { getInteger: { days: 14 } },
       } as any);
 
-      await handleExport(interaction as ChatInputCommandInteraction);
+      await handleExport(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       expect(mockAll).toHaveBeenCalledWith("test-guild-456", 1700000000 - 14 * 86400);
     });
@@ -171,7 +187,7 @@ describe("stats/export", () => {
     it("replies with attachment containing CSV", async () => {
       const interaction = createMockInteraction();
 
-      await handleExport(interaction as ChatInputCommandInteraction);
+      await handleExport(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       expect(interaction.editReply).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -184,7 +200,7 @@ describe("stats/export", () => {
     it("CSV contains correct header row", async () => {
       const interaction = createMockInteraction();
 
-      await handleExport(interaction as ChatInputCommandInteraction);
+      await handleExport(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       const attachment = call.files[0];
@@ -195,7 +211,7 @@ describe("stats/export", () => {
     it("includes moderator count in message", async () => {
       const interaction = createMockInteraction();
 
-      await handleExport(interaction as ChatInputCommandInteraction);
+      await handleExport(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       expect(call.content).toContain("2 moderators included");
@@ -206,7 +222,7 @@ describe("stats/export", () => {
         options: { getInteger: { days: 45 } },
       });
 
-      await handleExport(interaction as ChatInputCommandInteraction);
+      await handleExport(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       expect(call.content).toContain("last 45 days");
@@ -217,7 +233,7 @@ describe("stats/export", () => {
         options: { getInteger: { days: 30 } },
       });
 
-      await handleExport(interaction as ChatInputCommandInteraction);
+      await handleExport(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       const attachment = call.files[0];
@@ -232,7 +248,7 @@ describe("stats/export", () => {
         options: { getInteger: { days: 7 } },
       });
 
-      await handleExport(interaction as ChatInputCommandInteraction);
+      await handleExport(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       expect(interaction.editReply).toHaveBeenCalledWith({
         content: "No decisions found in the last 7 days.",
@@ -243,7 +259,7 @@ describe("stats/export", () => {
       mockAll.mockReturnValue([]);
       const interaction = createMockInteraction();
 
-      await handleExport(interaction as ChatInputCommandInteraction);
+      await handleExport(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       expect(call.files).toBeUndefined();
@@ -254,7 +270,7 @@ describe("stats/export", () => {
     it("calls getAvgClaimToDecision for each moderator", async () => {
       const interaction = createMockInteraction();
 
-      await handleExport(interaction as ChatInputCommandInteraction);
+      await handleExport(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       expect(mockGetAvgClaimToDecision).toHaveBeenCalledWith(
         "guild-123",
@@ -272,7 +288,7 @@ describe("stats/export", () => {
       mockGetAvgClaimToDecision.mockReturnValue(null);
       const interaction = createMockInteraction();
 
-      await handleExport(interaction as ChatInputCommandInteraction);
+      await handleExport(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       // Should not throw
       expect(interaction.editReply).toHaveBeenCalled();
@@ -286,7 +302,7 @@ describe("stats/export", () => {
       ]);
       const interaction = createMockInteraction();
 
-      await handleExport(interaction as ChatInputCommandInteraction);
+      await handleExport(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       expect(call.content).toContain("3 moderators");
@@ -300,7 +316,7 @@ describe("stats/export", () => {
         options: { getInteger: { days: 45 } },
       } as any);
 
-      await handleExport(interaction as ChatInputCommandInteraction);
+      await handleExport(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       const { logger } = await import("../../../src/commands/stats/shared.js");
       expect(logger.info).toHaveBeenCalledWith(
@@ -318,7 +334,7 @@ describe("stats/export", () => {
     it("prepares SQL query", async () => {
       const interaction = createMockInteraction();
 
-      await handleExport(interaction as ChatInputCommandInteraction);
+      await handleExport(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       expect(mockPrepare).toHaveBeenCalled();
       const sqlQuery = mockPrepare.mock.calls[0][0];
@@ -330,7 +346,7 @@ describe("stats/export", () => {
     it("orders results by total desc", async () => {
       const interaction = createMockInteraction();
 
-      await handleExport(interaction as ChatInputCommandInteraction);
+      await handleExport(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       const sqlQuery = mockPrepare.mock.calls[0][0];
       expect(sqlQuery).toContain("ORDER BY total DESC");
@@ -339,7 +355,7 @@ describe("stats/export", () => {
     it("filters by decision actions", async () => {
       const interaction = createMockInteraction();
 
-      await handleExport(interaction as ChatInputCommandInteraction);
+      await handleExport(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       const sqlQuery = mockPrepare.mock.calls[0][0];
       expect(sqlQuery).toContain("approve");

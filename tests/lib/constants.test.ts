@@ -21,7 +21,6 @@ import {
   MESSAGE_DELETE_BATCH_DELAY_MS,
   BULK_DELETE_ITERATION_DELAY_MS,
   UNCAUGHT_EXCEPTION_EXIT_DELAY_MS,
-  OAUTH_RATE_LIMIT_MAX_REQUESTS,
 } from "../../src/lib/constants.js";
 
 describe("constants", () => {
@@ -87,13 +86,6 @@ describe("constants", () => {
 
     it("UNCAUGHT_EXCEPTION_EXIT_DELAY_MS allows Sentry flush", () => {
       expect(UNCAUGHT_EXCEPTION_EXIT_DELAY_MS).toBe(1000);
-    });
-  });
-
-  describe("rate limit constants", () => {
-    it("OAUTH_RATE_LIMIT_MAX_REQUESTS is reasonable", () => {
-      expect(OAUTH_RATE_LIMIT_MAX_REQUESTS).toBe(10);
-      expect(OAUTH_RATE_LIMIT_MAX_REQUESTS).toBeGreaterThan(0);
     });
   });
 });

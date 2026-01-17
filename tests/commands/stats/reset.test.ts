@@ -7,7 +7,8 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createMockInteraction, createMockGuild } from "../../utils/discordMocks.js";
-import type { ChatInputCommandInteraction } from "discord.js";
+import { createTestCommandContext } from "../../utils/contextFactory.js";
+import { MessageFlags, type ChatInputCommandInteraction } from "discord.js";
 
 // Hoisted mocks
 const { mockRequireMinRole, mockSecureCompare, mockResetModstats, mockPostAuditEmbed, mockDb } = vi.hoisted(() => ({
@@ -19,21 +20,32 @@ const { mockRequireMinRole, mockSecureCompare, mockResetModstats, mockPostAuditE
 }));
 
 // Mock shared module
-vi.mock("../../../src/commands/stats/shared.js", () => ({
-  ChatInputCommandInteraction: {},
-  requireMinRole: mockRequireMinRole,
-  ROLE_IDS: {
-    SENIOR_ADMIN: "role-senior-admin",
-    GATEKEEPER: "role-gk",
-    SENIOR_MOD: "role-sm",
-  },
-  logger: {
-    debug: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-  },
-}));
+vi.mock("../../../src/commands/stats/shared.js", async () => {
+  const { MessageFlags } = await import("discord.js");
+  return {
+    ChatInputCommandInteraction: {},
+    MessageFlags,
+    requireMinRole: mockRequireMinRole,
+    ROLE_IDS: {
+      SENIOR_ADMIN: "role-senior-admin",
+      GATEKEEPER: "role-gk",
+      SENIOR_MOD: "role-sm",
+    },
+    logger: {
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+    },
+    // CommandContext helpers - passthrough implementations
+    withStep: async <T>(_ctx: unknown, _phase: string, fn: () => Promise<T> | T) => fn(),
+    withSql: <T>(_ctx: unknown, _sql: string, fn: () => T) => fn(),
+    ensureDeferred: async (interaction: any) => {
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    },
+    replyOrEdit: async () => {},
+  };
+});
 
 // Dynamic import mocks
 vi.mock("../../../src/config.js", () => ({
@@ -97,7 +109,7 @@ describe("stats/reset", () => {
         options: { getString: { password: "test" } },
       });
 
-      await handleReset(interaction as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       expect(mockRequireMinRole).toHaveBeenCalledWith(
         interaction,
@@ -115,7 +127,7 @@ describe("stats/reset", () => {
         options: { getString: { password: "test" } },
       });
 
-      await handleReset(interaction as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       expect(interaction.deferReply).not.toHaveBeenCalled();
       expect(mockSecureCompare).not.toHaveBeenCalled();
@@ -129,7 +141,7 @@ describe("stats/reset", () => {
       });
       mockSecureCompare.mockReturnValue(false);
 
-      await handleReset(interaction as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       expect(interaction.editReply).toHaveBeenCalledWith({
         content: "Unauthorized. Reset password invalid.",
@@ -147,12 +159,12 @@ describe("stats/reset", () => {
       } as any);
       mockSecureCompare.mockReturnValue(false);
 
-      await handleReset(interaction1 as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction1 as ChatInputCommandInteraction));
 
       // Advance by 10 seconds (within 30s rate limit)
       vi.advanceTimersByTime(10000);
 
-      await handleReset(interaction2 as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction2 as ChatInputCommandInteraction));
 
       expect((interaction2.editReply as any).mock.calls[0][0].content).toContain(
         "Too many attempts"
@@ -170,12 +182,12 @@ describe("stats/reset", () => {
       } as any);
       mockSecureCompare.mockReturnValueOnce(false).mockReturnValueOnce(true);
 
-      await handleReset(interaction1 as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction1 as ChatInputCommandInteraction));
 
       // Advance past 30s rate limit
       vi.advanceTimersByTime(31000);
 
-      await handleReset(interaction2 as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction2 as ChatInputCommandInteraction));
 
       expect(mockResetModstats).toHaveBeenCalled();
     });
@@ -191,10 +203,10 @@ describe("stats/reset", () => {
       } as any);
       mockSecureCompare.mockReturnValueOnce(false).mockReturnValueOnce(true);
 
-      await handleReset(interaction1 as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction1 as ChatInputCommandInteraction));
 
       // User bbb should not be affected by user aaa's rate limit
-      await handleReset(interaction2 as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction2 as ChatInputCommandInteraction));
 
       expect(mockResetModstats).toHaveBeenCalled();
     });
@@ -206,7 +218,7 @@ describe("stats/reset", () => {
         options: { getString: { password: "my-password-123" } },
       });
 
-      await handleReset(interaction as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       expect(mockSecureCompare).toHaveBeenCalledWith("my-password-123", "secret-password-123");
     });
@@ -217,7 +229,7 @@ describe("stats/reset", () => {
         options: { getString: { password: "wrong-password" } },
       });
 
-      await handleReset(interaction as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       expect(interaction.editReply).toHaveBeenCalledWith({
         content: "Unauthorized. Reset password invalid.",
@@ -232,7 +244,7 @@ describe("stats/reset", () => {
         options: { getString: { password: "hacking" } },
       } as any);
 
-      await handleReset(interaction as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       const { logger } = await import("../../../src/commands/stats/shared.js");
       expect(logger.warn).toHaveBeenCalledWith(
@@ -250,7 +262,7 @@ describe("stats/reset", () => {
         options: { getString: { password: "wrong" } },
       } as any);
 
-      await handleReset(interaction as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       expect(mockPostAuditEmbed).toHaveBeenCalledWith(
         mockGuild,
@@ -268,9 +280,9 @@ describe("stats/reset", () => {
         options: { getString: { password: "correct" } },
       });
 
-      await handleReset(interaction as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
-      expect(interaction.deferReply).toHaveBeenCalledWith({ ephemeral: true });
+      expect(interaction.deferReply).toHaveBeenCalledWith({ flags: MessageFlags.Ephemeral });
     });
 
     it("calls resetModstats with db and logger", async () => {
@@ -278,7 +290,7 @@ describe("stats/reset", () => {
         options: { getString: { password: "correct" } },
       });
 
-      await handleReset(interaction as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       expect(mockResetModstats).toHaveBeenCalledWith(mockDb, expect.anything(), {});
     });
@@ -288,7 +300,7 @@ describe("stats/reset", () => {
         options: { getString: { password: "correct" } },
       });
 
-      await handleReset(interaction as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       expect(call.content).toContain("Modstats cache reset complete");
@@ -306,7 +318,7 @@ describe("stats/reset", () => {
         options: { getString: { password: "correct" } },
       });
 
-      await handleReset(interaction as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       expect(call.content).toContain("Cache cleared: No");
@@ -322,7 +334,7 @@ describe("stats/reset", () => {
         options: { getString: { password: "correct" } },
       });
 
-      await handleReset(interaction as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       expect(call.content).toContain("Warnings:");
@@ -338,7 +350,7 @@ describe("stats/reset", () => {
         options: { getString: { password: "correct" } },
       } as any);
 
-      await handleReset(interaction as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       expect(mockPostAuditEmbed).toHaveBeenCalledWith(
         mockGuild,
@@ -357,7 +369,7 @@ describe("stats/reset", () => {
         options: { getString: { password: "correct" } },
       } as any);
 
-      await handleReset(interaction as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       const { logger } = await import("../../../src/commands/stats/shared.js");
       expect(logger.info).toHaveBeenCalledWith(
@@ -378,7 +390,7 @@ describe("stats/reset", () => {
       } as any);
       mockSecureCompare.mockReturnValueOnce(false);
 
-      await handleReset(interaction1 as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction1 as ChatInputCommandInteraction));
 
       // Advance past rate limit
       vi.advanceTimersByTime(31000);
@@ -390,7 +402,7 @@ describe("stats/reset", () => {
       } as any);
       mockSecureCompare.mockReturnValueOnce(true);
 
-      await handleReset(interaction2 as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction2 as ChatInputCommandInteraction));
 
       // Third attempt immediately should work (rate limit cleared)
       const interaction3 = createMockInteraction({
@@ -399,7 +411,7 @@ describe("stats/reset", () => {
       } as any);
       mockSecureCompare.mockReturnValueOnce(true);
 
-      await handleReset(interaction3 as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction3 as ChatInputCommandInteraction));
 
       expect(mockResetModstats).toHaveBeenCalledTimes(2);
     });
@@ -413,7 +425,7 @@ describe("stats/reset", () => {
         options: { getString: { password: "correct" } },
       } as any);
 
-      await handleReset(interaction as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       const { logger } = await import("../../../src/commands/stats/shared.js");
       expect(logger.error).toHaveBeenCalled();
@@ -425,7 +437,7 @@ describe("stats/reset", () => {
         options: { getString: { password: "correct" } },
       });
 
-      await handleReset(interaction as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       expect(interaction.editReply).toHaveBeenCalledWith({
         content: "Reset failed. Check logs for details.",
@@ -441,7 +453,7 @@ describe("stats/reset", () => {
         options: { getString: { password: "correct" } },
       } as any);
 
-      await handleReset(interaction as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       expect(mockPostAuditEmbed).toHaveBeenCalledWith(
         mockGuild,
@@ -462,7 +474,7 @@ describe("stats/reset", () => {
         options: { getString: { password: "any" } },
       });
 
-      await handleReset(interaction as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       // Should reach password comparison (config has RESET_PASSWORD set)
       expect(mockSecureCompare).toHaveBeenCalled();
@@ -477,7 +489,7 @@ describe("stats/reset", () => {
         options: { getString: { password: "wrong" } },
       } as any);
 
-      await handleReset(interaction as ChatInputCommandInteraction);
+      await handleReset(createTestCommandContext(interaction as ChatInputCommandInteraction));
 
       expect(mockPostAuditEmbed).not.toHaveBeenCalled();
     });

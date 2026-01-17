@@ -58,6 +58,11 @@ vi.mock("../../../src/commands/stats/shared.js", async () => {
       warn: vi.fn(),
       error: vi.fn(),
     },
+    // CommandContext helpers - passthrough implementations
+    withStep: async <T>(_ctx: unknown, _phase: string, fn: () => Promise<T> | T) => fn(),
+    withSql: <T>(_ctx: unknown, _sql: string, fn: () => T) => fn(),
+    ensureDeferred: async (interaction: any) => { await interaction.deferReply({ ephemeral: true }); },
+    replyOrEdit: async () => {},
   };
 });
 

@@ -120,7 +120,7 @@ describe("stats/index", () => {
 
       await execute(ctx);
 
-      expect(mockHandleLeaderboard).toHaveBeenCalledWith(interaction);
+      expect(mockHandleLeaderboard).toHaveBeenCalledWith(ctx);
     });
 
     it("routes user subcommand to handleUser", async () => {
@@ -131,7 +131,7 @@ describe("stats/index", () => {
 
       await execute(ctx);
 
-      expect(mockHandleUser).toHaveBeenCalledWith(interaction);
+      expect(mockHandleUser).toHaveBeenCalledWith(ctx);
     });
 
     it("routes export subcommand to handleExport", async () => {
@@ -142,7 +142,7 @@ describe("stats/index", () => {
 
       await execute(ctx);
 
-      expect(mockHandleExport).toHaveBeenCalledWith(interaction);
+      expect(mockHandleExport).toHaveBeenCalledWith(ctx);
     });
 
     it("routes reset subcommand to handleReset", async () => {
@@ -153,7 +153,7 @@ describe("stats/index", () => {
 
       await execute(ctx);
 
-      expect(mockHandleReset).toHaveBeenCalledWith(interaction);
+      expect(mockHandleReset).toHaveBeenCalledWith(ctx);
     });
 
     it("routes history subcommand to handleHistory", async () => {
@@ -202,7 +202,7 @@ describe("stats/index", () => {
   });
 
   describe("handler signatures", () => {
-    it("passes ctx to handlers that need CommandContext", async () => {
+    it("passes ctx with all properties to handlers", async () => {
       const interaction = createMockInteraction({
         options: { getSubcommand: "activity" },
       });
@@ -218,7 +218,7 @@ describe("stats/index", () => {
       );
     });
 
-    it("passes only interaction to handlers that use interaction directly", async () => {
+    it("passes ctx (not interaction) to all handlers", async () => {
       const interaction = createMockInteraction({
         options: { getSubcommand: "leaderboard" },
       });
@@ -226,7 +226,7 @@ describe("stats/index", () => {
 
       await execute(ctx);
 
-      expect(mockHandleLeaderboard).toHaveBeenCalledWith(interaction);
+      expect(mockHandleLeaderboard).toHaveBeenCalledWith(ctx);
     });
   });
 

@@ -93,6 +93,35 @@ function createMockInteraction(
   } as ChatInputCommandInteraction;
 }
 
+// Mock the logger
+vi.mock("../../src/lib/logger.js", () => ({
+  logger: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
+// Mock the owner module
+vi.mock("../../src/lib/owner.js", () => ({
+  isOwner: vi.fn(() => false),
+}));
+
+// Mock the rate limiter
+vi.mock("../../src/lib/rateLimiter.js", () => ({
+  checkCooldown: vi.fn(() => ({ allowed: true })),
+  formatCooldown: vi.fn((ms) => `${ms}ms`),
+  COOLDOWNS: {
+    SEND_MS: 5000,
+  },
+}));
+
+// Mock the logging utilities
+vi.mock("../../src/logging/pretty.js", () => ({
+  logActionPretty: vi.fn(),
+}));
+
 /**
  * Tests for the /send command - anonymous staff messaging.
  *

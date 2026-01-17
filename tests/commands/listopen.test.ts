@@ -5,8 +5,8 @@
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
-import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
-import { execute, data, invalidateDraftsCache } from "../../src/commands/listopen.js";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { execute, data } from "../../src/commands/listopen.js";
 import { createTestCommandContext } from "../utils/contextFactory.js";
 import { createMockInteraction, createMockGuild, createMockMember, createMockUser } from "../utils/discordMocks.js";
 import type { Guild } from "discord.js";
@@ -62,10 +62,6 @@ vi.mock("../../src/lib/lruCache.js", () => ({
 describe("/listopen command", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  afterEach(() => {
-    invalidateDraftsCache("test-guild");
   });
 
   describe("data (slash command builder)", () => {
@@ -345,13 +341,6 @@ describe("/listopen command", () => {
           meta: expect.objectContaining({ viewMode: "mine" }),
         })
       );
-    });
-  });
-
-  describe("invalidateDraftsCache", () => {
-    it("can be called without error", () => {
-      invalidateDraftsCache("test-guild-123");
-      // No error means success
     });
   });
 });

@@ -41,6 +41,20 @@ vi.mock("../../src/features/logger.js", () => ({
   postAuditEmbed: vi.fn().mockResolvedValue(undefined),
 }));
 
+// Mock the rate limiter
+vi.mock("../../src/lib/rateLimiter.js", () => ({
+  checkCooldown: vi.fn(() => ({ allowed: true })),
+  formatCooldown: vi.fn((ms) => `${ms}ms`),
+  COOLDOWNS: {
+    UNBLOCK_MS: 30000,
+  },
+}));
+
+// Mock the logging utilities
+vi.mock("../../src/logging/pretty.js", () => ({
+  logActionPretty: vi.fn(),
+}));
+
 describe("/unblock command", () => {
   beforeEach(() => {
     vi.clearAllMocks();
