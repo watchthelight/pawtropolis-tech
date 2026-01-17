@@ -178,7 +178,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
     case "set:pingdevonapp":
       await executeSetPingDevOnApp(ctx);
       break;
-    case "set:movie_threshold":
+    case "set-advanced:movie_threshold":
       await executeSetMovieThreshold(ctx);
       break;
     case "set:artist_rotation":

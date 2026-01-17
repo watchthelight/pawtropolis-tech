@@ -118,7 +118,7 @@ export async function executeGetMovieConfig(ctx: CommandContext<ChatInputCommand
             inline: false,
           },
         ],
-        footer: { text: "Use /config set movie_threshold to change threshold" },
+        footer: { text: "Use /config set-advanced movie_threshold to change" },
       }],
       flags: interaction.replied ? undefined : MessageFlags.Ephemeral,
     });

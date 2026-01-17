@@ -8,6 +8,8 @@ All changes to Pawtropolis Tech are tracked here.
 
 ### Changed
 
+- **`/config set movie_threshold` → `/config set-advanced movie_threshold`** — Moved to fix Discord's 25-subcommand limit. The `/config set` group was at 26 subcommands which caused command registration to fail.
+
 - **`/report` Command Enhancements** — Updated per manager feedback:
   - **Thread title is now the user ID** — Makes searching for existing reports easier
   - **Mod team ping** — Automatically pings `@Moderation Team` when a report is created

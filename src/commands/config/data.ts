@@ -30,13 +30,13 @@ import { SlashCommandBuilder } from "discord.js";
  * - Max 4000 chars total for all descriptions combined
  * - Max 100 characters per description
  *
- * We're currently running 24 subcommands in "set" and 13 in "set-advanced".
- * Room for one more in each before we hit the wall.
+ * Current counts: "set" has 25 subcommands, "set-advanced" has 15 subcommands.
+ * The "set" group is at the limit - add new settings to "set-advanced".
  */
 export const data = new SlashCommandBuilder()
   .setName("config")
   .setDescription("Guild configuration management")
-  // GROUP 1: "set" - Core settings (24 subcommands)
+  // GROUP 1: "set" - Core settings (25 subcommands - AT LIMIT)
   .addSubcommandGroup((group) =>
     group
       .setName("set")
@@ -163,10 +163,6 @@ export const data = new SlashCommandBuilder()
           .addUserOption((o) => o.setName("add").setDescription("User to add to ignore list").setRequired(false))
           .addUserOption((o) => o.setName("remove").setDescription("User to remove from ignore list").setRequired(false))
       )
-      .addSubcommand((sc) =>
-        sc.setName("movie_threshold").setDescription("Set movie night qualification threshold")
-          .addIntegerOption((o) => o.setName("minutes").setDescription("Minutes required (5-180)").setRequired(true).setMinValue(5).setMaxValue(180))
-      )
   )
   /*
    * GROUP 2: "set-advanced" - Settings that most admins should never touch.
@@ -249,6 +245,10 @@ export const data = new SlashCommandBuilder()
           .addNumberOption((o) => o.setName("weight_edge").setDescription("Edge weight (0-1)").setRequired(false).setMinValue(0.0).setMaxValue(1.0))
       )
       // Event thresholds
+      .addSubcommand((sc) =>
+        sc.setName("movie_threshold").setDescription("Set movie night qualification threshold")
+          .addIntegerOption((o) => o.setName("minutes").setDescription("Minutes required (5-180)").setRequired(true).setMinValue(5).setMaxValue(180))
+      )
       .addSubcommand((sc) =>
         sc.setName("game_threshold").setDescription("Set game night qualification percentage")
           .addIntegerOption((o) => o.setName("percentage").setDescription("Percentage of event duration required (10-90)").setRequired(true).setMinValue(10).setMaxValue(90))

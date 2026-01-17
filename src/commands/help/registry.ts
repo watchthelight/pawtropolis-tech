@@ -215,7 +215,6 @@ export const COMMAND_REGISTRY: CommandMetadata[] = [
           { name: "notify_mode", description: "Set notification mode" },
           { name: "artist_rotation", description: "Configure artist rotation" },
           { name: "artist_ignored_users", description: "Manage ignored users" },
-          { name: "movie_threshold", description: "Set movie qualification time" },
         ],
       },
       {
@@ -235,6 +234,8 @@ export const COMMAND_REGISTRY: CommandMetadata[] = [
           { name: "notify_config", description: "Notification settings" },
           { name: "avatar_thresholds", description: "NSFW scan thresholds" },
           { name: "avatar_scan_advanced", description: "Advanced scan settings" },
+          { name: "movie_threshold", description: "Set movie qualification time" },
+          { name: "game_threshold", description: "Set game qualification percentage" },
         ],
       },
       {
