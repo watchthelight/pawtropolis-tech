@@ -44,6 +44,13 @@ export const data = new SlashCommandBuilder()
       .setName("evidence")
       .setDescription("Screenshot of the violation")
       .setRequired(false)
+  )
+  .addStringOption((option) =>
+    option
+      .setName("actions")
+      .setDescription("What actions you took (e.g., deleted message, issued warning)")
+      .setRequired(false)
+      .setMaxLength(300)
   );
 
 /**
@@ -115,6 +122,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
 
   const reason = interaction.options.getString("reason", true);
   const evidence = interaction.options.getAttachment("evidence");
+  const actions = interaction.options.getString("actions");
 
   // Validate evidence is an image if provided
   if (evidence) {
@@ -139,6 +147,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
       evidence: evidence ?? undefined,
       guildId: interaction.guildId!,
       code,
+      actions: actions ?? undefined,
     });
   });
 

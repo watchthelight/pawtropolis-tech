@@ -20,11 +20,16 @@ import {
   ForumChannel,
   type Guild,
   ChannelType,
+  type ThreadChannel,
 } from "discord.js";
 import { getConfig } from "../../lib/config.js";
 import { logger } from "../../lib/logger.js";
 import { shortCode } from "../../lib/ids.js";
+import { ROLE_IDS } from "../../lib/roles.js";
 import type { ReportData, ReportResult } from "./types.js";
+
+// Default reports channel ID (Pawtropolis #reports forum)
+const DEFAULT_REPORTS_CHANNEL_ID = "1243820273610915880";
 
 // Colors for report embeds
 const COLOR_PENDING = 0xF5A623; // Orange for unresolved
@@ -41,12 +46,12 @@ export function generateReportCode(reporterId: string): string {
 
 /**
  * Build the report embed for display in the forum thread.
- * Shows reporter, target, reason, and awaiting resolution status.
+ * Shows reporter, target, reason, actions taken, and awaiting resolution status.
  */
 export function buildReportEmbed(data: ReportData): EmbedBuilder {
   const now = new Date();
 
-  return new EmbedBuilder()
+  const embed = new EmbedBuilder()
     .setTitle("Content Report")
     .setColor(COLOR_PENDING)
     .addFields(
@@ -70,6 +75,19 @@ export function buildReportEmbed(data: ReportData): EmbedBuilder {
     )
     .setFooter({ text: `Report #${data.code}` })
     .setTimestamp(now);
+
+  // Add actions field if provided
+  if (data.actions) {
+    embed.addFields({
+      name: "Actions Taken",
+      value: data.actions.length > 300
+        ? data.actions.slice(0, 297) + "..."
+        : data.actions,
+      inline: false,
+    });
+  }
+
+  return embed;
 }
 
 /**
@@ -114,25 +132,21 @@ export function buildReportActionRow(code: string, disabled = false): ActionRowB
 
 /**
  * Create a report thread in the configured forum channel.
- * Posts embed + screenshot as the thread starter.
+ * If a thread for the same user already exists, posts to that thread instead.
+ * Posts embed + screenshot with mod team ping.
  */
 export async function createReportThread(
   guild: Guild,
   data: ReportData
 ): Promise<ReportResult> {
-  // Get forum channel ID from config
+  // Get forum channel ID from config, fallback to default
   const config = getConfig(data.guildId);
-  if (!config?.report_forum_id) {
-    return {
-      success: false,
-      error: "Report forum not configured. Run `/config set report_forum` first.",
-    };
-  }
+  const channelId = config?.report_forum_id || DEFAULT_REPORTS_CHANNEL_ID;
 
   // Fetch the forum channel
   let forum: ForumChannel;
   try {
-    const channel = await guild.channels.fetch(config.report_forum_id);
+    const channel = await guild.channels.fetch(channelId);
     if (!channel || channel.type !== ChannelType.GuildForum) {
       return {
         success: false,
@@ -141,23 +155,25 @@ export async function createReportThread(
     }
     forum = channel as ForumChannel;
   } catch (err) {
-    logger.error({ err, channelId: config.report_forum_id }, "[report] Failed to fetch forum channel");
+    logger.error({ err, channelId }, "[report] Failed to fetch forum channel");
     return {
       success: false,
       error: "Could not access the report forum channel. Check bot permissions.",
     };
   }
 
-  // Build the thread starter message
+  // Build the thread message content
   const embed = buildReportEmbed(data);
   const actionRow = buildReportActionRow(data.code);
 
-  // Prepare message options
+  // Prepare message options with mod team ping
   const messageOptions: {
+    content: string;
     embeds: EmbedBuilder[];
     components: ActionRowBuilder<ButtonBuilder>[];
     files?: { attachment: string; name: string }[];
   } = {
+    content: `<@&${ROLE_IDS.MOD_TEAM}>`,
     embeds: [embed],
     components: [actionRow],
   };
@@ -172,11 +188,60 @@ export async function createReportThread(
     ];
   }
 
-  // Create the forum thread
+  // Thread name is just the user ID for easy searching
+  const threadName = data.target.id;
+
+  // Search for existing thread with the same user ID
   try {
-    const targetUsername = data.target.username.slice(0, 30);
+    // Check active threads first
+    const activeThreads = await forum.threads.fetchActive();
+    let existingThread: ThreadChannel | undefined = activeThreads.threads.find(
+      (t) => t.name === threadName
+    );
+
+    // Check archived threads if not found in active
+    if (!existingThread) {
+      const archivedThreads = await forum.threads.fetchArchived({ limit: 100 });
+      existingThread = archivedThreads.threads.find(
+        (t) => t.name === threadName
+      );
+    }
+
+    if (existingThread) {
+      // Unarchive if needed
+      if (existingThread.archived) {
+        await existingThread.setArchived(false);
+      }
+
+      // Post to existing thread
+      await existingThread.send(messageOptions);
+
+      logger.info(
+        {
+          evt: "report_added_to_existing",
+          code: data.code,
+          reporterId: data.reporter.id,
+          targetId: data.target.id,
+          threadId: existingThread.id,
+          guildId: data.guildId,
+        },
+        `[report] Added report #${data.code} to existing thread for user ${threadName}`
+      );
+
+      return {
+        success: true,
+        threadUrl: existingThread.url,
+      };
+    }
+  } catch (err) {
+    // Log but continue to create new thread if search fails
+    logger.warn({ err, targetId: data.target.id }, "[report] Failed to search for existing thread, creating new one");
+  }
+
+  // Create new forum thread
+  try {
     const thread = await forum.threads.create({
-      name: `Report #${data.code} - vs ${targetUsername}`,
+      name: threadName,
       message: messageOptions,
     });
 
@@ -198,7 +263,7 @@ export async function createReportThread(
     };
   } catch (err) {
     logger.error(
-      { err, code: data.code, forumId: config.report_forum_id },
+      { err, code: data.code, forumId: channelId },
       "[report] Failed to create report thread"
     );
     return {

@@ -24,6 +24,8 @@ export interface ReportData {
   guildId: string;
   /** Short code for the report (HEX6 format) */
   code: string;
+  /** Actions the reporter took before submitting (e.g., "Deleted message") */
+  actions?: string;
 }
 
 /**
