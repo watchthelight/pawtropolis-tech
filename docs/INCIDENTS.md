@@ -202,3 +202,82 @@ aws ec2 wait instance-running --instance-ids i-0b5c5db57b50ff74b --region us-eas
 - **Instance Type**: t3a.small
 - **Public IP**: 3.209.223.216 (Elastic IP)
 - **EBS Volume**: vol-05bbabd84993a6241 (now 32GB gp3)
+
+---
+
+## INC-004: Memory Pressure Causing Command Failures - 2026-01-19
+
+### Summary
+Discord slash commands were failing intermittently, requiring users to retry commands 3-5 times before they would work. Root cause was memory pressure on the t3a.small instance (918MB RAM) with no swap configured, causing the Node.js process to enter uninterruptible sleep (D state) during memory contention.
+
+### Timeline
+- **~21:00 UTC**: User reports commands failing intermittently ("I have to rerun every command like 5 times")
+- **21:09 UTC**: `/listopen` command logged with "Unknown interaction" error (code 10062) after only 144ms
+- **21:11 UTC**: Investigation reveals bot process in `D` state (uninterruptible sleep)
+- **21:11 UTC**: Memory check shows only 92MB free, 0 swap
+- **21:11 UTC**: Orphaned `commands.js` processes killed
+- **21:12 UTC**: PM2 restart issued to clear stuck state
+- **21:12 UTC**: 2GB swap file created and enabled
+- **21:12 UTC**: Bot process now in `R` state (running), commands working
+
+### Root Cause
+The EC2 instance (t3a.small) has only 918MB of RAM. The bot uses ~200MB when loaded, leaving limited headroom for:
+- Operating system operations
+- Garbage collection spikes
+- Concurrent database queries
+- Discord.js caching
+
+With **no swap configured**, when memory pressure occurred:
+1. The kernel couldn't page out inactive memory
+2. The Node.js process entered `D` state waiting for memory/I/O
+3. Discord interactions timed out (3-second SLA) while the process was blocked
+4. Discord reported "Unknown interaction" (error 10062) because the bot couldn't respond in time
+
+### Why Commands Worked "Sometimes"
+The failures were intermittent because:
+- Memory pressure is transient (depends on concurrent operations)
+- Some commands executed during low-pressure windows
+- The 3-second Discord timeout is tight - even brief D-state periods cause failures
+
+### Impact
+- **User Experience**: Commands unreliable, frustrating retry behavior
+- **Operational**: No data loss, but degraded service quality
+- **Duration**: Unknown start time, ~10-15 minutes of investigation/resolution
+
+### Resolution
+1. **Immediate**: Restarted bot via PM2 to clear stuck process state
+2. **Permanent**: Created 2GB swap file:
+```bash
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+```
+
+### Memory Status Before/After
+| Metric | Before | After |
+|--------|--------|-------|
+| Free RAM | 92MB | 207MB |
+| Swap | 0MB | 2048MB |
+| Process State | D (blocked) | R (running) |
+
+### Preventive Measures Implemented
+1. **Swap enabled**: 2GB swap file configured and persisted in `/etc/fstab`
+2. **Orphan cleanup**: Killed leftover `commands.js` processes consuming memory
+
+### Preventive Measures Needed
+1. **Memory monitoring**: Add opshealth alert for low available memory (<100MB)
+2. **Instance upgrade consideration**: t3a.small may be undersized long-term
+3. **Process leak detection**: Monitor for orphaned child processes
+
+### Lessons Learned
+1. **Always configure swap** on small instances - even 1-2GB prevents hard failures
+2. **Process state matters**: `D` state in `ps` output indicates I/O blocking issues
+3. **918MB is marginal** for a Node.js Discord bot with caching and monitoring
+4. **Intermittent failures** often indicate resource contention, not code bugs
+5. **Discord's 3-second SLA** is unforgiving - any process blocking causes timeouts
+
+### Related Issues
+- **Voice tracking bug** (same session): Channel switches weren't tracked - fixed separately
+- **INC-003** (same day): Disk space incident may have contributed to memory pressure via buffer cache starvation
