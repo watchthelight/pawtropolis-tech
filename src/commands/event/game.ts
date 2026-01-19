@@ -73,21 +73,21 @@ async function handleStart(ctx: CommandContext<ChatInputCommandInteraction>): Pr
   const guild = interaction.guild!;
   const channel = interaction.options.getChannel("channel", true);
 
+  // Defer FIRST to meet Discord's 3-second SLA
+  await withStep(ctx, "defer", async () => {
+    await interaction.deferReply();
+  });
+
   const isActive = await withStep(ctx, "check_active", async () => {
     return isGameEventActive(guild.id);
   });
 
   if (isActive) {
-    await interaction.reply({
+    await interaction.editReply({
       content: "A game night is already in progress. Use `/event game end` to finish it first.",
-      ephemeral: true,
     });
     return;
   }
-
-  await withStep(ctx, "defer", async () => {
-    await interaction.deferReply();
-  });
 
   const { retroactiveCount, eventDate, config } = await withStep(ctx, "start_event", async () => {
     const eventDate = new Date().toISOString().split("T")[0];
@@ -132,21 +132,21 @@ async function handleEnd(ctx: CommandContext<ChatInputCommandInteraction>): Prom
   const { interaction } = ctx;
   const guild = interaction.guild!;
 
+  // Defer FIRST to meet Discord's 3-second SLA
+  await withStep(ctx, "defer", async () => {
+    await interaction.deferReply();
+  });
+
   const event = await withStep(ctx, "get_event", async () => {
     return getActiveGameEvent(guild.id);
   });
 
   if (!event) {
-    await interaction.reply({
+    await interaction.editReply({
       content: "No game night is currently in progress.",
-      ephemeral: true,
     });
     return;
   }
-
-  await withStep(ctx, "defer", async () => {
-    await interaction.deferReply();
-  });
 
   logger.info({
     evt: "game_end_command",
