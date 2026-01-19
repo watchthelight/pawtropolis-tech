@@ -8,9 +8,9 @@
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
-import type { ChatInputCommandInteraction } from "discord.js";
+import type { ChatInputCommandInteraction, GuildMember } from "discord.js";
 import { type CommandContext, withStep } from "../../lib/cmdWrap.js";
-import { requireMinRole, ROLE_IDS } from "../../lib/config.js";
+import { ROLE_IDS, hasAnyRole, hasRoleOrAbove, shouldBypass } from "../../lib/roles.js";
 import { data } from "./data.js";
 import { handleMovieSubcommand } from "./movie.js";
 import { handleGameSubcommand } from "./game.js";
@@ -28,13 +28,26 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
     return;
   }
 
-  // Require Moderator+ role
+  // Require Event Host, Events Manager, or Moderator+
   const hasPermission = await withStep(ctx, "permission_check", async () => {
-    return requireMinRole(interaction, ROLE_IDS.MODERATOR, {
-      command: "event",
-      description: "Event attendance tracking and tier role management.",
-      requirements: [{ type: "hierarchy", minRoleId: ROLE_IDS.MODERATOR }],
+    const member = interaction.member as GuildMember;
+    const userId = interaction.user.id;
+
+    // Bypass for owner/dev
+    if (shouldBypass(userId, member)) return true;
+
+    // Check event-specific roles
+    if (hasAnyRole(member, [ROLE_IDS.EVENT_HOST, ROLE_IDS.EVENTS_MANAGER])) return true;
+
+    // Check mod hierarchy (Moderator+)
+    if (hasRoleOrAbove(member, ROLE_IDS.MODERATOR)) return true;
+
+    // No permission - show error
+    await interaction.reply({
+      content: "You need **Event Host**, **Events Manager**, or **Moderator+** to use this command.",
+      ephemeral: true,
     });
+    return false;
   });
 
   if (!hasPermission) return;

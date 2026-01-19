@@ -1417,7 +1417,7 @@ You need to stay **at least 30 minutes** during a movie night for it to count to
 - Each movie night counts as one event, even if you attend for 3 hours
 
 #### `/movie`
-**Who can use it:** Staff
+**Who can use it:** Event Host, Events Manager, or Moderator+
 
 | Subcommand | What it does |
 |------------|--------------|
@@ -1479,7 +1479,7 @@ Game night tracking works similarly to movie night, but the qualification is bas
 - User who attended 45 minutes: **Not qualified** (37%)
 
 #### `/event game`
-**Who can use it:** Staff
+**Who can use it:** Event Host, Events Manager, or Moderator+
 
 | Subcommand | What it does |
 |------------|--------------|
@@ -2297,7 +2297,8 @@ This is an interactive wizard that helps you:
 | **Gatekeeper only** | Gatekeeper role | `/accept`, `/reject`, `/kick`, `/unclaim`, `/listopen`, `/unblock`, review card buttons |
 | **Gatekeeper+** | GK and above | `/stats leaderboard`, `/stats user` |
 | **Junior Mod+** | JM and above | `/flag`, `/isitreal` |
-| **Moderator+** | M and above | `/movie` |
+| **Event Staff** | Event Host, Events Manager | `/event`, `/movie` |
+| **Moderator+** | M and above | (inherits event commands) |
 | **Senior Mod+** | SM and above | `/stats activity`, `/skullmode`, `/update activity/status` |
 | **Administrator+** | A and above | `/config` |
 | **Senior Admin+** | SA and above | `/panic`, `/stats export/reset` |

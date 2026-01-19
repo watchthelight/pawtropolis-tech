@@ -8,6 +8,8 @@ All changes to Pawtropolis Tech are tracked here.
 
 ### Changed
 
+- **`/event` Permission Update** — Now accessible to Event Host and Events Manager roles, in addition to Moderator+. Allows independent event hosts to manage movie/game nights without needing mod roles.
+
 - **`/config set movie_threshold` → `/config set-advanced movie_threshold`** — Moved to fix Discord's 25-subcommand limit. The `/config set` group was at 26 subcommands which caused command registration to fail.
 
 - **`/report` Command Enhancements** — Updated per manager feedback:

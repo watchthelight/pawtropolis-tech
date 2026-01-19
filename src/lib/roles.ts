@@ -32,6 +32,8 @@ export const ROLE_IDS = {
 
   // Functional roles (non-hierarchy)
   SERVER_ARTIST: "896070888749940770",
+  EVENT_HOST: "1243805450835853383",
+  EVENTS_MANAGER: "1243805681904259124",
 } as const;
 
 /** Bot Owner user ID - always bypasses all permission checks */
@@ -80,6 +82,8 @@ export const ROLE_NAMES: Record<string, string> = {
   [ROLE_IDS.MOD_TEAM]: "Moderation Team",
   [ROLE_IDS.SERVER_DEV]: "Server Dev",
   [ROLE_IDS.SERVER_ARTIST]: "Server Artist",
+  [ROLE_IDS.EVENT_HOST]: "Event Host",
+  [ROLE_IDS.EVENTS_MANAGER]: "Events Manager",
 };
 
 // =============================================================================
@@ -221,3 +225,6 @@ export const SERVER_ARTIST = [ROLE_IDS.SERVER_ARTIST];
 
 /** Server Artist OR Admin+ (for art management) */
 export const ARTIST_OR_ADMIN = [ROLE_IDS.SERVER_ARTIST, ...ADMIN_PLUS];
+
+/** Event Host or Events Manager (for event commands) */
+export const EVENT_STAFF = [ROLE_IDS.EVENT_HOST, ROLE_IDS.EVENTS_MANAGER];
