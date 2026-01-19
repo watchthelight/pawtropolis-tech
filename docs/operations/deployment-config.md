@@ -522,6 +522,80 @@ pm2 restart pawtropolis  # Restart
 pm2 monit                # Monitor
 ```
 
+## AWS Infrastructure
+
+### Server Details
+
+| Property | Value |
+|----------|-------|
+| **Instance ID** | `i-0b5c5db57b50ff74b` |
+| **Region** | `us-east-1` (NOT us-east-2!) |
+| **Instance Type** | `t3a.small` |
+| **Public IP** | `3.209.223.216` (Elastic IP) |
+| **EBS Volume** | `vol-05bbabd84993a6241` (32GB gp3) |
+| **SSH Alias** | `pawtech` or `watchthelight` |
+
+### SSH Access
+
+```bash
+# Connect to server
+ssh pawtech
+
+# SSH config (~/.ssh/config)
+Host pawtech
+  HostName 3.209.223.216
+  User ubuntu
+  IdentityFile ~/.ssh/pawtropolis-tech.pem
+  IdentitiesOnly yes
+  ServerAliveInterval 30
+```
+
+### AWS CLI Commands
+
+```bash
+# Check instance status (remember: us-east-1!)
+aws ec2 describe-instances --region us-east-1 \
+  --instance-ids i-0b5c5db57b50ff74b \
+  --query 'Reservations[*].Instances[*].[State.Name,PublicIpAddress]'
+
+# Reboot instance
+aws ec2 reboot-instances --instance-ids i-0b5c5db57b50ff74b --region us-east-1
+
+# Force stop (for emergencies)
+aws ec2 stop-instances --instance-ids i-0b5c5db57b50ff74b --region us-east-1 --force
+
+# Start instance
+aws ec2 start-instances --instance-ids i-0b5c5db57b50ff74b --region us-east-1
+```
+
+### Disk Space Management
+
+```bash
+# Check disk usage
+ssh pawtech "df -h /"
+
+# Clean PM2 logs
+ssh pawtech "pm2 flush"
+
+# Clean journal logs (keep 7 days)
+ssh pawtech "sudo journalctl --vacuum-time=7d"
+
+# Clean apt cache
+ssh pawtech "sudo apt-get clean"
+
+# Find large files
+ssh pawtech "sudo du -sh /* 2>/dev/null | sort -h"
+```
+
+### Cost
+
+| Resource | Cost |
+|----------|------|
+| t3a.small instance | ~$14/month |
+| 32GB gp3 EBS | ~$2.56/month |
+| Elastic IP | Free (while attached) |
+| **Total** | ~$17/month |
+
 ## Deployment Steps
 
 1. `git pull origin main` - Get latest code

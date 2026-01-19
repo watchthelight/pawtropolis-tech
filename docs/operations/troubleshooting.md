@@ -1,5 +1,73 @@
 # Troubleshooting
 
+## Critical Issues
+
+### Server Unresponsive (Disk Full)
+
+**Symptoms**:
+- SSH connection times out
+- Bot is offline
+- Ping to server fails (100% packet loss)
+- Disk Space Critical alert was posted before outage
+
+**Root Cause**: When disk usage exceeds ~95%, Linux cannot create new processes or write logs, causing SSH to fail.
+
+**Recovery Steps**:
+
+```bash
+# 1. Check instance status via AWS CLI (pawtech is in us-east-1!)
+aws ec2 describe-instances --region us-east-1 \
+  --query 'Reservations[*].Instances[*].[InstanceId,State.Name,PublicIpAddress]' \
+  --output text
+
+# 2. Try reboot first (may not work if disk is full)
+aws ec2 reboot-instances --instance-ids i-0b5c5db57b50ff74b --region us-east-1
+
+# 3. If reboot doesn't help after 2 min, force stop
+aws ec2 stop-instances --instance-ids i-0b5c5db57b50ff74b --region us-east-1 --force
+
+# 4. Wait for stopped state (can take several minutes when disk is full)
+aws ec2 wait instance-stopped --instance-ids i-0b5c5db57b50ff74b --region us-east-1
+
+# 5. OPTIONAL: Expand EBS volume via AWS Console if disk is too small
+# EC2 → Volumes → Select vol-05bbabd84993a6241 → Modify → Increase size
+
+# 6. Start instance
+aws ec2 start-instances --instance-ids i-0b5c5db57b50ff74b --region us-east-1
+
+# 7. Wait for running
+aws ec2 wait instance-running --instance-ids i-0b5c5db57b50ff74b --region us-east-1
+
+# 8. Connect and clean up
+ssh pawtech "pm2 flush && sudo journalctl --vacuum-time=3d && df -h /"
+```
+
+**Important Details**:
+- Instance ID: `i-0b5c5db57b50ff74b`
+- Region: `us-east-1` (NOT us-east-2)
+- EBS Volume: `vol-05bbabd84993a6241`
+- IP: 3.209.223.216
+
+**Preventive Maintenance**:
+
+```bash
+# Clean PM2 logs (do weekly)
+ssh pawtech "pm2 flush"
+
+# Clean journal (do weekly)
+ssh pawtech "sudo journalctl --vacuum-time=7d"
+
+# Check disk space
+ssh pawtech "df -h /"
+
+# Clean apt cache
+ssh pawtech "sudo apt-get clean"
+```
+
+See [INC-003](../INCIDENTS.md#inc-003-critical-disk-space-outage---2026-01-19) for full incident details.
+
+---
+
 ## Common Problems
 
 ### 1. Missing Database Column Error

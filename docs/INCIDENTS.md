@@ -89,3 +89,116 @@ Administrator permission is critical because it:
 - Quick response (~1 minute) is critical for security incidents
 - Bot permission issues should be solved with specific permissions, not Administrator
 - The "Community Apps" role should be reviewed to ensure all 26 members are legitimate bots
+
+---
+
+## INC-003: Critical Disk Space Outage - 2026-01-19
+
+### Summary
+Production server became completely unresponsive due to disk space exhaustion (92% full, 519MB free on 6.7GB volume). Bot was offline for approximately 1 hour. Resolution required EC2 instance stop/start via AWS CLI and EBS volume expansion from 8GB to 32GB.
+
+### Timeline
+- **~11:10 UTC**: Bot goes offline (exact time unknown - no logs due to disk full)
+- **~11:11 UTC**: Entropy reports bot is down in Discord
+- **11:18 UTC**: Disk Space Critical alert posted to logging channel (92% usage, 519.5MB free)
+- **11:25 UTC**: Bash attempts SSH connection - timeout, server unresponsive
+- **11:28 UTC**: Multiple SSH retry attempts fail
+- **12:20 UTC**: AWS CLI used to identify instance in us-east-1 region
+- **12:20 UTC**: `aws ec2 reboot-instances` command sent - no effect
+- **12:22 UTC**: `aws ec2 stop-instances --force` initiated
+- **12:28 UTC**: Instance reached stopped state after extended stopping period
+- **12:28 UTC**: User expanded EBS volume from 8GB to 32GB via AWS Console
+- **12:28 UTC**: `aws ec2 start-instances` initiated
+- **12:29 UTC**: Instance reached running state
+- **12:29 UTC**: SSH connection successful, filesystem auto-extended to 30GB
+- **12:29 UTC**: Disk usage now 21% (24GB free)
+- **12:30 UTC**: PM2 restarted, bot online
+- **12:30 UTC**: Slash commands re-registered (new `/attendance` command deployed)
+- **~12:30 UTC**: Full service restored
+
+### Root Cause
+The EC2 instance was provisioned with only 6.7GB (8GB EBS volume minus filesystem overhead) of disk space. Over time, the following consumed available space:
+
+1. **PM2 logs** - Accumulated application logs
+2. **systemd journal** - System logs
+3. **Database growth** - SQLite database and backups
+4. **apt cache** - Package manager cache
+
+The Disk Space Monitor feature (added in v5.1.0) correctly detected the critical state at 92% and posted an alert, but by then the server was already too full to accept SSH connections or function properly.
+
+### Why SSH Failed
+When a Linux server runs critically low on disk space:
+- SSH daemon cannot write to `/var/log` or create session files
+- New processes cannot be spawned
+- The kernel may kill processes to free memory
+- The system becomes effectively frozen
+
+### Impact
+- **Downtime**: ~1 hour of complete bot unavailability
+- **User Impact**:
+  - Gate applications could not be processed
+  - Modmail unavailable
+  - Event tracking interrupted (no active events at the time)
+  - Security audits could not run
+- **Data Loss**: None - SQLite database preserved
+
+### Resolution
+1. **Immediate**: Used AWS CLI to stop/start instance (reboot was ineffective)
+2. **Capacity**: Expanded EBS volume from 8GB to 32GB
+3. **Filesystem**: Ubuntu auto-extended root partition to use new space on boot
+4. **Cleanup**: Flushed PM2 logs with `pm2 flush`
+5. **Deployment**: Completed pending deployment of `/attendance` command
+
+### AWS CLI Commands Used
+```bash
+# Find instance (was in us-east-1, not default us-east-2)
+aws ec2 describe-instances --region us-east-1 \
+  --query 'Reservations[*].Instances[*].[InstanceId,State.Name,PublicIpAddress]'
+
+# Reboot attempt (ineffective when disk full)
+aws ec2 reboot-instances --instance-ids i-0b5c5db57b50ff74b --region us-east-1
+
+# Force stop
+aws ec2 stop-instances --instance-ids i-0b5c5db57b50ff74b --region us-east-1 --force
+
+# Wait for stopped
+aws ec2 wait instance-stopped --instance-ids i-0b5c5db57b50ff74b --region us-east-1
+
+# Start
+aws ec2 start-instances --instance-ids i-0b5c5db57b50ff74b --region us-east-1
+
+# Wait for running
+aws ec2 wait instance-running --instance-ids i-0b5c5db57b50ff74b --region us-east-1
+```
+
+### Post-Incident Disk Status
+| Before | After |
+|--------|-------|
+| 6.7GB total | 30GB total |
+| 92% used | 21% used |
+| 519MB free | 24GB free |
+
+### Preventive Measures Implemented
+1. **Increased disk capacity**: 8GB → 32GB EBS volume (~$2.40/month additional cost)
+2. **PM2 logs flushed**: Immediate cleanup performed
+
+### Preventive Measures Needed
+1. **Earlier warning threshold**: Change disk monitor from 80%/90% to 70%/80%
+2. **Automated log rotation**: Configure PM2 and journald to auto-rotate logs
+3. **Proactive cleanup**: Add scheduled task to clean old backups
+4. **Runbook**: Document AWS CLI recovery procedure for future incidents
+
+### Lessons Learned
+1. **8GB is not enough** for a production Discord bot with logging, monitoring, and database
+2. **Disk space alerts need earlier thresholds** - by 92%, recovery is already difficult
+3. **AWS CLI access is critical** - when SSH fails, AWS console/CLI is the only way in
+4. **Instance region matters** - pawtech is in us-east-1, not the default us-east-2
+5. **Reboot doesn't help** when disk is full - stop/start is required
+6. **EBS volumes can be expanded online** but filesystem extension happens on reboot
+
+### Server Details
+- **Instance ID**: i-0b5c5db57b50ff74b
+- **Region**: us-east-1
+- **Instance Type**: t3a.small
+- **Public IP**: 3.209.223.216 (Elastic IP)
+- **EBS Volume**: vol-05bbabd84993a6241 (now 32GB gp3)
