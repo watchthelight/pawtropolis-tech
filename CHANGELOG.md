@@ -6,6 +6,16 @@ All changes to Pawtropolis Tech are tracked here.
 
 ## [Unreleased]
 
+### Added
+
+- **`/attendance` Command** — Public event attendance stats and leaderboards:
+  - `/attendance user [user]` — View your own or another user's movie/game night stats
+  - `/attendance leaderboard [type]` — View top event attendees with optional movie/game filter
+  - Shows total qualified events, time spent, and recent event history
+  - Leaderboard displays top 15 with user's own rank if not listed
+  - Available to everyone — no permission requirements
+  - See `src/commands/attendance.ts`
+
 ### Changed
 
 - **`/event` Permission Update** — Now accessible to Event Host and Events Manager roles, in addition to Moderator+. Allows independent event hosts to manage movie/game nights without needing mod roles.

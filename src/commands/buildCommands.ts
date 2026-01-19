@@ -55,6 +55,7 @@ import { data as developerData } from "./developer.js";
 import { data as testData } from "./test.js";
 import { data as skullmodeData } from "./skullmode.js";
 import { data as reportData } from "./report.js";
+import { data as attendanceData } from "./attendance.js";
 
 // Returns an array of command JSON objects for Discord's bulk command registration.
 // Discord has a limit of 100 slash commands per bot per guild, so we're fine here.
@@ -120,6 +121,9 @@ export function buildCommands() {
 
     // Content report system - ambassador violation reports
     reportData.toJSON(),
+
+    // Event attendance stats and leaderboards
+    attendanceData.toJSON(),
 
     /*
      * Context menu commands are registered alongside slash commands in Discord.js v14.

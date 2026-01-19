@@ -282,6 +282,10 @@ commands.set(usebyte.data.name, wrapCommand("usebyte", usebyte.execute));
 import * as report from "./commands/report.js";
 commands.set(report.data.name, wrapCommand("report", report.execute));
 
+// Event attendance stats and leaderboards
+import * as attendance from "./commands/attendance.js";
+commands.set(attendance.data.name, wrapCommand("attendance", attendance.execute));
+
 client.once(Events.ClientReady, async () => {
   // schema self-heal before anything else
   // sudo make it work

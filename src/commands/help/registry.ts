@@ -920,8 +920,37 @@ export const COMMAND_REGISTRY: CommandMetadata[] = [
       "Use credit/bump to fix attendance issues retroactively",
       "Session persists if bot restarts - use resume to check status",
     ],
-    relatedCommands: ["roles", "panic"],
-    aliases: ["movienight", "gamenight", "attendance"],
+    relatedCommands: ["roles", "panic", "attendance"],
+    aliases: ["movienight", "gamenight"],
+  },
+  {
+    name: "attendance",
+    description: "View event attendance stats and leaderboards",
+    category: "roles",
+    permissionLevel: "public",
+    usage: "/attendance <user|leaderboard>",
+    subcommands: [
+      { name: "user", description: "View your or another user's event stats" },
+      { name: "leaderboard", description: "View top event attendees" },
+    ],
+    options: [
+      { name: "user", description: "User to view stats for (defaults to yourself)", type: "user", required: false },
+      { name: "type", description: "Filter leaderboard by event type (all/movie/game)", type: "string", required: false },
+    ],
+    examples: [
+      "/attendance user",
+      "/attendance user user:@Friend",
+      "/attendance leaderboard",
+      "/attendance leaderboard type:movie",
+    ],
+    notes: "Anyone can view attendance stats. Shows movie nights, game nights, total time spent, and recent events.",
+    workflowTips: [
+      "Use /attendance user to see your own stats",
+      "Check /attendance leaderboard to see top community members",
+      "Filter by type to see movie-only or game-only rankings",
+    ],
+    relatedCommands: ["event", "roles"],
+    aliases: ["stats", "leaderboard", "events"],
   },
 
   // ============================================================================
