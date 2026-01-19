@@ -1009,8 +1009,10 @@ client.on("voiceStateUpdate", wrapEvent("voiceStateUpdate", async (oldState, new
   // Check for active movie event
   const movieEvent = getActiveMovieEvent(guildId);
   if (movieEvent) {
-    const joined = !oldState.channelId && newState.channelId === movieEvent.channelId;
-    const left = oldState.channelId === movieEvent.channelId && !newState.channelId;
+    // Track joins: user wasn't in event channel, now is (includes channel switches)
+    const joined = oldState.channelId !== movieEvent.channelId && newState.channelId === movieEvent.channelId;
+    // Track leaves: user was in event channel, now isn't (includes channel switches)
+    const left = oldState.channelId === movieEvent.channelId && newState.channelId !== movieEvent.channelId;
 
     if (joined) {
       handleMovieVoiceJoin(guildId, userId);
@@ -1022,8 +1024,10 @@ client.on("voiceStateUpdate", wrapEvent("voiceStateUpdate", async (oldState, new
   // Check for active game event
   const gameEvent = getActiveGameEvent(guildId);
   if (gameEvent) {
-    const joined = !oldState.channelId && newState.channelId === gameEvent.channelId;
-    const left = oldState.channelId === gameEvent.channelId && !newState.channelId;
+    // Track joins: user wasn't in event channel, now is (includes channel switches)
+    const joined = oldState.channelId !== gameEvent.channelId && newState.channelId === gameEvent.channelId;
+    // Track leaves: user was in event channel, now isn't (includes channel switches)
+    const left = oldState.channelId === gameEvent.channelId && newState.channelId !== gameEvent.channelId;
 
     if (joined) {
       handleGameVoiceJoin(guildId, userId);
