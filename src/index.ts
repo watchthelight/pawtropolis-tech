@@ -1041,7 +1041,39 @@ client.on("voiceStateUpdate", wrapEvent("voiceStateUpdate", async (oldState, new
 // button/modal, scroll to the bottom of the isButton() block and add it there.
 // The order matters less than you'd think because we early-return on every match,
 // but good luck finding your handler in six months.
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INTERACTION DEDUPLICATION
+// ─────────────────────────────────────────────────────────────────────────────
+// Discord sometimes sends duplicate interaction events (observed: 4 duplicates within 19ms).
+// Track recently processed interaction IDs to prevent double-processing.
+// IDs expire after 10 seconds to prevent unbounded memory growth.
+const recentInteractionIds = new Map<string, number>();
+const INTERACTION_DEDUP_TTL_MS = 10_000;
+
+// Cleanup old entries every 30 seconds
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, timestamp] of recentInteractionIds) {
+    if (now - timestamp > INTERACTION_DEDUP_TTL_MS) {
+      recentInteractionIds.delete(id);
+    }
+  }
+}, 30_000).unref();
+
 client.on("interactionCreate", wrapEvent("interactionCreate", async (interaction) => {
+  // Deduplicate: skip if we've already processed this interaction ID
+  if (recentInteractionIds.has(interaction.id)) {
+    logger.warn({
+      evt: "interaction_duplicate",
+      interactionId: interaction.id,
+      userId: interaction.user.id,
+      commandName: interaction.isChatInputCommand() ? interaction.commandName : null,
+    }, "Duplicate interaction received - skipping");
+    return;
+  }
+  recentInteractionIds.set(interaction.id, Date.now());
+
   // Global owner override: allow owners to bypass permission checks
   if (isOwner(interaction.user.id)) {
     logger.info(
