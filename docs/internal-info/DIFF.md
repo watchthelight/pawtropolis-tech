@@ -1,8 +1,8 @@
 # Permission Changes Since Last Audit
 
-**Guild:** 🎆 Pawtropolis™ | Furry • LGBTQ+
-**Previous Audit:** 2026-01-13
-**Current Audit:** 2026-01-13
+**Guild:** Pawtropolis™ | Furry • LGBTQ+
+**Previous Audit:** 2026-01-21
+**Current Audit:** 2026-01-21
 
 ## Summary
 
@@ -20,7 +20,7 @@
 
 ## Channel Changes
 
-### [REMOVED] support-0919
+### [REMOVED] user-0437
 
 ---
 
