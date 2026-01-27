@@ -29,6 +29,18 @@ All changes to Pawtropolis Tech are tracked here.
   - **Default channel fallback** — Now defaults to `#reports` if no report forum is configured via `/config set report_forum`
   - **New `actions` option** — Reporters can document what actions they took (e.g., "Deleted message", "Issued warning")
 
+### Fixed
+
+- **Event Voice Channel Switch Tracking** — Previously, users who switched directly between voice channels (e.g., from another VC to Gaming Lounge) weren't tracked for event attendance. Now properly detects channel switches in addition to join/leave from no channel. See `src/index.ts` voiceStateUpdate handler.
+
+- **Event Command Defer Timing** — `/event game start`, `/event game end`, `/event movie start`, `/event movie end` now call `deferReply()` immediately to prevent Discord's 3-second timeout. Previously, database checks ran before defer which could cause "The application did not respond" errors.
+
+- **Interaction Deduplication** — Added protection against Discord sending duplicate interaction events (observed: 4 duplicates within 19ms for a single command). Tracks recent interaction IDs and skips duplicates to prevent race conditions and "Unknown interaction" errors.
+
+### Improved
+
+- **Review Card Debug Logging** — Added info-level logging for member fetch results in `ensureReviewMessage()` to help diagnose "left server" detection issues. Logs whether member was found and their display name.
+
 ---
 
 ## [5.1.0] - 2026-01-17
