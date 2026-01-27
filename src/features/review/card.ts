@@ -666,13 +666,21 @@ export async function ensureReviewMessage(
     const guild = await client.guilds.fetch(appRow.guild_id).catch(() => null);
     const member = guild
       ? await guild.members.fetch(appRow.user_id).catch((err) => {
-          logger.debug(
-            { err, userId: appRow.user_id },
-            "[review] failed to fetch member (may have left)"
+          logger.info(
+            { err: err?.message, userId: appRow.user_id, appId },
+            "[review] member not in server (left or banned)"
           );
           return null;
         })
       : null;
+
+    // Log member status for debugging
+    logger.info({
+      appId,
+      userId: appRow.user_id,
+      memberFound: member !== null,
+      memberDisplayName: member?.displayName ?? null,
+    }, "[review] ensureReviewMessage member fetch result");
 
     const reviewChannel = await client.channels.fetch(appRow.review_channel_id).catch((err) => {
       logger.warn({ err, channelId: appRow.review_channel_id }, "Failed to fetch review channel");
