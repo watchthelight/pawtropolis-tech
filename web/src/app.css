@@ -1,3 +1,4 @@
+@import '@fontsource-variable/inter';
 @import 'tailwindcss';
 
 /*
@@ -50,7 +51,7 @@
 body {
 	background-color: var(--bg-primary);
 	color: var(--text-primary);
-	font-family: 'Inter', system-ui, -apple-system, sans-serif;
+	font-family: 'Inter Variable', system-ui, -apple-system, sans-serif;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 }
