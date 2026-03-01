@@ -525,6 +525,17 @@ client.once(Events.ClientReady, async () => {
     );
   }
 
+  // WHY: Auto-end movie/game events that staff forgot to close after 12 hours
+  try {
+    const { startEventTimeoutScheduler } = await import("./scheduler/eventTimeoutScheduler.js");
+    startEventTimeoutScheduler(client);
+  } catch (err) {
+    logger.warn(
+      { err },
+      "[startup] event timeout scheduler failed to start - continuing without event auto-end"
+    );
+  }
+
   // Initialize banner sync (bot profile + website)
   try {
     await initializeBannerSync(client);
@@ -569,6 +580,9 @@ client.once(Events.ClientReady, async () => {
 
       const { stopDiskSpaceScheduler } = await import("./scheduler/diskSpaceScheduler.js");
       stopDiskSpaceScheduler();
+
+      const { stopEventTimeoutScheduler } = await import("./scheduler/eventTimeoutScheduler.js");
+      stopEventTimeoutScheduler();
 
       // 2. Flush message activity buffer before shutdown
       try {
