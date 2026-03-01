@@ -2,42 +2,41 @@
 @import 'tailwindcss';
 
 /*
- * Pawtropolis Dashboard - Discord Identity Theming Foundation
+ * Pawtropolis Dashboard — oklch Identity Theming
  *
- * --accent is set dynamically from the user's Discord profile accent_color.
- * All derived colors use oklch relative color syntax for perceptual consistency.
- * Fallback: Discord blurple (#5865f2) when no accent is available.
+ * --hue is derived from the user's Discord accentColor via stores/theme.ts.
+ * Every surface, text, and shadow token uses oklch(L% C var(--hue)).
+ * Fallback hue 250 (cool blue) applies before login / when accentColor is null.
  */
 
 :root {
-	/* Discord identity colors (set dynamically on login) */
-	--accent: #5865f2;
-	--accent-rgb: 88, 101, 242;
+	/* Hue from Discord accentColor — set dynamically on <body> by theme store */
+	--hue: 250;
 
-	/* Derived palette via oklch */
-	--accent-soft: oklch(from var(--accent) l c h / 0.12);
-	--accent-hover: oklch(from var(--accent) calc(l + 0.08) c h);
-	--accent-muted: oklch(from var(--accent) calc(l - 0.1) calc(c * 0.6) h);
-	--accent-glow: oklch(from var(--accent) calc(l + 0.15) c h / 0.3);
-
-	/* Semantic colors */
-	--approve: #22c55e;
-	--reject: #ef4444;
-	--warning: #f59e0b;
-	--info: #3b82f6;
-
-	/* Surface colors (dark theme default) */
-	--bg-primary: #0a0a0f;
-	--bg-secondary: #12121a;
-	--bg-card: #1a1a25;
-	--bg-elevated: #22222f;
-	--border: #2a2a3a;
-	--border-subtle: #1f1f2e;
+	/* Surfaces (all tinted with user's hue) */
+	--bg: oklch(15% 0.01 var(--hue));
+	--surface: oklch(20% 0.015 var(--hue));
+	--surface-raised: oklch(24% 0.02 var(--hue));
+	--border: oklch(30% 0.02 var(--hue));
 
 	/* Text */
-	--text-primary: #e8e8ef;
-	--text-secondary: #9898a8;
-	--text-muted: #5a5a6e;
+	--text-primary: oklch(90% 0.01 var(--hue));
+	--text-secondary: oklch(60% 0.02 var(--hue));
+
+	/* Accent */
+	--accent: oklch(70% 0.15 var(--hue));
+	--accent-dim: oklch(40% 0.08 var(--hue));
+
+	/* Accent-tinted shadows */
+	--shadow-sm: 0 1px 2px oklch(5% 0.02 var(--hue) / 0.3);
+	--shadow-md: 0 4px 8px oklch(5% 0.02 var(--hue) / 0.25);
+	--shadow-lg: 0 8px 24px oklch(5% 0.02 var(--hue) / 0.2);
+
+	/* Status colors (fixed — not themed) */
+	--status-success: oklch(65% 0.15 145);
+	--status-warning: oklch(70% 0.15 85);
+	--status-danger: oklch(60% 0.15 25);
+	--status-info: oklch(65% 0.12 250);
 
 	/* Animation */
 	--ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -49,7 +48,7 @@
 
 /* Base styles */
 body {
-	background-color: var(--bg-primary);
+	background-color: var(--bg);
 	color: var(--text-primary);
 	font-family: 'Inter Variable', system-ui, -apple-system, sans-serif;
 	-webkit-font-smoothing: antialiased;
@@ -72,5 +71,5 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-	background: var(--text-muted);
+	background: var(--text-secondary);
 }
