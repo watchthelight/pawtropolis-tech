@@ -1,0 +1,75 @@
+@import 'tailwindcss';
+
+/*
+ * Pawtropolis Dashboard - Discord Identity Theming Foundation
+ *
+ * --accent is set dynamically from the user's Discord profile accent_color.
+ * All derived colors use oklch relative color syntax for perceptual consistency.
+ * Fallback: Discord blurple (#5865f2) when no accent is available.
+ */
+
+:root {
+	/* Discord identity colors (set dynamically on login) */
+	--accent: #5865f2;
+	--accent-rgb: 88, 101, 242;
+
+	/* Derived palette via oklch */
+	--accent-soft: oklch(from var(--accent) l c h / 0.12);
+	--accent-hover: oklch(from var(--accent) calc(l + 0.08) c h);
+	--accent-muted: oklch(from var(--accent) calc(l - 0.1) calc(c * 0.6) h);
+	--accent-glow: oklch(from var(--accent) calc(l + 0.15) c h / 0.3);
+
+	/* Semantic colors */
+	--approve: #22c55e;
+	--reject: #ef4444;
+	--warning: #f59e0b;
+	--info: #3b82f6;
+
+	/* Surface colors (dark theme default) */
+	--bg-primary: #0a0a0f;
+	--bg-secondary: #12121a;
+	--bg-card: #1a1a25;
+	--bg-elevated: #22222f;
+	--border: #2a2a3a;
+	--border-subtle: #1f1f2e;
+
+	/* Text */
+	--text-primary: #e8e8ef;
+	--text-secondary: #9898a8;
+	--text-muted: #5a5a6e;
+
+	/* Animation */
+	--ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+	--ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+	--duration-fast: 150ms;
+	--duration-normal: 250ms;
+	--duration-slow: 400ms;
+}
+
+/* Base styles */
+body {
+	background-color: var(--bg-primary);
+	color: var(--text-primary);
+	font-family: 'Inter', system-ui, -apple-system, sans-serif;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+	background: var(--border);
+	border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: var(--text-muted);
+}
