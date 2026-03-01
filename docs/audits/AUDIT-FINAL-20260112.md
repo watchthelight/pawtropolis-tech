@@ -3,7 +3,7 @@
 **Audit Run ID:** `audit-20260112-final`
 **Date:** 2026-01-12
 **Auditor:** Claude Code (Automated)
-**Environment:** Production (3.209.223.216)
+**Environment:** Production (34.193.75.138)
 **Bot Version:** v5.0.0
 
 ---
@@ -284,7 +284,7 @@ The `deploy-changes` agent was audited and enhanced:
 
 ### Smoke Test Verifies
 
-1. HTTP health endpoint responds (http://3.209.223.216:3002/api/health)
+1. HTTP health endpoint responds (http://34.193.75.138:3002/api/health)
 2. Bot status is "online"
 3. WebSocket latency < 500ms
 4. PM2 process is running

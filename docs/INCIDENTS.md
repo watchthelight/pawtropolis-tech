@@ -200,7 +200,7 @@ aws ec2 wait instance-running --instance-ids i-0b5c5db57b50ff74b --region us-eas
 - **Instance ID**: i-0b5c5db57b50ff74b
 - **Region**: us-east-1
 - **Instance Type**: t3a.small
-- **Public IP**: 3.209.223.216 (Elastic IP)
+- **Public IP**: 34.193.75.138 (Elastic IP)
 - **EBS Volume**: vol-05bbabd84993a6241 (now 32GB gp3)
 
 ---

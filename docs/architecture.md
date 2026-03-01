@@ -228,7 +228,7 @@ Global Exception Handlers (uncaughtException, unhandledRejection)
 ```
 ┌──────────────┐    tarball/SCP    ┌──────────────────────┐
 │  Local Dev   │ ───────────────→  │  Ubuntu EC2 Server   │
-│  (Windows)   │                   │  3.209.223.216       │
+│  (Windows)   │                   │  34.193.75.138       │
 │              │    SSH/PM2        │                      │
 │  npm run dev │ ←───────────────  │  PM2: pawtropolis    │
 │  tsx watch   │    logs/status    │  node dist/index.js  │

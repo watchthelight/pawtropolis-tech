@@ -64,7 +64,7 @@ After deployment, the agent runs the smoke test:
 ```
 
 This verifies:
-- Health endpoint responds at `http://3.209.223.216:3002/api/health`
+- Health endpoint responds at `http://34.193.75.138:3002/api/health`
 - Bot status is "online"
 - WebSocket latency is reasonable (<500ms)
 - PM2 process is running
@@ -101,7 +101,7 @@ If you want to verify manually:
 
 ```bash
 # Check health endpoint
-curl http://3.209.223.216:3002/api/health
+curl http://34.193.75.138:3002/api/health
 
 # Check PM2 status
 ssh pawtech 'pm2 status pawtropolis'
@@ -183,7 +183,7 @@ The agent will ask you before proceeding. Common reasons:
 | Property | Value |
 |----------|-------|
 | SSH Alias | `pawtech` |
-| Host | `3.209.223.216` |
+| Host | `34.193.75.138` |
 | User | `ubuntu` |
 | Path | `/home/ubuntu/pawtropolis-tech` |
 | PM2 Process | `pawtropolis` |

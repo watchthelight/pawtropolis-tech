@@ -46,7 +46,7 @@ ssh pawtech "pm2 flush && sudo journalctl --vacuum-time=3d && df -h /"
 - Instance ID: `i-0b5c5db57b50ff74b`
 - Region: `us-east-1` (NOT us-east-2)
 - EBS Volume: `vol-05bbabd84993a6241`
-- IP: 3.209.223.216
+- IP: 34.193.75.138
 
 **Preventive Maintenance**:
 

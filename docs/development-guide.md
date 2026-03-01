@@ -15,7 +15,7 @@
 Add to `~/.ssh/config`:
 ```
 Host pawtropolis
-    HostName 3.209.223.216
+    HostName 34.193.75.138
     User ubuntu
     IdentityFile ~/.ssh/id_ed25519
 ```

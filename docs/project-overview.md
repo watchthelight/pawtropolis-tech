@@ -6,7 +6,7 @@
 
 **Pawtropolis Tech** (v5.1.1) is a production-grade Discord bot backend for the Pawtropolis server, built as a monolithic TypeScript application. It serves as a community gatekeeping, moderation, and engagement platform with sophisticated application review workflows, event tracking, artist coordination, and security auditing capabilities.
 
-The bot is actively deployed on an Ubuntu EC2 instance (`3.209.223.216`) managed via PM2, with automated deployment via custom shell scripts and CI/CD through GitHub Actions.
+The bot is actively deployed on an Ubuntu EC2 instance (`34.193.75.138`) managed via PM2, with automated deployment via custom shell scripts and CI/CD through GitHub Actions.
 
 ## Quick Reference
 

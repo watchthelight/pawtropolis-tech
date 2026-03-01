@@ -531,7 +531,7 @@ pm2 monit                # Monitor
 | **Instance ID** | `i-0b5c5db57b50ff74b` |
 | **Region** | `us-east-1` (NOT us-east-2!) |
 | **Instance Type** | `t3a.small` |
-| **Public IP** | `3.209.223.216` (Elastic IP) |
+| **Public IP** | `34.193.75.138` (Elastic IP) |
 | **EBS Volume** | `vol-05bbabd84993a6241` (32GB gp3) |
 | **SSH Alias** | `pawtech` or `watchthelight` |
 
@@ -543,7 +543,7 @@ ssh pawtech
 
 # SSH config (~/.ssh/config)
 Host pawtech
-  HostName 3.209.223.216
+  HostName 34.193.75.138
   User ubuntu
   IdentityFile ~/.ssh/pawtropolis-tech.pem
   IdentitiesOnly yes

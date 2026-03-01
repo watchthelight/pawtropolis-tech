@@ -15,7 +15,7 @@
 - **Framework:** Discord.js 14.16.3
 - **Database:** SQLite (better-sqlite3 12.4.1) with WAL mode
 - **Entry Point:** `src/index.ts` → `dist/index.js`
-- **Server:** `ubuntu@3.209.223.216` (SSH alias: `pawtropolis`)
+- **Server:** `ubuntu@34.193.75.138` (SSH alias: `pawtropolis`)
 - **PM2 Process:** `pawtropolis`
 - **License:** ANW-1.0
 
