@@ -350,6 +350,80 @@ export function cancelJob(jobId: number, reason?: string): boolean {
 }
 
 /**
+ * reassignJob
+ * WHAT: Atomically cancel an existing job and create a new one for a different artist.
+ * WHY: Single transaction ensures we never end up with a cancelled job and no replacement.
+ *      Preserves recipient and ticket type from the original job.
+ */
+export interface ReassignJobResult {
+  oldJobId: number;
+  oldJobNumber: number;
+  newJob: CreateJobResult;
+}
+
+const reassignJobTransaction = db.transaction(
+  (oldJob: ArtJobRow, newArtistId: string): ReassignJobResult => {
+    // 1. Cancel the old job
+    db.prepare(
+      `UPDATE art_job SET status = 'cancelled', notes = ?, updated_at = datetime('now') WHERE id = ?`
+    ).run(`Reassigned to <@${newArtistId}>`, oldJob.id);
+
+    // 2. Create the new job (inline since better-sqlite3 doesn't support nested transactions)
+    const jobNumRow = getMaxJobNumberStmt.get(oldJob.guild_id) as { max_num: number | null } | undefined;
+    const jobNumber = (jobNumRow?.max_num ?? 0) + 1;
+
+    const artistNumRow = getMaxArtistJobNumberStmt.get(oldJob.guild_id, newArtistId) as { max_num: number | null } | undefined;
+    const artistJobNumber = (artistNumRow?.max_num ?? 0) + 1;
+
+    const result = insertJobStmt.run(
+      oldJob.guild_id,
+      jobNumber,
+      newArtistId,
+      artistJobNumber,
+      oldJob.recipient_id,
+      oldJob.ticket_type,
+      null
+    );
+
+    // 3. Cross-reference in new job's notes
+    const formattedOldNum = String(oldJob.job_number).padStart(4, "0");
+    db.prepare(
+      `UPDATE art_job SET notes = ? WHERE id = ?`
+    ).run(`Reassigned from job #${formattedOldNum}`, result.lastInsertRowid);
+
+    return {
+      oldJobId: oldJob.id,
+      oldJobNumber: oldJob.job_number,
+      newJob: {
+        id: result.lastInsertRowid as number,
+        jobNumber,
+        artistJobNumber,
+      },
+    };
+  }
+);
+
+export function reassignJob(oldJob: ArtJobRow, newArtistId: string): ReassignJobResult {
+  const result = reassignJobTransaction(oldJob, newArtistId);
+
+  logger.info(
+    {
+      evt: "art_job_reassigned",
+      oldJobId: oldJob.id,
+      oldJobNumber: oldJob.job_number,
+      oldArtistId: oldJob.artist_id,
+      newArtistId,
+      newJobNumber: result.newJob.jobNumber,
+      recipientId: oldJob.recipient_id,
+      ticketType: oldJob.ticket_type,
+    },
+    "[artJobs] Job reassigned"
+  );
+
+  return result;
+}
+
+/**
  * getMonthlyLeaderboard
  * WHAT: Get artists ranked by jobs completed this month.
  *

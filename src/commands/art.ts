@@ -33,6 +33,7 @@ import {
   updateJobStatus,
   finishJob,
   cancelJob,
+  reassignJob,
   getMonthlyLeaderboard,
   getAllTimeLeaderboard,
   formatJobNumber,
@@ -186,6 +187,17 @@ export const data = new SlashCommandBuilder()
         opt.setName("reason").setDescription("Reason for cancellation (e.g., reassignment, member left)")
       )
   )
+  .addSubcommand((sub) =>
+    sub
+      .setName("reassign")
+      .setDescription("Reassign a job to a different artist (staff only)")
+      .addIntegerOption((opt) =>
+        opt.setName("id").setDescription("Job number (global)").setMinValue(1).setRequired(true)
+      )
+      .addUserOption((opt) =>
+        opt.setName("artist").setDescription("New artist to assign the job to").setRequired(true)
+      )
+  )
   .setDMPermission(false);
 
 /**
@@ -228,6 +240,9 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
       break;
     case "cancel":
       await handleCancel(interaction, ctx);
+      break;
+    case "reassign":
+      await handleReassign(interaction, ctx);
       break;
     default:
       // This should be unreachable if Discord is doing its job, but Discord
@@ -1153,6 +1168,115 @@ async function handleCancel(
     if (reason) {
       embed.addFields({ name: "Reason", value: reason });
     }
+
+    await interaction.reply({ embeds: [embed] });
+  });
+}
+
+/**
+ * /art reassign - Staff only: Reassign a job to a different artist
+ *
+ * Atomically cancels the old job and creates a new one for the new artist.
+ * Preserves recipient and ticket type from the original job.
+ * Both jobs get notes cross-referencing each other for the audit trail.
+ */
+async function handleReassign(
+  interaction: ChatInputCommandInteraction,
+  ctx: CommandContext
+): Promise<void> {
+  const guildId = interaction.guildId;
+
+  if (!guildId) {
+    await interaction.reply({ content: "This command must be run in a server.", flags: MessageFlags.Ephemeral });
+    return;
+  }
+
+  if (!requireStaff(interaction)) return;
+
+  const jobNumber = interaction.options.getInteger("id", true);
+  const newArtist = interaction.options.getUser("artist", true);
+
+  const job = await withStep(ctx, "fetch_job", () => {
+    return withSql(ctx, "SELECT * FROM art_job WHERE job_number = ?", () =>
+      getJobByNumber(guildId, jobNumber)
+    );
+  });
+
+  if (!job) {
+    await interaction.reply({
+      content: `Job #${formatJobNumber(jobNumber)} not found.`,
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  if (job.status === "done") {
+    await interaction.reply({
+      content: `Job #${formatJobNumber(jobNumber)} is already completed. Cannot reassign completed jobs.`,
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  if (job.status === "cancelled") {
+    await interaction.reply({
+      content: `Job #${formatJobNumber(jobNumber)} is already cancelled. Cannot reassign cancelled jobs.`,
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  if (job.artist_id === newArtist.id) {
+    await interaction.reply({
+      content: `Job #${formatJobNumber(jobNumber)} is already assigned to <@${newArtist.id}>.`,
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  const result = await withStep(ctx, "reassign_job", () => {
+    return withSql(ctx, "TRANSACTION: cancel old + create new art_job", () =>
+      reassignJob(job, newArtist.id)
+    );
+  });
+
+  await withStep(ctx, "audit_log", async () => {
+    await logActionPretty(interaction.guild!, {
+      actorId: interaction.user.id,
+      subjectId: newArtist.id,
+      action: "art_job_reassigned",
+      meta: {
+        oldJobNumber: formatJobNumber(jobNumber),
+        newJobNumber: formatJobNumber(result.newJob.jobNumber),
+        oldArtistId: job.artist_id,
+        newArtistId: newArtist.id,
+        recipientId: job.recipient_id,
+        artType: job.ticket_type,
+        previousStatus: job.status,
+      },
+    });
+  });
+
+  await withStep(ctx, "reply", async () => {
+    const clientValue = isSpecialJob(job)
+      ? `Special: ${formatTicketType(job.ticket_type)}`
+      : `<@${job.recipient_id}>`;
+
+    const embed = new EmbedBuilder()
+      .setTitle("Job Reassigned")
+      .setDescription(
+        `Job #${formatJobNumber(jobNumber)} has been reassigned.\n` +
+        `New job #${formatJobNumber(result.newJob.jobNumber)} created for <@${newArtist.id}>.`
+      )
+      .addFields(
+        { name: "Previous Artist", value: `<@${job.artist_id}>`, inline: true },
+        { name: "New Artist", value: `<@${newArtist.id}>`, inline: true },
+        { name: "Client", value: clientValue, inline: true },
+        { name: "Type", value: formatTicketType(job.ticket_type), inline: true },
+        { name: "Previous Status", value: formatStatus(job.status), inline: true }
+      )
+      .setColor(0xe67e22) // Orange for reassignment
+      .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });
   });

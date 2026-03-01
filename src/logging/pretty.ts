@@ -71,6 +71,7 @@ export type ActionType =
   | "user_unblocked"
   | "art_job_assigned"
   | "art_job_cancelled"
+  | "art_job_reassigned"
   | "byte_token_redeemed"
   | "byte_multiplier_applied"
   | "byte_multiplier_expired"
@@ -332,6 +333,11 @@ function getActionMeta(action: ActionType): ActionMeta {
       title: "Art Job Cancelled",
       color: 0xed4245, // Red
       emoji: "🚫",
+    },
+    art_job_reassigned: {
+      title: "Art Job Reassigned",
+      color: 0xe67e22, // Orange
+      emoji: "🔄",
     },
     // Byte token self-service redemption system
     byte_token_redeemed: {
