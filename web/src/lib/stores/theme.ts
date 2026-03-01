@@ -1,4 +1,4 @@
-const FALLBACK_HUE = 250;
+export const FALLBACK_HUE = 250;
 
 /**
  * Convert Discord accentColor integer to oklch hue.
@@ -43,5 +43,7 @@ export function applyTheme(accentColor: number | null): void {
 	const hue =
 		accentColor != null ? accentColorToHue(accentColor) : FALLBACK_HUE;
 
-	document.body.style.setProperty("--hue", String(Math.round(hue)));
+	if (typeof document !== "undefined") {
+		document.body.style.setProperty("--hue", String(Math.round(hue)));
+	}
 }
