@@ -7,7 +7,10 @@ export function normalizeTimestamp(
 	if (value == null) return null;
 
 	if (typeof value === "string") {
-		const ms = new Date(value).getTime();
+		// SQLite datetime('now') returns "YYYY-MM-DD HH:MM:SS" (UTC, no Z suffix).
+		// new Date() parses space-separated formats as local time — normalize to ISO8601 UTC.
+		const normalized = value.includes("T") ? value : value.replace(" ", "T") + "Z";
+		const ms = new Date(normalized).getTime();
 		return Number.isNaN(ms) ? null : ms;
 	}
 
