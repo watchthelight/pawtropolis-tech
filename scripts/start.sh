@@ -26,7 +26,7 @@
 set -euo pipefail
 
 # === CONFIGURATION (Edit these for your environment) ===
-REMOTE_ALIAS="pawtech"
+REMOTE_ALIAS="pawtropolis"
 REMOTE_PATH="/home/ubuntu/pawtropolis-tech"
 PM2_NAME="pawtropolis"
 LOCAL_PORT=3000
@@ -251,7 +251,7 @@ sync_db_remote_preferred() {
         echo -e "${GREEN}[sync] ✓ Local database is newer than remote - skipping pull${NC}"
         echo "[sync] Local mtime:  ${L_MTIME}"
         echo "[sync] Remote mtime: ${R_MTIME}"
-        echo -e "${YELLOW}[INFO] To push local to remote, run: pawtech --push-remote${NC}"
+        echo -e "${YELLOW}[INFO] To push local to remote, run: ./scripts/start.sh --push-remote${NC}"
         write_manifest "local-newer"
         return
     fi

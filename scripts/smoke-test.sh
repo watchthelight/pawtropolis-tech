@@ -15,7 +15,7 @@ set -e
 
 # Configuration
 HEALTH_URL="http://3.209.223.216:3002/api/health"
-SSH_HOST="pawtech"
+SSH_HOST="pawtropolis"
 LATENCY_WARN_MS=500
 TIMEOUT_SECONDS=10
 

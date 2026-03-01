@@ -2,12 +2,12 @@
 set -euo pipefail
 
 # Pawtropolis Deployment Script
-# Deploys to pawtech server (Ubuntu, user: ubuntu)
+# Deploys to pawtropolis server (Ubuntu, user: ubuntu)
 # Remote path: /home/ubuntu/pawtropolis-tech/
 # PM2 process: pawtropolis
 
 REMOTE_USER="ubuntu"
-REMOTE_HOST="pawtech"
+REMOTE_HOST="pawtropolis"
 REMOTE_PATH="/home/ubuntu/pawtropolis-tech"
 PM2_PROCESS="pawtropolis"
 TARBALL="deploy.tar.gz"

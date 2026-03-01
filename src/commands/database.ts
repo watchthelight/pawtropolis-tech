@@ -273,7 +273,7 @@ async function executeCheck(ctx: CommandContext<ChatInputCommandInteraction>) {
 
   try {
     // Check if we have remote config from env
-    const remoteAliasRaw = process.env.REMOTE_ALIAS || "pawtech";
+    const remoteAliasRaw = process.env.REMOTE_ALIAS || "pawtropolis";
     const remotePathRaw = process.env.REMOTE_PATH || "/home/ubuntu/pawtropolis-tech";
 
     // Skip remote checks if we're already running on remote

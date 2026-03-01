@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REMOTE_USER="ubuntu"
-REMOTE_HOST="pawtech"
+REMOTE_HOST="pawtropolis"
 REMOTE_PATH="/home/ubuntu/pawtropolis-tech"
 PM2_PROCESS="pawtropolis"
 TARBALL="deploy.tar.gz"
