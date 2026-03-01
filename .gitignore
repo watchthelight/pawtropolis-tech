@@ -37,7 +37,7 @@ tests/**/secrets/**
 *~
 
 # Database
-data/
+/data/
 *.db
 *.db-*
 
