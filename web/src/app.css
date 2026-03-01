@@ -74,6 +74,12 @@ body {
 	background: var(--text-secondary);
 }
 
+/* Focus ring — accent-colored, keyboard-only via :focus-visible */
+:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+}
+
 /* Respect prefers-reduced-motion — disable all transitions and animations */
 @media (prefers-reduced-motion: reduce) {
 	*,
