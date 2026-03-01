@@ -4,13 +4,20 @@
 Discord gatekeeping bot (v5.1.1) for the Pawtropolis server. Built by watchthelight (Bash).
 TypeScript, Discord.js 14, better-sqlite3, Node 20+, ESM modules.
 
+## Workflow Preferences
+- **TODO tracking**: Use super-detailed task tracking for every action
+- **Commits**: Tiny, purposeful commits — each commit does one clear thing
+- **No over-engineering**: Keep solutions focused and minimal
+
 ## Quick Reference
 - **Repo**: https://github.com/watchthelight/pawtropolis-tech
-- **Server**: `ubuntu@3.209.223.216` (SSH alias: `pawtropolis`)
+- **Server**: `ubuntu@34.193.75.138` (SSH alias: `pawtropolis`)
 - **Remote path**: `/home/ubuntu/pawtropolis-tech`
-- **PM2 process**: `pawtropolis`
+- **PM2 processes**: `pawtropolis` (bot), `pawtropolis-web` (dashboard)
 - **Database**: SQLite at `./data/data.db`
-- **Entry point**: `src/index.ts` -> `dist/index.js`
+- **Bot entry point**: `src/index.ts` -> `dist/index.js`
+- **Web dashboard**: `web/` directory (SvelteKit)
+- **Domain**: `pawtropolis.tech` (Cloudflare)
 
 ## Build & Run
 
@@ -108,6 +115,7 @@ assets/           # images, banners
 docs/             # documentation
 audit/            # command audit reports
 context/          # context documents
+web/              # SvelteKit web dashboard (monorepo)
 ```
 
 ## Environment
@@ -119,16 +127,26 @@ context/          # context documents
 ## SSH Config
 ```
 Host pawtropolis
-    HostName 3.209.223.216
+    HostName 34.193.75.138
     User ubuntu
-    IdentityFile ~/.ssh/id_ed25519
+    IdentityFile ~/pawtropolis-tech/authentication/pawtropolis.pem
 ```
 All deploy scripts use `pawtropolis` as the SSH alias, matching the SSH config.
+
+## Web Dashboard
+- **Framework**: SvelteKit (in `web/` directory)
+- **Styling**: Tailwind CSS + GSAP animations
+- **Auth**: Discord OAuth2 with 7-tier progressive role reveal
+- **Database**: Shared SQLite access via WAL mode (same data.db as bot)
+- **Real-time**: Server-Sent Events (SSE)
+- **Port**: 3000 (proxied via Nginx)
+- **Design**: Indie game polish, dynamic Discord identity theming, no template aesthetic
 
 ## Important Notes
 - Node >= 20.0.0 required
 - ESM modules (`"type": "module"`)
 - tsup bundles to `dist/` (index.js + scripts/commands.js)
-- PM2 manages the process on the server
+- PM2 manages processes on the server (bot + web dashboard)
 - Sentry integration for error tracking
 - Google Cloud Vision for avatar scanning
+- AWS credentials in `CREDENTIALS.md` (gitignored)
