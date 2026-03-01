@@ -7,7 +7,7 @@
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
-import { SlashCommandBuilder, type ChatInputCommandInteraction } from "discord.js";
+import { SlashCommandBuilder, type ChatInputCommandInteraction, MessageFlags } from "discord.js";
 import { type CommandContext, withStep } from "../lib/cmdWrap.js";
 import { isOwner } from "../lib/owner.js";
 
@@ -23,7 +23,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   if (!isOwner(interaction.user.id)) {
     await interaction.reply({
       content: "This command is restricted to bot owners.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }

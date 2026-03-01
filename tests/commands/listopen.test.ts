@@ -99,7 +99,7 @@ describe("/listopen command", () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: "❌ This command can only be used in a server.",
-        ephemeral: true,
+        flags: 64,
       });
     });
 

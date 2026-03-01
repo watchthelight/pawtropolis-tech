@@ -231,7 +231,7 @@ async function handleReviewPreview(ctx: CommandContext<ChatInputCommandInteracti
       content: "**Sample Review Card** (buttons are non-functional for preview only)",
       embeds: [embed],
       components,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   });
 }

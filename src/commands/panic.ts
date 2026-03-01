@@ -12,6 +12,7 @@
 import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
+  MessageFlags,
 } from "discord.js";
 import { type CommandContext, withStep, withSql } from "../lib/cmdWrap.js";
 import { setPanicMode, getPanicDetails } from "../features/panicStore.js";
@@ -76,7 +77,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   if (!interaction.guild) {
     await interaction.reply({
       content: "This command can only be used in a server.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -181,12 +182,12 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
           statusMsg += "\n\nUse `/panic off` to resume.";
           await interaction.reply({
             content: statusMsg,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
         } else {
           await interaction.reply({
             content: "✅ **Panic mode is OFF** - Role automation is running normally.",
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
         }
         break;

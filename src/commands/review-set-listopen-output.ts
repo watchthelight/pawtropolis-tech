@@ -11,7 +11,7 @@
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
-import { ChatInputCommandInteraction, SlashCommandBuilder, PermissionFlagsBits, type GuildMember } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder, PermissionFlagsBits, MessageFlags, type GuildMember } from "discord.js";
 import { upsertConfig, getConfig } from "../lib/config.js";
 import { logger } from "../lib/logger.js";
 import { logActionPretty } from "../logging/pretty.js";
@@ -52,7 +52,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   if (!interaction.guildId || !interaction.guild) {
     await interaction.reply({
       content: "❌ This command can only be used in a server.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -70,7 +70,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   if (!hasManageGuildPerm && !isOwnerUser) {
     await interaction.reply({
       content: "❌ You don't have permission to use this command. This command requires Manage Server permission.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
 
     logger.warn(
@@ -120,7 +120,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
             ? "Moderators' claimed application lists will now be **visible to everyone** in the channel."
             : "Moderators' claimed application lists will now be **ephemeral** (only visible to the command invoker)."
         }`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     });
   } catch (err) {
@@ -128,7 +128,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
 
     await interaction.reply({
       content: "❌ Failed to update /listopen output mode. Check bot logs.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 }

@@ -21,11 +21,12 @@ const { mockPrepare, mockAll, mockRequireMinRole, mockNowUtc, mockGetAvgClaimToD
 
 // Mock shared module
 vi.mock("../../../src/commands/stats/shared.js", async () => {
-  const { EmbedBuilder, AttachmentBuilder } = await vi.importActual("discord.js");
+  const { EmbedBuilder, AttachmentBuilder, MessageFlags } = await vi.importActual("discord.js");
   return {
     ChatInputCommandInteraction: {},
     EmbedBuilder,
     AttachmentBuilder,
+    MessageFlags,
     db: { prepare: mockPrepare },
     nowUtc: mockNowUtc,
     requireMinRole: mockRequireMinRole,
@@ -94,7 +95,7 @@ describe("stats/leaderboard", () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: "This command must be run in a guild.",
-        ephemeral: true,
+        flags: 64,
       });
     });
 

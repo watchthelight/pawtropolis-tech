@@ -243,7 +243,7 @@ export function clearClaim(appId: string): boolean {
  * RETURNS: Error message string or null if authorized
  * USAGE:
  *  const errorMsg = claimGuard(claim, interaction.user.id);
- *  if (errorMsg) return interaction.reply({ content: errorMsg, ephemeral: true });
+ *  if (errorMsg) return interaction.reply({ content: errorMsg, flags: MessageFlags.Ephemeral });
  */
 // Guard function for button handlers. Returns error message if user can't act, null if authorized.
 // Usage pattern: const err = claimGuard(claim, user.id); if (err) return reply(err);

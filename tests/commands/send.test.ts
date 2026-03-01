@@ -162,7 +162,7 @@ describe("/send command", () => {
 
     await wrappedExecute(interaction);
 
-    expect(interaction.deferReply).toHaveBeenCalledWith({ ephemeral: true });
+    expect(interaction.deferReply).toHaveBeenCalledWith({ flags: 64 });
     expect(interaction.channel?.send).toHaveBeenCalledWith(
       expect.objectContaining({
         content: "Test message",
@@ -255,7 +255,7 @@ describe("/send command", () => {
     expect(interaction.reply).toHaveBeenCalledWith(
       expect.objectContaining({
         content: expect.stringContaining("Message too long"),
-        ephemeral: true,
+        flags: 64,
       })
     );
 
@@ -287,7 +287,7 @@ describe("/send command", () => {
     expect(interaction.reply).toHaveBeenCalledWith(
       expect.objectContaining({
         content: expect.stringContaining("Message too long"),
-        ephemeral: true,
+        flags: 64,
       })
     );
 
@@ -338,7 +338,7 @@ describe("/send command", () => {
     expect(interaction.reply).toHaveBeenCalledWith(
       expect.objectContaining({
         content: expect.stringContaining("do not have the required role"),
-        ephemeral: true,
+        flags: 64,
       })
     );
 
@@ -447,7 +447,7 @@ describe("/send command", () => {
     expect(interaction.reply).toHaveBeenCalledWith(
       expect.objectContaining({
         content: expect.stringContaining("can only be used in a server"),
-        ephemeral: true,
+        flags: 64,
       })
     );
 

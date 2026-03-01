@@ -12,6 +12,7 @@ import {
   type ChatInputCommandInteraction,
   EmbedBuilder,
   Colors,
+  MessageFlags,
   type User,
 } from "discord.js";
 import { logger } from "../lib/logger.js";
@@ -67,7 +68,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   if (!guildId || !guild) {
     await interaction.reply({
       content: "This command can only be used in a server.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -87,7 +88,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   if (!cooldownResult.allowed) {
     await interaction.reply({
       content: `Please wait ${formatCooldown(cooldownResult.remainingMs!)} before using /unblock again.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -140,7 +141,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   if (resolved.unsupported) {
     await interaction.reply({
       content: "❌ Username lookup is not supported. Please use a user mention or User ID.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -149,7 +150,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   if (!resolved.targetUserId) {
     await interaction.reply({
       content: "❌ Please provide a user via mention, User ID, or username.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }

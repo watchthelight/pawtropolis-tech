@@ -20,11 +20,12 @@ const { mockFetchActivityData, mockGenerateHeatmap, mockRequireMinRole, mockWith
 
 // Mock shared module
 vi.mock("../../../src/commands/stats/shared.js", async () => {
-  const { EmbedBuilder, AttachmentBuilder } = await vi.importActual("discord.js");
+  const { EmbedBuilder, AttachmentBuilder, MessageFlags } = await vi.importActual("discord.js");
   return {
     ChatInputCommandInteraction: {},
     EmbedBuilder,
     AttachmentBuilder,
+    MessageFlags,
     withStep: mockWithStep,
     requireMinRole: mockRequireMinRole,
     ROLE_IDS: {
@@ -78,7 +79,7 @@ describe("stats/activity", () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: "This command can only be used in a server.",
-        ephemeral: true,
+        flags: 64,
       });
     });
 

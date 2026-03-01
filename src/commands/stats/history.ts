@@ -8,6 +8,7 @@
 import {
   ChatInputCommandInteraction,
   EmbedBuilder,
+  MessageFlags,
   db,
   logger,
   isOwner,
@@ -71,7 +72,7 @@ export async function handleHistory(
   if (!interaction.guildId) {
     await interaction.reply({
       content: "This command can only be used in a server.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -80,7 +81,7 @@ export async function handleHistory(
   if (!isLeadership) {
     await interaction.reply({
       content: "This command requires leadership role or admin permissions.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -90,7 +91,7 @@ export async function handleHistory(
   const exportCsv = interaction.options.getBoolean("export") || false;
 
   await withStep(ctx, "defer_reply", async () => {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   });
 
   const guildId = interaction.guildId;

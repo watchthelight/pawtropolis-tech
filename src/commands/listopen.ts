@@ -18,6 +18,7 @@ import {
   ButtonBuilder,
   ActionRowBuilder,
   ButtonStyle,
+  MessageFlags,
   StringSelectMenuBuilder,
 } from "discord.js";
 import { db } from "../db/db.js";
@@ -495,7 +496,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   if (!interaction.guildId || !interaction.guild) {
     await interaction.reply({
       content: "❌ This command can only be used in a server.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -616,7 +617,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
       // If edit fails, try a new reply
       interaction.followUp({
         content: "❌ Failed to fetch your open applications. Please try again later.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       }).catch(() => {
         // Silently fail if we can't communicate with Discord
       });
@@ -649,7 +650,7 @@ export async function handleListOpenPagination(interaction: any): Promise<void> 
   if (!match) {
     await interaction.reply({
       content: "❌ Invalid pagination button.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -662,7 +663,7 @@ export async function handleListOpenPagination(interaction: any): Promise<void> 
   if (newPage < 0) {
     await interaction.reply({
       content: "❌ You're already on the first page.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -691,7 +692,7 @@ export async function handleListOpenPagination(interaction: any): Promise<void> 
     if (apps.length === 0 && newPage > 0) {
       await interaction.followUp({
         content: "❌ No more pages available.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -717,7 +718,7 @@ export async function handleListOpenPagination(interaction: any): Promise<void> 
 
     await interaction.followUp({
       content: "❌ Failed to load page. Please try again.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     }).catch(() => {
       // Silently fail if we can't communicate with Discord
     });
@@ -741,7 +742,7 @@ export async function handleListOpenPageSelect(interaction: any): Promise<void> 
   if (!match) {
     await interaction.reply({
       content: "❌ Invalid page selector.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -778,7 +779,7 @@ export async function handleListOpenPageSelect(interaction: any): Promise<void> 
 
     await interaction.followUp({
       content: "❌ Failed to load page. Please try again.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     }).catch((err: unknown) => {
       logger.debug({ err }, "[listopen] Pagination response failed");
     });

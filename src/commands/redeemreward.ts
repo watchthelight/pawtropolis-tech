@@ -16,6 +16,7 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  MessageFlags,
   PermissionFlagsBits,
   type GuildMember,
 } from "discord.js";
@@ -131,7 +132,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   if (!hasAmbassadorRole && !hasManageRoles) {
     await interaction.reply({
       content: "You need the Ambassador role or Manage Roles permission to use this command.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }

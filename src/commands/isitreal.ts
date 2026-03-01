@@ -14,6 +14,7 @@ import {
   SlashCommandBuilder,
   ContextMenuCommandBuilder,
   ApplicationCommandType,
+  MessageFlags,
   type ChatInputCommandInteraction,
   type MessageContextMenuCommandInteraction,
   type Message,
@@ -53,7 +54,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   if (!guildId || !guild || !channel || !channel.isTextBased()) {
     await interaction.reply({
       content: "This command can only be used in a server text channel.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -70,7 +71,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
 
   // Defer early - API calls will take time
   await withStep(ctx, "defer", async () => {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   });
 
   // Parse message ID/link from option
@@ -209,7 +210,7 @@ export async function handleIsItRealContextMenu(
   if (!guildId || !guild) {
     await interaction.reply({
       content: "This command can only be used in a server.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -229,7 +230,7 @@ export async function handleIsItRealContextMenu(
   }
 
   // Defer early - API calls will take time
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   // Extract images from attachments and embeds
   const imageUrls = extractImages(targetMessage);

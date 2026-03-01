@@ -112,7 +112,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
 
   // Defer while we process
   await withStep(ctx, "defer", async () => {
-    await ensureDeferred(interaction, { ephemeral: true });
+    await ensureDeferred(interaction, { flags: MessageFlags.Ephemeral });
   });
 
   // Get command options

@@ -12,6 +12,7 @@
 import {
   SlashCommandBuilder,
   EmbedBuilder,
+  MessageFlags,
   type ChatInputCommandInteraction,
 } from 'discord.js';
 import { spawn } from 'child_process';
@@ -64,7 +65,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   if (!guildId) {
     await interaction.reply({
       content: 'This command can only be used in a server.',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -84,7 +85,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   if (!cooldownResult.allowed) {
     await interaction.reply({
       content: `Backfill on cooldown. Try again in ${formatCooldown(cooldownResult.remainingMs!)}.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -95,7 +96,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   if (weeks < 1 || weeks > 8) {
     await interaction.reply({
       content: '❌ Invalid weeks value. Must be between 1 and 8.',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -107,7 +108,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   if (oldestDate > currentDate) {
     await interaction.reply({
       content: '❌ Invalid date range: calculated start date is in the future.',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }

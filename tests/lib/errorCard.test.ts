@@ -48,8 +48,8 @@ describe("safeReply", () => {
       editReply: vi.fn(),
     } as unknown as ChatInputCommandInteraction;
 
-    await errorCard.safeReply(interaction, { content: "hi", ephemeral: true });
-    expect(reply).toHaveBeenCalledWith({ content: "hi", ephemeral: true, flags: 0 });
+    await errorCard.safeReply(interaction, { content: "hi", flags: 64 });
+    expect(reply).toHaveBeenCalledWith({ content: "hi", flags: 64 });
   });
 
   /**
@@ -69,8 +69,8 @@ describe("safeReply", () => {
       editReply,
     } as unknown as ChatInputCommandInteraction;
 
-    await errorCard.safeReply(interaction, { content: "done", ephemeral: true });
-    expect(editReply).toHaveBeenCalledWith({ content: "done", ephemeral: true });
+    await errorCard.safeReply(interaction, { content: "done", flags: 64 });
+    expect(editReply).toHaveBeenCalledWith({ content: "done" });
     // Verify we didn't accidentally call the wrong method.
     expect(followUp).not.toHaveBeenCalled();
     expect(reply).not.toHaveBeenCalled();
@@ -91,8 +91,8 @@ describe("safeReply", () => {
       editReply: vi.fn(),
     } as unknown as ChatInputCommandInteraction;
 
-    await errorCard.safeReply(interaction, { content: "later", ephemeral: true });
-    expect(followUp).toHaveBeenCalledWith({ content: "later", ephemeral: true, flags: 0 });
+    await errorCard.safeReply(interaction, { content: "later", flags: 64 });
+    expect(followUp).toHaveBeenCalledWith({ content: "later", flags: 64 });
   });
 });
 

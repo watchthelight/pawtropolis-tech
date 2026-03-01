@@ -13,7 +13,7 @@
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
-import { SlashCommandBuilder, ChatInputCommandInteraction, PermissionFlagsBits } from "discord.js";
+import { SlashCommandBuilder, ChatInputCommandInteraction, PermissionFlagsBits, MessageFlags } from "discord.js";
 import { withStep, withSql, type CommandContext } from "../../lib/cmdWrap.js";
 import { setNotifyConfig, getNotifyConfig, type NotifyConfig } from "../../features/notifyConfig.js";
 import { logActionPretty } from "../../logging/pretty.js";
@@ -90,7 +90,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   if (!guildId) {
     await interaction.reply({
       content: "❌ This command can only be used in a server.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -103,13 +103,13 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   if (!authorized) {
     await interaction.reply({
       content: "❌ You must be a server administrator to use this command.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
 
   await withStep(ctx, "defer_reply", async () => {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   });
 
   try {

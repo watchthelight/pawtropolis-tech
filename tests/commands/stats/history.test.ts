@@ -43,10 +43,11 @@ const {
 
 // Mock shared module
 vi.mock("../../../src/commands/stats/shared.js", async () => {
-  const { EmbedBuilder } = await vi.importActual("discord.js");
+  const { EmbedBuilder, MessageFlags } = await vi.importActual("discord.js");
   return {
     ChatInputCommandInteraction: {},
     EmbedBuilder,
+    MessageFlags,
     db: { prepare: mockPrepare },
     isOwner: mockIsOwner,
     hasStaffPermissions: mockHasStaffPermissions,
@@ -61,7 +62,7 @@ vi.mock("../../../src/commands/stats/shared.js", async () => {
     // CommandContext helpers - passthrough implementations
     withStep: async <T>(_ctx: unknown, _phase: string, fn: () => Promise<T> | T) => fn(),
     withSql: <T>(_ctx: unknown, _sql: string, fn: () => T) => fn(),
-    ensureDeferred: async (interaction: any) => { await interaction.deferReply({ ephemeral: true }); },
+    ensureDeferred: async (interaction: any) => { await interaction.deferReply({ flags: 64 }); },
     replyOrEdit: async () => {},
   };
 });
@@ -129,7 +130,7 @@ describe("stats/history", () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: "This command can only be used in a server.",
-        ephemeral: true,
+        flags: 64,
       });
     });
 
@@ -222,7 +223,7 @@ describe("stats/history", () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: "This command requires leadership role or admin permissions.",
-        ephemeral: true,
+        flags: 64,
       });
     });
 
@@ -298,7 +299,7 @@ describe("stats/history", () => {
 
       await handleHistory(ctx);
 
-      expect(interaction.deferReply).toHaveBeenCalledWith({ ephemeral: true });
+      expect(interaction.deferReply).toHaveBeenCalledWith({ flags: 64 });
     });
 
     it("replies with embed containing history", async () => {

@@ -96,7 +96,7 @@ describe("/search command", () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: "❌ This command can only be used in a server.",
-        ephemeral: true,
+        flags: 64,
       });
     });
 
@@ -125,7 +125,7 @@ describe("/search command", () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: expect.stringContaining("don't have permission"),
-        ephemeral: true,
+        flags: 64,
       });
     });
 
@@ -247,7 +247,7 @@ describe("/search command", () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: expect.stringContaining("cooldown"),
-        ephemeral: true,
+        flags: 64,
       });
     });
 
@@ -280,7 +280,7 @@ describe("/search command", () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: expect.stringContaining("Please provide either a user or a search query"),
-        ephemeral: true,
+        flags: 64,
       });
     });
 

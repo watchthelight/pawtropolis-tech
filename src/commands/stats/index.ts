@@ -13,7 +13,7 @@
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
-import type { ChatInputCommandInteraction } from "discord.js";
+import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
 import type { CommandContext } from "../../lib/cmdWrap.js";
 
 // Re-export command data
@@ -74,7 +74,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
     default:
       await interaction.reply({
         content: "Unknown subcommand.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
   }
 }

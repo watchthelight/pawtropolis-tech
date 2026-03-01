@@ -13,6 +13,7 @@ import {
   type ChatInputCommandInteraction,
   EmbedBuilder,
   Colors,
+  MessageFlags,
 } from "discord.js";
 import { requireOwnerOnly } from "../lib/config.js";
 import { checkCooldown, formatCooldown, COOLDOWNS } from "../lib/rateLimiter.js";
@@ -211,7 +212,7 @@ async function executeCheck(ctx: CommandContext<ChatInputCommandInteraction>) {
     const remaining = formatCooldown(cooldownResult.remainingMs!);
     await interaction.reply({
       content: `You're on cooldown for database checks. Please wait ${remaining}.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -557,7 +558,7 @@ async function executeRecover(ctx: CommandContext<ChatInputCommandInteraction>) 
   if (!env.RESET_PASSWORD) {
     await interaction.reply({
       content: "RESET_PASSWORD not configured in environment.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -575,7 +576,7 @@ async function executeRecover(ctx: CommandContext<ChatInputCommandInteraction>) 
     );
     await interaction.reply({
       content: "Password incorrect.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -593,7 +594,7 @@ async function executeRecover(ctx: CommandContext<ChatInputCommandInteraction>) 
   // Ephemeral because the response contains file paths and system info
   // that shouldn't be visible to the whole server.
   if (!interaction.deferred && !interaction.replied) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   }
 
   ctx.step("list_candidates");
@@ -639,7 +640,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   const { interaction } = ctx;
 
   if (!interaction.guildId || !interaction.guild) {
-    await interaction.reply({ content: "This command can only be used in a server.", ephemeral: true });
+    await interaction.reply({ content: "This command can only be used in a server.", flags: MessageFlags.Ephemeral });
     return;
   }
 

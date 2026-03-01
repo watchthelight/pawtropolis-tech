@@ -9,6 +9,7 @@ import {
   ChatInputCommandInteraction,
   AttachmentBuilder,
   EmbedBuilder,
+  MessageFlags,
   withStep,
   requireMinRole,
   ROLE_IDS,
@@ -32,7 +33,7 @@ export async function handleActivity(
   if (!guildId) {
     await interaction.reply({
       content: "This command can only be used in a server.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }

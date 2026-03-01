@@ -94,7 +94,7 @@ describe("/flag command", () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: "This command can only be used in a server.",
-        ephemeral: true,
+        flags: 64,
       });
     });
 
@@ -144,7 +144,7 @@ describe("/flag command", () => {
 
       await execute(ctx);
 
-      expect(interaction.deferReply).toHaveBeenCalledWith({ ephemeral: true });
+      expect(interaction.deferReply).toHaveBeenCalledWith({ flags: 64 });
       expect(upsertManualFlag).toHaveBeenCalledWith(
         expect.objectContaining({
           guildId: "guild-123",
@@ -263,7 +263,7 @@ describe("/flag command", () => {
 
       expect(interaction2.reply).toHaveBeenCalledWith({
         content: expect.stringContaining("Please wait"),
-        ephemeral: true,
+        flags: 64,
       });
       expect(upsertManualFlag).not.toHaveBeenCalled();
     });

@@ -77,7 +77,7 @@ describe("/roles command", () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: "This command can only be used in a server.",
-        ephemeral: true,
+        flags: 64,
       });
     });
 
@@ -102,7 +102,7 @@ describe("/roles command", () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: expect.stringContaining("Manage Roles"),
-        ephemeral: true,
+        flags: 64,
       });
     });
 
@@ -132,7 +132,7 @@ describe("/roles command", () => {
 
         expect(interaction.reply).toHaveBeenCalledWith({
           content: expect.stringContaining("Mapped level **10**"),
-          ephemeral: true,
+          flags: 64,
         });
       });
 
@@ -164,7 +164,7 @@ describe("/roles command", () => {
 
         expect(interaction.reply).toHaveBeenCalledWith({
           content: expect.stringContaining("Cannot configure this role"),
-          ephemeral: true,
+          flags: 64,
         });
       });
     });
@@ -195,7 +195,7 @@ describe("/roles command", () => {
 
         expect(interaction.reply).toHaveBeenCalledWith({
           content: expect.stringContaining("Added reward **Reward Token**"),
-          ephemeral: true,
+          flags: 64,
         });
       });
     });
@@ -227,7 +227,7 @@ describe("/roles command", () => {
 
         expect(interaction.reply).toHaveBeenCalledWith({
           content: expect.stringContaining("Added movie tier **Popcorn Club**"),
-          ephemeral: true,
+          flags: 64,
         });
       });
     });
@@ -259,7 +259,7 @@ describe("/roles command", () => {
 
         expect(interaction.reply).toHaveBeenCalledWith({
           content: expect.stringContaining("Added game tier **Game Champion**"),
-          ephemeral: true,
+          flags: 64,
         });
       });
     });
@@ -297,7 +297,7 @@ describe("/roles command", () => {
 
         await execute(ctx);
 
-        expect(interaction.deferReply).toHaveBeenCalledWith({ ephemeral: true });
+        expect(interaction.deferReply).toHaveBeenCalledWith({ flags: 64 });
         expect(interaction.editReply).toHaveBeenCalled();
       });
 
@@ -357,7 +357,7 @@ describe("/roles command", () => {
 
         expect(interaction.reply).toHaveBeenCalledWith({
           content: expect.stringContaining("Removed level tier for level **10**"),
-          ephemeral: true,
+          flags: 64,
         });
       });
 
@@ -385,7 +385,7 @@ describe("/roles command", () => {
 
         expect(interaction.reply).toHaveBeenCalledWith({
           content: expect.stringContaining("No level tier found"),
-          ephemeral: true,
+          flags: 64,
         });
       });
     });
@@ -415,7 +415,7 @@ describe("/roles command", () => {
 
         expect(interaction.reply).toHaveBeenCalledWith({
           content: expect.stringContaining("Removed movie tier **Popcorn Club**"),
-          ephemeral: true,
+          flags: 64,
         });
       });
     });
@@ -445,7 +445,7 @@ describe("/roles command", () => {
 
         expect(interaction.reply).toHaveBeenCalledWith({
           content: expect.stringContaining("Removed game tier **Game Champion**"),
-          ephemeral: true,
+          flags: 64,
         });
       });
     });
@@ -469,7 +469,7 @@ describe("/roles command", () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: "Unknown subcommand.",
-        ephemeral: true,
+        flags: 64,
       });
     });
   });

@@ -95,7 +95,7 @@ describe("/purge command", () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: "This command can only be used in a guild.",
-        ephemeral: true,
+        flags: 64,
       });
     });
 
@@ -125,7 +125,7 @@ describe("/purge command", () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: expect.stringContaining("Too many failed attempts"),
-        ephemeral: true,
+        flags: 64,
       });
     });
 
@@ -151,7 +151,7 @@ describe("/purge command", () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: "Password not configured. Contact bot administrator.",
-        ephemeral: true,
+        flags: 64,
       });
     });
 
@@ -178,7 +178,7 @@ describe("/purge command", () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: "Incorrect password.",
-        ephemeral: true,
+        flags: 64,
       });
     });
 
@@ -209,7 +209,7 @@ describe("/purge command", () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: expect.stringContaining("Purge on cooldown"),
-        ephemeral: true,
+        flags: 64,
       });
     });
 
@@ -233,7 +233,7 @@ describe("/purge command", () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: "This command can only be used in text channels.",
-        ephemeral: true,
+        flags: 64,
       });
     });
 
@@ -263,7 +263,7 @@ describe("/purge command", () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: expect.stringContaining("ManageMessages and ReadMessageHistory"),
-        ephemeral: true,
+        flags: 64,
       });
     });
 
@@ -312,7 +312,7 @@ describe("/purge command", () => {
 
       await execute(ctx);
 
-      expect(interaction.deferReply).toHaveBeenCalledWith({ ephemeral: true });
+      expect(interaction.deferReply).toHaveBeenCalledWith({ flags: 64 });
       expect(interaction.editReply).toHaveBeenCalled();
       // Verify the editReply was called (the embed structure may vary)
       const editReplyCall = (interaction.editReply as any).mock.calls[0][0];

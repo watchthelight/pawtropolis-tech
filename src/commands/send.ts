@@ -19,6 +19,7 @@ import {
   ChatInputCommandInteraction,
   PermissionFlagsBits,
   EmbedBuilder,
+  MessageFlags,
   TextChannel,
   ChannelType,
   MessageCreateOptions,
@@ -226,7 +227,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   if (!interaction.guild || !interaction.channel) {
     await interaction.reply({
       content: "❌ This command can only be used in a server.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -236,7 +237,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
     await interaction.reply({
       content:
         "❌ You do not have the required role to use this command. Contact an administrator if you believe this is an error.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -246,7 +247,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   if (!cooldownResult.allowed) {
     await interaction.reply({
       content: `❌ You're sending messages too quickly. Please wait ${formatCooldown(cooldownResult.remainingMs!)}.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -271,7 +272,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
 
     await interaction.reply({
       content: `❌ Message too long (${sanitizedMessage.length}/${maxLength} characters).\n\n${hint}`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -310,7 +311,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   // be clever and skip the defer for "fast" operations, Murphy's Law kicks in and
   // the one time Discord's API hiccups, you get "This interaction failed".
   await withStep(ctx, "defer", async () => {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   });
 
   // Reply threading: if reply_to is specified, we try to make this message

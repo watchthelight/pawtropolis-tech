@@ -21,7 +21,7 @@
  *   4. Runtime environment info (Node version, environment mode)
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
-import { SlashCommandBuilder, EmbedBuilder, type ChatInputCommandInteraction } from "discord.js";
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags, type ChatInputCommandInteraction } from "discord.js";
 import { withStep, type CommandContext } from "../lib/cmdWrap.js";
 import { HEALTH_CHECK_TIMEOUT_MS } from "../lib/constants.js";
 import { getSchedulerHealth, type SchedulerHealth } from "../lib/schedulerHealth.js";
@@ -224,7 +224,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
     if (error instanceof Error && error.message === 'Health check timeout') {
       await interaction.reply({
         content: '⚠️ Health check timed out after 5 seconds.',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       }).catch((err) => {
         logger.debug({ err }, "[health] Timeout response failed (interaction may have expired)");
       });

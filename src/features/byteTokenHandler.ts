@@ -13,7 +13,7 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import type { ButtonInteraction, StringSelectMenuInteraction, GuildMember } from "discord.js";
-import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
+import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from "discord.js";
 import { randomUUID } from "node:crypto";
 import { logger } from "../lib/logger.js";
 import { isPanicMode } from "./panicStore.js";
@@ -113,7 +113,7 @@ export async function handleUseByteButton(interaction: ButtonInteraction): Promi
     );
     await interaction.reply({
       content: "Invalid button data. Please try running `/usebyte` again.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -122,7 +122,7 @@ export async function handleUseByteButton(interaction: ButtonInteraction): Promi
   if (interaction.user.id !== parsed.userId) {
     await interaction.reply({
       content: "This button isn't for you.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -173,7 +173,7 @@ async function handleConfirm(
   if (!guild || !member) {
     await interaction.reply({
       content: "This command must be used in a server.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -486,7 +486,7 @@ export async function handleUseByteSelectMenu(
     logger.warn({ customId }, "[byteToken] Invalid select menu customId");
     await interaction.reply({
       content: "Invalid selection. Please try running `/usebyte` again.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -497,7 +497,7 @@ export async function handleUseByteSelectMenu(
   if (interaction.user.id !== userId) {
     await interaction.reply({
       content: "This selection isn't for you.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -508,7 +508,7 @@ export async function handleUseByteSelectMenu(
   if (!selectedRarity || !BYTE_TOKEN_CONFIG[selectedRarity]) {
     await interaction.reply({
       content: "Invalid token selection. Please try running `/usebyte` again.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -519,7 +519,7 @@ export async function handleUseByteSelectMenu(
   if (!guild || !member) {
     await interaction.reply({
       content: "This must be used in a server.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }

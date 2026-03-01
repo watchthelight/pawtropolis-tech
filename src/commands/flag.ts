@@ -15,6 +15,7 @@ import {
   type ChatInputCommandInteraction,
   EmbedBuilder,
   Colors,
+  MessageFlags,
 } from "discord.js";
 import { logger } from "../lib/logger.js";
 import { requireMinRole, ROLE_IDS, JUNIOR_MOD_PLUS } from "../lib/config.js";
@@ -90,7 +91,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   if (!guildId || !guild) {
     await interaction.reply({
       content: "This command can only be used in a server.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -115,7 +116,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
       const remainingMs = FLAG_RATE_LIMIT_MS - (now - lastFlagTime);
       await interaction.reply({
         content: `⏱️ Please wait ${Math.ceil(remainingMs / 1000)}s before flagging another user.`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return false;
     }
@@ -132,7 +133,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
 
   // Defer reply to allow time for API calls
   await withStep(ctx, "defer", async () => {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   });
 
   try {

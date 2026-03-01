@@ -18,6 +18,7 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  MessageFlags,
   type TextChannel,
   type Guild,
   type GuildMember,
@@ -180,7 +181,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   if (!guildId || !guild) {
     await interaction.reply({
       content: "This command can only be used in a server.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -998,7 +999,7 @@ export async function handleAuditButton(interaction: ButtonInteraction): Promise
     logger.warn({ customId }, "[audit] Invalid button custom ID format");
     await interaction.reply({
       content: "❌ Invalid button ID format.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -1033,7 +1034,7 @@ export async function handleAuditButton(interaction: ButtonInteraction): Promise
   if (!guild) {
     await interaction.reply({
       content: "❌ This button can only be used in a server.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -1080,7 +1081,7 @@ export async function handleAuditButton(interaction: ButtonInteraction): Promise
       const remaining = formatCooldown(cooldownResult.remainingMs!);
       await interaction.reply({
         content: `This guild is on cooldown for ${subcommand} audits. Please wait ${remaining} before running another audit.`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       logger.info(
         { guildId: guild.id, subcommand, remainingMs: cooldownResult.remainingMs },

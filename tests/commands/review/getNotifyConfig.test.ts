@@ -91,7 +91,7 @@ describe("review/getNotifyConfig", () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: expect.stringContaining("only be used in a server"),
-        ephemeral: true,
+        flags: 64,
       });
     });
 
@@ -124,7 +124,7 @@ describe("review/getNotifyConfig", () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: expect.stringContaining("must be a server administrator"),
-        ephemeral: true,
+        flags: 64,
       });
     });
 
@@ -146,7 +146,7 @@ describe("review/getNotifyConfig", () => {
 
       await execute(ctx);
 
-      expect(interaction.deferReply).toHaveBeenCalledWith({ ephemeral: true });
+      expect(interaction.deferReply).toHaveBeenCalledWith({ flags: 64 });
     });
 
     it("calls getNotifyConfig with guildId", async () => {

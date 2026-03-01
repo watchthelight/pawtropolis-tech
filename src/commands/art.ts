@@ -17,6 +17,7 @@ import {
   SlashCommandBuilder,
   EmbedBuilder,
   GuildMember,
+  MessageFlags,
 } from "discord.js";
 import { type CommandContext, withStep, withSql } from "../lib/cmdWrap.js";
 import { requireStaff } from "../lib/config.js";
@@ -231,7 +232,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
     default:
       // This should be unreachable if Discord is doing its job, but Discord
       // has a habit of delivering options that don't match what you registered.
-      await interaction.reply({ content: "Unknown subcommand.", ephemeral: true });
+      await interaction.reply({ content: "Unknown subcommand.", flags: MessageFlags.Ephemeral });
   }
 }
 
@@ -365,7 +366,7 @@ async function handleJobs(
   const member = interaction.member as GuildMember;
 
   if (!guildId) {
-    await interaction.reply({ content: "This command must be run in a server.", ephemeral: true });
+    await interaction.reply({ content: "This command must be run in a server.", flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -373,7 +374,7 @@ async function handleJobs(
     if (!isServerArtist(member, guildId)) {
       await interaction.reply({
         content: "You must be a Server Artist to use this command.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return false;
     }
@@ -443,7 +444,7 @@ async function handleBump(
   const member = interaction.member as GuildMember;
 
   if (!guildId) {
-    await interaction.reply({ content: "This command must be run in a server.", ephemeral: true });
+    await interaction.reply({ content: "This command must be run in a server.", flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -451,7 +452,7 @@ async function handleBump(
     if (!isServerArtist(member, guildId)) {
       await interaction.reply({
         content: "You must be a Server Artist to use this command.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return false;
     }
@@ -466,7 +467,7 @@ async function handleBump(
   if (jobResult.status === "no_identifier") {
     await interaction.reply({
       content: "Provide either `id` or both `user` and `type`.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -474,7 +475,7 @@ async function handleBump(
   if (jobResult.status === "not_found") {
     await interaction.reply({
       content: "Job not found. Check your job number with `/art jobs`.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -485,7 +486,7 @@ async function handleBump(
       .join("\n");
     await interaction.reply({
       content: `You have ${jobResult.count} matching jobs for that user+type. Use the job ID instead:\n\n${jobList}\n\nExample: \`/art bump id:${jobResult.jobs[0].artist_job_number}\``,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -495,7 +496,7 @@ async function handleBump(
   if (job.status === "done") {
     await interaction.reply({
       content: "This job is already completed.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -509,7 +510,7 @@ async function handleBump(
   if (!stage && !notes) {
     await interaction.reply({
       content: "Please provide a `stage` or `notes` to update.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -551,7 +552,7 @@ async function handleFinish(
   const member = interaction.member as GuildMember;
 
   if (!guildId) {
-    await interaction.reply({ content: "This command must be run in a server.", ephemeral: true });
+    await interaction.reply({ content: "This command must be run in a server.", flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -559,7 +560,7 @@ async function handleFinish(
     if (!isServerArtist(member, guildId)) {
       await interaction.reply({
         content: "You must be a Server Artist to use this command.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return false;
     }
@@ -574,7 +575,7 @@ async function handleFinish(
   if (jobResult.status === "no_identifier") {
     await interaction.reply({
       content: "Provide either `id` or both `user` and `type`.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -582,7 +583,7 @@ async function handleFinish(
   if (jobResult.status === "not_found") {
     await interaction.reply({
       content: "Job not found. Check your job number with `/art jobs`.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -593,7 +594,7 @@ async function handleFinish(
       .join("\n");
     await interaction.reply({
       content: `You have ${jobResult.count} matching jobs for that user+type. Use the job ID instead:\n\n${jobList}\n\nExample: \`/art finish id:${jobResult.jobs[0].artist_job_number}\``,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -603,7 +604,7 @@ async function handleFinish(
   if (job.status === "done") {
     await interaction.reply({
       content: "This job is already completed.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -646,7 +647,7 @@ async function handleView(
   const member = interaction.member as GuildMember;
 
   if (!guildId) {
-    await interaction.reply({ content: "This command must be run in a server.", ephemeral: true });
+    await interaction.reply({ content: "This command must be run in a server.", flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -654,7 +655,7 @@ async function handleView(
     if (!isServerArtist(member, guildId)) {
       await interaction.reply({
         content: "You must be a Server Artist to use this command.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return false;
     }
@@ -669,7 +670,7 @@ async function handleView(
   if (jobResult.status === "no_identifier") {
     await interaction.reply({
       content: "Provide either `id` or both `user` and `type`.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -677,7 +678,7 @@ async function handleView(
   if (jobResult.status === "not_found") {
     await interaction.reply({
       content: "Job not found. Check your job number with `/art jobs`.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -688,7 +689,7 @@ async function handleView(
       .join("\n");
     await interaction.reply({
       content: `You have ${jobResult.count} matching jobs for that user+type. Use the job ID instead:\n\n${jobList}\n\nExample: \`/art view id:${jobResult.jobs[0].artist_job_number}\``,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -742,7 +743,7 @@ async function handleLeaderboard(
   const guildId = interaction.guildId;
 
   if (!guildId) {
-    await interaction.reply({ content: "This command must be run in a server.", ephemeral: true });
+    await interaction.reply({ content: "This command must be run in a server.", flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -810,7 +811,7 @@ async function handleAll(
   const guildId = interaction.guildId;
 
   if (!guildId) {
-    await interaction.reply({ content: "This command must be run in a server.", ephemeral: true });
+    await interaction.reply({ content: "This command must be run in a server.", flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -884,7 +885,7 @@ async function handleAssign(
   const guildId = interaction.guildId;
 
   if (!guildId) {
-    await interaction.reply({ content: "This command must be run in a server.", ephemeral: true });
+    await interaction.reply({ content: "This command must be run in a server.", flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -908,7 +909,7 @@ async function handleAssign(
     if (!recipient || !artType) {
       await interaction.reply({
         content: "For scope `user`, you must provide both `recipient` and `type`.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -916,7 +917,7 @@ async function handleAssign(
     if (!description) {
       await interaction.reply({
         content: "For scope `special`, you must provide a `description`.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -996,12 +997,12 @@ async function handleGetStatus(
   const guildId = interaction.guildId;
 
   if (!guildId) {
-    await interaction.reply({ content: "This command must be run in a server.", ephemeral: true });
+    await interaction.reply({ content: "This command must be run in a server.", flags: MessageFlags.Ephemeral });
     return;
   }
 
   await withStep(ctx, "defer", async () => {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   });
 
   const jobs = await withStep(ctx, "fetch_jobs", async () => {
@@ -1061,7 +1062,7 @@ async function handleCancel(
   const guildId = interaction.guildId;
 
   if (!guildId) {
-    await interaction.reply({ content: "This command must be run in a server.", ephemeral: true });
+    await interaction.reply({ content: "This command must be run in a server.", flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -1081,7 +1082,7 @@ async function handleCancel(
   if (!job) {
     await interaction.reply({
       content: `Job #${formatJobNumber(jobNumber)} not found.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -1089,7 +1090,7 @@ async function handleCancel(
   if (job.status === "done") {
     await interaction.reply({
       content: `Job #${formatJobNumber(jobNumber)} is already completed. Cannot cancel completed jobs.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -1097,7 +1098,7 @@ async function handleCancel(
   if (job.status === "cancelled") {
     await interaction.reply({
       content: `Job #${formatJobNumber(jobNumber)} is already cancelled.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -1112,7 +1113,7 @@ async function handleCancel(
   if (!success) {
     await interaction.reply({
       content: "Failed to cancel job. Please try again.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }

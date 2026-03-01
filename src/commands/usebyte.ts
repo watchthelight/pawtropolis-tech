@@ -18,6 +18,7 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  MessageFlags,
   StringSelectMenuBuilder,
   type GuildMember,
 } from "discord.js";
@@ -250,7 +251,7 @@ async function showConfirmation(
   await interaction.reply({
     embeds: [embed],
     components: [buttons],
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   });
 
   logger.info(
@@ -276,7 +277,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   if (!guild || !member) {
     await interaction.reply({
       content: "This command must be run in a server.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -301,7 +302,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
           (userTokens.length > 0
             ? `You currently have: ${userTokens.map((t) => t.tokenRoleName).join(", ")}`
             : "You don't have any byte tokens. Byte tokens can be earned from giveaways, events, level rewards, and the Paw Bank shop."),
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -327,7 +328,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
         "• Event rewards\n" +
         "• Level up rewards\n" +
         "• The Paw Bank shop",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -381,7 +382,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
     await interaction.reply({
       embeds: [embed],
       components: [row],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
 
     logger.info(

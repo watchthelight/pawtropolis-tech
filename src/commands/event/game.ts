@@ -8,7 +8,7 @@
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
-import { ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
+import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags } from "discord.js";
 import { db } from "../../db/db.js";
 import { logger } from "../../lib/logger.js";
 import { type CommandContext, withStep, withSql } from "../../lib/cmdWrap.js";
@@ -63,7 +63,7 @@ export async function handleGameSubcommand(
     default:
       await interaction.reply({
         content: "Unknown game subcommand.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
   }
 }
@@ -436,7 +436,7 @@ async function handleAdd(ctx: CommandContext<ChatInputCommandInteraction>): Prom
   if (!success) {
     await interaction.reply({
       content: "No game night is currently in progress. Use `/event game credit` to credit historical attendance.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -465,7 +465,7 @@ async function handleAdd(ctx: CommandContext<ChatInputCommandInteraction>): Prom
       embed.addFields({ name: "Reason", value: reason });
     }
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   });
 }
 
@@ -480,7 +480,7 @@ async function handleCredit(ctx: CommandContext<ChatInputCommandInteraction>): P
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
     await interaction.reply({
       content: "Invalid date format. Use YYYY-MM-DD (e.g., 2024-01-15)",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -489,13 +489,13 @@ async function handleCredit(ctx: CommandContext<ChatInputCommandInteraction>): P
   if (dateStr > today) {
     await interaction.reply({
       content: "Cannot credit attendance for future dates.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
 
   await withStep(ctx, "defer", async () => {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   });
 
   await withStep(ctx, "credit_attendance", async () => {
@@ -549,13 +549,13 @@ async function handleBump(ctx: CommandContext<ChatInputCommandInteraction>): Pro
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
     await interaction.reply({
       content: "Invalid date format. Use YYYY-MM-DD (e.g., 2024-01-15)",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
 
   await withStep(ctx, "defer", async () => {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   });
 
   const result = await withStep(ctx, "bump_attendance", async () => {
@@ -620,7 +620,7 @@ async function handleResume(ctx: CommandContext<ChatInputCommandInteraction>): P
   if (!status.hasActiveEvent) {
     await interaction.reply({
       content: "No game night session is currently active or recovered.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -638,6 +638,6 @@ async function handleResume(ctx: CommandContext<ChatInputCommandInteraction>): P
       .setColor(0x9B59B6)
       .setTimestamp();
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   });
 }

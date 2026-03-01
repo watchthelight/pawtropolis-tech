@@ -94,7 +94,7 @@ describe("/unblock command", () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: "This command can only be used in a server.",
-        ephemeral: true,
+        flags: 64,
       });
     });
 
@@ -138,7 +138,7 @@ describe("/unblock command", () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: expect.stringContaining("Please provide a user"),
-        ephemeral: true,
+        flags: 64,
       });
     });
 
@@ -161,7 +161,7 @@ describe("/unblock command", () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: expect.stringContaining("Username lookup is not supported"),
-        ephemeral: true,
+        flags: 64,
       });
     });
 

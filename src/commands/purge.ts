@@ -14,6 +14,7 @@ import {
   SlashCommandBuilder,
   EmbedBuilder,
   type ChatInputCommandInteraction,
+  MessageFlags,
   PermissionFlagsBits,
   type TextChannel,
   ChannelType,
@@ -80,7 +81,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   if (!guildId) {
     await interaction.reply({
       content: "This command can only be used in a guild.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -91,7 +92,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   if (!passwordCooldownResult.allowed) {
     await interaction.reply({
       content: `Too many failed attempts. Try again in ${formatCooldown(passwordCooldownResult.remainingMs!)}.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -103,7 +104,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
     logger.error("[purge] RESET_PASSWORD not configured in environment");
     await interaction.reply({
       content: "Password not configured. Contact bot administrator.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -113,7 +114,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
     logger.warn({ userId: interaction.user.id, guildId }, "[purge] incorrect password attempt");
     await interaction.reply({
       content: "Incorrect password.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -124,7 +125,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   if (!cooldownResult.allowed) {
     await interaction.reply({
       content: `Purge on cooldown. Try again in ${formatCooldown(cooldownResult.remainingMs!)}.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -134,7 +135,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   if (!channel || (channel.type !== ChannelType.GuildText && channel.type !== ChannelType.GuildAnnouncement)) {
     await interaction.reply({
       content: "This command can only be used in text channels.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -149,7 +150,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
     if (!permissions?.has(["ManageMessages", "ReadMessageHistory"])) {
       await interaction.reply({
         content: "I don't have ManageMessages and ReadMessageHistory permissions in this channel.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -157,7 +158,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
 
   // Defer reply - this will take time
   await withStep(ctx, "defer", async () => {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   });
 
   const targetCount = count ?? Infinity;

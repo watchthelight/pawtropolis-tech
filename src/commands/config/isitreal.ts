@@ -126,7 +126,7 @@ export async function executeIsitreal(ctx: CommandContext<ChatInputCommandIntera
   }
 
   await withStep(ctx, "defer", async () => {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   });
 
   // Get enabled services for this guild
@@ -322,7 +322,7 @@ export async function handleIsitRealModal(interaction: ModalSubmitInteraction) {
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const info = SERVICE_INFO[service];
   let testResult: { success: boolean; error?: string };

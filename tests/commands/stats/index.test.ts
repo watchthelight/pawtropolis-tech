@@ -179,7 +179,7 @@ describe("stats/index", () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: "Unknown subcommand.",
-        ephemeral: true,
+        flags: 64,
       });
     });
 

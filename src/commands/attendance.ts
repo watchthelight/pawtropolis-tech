@@ -11,6 +11,7 @@
 import {
   ChatInputCommandInteraction,
   EmbedBuilder,
+  MessageFlags,
   SlashCommandBuilder,
 } from "discord.js";
 import { db } from "../db/db.js";
@@ -55,7 +56,7 @@ export async function execute(
   if (!interaction.guild) {
     await interaction.reply({
       content: "This command can only be used in a server.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -72,7 +73,7 @@ export async function execute(
     default:
       await interaction.reply({
         content: "Unknown subcommand.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
   }
 }

@@ -13,6 +13,7 @@ import {
   SlashCommandBuilder,
   EmbedBuilder,
   type ChatInputCommandInteraction,
+  MessageFlags,
   PermissionFlagsBits,
   type GuildMember,
 } from "discord.js";
@@ -49,7 +50,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
 
   // Defer reply (this might take a moment)
   await withStep(ctx, "defer", async () => {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   });
 
   const password = interaction.options.getString("password", true);

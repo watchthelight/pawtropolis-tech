@@ -11,6 +11,7 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import type { ButtonInteraction } from "discord.js";
+import { MessageFlags } from "discord.js";
 import { logger } from "../lib/logger.js";
 import { findCandidateById, validateCandidate, restoreCandidate } from "./dbRecovery.js";
 import { buildValidationEmbed, buildRestoreSummaryEmbed } from "../ui/dbRecoveryCard.js";
@@ -41,7 +42,7 @@ export async function handleDbRecoveryButton(interaction: ButtonInteraction): Pr
     logger.warn({ customId }, "[dbRecovery] Invalid button custom ID format");
     await interaction.reply({
       content: "❌ Invalid button ID format. Please use `/database recover` to generate a new recovery card.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -56,7 +57,7 @@ export async function handleDbRecoveryButton(interaction: ButtonInteraction): Pr
   // Defer immediately - validation and restore ops can take 5-30s depending on
   // DB size and whether PM2 coordination is involved. Discord kills interactions
   // after 3s without acknowledgment.
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
     // Use type guard to safely check if member is a full GuildMember

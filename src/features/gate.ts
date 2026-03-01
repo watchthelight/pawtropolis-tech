@@ -760,7 +760,7 @@ function isGateEntryCandidate(message: Message, botId: string | null) {
  * Returns null if no gate entry found - caller will create a new one.
  */
 async function findExistingGateEntry(channel: GuildTextBasedChannel, botId: string | null) {
-  const pinned = await channel.messages.fetchPinned().catch(() => null);
+  const pinned = await channel.messages.fetchPins().catch(() => null);
   if (pinned) {
     for (const pinnedMessage of pinned.values()) {
       if (isGateEntryCandidate(pinnedMessage, botId)) return pinnedMessage;
@@ -999,7 +999,7 @@ export async function ensureGateEntry(
     if (!message.pinned) {
       await message.pin();
     }
-    const pinnedMessages = await channel.messages.fetchPinned();
+    const pinnedMessages = await channel.messages.fetchPins();
     const pinnedMatch = pinnedMessages.has(message.id);
     result.pinned = pinnedMatch;
     if (!pinnedMatch) {

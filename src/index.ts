@@ -1270,7 +1270,7 @@ client.on("interactionCreate", wrapEvent("interactionCreate", async (interaction
           if (customId.includes("SAMPLE")) {
             await interaction.reply({
               content: "⚠️ This is a sample preview card. Buttons are non-functional.",
-              ephemeral: true,
+              flags: MessageFlags.Ephemeral,
             });
             succeeded = true;
             return;

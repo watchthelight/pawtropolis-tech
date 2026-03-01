@@ -18,6 +18,7 @@ import {
   ChatInputCommandInteraction,
   PermissionFlagsBits,
   EmbedBuilder,
+  MessageFlags,
   Role,
 } from "discord.js";
 import { type CommandContext, withStep, withSql } from "../lib/cmdWrap.js";
@@ -141,7 +142,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   if (!interaction.guild) {
     await interaction.reply({
       content: "This command can only be used in a server.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -157,7 +158,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   if (!hasPermission) {
     await interaction.reply({
       content: "❌ You need the **Manage Roles** permission to use this command.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -195,7 +196,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
     default:
       await interaction.reply({
         content: "Unknown subcommand.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
   }
 }
@@ -211,7 +212,7 @@ async function handleAddLevelTier(ctx: CommandContext<ChatInputCommandInteractio
   if (!check.canManage) {
     await interaction.reply({
       content: `Cannot configure this role: ${check.reason}\n\nPlease choose a role that is below the bot's highest role.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -242,14 +243,14 @@ async function handleAddLevelTier(ctx: CommandContext<ChatInputCommandInteractio
     await withStep(ctx, "reply", async () => {
       await interaction.reply({
         content: `✅ Mapped level **${level}** to role **${role.name}**`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     });
   } catch (err) {
     logger.error({ evt: "add_level_tier_error", err }, "Error adding level tier");
     await interaction.reply({
       content: `❌ Failed to add level tier: ${err}`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 }
@@ -265,7 +266,7 @@ async function handleAddLevelReward(ctx: CommandContext<ChatInputCommandInteract
   if (!check.canManage) {
     await interaction.reply({
       content: `Cannot configure this role: ${check.reason}\n\nPlease choose a role that is below the bot's highest role.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -293,14 +294,14 @@ async function handleAddLevelReward(ctx: CommandContext<ChatInputCommandInteract
     await withStep(ctx, "reply", async () => {
       await interaction.reply({
         content: `✅ Added reward **${role.name}** for level **${level}**`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     });
   } catch (err) {
     logger.error({ evt: "add_level_reward_error", err }, "Error adding level reward");
     await interaction.reply({
       content: `❌ Failed to add level reward: ${err}`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 }
@@ -317,7 +318,7 @@ async function handleAddMovieTier(ctx: CommandContext<ChatInputCommandInteractio
   if (!check.canManage) {
     await interaction.reply({
       content: `Cannot configure this role: ${check.reason}\n\nPlease choose a role that is below the bot's highest role.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -345,14 +346,14 @@ async function handleAddMovieTier(ctx: CommandContext<ChatInputCommandInteractio
     await withStep(ctx, "reply", async () => {
       await interaction.reply({
         content: `✅ Added movie tier **${tierName}** (${moviesRequired} movies) → **${role.name}**`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     });
   } catch (err) {
     logger.error({ evt: "add_movie_tier_error", err }, "Error adding movie tier");
     await interaction.reply({
       content: `❌ Failed to add movie tier: ${err}`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 }
@@ -365,7 +366,7 @@ async function handleList(ctx: CommandContext<ChatInputCommandInteraction>): Pro
   // Defer because we're making multiple DB queries. Discord gives us 3 seconds
   // to respond, and these queries could take longer on large configs.
   await withStep(ctx, "defer", async () => {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   });
 
   const { embed, configuredRoleIds } = await withStep(ctx, "fetch_config", async () => {
@@ -497,12 +498,12 @@ async function handleRemoveLevelTier(ctx: CommandContext<ChatInputCommandInterac
 
         await interaction.reply({
           content: `✅ Removed level tier for level **${level}**`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       } else {
         await interaction.reply({
           content: `⚠️ No level tier found for level **${level}**`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       }
     });
@@ -510,7 +511,7 @@ async function handleRemoveLevelTier(ctx: CommandContext<ChatInputCommandInterac
     logger.error({ evt: "remove_level_tier_error", err }, "Error removing level tier");
     await interaction.reply({
       content: `❌ Failed to remove level tier: ${err}`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 }
@@ -544,12 +545,12 @@ async function handleRemoveLevelReward(ctx: CommandContext<ChatInputCommandInter
 
         await interaction.reply({
           content: `✅ Removed reward **${role.name}** from level **${level}**`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       } else {
         await interaction.reply({
           content: `⚠️ No reward **${role.name}** found for level **${level}**`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       }
     });
@@ -557,7 +558,7 @@ async function handleRemoveLevelReward(ctx: CommandContext<ChatInputCommandInter
     logger.error({ evt: "remove_level_reward_error", err }, "Error removing level reward");
     await interaction.reply({
       content: `❌ Failed to remove level reward: ${err}`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 }
@@ -589,12 +590,12 @@ async function handleRemoveMovieTier(ctx: CommandContext<ChatInputCommandInterac
 
         await interaction.reply({
           content: `✅ Removed movie tier **${tierName}**`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       } else {
         await interaction.reply({
           content: `⚠️ No movie tier found with name **${tierName}**`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       }
     });
@@ -602,7 +603,7 @@ async function handleRemoveMovieTier(ctx: CommandContext<ChatInputCommandInterac
     logger.error({ evt: "remove_movie_tier_error", err }, "Error removing movie tier");
     await interaction.reply({
       content: `❌ Failed to remove movie tier: ${err}`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 }
@@ -619,7 +620,7 @@ async function handleAddGameTier(ctx: CommandContext<ChatInputCommandInteraction
   if (!check.canManage) {
     await interaction.reply({
       content: `Cannot configure this role: ${check.reason}\n\nPlease choose a role that is below the bot's highest role.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -647,14 +648,14 @@ async function handleAddGameTier(ctx: CommandContext<ChatInputCommandInteraction
     await withStep(ctx, "reply", async () => {
       await interaction.reply({
         content: `✅ Added game tier **${tierName}** (${gamesRequired} game nights) → **${role.name}**`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     });
   } catch (err) {
     logger.error({ evt: "add_game_tier_error", err }, "Error adding game tier");
     await interaction.reply({
       content: `❌ Failed to add game tier: ${err}`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 }
@@ -686,12 +687,12 @@ async function handleRemoveGameTier(ctx: CommandContext<ChatInputCommandInteract
 
         await interaction.reply({
           content: `✅ Removed game tier **${tierName}**`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       } else {
         await interaction.reply({
           content: `⚠️ No game tier found with name **${tierName}**`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       }
     });
@@ -699,7 +700,7 @@ async function handleRemoveGameTier(ctx: CommandContext<ChatInputCommandInteract
     logger.error({ evt: "remove_game_tier_error", err }, "Error removing game tier");
     await interaction.reply({
       content: `❌ Failed to remove game tier: ${err}`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 }

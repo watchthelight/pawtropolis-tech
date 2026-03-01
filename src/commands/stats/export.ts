@@ -37,7 +37,7 @@ export async function handleExport(
   if (!interaction.guildId) {
     await interaction.reply({
       content: "This command must be run in a guild.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }

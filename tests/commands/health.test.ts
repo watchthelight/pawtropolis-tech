@@ -180,7 +180,7 @@ describe("/health command", () => {
       process.uptime = originalUptime;
 
       const replyCall = (interaction.reply as any).mock.calls[0][0];
-      // Should NOT have ephemeral: true
+      // Should NOT have flags: 64
       expect(replyCall.ephemeral).toBeUndefined();
     });
   });

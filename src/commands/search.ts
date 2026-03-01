@@ -15,6 +15,7 @@ import {
   ChatInputCommandInteraction,
   SlashCommandBuilder,
   EmbedBuilder,
+  MessageFlags,
 } from "discord.js";
 import { db } from "../db/db.js";
 import { shortCode } from "../lib/ids.js";
@@ -131,7 +132,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   if (!interaction.guildId || !interaction.guild) {
     await interaction.reply({
       content: "❌ This command can only be used in a server.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -153,7 +154,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
       await interaction.reply({
         content:
           "❌ You don't have permission to use this command. This command is restricted to reviewers, staff, and server administrators.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
 
       logger.warn(
@@ -172,7 +173,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
     if (!cooldownResult.allowed) {
       await interaction.reply({
         content: `This command is on cooldown. Try again in ${formatCooldown(cooldownResult.remainingMs!)}.`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return false;
     }
@@ -191,7 +192,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   if (!targetUser && !queryString) {
     await interaction.reply({
       content: "❌ Please provide either a user or a search query (user ID or username).",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }

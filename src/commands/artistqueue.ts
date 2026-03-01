@@ -22,6 +22,7 @@ import {
   ChatInputCommandInteraction,
   SlashCommandBuilder,
   EmbedBuilder,
+  MessageFlags,
   PermissionFlagsBits,
 } from "discord.js";
 import { type CommandContext, withStep, withSql } from "../lib/cmdWrap.js";
@@ -157,7 +158,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
     default:
       // This should be unreachable if the SlashCommandBuilder is in sync
       // with the switch cases. Famous last words.
-      await interaction.reply({ content: "Unknown subcommand.", ephemeral: true });
+      await interaction.reply({ content: "Unknown subcommand.", flags: MessageFlags.Ephemeral });
   }
 }
 
@@ -241,7 +242,7 @@ async function handleSync(
 ): Promise<void> {
   const guild = interaction.guild;
   if (!guild) {
-    await interaction.reply({ content: "This command must be run in a server.", ephemeral: true });
+    await interaction.reply({ content: "This command must be run in a server.", flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -250,7 +251,7 @@ async function handleSync(
   if (!cooldownResult.allowed) {
     await interaction.reply({
       content: `Queue sync is on cooldown. Try again in ${formatCooldown(cooldownResult.remainingMs!)}.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -335,7 +336,7 @@ async function handleMove(
 ): Promise<void> {
   const guildId = interaction.guildId;
   if (!guildId) {
-    await interaction.reply({ content: "This command must be run in a server.", ephemeral: true });
+    await interaction.reply({ content: "This command must be run in a server.", flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -351,7 +352,7 @@ async function handleMove(
   if (!artist) {
     await interaction.reply({
       content: `<@${user.id}> is not in the artist queue.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -369,7 +370,7 @@ async function handleMove(
   if (!success) {
     // Unhelpfully vague error message. The store function doesn't tell us why
     // it failed (position out of range? DB error?). Could be improved.
-    await interaction.reply({ content: "Failed to move artist.", ephemeral: true });
+    await interaction.reply({ content: "Failed to move artist.", flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -396,7 +397,7 @@ async function handleSkip(
 ): Promise<void> {
   const guildId = interaction.guildId;
   if (!guildId) {
-    await interaction.reply({ content: "This command must be run in a server.", ephemeral: true });
+    await interaction.reply({ content: "This command must be run in a server.", flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -414,7 +415,7 @@ async function handleSkip(
   if (!artist) {
     await interaction.reply({
       content: `<@${user.id}> is not in the artist queue.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -422,7 +423,7 @@ async function handleSkip(
   if (artist.skipped) {
     await interaction.reply({
       content: `<@${user.id}> is already skipped.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -434,7 +435,7 @@ async function handleSkip(
   });
 
   if (!success) {
-    await interaction.reply({ content: "Failed to skip artist.", ephemeral: true });
+    await interaction.reply({ content: "Failed to skip artist.", flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -462,7 +463,7 @@ async function handleUnskip(
 ): Promise<void> {
   const guildId = interaction.guildId;
   if (!guildId) {
-    await interaction.reply({ content: "This command must be run in a server.", ephemeral: true });
+    await interaction.reply({ content: "This command must be run in a server.", flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -477,7 +478,7 @@ async function handleUnskip(
   if (!artist) {
     await interaction.reply({
       content: `<@${user.id}> is not in the artist queue.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -485,7 +486,7 @@ async function handleUnskip(
   if (!artist.skipped) {
     await interaction.reply({
       content: `<@${user.id}> is not currently skipped.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -497,7 +498,7 @@ async function handleUnskip(
   });
 
   if (!success) {
-    await interaction.reply({ content: "Failed to unskip artist.", ephemeral: true });
+    await interaction.reply({ content: "Failed to unskip artist.", flags: MessageFlags.Ephemeral });
     return;
   }
 

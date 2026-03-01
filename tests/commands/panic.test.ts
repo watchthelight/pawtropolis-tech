@@ -73,7 +73,7 @@ describe("/panic command", () => {
 
       expect(interaction.reply).toHaveBeenCalledWith({
         content: "This command can only be used in a server.",
-        ephemeral: true,
+        flags: 64,
       });
     });
 
@@ -223,7 +223,7 @@ describe("/panic command", () => {
 
         expect(interaction.reply).toHaveBeenCalledWith({
           content: expect.stringContaining("Panic mode is OFF"),
-          ephemeral: true,
+          flags: 64,
         });
       });
 
@@ -252,7 +252,7 @@ describe("/panic command", () => {
 
         expect(interaction.reply).toHaveBeenCalledWith({
           content: expect.stringMatching(/Panic mode is ACTIVE.*mod-456/s),
-          ephemeral: true,
+          flags: 64,
         });
       });
 
@@ -281,7 +281,7 @@ describe("/panic command", () => {
 
         expect(interaction.reply).toHaveBeenCalledWith({
           content: expect.stringContaining("Panic mode is ACTIVE"),
-          ephemeral: true,
+          flags: 64,
         });
       });
     });

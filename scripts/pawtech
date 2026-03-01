@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Pawtropolis Tech CLI wrapper
+# Runs the start.sh script from the project directory
+
+PAWTECH_DIR="/Users/bash/Documents/pawtropolis-tech"
+
+cd "$PAWTECH_DIR" || exit 1
+exec "./scripts/start.sh" "$@"

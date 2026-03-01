@@ -8,7 +8,7 @@
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
-import type { ChatInputCommandInteraction, GuildMember } from "discord.js";
+import { type ChatInputCommandInteraction, type GuildMember, MessageFlags } from "discord.js";
 import { type CommandContext, withStep } from "../../lib/cmdWrap.js";
 import { ROLE_IDS, hasAnyRole, hasRoleOrAbove, shouldBypass } from "../../lib/roles.js";
 import { data } from "./data.js";
@@ -23,7 +23,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   if (!interaction.guild) {
     await interaction.reply({
       content: "This command can only be used in a server.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -45,7 +45,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
     // No permission - show error
     await interaction.reply({
       content: "You need **Event Host**, **Events Manager**, or **Moderator+** to use this command.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return false;
   });
@@ -66,7 +66,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
       default:
         await interaction.reply({
           content: "Unknown subcommand group.",
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
     }
   });
