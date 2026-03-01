@@ -78,14 +78,12 @@
 				<a
 					href={item.href}
 					aria-current={active ? 'page' : undefined}
-					class="flex items-center px-4 py-2 text-sm transition-colors"
-					class:border-l-[3px]={active}
+					class="flex items-center border-l-[3px] px-4 py-2 text-sm transition-colors"
 					class:border-l-[var(--accent)]={active}
 					class:text-[var(--text-primary)]={active}
 					class:font-medium={active}
 					class:bg-[var(--surface)]={active}
 					class:text-[var(--text-secondary)]={!active}
-					class:border-l-[3px]={!active}
 					class:border-l-transparent={!active}
 					class:hover:bg-[var(--surface-raised)]={!active}
 					class:hover:text-[var(--text-primary)]={!active}
