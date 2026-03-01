@@ -73,3 +73,13 @@ body {
 ::-webkit-scrollbar-thumb:hover {
 	background: var(--text-secondary);
 }
+
+/* Respect prefers-reduced-motion — disable all transitions and animations */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		transition-duration: 0s !important;
+		animation-duration: 0s !important;
+	}
+}

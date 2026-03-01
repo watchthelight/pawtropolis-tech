@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onDestroy } from 'svelte';
+	import { onDestroy, untrack } from 'svelte';
 	import gsap from 'gsap';
 	import { DURATIONS, EASINGS, prefersReducedMotion } from '$lib/motion';
 
@@ -22,7 +22,7 @@
 		}
 
 		activeTween?.kill();
-		tweenTarget.val = displayValue;
+		tweenTarget.val = untrack(() => displayValue);
 		activeTween = gsap.to(tweenTarget, {
 			val: value,
 			duration: DURATIONS.COUNTER / 1000,

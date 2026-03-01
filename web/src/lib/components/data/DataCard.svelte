@@ -34,6 +34,7 @@
 	onmouseenter={(e) => { if (clickable) e.currentTarget.style.boxShadow = hoverShadowVar[elevation]; }}
 	onmouseleave={(e) => { if (clickable) e.currentTarget.style.boxShadow = shadowVar[elevation]; }}
 	onclick={() => { if (clickable && onclick) onclick(); }}
+	onkeydown={(e) => { if (clickable && onclick && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onclick(); } }}
 	role={clickable ? 'button' : undefined}
 	tabindex={clickable ? 0 : undefined}
 >
