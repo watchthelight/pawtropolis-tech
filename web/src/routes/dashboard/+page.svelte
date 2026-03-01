@@ -11,7 +11,7 @@
 		Dashboard tier: <span class="text-[var(--accent)] font-medium">{user.tier}</span>
 	</p>
 
-	<div class="bg-[var(--bg-card)] rounded-lg border border-[var(--border)] p-6">
+	<div class="bg-[var(--surface)] rounded-lg border border-[var(--border)] p-6">
 		<div class="flex items-center gap-4 mb-4">
 			<img
 				src={user.avatarUrl}
@@ -20,7 +20,7 @@
 			/>
 			<div>
 				<p class="text-lg font-medium text-[var(--text-primary)]">{user.globalName || user.username}</p>
-				<p class="text-sm text-[var(--text-muted)]">@{user.username}</p>
+				<p class="text-sm text-[var(--text-secondary)]">@{user.username}</p>
 			</div>
 		</div>
 		<p class="text-sm text-[var(--text-secondary)]">
