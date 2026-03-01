@@ -4,7 +4,7 @@ import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user || !hasMinTier(locals.user.tier, 'gk')) {
-		error(403, 'Access denied');
+		error(403, "You don't have permission to view this page.");
 	}
 	return {};
 };

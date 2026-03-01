@@ -13,19 +13,22 @@
 	// Inline tier check — $lib/server/roles.ts can't be imported client-side
 	const TIER_ORDER = ['owner', 'cm', 'sa', 'admin', 'sm', 'mod', 'jm', 'gk', 'viewer', 'none'];
 	function hasMinTier(userTier: string, minTier: string): boolean {
-		return TIER_ORDER.indexOf(userTier) <= TIER_ORDER.indexOf(minTier);
+		const userIdx = TIER_ORDER.indexOf(userTier);
+		const minIdx = TIER_ORDER.indexOf(minTier);
+		if (userIdx === -1 || minIdx === -1) return false;
+		return userIdx <= minIdx;
 	}
 
 	const TIER_LABELS: Record<string, string> = {
 		owner: 'Owner / Dev',
 		cm: 'Community Manager',
-		sa: 'Senior Admin',
+		sa: 'Senior Administrator',
 		admin: 'Administrator',
-		sm: 'Senior Mod',
+		sm: 'Senior Moderator',
 		mod: 'Moderator',
-		jm: 'Junior Mod',
+		jm: 'Junior Moderator',
 		gk: 'Gatekeeper',
-		viewer: 'View Only',
+		viewer: 'Mod Team (View Only)',
 		none: 'No Access'
 	};
 
@@ -57,8 +60,8 @@
 	<div class="flex items-center gap-3 p-4 border-b border-[var(--border)]">
 		<img
 			src={user.avatarUrl}
-			alt={user.username}
-			class="w-10 h-10 rounded-full ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--bg)]"
+			alt={user.globalName || user.username}
+			class="w-12 h-12 rounded-full ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--bg)]"
 		/>
 		<div class="min-w-0">
 			<p class="truncate text-sm font-medium text-[var(--text-primary)]">

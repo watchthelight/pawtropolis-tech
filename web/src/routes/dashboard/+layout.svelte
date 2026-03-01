@@ -11,7 +11,7 @@
 </script>
 
 <div class="flex min-h-screen bg-[var(--bg)]">
-	<aside class="w-60 shrink-0">
+	<aside class="sticky top-0 h-screen w-60 shrink-0 overflow-y-auto">
 		<Nav {user} />
 	</aside>
 
