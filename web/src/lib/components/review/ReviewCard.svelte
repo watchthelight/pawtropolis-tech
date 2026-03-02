@@ -1,0 +1,155 @@
+<script lang="ts">
+	import { prefersReducedMotion } from '$lib/motion';
+
+	let { applicantName, status, submittedAt, claimedBy, riskScore, selected = false, onclick }: {
+		applicantName: string;
+		status: string;
+		submittedAt: number | null;
+		claimedBy: string | null;
+		riskScore: number;
+		selected?: boolean;
+		onclick?: () => void;
+	} = $props();
+
+	function relativeTime(ms: number | null): string {
+		if (!ms) return '';
+		const diff = Date.now() - ms;
+		const mins = Math.floor(diff / 60_000);
+		if (mins < 1) return 'just now';
+		if (mins < 60) return `${mins}m ago`;
+		const hours = Math.floor(mins / 60);
+		if (hours < 24) return `${hours}h ago`;
+		const days = Math.floor(hours / 24);
+		return `${days}d ago`;
+	}
+
+	function riskColor(score: number): string {
+		if (score >= 50) return 'var(--status-danger)';
+		if (score >= 20) return 'var(--status-warning)';
+		return 'var(--status-success)';
+	}
+
+	const statusLabel: Record<string, string> = {
+		submitted: 'Pending',
+		needs_info: 'Needs Info'
+	};
+</script>
+
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<div
+	class="review-card"
+	class:review-card-selected={selected}
+	role="button"
+	tabindex="0"
+	{onclick}
+	onkeydown={(e) => { if (onclick && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onclick(); } }}
+	onmouseenter={(e) => {
+		if (!selected && !prefersReducedMotion()) {
+			e.currentTarget.style.transform = 'translateY(-1px)';
+		}
+	}}
+	onmouseleave={(e) => {
+		e.currentTarget.style.transform = '';
+	}}
+>
+	<div class="review-card-top">
+		<span class="review-card-name">{applicantName}</span>
+		<span class="review-card-time">{relativeTime(submittedAt)}</span>
+	</div>
+
+	<div class="review-card-bottom">
+		<span class="review-card-status">
+			<span class="status-dot" style:background-color={status === 'needs_info' ? 'var(--status-warning)' : 'var(--accent)'}></span>
+			{statusLabel[status] ?? status}
+		</span>
+
+		{#if riskScore > 0}
+			<span class="review-card-risk" style:color={riskColor(riskScore)}>
+				{riskScore}%
+			</span>
+		{/if}
+	</div>
+
+	{#if claimedBy}
+		<div class="review-card-claimed">Claimed</div>
+	{/if}
+</div>
+
+<style>
+	.review-card {
+		padding: 0.75rem 1rem;
+		border-radius: var(--radius-md);
+		border: 1px solid var(--border-holdfast);
+		background: var(--surface);
+		cursor: pointer;
+		transition: all 150ms var(--ease-smooth);
+	}
+
+	.review-card:hover {
+		background: var(--surface-raised);
+		box-shadow: var(--glow-hover);
+	}
+
+	.review-card-selected {
+		border-left: 3px solid var(--accent);
+		background: var(--surface-raised);
+		box-shadow: var(--glow-accent);
+	}
+
+	.review-card-top {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		margin-bottom: 0.25rem;
+	}
+
+	.review-card-name {
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: var(--text-primary);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.review-card-time {
+		font-size: 0.7rem;
+		color: var(--text-secondary);
+		flex-shrink: 0;
+		margin-left: 0.5rem;
+	}
+
+	.review-card-bottom {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		font-size: 0.75rem;
+	}
+
+	.review-card-status {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+		color: var(--text-secondary);
+	}
+
+	.status-dot {
+		width: 0.375rem;
+		height: 0.375rem;
+		border-radius: 50%;
+		flex-shrink: 0;
+	}
+
+	.review-card-risk {
+		font-weight: 600;
+		font-size: 0.7rem;
+	}
+
+	.review-card-claimed {
+		font-size: 0.65rem;
+		color: var(--text-secondary);
+		margin-top: 0.25rem;
+		opacity: 0.7;
+	}
+</style>
