@@ -19,8 +19,9 @@ class EventBus {
 		for (const callback of this.subscribers) {
 			try {
 				callback(event);
-			} catch {
+			} catch (err) {
 				// Subscriber errors must not break other subscribers
+				console.error('[EventBus] Subscriber error during', event.type, err);
 			}
 		}
 	}

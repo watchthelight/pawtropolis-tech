@@ -65,8 +65,13 @@ function broadcast(event: SSEEvent): void {
 	if (clients.size === 0) return;
 
 	const minTier = getMinTierForEvent(event.type);
-	const sseData = `data: ${JSON.stringify(event)}\n\n`;
 	const isRoleChanged = event.type === 'role:changed';
+
+	// Fail-closed: unknown event domains (minTier === 'none') are dropped
+	// unless they're role:changed which uses per-user filtering instead
+	if (minTier === 'none' && !isRoleChanged) return;
+
+	const sseData = `data: ${JSON.stringify(event)}\n\n`;
 
 	for (const client of clients.values()) {
 		// Special case: role:changed only goes to the affected user
