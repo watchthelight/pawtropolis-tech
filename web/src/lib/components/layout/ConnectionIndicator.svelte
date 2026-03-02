@@ -6,7 +6,7 @@
 		connected: { color: 'var(--status-success)', label: 'Connected', pulse: false },
 		connecting: { color: 'var(--status-warning)', label: 'Connecting...', pulse: false },
 		reconnecting: { color: 'var(--status-warning)', label: 'Reconnecting...', pulse: true },
-		disconnected: { color: 'var(--status-error)', label: 'Disconnected', pulse: false }
+		disconnected: { color: 'var(--status-danger)', label: 'Disconnected', pulse: false }
 	} as const;
 
 	let config = $derived(STATUS_CONFIG[getConnectionStatus()]);
@@ -24,11 +24,11 @@
 		{config.label}
 	</div>
 	{#if !botOnline}
-		<div class="flex items-center gap-2 text-xs text-[var(--status-error)]">
+		<div class="flex items-center gap-2 text-xs text-[var(--status-danger)]">
 			<span
 				class="status-dot"
-				style:background-color="var(--status-error)"
-				style:box-shadow="0 0 6px var(--status-error), 0 0 2px var(--status-error)"
+				style:background-color="var(--status-danger)"
+				style:box-shadow="0 0 6px var(--status-danger), 0 0 2px var(--status-danger)"
 			></span>
 			Bot offline
 		</div>

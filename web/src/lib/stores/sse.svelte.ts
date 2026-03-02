@@ -156,11 +156,11 @@ function createConnection(): void {
 
 /** Open the SSE connection. Safe to call multiple times. */
 export function connect(): void {
-	if (eventSource) return; // already connected or connecting
+	if (eventSource || reconnectTimer) return; // already connected, connecting, or reconnect pending
 	createConnection();
 }
 
-/** Close the SSE connection and clean up all timers. */
+/** Close the SSE connection and clean up all state. */
 export function disconnect(): void {
 	if (reconnectTimer) {
 		clearTimeout(reconnectTimer);
@@ -175,4 +175,5 @@ export function disconnect(): void {
 	_connectionStatus = 'disconnected';
 	backoffMs = MIN_BACKOFF;
 	hasConnectedBefore = false;
+	reconnectCallbacks.clear();
 }

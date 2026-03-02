@@ -60,11 +60,15 @@ function handleReconnect(): void {
 /**
  * Start monitoring bot health via SSE event activity.
  * Call from dashboard layout on mount.
+ *
+ * Note: inactivity timer only starts after the first real event arrives.
+ * On a quiet server with no events, bot stays "online" (default) — the
+ * absence of events doesn't mean the bot is down, just that nothing happened.
  */
 export function startMonitoring(): void {
 	subscribe('*', handleEvent);
 	onReconnect(handleReconnect);
-	resetInactivityTimer();
+	// Don't start inactivity timer here — wait for first event in handleEvent()
 }
 
 /**
