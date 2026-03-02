@@ -1,6 +1,6 @@
 <script lang="ts">
 	let { data } = $props();
-	const { queue, pendingCount } = data;
+	const { tabCounts } = data;
 </script>
 
 <!-- No application selected — show placeholder with queue stats -->
@@ -8,16 +8,16 @@
 	<p class="detail-prompt">Select an application to review</p>
 	<div class="detail-stats">
 		<div class="detail-stat">
-			<span class="detail-stat-value">{pendingCount}</span>
-			<span class="detail-stat-label">Pending</span>
+			<span class="detail-stat-value">{tabCounts.unclaimed}</span>
+			<span class="detail-stat-label">Unclaimed</span>
 		</div>
 		<div class="detail-stat">
-			<span class="detail-stat-value">{queue.length - pendingCount}</span>
-			<span class="detail-stat-label">Claimed</span>
+			<span class="detail-stat-value">{tabCounts.mine}</span>
+			<span class="detail-stat-label">My Claims</span>
 		</div>
 		<div class="detail-stat">
-			<span class="detail-stat-value">{queue.length}</span>
-			<span class="detail-stat-label">Total</span>
+			<span class="detail-stat-value">{tabCounts.all}</span>
+			<span class="detail-stat-label">Total Open</span>
 		</div>
 	</div>
 </div>
