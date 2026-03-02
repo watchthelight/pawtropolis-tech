@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { hasMinTier } from '$lib/server/roles';
-import { getReviewQueue } from '$lib/server/queries/reviews';
+import { getReviewQueue, getReviewHistory } from '$lib/server/queries/reviews';
 import type { LayoutServerLoad } from './$types';
 
 const GUILD_ID = process.env.GUILD_ID!;
@@ -11,7 +11,21 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 	}
 
 	const queue = getReviewQueue(GUILD_ID);
-	const pendingCount = queue.filter((item) => !item.claimedBy).length;
+	const history = getReviewHistory(GUILD_ID, 50);
 
-	return { queue, pendingCount, userId: locals.user.id };
+	const userId = locals.user.id;
+	const unclaimed = queue.filter((item) => !item.claimedBy).length;
+	const myClaims = queue.filter((item) => item.claimedBy === userId).length;
+
+	return {
+		queue,
+		history,
+		userId,
+		tabCounts: {
+			unclaimed,
+			mine: myClaims,
+			all: queue.length,
+			history: history.length
+		}
+	};
 };
