@@ -40,7 +40,7 @@
 	</div>
 
 	<!-- Stat cards — all tiers see these 3 -->
-	<div class="grid grid-cols-3 gap-4">
+	<div class="grid grid-cols-3 gap-[var(--space-section)]">
 		<DataCard elevation="sm">
 			<StatNumber value={metrics.pending} label="Pending" />
 		</DataCard>
@@ -54,7 +54,7 @@
 
 	<!-- Mod+ stat cards -->
 	{#if metrics.openModmail != null}
-		<div class="mt-4 grid grid-cols-2 gap-4">
+		<div class="mt-[var(--space-section)] grid grid-cols-2 gap-[var(--space-section)]">
 			<DataCard elevation="sm">
 				<StatNumber value={metrics.openModmail} label="Open Modmail" />
 			</DataCard>
@@ -66,7 +66,7 @@
 
 	<!-- Empty state when no pending applications -->
 	{#if metrics.pending === 0}
-		<div class="mt-6">
+		<div class="mt-[var(--space-section)]">
 			<EmptyState message="All clear" subtitle="No pending applications" />
 		</div>
 	{/if}
