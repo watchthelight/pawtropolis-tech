@@ -17,7 +17,7 @@
 </script>
 
 <SpringReveal stagger={30}>
-	<PageHeader title="Reviews" subtitle="Application review queue" badge={queue.length} />
+	<PageHeader title="Reviews" subtitle="Application review queue" badge={pendingCount} />
 
 	{#if queue.length === 0}
 		<EmptyState message="All clear" subtitle="No pending applications" />
