@@ -7,10 +7,17 @@ const dbPath =
 	process.env.DB_PATH ||
 	path.resolve(process.cwd(), "..", "data", "data.db");
 
-export const db = new Database(dbPath, { fileMustExist: true });
+let _db: Database.Database | undefined;
 
-db.pragma("journal_mode = WAL");
-db.pragma("synchronous = NORMAL");
-db.pragma("foreign_keys = ON");
-db.pragma(`busy_timeout = ${DB_BUSY_TIMEOUT_MS}`);
-db.pragma("query_only = ON");
+/** Lazy-initialized database connection. Deferred so SSR builds don't require a valid DB file. */
+export function db(): Database.Database {
+	if (!_db) {
+		_db = new Database(dbPath, { fileMustExist: true });
+		_db.pragma("journal_mode = WAL");
+		_db.pragma("synchronous = NORMAL");
+		_db.pragma("foreign_keys = ON");
+		_db.pragma(`busy_timeout = ${DB_BUSY_TIMEOUT_MS}`);
+		_db.pragma("query_only = ON");
+	}
+	return _db;
+}
