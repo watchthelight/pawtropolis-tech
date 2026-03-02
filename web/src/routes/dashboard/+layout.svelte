@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { applyTheme } from '$lib/stores/theme';
+	import { connect, disconnect, onReconnect, offReconnect } from '$lib/stores/sse.svelte';
+	import { startMonitoring, stopMonitoring } from '$lib/stores/bot-status.svelte';
+	import { invalidateAll } from '$app/navigation';
 	import Nav from '$lib/components/layout/Nav.svelte';
 
 	let { data, children } = $props();
@@ -7,6 +10,18 @@
 
 	$effect(() => {
 		applyTheme(user.accentColor);
+	});
+
+	$effect(() => {
+		const refreshOnReconnect = () => invalidateAll();
+		connect();
+		startMonitoring();
+		onReconnect(refreshOnReconnect);
+		return () => {
+			offReconnect(refreshOnReconnect);
+			stopMonitoring();
+			disconnect();
+		};
 	});
 </script>
 

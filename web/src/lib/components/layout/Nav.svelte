@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import ConnectionIndicator from './ConnectionIndicator.svelte';
 
 	let { user }: {
 		user: {
@@ -99,10 +100,7 @@
 
 	<!-- Footer section -->
 	<div class="border-t border-[var(--border)] p-4 space-y-3">
-		<div class="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
-			<span class="inline-block w-2 h-2 rounded-full bg-[var(--status-success)]"></span>
-			Connected
-		</div>
+		<ConnectionIndicator />
 		<a
 			href="/auth/logout"
 			class="block text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
