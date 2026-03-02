@@ -30,7 +30,7 @@
 		<Nav {user} />
 	</aside>
 
-	<main class="flex-1 p-6">
+	<main class="flex-1 p-8">
 		{@render children()}
 	</main>
 </div>
