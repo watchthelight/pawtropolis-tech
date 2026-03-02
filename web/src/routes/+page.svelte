@@ -70,7 +70,7 @@
 
 	<!-- City skyline silhouette -->
 	<div class="skyline" aria-hidden="true">
-		<svg viewBox="0 0 1440 200" preserveAspectRatio="none" fill="oklch(18% 0.015 var(--hue))">
+		<svg viewBox="0 0 1440 200" preserveAspectRatio="none" style="fill: oklch(18% 0.015 var(--hue))">
 			<path d="M0 200V160h40v-20h20v20h30V120h15v-30h10v30h15v40h25V100h10V80h10v20h10v40h20V90h8V60h8v30h8v50h30v-30h20v-20h15v20h20v30h40V80h10V50h10v30h10v60h25V100h15V70h10v30h15v40h35v-50h20v-15h10v15h20v50h30V110h10V80h10v30h10v30h50v-40h15V90h10v20h15v40h20V100h20V75h10v25h20v50h30v-30h10V90h10v30h10v30h25V80h15V50h10v30h15v40h30V120h20V90h10v30h20v50h40V130h10V100h10v30h10v40h30v-50h10V90h10v30h10v50h20v-20h30v-30h10v30h30v20h40V140h10V110h10v30h10v60z"/>
 		</svg>
 	</div>
