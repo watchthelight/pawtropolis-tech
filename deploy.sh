@@ -53,8 +53,8 @@ fi
 
 # Restart only
 if [ "$RESTART_ONLY" = true ]; then
-  echo "Restarting PM2 process..."
-  ssh ${REMOTE_USER}@${REMOTE_HOST} "pm2 restart ${PM2_PROCESS}"
+  echo "Restarting PM2 processes..."
+  ssh ${REMOTE_USER}@${REMOTE_HOST} "cd ${REMOTE_PATH} && pm2 startOrRestart ecosystem.config.cjs"
   echo "Process restarted successfully!"
   exit 0
 fi
@@ -70,9 +70,11 @@ else
   npm test
 fi
 
-# Step 2: Build
+# Step 2: Build bot + web
 echo "Step 2/9: Building project..."
 npm run build
+echo "Step 2b/9: Building web dashboard..."
+(cd web && npm run build)
 
 # Step 3: Inject build metadata
 # ─────────────────────────────────────────────────────────────────────────────
@@ -93,7 +95,7 @@ npx tsx scripts/inject-build-info.ts
 # Step 4: Create tarball
 # Include .env.build so the build metadata is available on the server
 echo "Step 4/9: Creating deployment tarball..."
-tar -czf ${TARBALL} dist migrations scripts assets package.json package-lock.json .env.build
+tar -czf ${TARBALL} dist migrations scripts assets package.json package-lock.json .env.build ecosystem.config.cjs web/build web/package.json web/package-lock.json
 
 # Step 5: Upload to remote
 echo "Step 5/9: Uploading to remote server..."
@@ -101,7 +103,7 @@ scp ${TARBALL} ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}/
 
 # Step 6: Extract and install on remote
 echo "Step 6/9: Extracting and installing on remote..."
-ssh ${REMOTE_USER}@${REMOTE_HOST} "cd ${REMOTE_PATH} && tar -xzf ${TARBALL} && npm ci --omit=dev"
+ssh ${REMOTE_USER}@${REMOTE_HOST} "cd ${REMOTE_PATH} && tar -xzf ${TARBALL} && npm ci --omit=dev && cd web && npm ci --omit=dev"
 
 # Step 6.5: Run migrations on remote
 echo "Step 6.5/9: Running migrations on remote..."
@@ -119,14 +121,14 @@ npx dotenvx run -- tsx scripts/commands.ts --all || {
 }
 
 # Step 7: Restart PM2
-echo "Step 7/9: Restarting PM2 process..."
-ssh ${REMOTE_USER}@${REMOTE_HOST} "pm2 restart ${PM2_PROCESS}"
+echo "Step 7/9: Restarting PM2 processes..."
+ssh ${REMOTE_USER}@${REMOTE_HOST} "cd ${REMOTE_PATH} && pm2 startOrRestart ecosystem.config.cjs"
 
 # Step 8: Post-deploy health check
 echo "Step 8/9: Waiting for process to stabilize..."
 sleep 3
 echo "Checking PM2 process status..."
-ssh ${REMOTE_USER}@${REMOTE_HOST} "pm2 show ${PM2_PROCESS} | grep -E 'status|restarts|uptime'" || {
+ssh ${REMOTE_USER}@${REMOTE_HOST} "pm2 show pawtropolis | grep -E 'status|restarts|uptime' && echo '---' && pm2 show pawtropolis-web | grep -E 'status|restarts|uptime'" || {
   echo "WARNING: Could not verify process status. Check logs manually."
 }
 
@@ -141,7 +143,7 @@ rm ${TARBALL}
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║                                                              ║"
-echo "║   ✅ DEPLOYMENT COMPLETE - BOT IS ONLINE AND RUNNING ✅     ║"
+echo "║   ✅ DEPLOYMENT COMPLETE - BOT + WEB DEPLOYED ✅             ║"
 echo "║                                                              ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
@@ -150,5 +152,5 @@ echo "::DEPLOY_DONE::"
 # Show logs if requested
 if [ "$SHOW_LOGS" = true ]; then
   echo "Showing recent logs..."
-  ssh ${REMOTE_USER}@${REMOTE_HOST} "pm2 logs ${PM2_PROCESS} --lines 50"
+  ssh ${REMOTE_USER}@${REMOTE_HOST} "pm2 logs --lines 50"
 fi
