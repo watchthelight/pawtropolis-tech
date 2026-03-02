@@ -81,7 +81,7 @@ export function getApplicationDetail(appId: string): ApplicationDetail | null {
 			FROM user_snapshot
 		) u ON u.guild_id = a.guild_id AND u.user_id = a.user_id AND u.rn = 1
 		LEFT JOIN review_claim c ON a.id = c.app_id
-		LEFT JOIN avatar_scan s ON a.id = s.app_id
+		LEFT JOIN avatar_scan s ON a.id = s.application_id
 		WHERE a.id = ?
 	`).get(appId) as AppDetailRow | undefined;
 
@@ -130,7 +130,7 @@ export function getReviewQueue(guildId: string): ReviewQueueItem[] {
 			FROM user_snapshot
 		) u ON u.guild_id = a.guild_id AND u.user_id = a.user_id AND u.rn = 1
 		LEFT JOIN review_claim c ON a.id = c.app_id
-		LEFT JOIN avatar_scan s ON a.id = s.app_id
+		LEFT JOIN avatar_scan s ON a.id = s.application_id
 		WHERE a.guild_id = ? AND a.status IN ('submitted', 'needs_info')
 		ORDER BY a.submitted_at DESC
 	`).all(guildId) as ReviewQueueRow[];
