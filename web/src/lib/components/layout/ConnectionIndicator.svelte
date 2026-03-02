@@ -16,19 +16,17 @@
 <div class="space-y-1">
 	<div class="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
 		<span
-			class="status-dot"
+			class="status-dot glow"
 			class:pulse-glow={config.pulse}
-			style:background-color={config.color}
-			style:box-shadow="0 0 6px {config.color}, 0 0 2px {config.color}"
+			style:--dot-color={config.color}
 		></span>
 		{config.label}
 	</div>
 	{#if !botOnline}
 		<div class="flex items-center gap-2 text-xs text-[var(--status-danger)]">
 			<span
-				class="status-dot"
-				style:background-color="var(--status-danger)"
-				style:box-shadow="0 0 6px var(--status-danger), 0 0 2px var(--status-danger)"
+				class="status-dot glow"
+				style:--dot-color="var(--status-danger)"
 			></span>
 			Bot offline
 		</div>
@@ -42,15 +40,23 @@
 		height: 0.5rem;
 		border-radius: 50%;
 		flex-shrink: 0;
+		background-color: var(--dot-color);
 	}
 
+	/* Base glow — applied via CSS so it doesn't override animation */
+	.glow {
+		box-shadow: 0 0 6px var(--dot-color), 0 0 2px var(--dot-color);
+	}
+
+	/* Pulse overrides .glow's box-shadow via animation — works because
+	   both are in the stylesheet (same specificity layer) */
 	.pulse-glow {
 		animation: glow-pulse 1.5s ease-in-out infinite;
 	}
 
 	@keyframes glow-pulse {
-		0%, 100% { box-shadow: 0 0 4px var(--status-warning), 0 0 2px var(--status-warning); }
-		50% { box-shadow: 0 0 10px var(--status-warning), 0 0 4px var(--status-warning); }
+		0%, 100% { box-shadow: 0 0 4px var(--dot-color), 0 0 2px var(--dot-color); }
+		50% { box-shadow: 0 0 10px var(--dot-color), 0 0 4px var(--dot-color); }
 	}
 
 	@media (prefers-reduced-motion: reduce) {
