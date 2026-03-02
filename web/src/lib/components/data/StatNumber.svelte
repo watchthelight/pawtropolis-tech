@@ -1,7 +1,5 @@
 <script lang="ts">
-	import { onDestroy, untrack } from 'svelte';
-	import gsap from 'gsap';
-	import { DURATIONS, EASINGS, prefersReducedMotion } from '$lib/motion';
+	import { prefersReducedMotion } from '$lib/motion';
 
 	let { value, label, trend }: {
 		value: number;
@@ -9,33 +7,11 @@
 		trend?: 'up' | 'down' | 'neutral';
 	} = $props();
 
-	let displayValue = $state(value);
-	let tweenTarget = { val: value };
-	let activeTween: gsap.core.Tween | null = null;
-
 	const formatter = new Intl.NumberFormat();
+	let reduced = prefersReducedMotion();
 
-	$effect(() => {
-		if (prefersReducedMotion()) {
-			displayValue = value;
-			return;
-		}
-
-		activeTween?.kill();
-		tweenTarget.val = untrack(() => displayValue);
-		activeTween = gsap.to(tweenTarget, {
-			val: value,
-			duration: DURATIONS.COUNTER / 1000,
-			ease: EASINGS.standard,
-			onUpdate: () => {
-				displayValue = Math.round(tweenTarget.val);
-			}
-		});
-	});
-
-	onDestroy(() => {
-		activeTween?.kill();
-	});
+	// Split formatted number into characters for odometer effect
+	let digits = $derived(formatter.format(value).split(''));
 
 	const trendColor: Record<string, string> = {
 		up: 'var(--status-success)',
@@ -52,8 +28,24 @@
 
 <div class="flex flex-col">
 	<div class="flex items-baseline gap-1.5">
-		<span class="text-2xl font-bold text-[var(--text-primary)]">
-			{formatter.format(displayValue)}
+		<span class="odometer text-2xl font-bold text-[var(--text-primary)]">
+			{#each digits as char, i (i)}
+				{#if char.match(/\d/)}
+					<span class="digit-wrapper">
+						<span
+							class="digit-column"
+							class:no-transition={reduced}
+							style:transform="translateY(-{Number(char) * 1.2}em)"
+						>
+							{#each Array(10) as _, n}
+								<span class="digit">{n}</span>
+							{/each}
+						</span>
+					</span>
+				{:else}
+					<span class="separator">{char}</span>
+				{/if}
+			{/each}
 		</span>
 		{#if trend}
 			<span class="text-sm font-medium" style:color={trendColor[trend]}>
@@ -63,3 +55,37 @@
 	</div>
 	<span class="text-sm text-[var(--text-secondary)]">{label}</span>
 </div>
+
+<style>
+	.odometer {
+		display: inline-flex;
+		align-items: baseline;
+	}
+
+	.digit-wrapper {
+		display: inline-block;
+		height: 1.2em;
+		overflow: hidden;
+		line-height: 1.2;
+	}
+
+	.digit-column {
+		display: flex;
+		flex-direction: column;
+		transition: transform 0.4s var(--ease-spring);
+	}
+
+	.digit-column.no-transition {
+		transition: none;
+	}
+
+	.digit {
+		display: block;
+		height: 1.2em;
+		line-height: 1.2;
+	}
+
+	.separator {
+		line-height: 1.2;
+	}
+</style>
