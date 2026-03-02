@@ -2,7 +2,8 @@ import { hasMinTier } from '$lib/server/roles';
 import { getHomeMetrics } from '$lib/server/queries/home';
 import type { PageServerLoad } from './$types';
 
-const GUILD_ID = process.env.GUILD_ID!;
+if (!process.env.GUILD_ID) throw new Error('GUILD_ID environment variable is required');
+const GUILD_ID = process.env.GUILD_ID;
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const user = locals.user!;

@@ -10,8 +10,7 @@ export interface HomeMetrics {
 
 function getTodayMidnightUnix(): number {
 	const now = new Date();
-	now.setHours(0, 0, 0, 0);
-	return Math.floor(now.getTime() / 1000);
+	return Math.floor(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) / 1000);
 }
 
 function count(sql: string, ...params: unknown[]): number {

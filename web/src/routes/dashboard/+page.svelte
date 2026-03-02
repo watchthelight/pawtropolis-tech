@@ -1,7 +1,6 @@
 <script lang="ts">
 	import DataCard from '$lib/components/data/DataCard.svelte';
 	import StatNumber from '$lib/components/data/StatNumber.svelte';
-	import StatusBadge from '$lib/components/data/StatusBadge.svelte';
 	import EmptyState from '$lib/components/feedback/EmptyState.svelte';
 	import SpringReveal from '$lib/components/motion/SpringReveal.svelte';
 
