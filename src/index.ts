@@ -440,6 +440,17 @@ client.once(Events.ClientReady, async () => {
     logger.warn({ err }, "[startup] Status endpoint failed to start - badges will show offline");
   }
 
+  // ===== Dashboard API Server =====
+  // WHAT: Fastify server on port 3003 for dashboard mutation requests
+  // WHY: Dashboard proxies review actions (claim/approve/reject/kick/unclaim) through this API
+  try {
+    const { startDashboardApi, getDashboardApiPort } = await import("./web/dashboardApi.js");
+    await startDashboardApi(client);
+    logger.info({ port: getDashboardApiPort() }, "[startup] Dashboard API started");
+  } catch (err) {
+    logger.warn({ err }, "[startup] Dashboard API failed to start - dashboard mutations disabled");
+  }
+
   // ===== Scheduler Initialization =====
   // Start mod metrics periodic refresh scheduler
   // WHAT: Recalculates mod_metrics table every 15 minutes
