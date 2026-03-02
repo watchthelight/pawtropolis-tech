@@ -48,6 +48,9 @@
 		<div class="blob blob-cyan"></div>
 		<div class="blob blob-violet"></div>
 		<div class="blob blob-warm"></div>
+		<div class="blob blob-rose"></div>
+		<div class="blob blob-teal"></div>
+		<div class="blob blob-peach"></div>
 	</div>
 
 	<!-- Vignette -->
@@ -174,6 +177,36 @@
 		animation: drift-4 22s ease-in-out infinite alternate;
 	}
 
+	.blob-rose {
+		width: 320px;
+		height: 320px;
+		top: 60%;
+		left: 45%;
+		background: oklch(58% 0.22 0);
+		opacity: 0.05;
+		animation: drift-5 28s ease-in-out infinite alternate;
+	}
+
+	.blob-teal {
+		width: 280px;
+		height: 280px;
+		top: 10%;
+		right: 40%;
+		background: oklch(60% 0.15 170);
+		opacity: 0.06;
+		animation: drift-6 24s ease-in-out infinite alternate;
+	}
+
+	.blob-peach {
+		width: 220px;
+		height: 220px;
+		bottom: 5%;
+		left: 55%;
+		background: oklch(68% 0.16 70);
+		opacity: 0.04;
+		animation: drift-3 26s ease-in-out infinite alternate;
+	}
+
 	@keyframes drift-1 {
 		0% { transform: translate(0, 0) scale(1); }
 		100% { transform: translate(40px, 30px) scale(1.1); }
@@ -189,6 +222,14 @@
 	@keyframes drift-4 {
 		0% { transform: translate(0, 0); }
 		100% { transform: translate(25px, -15px); }
+	}
+	@keyframes drift-5 {
+		0% { transform: translate(0, 0) scale(1); }
+		100% { transform: translate(-35px, -25px) scale(1.05); }
+	}
+	@keyframes drift-6 {
+		0% { transform: translate(0, 0); }
+		100% { transform: translate(20px, 30px); }
 	}
 
 	/* Vignette */
@@ -234,18 +275,19 @@
 		50% { opacity: 0.6; transform: scale(1); }
 	}
 
-	/* City skyline */
+	/* City skyline — full bleed edge to edge */
 	.skyline {
 		position: absolute;
 		bottom: 0;
-		left: 0;
-		right: 0;
-		height: 200px;
+		left: -1px;
+		right: -1px;
+		height: 180px;
 		opacity: 0.35;
 		pointer-events: none;
 	}
 
 	.skyline svg {
+		display: block;
 		width: 100%;
 		height: 100%;
 	}
