@@ -16,23 +16,31 @@
 	} as const;
 
 	const hoverShadowVar = {
-		sm: 'var(--shadow-md)',
-		md: 'var(--shadow-lg)',
-		lg: 'var(--shadow-lg)'
+		sm: 'var(--shadow-md), var(--glow-hover)',
+		md: 'var(--shadow-lg), var(--glow-hover)',
+		lg: 'var(--shadow-lg), var(--glow-hover)'
 	} as const;
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <div
-	class="rounded-lg border bg-[var(--surface)] p-4 transition-shadow"
+	class="surface-gradient rounded-[var(--radius-md)] border bg-[var(--surface)] p-[var(--space-card)] transition-all"
 	class:cursor-pointer={clickable}
 	class:border-l-4={selected}
 	style:box-shadow={shadowVar[elevation]}
-	style:border-color={selected ? 'var(--accent)' : 'var(--border)'}
+	style:border-color={selected ? 'var(--accent)' : 'var(--border-holdfast)'}
 	style:transition-duration="var(--duration-fast)"
-	onmouseenter={(e) => { if (clickable) e.currentTarget.style.boxShadow = hoverShadowVar[elevation]; }}
-	onmouseleave={(e) => { if (clickable) e.currentTarget.style.boxShadow = shadowVar[elevation]; }}
+	onmouseenter={(e) => {
+		const el = e.currentTarget;
+		el.style.boxShadow = hoverShadowVar[elevation];
+		el.style.transform = 'translateY(-2px)';
+	}}
+	onmouseleave={(e) => {
+		const el = e.currentTarget;
+		el.style.boxShadow = shadowVar[elevation];
+		el.style.transform = 'translateY(0)';
+	}}
 	onclick={() => { if (clickable && onclick) onclick(); }}
 	onkeydown={(e) => { if (clickable && onclick && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onclick(); } }}
 	role={clickable ? 'button' : undefined}
