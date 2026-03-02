@@ -2,10 +2,11 @@
 @import 'tailwindcss';
 
 /*
- * Pawtropolis Dashboard — oklch Identity Theming
+ * Pawtropolis Dashboard — Cozy Holdfast Design System
  *
  * --hue is derived from the user's Discord accentColor via stores/theme.ts.
- * Every surface, text, and shadow token uses oklch(L% C var(--hue)).
+ * Surfaces and glows use oklch with the user's hue.
+ * Shadows lean warm (hue ~40) regardless of accent for cozy depth.
  * Fallback hue 250 (cool blue) applies before login / when accentColor is null.
  */
 
@@ -18,6 +19,7 @@
 	--surface: oklch(20% 0.015 var(--hue));
 	--surface-raised: oklch(24% 0.02 var(--hue));
 	--border: oklch(30% 0.02 var(--hue));
+	--border-holdfast: oklch(35% 0.02 var(--hue));
 
 	/* Text */
 	--text-primary: oklch(90% 0.01 var(--hue));
@@ -27,16 +29,33 @@
 	--accent: oklch(70% 0.15 var(--hue));
 	--accent-dim: oklch(40% 0.08 var(--hue));
 
-	/* Accent-tinted shadows */
-	--shadow-sm: 0 1px 2px oklch(5% 0.02 var(--hue) / 0.3);
-	--shadow-md: 0 4px 8px oklch(5% 0.02 var(--hue) / 0.25);
-	--shadow-lg: 0 8px 24px oklch(5% 0.02 var(--hue) / 0.2);
+	/* Warm shadows — hue ~40 (warm amber) for cozy depth regardless of accent */
+	--shadow-sm: 0 1px 3px oklch(5% 0.02 40 / 0.3);
+	--shadow-md: 0 4px 12px oklch(5% 0.02 40 / 0.25);
+	--shadow-lg: 0 8px 24px oklch(5% 0.02 40 / 0.2);
+
+	/* Accent-tinted glows — use user's hue for interactive warmth */
+	--glow-accent: 0 0 12px oklch(70% 0.15 var(--hue) / 0.15);
+	--glow-hover: 0 0 20px oklch(70% 0.15 var(--hue) / 0.25);
+
+	/* Constrained radii — pixel art discipline, exactly 3 values */
+	--radius-sm: 6px;
+	--radius-md: 12px;
+	--radius-lg: 16px;
+
+	/* Generous spacing */
+	--space-card: 24px;
+	--space-section: 32px;
 
 	/* Status colors (fixed — not themed) */
 	--status-success: oklch(65% 0.15 145);
 	--status-warning: oklch(70% 0.15 85);
 	--status-danger: oklch(60% 0.15 25);
 	--status-info: oklch(65% 0.12 250);
+
+	/* Brand colors — Pawtropolis paw logo (magenta pads, cyan drips) */
+	--brand-magenta: oklch(65% 0.25 330);
+	--brand-cyan: oklch(70% 0.15 200);
 
 	/* Animation */
 	--ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -51,6 +70,8 @@ body {
 	background-color: var(--bg);
 	color: var(--text-primary);
 	font-family: 'Inter Variable', system-ui, -apple-system, sans-serif;
+	font-size: 0.9375rem; /* 15px — comfortable for long sessions */
+	line-height: 1.6;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 }
