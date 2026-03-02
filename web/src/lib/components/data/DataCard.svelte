@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { prefersReducedMotion } from '$lib/motion';
 
 	let { selected = false, clickable = false, elevation = 'md', children, onclick }: {
 		selected?: boolean;
@@ -34,12 +35,12 @@
 	onmouseenter={(e) => {
 		const el = e.currentTarget;
 		el.style.boxShadow = hoverShadowVar[elevation];
-		el.style.transform = 'translateY(-2px)';
+		if (!prefersReducedMotion()) el.style.transform = 'translateY(-2px)';
 	}}
 	onmouseleave={(e) => {
 		const el = e.currentTarget;
 		el.style.boxShadow = shadowVar[elevation];
-		el.style.transform = 'translateY(0)';
+		if (!prefersReducedMotion()) el.style.transform = 'translateY(0)';
 	}}
 	onclick={() => { if (clickable && onclick) onclick(); }}
 	onkeydown={(e) => { if (clickable && onclick && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onclick(); } }}
