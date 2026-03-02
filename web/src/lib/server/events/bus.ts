@@ -14,9 +14,9 @@ type EventCallback = (event: SSEEvent) => void;
 class EventBus {
 	private subscribers = new Set<EventCallback>();
 
-	/** Publish an event to all subscribers */
+	/** Publish an event to all subscribers (snapshot to prevent mutation during iteration) */
 	publish(event: SSEEvent): void {
-		for (const callback of this.subscribers) {
+		for (const callback of Array.from(this.subscribers)) {
 			try {
 				callback(event);
 			} catch (err) {

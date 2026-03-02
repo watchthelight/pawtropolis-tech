@@ -39,11 +39,15 @@ export function generateClientId(): string {
 /** Register a new SSE client connection */
 export function addClient(client: SSEClient): void {
 	clients.set(client.id, client);
+	console.log(`[SSE] Client connected: ${client.id} (user=${client.userId}, tier=${client.tier}, total=${clients.size})`);
 }
 
 /** Remove a disconnected SSE client */
 export function removeClient(id: string): void {
-	clients.delete(id);
+	const had = clients.delete(id);
+	if (had) {
+		console.log(`[SSE] Client disconnected: ${id} (total=${clients.size})`);
+	}
 }
 
 /** Current connected client count (diagnostics) */
@@ -71,13 +75,20 @@ function broadcast(event: SSEEvent): void {
 	// unless they're role:changed which uses per-user filtering instead
 	if (minTier === 'none' && !isRoleChanged) return;
 
-	const sseData = `data: ${JSON.stringify(event)}\n\n`;
+	// Serialize once — if the event can't be serialized, drop it
+	let sseData: string;
+	try {
+		sseData = `data: ${JSON.stringify(event)}\n\n`;
+	} catch (err) {
+		console.error('[SSE] Failed to serialize event', event.type, err);
+		return;
+	}
 
 	for (const client of clients.values()) {
 		// Special case: role:changed only goes to the affected user
 		if (isRoleChanged) {
-			const payload = event.payload as RoleChangedPayload;
-			if (payload.userId === client.userId) {
+			const payload = event.payload as RoleChangedPayload | null;
+			if (payload?.userId === client.userId) {
 				safeSend(client, sseData);
 			}
 			continue;
@@ -95,8 +106,9 @@ function safeSend(client: SSEClient, data: string): void {
 	try {
 		client.send(data);
 	} catch {
-		// Client stream errored — remove silently
+		// Client stream errored — remove and log
 		clients.delete(client.id);
+		console.log(`[SSE] Client removed (send failed): ${client.id} (total=${clients.size})`);
 	}
 }
 

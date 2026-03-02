@@ -13,19 +13,38 @@ import type { RequestHandler } from './$types';
 import { eventBus } from '$lib/server/events/bus';
 import type { SSEEvent } from '$lib/types/events';
 
+const MAX_PAYLOAD_BYTES = 64 * 1024; // 64 KB max webhook payload
+
+/** Cached secret — read once from env on first use */
+let cachedSecret: string | undefined;
 function getInternalSecret(): string {
-	const secret = process.env.INTERNAL_SECRET;
-	if (!secret) throw new Error('INTERNAL_SECRET environment variable is required');
-	return secret;
+	if (!cachedSecret) {
+		const secret = process.env.INTERNAL_SECRET;
+		if (!secret) throw new Error('INTERNAL_SECRET environment variable is required');
+		cachedSecret = secret;
+	}
+	return cachedSecret;
 }
 
-/** Timing-safe secret comparison to prevent timing attacks */
+/**
+ * Timing-safe secret comparison via HMAC.
+ * Both values are HMAC'd with a fixed key so output length is always equal,
+ * eliminating the length-leak that a raw timingSafeEqual guard would introduce.
+ */
 function secretsMatch(provided: string, expected: string): boolean {
-	if (provided.length !== expected.length) return false;
-	return crypto.timingSafeEqual(Buffer.from(provided), Buffer.from(expected));
+	const key = 'sse-internal-auth';
+	const a = crypto.createHmac('sha256', key).update(provided).digest();
+	const b = crypto.createHmac('sha256', key).update(expected).digest();
+	return crypto.timingSafeEqual(a, b);
 }
 
 export const POST: RequestHandler = async ({ request }) => {
+	// Reject oversized payloads before reading body
+	const contentLength = request.headers.get('content-length');
+	if (contentLength && parseInt(contentLength, 10) > MAX_PAYLOAD_BYTES) {
+		return json({ success: false, error: 'Bad request' }, { status: 413 });
+	}
+
 	// Validate internal secret
 	const providedSecret = request.headers.get('x-internal-secret');
 	if (!providedSecret || !secretsMatch(providedSecret, getInternalSecret())) {
@@ -39,12 +58,14 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ success: false, error: 'Bad request' }, { status: 400 });
 	}
 
-	// Basic validation
+	// Validate event shape
 	const event = body as SSEEvent;
 	if (
 		!event ||
 		typeof event.type !== 'string' ||
+		!event.type.includes(':') ||
 		typeof event.timestamp !== 'number' ||
+		!Number.isFinite(event.timestamp) ||
 		!('payload' in event)
 	) {
 		return json({ success: false, error: 'Bad request' }, { status: 400 });

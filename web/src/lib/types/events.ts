@@ -104,11 +104,20 @@ export const EVENT_TIER_VISIBILITY: Record<string, DashboardTier> = {
 };
 
 /**
+ * Sorted prefixes — longest first so more specific prefixes match before broader ones.
+ * Prevents insertion-order dependency in EVENT_TIER_VISIBILITY.
+ */
+const SORTED_PREFIXES = Object.entries(EVENT_TIER_VISIBILITY).sort(
+	(a, b) => b[0].length - a[0].length
+);
+
+/**
  * Resolve the minimum tier for a given event type by matching its domain prefix.
+ * Matches longest prefix first for specificity.
  * Returns 'none' if no matching domain found (event visible to nobody).
  */
 export function getMinTierForEvent(eventType: string): DashboardTier {
-	for (const [prefix, tier] of Object.entries(EVENT_TIER_VISIBILITY)) {
+	for (const [prefix, tier] of SORTED_PREFIXES) {
 		if (eventType.startsWith(prefix)) return tier;
 	}
 	return 'none';
