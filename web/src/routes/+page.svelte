@@ -8,11 +8,9 @@
 	function handleBtnMouse(e: MouseEvent) {
 		if (!btnRef || prefersReducedMotion()) return;
 		const rect = btnRef.getBoundingClientRect();
-		const x = (e.clientX - rect.left) / rect.width - 0.5; // -0.5 to 0.5
+		const x = (e.clientX - rect.left) / rect.width - 0.5;
 		const y = (e.clientY - rect.top) / rect.height - 0.5;
-		const tiltX = y * -8; // rotate opposite to mouse Y
-		const tiltY = x * 8;  // rotate toward mouse X
-		btnRef.style.transform = `perspective(400px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale(1.02)`;
+		btnRef.style.transform = `perspective(400px) rotateX(${y * -8}deg) rotateY(${x * 8}deg) scale(1.02)`;
 	}
 
 	function handleBtnLeave() {
@@ -23,7 +21,6 @@
 	function handleBtnDown() {
 		if (!btnRef) return;
 		btnRef.style.transform = 'perspective(400px) rotateX(0) rotateY(0) scale(0.98)';
-		// Neumorphic concave — pushed INTO the surface
 		btnRef.style.boxShadow = 'inset 6px 6px 16px oklch(5% 0.005 40), inset -6px -6px 16px oklch(22% 0.015 40)';
 	}
 
@@ -45,40 +42,52 @@
 </script>
 
 <div class="splash">
-	<!-- Atmospheric gradient blobs -->
+	<!-- Atmospheric gradient blobs — more colorful -->
 	<div bind:this={blobsRef} class="blobs" aria-hidden="true">
 		<div class="blob blob-magenta"></div>
 		<div class="blob blob-cyan"></div>
+		<div class="blob blob-violet"></div>
+		<div class="blob blob-warm"></div>
 	</div>
 
-	<!-- Vignette overlay for threshold depth -->
+	<!-- Vignette -->
 	<div class="vignette" aria-hidden="true"></div>
 
-	<!-- Paint drip trails from logo area -->
-	<div class="drips" aria-hidden="true">
-		<div class="drip drip-1"></div>
-		<div class="drip drip-2"></div>
-		<div class="drip drip-3"></div>
-		<div class="drip drip-4"></div>
-		<div class="drip drip-5"></div>
+	<!-- Scattered sparkles — strawpage indie touch -->
+	<div class="sparkles" aria-hidden="true">
+		<span class="sparkle s1">+</span>
+		<span class="sparkle s2">.</span>
+		<span class="sparkle s3">+</span>
+		<span class="sparkle s4">*</span>
+		<span class="sparkle s5">.</span>
+		<span class="sparkle s6">+</span>
+		<span class="sparkle s7">*</span>
+		<span class="sparkle s8">.</span>
 	</div>
 
-	<!-- City skyline silhouette at bottom -->
+	<!-- City skyline silhouette -->
 	<div class="skyline" aria-hidden="true">
 		<svg viewBox="0 0 1440 200" preserveAspectRatio="none" fill="oklch(18% 0.015 var(--hue))">
 			<path d="M0 200V160h40v-20h20v20h30V120h15v-30h10v30h15v40h25V100h10V80h10v20h10v40h20V90h8V60h8v30h8v50h30v-30h20v-20h15v20h20v30h40V80h10V50h10v30h10v60h25V100h15V70h10v30h15v40h35v-50h20v-15h10v15h20v50h30V110h10V80h10v30h10v30h50v-40h15V90h10v20h15v40h20V100h20V75h10v25h20v50h30v-30h10V90h10v30h10v30h25V80h15V50h10v30h15v40h30V120h20V90h10v30h20v50h40V130h10V100h10v30h10v40h30v-50h10V90h10v30h10v50h20v-20h30v-30h10v30h30v20h40V140h10V110h10v30h10v60z"/>
 		</svg>
 	</div>
 
-	<!-- Content — offset left, not dead center -->
+	<!-- Content — centered, stacked, strawpage-style -->
 	<div class="content">
-		<div class="identity">
-			<img src="/paw-logo.png" alt="Pawtropolis" class="logo" />
-			<div class="text">
-				<h1 class="title">Pawtropolis</h1>
-				<p class="subtitle">A Safe Place For Everyone</p>
-			</div>
+		<img src="/paw-logo.png" alt="Pawtropolis" class="logo" />
+
+		<h1 class="title">Pawtropolis</h1>
+
+		<!-- Decorative divider — indie touch -->
+		<div class="divider" aria-hidden="true">
+			<span class="divider-dot"></span>
+			<span class="divider-line"></span>
+			<span class="divider-star">&#10038;</span>
+			<span class="divider-line"></span>
+			<span class="divider-dot"></span>
 		</div>
+
+		<p class="subtitle">A Safe Place For Everyone</p>
 
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<a
@@ -96,7 +105,7 @@
 			Sign in with Discord
 		</a>
 
-		<p class="footer">Staff access only</p>
+		<p class="footer">staff access only</p>
 	</div>
 </div>
 
@@ -111,7 +120,7 @@
 		background-color: var(--bg);
 	}
 
-	/* Atmospheric blobs */
+	/* Atmospheric blobs — more colors per Entropy */
 	.blobs {
 		position: absolute;
 		inset: 0;
@@ -122,114 +131,117 @@
 	.blob {
 		position: absolute;
 		border-radius: 50%;
-		filter: blur(80px);
+		filter: blur(90px);
 	}
 
 	.blob-magenta {
-		width: 500px;
-		height: 500px;
+		width: 450px;
+		height: 450px;
 		top: -5%;
-		left: 5%;
-		background: var(--brand-magenta);
-		opacity: 0.08;
+		left: 8%;
+		background: oklch(60% 0.25 330);
+		opacity: 0.09;
 		animation: drift-1 25s ease-in-out infinite alternate;
 	}
 
 	.blob-cyan {
-		width: 400px;
-		height: 400px;
-		bottom: 5%;
-		right: 10%;
-		background: var(--brand-cyan);
-		opacity: 0.06;
+		width: 380px;
+		height: 380px;
+		bottom: 10%;
+		right: 8%;
+		background: oklch(65% 0.18 200);
+		opacity: 0.07;
 		animation: drift-2 20s ease-in-out infinite alternate;
+	}
+
+	.blob-violet {
+		width: 300px;
+		height: 300px;
+		top: 30%;
+		right: 25%;
+		background: oklch(55% 0.2 280);
+		opacity: 0.06;
+		animation: drift-3 30s ease-in-out infinite alternate;
+	}
+
+	.blob-warm {
+		width: 250px;
+		height: 250px;
+		bottom: 25%;
+		left: 20%;
+		background: oklch(65% 0.18 50);
+		opacity: 0.05;
+		animation: drift-4 22s ease-in-out infinite alternate;
 	}
 
 	@keyframes drift-1 {
 		0% { transform: translate(0, 0) scale(1); }
 		100% { transform: translate(40px, 30px) scale(1.1); }
 	}
-
 	@keyframes drift-2 {
 		0% { transform: translate(0, 0) scale(1); }
 		100% { transform: translate(-30px, -20px) scale(0.9); }
 	}
+	@keyframes drift-3 {
+		0% { transform: translate(0, 0); }
+		100% { transform: translate(-20px, 25px); }
+	}
+	@keyframes drift-4 {
+		0% { transform: translate(0, 0); }
+		100% { transform: translate(25px, -15px); }
+	}
 
-	/* Vignette — threshold depth, looking through an opening */
+	/* Vignette */
 	.vignette {
 		position: absolute;
 		inset: 0;
 		pointer-events: none;
 		background: radial-gradient(
-			ellipse 70% 60% at 50% 45%,
+			ellipse 65% 55% at 50% 45%,
 			transparent 0%,
 			oklch(10% 0.01 var(--hue) / 0.3) 60%,
 			oklch(8% 0.01 var(--hue) / 0.7) 100%
 		);
 	}
 
-	/* Paint drip trails — extending the logo's dripping paint language */
-	.drips {
+	/* Scattered sparkles — strawpage aesthetic */
+	.sparkles {
 		position: absolute;
 		inset: 0;
 		pointer-events: none;
 		overflow: hidden;
 	}
 
-	.drip {
+	.sparkle {
 		position: absolute;
-		width: 2px;
-		border-radius: 0 0 2px 2px;
-		opacity: 0.12;
+		color: oklch(70% 0.1 var(--hue));
+		font-size: 0.75rem;
+		opacity: 0;
+		animation: twinkle 4s ease-in-out infinite;
 	}
 
-	.drip-1 {
-		left: 12%;
-		top: 20%;
-		height: 35%;
-		background: linear-gradient(180deg, var(--brand-magenta), transparent);
+	.s1 { top: 15%; left: 20%; animation-delay: 0s; color: oklch(70% 0.15 330); }
+	.s2 { top: 25%; right: 18%; animation-delay: 0.8s; color: oklch(70% 0.12 200); }
+	.s3 { bottom: 30%; left: 12%; animation-delay: 1.5s; color: oklch(65% 0.15 280); }
+	.s4 { top: 40%; left: 30%; animation-delay: 2.2s; color: oklch(70% 0.15 330); font-size: 0.5rem; }
+	.s5 { bottom: 40%; right: 25%; animation-delay: 0.5s; color: oklch(70% 0.12 50); }
+	.s6 { top: 12%; right: 30%; animation-delay: 1.8s; color: oklch(65% 0.15 200); }
+	.s7 { bottom: 20%; left: 35%; animation-delay: 3s; color: oklch(70% 0.15 280); font-size: 0.6rem; }
+	.s8 { top: 50%; right: 12%; animation-delay: 2.5s; color: oklch(65% 0.12 50); }
+
+	@keyframes twinkle {
+		0%, 100% { opacity: 0; transform: scale(0.8); }
+		50% { opacity: 0.6; transform: scale(1); }
 	}
 
-	.drip-2 {
-		left: 8%;
-		top: 35%;
-		height: 25%;
-		background: linear-gradient(180deg, var(--brand-cyan), transparent);
-	}
-
-	.drip-3 {
-		right: 15%;
-		top: 15%;
-		height: 40%;
-		background: linear-gradient(180deg, var(--brand-magenta), transparent);
-		opacity: 0.08;
-	}
-
-	.drip-4 {
-		right: 10%;
-		top: 45%;
-		height: 20%;
-		background: linear-gradient(180deg, var(--brand-cyan), transparent);
-		opacity: 0.1;
-	}
-
-	.drip-5 {
-		left: 30%;
-		top: 55%;
-		height: 30%;
-		width: 1px;
-		background: linear-gradient(180deg, var(--brand-magenta), transparent);
-		opacity: 0.06;
-	}
-
-	/* City skyline — faint silhouette at bottom */
+	/* City skyline */
 	.skyline {
 		position: absolute;
 		bottom: 0;
 		left: 0;
 		right: 0;
 		height: 200px;
-		opacity: 0.4;
+		opacity: 0.35;
 		pointer-events: none;
 	}
 
@@ -238,50 +250,68 @@
 		height: 100%;
 	}
 
-	/* Content — identity cluster with offset composition */
+	/* Content — centered, stacked */
 	.content {
 		position: relative;
 		z-index: 1;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 2.5rem;
+		text-align: center;
+		gap: 0;
 		padding-bottom: 4rem;
-	}
-
-	.identity {
-		display: flex;
-		align-items: center;
-		gap: 2rem;
 	}
 
 	.logo {
 		width: 180px;
 		height: 180px;
+		margin-bottom: 1.5rem;
 		filter: drop-shadow(0 4px 24px oklch(50% 0.2 330 / 0.35));
-		flex-shrink: 0;
-	}
-
-	.text {
-		text-align: left;
 	}
 
 	.title {
-		font-size: 3.5rem;
+		font-size: 3rem;
 		font-weight: 800;
 		color: var(--text-primary);
 		letter-spacing: -0.03em;
 		line-height: 1;
-		margin-bottom: 0.5rem;
+		margin-bottom: 1rem;
+	}
+
+	/* Decorative divider — indie/strawpage touch */
+	.divider {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		margin-bottom: 0.75rem;
+	}
+
+	.divider-line {
+		width: 40px;
+		height: 1px;
+		background: linear-gradient(90deg, transparent, oklch(50% 0.1 330), transparent);
+	}
+
+	.divider-dot {
+		width: 3px;
+		height: 3px;
+		border-radius: 50%;
+		background: oklch(60% 0.15 200);
+	}
+
+	.divider-star {
+		font-size: 0.7rem;
+		color: oklch(65% 0.15 280);
 	}
 
 	.subtitle {
-		font-size: 1.1rem;
+		font-size: 1rem;
 		color: var(--text-secondary);
-		letter-spacing: 0.02em;
+		letter-spacing: 0.04em;
+		margin-bottom: 2.5rem;
 	}
 
-	/* Discord button — true neumorphic: extruded from the surface */
+	/* Discord button — neumorphic + magnetic tilt */
 	.discord-btn {
 		position: relative;
 		display: inline-flex;
@@ -299,14 +329,12 @@
 		transition: transform 0.15s var(--ease-smooth), box-shadow 0.3s var(--ease-smooth);
 		transform: perspective(400px) rotateX(0) rotateY(0) scale(1);
 		transform-style: preserve-3d;
-		/* Neumorphic: convex — raised from the dark surface */
 		box-shadow:
 			10px 10px 24px oklch(6% 0.005 var(--hue)),
 			-10px -10px 24px oklch(24% 0.015 var(--hue));
 	}
 
 	.discord-btn:hover {
-		/* Lift higher from surface — shadows spread further */
 		box-shadow:
 			14px 14px 32px oklch(5% 0.005 var(--hue)),
 			-14px -14px 32px oklch(26% 0.015 var(--hue));
@@ -335,25 +363,23 @@
 	}
 
 	.footer {
-		font-size: 0.75rem;
+		margin-top: 2rem;
+		font-size: 0.7rem;
 		color: var(--text-secondary);
-		opacity: 0.6;
+		opacity: 0.5;
+		letter-spacing: 0.1em;
+		text-transform: lowercase;
 	}
 
 	/* Reduce motion */
 	@media (prefers-reduced-motion: reduce) {
 		.blob { animation: none; }
 		.shimmer::after { animation: none; }
+		.sparkle { animation: none; opacity: 0.3; }
 	}
 
-	/* Responsive — stack vertically on smaller screens */
 	@media (max-width: 640px) {
-		.identity {
-			flex-direction: column;
-			text-align: center;
-		}
-		.text { text-align: center; }
 		.logo { width: 140px; height: 140px; }
-		.title { font-size: 2.5rem; }
+		.title { font-size: 2.2rem; }
 	}
 </style>
