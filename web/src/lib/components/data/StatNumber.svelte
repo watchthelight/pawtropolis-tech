@@ -10,8 +10,15 @@
 	const formatter = new Intl.NumberFormat();
 	let reduced = prefersReducedMotion();
 
-	// Split formatted number into characters for odometer effect
-	let digits = $derived(formatter.format(value).split(''));
+	// Split formatted number into characters for odometer effect.
+	// Key from right so digit positions stay stable across boundary
+	// transitions (e.g. 999 → 1,000 — rightmost digits keep their keys).
+	let digits = $derived(
+		formatter.format(value).split('').map((char, i, arr) => ({
+			char,
+			key: arr.length - 1 - i // key from right: rightmost = 0, leftmost = len-1
+		}))
+	);
 
 	const trendColor: Record<string, string> = {
 		up: 'var(--status-success)',
@@ -29,13 +36,13 @@
 <div class="flex flex-col">
 	<div class="flex items-baseline gap-1.5">
 		<span class="odometer text-2xl font-bold text-[var(--text-primary)]">
-			{#each digits as char, i (i)}
-				{#if char.match(/\d/)}
+			{#each digits as d (d.key)}
+				{#if d.char.match(/\d/)}
 					<span class="digit-wrapper">
 						<span
 							class="digit-column"
 							class:no-transition={reduced}
-							style:transform="translateY(-{Number(char) * 1.2}em)"
+							style:transform="translateY(-{Number(d.char) * 1.2}em)"
 						>
 							{#each Array(10) as _, n}
 								<span class="digit">{n}</span>
@@ -43,7 +50,7 @@
 						</span>
 					</span>
 				{:else}
-					<span class="separator">{char}</span>
+					<span class="separator">{d.char}</span>
 				{/if}
 			{/each}
 		</span>
