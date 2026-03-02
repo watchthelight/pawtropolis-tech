@@ -573,6 +573,15 @@ client.once(Events.ClientReady, async () => {
     logger.info({ signal }, "[shutdown] Graceful shutdown initiated");
 
     try {
+      // 0. Stop Dashboard API server
+      try {
+        const { stopDashboardApi } = await import("./web/dashboardApi.js");
+        await stopDashboardApi();
+        logger.debug("[shutdown] Dashboard API stopped");
+      } catch (err) {
+        logger.warn({ err }, "[shutdown] Dashboard API stop failed (non-fatal)");
+      }
+
       // 1. Stop schedulers
       const { stopModMetricsScheduler } = await import("./scheduler/modMetricsScheduler.js");
       stopModMetricsScheduler();

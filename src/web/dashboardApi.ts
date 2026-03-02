@@ -7,7 +7,7 @@
  */
 
 import Fastify from "fastify";
-import type { Client, Guild } from "discord.js";
+import type { Client } from "discord.js";
 import { logger } from "../lib/logger.js";
 import { getConfig } from "../lib/config.js";
 import { claimTx, unclaimTx, ClaimError } from "../features/reviewActions.js";
@@ -33,8 +33,6 @@ function hasMinTier(userTier: string, minTier: string): boolean {
 
 type ApiSuccess = { success: true; data: Record<string, unknown> };
 type ApiError = { success: false; error: string };
-type ApiResponse = ApiSuccess | ApiError;
-
 type ReviewBody = {
   userId: string;
   tier: string;
@@ -62,7 +60,7 @@ export async function startDashboardApi(client: Client): Promise<void> {
   server.addHook("onRequest", async (request, reply) => {
     const secret = request.headers["x-dashboard-secret"];
     if (secret !== DASHBOARD_API_SECRET) {
-      reply.code(401).send({ success: false, error: "Unauthorized" } satisfies ApiError);
+      return reply.code(401).send({ success: false, error: "Unauthorized" } satisfies ApiError);
     }
   });
 
@@ -105,20 +103,29 @@ export async function startDashboardApi(client: Client): Promise<void> {
 
     // Admin+ can unclaim anyone; GK can only unclaim own
     const claim = getClaim(appId);
-    if (claim && claim.reviewer_id !== userId && !hasMinTier(tier, "admin")) {
+    if (!claim) {
+      return reply.code(409).send({ success: false, error: "Application is not claimed" } satisfies ApiError);
+    }
+    const isAdmin = hasMinTier(tier, "admin");
+    if (claim.reviewer_id !== userId && !isAdmin) {
       return reply.code(403).send({ success: false, error: "Only the claim owner or an admin can unclaim" } satisfies ApiError);
     }
 
-    try {
-      unclaimTx(appId, userId, GUILD_ID);
-      return { success: true, data: { appId } } satisfies ApiSuccess;
-    } catch (err) {
-      if (err instanceof ClaimError) {
-        const status = err.code === "APP_NOT_FOUND" ? 404 : 409;
-        return reply.code(status).send({ success: false, error: err.message } satisfies ApiError);
+    if (isAdmin && claim.reviewer_id !== userId) {
+      // Admin override: bypass unclaimTx ownership check
+      clearClaim(appId);
+    } else {
+      try {
+        unclaimTx(appId, userId, GUILD_ID);
+      } catch (err) {
+        if (err instanceof ClaimError) {
+          const status = err.code === "APP_NOT_FOUND" ? 404 : 409;
+          return reply.code(status).send({ success: false, error: err.message } satisfies ApiError);
+        }
+        throw err;
       }
-      throw err;
     }
+    return { success: true, data: { appId } } satisfies ApiSuccess;
   });
 
   // POST /api/review/approve
@@ -138,7 +145,7 @@ export async function startDashboardApi(client: Client): Promise<void> {
 
     const txResult = approveTx(appId, userId, reason);
     if (txResult.kind !== "changed") {
-      return reply.code(409).send({ success: false, error: `Application is not in a reviewable state (${txResult.status})` } satisfies ApiError);
+      return reply.code(409).send({ success: false, error: "Application is not in a reviewable state" } satisfies ApiError);
     }
 
     // Clear claim after decision
@@ -180,7 +187,7 @@ export async function startDashboardApi(client: Client): Promise<void> {
 
     const txResult = rejectTx(appId, userId, reason);
     if (txResult.kind !== "changed") {
-      return reply.code(409).send({ success: false, error: `Application is not in a reviewable state (${txResult.status})` } satisfies ApiError);
+      return reply.code(409).send({ success: false, error: "Application is not in a reviewable state" } satisfies ApiError);
     }
 
     clearClaim(appId);
@@ -217,7 +224,7 @@ export async function startDashboardApi(client: Client): Promise<void> {
 
     const txResult = kickTx(appId, userId, reason);
     if (txResult.kind !== "changed") {
-      return reply.code(409).send({ success: false, error: `Application is not in a reviewable state (${txResult.status})` } satisfies ApiError);
+      return reply.code(409).send({ success: false, error: "Application is not in a reviewable state" } satisfies ApiError);
     }
 
     clearClaim(appId);
