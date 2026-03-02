@@ -6,7 +6,7 @@
 	} = $props();
 </script>
 
-<div class="flex flex-col items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] p-8 text-center">
+<div class="flex flex-col items-center justify-center rounded-[var(--radius-md)] border border-[var(--border-holdfast)] bg-[var(--surface)] p-8 text-center">
 	{#if icon}
 		<span class="mb-3 text-3xl">{icon}</span>
 	{/if}
