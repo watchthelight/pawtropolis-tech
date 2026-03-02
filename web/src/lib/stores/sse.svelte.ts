@@ -77,6 +77,7 @@ export function offReconnect(callback: () => void): void {
 // ---------------------------------------------------------------------------
 
 function matchesPattern(pattern: string, eventType: string): boolean {
+	if (pattern === '*') return true; // global wildcard — matches all events
 	if (pattern.endsWith(':*')) {
 		return eventType.startsWith(pattern.slice(0, -1)); // 'review:*' → startsWith('review:')
 	}
