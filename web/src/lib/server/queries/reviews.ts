@@ -109,6 +109,64 @@ export function getApplicationDetail(appId: string, guildId: string): Applicatio
 }
 
 // ---------------------------------------------------------------------------
+// Review history (resolved applications)
+// ---------------------------------------------------------------------------
+
+export interface ReviewHistoryItem {
+	id: string;
+	applicantName: string;
+	status: string;
+	resolvedAt: number | null;
+	resolverId: string | null;
+	reason: string | null;
+}
+
+interface HistoryRow {
+	id: string;
+	applicant_name: string;
+	status: string;
+	resolved_at: string | null;
+	resolver_id: string | null;
+	reason: string | null;
+}
+
+export function getReviewHistory(guildId: string, limit: number = 50): ReviewHistoryItem[] {
+	const rows = db().prepare(`
+		SELECT
+			a.id,
+			a.status,
+			a.resolved_at,
+			COALESCE(u.global_name, u.username, 'Unknown') as applicant_name,
+			ra.moderator_id as resolver_id,
+			ra.reason
+		FROM application a
+		LEFT JOIN (
+			SELECT guild_id, user_id, global_name, username,
+				ROW_NUMBER() OVER (PARTITION BY guild_id, user_id ORDER BY created_at DESC) as rn
+			FROM user_snapshot
+		) u ON u.guild_id = a.guild_id AND u.user_id = a.user_id AND u.rn = 1
+		LEFT JOIN (
+			SELECT app_id, moderator_id, reason,
+				ROW_NUMBER() OVER (PARTITION BY app_id ORDER BY created_at DESC) as rn
+			FROM review_action
+			WHERE action IN ('approve', 'reject', 'perm_reject', 'kick')
+		) ra ON ra.app_id = a.id AND ra.rn = 1
+		WHERE a.guild_id = ? AND a.status IN ('approved', 'rejected', 'kicked')
+		ORDER BY a.resolved_at DESC
+		LIMIT ?
+	`).all(guildId, limit) as HistoryRow[];
+
+	return rows.map((row) => ({
+		id: row.id,
+		applicantName: row.applicant_name,
+		status: row.status,
+		resolvedAt: normalizeTimestamp(row.resolved_at),
+		resolverId: row.resolver_id,
+		reason: row.reason
+	}));
+}
+
+// ---------------------------------------------------------------------------
 // Review queue
 // ---------------------------------------------------------------------------
 
