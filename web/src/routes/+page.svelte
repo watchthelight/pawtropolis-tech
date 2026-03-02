@@ -360,7 +360,7 @@
 		align-items: center;
 		gap: 0.75rem;
 		padding: 1rem 2.5rem;
-		border-radius: 16px;
+		border-radius: var(--radius-lg);
 		background: linear-gradient(135deg, var(--brand-magenta), var(--brand-cyan));
 		color: white;
 		font-weight: 600;
