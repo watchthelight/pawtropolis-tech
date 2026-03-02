@@ -23,23 +23,26 @@
 
 <SpringReveal stagger={30}>
 	<!-- Identity section -->
-	<div class="mb-8 flex items-center gap-4">
+	<div class="mb-[var(--space-section)] flex items-center gap-5">
 		<img
 			src={user.avatarUrl}
 			alt={user.globalName || user.username}
-			class="h-12 w-12 rounded-full ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--bg)]"
+			class="h-14 w-14 rounded-[var(--radius-md)] ring-2 ring-[var(--accent)] ring-offset-3 ring-offset-[var(--bg)]"
+			style:box-shadow="0 0 20px oklch(70% 0.15 var(--hue) / 0.15)"
 		/>
 		<div>
-			<h1 class="text-2xl font-semibold text-[var(--text-primary)]">
+			<h1 class="text-2xl font-semibold text-[var(--text-primary)] tracking-tight">
 				Welcome back, {user.globalName || user.username}
 			</h1>
-			<span class="inline-flex items-center rounded-full bg-[var(--surface-raised)] px-2 py-0.5 text-xs font-medium text-[var(--text-secondary)]">
+			<span class="inline-flex items-center rounded-[var(--radius-sm)] bg-[var(--surface-raised)] px-2.5 py-0.5 text-xs font-medium text-[var(--text-secondary)]">
 				{TIER_LABELS[user.tier] ?? user.tier}
 			</span>
 		</div>
 	</div>
 
-	<!-- Stat cards — all tiers see these 3 -->
+	<!-- Section: Your Queue -->
+	<div class="section-heading">Your Queue</div>
+
 	<div class="grid grid-cols-3 gap-[var(--space-section)]">
 		<DataCard elevation="sm">
 			<StatNumber value={metrics.pending} label="Pending" />
@@ -52,9 +55,11 @@
 		</DataCard>
 	</div>
 
-	<!-- Mod+ stat cards -->
+	<!-- Section: Server Status (Mod+) -->
 	{#if metrics.openModmail != null}
-		<div class="mt-[var(--space-section)] grid grid-cols-2 gap-[var(--space-section)]">
+		<div class="section-heading mt-[var(--space-section)]">Server Status</div>
+
+		<div class="grid grid-cols-2 gap-[var(--space-section)]">
 			<DataCard elevation="sm">
 				<StatNumber value={metrics.openModmail} label="Open Modmail" />
 			</DataCard>
@@ -71,3 +76,16 @@
 		</div>
 	{/if}
 </SpringReveal>
+
+<style>
+	.section-heading {
+		font-size: 0.7rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--text-secondary);
+		margin-bottom: 1rem;
+		padding-bottom: 0.5rem;
+		border-bottom: 1px solid var(--border-holdfast);
+	}
+</style>
