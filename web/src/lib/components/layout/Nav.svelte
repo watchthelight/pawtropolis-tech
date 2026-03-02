@@ -56,13 +56,13 @@
 	}
 </script>
 
-<nav aria-label="Main navigation" class="flex h-full flex-col bg-[var(--bg)] border-r border-[var(--border)]">
+<nav aria-label="Main navigation" class="flex h-full flex-col bg-[var(--bg)] border-r border-[var(--border-holdfast)]">
 	<!-- Identity section -->
-	<div class="flex items-center gap-3 p-4 border-b border-[var(--border)]">
+	<div class="flex items-center gap-3 p-4 border-b border-[var(--border-holdfast)]">
 		<img
 			src={user.avatarUrl}
 			alt={user.globalName || user.username}
-			class="w-12 h-12 rounded-full ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--bg)]"
+			class="w-12 h-12 rounded-[var(--radius-md)] ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--bg)]"
 		/>
 		<div class="min-w-0">
 			<p class="truncate text-sm font-medium text-[var(--text-primary)]">
@@ -82,15 +82,9 @@
 				<a
 					href={item.href}
 					aria-current={active ? 'page' : undefined}
-					class="flex items-center border-l-[3px] px-4 py-2 text-sm transition-colors"
-					class:border-l-[var(--accent)]={active}
-					class:text-[var(--text-primary)]={active}
-					class:font-medium={active}
-					class:bg-[var(--surface)]={active}
-					class:text-[var(--text-secondary)]={!active}
-					class:border-l-transparent={!active}
-					class:hover:bg-[var(--surface-raised)]={!active}
-					class:hover:text-[var(--text-primary)]={!active}
+					class="nav-item"
+					class:nav-active={active}
+					class:nav-inactive={!active}
 				>
 					{item.label}
 				</a>
@@ -99,7 +93,7 @@
 	</ul>
 
 	<!-- Footer section -->
-	<div class="border-t border-[var(--border)] p-4 space-y-3">
+	<div class="border-t border-[var(--border-holdfast)] p-4 space-y-3">
 		<ConnectionIndicator />
 		<a
 			href="/auth/logout"
@@ -109,3 +103,32 @@
 		</a>
 	</div>
 </nav>
+
+<style>
+	.nav-item {
+		display: flex;
+		align-items: center;
+		padding: 0.5rem 1rem;
+		margin: 0.125rem 0.5rem;
+		font-size: 0.875rem;
+		border-radius: var(--radius-sm);
+		transition: all 150ms var(--ease-smooth);
+	}
+
+	.nav-active {
+		color: var(--text-primary);
+		font-weight: 500;
+		background: var(--surface);
+		box-shadow: inset 3px 0 0 var(--accent), var(--glow-accent);
+	}
+
+	.nav-inactive {
+		color: var(--text-secondary);
+	}
+
+	.nav-inactive:hover {
+		color: var(--text-primary);
+		background: var(--surface-raised);
+		transform: translateX(2px);
+	}
+</style>
