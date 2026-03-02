@@ -44,7 +44,7 @@
 	<div class="section-heading">Your Queue</div>
 
 	<div class="grid grid-cols-3 gap-[var(--space-section)]">
-		<DataCard elevation="sm">
+		<DataCard elevation="md" selected>
 			<StatNumber value={metrics.pending} label="Pending" />
 		</DataCard>
 		<DataCard elevation="sm">
