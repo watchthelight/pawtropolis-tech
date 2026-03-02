@@ -22,8 +22,9 @@
 
 	function handleBtnDown() {
 		if (!btnRef) return;
-		btnRef.style.transform = 'perspective(400px) rotateX(0) rotateY(0) scale(0.97)';
-		btnRef.style.boxShadow = 'inset 3px 3px 8px oklch(5% 0.01 40 / 0.5), inset -2px -2px 6px oklch(25% 0.02 40 / 0.15)';
+		btnRef.style.transform = 'perspective(400px) rotateX(0) rotateY(0) scale(0.98)';
+		// Neumorphic concave — pushed INTO the surface
+		btnRef.style.boxShadow = 'inset 6px 6px 16px oklch(5% 0.005 40), inset -6px -6px 16px oklch(22% 0.015 40)';
 	}
 
 	function handleBtnUp() {
@@ -280,35 +281,35 @@
 		letter-spacing: 0.02em;
 	}
 
-	/* Discord button — magnetic tilt via JS, neumorphic shadows */
+	/* Discord button — true neumorphic: extruded from the surface */
 	.discord-btn {
 		position: relative;
 		display: inline-flex;
 		align-items: center;
 		gap: 0.75rem;
-		padding: 0.875rem 2.5rem;
-		border-radius: var(--radius-md);
+		padding: 1rem 2.5rem;
+		border-radius: 16px;
 		background: linear-gradient(135deg, var(--brand-magenta), var(--brand-cyan));
 		color: white;
 		font-weight: 600;
 		font-size: 1rem;
 		text-decoration: none;
 		overflow: hidden;
-		transition: transform 0.15s var(--ease-smooth), box-shadow 0.25s var(--ease-smooth);
+		border: none;
+		transition: transform 0.15s var(--ease-smooth), box-shadow 0.3s var(--ease-smooth);
 		transform: perspective(400px) rotateX(0) rotateY(0) scale(1);
 		transform-style: preserve-3d;
-		border: 1px solid oklch(40% 0.03 var(--hue) / 0.5);
+		/* Neumorphic: convex — raised from the dark surface */
 		box-shadow:
-			6px 6px 16px oklch(6% 0.01 var(--hue) / 0.6),
-			-3px -3px 10px oklch(28% 0.02 var(--hue) / 0.2),
-			inset 0 1px 0 oklch(90% 0.02 200 / 0.1);
+			10px 10px 24px oklch(6% 0.005 var(--hue)),
+			-10px -10px 24px oklch(24% 0.015 var(--hue));
 	}
 
 	.discord-btn:hover {
+		/* Lift higher from surface — shadows spread further */
 		box-shadow:
-			8px 8px 20px oklch(5% 0.01 var(--hue) / 0.7),
-			-4px -4px 12px oklch(30% 0.02 var(--hue) / 0.25),
-			inset 0 1px 0 oklch(90% 0.02 200 / 0.12);
+			14px 14px 32px oklch(5% 0.005 var(--hue)),
+			-14px -14px 32px oklch(26% 0.015 var(--hue));
 	}
 
 	/* Shimmer */
