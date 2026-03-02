@@ -62,7 +62,7 @@ interface AppResponseRow {
 	answer: string;
 }
 
-export function getApplicationDetail(appId: string): ApplicationDetail | null {
+export function getApplicationDetail(appId: string, guildId: string): ApplicationDetail | null {
 	const row = db().prepare(`
 		SELECT
 			a.id,
@@ -82,8 +82,8 @@ export function getApplicationDetail(appId: string): ApplicationDetail | null {
 		) u ON u.guild_id = a.guild_id AND u.user_id = a.user_id AND u.rn = 1
 		LEFT JOIN review_claim c ON a.id = c.app_id
 		LEFT JOIN avatar_scan s ON a.id = s.application_id
-		WHERE a.id = ?
-	`).get(appId) as AppDetailRow | undefined;
+		WHERE a.id = ? AND a.guild_id = ?
+	`).get(appId, guildId) as AppDetailRow | undefined;
 
 	if (!row) return null;
 
