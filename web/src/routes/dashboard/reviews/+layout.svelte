@@ -1,6 +1,9 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
 	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
+	import { subscribe, unsubscribe } from '$lib/stores/sse.svelte';
+	import type { SSEEvent } from '$lib/types/events';
 	import PageHeader from '$lib/components/layout/PageHeader.svelte';
 	import EmptyState from '$lib/components/feedback/EmptyState.svelte';
 	import SpringReveal from '$lib/components/motion/SpringReveal.svelte';
@@ -8,6 +11,13 @@
 	import TabBar from '$lib/components/review/TabBar.svelte';
 
 	let { data, children } = $props();
+
+	// Live queue updates — any review event refreshes data from DB
+	function onReviewEvent(_event: SSEEvent) {
+		invalidateAll();
+	}
+	subscribe('review:*', onReviewEvent);
+	onDestroy(() => unsubscribe('review:*', onReviewEvent));
 	let queue = $derived(data.queue);
 	let history = $derived(data.history);
 	let userId = $derived(data.userId);
