@@ -8,7 +8,10 @@
 	import TabBar from '$lib/components/review/TabBar.svelte';
 
 	let { data, children } = $props();
-	const { queue, history, userId, tabCounts } = data;
+	let queue = $derived(data.queue);
+	let history = $derived(data.history);
+	let userId = $derived(data.userId);
+	let tabCounts = $derived(data.tabCounts);
 
 	type TabId = 'unclaimed' | 'mine' | 'all' | 'history';
 	let activeTab = $state<TabId>('unclaimed');
@@ -59,6 +62,39 @@
 		const days = Math.floor(hours / 24);
 		return `${days}d ago`;
 	}
+
+	// Glow overlay — rendered outside scroll container so it's not clipped
+	let queueWrapper: HTMLElement;
+	let glowRect = $state<{ top: number; left: number; width: number; height: number } | null>(null);
+	let glowTarget: HTMLElement | null = null;
+
+	function updateGlow() {
+		if (!glowTarget || !queueWrapper) { glowRect = null; return; }
+		const wr = queueWrapper.getBoundingClientRect();
+		const cr = glowTarget.getBoundingClientRect();
+		glowRect = {
+			top: cr.top - wr.top,
+			left: cr.left - wr.left,
+			width: cr.width,
+			height: cr.height,
+		};
+	}
+
+	function onQueueHover(e: MouseEvent) {
+		const card = (e.target as HTMLElement).closest('[role="button"]') as HTMLElement | null;
+		if (!card) { glowTarget = null; glowRect = null; return; }
+		glowTarget = card;
+		updateGlow();
+	}
+
+	function onQueueLeave() {
+		glowTarget = null;
+		glowRect = null;
+	}
+
+	function onQueueScroll() {
+		if (glowTarget) updateGlow();
+	}
 </script>
 
 <SpringReveal stagger={30}>
@@ -71,33 +107,45 @@
 			<EmptyState message={EMPTY_MESSAGES.history.message} subtitle={EMPTY_MESSAGES.history.subtitle} />
 		{:else}
 			<div class="review-layout">
-				<div class="queue-list">
-					{#each history as item (item.id)}
-						<!-- svelte-ignore a11y_no_static_element_interactions -->
-						<!-- svelte-ignore a11y_click_events_have_key_events -->
-						<div
-							class="history-card"
-							class:history-card-selected={selectedAppId() === item.id}
-							role="button"
-							tabindex="0"
-							onclick={() => goto(`/dashboard/reviews/${item.id}`)}
-							onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goto(`/dashboard/reviews/${item.id}`); } }}
-						>
-							<div class="history-card-top">
-								<span class="history-card-name">{item.applicantName}</span>
-								<span class="history-card-time">{relativeTime(item.resolvedAt)}</span>
+				<div class="queue-wrapper" bind:this={queueWrapper}>
+					<!-- svelte-ignore a11y_no_static_element_interactions -->
+					<!-- svelte-ignore a11y_mouse_events_have_key_events -->
+					<div
+						class="queue-list"
+						onmouseover={onQueueHover}
+						onmouseleave={onQueueLeave}
+						onscroll={onQueueScroll}
+					>
+						{#each history as item (item.id)}
+							<!-- svelte-ignore a11y_no_static_element_interactions -->
+							<!-- svelte-ignore a11y_click_events_have_key_events -->
+							<div
+								class="history-card"
+								class:history-card-selected={selectedAppId() === item.id}
+								role="button"
+								tabindex="0"
+								onclick={() => goto(`/dashboard/reviews/${item.id}`)}
+								onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goto(`/dashboard/reviews/${item.id}`); } }}
+							>
+								<div class="history-card-top">
+									<span class="history-card-name">{item.applicantName}</span>
+									<span class="history-card-time">{relativeTime(item.resolvedAt)}</span>
+								</div>
+								<div class="history-card-bottom">
+									<span class="history-card-outcome" style:color={outcomeColor(item.status)}>
+										<span class="status-dot" style:background-color={outcomeColor(item.status)}></span>
+										{outcomeLabel(item.status)}
+									</span>
+									{#if item.reason}
+										<span class="history-card-reason">{item.reason.slice(0, 40)}{item.reason.length > 40 ? '...' : ''}</span>
+									{/if}
+								</div>
 							</div>
-							<div class="history-card-bottom">
-								<span class="history-card-outcome" style:color={outcomeColor(item.status)}>
-									<span class="status-dot" style:background-color={outcomeColor(item.status)}></span>
-									{outcomeLabel(item.status)}
-								</span>
-								{#if item.reason}
-									<span class="history-card-reason">{item.reason.slice(0, 40)}{item.reason.length > 40 ? '...' : ''}</span>
-								{/if}
-							</div>
-						</div>
-					{/each}
+						{/each}
+					</div>
+					{#if glowRect}
+						<div class="queue-glow" style="top:{glowRect.top}px;left:{glowRect.left}px;width:{glowRect.width}px;height:{glowRect.height}px"></div>
+					{/if}
 				</div>
 
 				<div class="detail-panel">
@@ -109,18 +157,30 @@
 		<EmptyState message={EMPTY_MESSAGES[activeTab].message} subtitle={EMPTY_MESSAGES[activeTab].subtitle} />
 	{:else}
 		<div class="review-layout">
-			<div class="queue-list">
-				{#each filteredItems as item (item.id)}
-					<ReviewCard
-						applicantName={item.applicantName}
-						status={item.status}
-						submittedAt={item.submittedAt}
-						claimedBy={item.claimedBy}
-						riskScore={item.riskScore}
-						selected={selectedAppId() === item.id}
-						onclick={() => goto(`/dashboard/reviews/${item.id}`)}
-					/>
-				{/each}
+			<div class="queue-wrapper" bind:this={queueWrapper}>
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<!-- svelte-ignore a11y_mouse_events_have_key_events -->
+				<div
+					class="queue-list"
+					onmouseover={onQueueHover}
+					onmouseleave={onQueueLeave}
+					onscroll={onQueueScroll}
+				>
+					{#each filteredItems as item (item.id)}
+						<ReviewCard
+							applicantName={item.applicantName}
+							status={item.status}
+							submittedAt={item.submittedAt}
+							claimedBy={item.claimedBy}
+							riskScore={item.riskScore}
+							selected={selectedAppId() === item.id}
+							onclick={() => goto(`/dashboard/reviews/${item.id}`)}
+						/>
+					{/each}
+				</div>
+				{#if glowRect}
+					<div class="queue-glow" style="top:{glowRect.top}px;left:{glowRect.left}px;width:{glowRect.width}px;height:{glowRect.height}px"></div>
+				{/if}
 			</div>
 
 			<div class="detail-panel">
@@ -137,22 +197,50 @@
 		height: calc(100vh - 260px);
 	}
 
-	.queue-list {
+	.queue-wrapper {
+		position: relative;
+		z-index: 1;
 		width: 320px;
 		flex-shrink: 0;
+	}
+
+	.queue-list {
+		height: 100%;
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
+		padding: 0.25rem;
 		overflow-y: auto;
+	}
+
+	/* Suppress card hover shadow inside queue — overlay handles it */
+	.queue-list :global([role="button"]:hover) {
+		box-shadow: none !important;
+	}
+
+	.queue-glow {
+		position: absolute;
+		pointer-events: none;
+		border-radius: var(--radius-md);
+		box-shadow: var(--glow-hover);
+		transition: top 100ms ease, left 100ms ease, width 100ms ease, height 100ms ease;
 	}
 
 	.detail-panel {
 		flex: 1;
+		display: flex;
+		flex-direction: column;
 		border-radius: var(--radius-md);
 		border: 1px solid var(--border-holdfast);
 		background: var(--surface);
 		min-height: 400px;
 		overflow: hidden;
+	}
+
+	/* Stretch page content (SpringReveal wrapper, placeholder div) to fill panel */
+	.detail-panel > :global(*) {
+		flex: 1;
+		min-height: 0;
 	}
 
 	/* History cards — color-coded by outcome */
@@ -167,7 +255,6 @@
 
 	.history-card:hover {
 		background: var(--surface-raised);
-		box-shadow: var(--glow-hover);
 	}
 
 	.history-card-selected {
