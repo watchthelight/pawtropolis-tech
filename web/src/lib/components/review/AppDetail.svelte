@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ApplicationDetail } from '$lib/server/queries/reviews';
+	import RiskAura from '$lib/components/data/RiskAura.svelte';
 
 	let { app }: { app: ApplicationDetail } = $props();
 
@@ -39,11 +40,12 @@
 				<p class="claimed-info">Claimed by {app.claimedBy}</p>
 			{/if}
 		</div>
-		{#if app.riskScore > 0}
-			<div class="risk-badge" class:risk-low={app.riskScore < 20} class:risk-med={app.riskScore >= 20 && app.riskScore < 50} class:risk-high={app.riskScore >= 50}>
-				{app.riskScore}%
-			</div>
-		{/if}
+		<RiskAura
+			variant="expanded"
+			riskScore={app.riskScore}
+			reason={app.scan?.reason}
+			evidence={app.scan ? { hard: app.scan.evidenceHard, soft: app.scan.evidenceSoft, safe: app.scan.evidenceSafe } : undefined}
+		/>
 	</div>
 
 	<!-- Answers section -->
@@ -139,18 +141,6 @@
 		color: var(--status-warning);
 		margin: 0.25rem 0 0;
 	}
-
-	.risk-badge {
-		flex-shrink: 0;
-		font-size: 0.75rem;
-		font-weight: 700;
-		padding: 0.25rem 0.5rem;
-		border-radius: var(--radius-sm);
-	}
-
-	.risk-low { color: var(--status-success); background: oklch(65% 0.05 145 / 0.15); }
-	.risk-med { color: var(--status-warning); background: oklch(70% 0.05 85 / 0.15); }
-	.risk-high { color: var(--status-danger); background: oklch(60% 0.05 25 / 0.15); }
 
 	/* Answers */
 	.answers-section {
