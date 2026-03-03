@@ -272,7 +272,7 @@
 	</div>
 
 	<!-- Action bar (full width) -->
-	<div class="action-bar" bind:this={actionBar}>
+	<div class="action-bar">
 		{#if decisionDone}
 			<span class="decision-done">{decisionDone}</span>
 		{:else if claimError || decisionError}
