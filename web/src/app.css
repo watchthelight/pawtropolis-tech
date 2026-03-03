@@ -29,10 +29,10 @@
 	--border-strong: oklch(42% 0.05 var(--hue));
 
 	/* ── Text (4 levels + on-accent) ── */
-	--text-primary: oklch(93% 0.015 var(--hue));
-	--text-secondary: oklch(65% 0.035 var(--hue));
-	--text-tertiary: oklch(50% 0.03 var(--hue));
-	--text-muted: oklch(38% 0.025 var(--hue));
+	--text-primary: oklch(95% 0.01 var(--hue));
+	--text-secondary: oklch(75% 0.025 var(--hue));
+	--text-tertiary: oklch(58% 0.02 var(--hue));
+	--text-muted: oklch(45% 0.02 var(--hue));
 	--text-on-accent: oklch(10% 0.02 var(--hue));
 
 	/* ── Primary accent (5 shades) ── */
