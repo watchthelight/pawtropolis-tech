@@ -104,3 +104,11 @@ export {
   executeModmailCommand,
   modmailContextMenu,
 } from "./modmail/commands.js";
+
+// Re-export dashboard bridge (interaction-free wrappers)
+export {
+  dashboardSendMessage,
+  dashboardOpenThread,
+  dashboardCloseThread,
+  dashboardReopenThread,
+} from "./modmail/dashboardBridge.js";
