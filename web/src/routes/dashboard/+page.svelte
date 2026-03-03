@@ -5,7 +5,8 @@
 	import SpringReveal from '$lib/components/motion/SpringReveal.svelte';
 
 	let { data } = $props();
-	const { user, metrics } = data;
+	let user = $derived(data.user);
+	let metrics = $derived(data.metrics);
 
 	const TIER_LABELS: Record<string, string> = {
 		owner: 'Owner / Dev',

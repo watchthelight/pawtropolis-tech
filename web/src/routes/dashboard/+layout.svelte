@@ -6,7 +6,7 @@
 	import Nav from '$lib/components/layout/Nav.svelte';
 
 	let { data, children } = $props();
-	const { user } = data;
+	let user = $derived(data.user);
 
 	$effect(() => {
 		applyTheme(user.accentColor);

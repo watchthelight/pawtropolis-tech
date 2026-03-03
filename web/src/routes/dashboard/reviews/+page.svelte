@@ -1,6 +1,6 @@
 <script lang="ts">
 	let { data } = $props();
-	const { tabCounts } = data;
+	let tabCounts = $derived(data.tabCounts);
 </script>
 
 <!-- No application selected — show placeholder with queue stats -->

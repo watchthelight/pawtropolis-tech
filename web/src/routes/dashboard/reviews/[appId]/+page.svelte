@@ -3,7 +3,8 @@
 	import AppDetail from '$lib/components/review/AppDetail.svelte';
 
 	let { data } = $props();
-	const { app, modmail } = data;
+	let app = $derived(data.app);
+	let modmail = $derived(data.modmail);
 </script>
 
 <SpringReveal stagger={30}>
