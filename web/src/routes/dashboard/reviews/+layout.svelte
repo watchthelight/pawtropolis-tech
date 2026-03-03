@@ -134,7 +134,7 @@
 	.review-layout {
 		display: flex;
 		gap: var(--space-section);
-		min-height: calc(100vh - 260px);
+		height: calc(100vh - 260px);
 	}
 
 	.queue-list {
