@@ -124,7 +124,7 @@ function extractImageHue(imageUrl: string): Promise<number | null> {
 
 function setHue(hue: number): void {
 	if (typeof document !== 'undefined') {
-		document.body.style.setProperty('--hue', String(Math.round(hue)));
+		document.documentElement.style.setProperty('--hue', String(Math.round(hue)));
 	}
 }
 
