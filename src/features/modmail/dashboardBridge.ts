@@ -86,12 +86,14 @@ export async function dashboardSendMessage(params: {
       logger.warn({ err, ticketId, threadId: ticket.thread_id }, "[modmail:dashboard] failed to echo to thread");
     }
 
-    // Record in DB
+    // Record in DB (all named params must be present for better-sqlite3)
     insertModmailMessage({
       ticketId: ticket.id,
       direction: "to_user",
       threadMessageId,
       dmMessageId: dmMessage.id,
+      replyToThreadMessageId: undefined,
+      replyToDmMessageId: undefined,
       content,
     });
 
