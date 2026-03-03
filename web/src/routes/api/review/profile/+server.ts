@@ -3,36 +3,24 @@ import type { RequestHandler } from './$types';
 import { callBotApi } from '$lib/server/botApi';
 import { hasMinTier } from '$lib/server/roles';
 
-const DISCORD_API = 'https://discord.com/api/v9';
+const PROFILE_PROXY_URL = process.env.DISCORD_PROFILE_PROXY_URL || '';
+const PROFILE_PROXY_SECRET = process.env.DISCORD_PROFILE_PROXY_SECRET || '';
 
-/**
- * Fetch user profile (bio, custom status) via Discord's internal profile endpoint.
- * Uses DISCORD_USER_TOKEN env var — a user account token stored ONLY server-side.
- * This token is NEVER sent to any client, never logged, never included in responses.
- */
+/** Fetch bio + custom status via Cloudflare Worker proxy (bypasses datacenter IP block). */
 async function fetchDiscordProfile(targetUserId: string, guildId: string): Promise<{ bio: string | null; customStatus: string | null } | null> {
-	const token = process.env.DISCORD_USER_TOKEN;
-	if (!token) return null;
+	if (!PROFILE_PROXY_URL || !PROFILE_PROXY_SECRET) return null;
 	try {
-		const res = await fetch(
-			`${DISCORD_API}/users/${targetUserId}/profile?with_mutual_guilds=false&with_mutual_friends_count=false&guild_id=${guildId}`,
-			{
-				headers: { Authorization: token },
-				signal: AbortSignal.timeout(5000)
-			}
-		);
+		const res = await fetch(PROFILE_PROXY_URL, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'X-Proxy-Secret': PROFILE_PROXY_SECRET
+			},
+			body: JSON.stringify({ targetUserId, guildId }),
+			signal: AbortSignal.timeout(8000)
+		});
 		if (!res.ok) return null;
-		const data = await res.json();
-		const bio = data.user_profile?.bio || null;
-		let customStatus: string | null = null;
-		// Check for custom status in guild member activities
-		const activities: Array<{ type: number; emoji?: { name?: string }; state?: string }> =
-			data.guild_member?.activities ?? [];
-		const custom = activities.find((a) => a.type === 4);
-		if (custom) {
-			customStatus = [custom.emoji?.name, custom.state].filter(Boolean).join(' ') || null;
-		}
-		return { bio, customStatus };
+		return await res.json();
 	} catch {
 		return null;
 	}
@@ -53,7 +41,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 
 	const guildId = process.env.GUILD_ID || '';
 
-	// Fetch bot API data and Discord profile in parallel
+	// Fetch bot API data and Discord profile (bio) in parallel
 	const [botResult, discordProfile] = await Promise.all([
 		callBotApi('/api/review/profile', {
 			userId: locals.user.id,
