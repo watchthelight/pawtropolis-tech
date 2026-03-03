@@ -37,6 +37,8 @@
 	let loading = $state(false);
 	let error = $state<string | null>(null);
 	let lastFetchedId = $state('');
+	let rolesExpanded = $state(false);
+	const ROLES_COLLAPSED_COUNT = 3;
 
 	function formatDate(ms: number | null): string {
 		if (!ms) return '—';
@@ -87,8 +89,9 @@
 	// Re-fetch when userId changes (clicking different apps in queue)
 	$effect(() => {
 		if (userId && userId !== lastFetchedId) {
-			// Reset to cached data immediately for fast render
+			// Reset state for new user
 			profile = cachedProfile ? { ...cachedProfile, avatarUrl, displayName: applicantName } : { avatarUrl, displayName: applicantName };
+			rolesExpanded = false;
 			fetchProfile();
 		}
 	});
@@ -153,19 +156,38 @@
 		</div>
 	</div>
 
-	<!-- Roles -->
+	<!-- Roles (collapsed by default) -->
 	{#if profile?.roles && profile.roles.length > 0}
 		<div class="dc-divider"></div>
 		<div class="dc-section">
-			<p class="dc-section-label">Roles</p>
-			<div class="dc-roles">
-				{#each profile.roles as role}
-					<span class="dc-role" style:border-color={role.color ?? 'var(--border-holdfast)'} style:color={role.color ?? 'var(--text-secondary)'}>
-						{#if role.color}<span class="dc-role-dot" style:background-color={role.color}></span>{/if}
-						{role.name}
-					</span>
-				{/each}
-			</div>
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
+			<p class="dc-section-label dc-section-label-toggle" onclick={() => rolesExpanded = !rolesExpanded}>
+				Roles ({profile.roles.length})
+				<span class="dc-expand-arrow" class:dc-expand-arrow-open={rolesExpanded}>&#9656;</span>
+			</p>
+			{#if rolesExpanded}
+				<div class="dc-roles">
+					{#each profile.roles as role}
+						<span class="dc-role" style:border-color={role.color ?? 'var(--border-holdfast)'} style:color={role.color ?? 'var(--text-secondary)'}>
+							{#if role.color}<span class="dc-role-dot" style:background-color={role.color}></span>{/if}
+							{role.name}
+						</span>
+					{/each}
+				</div>
+			{:else}
+				<div class="dc-roles">
+					{#each profile.roles.slice(0, ROLES_COLLAPSED_COUNT) as role}
+						<span class="dc-role" style:border-color={role.color ?? 'var(--border-holdfast)'} style:color={role.color ?? 'var(--text-secondary)'}>
+							{#if role.color}<span class="dc-role-dot" style:background-color={role.color}></span>{/if}
+							{role.name}
+						</span>
+					{/each}
+					{#if profile.roles.length > ROLES_COLLAPSED_COUNT}
+						<span class="dc-role dc-role-more" onclick={() => rolesExpanded = true}>+{profile.roles.length - ROLES_COLLAPSED_COUNT}</span>
+					{/if}
+				</div>
+			{/if}
 		</div>
 	{/if}
 
@@ -289,6 +311,27 @@
 		margin: 0 0 0.35rem;
 	}
 
+	.dc-section-label-toggle {
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+		transition: color 150ms;
+	}
+
+	.dc-section-label-toggle:hover {
+		color: var(--text-primary);
+	}
+
+	.dc-expand-arrow {
+		font-size: 0.55rem;
+		transition: transform 150ms;
+	}
+
+	.dc-expand-arrow-open {
+		transform: rotate(90deg);
+	}
+
 	.dc-bio {
 		font-size: 0.8rem;
 		color: var(--text-primary);
@@ -342,6 +385,17 @@
 		height: 0.35rem;
 		border-radius: 50%;
 		flex-shrink: 0;
+	}
+
+	.dc-role-more {
+		cursor: pointer;
+		border-color: var(--border-holdfast);
+		color: var(--text-secondary);
+	}
+
+	.dc-role-more:hover {
+		color: var(--text-primary);
+		border-color: var(--accent);
 	}
 
 	.dc-footer {

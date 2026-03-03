@@ -463,7 +463,7 @@ export async function startDashboardApi(client: Client): Promise<void> {
       // Force API call to get banner and accent color (not available from cache)
       const user = await client.users.fetch(targetUserId, { force: true });
       const guild = getGuild();
-      const member = guild ? await guild.members.fetch(targetUserId).catch(() => null) : null;
+      const member = guild ? await guild.members.fetch({ user: targetUserId, force: true }).catch(() => null) : null;
 
       // Cache enriched data
       cacheUser(user, GUILD_ID, member);
@@ -487,6 +487,7 @@ export async function startDashboardApi(client: Client): Promise<void> {
           customStatus = [custom.emoji?.toString(), custom.state].filter(Boolean).join(" ") || null;
         }
       }
+      logger.debug({ targetUserId, status, customStatus, activityCount: presence?.activities?.length ?? 0 }, "[dashboardApi] presence data");
 
       return {
         success: true,
