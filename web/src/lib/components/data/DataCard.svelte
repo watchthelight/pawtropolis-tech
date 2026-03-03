@@ -21,6 +21,8 @@
 		md: 'var(--shadow-lg), var(--glow-hover)',
 		lg: 'var(--shadow-lg), var(--glow-hover)'
 	} as const;
+
+	const canHover = typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches;
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -32,16 +34,16 @@
 	style:box-shadow={shadowVar[elevation]}
 	style:border-color={selected ? 'var(--accent)' : 'var(--border-holdfast)'}
 	style:transition-duration="var(--duration-fast)"
-	onmouseenter={(e) => {
+	onmouseenter={canHover ? (e) => {
 		const el = e.currentTarget;
 		el.style.boxShadow = hoverShadowVar[elevation];
 		if (!prefersReducedMotion()) el.style.transform = 'translateY(-2px)';
-	}}
-	onmouseleave={(e) => {
+	} : undefined}
+	onmouseleave={canHover ? (e) => {
 		const el = e.currentTarget;
 		el.style.boxShadow = shadowVar[elevation];
 		if (!prefersReducedMotion()) el.style.transform = 'translateY(0)';
-	}}
+	} : undefined}
 	onclick={() => { if (clickable && onclick) onclick(); }}
 	onkeydown={(e) => { if (clickable && onclick && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onclick(); } }}
 	role={clickable ? 'button' : undefined}

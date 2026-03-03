@@ -54,8 +54,14 @@
 		transition: all 150ms var(--ease-smooth);
 	}
 
-	.tab:hover {
-		color: var(--text-primary);
+	@media (hover: hover) {
+		.tab:hover {
+			color: var(--text-primary);
+			background: var(--surface-raised);
+		}
+	}
+
+	.tab:active {
 		background: var(--surface-raised);
 	}
 
@@ -79,5 +85,18 @@
 	.tab-active .tab-badge {
 		background: var(--accent);
 		color: var(--bg);
+	}
+
+	@media (max-width: 767px) {
+		.tab-bar {
+			overflow-x: auto;
+			-webkit-overflow-scrolling: touch;
+			scrollbar-width: none;
+		}
+		.tab-bar::-webkit-scrollbar { display: none; }
+		.tab {
+			flex-shrink: 0;
+			min-height: 44px;
+		}
 	}
 </style>

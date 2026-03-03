@@ -430,10 +430,6 @@
 		transition: all 150ms;
 	}
 
-	.send-btn:hover:not(:disabled) {
-		filter: brightness(1.15);
-	}
-
 	.send-btn:disabled {
 		opacity: 0.4;
 		cursor: not-allowed;
@@ -463,5 +459,26 @@
 		left: 0;
 		font-size: 0.6rem;
 		color: var(--status-danger);
+	}
+
+	@media (max-width: 767px) {
+		.send-input {
+			font-size: 16px; /* prevent iOS auto-zoom */
+		}
+		.thread-messages {
+			max-height: 300px;
+		}
+		.send-btn {
+			min-height: 44px;
+			min-width: 44px;
+			width: 44px;
+			height: 44px;
+		}
+	}
+
+	@media (hover: hover) {
+		.send-btn:hover:not(:disabled) {
+			filter: brightness(1.15);
+		}
 	}
 </style>

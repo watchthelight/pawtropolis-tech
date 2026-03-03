@@ -80,9 +80,15 @@
 		transition: all 150ms var(--ease-smooth);
 	}
 
-	.review-card:hover {
+	@media (hover: hover) {
+		.review-card:hover {
+			background: var(--surface-raised);
+			box-shadow: var(--glow-hover);
+		}
+	}
+
+	.review-card:active {
 		background: var(--surface-raised);
-		box-shadow: var(--glow-hover);
 	}
 
 	.review-card-selected {
