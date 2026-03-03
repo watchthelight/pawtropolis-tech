@@ -7,7 +7,7 @@
 	import ModmailViewer from '$lib/components/review/ModmailViewer.svelte';
 	import gsap from 'gsap';
 	import { SPRINGS } from '$lib/motion';
-	import { setBotOffline, setBotOnline } from '$lib/stores/bot-status.svelte';
+	import { setBotOffline, setBotOnline, getBotOnline } from '$lib/stores/bot-status.svelte';
 
 	let {
 		app,
@@ -40,6 +40,7 @@
 		});
 	}
 
+	let botOnline = $derived(getBotOnline());
 	const REVIEWABLE_STATUSES = ['submitted', 'needs_info'];
 	let isReviewable = $derived(REVIEWABLE_STATUSES.includes(app.status));
 	let isClaimedByMe = $derived(isReviewable && app.claimedBy != null && app.claimedBy === sessionUserId);
@@ -295,19 +296,19 @@
 			</button>
 			<button class="btn btn-cancel" onclick={cancelDecision} disabled={decisionLoading}>Cancel</button>
 		{:else if isUnclaimed}
-			<button class="btn btn-claim" onclick={handleClaim} disabled={claimLoading}>
-				{claimLoading ? 'Claiming...' : 'Claim'}
+			<button class="btn btn-claim" onclick={handleClaim} disabled={claimLoading || !botOnline}>
+				{claimLoading ? 'Claiming...' : !botOnline ? 'Bot offline' : 'Claim'}
 			</button>
 		{:else if isClaimedByMe}
-			<button class="btn btn-unclaim" onclick={handleUnclaim} disabled={claimLoading || decisionLoading}>
+			<button class="btn btn-unclaim" onclick={handleUnclaim} disabled={claimLoading || decisionLoading || !botOnline}>
 				{claimLoading ? 'Releasing...' : 'Unclaim'}
 			</button>
 			<div class="decision-buttons">
-				<button class="btn btn-approve" onclick={() => startDecision('approve')} disabled={decisionLoading}>
+				<button class="btn btn-approve" onclick={() => startDecision('approve')} disabled={decisionLoading || !botOnline}>
 					{decisionLoading && activeAction === 'approve' ? 'Approving...' : 'Approve'}
 				</button>
-				<button class="btn btn-reject" onclick={() => startDecision('reject')} disabled={decisionLoading}>Reject</button>
-				<button class="btn btn-kick" onclick={() => startDecision('kick')} disabled={decisionLoading}>Kick</button>
+				<button class="btn btn-reject" onclick={() => startDecision('reject')} disabled={decisionLoading || !botOnline}>Reject</button>
+				<button class="btn btn-kick" onclick={() => startDecision('kick')} disabled={decisionLoading || !botOnline}>Kick</button>
 			</div>
 		{:else if isResolved}
 			<span class="action-resolved">{app.status.charAt(0).toUpperCase() + app.status.slice(1)}</span>
