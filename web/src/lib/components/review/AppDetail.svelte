@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
 	import type { ApplicationDetail } from '$lib/server/queries/reviews';
 	import type { ModmailThreadSummary } from '$lib/server/queries/modmail';
@@ -7,6 +7,7 @@
 	import ModmailViewer from '$lib/components/review/ModmailViewer.svelte';
 	import gsap from 'gsap';
 	import { SPRINGS } from '$lib/motion';
+	import { setBotOffline, setBotOnline } from '$lib/stores/bot-status.svelte';
 
 	let {
 		app,
@@ -78,12 +79,14 @@
 			if (!result.success) {
 				claimError = result.error;
 			} else {
+				setBotOnline();
 				app.claimedBy = sessionUserId;
 				app.claimedAt = Date.now();
 				requestAnimationFrame(() => animateActionBar());
 			}
 		} catch {
 			claimError = 'Failed to connect';
+			setBotOffline();
 		} finally {
 			claimLoading = false;
 		}
@@ -102,11 +105,13 @@
 			if (!result.success) {
 				claimError = result.error;
 			} else {
+				setBotOnline();
 				app.claimedBy = null;
 				app.claimedAt = null;
 			}
 		} catch {
 			claimError = 'Failed to connect';
+			setBotOffline();
 		} finally {
 			claimLoading = false;
 		}
@@ -189,9 +194,12 @@
 				return;
 			}
 
+			setBotOnline();
+
 			// Success — show confirmation then navigate away
 			const labels: Record<DecisionAction, string> = { approve: 'Approved', reject: 'Rejected', kick: 'Kicked' };
 			decisionDone = labels[action];
+			decisionError = null;
 			activeAction = null;
 
 			// Brief pause to show success, then go back to queue
@@ -199,6 +207,7 @@
 		} catch {
 			decisionError = 'Failed to connect';
 			decisionLoading = false;
+			setBotOffline();
 		}
 	}
 

@@ -12,12 +12,17 @@
 
 	let { data, children } = $props();
 
-	// Live queue updates — any review event refreshes data from DB
+	// Live queue updates — any review event refreshes data from DB (debounced)
+	let invalidateTimer: ReturnType<typeof setTimeout> | undefined;
 	function onReviewEvent(_event: SSEEvent) {
-		invalidateAll();
+		if (invalidateTimer) clearTimeout(invalidateTimer);
+		invalidateTimer = setTimeout(() => invalidateAll(), 150);
 	}
 	subscribe('review:*', onReviewEvent);
-	onDestroy(() => unsubscribe('review:*', onReviewEvent));
+	onDestroy(() => {
+		unsubscribe('review:*', onReviewEvent);
+		if (invalidateTimer) clearTimeout(invalidateTimer);
+	});
 	let queue = $derived(data.queue);
 	let history = $derived(data.history);
 	let userId = $derived(data.userId);
