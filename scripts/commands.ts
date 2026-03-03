@@ -207,4 +207,7 @@ if (isMainModule) {
 
   if (process.argv.includes("--purge-global")) await purgeGlobal(appId, token);
   if (process.argv.includes("--all")) await syncAllGuilds(appId, token);
+
+  // Force exit — REST client keeps handles open that prevent clean shutdown
+  process.exit(0);
 }
