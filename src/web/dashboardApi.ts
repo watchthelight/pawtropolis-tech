@@ -40,6 +40,21 @@ type ReviewBody = {
   reason?: string;
 };
 
+// ===== SSE Notifier =====
+
+const DASHBOARD_WEB_URL = process.env.DASHBOARD_WEB_URL || "http://localhost:3000";
+const INTERNAL_SECRET = process.env.INTERNAL_SECRET || "";
+
+/** Fire-and-forget SSE event to dashboard. Never blocks the mutation response. */
+function notifyDashboard(type: string, payload: Record<string, unknown>): void {
+  if (!INTERNAL_SECRET) return;
+  fetch(`${DASHBOARD_WEB_URL}/api/internal/events`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Internal-Secret": INTERNAL_SECRET },
+    body: JSON.stringify({ type, payload, timestamp: Date.now() }),
+  }).catch((err) => logger.warn({ err, type }, "[dashboardApi] SSE notify failed"));
+}
+
 // ===== Server =====
 
 let server: ReturnType<typeof Fastify> | null = null;
@@ -85,6 +100,7 @@ export async function startDashboardApi(client: Client): Promise<void> {
 
     try {
       claimTx(appId, userId, GUILD_ID);
+      notifyDashboard("review:claimed", { appId, reviewerId: userId });
       return { success: true, data: { appId, reviewerId: userId } } satisfies ApiSuccess;
     } catch (err) {
       if (err instanceof ClaimError) {
@@ -125,6 +141,7 @@ export async function startDashboardApi(client: Client): Promise<void> {
         throw err;
       }
     }
+    notifyDashboard("review:unclaimed", { appId, reviewerId: userId });
     return { success: true, data: { appId } } satisfies ApiSuccess;
   });
 
@@ -167,6 +184,7 @@ export async function startDashboardApi(client: Client): Promise<void> {
       }
     }
 
+    notifyDashboard("review:approved", { appId, reviewerId: userId, action: "approve", reason });
     return { success: true, data: { appId, action: "approve" } } satisfies ApiSuccess;
   });
 
@@ -204,6 +222,7 @@ export async function startDashboardApi(client: Client): Promise<void> {
       }
     }
 
+    notifyDashboard("review:rejected", { appId, reviewerId: userId, action: "reject", reason });
     return { success: true, data: { appId, action: "reject" } } satisfies ApiSuccess;
   });
 
@@ -240,6 +259,7 @@ export async function startDashboardApi(client: Client): Promise<void> {
       });
     }
 
+    notifyDashboard("review:kicked", { appId, reviewerId: userId, action: "kick", reason });
     return { success: true, data: { appId, action: "kick" } } satisfies ApiSuccess;
   });
 
