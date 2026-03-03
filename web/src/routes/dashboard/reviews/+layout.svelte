@@ -6,6 +6,7 @@
 	import { flip } from 'svelte/animate';
 	import { subscribe, unsubscribe } from '$lib/stores/sse.svelte';
 	import type { SSEEvent } from '$lib/types/events';
+	import { getIsMobile } from '$lib/stores/viewport.svelte';
 	import PageHeader from '$lib/components/layout/PageHeader.svelte';
 	import EmptyState from '$lib/components/feedback/EmptyState.svelte';
 	import SpringReveal from '$lib/components/motion/SpringReveal.svelte';
@@ -119,6 +120,9 @@
 	function onQueueScroll() {
 		if (glowTarget) updateGlow();
 	}
+
+	let isMobile = $derived(getIsMobile());
+	let hasSelectedApp = $derived($page.url.pathname !== '/dashboard/reviews');
 </script>
 
 <SpringReveal stagger={30}>
@@ -129,6 +133,11 @@
 	{#if isHistoryTab}
 		{#if history.length === 0}
 			<EmptyState message={EMPTY_MESSAGES.history.message} subtitle={EMPTY_MESSAGES.history.subtitle} />
+		{:else if isMobile && hasSelectedApp}
+			<!-- Mobile: full-width detail -->
+			<div class="mobile-detail-wrapper">
+				{@render children()}
+			</div>
 		{:else}
 			<div class="review-layout">
 				<div class="queue-wrapper" bind:this={queueWrapper}>
@@ -136,9 +145,9 @@
 					<!-- svelte-ignore a11y_mouse_events_have_key_events -->
 					<div
 						class="queue-list"
-						onmouseover={onQueueHover}
-						onmouseleave={onQueueLeave}
-						onscroll={onQueueScroll}
+						onmouseover={isMobile ? undefined : onQueueHover}
+						onmouseleave={isMobile ? undefined : onQueueLeave}
+						onscroll={isMobile ? undefined : onQueueScroll}
 					>
 						{#each history as item (item.id)}
 							<!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -179,18 +188,25 @@
 							</div>
 						{/each}
 					</div>
-					{#if glowRect}
+					{#if !isMobile && glowRect}
 						<div class="queue-glow" style="top:{glowRect.top}px;left:{glowRect.left}px;width:{glowRect.width}px;height:{glowRect.height}px"></div>
 					{/if}
 				</div>
 
-				<div class="detail-panel">
-					{@render children()}
-				</div>
+				{#if !isMobile}
+					<div class="detail-panel">
+						{@render children()}
+					</div>
+				{/if}
 			</div>
 		{/if}
 	{:else if filteredItems.length === 0}
 		<EmptyState message={EMPTY_MESSAGES[activeTab].message} subtitle={EMPTY_MESSAGES[activeTab].subtitle} />
+	{:else if isMobile && hasSelectedApp}
+		<!-- Mobile: full-width detail -->
+		<div class="mobile-detail-wrapper">
+			{@render children()}
+		</div>
 	{:else}
 		<div class="review-layout">
 			<div class="queue-wrapper" bind:this={queueWrapper}>
@@ -198,9 +214,9 @@
 				<!-- svelte-ignore a11y_mouse_events_have_key_events -->
 				<div
 					class="queue-list"
-					onmouseover={onQueueHover}
-					onmouseleave={onQueueLeave}
-					onscroll={onQueueScroll}
+					onmouseover={isMobile ? undefined : onQueueHover}
+					onmouseleave={isMobile ? undefined : onQueueLeave}
+					onscroll={isMobile ? undefined : onQueueScroll}
 				>
 					{#each filteredItems as item (item.id)}
 						<div transition:slide={{ duration: 200 }} animate:flip={{ duration: 200 }}>
@@ -219,14 +235,16 @@
 						</div>
 					{/each}
 				</div>
-				{#if glowRect}
+				{#if !isMobile && glowRect}
 					<div class="queue-glow" style="top:{glowRect.top}px;left:{glowRect.left}px;width:{glowRect.width}px;height:{glowRect.height}px"></div>
 				{/if}
 			</div>
 
-			<div class="detail-panel">
-				{@render children()}
-			</div>
+			{#if !isMobile}
+				<div class="detail-panel">
+					{@render children()}
+				</div>
+			{/if}
 		</div>
 	{/if}
 </SpringReveal>
@@ -327,10 +345,6 @@
 		transition: all 150ms var(--ease-smooth);
 	}
 
-	.history-card:hover {
-		background: var(--surface-raised);
-	}
-
 	.history-card-selected {
 		border-left: 3px solid var(--accent);
 		background: var(--surface-raised);
@@ -393,5 +407,37 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+	}
+
+	/* Mobile: full-width detail wrapper */
+	.mobile-detail-wrapper {
+		display: flex;
+		flex-direction: column;
+		min-height: calc(var(--vh-full) - var(--mobile-header-h) - 10rem);
+		border-radius: var(--radius-md);
+		border: 1px solid var(--border-holdfast);
+		background: var(--surface);
+		overflow: hidden;
+	}
+
+	.mobile-detail-wrapper > :global(*) {
+		flex: 1;
+		min-height: 0;
+	}
+
+	@media (max-width: 767px) {
+		.review-layout {
+			height: auto;
+		}
+
+		.queue-wrapper {
+			width: 100%;
+		}
+	}
+
+	@media (hover: hover) {
+		.history-card:hover {
+			background: var(--surface-raised);
+		}
 	}
 </style>
