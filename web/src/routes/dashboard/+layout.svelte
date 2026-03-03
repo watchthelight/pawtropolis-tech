@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { applyTheme } from '$lib/stores/theme';
-	import { connect, disconnect, onReconnect, offReconnect } from '$lib/stores/sse.svelte';
+	import { connect, disconnect, onReconnect, offReconnect, subscribe, unsubscribe } from '$lib/stores/sse.svelte';
 	import { startMonitoring, stopMonitoring } from '$lib/stores/bot-status.svelte';
 	import { invalidateAll } from '$app/navigation';
+	import type { SSEEvent } from '$lib/types/events';
 	import Nav from '$lib/components/layout/Nav.svelte';
 
 	let { data, children } = $props();
@@ -28,13 +29,25 @@
 			.catch(() => {}); // silent on failure
 	});
 
+	// Live tier expansion — refresh session and reload on role change
+	function onRoleChanged(_event: SSEEvent) {
+		fetch('/api/refresh-session')
+			.then((r) => r.json())
+			.then((result) => {
+				if (result.tierChanged) invalidateAll();
+			})
+			.catch(() => {});
+	}
+
 	$effect(() => {
 		const refreshOnReconnect = () => invalidateAll();
 		connect();
 		startMonitoring();
+		subscribe('role:changed', onRoleChanged);
 		onReconnect(refreshOnReconnect);
 		return () => {
 			offReconnect(refreshOnReconnect);
+			unsubscribe('role:changed', onRoleChanged);
 			stopMonitoring();
 			disconnect();
 		};
