@@ -190,13 +190,20 @@
 		color: var(--text-secondary);
 	}
 
-	.nav-inactive:hover {
-		color: var(--text-primary);
-		background: var(--surface-raised);
+	@media (hover: hover) {
+		.nav-inactive:hover {
+			color: var(--text-primary);
+			background: var(--surface-raised);
+		}
+
+		.nav-inactive:not(.nav-item-collapsed):hover {
+			transform: translateX(2px);
+		}
 	}
 
-	.nav-inactive:not(.nav-item-collapsed):hover {
-		transform: translateX(2px);
+	.nav-inactive:active {
+		color: var(--text-primary);
+		background: var(--surface-raised);
 	}
 
 	/* Letter icon (shown when collapsed) */
@@ -267,5 +274,13 @@
 
 	.toggle-label {
 		font-size: 0.75rem;
+	}
+
+	/* Mobile touch targets */
+	@media (max-width: 767px) {
+		.nav-item {
+			padding: 0.625rem 1rem;
+			min-height: 44px;
+		}
 	}
 </style>
