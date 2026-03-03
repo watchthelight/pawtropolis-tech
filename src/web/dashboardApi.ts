@@ -50,18 +50,7 @@ type ReviewBody = {
 
 // ===== SSE Notifier =====
 
-const DASHBOARD_WEB_URL = process.env.DASHBOARD_WEB_URL || "http://localhost:3000";
-const INTERNAL_SECRET = process.env.INTERNAL_SECRET || "";
-
-/** Fire-and-forget SSE event to dashboard. Never blocks the mutation response. */
-function notifyDashboard(type: string, payload: Record<string, unknown>): void {
-  if (!INTERNAL_SECRET) return;
-  fetch(`${DASHBOARD_WEB_URL}/api/internal/events`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Internal-Secret": INTERNAL_SECRET },
-    body: JSON.stringify({ type, payload, timestamp: Date.now() }),
-  }).catch((err) => logger.warn({ err, type }, "[dashboardApi] SSE notify failed"));
-}
+import { notifyDashboard } from "./notifyDashboard.js";
 
 // ===== Server =====
 

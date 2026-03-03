@@ -1,5 +1,9 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
+	import { invalidateAll } from '$app/navigation';
 	import type { ModmailThreadSummary } from '$lib/server/queries/modmail';
+	import { subscribe, unsubscribe } from '$lib/stores/sse.svelte';
+	import type { SSEEvent } from '$lib/types/events';
 
 	let {
 		threads,
@@ -167,6 +171,17 @@
 			handleSend();
 		}
 	}
+
+	// SSE: auto-refresh when modmail events arrive from other sources
+	function handleModmailEvent(_event: SSEEvent) {
+		// Refresh the page data to pick up new messages/state changes
+		invalidateAll();
+	}
+
+	subscribe('modmail:*', handleModmailEvent);
+	onDestroy(() => {
+		unsubscribe('modmail:*', handleModmailEvent);
+	});
 </script>
 
 <div class="modmail-section">

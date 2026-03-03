@@ -22,6 +22,7 @@ import { logger } from "../../lib/logger.js";
 import { captureException } from "../../lib/sentry.js";
 import { enrichEvent } from "../../lib/reqctx.js";
 import { getConfig } from "../../lib/config.js";
+import { notifyDashboard } from "../../web/notifyDashboard.js";
 import { logActionPretty } from "../../logging/pretty.js";
 import { SAFE_ALLOWED_MENTIONS } from "../../lib/constants.js";
 import type { ModmailTicket } from "./types.js";
@@ -407,6 +408,8 @@ export async function closeModmailThread(params: {
       });
     }
 
+    notifyDashboard("modmail:thread_closed", { ticketId: ticket.id, staffUserId: interaction.user.id });
+
     return {
       success: true,
       message: logUrl ? `Modmail closed. Logs: ${logUrl}` : "Modmail thread closed.",
@@ -553,6 +556,8 @@ export async function closeModmailForApplication(
     })();
 
     logger.info({ ticketId, threadId, guildId, userId }, "[modmail] close:cleanup ok");
+
+    notifyDashboard("modmail:thread_closed", { ticketId, staffUserId: "system" });
 
     // ===== Best-effort: DM applicant about closure =====
     try {

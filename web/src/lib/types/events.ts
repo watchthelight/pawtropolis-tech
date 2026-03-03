@@ -29,7 +29,11 @@ export type SSEEventType =
 	| 'review:rejected'
 	| 'review:kicked'
 	| 'stats:updated'
-	| 'role:changed';
+	| 'role:changed'
+	| 'modmail:message_sent'
+	| 'modmail:thread_opened'
+	| 'modmail:thread_closed'
+	| 'modmail:thread_reopened';
 
 // ---------------------------------------------------------------------------
 // Typed payloads per event
@@ -69,6 +73,31 @@ export interface RoleChangedPayload {
 	previousTier: DashboardTier;
 }
 
+// Modmail payloads
+
+export interface ModmailMessageSentPayload {
+	ticketId: number;
+	staffUserId: string;
+}
+
+export interface ModmailThreadOpenedPayload {
+	ticketId: number;
+	threadId: string;
+	targetUserId: string;
+	staffUserId: string;
+}
+
+export interface ModmailThreadClosedPayload {
+	ticketId: number;
+	staffUserId: string;
+}
+
+export interface ModmailThreadReopenedPayload {
+	ticketId: number;
+	threadId: string;
+	staffUserId: string;
+}
+
 // ---------------------------------------------------------------------------
 // Event-to-payload type map (for type-safe consumption)
 // ---------------------------------------------------------------------------
@@ -82,6 +111,10 @@ export interface SSEEventMap {
 	'review:kicked': ReviewDecidedPayload;
 	'stats:updated': StatsUpdatedPayload;
 	'role:changed': RoleChangedPayload;
+	'modmail:message_sent': ModmailMessageSentPayload;
+	'modmail:thread_opened': ModmailThreadOpenedPayload;
+	'modmail:thread_closed': ModmailThreadClosedPayload;
+	'modmail:thread_reopened': ModmailThreadReopenedPayload;
 }
 
 // ---------------------------------------------------------------------------
@@ -97,6 +130,7 @@ export const EVENT_TIER_VISIBILITY: Record<string, DashboardTier> = {
 	'review:': 'gk',
 	'stats:': 'gk',
 	'role:': 'gk',
+	'modmail:': 'gk',
 	// Future domains
 	'flag:': 'mod',
 	'pulse:': 'mod',

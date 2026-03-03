@@ -33,6 +33,7 @@ import { hasManageGuild, isReviewer, canRunAllCommands } from "../../lib/config.
 import { logActionPretty } from "../../logging/pretty.js";
 import { SAFE_ALLOWED_MENTIONS } from "../../lib/constants.js";
 import { createTicket } from "./tickets.js";
+import { notifyDashboard } from "../../web/notifyDashboard.js";
 import { addOpenThread } from "./threadState.js";
 import { missingPermsForStartThread, ensureModsCanSpeakInThread } from "./threadPerms.js";
 
@@ -423,6 +424,8 @@ export async function openPublicModmailThreadFor(params: {
       e.addAttr("threadId", thread.id);
       if (appCode) e.addAttr("appCode", appCode);
     });
+
+    notifyDashboard("modmail:thread_opened", { ticketId, threadId: thread.id, targetUserId: userId, staffUserId: interaction.user.id });
 
     return {
       success: true,

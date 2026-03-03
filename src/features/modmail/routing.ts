@@ -27,6 +27,7 @@ import {
 } from "./tickets.js";
 import { appendTranscript, formatContentWithAttachments } from "./transcript.js";
 import { SAFE_ALLOWED_MENTIONS } from "../../lib/constants.js";
+import { notifyDashboard } from "../../web/notifyDashboard.js";
 
 // ===== Embed Builders =====
 
@@ -313,6 +314,8 @@ export async function routeThreadToDm(message: Message, ticket: ModmailTicket, c
 
     appendTranscript(ticket.id, "STAFF", transcriptContent);
 
+    notifyDashboard("modmail:message_sent", { ticketId: ticket.id, staffUserId: message.author.id });
+
     // Track in wide event
     enrichEvent((e) => {
       e.setFeature("modmail", "relay_message");
@@ -429,6 +432,8 @@ export async function routeDmToThread(message: Message, ticket: ModmailTicket, c
 
     // Append to transcript buffer for audit trail (in-memory, also persisted above)
     appendTranscript(ticket.id, "USER", transcriptContent);
+
+    notifyDashboard("modmail:message_sent", { ticketId: ticket.id, staffUserId: message.author.id });
 
     // Track in wide event
     enrichEvent((e) => {
