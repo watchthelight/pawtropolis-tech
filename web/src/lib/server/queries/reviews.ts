@@ -5,6 +5,7 @@ export interface ReviewQueueItem {
 	id: string;
 	userId: string;
 	applicantName: string;
+	avatarUrl: string | null;
 	status: string;
 	submittedAt: number | null;
 	claimedBy: string | null;
@@ -17,6 +18,7 @@ interface ReviewQueueRow {
 	id: string;
 	user_id: string;
 	applicant_name: string;
+	avatar_url: string | null;
 	status: string;
 	submitted_at: string | null;
 	reviewer_id: string | null;
@@ -186,6 +188,7 @@ export function getCachedProfile(userId: string, guildId: string): CachedProfile
 export interface ReviewHistoryItem {
 	id: string;
 	applicantName: string;
+	avatarUrl: string | null;
 	status: string;
 	resolvedAt: number | null;
 	resolverId: string | null;
@@ -195,6 +198,7 @@ export interface ReviewHistoryItem {
 interface HistoryRow {
 	id: string;
 	applicant_name: string;
+	avatar_url: string | null;
 	status: string;
 	resolved_at: string | null;
 	resolver_id: string | null;
@@ -208,6 +212,7 @@ export function getReviewHistory(guildId: string, limit: number = 50): ReviewHis
 			a.status,
 			a.resolved_at,
 			COALESCE(u.display_name, u.global_name, u.username, 'User ' || substr(a.user_id, -6)) as applicant_name,
+			u.avatar_url,
 			ra.moderator_id as resolver_id,
 			ra.reason
 		FROM application a
@@ -226,6 +231,7 @@ export function getReviewHistory(guildId: string, limit: number = 50): ReviewHis
 	return rows.map((row) => ({
 		id: row.id,
 		applicantName: row.applicant_name,
+		avatarUrl: row.avatar_url,
 		status: row.status,
 		resolvedAt: normalizeTimestamp(row.resolved_at),
 		resolverId: row.resolver_id,
@@ -245,6 +251,7 @@ export function getReviewQueue(guildId: string): ReviewQueueItem[] {
 			a.status,
 			a.submitted_at,
 			COALESCE(u.display_name, u.global_name, u.username, 'User ' || substr(a.user_id, -6)) as applicant_name,
+			u.avatar_url,
 			c.reviewer_id,
 			COALESCE(ru.display_name, ru.global_name, ru.username) as reviewer_name,
 			c.claimed_at,
@@ -262,6 +269,7 @@ export function getReviewQueue(guildId: string): ReviewQueueItem[] {
 		id: row.id,
 		userId: row.user_id,
 		applicantName: row.applicant_name,
+		avatarUrl: row.avatar_url,
 		status: row.status,
 		submittedAt: normalizeTimestamp(row.submitted_at),
 		claimedBy: row.reviewer_id,

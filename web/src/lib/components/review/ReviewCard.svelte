@@ -2,8 +2,9 @@
 	import { prefersReducedMotion } from '$lib/motion';
 	import RiskAura from '$lib/components/data/RiskAura.svelte';
 
-	let { applicantName, status, submittedAt, claimedBy, claimedByName, riskScore, selected = false, onclick }: {
+	let { applicantName, avatarUrl = null, status, submittedAt, claimedBy, claimedByName, riskScore, selected = false, onclick }: {
 		applicantName: string;
+		avatarUrl?: string | null;
 		status: string;
 		submittedAt: number | null;
 		claimedBy: string | null;
@@ -49,23 +50,29 @@
 		e.currentTarget.style.transform = '';
 	}}
 >
-	<div class="review-card-top">
-		<span class="review-card-name">{applicantName}</span>
-		<span class="review-card-time">{relativeTime(submittedAt)}</span>
+	<div class="review-card-row">
+		{#if avatarUrl}
+			<img src={avatarUrl} alt={applicantName} class="review-card-avatar" />
+		{:else}
+			<div class="review-card-avatar-placeholder">{applicantName.charAt(0).toUpperCase()}</div>
+		{/if}
+		<div class="review-card-content">
+			<div class="review-card-top">
+				<span class="review-card-name">{applicantName}</span>
+				<span class="review-card-time">{relativeTime(submittedAt)}</span>
+			</div>
+			<div class="review-card-bottom">
+				<span class="review-card-status">
+					<span class="status-dot" style:background-color={status === 'needs_info' ? 'var(--status-warning)' : 'var(--accent)'}></span>
+					{statusLabel[status] ?? status}
+				</span>
+				<RiskAura variant="compact" {riskScore} />
+			</div>
+			{#if claimedBy}
+				<div class="review-card-claimed">Claimed by {claimedByName ?? 'unknown'}</div>
+			{/if}
+		</div>
 	</div>
-
-	<div class="review-card-bottom">
-		<span class="review-card-status">
-			<span class="status-dot" style:background-color={status === 'needs_info' ? 'var(--status-warning)' : 'var(--accent)'}></span>
-			{statusLabel[status] ?? status}
-		</span>
-
-		<RiskAura variant="compact" {riskScore} />
-	</div>
-
-	{#if claimedBy}
-		<div class="review-card-claimed">Claimed by {claimedByName ?? 'unknown'}</div>
-	{/if}
 </div>
 
 <style>
@@ -87,6 +94,39 @@
 		border-left: 3px solid var(--accent);
 		background: var(--surface-raised);
 		box-shadow: var(--glow-accent);
+	}
+
+	.review-card-row {
+		display: flex;
+		align-items: center;
+		gap: 0.625rem;
+	}
+
+	.review-card-avatar {
+		width: 36px;
+		height: 36px;
+		border-radius: var(--radius-sm);
+		object-fit: cover;
+		flex-shrink: 0;
+	}
+
+	.review-card-avatar-placeholder {
+		width: 36px;
+		height: 36px;
+		border-radius: var(--radius-sm);
+		background: var(--accent-dim);
+		color: var(--accent);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-weight: 700;
+		font-size: 0.85rem;
+		flex-shrink: 0;
+	}
+
+	.review-card-content {
+		flex: 1;
+		min-width: 0;
 	}
 
 	.review-card-top {

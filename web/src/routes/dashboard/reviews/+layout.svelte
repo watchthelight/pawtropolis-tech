@@ -144,18 +144,27 @@
 								onclick={() => goto(`/dashboard/reviews/${item.id}`)}
 								onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goto(`/dashboard/reviews/${item.id}`); } }}
 							>
-								<div class="history-card-top">
-									<span class="history-card-name">{item.applicantName}</span>
-									<span class="history-card-time">{relativeTime(item.resolvedAt)}</span>
-								</div>
-								<div class="history-card-bottom">
-									<span class="history-card-outcome" style:color={outcomeColor(item.status)}>
-										<span class="status-dot" style:background-color={outcomeColor(item.status)}></span>
-										{outcomeLabel(item.status)}
-									</span>
-									{#if item.reason}
-										<span class="history-card-reason">{item.reason.slice(0, 40)}{item.reason.length > 40 ? '...' : ''}</span>
+								<div class="history-card-row">
+									{#if item.avatarUrl}
+										<img src={item.avatarUrl} alt={item.applicantName} class="history-card-avatar" />
+									{:else}
+										<div class="history-card-avatar-ph">{item.applicantName.charAt(0).toUpperCase()}</div>
 									{/if}
+									<div class="history-card-info">
+										<div class="history-card-top">
+											<span class="history-card-name">{item.applicantName}</span>
+											<span class="history-card-time">{relativeTime(item.resolvedAt)}</span>
+										</div>
+										<div class="history-card-bottom">
+											<span class="history-card-outcome" style:color={outcomeColor(item.status)}>
+												<span class="status-dot" style:background-color={outcomeColor(item.status)}></span>
+												{outcomeLabel(item.status)}
+											</span>
+											{#if item.reason}
+												<span class="history-card-reason">{item.reason.slice(0, 40)}{item.reason.length > 40 ? '...' : ''}</span>
+											{/if}
+										</div>
+									</div>
 								</div>
 							</div>
 						{/each}
@@ -186,6 +195,7 @@
 					{#each filteredItems as item (item.id)}
 						<ReviewCard
 							applicantName={item.applicantName}
+							avatarUrl={item.avatarUrl}
 							status={item.status}
 							submittedAt={item.submittedAt}
 							claimedBy={item.claimedBy}
@@ -259,6 +269,39 @@
 	.detail-panel > :global(*) {
 		flex: 1;
 		min-height: 0;
+	}
+
+	.history-card-row {
+		display: flex;
+		align-items: center;
+		gap: 0.625rem;
+	}
+
+	.history-card-avatar {
+		width: 32px;
+		height: 32px;
+		border-radius: var(--radius-sm);
+		object-fit: cover;
+		flex-shrink: 0;
+	}
+
+	.history-card-avatar-ph {
+		width: 32px;
+		height: 32px;
+		border-radius: var(--radius-sm);
+		background: var(--accent-dim);
+		color: var(--accent);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-weight: 700;
+		font-size: 0.75rem;
+		flex-shrink: 0;
+	}
+
+	.history-card-info {
+		flex: 1;
+		min-width: 0;
 	}
 
 	/* History cards — color-coded by outcome */
