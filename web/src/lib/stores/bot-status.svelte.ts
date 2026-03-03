@@ -1,12 +1,12 @@
 /**
  * Bot status store — tracks whether the bot API is reachable.
  *
- * Separate from SSE connection status: SSE can be healthy while the bot
- * is offline (e.g., bot process crashed but web server is still running).
+ * Goes offline only when a mutation API call explicitly fails with
+ * "unreachable" or "timed out". Goes back online when any SSE event
+ * arrives or a mutation succeeds.
  *
- * Bot goes offline when: no SSE events for 60s after last event AND
- * a health check to the bot API fails.
- * Bot goes online when: any SSE event arrives after being offline, or reconnect.
+ * Does NOT use inactivity timers — a quiet server with no events
+ * is not a dead bot.
  */
 
 import { subscribe, unsubscribe, onReconnect, offReconnect } from '$lib/stores/sse.svelte';
@@ -18,68 +18,44 @@ export function getBotOnline(): boolean {
 	return _botOnline;
 }
 
+/** Mark bot offline (called by mutation code on connection failure). */
 export function setBotOffline(): void {
 	_botOnline = false;
 }
 
+/** Mark bot online (called by mutation code on success). */
 export function setBotOnline(): void {
 	_botOnline = true;
 }
 
 // ---------------------------------------------------------------------------
-// Inactivity monitoring
+// SSE-based recovery: any real event proves the bot is alive
 // ---------------------------------------------------------------------------
 
-const INACTIVITY_TIMEOUT_MS = 60_000;
-
-let inactivityTimer: ReturnType<typeof setTimeout> | null = null;
-
-function resetInactivityTimer(): void {
-	if (inactivityTimer) clearTimeout(inactivityTimer);
-
-	inactivityTimer = setTimeout(() => {
-		// No events for 60s — mark bot offline
-		_botOnline = false;
-	}, INACTIVITY_TIMEOUT_MS);
-}
-
 function handleEvent(_event: SSEEvent): void {
-	// Any event arriving means the bot is alive
 	if (!_botOnline) {
 		_botOnline = true;
 	}
-	resetInactivityTimer();
 }
 
 function handleReconnect(): void {
-	// Reconnect implies the SSE server (and by extension the bot) is reachable
-	_botOnline = true;
-	resetInactivityTimer();
+	// SSE reconnect means the web server is reachable; bot likely is too
+	if (!_botOnline) {
+		_botOnline = true;
+	}
 }
 
 /**
- * Start monitoring bot health via SSE event activity.
- * Call from dashboard layout on mount.
- *
- * Note: inactivity timer only starts after the first real event arrives.
- * On a quiet server with no events, bot stays "online" (default) — the
- * absence of events doesn't mean the bot is down, just that nothing happened.
+ * Start monitoring bot health via SSE events.
+ * Bot starts as "online" and only goes offline when a mutation fails.
+ * Any SSE event brings it back online.
  */
 export function startMonitoring(): void {
 	subscribe('*', handleEvent);
 	onReconnect(handleReconnect);
-	// Don't start inactivity timer here — wait for first event in handleEvent()
 }
 
-/**
- * Stop monitoring and clean up timers.
- * Call from dashboard layout on unmount.
- */
 export function stopMonitoring(): void {
 	unsubscribe('*', handleEvent);
 	offReconnect(handleReconnect);
-	if (inactivityTimer) {
-		clearTimeout(inactivityTimer);
-		inactivityTimer = null;
-	}
 }
