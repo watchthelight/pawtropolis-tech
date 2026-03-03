@@ -11,58 +11,95 @@
  */
 
 :root {
-	/* Hue from Discord accentColor — set dynamically on <body> by theme store */
+	/* ── Hue seeds ──
+	   --hue from Discord accentColor, set dynamically by theme store.
+	   --hue-secondary is split-complementary (+150°) for natural contrast. */
 	--hue: 250;
+	--hue-secondary: calc(var(--hue) + 150);
 
-	/* Surfaces (all tinted with user's hue) */
-	--bg: oklch(14% 0.025 var(--hue));
-	--surface: oklch(19% 0.035 var(--hue));
-	--surface-raised: oklch(23% 0.04 var(--hue));
-	--border: oklch(32% 0.04 var(--hue));
-	--border-holdfast: oklch(36% 0.045 var(--hue));
+	/* ── Surfaces (wider contrast spread for stronger depth) ── */
+	--bg: oklch(10% 0.02 var(--hue));
+	--surface: oklch(16% 0.03 var(--hue));
+	--surface-raised: oklch(22% 0.035 var(--hue));
+	--surface-overlay: oklch(28% 0.04 var(--hue));
 
-	/* Text */
-	--text-primary: oklch(92% 0.02 var(--hue));
-	--text-secondary: oklch(62% 0.04 var(--hue));
+	/* ── Borders (3 tiers) ── */
+	--border: oklch(28% 0.03 var(--hue));
+	--border-holdfast: oklch(34% 0.04 var(--hue));
+	--border-strong: oklch(42% 0.05 var(--hue));
 
-	/* Accent */
+	/* ── Text (4 levels + on-accent) ── */
+	--text-primary: oklch(93% 0.015 var(--hue));
+	--text-secondary: oklch(65% 0.035 var(--hue));
+	--text-tertiary: oklch(50% 0.03 var(--hue));
+	--text-muted: oklch(38% 0.025 var(--hue));
+	--text-on-accent: oklch(10% 0.02 var(--hue));
+
+	/* ── Primary accent (5 shades) ── */
 	--accent: oklch(72% 0.18 var(--hue));
 	--accent-dim: oklch(40% 0.10 var(--hue));
+	--accent-soft: oklch(25% 0.06 var(--hue));
+	--accent-strong: oklch(80% 0.22 var(--hue));
+	--accent-muted: oklch(55% 0.08 var(--hue));
 
-	/* Warm shadows — hue ~40 (warm amber) for cozy depth regardless of accent */
+	/* ── Secondary accent (split-complementary hue) ── */
+	--secondary: oklch(70% 0.15 var(--hue-secondary));
+	--secondary-dim: oklch(38% 0.08 var(--hue-secondary));
+	--secondary-soft: oklch(23% 0.05 var(--hue-secondary));
+	--secondary-strong: oklch(78% 0.20 var(--hue-secondary));
+
+	/* ── Interactive states ── */
+	--hover-bg: oklch(20% 0.04 var(--hue));
+	--active-bg: oklch(24% 0.05 var(--hue));
+	--selected-bg: oklch(22% 0.06 var(--hue));
+
+	/* ── Warm shadows — hue ~40 (warm amber) for cozy depth regardless of accent ── */
 	--shadow-sm: 0 1px 3px oklch(5% 0.02 40 / 0.3);
 	--shadow-md: 0 4px 12px oklch(5% 0.02 40 / 0.25);
 	--shadow-lg: 0 8px 24px oklch(5% 0.02 40 / 0.2);
 
-	/* Accent-tinted glows — use user's hue for interactive warmth */
+	/* ── Accent-tinted glows ── */
 	--glow-accent: 0 0 12px oklch(72% 0.18 var(--hue) / 0.2);
 	--glow-hover: 0 0 20px oklch(72% 0.18 var(--hue) / 0.3);
+	--glow-strong: 0 0 28px oklch(72% 0.18 var(--hue) / 0.4);
+	--glow-secondary: 0 0 14px oklch(70% 0.15 var(--hue-secondary) / 0.2);
 
-	/* Constrained radii — pixel art discipline, exactly 3 values */
+	/* ── Constrained radii — pixel art discipline, exactly 3 values ── */
 	--radius-sm: 6px;
 	--radius-md: 12px;
 	--radius-lg: 16px;
 
-	/* Generous spacing */
+	/* ── Generous spacing ── */
 	--space-card: 24px;
 	--space-section: 32px;
 
-	/* Status colors (fixed — not themed) */
+	/* ── Status colors (fixed — not themed) ── */
 	--status-success: oklch(65% 0.15 145);
 	--status-warning: oklch(70% 0.15 85);
 	--status-danger: oklch(60% 0.15 25);
 	--status-info: oklch(65% 0.12 250);
 
-	/* Brand colors — Pawtropolis paw logo (magenta pads, cyan drips) */
+	/* ── Brand colors — Pawtropolis paw logo (magenta pads, cyan drips) ── */
 	--brand-magenta: oklch(65% 0.25 330);
 	--brand-cyan: oklch(70% 0.15 200);
 
-	/* Animation */
+	/* ── Animation ── */
 	--ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 	--ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
 	--duration-fast: 150ms;
 	--duration-normal: 250ms;
 	--duration-slow: 400ms;
+
+	/* ── Mobile ── */
+	--vh-full: 100dvh;
+	--mobile-header-h: 3.25rem;
+	--mobile-pad: 1rem;
+
+	/* ── EDEX-UI terminal aesthetic (stats page) ── */
+	--terminal-grid: oklch(32% 0.04 var(--hue) / 0.35);
+	--terminal-border: oklch(72% 0.18 var(--hue) / 0.5);
+	--terminal-glow: 0 0 16px oklch(72% 0.18 var(--hue) / 0.25);
+	--terminal-font: 'Courier New', 'Courier', monospace;
 }
 
 /* Base styles */
@@ -110,13 +147,34 @@ body::after {
 
 /* Micro-gradient — subtle top-lit surface, opt-in per component */
 .surface-gradient {
-	background: linear-gradient(180deg, oklch(22% 0.015 var(--hue)) 0%, var(--surface) 100%);
+	background: linear-gradient(180deg, oklch(20% 0.015 var(--hue)) 0%, var(--surface) 100%);
 }
 
 /* Focus ring — accent-colored, keyboard-only via :focus-visible */
 :focus-visible {
 	outline: 2px solid var(--accent);
 	outline-offset: 2px;
+}
+
+/* dvh fallback for older browsers */
+@supports not (height: 100dvh) {
+	:root {
+		--vh-full: 100vh;
+	}
+}
+
+/* Mobile drawer scroll lock */
+body.drawer-open {
+	overflow: hidden;
+}
+
+/* Prevent iOS auto-zoom on input focus */
+@media (max-width: 767px) {
+	input,
+	textarea,
+	select {
+		font-size: 16px;
+	}
 }
 
 /* Respect prefers-reduced-motion — disable all transitions and animations */

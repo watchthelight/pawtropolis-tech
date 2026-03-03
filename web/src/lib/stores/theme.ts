@@ -104,7 +104,9 @@ let _activeUserId: string | null = null;
 function setHue(hue: number): void {
 	if (typeof document !== 'undefined') {
 		const rounded = String(Math.round(hue));
+		const secondary = String(Math.round((hue + 150) % 360));
 		document.documentElement.style.setProperty('--hue', rounded);
+		document.documentElement.style.setProperty('--hue-secondary', secondary);
 		if (_activeUserId) {
 			try {
 				localStorage.setItem(`theme-hue-${_activeUserId}`, rounded);
@@ -122,7 +124,10 @@ export function restoreCachedHue(userId: string): void {
 	if (typeof document === 'undefined') return;
 	try {
 		const cached = localStorage.getItem(`theme-hue-${userId}`);
-		if (cached) document.documentElement.style.setProperty('--hue', cached);
+		if (cached) {
+			document.documentElement.style.setProperty('--hue', cached);
+			document.documentElement.style.setProperty('--hue-secondary', String((parseInt(cached) + 150) % 360));
+		}
 	} catch {}
 }
 
