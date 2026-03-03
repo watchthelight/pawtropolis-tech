@@ -9,7 +9,7 @@
 	let user = $derived(data.user);
 
 	$effect(() => {
-		applyTheme(user.accentColor);
+		applyTheme(user.accentColor, user.avatarUrl);
 	});
 
 	// Refresh Discord profile data once per browser session
@@ -21,8 +21,8 @@
 		fetch('/api/refresh-session')
 			.then((r) => r.json())
 			.then((result) => {
-				if (result.changed && result.accentColor != null) {
-					applyTheme(result.accentColor);
+				if (result.changed) {
+					applyTheme(result.accentColor ?? user.accentColor, user.avatarUrl);
 				}
 			})
 			.catch(() => {}); // silent on failure

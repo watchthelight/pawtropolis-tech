@@ -25,6 +25,8 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 
 		// Fetch user profile (includes accent_color, banner)
 		const user = await fetchUser(tokens.access_token);
+		// Note: accent_color=0 means Discord returned black (Nitro theme colors not in API)
+		// Client-side avatar color extraction handles this as fallback
 
 		// Fetch guild member (includes roles)
 		let member;

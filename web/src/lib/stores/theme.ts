@@ -4,11 +4,7 @@ export const FALLBACK_HUE = 250;
  * Convert Discord accentColor integer to oklch hue.
  * Uses Bjorn Ottosson's Oklab color space for perceptually uniform hue extraction.
  */
-function accentColorToHue(accentColor: number): number {
-	const r = (accentColor >> 16) & 0xff;
-	const g = (accentColor >> 8) & 0xff;
-	const b = accentColor & 0xff;
-
+function rgbToHue(r: number, g: number, b: number): number | null {
 	// sRGB gamma decode -> linear RGB
 	const toLinear = (c: number) => {
 		const s = c / 255;
@@ -33,17 +29,78 @@ function accentColorToHue(accentColor: number): number {
 
 	// Oklab -> oklch chroma and hue
 	const chroma = Math.sqrt(okA * okA + okB * okB);
-	if (chroma < 0.02) return FALLBACK_HUE; // Near-gray: hue unreliable
+	if (chroma < 0.02) return null; // Near-gray: hue unreliable
 
 	const hue = Math.atan2(okB, okA) * (180 / Math.PI);
 	return (hue + 360) % 360;
 }
 
-export function applyTheme(accentColor: number | null): void {
-	const hue =
-		accentColor != null ? accentColorToHue(accentColor) : FALLBACK_HUE;
+function accentColorToHue(accentColor: number): number | null {
+	const r = (accentColor >> 16) & 0xff;
+	const g = (accentColor >> 8) & 0xff;
+	const b = accentColor & 0xff;
+	return rgbToHue(r, g, b);
+}
 
-	if (typeof document !== "undefined") {
-		document.body.style.setProperty("--hue", String(Math.round(hue)));
+/**
+ * Extract dominant hue from an image URL using a 1x1 canvas downscale.
+ * Returns null if extraction fails or color is too grey.
+ */
+function extractImageHue(imageUrl: string): Promise<number | null> {
+	return new Promise((resolve) => {
+		const img = new Image();
+		img.crossOrigin = 'anonymous';
+		img.onload = () => {
+			try {
+				const canvas = document.createElement('canvas');
+				canvas.width = 1;
+				canvas.height = 1;
+				const ctx = canvas.getContext('2d');
+				if (!ctx) { resolve(null); return; }
+				ctx.drawImage(img, 0, 0, 1, 1);
+				const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+				resolve(rgbToHue(r, g, b));
+			} catch {
+				resolve(null);
+			}
+		};
+		img.onerror = () => resolve(null);
+		// Use small size for fast download
+		img.src = imageUrl.includes('?') ? imageUrl.replace(/size=\d+/, 'size=64') : imageUrl + '?size=64';
+	});
+}
+
+function setHue(hue: number): void {
+	if (typeof document !== 'undefined') {
+		document.body.style.setProperty('--hue', String(Math.round(hue)));
 	}
+}
+
+/**
+ * Apply theme from Discord accent color.
+ * Falls back to avatar color extraction when accent_color is 0/null.
+ */
+export function applyTheme(accentColor: number | null, avatarUrl?: string | null): void {
+	// Try accent color first (skip 0 = black, which Discord returns when theme isn't in API)
+	if (accentColor && accentColor !== 0) {
+		const hue = accentColorToHue(accentColor);
+		if (hue != null) {
+			setHue(hue);
+			return;
+		}
+	}
+
+	// Fallback: extract from avatar image
+	if (avatarUrl && typeof document !== 'undefined') {
+		extractImageHue(avatarUrl).then((hue) => {
+			if (hue != null) {
+				setHue(hue);
+			} else {
+				setHue(FALLBACK_HUE);
+			}
+		});
+		return;
+	}
+
+	setHue(FALLBACK_HUE);
 }
