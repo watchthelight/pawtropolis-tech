@@ -90,5 +90,13 @@ export {
   modmailContextMenu,
 } from "./commands.js";
 
+// Re-export dashboard bridge (interaction-free wrappers)
+export {
+  dashboardSendMessage,
+  dashboardOpenThread,
+  dashboardCloseThread,
+  dashboardReopenThread,
+} from "./dashboardBridge.js";
+
 // Note: The parent modmail.ts now re-exports from this index file.
 // Import from either "../modmail.js" or "./modmail/index.js" for the same API.
