@@ -38,7 +38,6 @@
 	let error = $state<string | null>(null);
 	let lastFetchedId = $state('');
 	let rolesExpanded = $state(false);
-	const ROLES_COLLAPSED_COUNT = 3;
 
 	function formatDate(ms: number | null): string {
 		if (!ms) return '—';
@@ -174,18 +173,6 @@
 							{role.name}
 						</span>
 					{/each}
-				</div>
-			{:else}
-				<div class="dc-roles">
-					{#each profile.roles.slice(0, ROLES_COLLAPSED_COUNT) as role}
-						<span class="dc-role" style:border-color={role.color ?? 'var(--border-holdfast)'} style:color={role.color ?? 'var(--text-secondary)'}>
-							{#if role.color}<span class="dc-role-dot" style:background-color={role.color}></span>{/if}
-							{role.name}
-						</span>
-					{/each}
-					{#if profile.roles.length > ROLES_COLLAPSED_COUNT}
-						<span class="dc-role dc-role-more" onclick={() => rolesExpanded = true}>+{profile.roles.length - ROLES_COLLAPSED_COUNT}</span>
-					{/if}
 				</div>
 			{/if}
 		</div>
@@ -385,17 +372,6 @@
 		height: 0.35rem;
 		border-radius: 50%;
 		flex-shrink: 0;
-	}
-
-	.dc-role-more {
-		cursor: pointer;
-		border-color: var(--border-holdfast);
-		color: var(--text-secondary);
-	}
-
-	.dc-role-more:hover {
-		color: var(--text-primary);
-		border-color: var(--accent);
 	}
 
 	.dc-footer {
