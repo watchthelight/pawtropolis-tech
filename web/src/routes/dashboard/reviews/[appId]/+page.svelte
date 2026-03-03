@@ -3,9 +3,9 @@
 	import AppDetail from '$lib/components/review/AppDetail.svelte';
 
 	let { data } = $props();
-	const { app } = data;
+	const { app, modmail } = data;
 </script>
 
 <SpringReveal stagger={30}>
-	<AppDetail {app} />
+	<AppDetail {app} {modmail} />
 </SpringReveal>

@@ -1,8 +1,10 @@
 <script lang="ts">
 	import type { ApplicationDetail } from '$lib/server/queries/reviews';
+	import type { ModmailThreadSummary } from '$lib/server/queries/modmail';
 	import RiskAura from '$lib/components/data/RiskAura.svelte';
+	import ModmailViewer from '$lib/components/review/ModmailViewer.svelte';
 
-	let { app }: { app: ApplicationDetail } = $props();
+	let { app, modmail = [] }: { app: ApplicationDetail; modmail?: ModmailThreadSummary[] } = $props();
 
 	function relativeTime(ms: number | null): string {
 		if (!ms) return '';
@@ -57,6 +59,10 @@
 				<div class="qa-answer">{qa.answer}</div>
 			</div>
 		{/each}
+
+		{#if modmail.length > 0}
+			<ModmailViewer threads={modmail} />
+		{/if}
 	</div>
 
 	<!-- Action bar placeholder -->
