@@ -246,18 +246,16 @@
 				</div>
 				<div class="content-tabs">
 					<RiskAura variant="compact" riskScore={app.riskScore} />
-					{#if modmail.length > 0}
-						<button class="tab-btn" class:tab-btn-active={showModmail} onclick={() => showModmail = !showModmail}>
-							Modmail ({modmail.reduce((a, t) => a + t.messageCount, 0)})
-						</button>
-					{/if}
+					<button class="tab-btn" class:tab-btn-active={showModmail} onclick={() => showModmail = !showModmail}>
+						Modmail{modmail.length > 0 ? ` (${modmail.reduce((a, t) => a + t.messageCount, 0)})` : ''}
+					</button>
 				</div>
 			</div>
 
 			<!-- Content area: answers or modmail -->
 			<div class="content-body">
-				{#if showModmail && modmail.length > 0}
-					<ModmailViewer threads={modmail} />
+				{#if showModmail}
+					<ModmailViewer threads={modmail} targetUserId={app.userId} />
 				{:else}
 					<div class="section-label">Responses</div>
 					{#each app.answers as qa}
