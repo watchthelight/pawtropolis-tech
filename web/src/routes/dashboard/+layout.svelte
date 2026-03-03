@@ -80,8 +80,8 @@
 		if (!isMobile) return;
 		const dx = e.changedTouches[0].clientX - touchStartX;
 		const dy = e.changedTouches[0].clientY - touchStartY;
-		// Only trigger on horizontal swipes (> 60px, angle < 30°)
-		if (Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx) * 0.58) return;
+		// Only trigger on deliberate horizontal swipes (> 100px, angle < 25°)
+		if (Math.abs(dx) < 100 || Math.abs(dy) > Math.abs(dx) * 0.47) return;
 
 		const currentPath = $page.url.pathname;
 		// Match current page to its base nav item
