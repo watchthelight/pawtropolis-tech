@@ -49,6 +49,7 @@ import { scanAvatar, type ScanResult } from "./avatarScan.js";
 import type { CmdCtx } from "../lib/cmdWrap.js";
 import { ensureDeferred, replyOrEdit, withSql } from "../lib/cmdWrap.js";
 import { enrichEvent } from "../lib/reqctx.js";
+import { cacheUser } from "../lib/userCache.js";
 import { logActionPretty } from "../logging/pretty.js";
 import { getQuestions as getQuestionsShared } from "./gate/questions.js";
 import { touchSyncMarker } from "../lib/syncMarker.js";
@@ -1313,6 +1314,7 @@ export async function handleGateModalSubmit(
 
   ctx.step("db_begin");
   submitApplication(db, draftRow.id, ctx);
+  cacheUser(interaction.user, guildId, interaction.member && "displayName" in interaction.member ? interaction.member : null);
   ctx.step("db_commit");
 
   // Track submission in wide event

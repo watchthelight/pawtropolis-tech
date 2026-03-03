@@ -102,7 +102,7 @@ export function getApplicationDetail(appId: string, guildId: string): Applicatio
 			a.user_id,
 			a.status,
 			a.submitted_at,
-			COALESCE(u.global_name, u.username, 'Unknown') as applicant_name,
+			COALESCE(u.display_name, u.global_name, u.username, 'User ' || substr(a.user_id, -6)) as applicant_name,
 			u.avatar_url,
 			c.reviewer_id,
 			COALESCE(ru.display_name, ru.global_name, ru.username) as reviewer_name,
@@ -113,11 +113,7 @@ export function getApplicationDetail(appId: string, guildId: string): Applicatio
 			s.evidence_soft as scan_evidence_soft,
 			s.evidence_safe as scan_evidence_safe
 		FROM application a
-		LEFT JOIN (
-			SELECT guild_id, user_id, global_name, username, avatar_url,
-				ROW_NUMBER() OVER (PARTITION BY guild_id, user_id ORDER BY created_at DESC) as rn
-			FROM user_snapshot
-		) u ON u.guild_id = a.guild_id AND u.user_id = a.user_id AND u.rn = 1
+		LEFT JOIN user_cache u ON u.guild_id = a.guild_id AND u.user_id = a.user_id
 		LEFT JOIN review_claim c ON a.id = c.app_id
 		LEFT JOIN user_cache ru ON ru.guild_id = a.guild_id AND ru.user_id = c.reviewer_id
 		LEFT JOIN avatar_scan s ON a.id = s.application_id
@@ -184,15 +180,11 @@ export function getReviewHistory(guildId: string, limit: number = 50): ReviewHis
 			a.id,
 			a.status,
 			a.resolved_at,
-			COALESCE(u.global_name, u.username, 'Unknown') as applicant_name,
+			COALESCE(u.display_name, u.global_name, u.username, 'User ' || substr(a.user_id, -6)) as applicant_name,
 			ra.moderator_id as resolver_id,
 			ra.reason
 		FROM application a
-		LEFT JOIN (
-			SELECT guild_id, user_id, global_name, username,
-				ROW_NUMBER() OVER (PARTITION BY guild_id, user_id ORDER BY created_at DESC) as rn
-			FROM user_snapshot
-		) u ON u.guild_id = a.guild_id AND u.user_id = a.user_id AND u.rn = 1
+		LEFT JOIN user_cache u ON u.guild_id = a.guild_id AND u.user_id = a.user_id
 		LEFT JOIN (
 			SELECT app_id, moderator_id, reason,
 				ROW_NUMBER() OVER (PARTITION BY app_id ORDER BY created_at DESC) as rn
@@ -225,17 +217,13 @@ export function getReviewQueue(guildId: string): ReviewQueueItem[] {
 			a.user_id,
 			a.status,
 			a.submitted_at,
-			COALESCE(u.global_name, u.username, 'Unknown') as applicant_name,
+			COALESCE(u.display_name, u.global_name, u.username, 'User ' || substr(a.user_id, -6)) as applicant_name,
 			c.reviewer_id,
 			COALESCE(ru.display_name, ru.global_name, ru.username) as reviewer_name,
 			c.claimed_at,
 			COALESCE(s.final_pct, 0) as risk_score
 		FROM application a
-		LEFT JOIN (
-			SELECT guild_id, user_id, global_name, username,
-				ROW_NUMBER() OVER (PARTITION BY guild_id, user_id ORDER BY created_at DESC) as rn
-			FROM user_snapshot
-		) u ON u.guild_id = a.guild_id AND u.user_id = a.user_id AND u.rn = 1
+		LEFT JOIN user_cache u ON u.guild_id = a.guild_id AND u.user_id = a.user_id
 		LEFT JOIN review_claim c ON a.id = c.app_id
 		LEFT JOIN user_cache ru ON ru.guild_id = a.guild_id AND ru.user_id = c.reviewer_id
 		LEFT JOIN avatar_scan s ON a.id = s.application_id

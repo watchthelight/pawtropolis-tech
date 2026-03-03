@@ -236,7 +236,9 @@
 		<div class="applicant-info">
 			<h2 class="applicant-name">{app.applicantName}</h2>
 			<p class="applicant-meta">
-				<span class="user-id">{app.userId}</span>
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<span class="user-id" title="Click to copy" onclick={() => navigator.clipboard.writeText(app.userId)}>{app.userId}</span>
 				{#if app.submittedAt}
 					<span class="separator">·</span>
 					<span>Submitted {relativeTime(app.submittedAt)}</span>
@@ -395,6 +397,12 @@
 		font-family: monospace;
 		font-size: 0.7rem;
 		opacity: 0.7;
+		cursor: pointer;
+		transition: opacity 150ms;
+	}
+
+	.user-id:hover {
+		opacity: 1;
 	}
 
 	.separator {
