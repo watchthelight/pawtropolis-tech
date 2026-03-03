@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onDestroy } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { invalidateAll } from '$app/navigation';
 	import type { ModmailThreadSummary } from '$lib/server/queries/modmail';
 	import { subscribe, unsubscribe } from '$lib/stores/sse.svelte';
@@ -7,29 +7,18 @@
 
 	let {
 		threads,
-		targetUserId = '',
-		appCode = ''
+		targetUserId = ''
 	}: {
 		threads: ModmailThreadSummary[];
 		targetUserId?: string;
-		appCode?: string;
 	} = $props();
 
-	let expanded = $state(false);
 	let messageInput = $state('');
 	let sending = $state(false);
 	let sendError = $state<string | null>(null);
 	let actionLoading = $state<string | null>(null);
 	let actionError = $state<string | null>(null);
 	let messagesEnd: HTMLElement | undefined = $state();
-
-	const totalMessages = $derived(threads.reduce((sum, t) => sum + t.messageCount, 0));
-	const latestPreview = $derived.by(() => {
-		const first = threads[0];
-		if (!first?.latestMessage) return null;
-		const msg = first.latestMessage;
-		return msg.length > 80 ? msg.slice(0, 80) + '...' : msg;
-	});
 
 	// Find the open thread (if any) for send/close actions
 	const openThread = $derived(threads.find(t => t.status === 'open'));
@@ -54,6 +43,8 @@
 		});
 	}
 
+	onMount(() => scrollToBottom());
+
 	async function handleSend() {
 		if (!messageInput.trim() || !openThread || sending) return;
 		sending = true;
@@ -69,7 +60,6 @@
 			if (!result.success) {
 				sendError = result.error ?? 'Failed to send';
 			} else {
-				// Optimistic update: add message to the thread locally
 				openThread.messages = [
 					...openThread.messages,
 					{
@@ -90,31 +80,6 @@
 		}
 	}
 
-	async function handleOpen() {
-		if (!targetUserId || actionLoading) return;
-		actionLoading = 'open';
-		actionError = null;
-
-		try {
-			const res = await fetch('/api/modmail/open', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ targetUserId, ...(appCode ? { appCode } : {}) })
-			});
-			const result = await res.json();
-			if (!result.success) {
-				actionError = result.error ?? 'Failed to open';
-			} else {
-				// Refresh to get new thread
-				window.location.reload();
-			}
-		} catch {
-			actionError = 'Failed to connect';
-		} finally {
-			actionLoading = null;
-		}
-	}
-
 	async function handleClose() {
 		if (!openThread || actionLoading) return;
 		actionLoading = 'close';
@@ -130,7 +95,6 @@
 			if (!result.success) {
 				actionError = result.error ?? 'Failed to close';
 			} else {
-				// Update local state
 				openThread.status = 'closed';
 			}
 		} catch {
@@ -155,7 +119,6 @@
 			if (!result.success) {
 				actionError = result.error ?? 'Failed to reopen';
 			} else {
-				// Update local state
 				recentClosedThread.status = 'open';
 			}
 		} catch {
@@ -174,7 +137,6 @@
 
 	// SSE: auto-refresh when modmail events arrive from other sources
 	function handleModmailEvent(_event: SSEEvent) {
-		// Refresh the page data to pick up new messages/state changes
 		invalidateAll();
 	}
 
@@ -184,188 +146,79 @@
 	});
 </script>
 
-<div class="modmail-section">
-	<button
-		class="modmail-header"
-		aria-expanded={expanded}
-		aria-controls="modmail-threads"
-		onclick={() => { expanded = !expanded; if (expanded) scrollToBottom(); }}
-	>
-		<div class="modmail-summary">
-			<span class="modmail-label">Modmail</span>
-			<span class="modmail-meta">
-				{#if threads.length > 0}
-					{threads.length} {threads.length === 1 ? 'thread' : 'threads'} · {totalMessages} {totalMessages === 1 ? 'msg' : 'msgs'}
-				{:else}
-					No threads
-				{/if}
-				{#if openThread}
-					<span class="status-dot status-open" title="Open thread"></span>
-				{/if}
-			</span>
-		</div>
-		<span class="modmail-toggle">{expanded ? '▲' : '▼'}</span>
-	</button>
+<div class="modmail-panel">
+	<!-- Thread actions bar -->
+	<div class="thread-actions">
+		{#if openThread}
+			<span class="thread-status thread-status-open">Open</span>
+			<button class="action-btn action-btn-danger" onclick={handleClose} disabled={actionLoading !== null}>
+				{actionLoading === 'close' ? 'Closing...' : 'Close Thread'}
+			</button>
+		{:else if recentClosedThread}
+			<span class="thread-status thread-status-closed">Closed</span>
+			<button class="action-btn" onclick={handleReopen} disabled={actionLoading !== null}>
+				{actionLoading === 'reopen' ? 'Reopening...' : 'Reopen'}
+			</button>
+		{/if}
+		{#if actionError}
+			<span class="action-error">{actionError}</span>
+		{/if}
+	</div>
 
-	{#if !expanded && latestPreview}
-		<div class="modmail-preview">{latestPreview}</div>
-	{/if}
-
-	{#if expanded}
-		<div id="modmail-threads" class="modmail-threads">
-			<!-- Thread actions bar -->
-			<div class="thread-actions">
-				{#if openThread}
-					<span class="thread-status thread-status-open">Open</span>
-					<button class="action-btn action-btn-danger" onclick={handleClose} disabled={actionLoading !== null}>
-						{actionLoading === 'close' ? 'Closing...' : 'Close Thread'}
-					</button>
-				{:else if recentClosedThread}
-					<span class="thread-status thread-status-closed">Closed</span>
-					<button class="action-btn" onclick={handleReopen} disabled={actionLoading !== null}>
-						{actionLoading === 'reopen' ? 'Reopening...' : 'Reopen'}
-					</button>
-					{#if targetUserId}
-						<button class="action-btn action-btn-primary" onclick={handleOpen} disabled={actionLoading !== null}>
-							{actionLoading === 'open' ? 'Opening...' : 'New Thread'}
-						</button>
-					{/if}
-				{:else if targetUserId}
-					<button class="action-btn action-btn-primary" onclick={handleOpen} disabled={actionLoading !== null}>
-						{actionLoading === 'open' ? 'Opening...' : 'Open Thread'}
-					</button>
-				{/if}
-				{#if actionError}
-					<span class="action-error">{actionError}</span>
-				{/if}
-			</div>
-
-			<!-- Messages -->
-			{#if threads.length === 0}
-				<div class="empty-state">No modmail threads yet. Open one to start a conversation.</div>
-			{/if}
-			{#each threads as thread, i (thread.id)}
-				{#if i > 0}
-					<div class="thread-separator"></div>
-				{/if}
-				<div class="thread-block">
-					<div class="thread-header">{threadLabel(thread)}</div>
-					<div class="thread-messages">
-						{#each thread.messages as msg (msg.id)}
-							<div class="message" class:message-staff={msg.direction === 'to_user'} class:message-user={msg.direction === 'to_staff'}>
-								<div class="message-bubble">
-									<div class="message-content">{msg.content}</div>
-								</div>
-								<div class="message-time">{formatTime(msg.createdAt)}</div>
-							</div>
-						{/each}
+	<!-- Messages -->
+	{#each threads as thread, i (thread.id)}
+		{#if i > 0}
+			<div class="thread-separator"></div>
+		{/if}
+		<div class="thread-block">
+			<div class="thread-header">{threadLabel(thread)}</div>
+			<div class="thread-messages">
+				{#each thread.messages as msg (msg.id)}
+					<div class="message" class:message-staff={msg.direction === 'to_user'} class:message-user={msg.direction === 'to_staff'}>
+						<div class="message-bubble">
+							<div class="message-content">{msg.content}</div>
+						</div>
+						<div class="message-time">{formatTime(msg.createdAt)}</div>
 					</div>
-				</div>
-			{/each}
-			<div bind:this={messagesEnd}></div>
+				{/each}
+			</div>
+		</div>
+	{/each}
+	<div bind:this={messagesEnd}></div>
 
-			<!-- Message input (only when open thread exists) -->
-			{#if openThread}
-				<div class="send-bar">
-					<textarea
-						class="send-input"
-						placeholder="Type a message..."
-						bind:value={messageInput}
-						onkeydown={handleKeydown}
-						disabled={sending}
-						rows={1}
-					></textarea>
-					<button
-						class="send-btn"
-						onclick={handleSend}
-						disabled={sending || !messageInput.trim()}
-						title="Send message"
-					>
-						{#if sending}
-							<span class="send-spinner"></span>
-						{:else}
-							<svg viewBox="0 0 20 20" fill="currentColor" class="send-icon"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
-						{/if}
-					</button>
-					{#if sendError}
-						<span class="send-error">{sendError}</span>
-					{/if}
-				</div>
+	<!-- Message input (only when open thread exists) -->
+	{#if openThread}
+		<div class="send-bar">
+			<textarea
+				class="send-input"
+				placeholder="Type a message..."
+				bind:value={messageInput}
+				onkeydown={handleKeydown}
+				disabled={sending}
+				rows={1}
+			></textarea>
+			<button
+				class="send-btn"
+				onclick={handleSend}
+				disabled={sending || !messageInput.trim()}
+				title="Send message"
+			>
+				{#if sending}
+					<span class="send-spinner"></span>
+				{:else}
+					<svg viewBox="0 0 20 20" fill="currentColor" class="send-icon"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
+				{/if}
+			</button>
+			{#if sendError}
+				<span class="send-error">{sendError}</span>
 			{/if}
 		</div>
 	{/if}
 </div>
 
 <style>
-	.modmail-section {
-		border-top: 1px solid var(--border-holdfast);
-		padding-top: 1rem;
-		margin-top: 1rem;
-	}
-
-	.modmail-header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		width: 100%;
-		background: none;
-		border: none;
-		padding: 0;
-		cursor: pointer;
-		color: var(--text-primary);
-		font: inherit;
-	}
-
-	.modmail-header:hover .modmail-label {
-		color: var(--accent);
-	}
-
-	.modmail-summary {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-	}
-
-	.modmail-label {
-		font-size: 0.7rem;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		color: var(--text-secondary);
-		transition: color 150ms var(--ease-smooth);
-	}
-
-	.modmail-meta {
-		font-size: 0.7rem;
-		color: var(--text-secondary);
-		opacity: 0.7;
-		display: flex;
-		align-items: center;
-		gap: 0.35rem;
-	}
-
-	.status-dot {
-		width: 6px;
-		height: 6px;
-		border-radius: 50%;
-		display: inline-block;
-	}
-
-	.status-open { background: var(--status-success); }
-
-	.modmail-toggle {
-		font-size: 0.6rem;
-		color: var(--text-secondary);
-	}
-
-	.modmail-preview {
-		font-size: 0.8rem;
-		color: var(--text-secondary);
-		margin-top: 0.375rem;
-		padding-left: 0;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
+	.modmail-panel {
+		padding-top: 0.25rem;
 	}
 
 	/* ── Thread actions ────────────────────────────────────── */
@@ -420,12 +273,6 @@
 		cursor: not-allowed;
 	}
 
-	.action-btn-primary {
-		background: var(--accent-dim);
-		border-color: var(--accent);
-		color: var(--accent);
-	}
-
 	.action-btn-danger {
 		color: var(--status-danger);
 		border-color: var(--status-danger);
@@ -442,19 +289,7 @@
 		color: var(--status-danger);
 	}
 
-	.empty-state {
-		font-size: 0.8rem;
-		color: var(--text-secondary);
-		opacity: 0.7;
-		padding: 1rem 0;
-		text-align: center;
-	}
-
 	/* ── Threads ──────────────────────────────────────────── */
-	.modmail-threads {
-		margin-top: 0.75rem;
-	}
-
 	.thread-separator {
 		height: 1px;
 		background: var(--border-holdfast);

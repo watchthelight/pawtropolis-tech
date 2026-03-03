@@ -31,6 +31,31 @@
 
 	// Flip state: 'answers' (front) or 'modmail' (back)
 	let showModmail = $state(false);
+	let openingModmail = $state(false);
+	let openModmailError = $state<string | null>(null);
+
+	async function handleOpenModmail() {
+		if (openingModmail) return;
+		openingModmail = true;
+		openModmailError = null;
+		try {
+			const res = await fetch('/api/modmail/open', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ targetUserId: app.userId })
+			});
+			const result = await res.json();
+			if (!result.success) {
+				openModmailError = result.error ?? 'Failed to open';
+			} else {
+				window.location.reload();
+			}
+		} catch {
+			openModmailError = 'Failed to connect';
+		} finally {
+			openingModmail = false;
+		}
+	}
 
 	// Reactive tick so stale claim indicator updates over time
 	let now = $state(Date.now());
@@ -246,9 +271,18 @@
 				</div>
 				<div class="content-tabs">
 					<RiskAura variant="compact" riskScore={app.riskScore} />
-					<button class="tab-btn" class:tab-btn-active={showModmail} onclick={() => showModmail = !showModmail}>
-						Modmail{modmail.length > 0 ? ` (${modmail.reduce((a, t) => a + t.messageCount, 0)})` : ''}
-					</button>
+					{#if modmail.length > 0}
+						<button class="tab-btn" class:tab-btn-active={showModmail} onclick={() => showModmail = !showModmail}>
+							Modmail ({modmail.reduce((a, t) => a + t.messageCount, 0)})
+						</button>
+					{:else}
+						<button class="tab-btn" onclick={handleOpenModmail} disabled={openingModmail}>
+							{openingModmail ? 'Opening...' : 'Open Modmail'}
+						</button>
+						{#if openModmailError}
+							<span style="font-size:0.6rem;color:var(--status-danger)">{openModmailError}</span>
+						{/if}
+					{/if}
 				</div>
 			</div>
 
