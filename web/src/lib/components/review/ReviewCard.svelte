@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { prefersReducedMotion } from '$lib/motion';
 	import RiskAura from '$lib/components/data/RiskAura.svelte';
+	import { relativeTime } from '$lib/utils/time';
 
 	let { applicantName, avatarUrl = null, status, submittedAt, claimedBy, claimedByName, riskScore, selected = false, onclick }: {
 		applicantName: string;
@@ -13,18 +14,6 @@
 		selected?: boolean;
 		onclick?: () => void;
 	} = $props();
-
-	function relativeTime(ms: number | null): string {
-		if (!ms) return '';
-		const diff = Date.now() - ms;
-		const mins = Math.floor(diff / 60_000);
-		if (mins < 1) return 'just now';
-		if (mins < 60) return `${mins}m ago`;
-		const hours = Math.floor(mins / 60);
-		if (hours < 24) return `${hours}h ago`;
-		const days = Math.floor(hours / 24);
-		return `${days}d ago`;
-	}
 
 	const statusLabel: Record<string, string> = {
 		submitted: 'Pending',

@@ -9,6 +9,7 @@
 	import SpringReveal from '$lib/components/motion/SpringReveal.svelte';
 	import ReviewCard from '$lib/components/review/ReviewCard.svelte';
 	import TabBar from '$lib/components/review/TabBar.svelte';
+	import { relativeTime } from '$lib/utils/time';
 
 	let { data, children } = $props();
 
@@ -68,17 +69,6 @@
 		return 'Rejected';
 	}
 
-	function relativeTime(ms: number | null): string {
-		if (ms == null) return '';
-		const diff = Date.now() - ms;
-		const mins = Math.floor(diff / 60_000);
-		if (mins < 1) return 'just now';
-		if (mins < 60) return `${mins}m ago`;
-		const hours = Math.floor(mins / 60);
-		if (hours < 24) return `${hours}h ago`;
-		const days = Math.floor(hours / 24);
-		return `${days}d ago`;
-	}
 
 	// Glow overlay — rendered outside scroll container so it's not clipped
 	let queueWrapper: HTMLElement;

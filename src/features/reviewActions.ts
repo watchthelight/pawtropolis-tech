@@ -102,7 +102,7 @@ export function claimTx(appId: string, moderatorId: string, guildId: string): vo
         { appId, existingReviewer: existingClaim.reviewer_id, newReviewer: moderatorId },
         "[reviewActions] claimTx: already claimed by different moderator"
       );
-      throw new ClaimError("Application already claimed by another moderator", "ALREADY_CLAIMED");
+      throw new ClaimError(`Application already claimed by <@${existingClaim.reviewer_id}>`, "ALREADY_CLAIMED");
     }
 
     // Capture timestamp once for both claim record and audit log

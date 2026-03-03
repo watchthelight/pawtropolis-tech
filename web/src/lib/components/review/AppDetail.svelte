@@ -7,9 +7,8 @@
 	import ModmailViewer from '$lib/components/review/ModmailViewer.svelte';
 	import DiscordProfileCard from '$lib/components/review/DiscordProfileCard.svelte';
 	import type { CachedProfile } from '$lib/server/queries/reviews';
-	import gsap from 'gsap';
-	import { SPRINGS } from '$lib/motion';
 	import { setBotOffline, setBotOnline, getBotOnline } from '$lib/stores/bot-status.svelte';
+	import { relativeTime } from '$lib/utils/time';
 
 	let {
 		app,
@@ -27,7 +26,6 @@
 
 	let claimLoading = $state(false);
 	let claimError = $state<string | null>(null);
-	let actionBar: HTMLElement;
 
 	// Flip state: 'answers' (front) or 'modmail' (back)
 	let showModmail = $state(false);
@@ -37,17 +35,6 @@
 	let tickInterval: ReturnType<typeof setInterval> | undefined;
 	onMount(() => { tickInterval = setInterval(() => { now = Date.now(); }, 60_000); });
 	onDestroy(() => { if (tickInterval) clearInterval(tickInterval); });
-
-	function animateActionBar() {
-		if (!actionBar) return;
-		gsap.from(actionBar.children, {
-			opacity: 0,
-			y: 8,
-			duration: 0.4,
-			ease: SPRINGS.gentle,
-			stagger: 0.06
-		});
-	}
 
 	let botOnline = $derived(getBotOnline());
 	const REVIEWABLE_STATUSES = ['submitted', 'needs_info'];
@@ -63,18 +50,6 @@
 		if (hours < 2) return 'var(--status-success)';
 		if (hours < 8) return 'var(--status-warning)';
 		return 'var(--status-danger)';
-	}
-
-	function relativeTime(ms: number | null): string {
-		if (!ms) return '';
-		const diff = now - ms;
-		const mins = Math.floor(diff / 60_000);
-		if (mins < 1) return 'just now';
-		if (mins < 60) return `${mins}m ago`;
-		const hours = Math.floor(mins / 60);
-		if (hours < 24) return `${hours}h ago`;
-		const days = Math.floor(hours / 24);
-		return `${days}d ago`;
 	}
 
 	// === Claim/Unclaim ===
@@ -207,6 +182,7 @@
 			decisionDone = labels[action];
 			decisionError = null;
 			activeAction = null;
+			decisionLoading = false;
 			setTimeout(() => goto('/dashboard/reviews'), 800);
 		} catch {
 			decisionError = 'Failed to connect';
@@ -243,7 +219,7 @@
 						<span class="claimed-info" style:color={claimAgeColor(app.claimedAt)}>Claimed by you</span>
 					{:else if isClaimedByOther}
 						<span class="separator">·</span>
-						<span class="claimed-info">Claimed by {app.claimedByName ?? 'unknown'}</span>
+						<span class="claimed-info" style:color={canAdminUnclaim ? claimAgeColor(app.claimedAt) : undefined}>Claimed by {app.claimedByName ?? 'unknown'}</span>
 					{/if}
 				</div>
 				<div class="content-tabs">
@@ -318,7 +294,7 @@
 		{:else if isResolved}
 			<span class="action-resolved">{app.status.charAt(0).toUpperCase() + app.status.slice(1)}</span>
 		{:else if isClaimedByOther && canAdminUnclaim}
-			<span class="action-placeholder">Claimed by {app.claimedByName ?? 'unknown'}</span>
+			<span class="action-placeholder" style:color={claimAgeColor(app.claimedAt)}>Claimed by {app.claimedByName ?? 'unknown'}</span>
 			<button class="btn btn-admin-unclaim" onclick={handleUnclaim} disabled={claimLoading || !botOnline}>
 				{claimLoading ? 'Releasing...' : !botOnline ? 'Bot offline' : 'Unclaim (Admin)'}
 			</button>

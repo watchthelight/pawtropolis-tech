@@ -28,7 +28,7 @@ import { cacheUser, snowflakeToTimestamp } from "../lib/userCache.js";
 
 // ===== Tier Check =====
 
-const TIER_ORDER = ["owner", "cm", "sa", "admin", "sm", "mod", "jm", "gk", "viewer", "none"];
+const TIER_ORDER = ["owner", "cm", "cdl", "sa", "admin", "sm", "mod", "jm", "gk", "viewer", "none"];
 
 function hasMinTier(userTier: string, minTier: string): boolean {
   const userIdx = TIER_ORDER.indexOf(userTier);

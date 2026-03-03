@@ -34,6 +34,10 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
 	if (!appId) {
 		error(400, 'appId is required');
 	}
+	// UUID format validation (defense in depth — SQL is parameterized but reject garbage early)
+	if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(appId)) {
+		error(400, 'Invalid appId format');
+	}
 
 	if (REASON_REQUIRED.includes(action as ReviewAction) && !body.reason) {
 		error(400, 'reason is required for this action');
