@@ -10,3 +10,13 @@ export function relativeTime(ms: number | null): string {
 	const days = Math.floor(hours / 24);
 	return `${days}d ago`;
 }
+
+/** Format seconds as a human-readable duration (e.g., "5m", "2h 15m", "--"). */
+export function formatDuration(seconds: number | null | undefined): string {
+	if (seconds == null || seconds <= 0) return '--';
+	const mins = Math.round(seconds / 60);
+	if (mins < 60) return `${mins}m`;
+	const h = Math.floor(mins / 60);
+	const m = mins % 60;
+	return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
