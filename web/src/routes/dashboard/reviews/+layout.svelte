@@ -29,7 +29,9 @@
 	let tabCounts = $derived(data.tabCounts);
 
 	type TabId = 'unclaimed' | 'mine' | 'all' | 'history';
-	let activeTab = $state<TabId>('unclaimed');
+	const VALID_TABS: TabId[] = ['unclaimed', 'mine', 'all', 'history'];
+	const urlTab = $page.url.searchParams.get('tab');
+	let activeTab = $state<TabId>(urlTab && VALID_TABS.includes(urlTab as TabId) ? urlTab as TabId : 'unclaimed');
 
 	let filteredItems = $derived.by(() => {
 		switch (activeTab) {

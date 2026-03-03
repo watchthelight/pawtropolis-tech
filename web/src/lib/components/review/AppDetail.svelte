@@ -87,10 +87,8 @@
 				invalidateAll();
 			} else {
 				setBotOnline();
-				app.claimedBy = sessionUserId;
-				app.claimedByName = null;
-				app.claimedAt = Date.now();
-				requestAnimationFrame(() => animateActionBar());
+				// Navigate to My Claims tab with this app selected
+				goto(`/dashboard/reviews/${app.id}?tab=mine`);
 			}
 		} catch {
 			claimError = 'Failed to connect';
@@ -140,11 +138,6 @@
 	let reasonInput: HTMLInputElement;
 
 	function startDecision(action: DecisionAction) {
-		if (action === 'approve') {
-			// Approve fires immediately (reason optional, skip input for speed)
-			executeDecision('approve');
-			return;
-		}
 		activeAction = action;
 		reasonText = '';
 		decisionError = null;
@@ -161,11 +154,14 @@
 	}
 
 	function submitReason() {
-		if (!activeAction || !reasonText.trim()) return;
+		if (!activeAction) return;
+		const trimmed = reasonText.trim();
+		// Approve allows empty reason; reject/kick require it
+		if (activeAction !== 'approve' && !trimmed) return;
 		if (activeAction === 'kick') {
 			startKickCountdown();
 		} else {
-			executeDecision(activeAction, reasonText.trim());
+			executeDecision(activeAction, trimmed || undefined);
 		}
 	}
 
@@ -296,12 +292,12 @@
 				bind:value={reasonText}
 				class="reason-input"
 				type="text"
-				placeholder="Reason{activeAction === 'reject' ? ' (required)' : ''}"
+				placeholder={activeAction === 'approve' ? 'Note (optional)' : activeAction === 'reject' ? 'Reason (required)' : 'Reason (required)'}
 				onkeydown={(e) => { if (e.key === 'Enter') submitReason(); if (e.key === 'Escape') cancelDecision(); }}
 				disabled={decisionLoading}
 			/>
-			<button class="btn btn-{activeAction}" onclick={submitReason} disabled={decisionLoading || !reasonText.trim()}>
-				{decisionLoading ? 'Sending...' : activeAction === 'reject' ? 'Reject' : 'Kick'}
+			<button class="btn btn-{activeAction}" onclick={submitReason} disabled={decisionLoading || (activeAction !== 'approve' && !reasonText.trim())}>
+				{decisionLoading ? 'Sending...' : activeAction === 'approve' ? 'Approve' : activeAction === 'reject' ? 'Reject' : 'Kick'}
 			</button>
 			<button class="btn btn-cancel" onclick={cancelDecision} disabled={decisionLoading}>Cancel</button>
 		{:else if isUnclaimed}
