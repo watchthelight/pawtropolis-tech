@@ -28,6 +28,7 @@ export type SSEEventType =
 	| 'review:approved'
 	| 'review:rejected'
 	| 'review:kicked'
+	| 'review:permrejected'
 	| 'stats:updated'
 	| 'role:changed'
 	| 'modmail:message_sent'
@@ -59,7 +60,7 @@ export interface ReviewDecidedPayload {
 	appId: string;
 	reviewerId: string;
 	reviewerName: string;
-	action: 'approve' | 'reject' | 'kick';
+	action: 'approve' | 'reject' | 'kick' | 'perm_reject';
 	reason?: string;
 }
 
@@ -109,6 +110,7 @@ export interface SSEEventMap {
 	'review:approved': ReviewDecidedPayload;
 	'review:rejected': ReviewDecidedPayload;
 	'review:kicked': ReviewDecidedPayload;
+	'review:permrejected': ReviewDecidedPayload;
 	'stats:updated': StatsUpdatedPayload;
 	'role:changed': RoleChangedPayload;
 	'modmail:message_sent': ModmailMessageSentPayload;
