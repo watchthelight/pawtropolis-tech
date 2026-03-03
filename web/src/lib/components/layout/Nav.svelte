@@ -12,7 +12,7 @@
 	} = $props();
 
 	// Inline tier check — $lib/server/roles.ts can't be imported client-side
-	const TIER_ORDER = ['owner', 'cm', 'sa', 'admin', 'sm', 'mod', 'jm', 'gk', 'viewer', 'none'];
+	const TIER_ORDER = ['owner', 'cm', 'cdl', 'sa', 'admin', 'sm', 'mod', 'jm', 'gk', 'viewer', 'none'];
 	function hasMinTier(userTier: string, minTier: string): boolean {
 		const userIdx = TIER_ORDER.indexOf(userTier);
 		const minIdx = TIER_ORDER.indexOf(minTier);
@@ -23,6 +23,7 @@
 	const TIER_LABELS: Record<string, string> = {
 		owner: 'Owner / Dev',
 		cm: 'Community Manager',
+		cdl: 'Community Dev Lead',
 		sa: 'Senior Administrator',
 		admin: 'Administrator',
 		sm: 'Senior Moderator',

@@ -10,6 +10,7 @@
 	const TIER_LABELS: Record<string, string> = {
 		owner: 'Owner / Dev',
 		cm: 'Community Manager',
+		cdl: 'Community Dev Lead',
 		sa: 'Senior Administrator',
 		admin: 'Administrator',
 		sm: 'Senior Moderator',

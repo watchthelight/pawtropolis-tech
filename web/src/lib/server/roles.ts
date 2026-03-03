@@ -20,10 +20,11 @@ export const ROLE_IDS = {
 
 export const BOT_OWNER_UID = '697169405422862417';
 
-/** Dashboard tiers (highest to lowest) matching the 7-tier progressive reveal */
+/** Dashboard tiers (highest to lowest) matching the progressive reveal */
 export type DashboardTier =
 	| 'owner'
 	| 'cm'
+	| 'cdl'
 	| 'sa'
 	| 'admin'
 	| 'sm'
@@ -36,6 +37,7 @@ export type DashboardTier =
 export const TIER_LABELS: Record<DashboardTier, string> = {
 	owner: 'Owner / Dev',
 	cm: 'Community Manager',
+	cdl: 'Community Dev Lead',
 	sa: 'Senior Administrator',
 	admin: 'Administrator',
 	sm: 'Senior Moderator',
@@ -58,7 +60,7 @@ export function detectTier(roleIds: string[], userId: string): DashboardTier {
 	// Hierarchy check (highest first)
 	if (roleIds.includes(ROLE_IDS.SERVER_OWNER)) return 'owner';
 	if (roleIds.includes(ROLE_IDS.COMMUNITY_MANAGER)) return 'cm';
-	if (roleIds.includes(ROLE_IDS.COMMUNITY_DEV_LEAD)) return 'cm';
+	if (roleIds.includes(ROLE_IDS.COMMUNITY_DEV_LEAD)) return 'cdl';
 	if (roleIds.includes(ROLE_IDS.SENIOR_ADMIN)) return 'sa';
 	if (roleIds.includes(ROLE_IDS.ADMINISTRATOR)) return 'admin';
 	if (roleIds.includes(ROLE_IDS.SENIOR_MOD)) return 'sm';
@@ -70,8 +72,18 @@ export function detectTier(roleIds: string[], userId: string): DashboardTier {
 	return 'none';
 }
 
+/**
+ * Check if user has the actual Gatekeeper role (not tier-based).
+ * Review actions (claim/approve/reject/kick) are [GK] specific per PERMS-MATRIX.
+ * Higher tiers can VIEW reviews but only GK role holders can ACT on them.
+ * Admin+ can override unclaim (checked separately).
+ */
+export function isGatekeeper(roleIds: string[]): boolean {
+	return roleIds.includes(ROLE_IDS.GATEKEEPER);
+}
+
 /** Check if a tier has at least the given minimum tier */
 export function hasMinTier(userTier: DashboardTier, minTier: DashboardTier): boolean {
-	const order: DashboardTier[] = ['owner', 'cm', 'sa', 'admin', 'sm', 'mod', 'jm', 'gk', 'viewer', 'none'];
+	const order: DashboardTier[] = ['owner', 'cm', 'cdl', 'sa', 'admin', 'sm', 'mod', 'jm', 'gk', 'viewer', 'none'];
 	return order.indexOf(userTier) <= order.indexOf(minTier);
 }
