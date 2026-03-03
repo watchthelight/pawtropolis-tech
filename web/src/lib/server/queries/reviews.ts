@@ -105,7 +105,7 @@ export function getApplicationDetail(appId: string, guildId: string): Applicatio
 			COALESCE(u.global_name, u.username, 'Unknown') as applicant_name,
 			u.avatar_url,
 			c.reviewer_id,
-			COALESCE(ru.global_name, ru.username) as reviewer_name,
+			COALESCE(ru.display_name, ru.global_name, ru.username) as reviewer_name,
 			c.claimed_at,
 			COALESCE(s.final_pct, 0) as risk_score,
 			s.reason as scan_reason,
@@ -119,11 +119,7 @@ export function getApplicationDetail(appId: string, guildId: string): Applicatio
 			FROM user_snapshot
 		) u ON u.guild_id = a.guild_id AND u.user_id = a.user_id AND u.rn = 1
 		LEFT JOIN review_claim c ON a.id = c.app_id
-		LEFT JOIN (
-			SELECT guild_id, user_id, global_name, username,
-				ROW_NUMBER() OVER (PARTITION BY guild_id, user_id ORDER BY created_at DESC) as rn
-			FROM user_snapshot
-		) ru ON ru.guild_id = a.guild_id AND ru.user_id = c.reviewer_id AND ru.rn = 1
+		LEFT JOIN user_cache ru ON ru.guild_id = a.guild_id AND ru.user_id = c.reviewer_id
 		LEFT JOIN avatar_scan s ON a.id = s.application_id
 		WHERE a.id = ? AND a.guild_id = ?
 	`).get(appId, guildId) as AppDetailRow | undefined;
@@ -231,7 +227,7 @@ export function getReviewQueue(guildId: string): ReviewQueueItem[] {
 			a.submitted_at,
 			COALESCE(u.global_name, u.username, 'Unknown') as applicant_name,
 			c.reviewer_id,
-			COALESCE(ru.global_name, ru.username) as reviewer_name,
+			COALESCE(ru.display_name, ru.global_name, ru.username) as reviewer_name,
 			c.claimed_at,
 			COALESCE(s.final_pct, 0) as risk_score
 		FROM application a
@@ -241,11 +237,7 @@ export function getReviewQueue(guildId: string): ReviewQueueItem[] {
 			FROM user_snapshot
 		) u ON u.guild_id = a.guild_id AND u.user_id = a.user_id AND u.rn = 1
 		LEFT JOIN review_claim c ON a.id = c.app_id
-		LEFT JOIN (
-			SELECT guild_id, user_id, global_name, username,
-				ROW_NUMBER() OVER (PARTITION BY guild_id, user_id ORDER BY created_at DESC) as rn
-			FROM user_snapshot
-		) ru ON ru.guild_id = a.guild_id AND ru.user_id = c.reviewer_id AND ru.rn = 1
+		LEFT JOIN user_cache ru ON ru.guild_id = a.guild_id AND ru.user_id = c.reviewer_id
 		LEFT JOIN avatar_scan s ON a.id = s.application_id
 		WHERE a.guild_id = ? AND a.status IN ('submitted', 'needs_info')
 		ORDER BY a.submitted_at DESC
