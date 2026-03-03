@@ -9,6 +9,7 @@
 	import DiscordProfileCard from '$lib/components/review/DiscordProfileCard.svelte';
 	import type { CachedProfile } from '$lib/server/queries/reviews';
 	import { setBotOffline, setBotOnline, getBotOnline } from '$lib/stores/bot-status.svelte';
+	import { getIsMobile } from '$lib/stores/viewport.svelte';
 	import { relativeTime } from '$lib/utils/time';
 	import gsap from 'gsap';
 
@@ -29,6 +30,8 @@
 	let claimLoading = $state(false);
 	let claimError = $state<string | null>(null);
 	let detailBody: HTMLElement;
+	let isMobile = $derived(getIsMobile());
+	let profileExpanded = $state(false);
 
 	// Flip state: 'answers' (front) or 'modmail' (back)
 	let showModmail = $state(false);
@@ -249,9 +252,14 @@
 <div class="app-detail">
 	<!-- Two-panel body -->
 	<div class="detail-body" bind:this={detailBody}>
-		<!-- Left: Discord Profile Card -->
-		<div class="profile-col">
+		<!-- Left/Top: Discord Profile Card -->
+		<div class="profile-col" class:profile-collapsed={isMobile && !profileExpanded}>
 			<DiscordProfileCard userId={app.userId} avatarUrl={app.avatarUrl} applicantName={app.applicantName} {cachedProfile} />
+			{#if isMobile}
+				<button class="profile-toggle" onclick={() => profileExpanded = !profileExpanded}>
+					{profileExpanded ? 'Hide profile' : 'Show full profile'}
+				</button>
+			{/if}
 		</div>
 
 		<!-- Right: Answers / Modmail (flip) -->
@@ -594,6 +602,26 @@
 			width: 100%;
 			border-right: none;
 			border-bottom: 1px solid var(--border-holdfast);
+			overflow: hidden;
+			transition: max-height 300ms var(--ease-smooth);
+		}
+
+		.profile-collapsed {
+			max-height: 80px;
+		}
+
+		.profile-toggle {
+			display: block;
+			width: 100%;
+			padding: 0.4rem;
+			background: var(--surface-raised);
+			border: none;
+			border-top: 1px solid var(--border-holdfast);
+			color: var(--accent);
+			font-size: 0.7rem;
+			font-weight: 500;
+			cursor: pointer;
+			text-align: center;
 		}
 
 		.content-header {

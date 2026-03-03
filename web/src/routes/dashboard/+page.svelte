@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { getIsMobile } from '$lib/stores/viewport.svelte';
 	import DataCard from '$lib/components/data/DataCard.svelte';
 	import StatNumber from '$lib/components/data/StatNumber.svelte';
 	import EmptyState from '$lib/components/feedback/EmptyState.svelte';
@@ -8,6 +9,11 @@
 	let { data } = $props();
 	let user = $derived(data.user);
 	let metrics = $derived(data.metrics);
+
+	// On mobile, default to reviews page
+	$effect(() => {
+		if (getIsMobile()) goto('/dashboard/reviews', { replaceState: true });
+	});
 
 	const TIER_LABELS: Record<string, string> = {
 		owner: 'Owner / Dev',

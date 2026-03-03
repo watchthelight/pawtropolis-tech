@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/stores';
 	import { getIsMobile } from '$lib/stores/viewport.svelte';
 	import SpringReveal from '$lib/components/motion/SpringReveal.svelte';
 	import AppDetail from '$lib/components/review/AppDetail.svelte';
@@ -11,12 +12,33 @@
 	let cachedProfile = $derived(data.cachedProfile);
 
 	let isMobile = $derived(getIsMobile());
+
+	// Prev/next navigation within queue (mobile)
+	let queue = $derived((data as any).queue ?? []);
+	let currentIdx = $derived(queue.findIndex((q: any) => q.id === app.id));
+	let prevApp = $derived(currentIdx > 0 ? queue[currentIdx - 1] : null);
+	let nextApp = $derived(currentIdx >= 0 && currentIdx < queue.length - 1 ? queue[currentIdx + 1] : null);
 </script>
 
 {#if isMobile}
-	<a href="/dashboard/reviews" class="mobile-back-link">
-		<span class="back-arrow">&#8592;</span> Back to queue
-	</a>
+	<div class="mobile-nav-bar">
+		<a href="/dashboard/reviews" class="mobile-back-link">
+			<span class="back-arrow">&#8592;</span> Queue
+		</a>
+		<div class="mobile-pager">
+			{#if prevApp}
+				<a href="/dashboard/reviews/{prevApp.id}" class="pager-btn" title="Previous review">&#9664;</a>
+			{:else}
+				<span class="pager-btn pager-disabled">&#9664;</span>
+			{/if}
+			<span class="pager-count">{currentIdx + 1}/{queue.length}</span>
+			{#if nextApp}
+				<a href="/dashboard/reviews/{nextApp.id}" class="pager-btn" title="Next review">&#9654;</a>
+			{:else}
+				<span class="pager-btn pager-disabled">&#9654;</span>
+			{/if}
+		</div>
+	</div>
 {/if}
 
 <SpringReveal stagger={30}>
@@ -24,18 +46,62 @@
 </SpringReveal>
 
 <style>
+	.mobile-nav-bar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0.5rem 0;
+		margin-bottom: 0.5rem;
+	}
+
 	.mobile-back-link {
 		display: flex;
 		align-items: center;
-		gap: 0.5rem;
-		padding: 0.5rem 0;
+		gap: 0.375rem;
 		font-size: 0.8rem;
 		color: var(--accent);
 		text-decoration: none;
-		margin-bottom: 0.5rem;
+		min-height: 44px;
 	}
 
 	.back-arrow {
 		font-size: 1rem;
+	}
+
+	.mobile-pager {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.pager-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 36px;
+		height: 36px;
+		border-radius: var(--radius-sm);
+		background: var(--surface-raised);
+		border: 1px solid var(--border-holdfast);
+		color: var(--text-primary);
+		font-size: 0.7rem;
+		text-decoration: none;
+		transition: all 150ms;
+	}
+
+	.pager-btn:active {
+		background: var(--accent-dim);
+	}
+
+	.pager-disabled {
+		opacity: 0.3;
+		pointer-events: none;
+	}
+
+	.pager-count {
+		font-size: 0.7rem;
+		color: var(--text-secondary);
+		min-width: 2.5rem;
+		text-align: center;
 	}
 </style>
