@@ -4,7 +4,30 @@
 	import RiskAura from '$lib/components/data/RiskAura.svelte';
 	import ModmailViewer from '$lib/components/review/ModmailViewer.svelte';
 
-	let { app, modmail = [] }: { app: ApplicationDetail; modmail?: ModmailThreadSummary[] } = $props();
+	let {
+		app,
+		modmail = [],
+		sessionUserId = null
+	}: {
+		app: ApplicationDetail;
+		modmail?: ModmailThreadSummary[];
+		sessionUserId?: string | null;
+	} = $props();
+
+	let claimLoading = $state(false);
+	let claimError = $state<string | null>(null);
+
+	let isClaimedByMe = $derived(app.claimedBy != null && app.claimedBy === sessionUserId);
+	let isClaimedByOther = $derived(app.claimedBy != null && app.claimedBy !== sessionUserId);
+	let isUnclaimed = $derived(app.claimedBy == null);
+
+	function claimAgeColor(claimedAt: number | null): string {
+		if (!claimedAt) return 'var(--text-secondary)';
+		const hours = (Date.now() - claimedAt) / 3_600_000;
+		if (hours < 2) return 'var(--status-success)';
+		if (hours < 8) return 'var(--status-warning)';
+		return 'var(--status-danger)';
+	}
 
 	function relativeTime(ms: number | null): string {
 		if (!ms) return '';
@@ -16,6 +39,54 @@
 		if (hours < 24) return `${hours}h ago`;
 		const days = Math.floor(hours / 24);
 		return `${days}d ago`;
+	}
+
+	async function handleClaim() {
+		claimLoading = true;
+		claimError = null;
+		try {
+			const res = await fetch('/api/review/claim', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ appId: app.id })
+			});
+			const result = await res.json();
+			if (!result.success) {
+				claimError = result.error;
+			} else {
+				// Optimistic: page will reload via invalidateAll on SSE event
+				// For now, show immediate feedback
+				app.claimedBy = sessionUserId;
+				app.claimedAt = Date.now();
+			}
+		} catch {
+			claimError = 'Failed to connect';
+		} finally {
+			claimLoading = false;
+		}
+	}
+
+	async function handleUnclaim() {
+		claimLoading = true;
+		claimError = null;
+		try {
+			const res = await fetch('/api/review/unclaim', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ appId: app.id })
+			});
+			const result = await res.json();
+			if (!result.success) {
+				claimError = result.error;
+			} else {
+				app.claimedBy = null;
+				app.claimedAt = null;
+			}
+		} catch {
+			claimError = 'Failed to connect';
+		} finally {
+			claimLoading = false;
+		}
 	}
 </script>
 
@@ -38,7 +109,11 @@
 					<span>Submitted {relativeTime(app.submittedAt)}</span>
 				{/if}
 			</p>
-			{#if app.claimedBy}
+			{#if isClaimedByMe}
+				<p class="claimed-info" style:color={claimAgeColor(app.claimedAt)}>
+					Claimed by you · {relativeTime(app.claimedAt)}
+				</p>
+			{:else if isClaimedByOther}
 				<p class="claimed-info">Claimed by {app.claimedBy}</p>
 			{/if}
 		</div>
@@ -53,7 +128,7 @@
 	<!-- Answers section -->
 	<div class="answers-section">
 		<div class="section-label">Responses</div>
-		{#each app.answers as qa, i}
+		{#each app.answers as qa}
 			<div class="qa-block">
 				<div class="qa-question">{qa.question}</div>
 				<div class="qa-answer">{qa.answer}</div>
@@ -65,9 +140,24 @@
 		{/if}
 	</div>
 
-	<!-- Action bar placeholder -->
+	<!-- Action bar -->
 	<div class="action-bar">
-		<span class="action-placeholder">Decision actions coming soon</span>
+		{#if claimError}
+			<span class="claim-error">{claimError}</span>
+		{/if}
+
+		{#if isUnclaimed}
+			<button class="btn btn-claim" onclick={handleClaim} disabled={claimLoading}>
+				{claimLoading ? 'Claiming...' : 'Claim'}
+			</button>
+		{:else if isClaimedByMe}
+			<button class="btn btn-unclaim" onclick={handleUnclaim} disabled={claimLoading}>
+				{claimLoading ? 'Releasing...' : 'Unclaim'}
+			</button>
+			<span class="action-placeholder">Decision actions coming soon</span>
+		{:else}
+			<span class="action-placeholder">Claimed by another reviewer</span>
+		{/if}
 	</div>
 </div>
 
@@ -189,12 +279,54 @@
 		border-top: 1px solid var(--border-holdfast);
 		display: flex;
 		align-items: center;
-		justify-content: center;
+		gap: 0.75rem;
 	}
 
 	.action-placeholder {
 		font-size: 0.8rem;
 		color: var(--text-secondary);
 		opacity: 0.5;
+	}
+
+	.claim-error {
+		font-size: 0.75rem;
+		color: var(--status-danger);
+	}
+
+	/* Buttons */
+	.btn {
+		padding: 0.5rem 1.25rem;
+		border-radius: var(--radius-sm);
+		font-size: 0.8rem;
+		font-weight: 600;
+		border: none;
+		cursor: pointer;
+		transition: all 150ms var(--ease-smooth);
+	}
+
+	.btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.btn-claim {
+		background: var(--accent);
+		color: var(--bg);
+	}
+
+	.btn-claim:hover:not(:disabled) {
+		filter: brightness(1.1);
+		box-shadow: var(--glow-accent);
+	}
+
+	.btn-unclaim {
+		background: var(--surface-raised);
+		color: var(--text-secondary);
+		border: 1px solid var(--border-holdfast);
+	}
+
+	.btn-unclaim:hover:not(:disabled) {
+		background: var(--surface);
+		color: var(--text-primary);
 	}
 </style>

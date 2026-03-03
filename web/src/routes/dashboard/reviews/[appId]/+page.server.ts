@@ -5,7 +5,7 @@ import type { PageServerLoad } from './$types';
 
 const GUILD_ID = process.env.GUILD_ID!;
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
 	const app = getApplicationDetail(params.appId, GUILD_ID);
 
 	if (!app) {
@@ -14,5 +14,5 @@ export const load: PageServerLoad = async ({ params }) => {
 
 	const modmail = getModmailForApplication(app.userId, GUILD_ID);
 
-	return { app, modmail };
+	return { app, modmail, sessionUserId: locals.user?.id ?? null };
 };

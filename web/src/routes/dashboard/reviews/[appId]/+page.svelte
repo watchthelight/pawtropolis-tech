@@ -5,8 +5,9 @@
 	let { data } = $props();
 	let app = $derived(data.app);
 	let modmail = $derived(data.modmail);
+	let sessionUserId = $derived(data.sessionUserId);
 </script>
 
 <SpringReveal stagger={30}>
-	<AppDetail {app} {modmail} />
+	<AppDetail {app} {modmail} {sessionUserId} />
 </SpringReveal>
