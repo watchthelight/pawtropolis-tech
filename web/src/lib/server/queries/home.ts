@@ -2,6 +2,7 @@ import { db } from '$lib/server/db';
 
 export interface HomeMetrics {
 	pending: number;
+	pendingYours: number;
 	activeClaims: number;
 	decisionsToday: number;
 	openModmail: number | null;
@@ -25,6 +26,12 @@ export function getHomeMetrics(
 	const pending = count(
 		'SELECT COUNT(*) as count FROM application WHERE guild_id = ? AND status IN (?, ?)',
 		guildId, 'submitted', 'needs_info'
+	);
+	const pendingYours = count(
+		`SELECT COUNT(*) as count FROM review_claim rc
+		 JOIN application a ON rc.app_id = a.id
+		 WHERE rc.reviewer_id = ? AND a.guild_id = ? AND a.status IN ('submitted', 'needs_info')`,
+		userId, guildId
 	);
 	const activeClaims = count(
 		'SELECT COUNT(*) as count FROM review_claim WHERE reviewer_id = ?',
@@ -50,5 +57,5 @@ export function getHomeMetrics(
 		);
 	}
 
-	return { pending, activeClaims, decisionsToday, openModmail, activeFlags };
+	return { pending, pendingYours, activeClaims, decisionsToday, openModmail, activeFlags };
 }

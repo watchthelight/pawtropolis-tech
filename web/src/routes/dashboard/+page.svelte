@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import DataCard from '$lib/components/data/DataCard.svelte';
 	import StatNumber from '$lib/components/data/StatNumber.svelte';
 	import EmptyState from '$lib/components/feedback/EmptyState.svelte';
@@ -46,10 +47,13 @@
 	<div class="section-heading">Your Queue</div>
 
 	<div class="grid grid-cols-3 gap-[var(--space-section)]">
-		<DataCard elevation="md" selected>
+		<DataCard elevation="md" selected clickable onclick={() => goto('/dashboard/reviews?tab=all')}>
 			<StatNumber value={metrics.pending} label="Pending" />
+			{#if metrics.pendingYours > 0}
+				<p class="stat-sub">{metrics.pendingYours} yours</p>
+			{/if}
 		</DataCard>
-		<DataCard elevation="sm">
+		<DataCard elevation="sm" clickable onclick={() => goto('/dashboard/reviews?tab=mine')}>
 			<StatNumber value={metrics.activeClaims} label="Your Claims" />
 		</DataCard>
 		<DataCard elevation="sm">
@@ -80,6 +84,12 @@
 </SpringReveal>
 
 <style>
+	.stat-sub {
+		font-size: 0.7rem;
+		color: var(--text-secondary);
+		margin-top: 0.25rem;
+	}
+
 	.section-heading {
 		font-size: 0.7rem;
 		font-weight: 600;
