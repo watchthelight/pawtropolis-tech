@@ -2,13 +2,15 @@
 	import { page } from '$app/stores';
 	import ConnectionIndicator from './ConnectionIndicator.svelte';
 
-	let { user }: {
+	let { user, collapsed = false, ontoggle }: {
 		user: {
 			username: string;
 			globalName: string | null;
 			avatarUrl: string;
 			tier: string;
 		};
+		collapsed?: boolean;
+		ontoggle?: () => void;
 	} = $props();
 
 	// Inline tier check — $lib/server/roles.ts can't be imported client-side
@@ -57,22 +59,25 @@
 	}
 </script>
 
-<nav aria-label="Main navigation" class="flex h-full flex-col bg-[var(--bg)] border-r border-[var(--border-holdfast)]">
+<nav aria-label="Main navigation" class="sidebar" class:sidebar-collapsed={collapsed}>
 	<!-- Identity section -->
-	<div class="flex items-center gap-3 p-4 border-b border-[var(--border-holdfast)]">
+	<div class="identity" class:identity-collapsed={collapsed}>
 		<img
 			src={user.avatarUrl}
 			alt={user.globalName || user.username}
-			class="w-12 h-12 rounded-[var(--radius-md)] ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--bg)]"
+			class="avatar"
+			class:avatar-collapsed={collapsed}
 		/>
-		<div class="min-w-0">
-			<p class="truncate text-sm font-medium text-[var(--text-primary)]">
-				{user.globalName || user.username}
-			</p>
-			<p class="text-xs text-[var(--text-secondary)]">
-				{TIER_LABELS[user.tier] ?? user.tier}
-			</p>
-		</div>
+		{#if !collapsed}
+			<div class="min-w-0">
+				<p class="truncate text-sm font-medium text-[var(--text-primary)]">
+					{user.globalName || user.username}
+				</p>
+				<p class="text-xs text-[var(--text-secondary)]">
+					{TIER_LABELS[user.tier] ?? user.tier}
+				</p>
+			</div>
+		{/if}
 	</div>
 
 	<!-- Navigation items -->
@@ -83,37 +88,102 @@
 				<a
 					href={item.href}
 					aria-current={active ? 'page' : undefined}
+					title={collapsed ? item.label : undefined}
 					class="nav-item"
 					class:nav-active={active}
 					class:nav-inactive={!active}
+					class:nav-item-collapsed={collapsed}
 				>
-					{item.label}
+					<span class="nav-letter" class:nav-letter-show={collapsed}>{item.label.charAt(0)}</span>
+					{#if !collapsed}
+						<span class="nav-label">{item.label}</span>
+					{/if}
 				</a>
 			</li>
 		{/each}
 	</ul>
 
 	<!-- Footer section -->
-	<div class="border-t border-[var(--border-holdfast)] p-4 space-y-3">
-		<ConnectionIndicator />
-		<a
-			href="/auth/logout"
-			class="block text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+	<div class="footer" class:footer-collapsed={collapsed}>
+		{#if !collapsed}
+			<ConnectionIndicator />
+		{/if}
+		<button
+			class="toggle-btn"
+			onclick={ontoggle}
+			title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+			aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
 		>
-			Logout
-		</a>
+			<span class="toggle-icon" class:toggle-icon-flipped={collapsed}>&#9666;</span>
+			{#if !collapsed}<span class="toggle-label">Collapse</span>{/if}
+		</button>
+		{#if !collapsed}
+			<a
+				href="/auth/logout"
+				class="block text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+			>
+				Logout
+			</a>
+		{/if}
 	</div>
 </nav>
 
 <style>
+	.sidebar {
+		display: flex;
+		height: 100%;
+		flex-direction: column;
+		background: var(--bg);
+		border-right: 1px solid var(--border-holdfast);
+		overflow: hidden;
+	}
+
+	/* Identity */
+	.identity {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 1rem;
+		border-bottom: 1px solid var(--border-holdfast);
+	}
+
+	.identity-collapsed {
+		justify-content: center;
+		padding: 0.75rem;
+	}
+
+	.avatar {
+		width: 3rem;
+		height: 3rem;
+		border-radius: var(--radius-md);
+		ring: 2px solid var(--accent);
+		flex-shrink: 0;
+		transition: width 200ms var(--ease-smooth), height 200ms var(--ease-smooth);
+	}
+
+	.avatar-collapsed {
+		width: 2rem;
+		height: 2rem;
+	}
+
+	/* Nav items */
 	.nav-item {
 		display: flex;
 		align-items: center;
+		gap: 0.5rem;
 		padding: 0.5rem 1rem;
 		margin: 0.125rem 0.5rem;
 		font-size: 0.875rem;
 		border-radius: var(--radius-sm);
 		transition: all 150ms var(--ease-smooth);
+		white-space: nowrap;
+		overflow: hidden;
+	}
+
+	.nav-item-collapsed {
+		justify-content: center;
+		padding: 0.5rem;
+		margin: 0.125rem 0.25rem;
 	}
 
 	.nav-active {
@@ -123,6 +193,10 @@
 		box-shadow: inset 3px 0 0 var(--accent), var(--glow-accent);
 	}
 
+	.nav-item-collapsed.nav-active {
+		box-shadow: var(--glow-accent);
+	}
+
 	.nav-inactive {
 		color: var(--text-secondary);
 	}
@@ -130,6 +204,79 @@
 	.nav-inactive:hover {
 		color: var(--text-primary);
 		background: var(--surface-raised);
+	}
+
+	.nav-inactive:not(.nav-item-collapsed):hover {
 		transform: translateX(2px);
+	}
+
+	/* Letter icon (shown when collapsed) */
+	.nav-letter {
+		display: none;
+		width: 1.5rem;
+		height: 1.5rem;
+		border-radius: var(--radius-sm);
+		font-size: 0.7rem;
+		font-weight: 600;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+	}
+
+	.nav-letter-show {
+		display: flex;
+	}
+
+	.nav-label {
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	/* Footer */
+	.footer {
+		border-top: 1px solid var(--border-holdfast);
+		padding: 1rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.footer-collapsed {
+		padding: 0.5rem;
+		align-items: center;
+	}
+
+	/* Toggle button */
+	.toggle-btn {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.35rem 0.5rem;
+		border: none;
+		border-radius: var(--radius-sm);
+		background: none;
+		color: var(--text-secondary);
+		font-size: 0.75rem;
+		cursor: pointer;
+		transition: all 150ms var(--ease-smooth);
+		width: 100%;
+	}
+
+	.toggle-btn:hover {
+		color: var(--text-primary);
+		background: var(--surface-raised);
+	}
+
+	.toggle-icon {
+		font-size: 0.7rem;
+		transition: transform 200ms var(--ease-smooth);
+	}
+
+	.toggle-icon-flipped {
+		transform: rotate(180deg);
+	}
+
+	.toggle-label {
+		font-size: 0.75rem;
 	}
 </style>
