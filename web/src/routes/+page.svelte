@@ -6,7 +6,7 @@
 	let btnRef: HTMLAnchorElement;
 
 	function handleBtnMouse(e: MouseEvent) {
-		if (!btnRef || prefersReducedMotion()) return;
+		if (!btnRef || prefersReducedMotion() || window.matchMedia('(pointer: coarse)').matches) return;
 		const rect = btnRef.getBoundingClientRect();
 		const x = (e.clientX - rect.left) / rect.width - 0.5;
 		const y = (e.clientY - rect.top) / rect.height - 0.5;
@@ -30,6 +30,8 @@
 	}
 
 	onMount(() => {
+		// Skip mouse tracking on touch devices
+		if (window.matchMedia('(pointer: coarse)').matches) return;
 		const handleMouse = (e: MouseEvent) => {
 			if (!blobsRef || prefersReducedMotion()) return;
 			const x = (e.clientX / window.innerWidth - 0.5) * 6;
@@ -115,7 +117,7 @@
 <style>
 	.splash {
 		position: relative;
-		min-height: 100vh;
+		min-height: var(--vh-full);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -376,10 +378,16 @@
 			-10px -10px 24px oklch(24% 0.015 var(--hue));
 	}
 
-	.discord-btn:hover {
-		box-shadow:
-			14px 14px 32px oklch(5% 0.005 var(--hue)),
-			-14px -14px 32px oklch(26% 0.015 var(--hue));
+	@media (hover: hover) {
+		.discord-btn:hover {
+			box-shadow:
+				14px 14px 32px oklch(5% 0.005 var(--hue)),
+				-14px -14px 32px oklch(26% 0.015 var(--hue));
+		}
+	}
+
+	.discord-btn:active {
+		transform: perspective(400px) scale(0.98);
 	}
 
 	/* Shimmer */
@@ -423,5 +431,15 @@
 	@media (max-width: 640px) {
 		.logo { width: 140px; height: 140px; }
 		.title { font-size: 2.2rem; }
+		.content { padding: 0 var(--mobile-pad) 4rem; }
+		.blob-magenta { width: 250px; height: 250px; }
+		.blob-cyan { width: 200px; height: 200px; }
+		.blob-violet { width: 180px; height: 180px; }
+		.blob-warm { width: 150px; height: 150px; }
+		.blob-rose { width: 180px; height: 180px; }
+		.blob-teal { width: 160px; height: 160px; }
+		.blob-peach { width: 130px; height: 130px; }
+		.skyline { height: 100px; }
+		.discord-btn { padding: 0.875rem 2rem; font-size: 0.9rem; min-height: 44px; }
 	}
 </style>
