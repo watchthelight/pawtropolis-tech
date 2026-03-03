@@ -7,7 +7,7 @@
  */
 
 import Fastify from "fastify";
-import type { Client } from "discord.js";
+import type { Client, Guild } from "discord.js";
 import { logger } from "../lib/logger.js";
 import { getConfig } from "../lib/config.js";
 import { claimTx, unclaimTx, ClaimError } from "../features/reviewActions.js";
@@ -17,6 +17,9 @@ import { kickTx, kickFlow } from "../features/review/flows/kick.js";
 import { loadApplication } from "../features/review/queries.js";
 import { clearClaim, getClaim } from "../features/review/claims.js";
 import { updateReviewActionMeta } from "../features/review/queries.js";
+import { ensureReviewMessage } from "../features/review.js";
+import { logActionPretty } from "../logging/pretty.js";
+import { shortCode } from "../lib/ids.js";
 
 // ===== Tier Check =====
 
@@ -100,6 +103,17 @@ export async function startDashboardApi(client: Client): Promise<void> {
 
     try {
       claimTx(appId, userId, GUILD_ID);
+
+      // Discord side-effects: refresh review card + audit log
+      const guild = getGuild();
+      if (guild) {
+        const app = loadApplication(appId);
+        ensureReviewMessage(client, appId).catch((err) =>
+          logger.warn({ err, appId }, "[dashboardApi] failed to refresh review card after claim"));
+        logActionPretty(guild, { appId, appCode: shortCode(appId), actorId: userId, subjectId: app?.user_id ?? "", action: "claim" }).catch((err) =>
+          logger.warn({ err, appId }, "[dashboardApi] failed to log claim action"));
+      }
+
       notifyDashboard("review:claimed", { appId, reviewerId: userId });
       return { success: true, data: { appId, reviewerId: userId } } satisfies ApiSuccess;
     } catch (err) {
@@ -141,6 +155,16 @@ export async function startDashboardApi(client: Client): Promise<void> {
         throw err;
       }
     }
+    // Discord side-effects: refresh review card + audit log
+    const guild = getGuild();
+    if (guild) {
+      const appForLog = loadApplication(appId);
+      ensureReviewMessage(client, appId).catch((err) =>
+        logger.warn({ err, appId }, "[dashboardApi] failed to refresh review card after unclaim"));
+      logActionPretty(guild, { appId, appCode: shortCode(appId), actorId: userId, subjectId: appForLog?.user_id ?? "", action: "unclaim" }).catch((err) =>
+        logger.warn({ err, appId }, "[dashboardApi] failed to log unclaim action"));
+    }
+
     notifyDashboard("review:unclaimed", { appId, reviewerId: userId });
     return { success: true, data: { appId } } satisfies ApiSuccess;
   });
@@ -184,6 +208,10 @@ export async function startDashboardApi(client: Client): Promise<void> {
       }
     }
 
+    // Refresh review card in Discord
+    ensureReviewMessage(client, appId).catch((err) =>
+      logger.warn({ err, appId }, "[dashboardApi] failed to refresh review card after approve"));
+
     notifyDashboard("review:approved", { appId, reviewerId: userId, action: "approve", reason });
     return { success: true, data: { appId, action: "approve" } } satisfies ApiSuccess;
   });
@@ -222,6 +250,10 @@ export async function startDashboardApi(client: Client): Promise<void> {
       }
     }
 
+    // Refresh review card in Discord
+    ensureReviewMessage(client, appId).catch((err) =>
+      logger.warn({ err, appId }, "[dashboardApi] failed to refresh review card after reject"));
+
     notifyDashboard("review:rejected", { appId, reviewerId: userId, action: "reject", reason });
     return { success: true, data: { appId, action: "reject" } } satisfies ApiSuccess;
   });
@@ -258,6 +290,10 @@ export async function startDashboardApi(client: Client): Promise<void> {
         kickError: flowResult.error,
       });
     }
+
+    // Refresh review card in Discord
+    ensureReviewMessage(client, appId).catch((err) =>
+      logger.warn({ err, appId }, "[dashboardApi] failed to refresh review card after kick"));
 
     notifyDashboard("review:kicked", { appId, reviewerId: userId, action: "kick", reason });
     return { success: true, data: { appId, action: "kick" } } satisfies ApiSuccess;
