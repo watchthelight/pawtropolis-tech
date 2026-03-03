@@ -153,6 +153,33 @@ export function getApplicationDetail(appId: string, guildId: string): Applicatio
 }
 
 // ---------------------------------------------------------------------------
+// Applicant profile (cached from user_cache)
+// ---------------------------------------------------------------------------
+
+export interface CachedProfile {
+	bannerUrl: string | null;
+	accentColor: number | null;
+	joinedAt: number | null;
+	createdAt: number | null;
+}
+
+export function getCachedProfile(userId: string, guildId: string): CachedProfile | null {
+	const row = db().prepare(`
+		SELECT banner_url, accent_color, joined_at, created_at
+		FROM user_cache
+		WHERE user_id = ? AND guild_id = ?
+	`).get(userId, guildId) as { banner_url: string | null; accent_color: number | null; joined_at: number | null; created_at: number | null } | undefined;
+
+	if (!row) return null;
+	return {
+		bannerUrl: row.banner_url,
+		accentColor: row.accent_color,
+		joinedAt: row.joined_at ? row.joined_at * 1000 : null,
+		createdAt: row.created_at ? row.created_at * 1000 : null,
+	};
+}
+
+// ---------------------------------------------------------------------------
 // Review history (resolved applications)
 // ---------------------------------------------------------------------------
 

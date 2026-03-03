@@ -5,6 +5,8 @@
 	import type { ModmailThreadSummary } from '$lib/server/queries/modmail';
 	import RiskAura from '$lib/components/data/RiskAura.svelte';
 	import ModmailViewer from '$lib/components/review/ModmailViewer.svelte';
+	import ProfilePanel from '$lib/components/review/ProfilePanel.svelte';
+	import type { CachedProfile } from '$lib/server/queries/reviews';
 	import gsap from 'gsap';
 	import { SPRINGS } from '$lib/motion';
 	import { setBotOffline, setBotOnline, getBotOnline } from '$lib/stores/bot-status.svelte';
@@ -13,12 +15,14 @@
 		app,
 		modmail = [],
 		sessionUserId = null,
-		canAdminUnclaim = false
+		canAdminUnclaim = false,
+		cachedProfile = null
 	}: {
 		app: ApplicationDetail;
 		modmail?: ModmailThreadSummary[];
 		sessionUserId?: string | null;
 		canAdminUnclaim?: boolean;
+		cachedProfile?: CachedProfile | null;
 	} = $props();
 
 	let claimLoading = $state(false);
@@ -257,6 +261,9 @@
 			evidence={app.scan ? { hard: app.scan.evidenceHard, soft: app.scan.evidenceSoft, safe: app.scan.evidenceSafe } : undefined}
 		/>
 	</div>
+
+	<!-- Profile panel (expandable) -->
+	<ProfilePanel userId={app.userId} avatarUrl={app.avatarUrl} {cachedProfile} />
 
 	<!-- Answers section -->
 	<div class="answers-section">
