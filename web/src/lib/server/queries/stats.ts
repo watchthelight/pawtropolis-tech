@@ -4,6 +4,8 @@ import { db } from '$lib/server/db';
 // Types
 // ---------------------------------------------------------------------------
 
+export type TimeWindow = '7d' | '30d' | '90d' | 'all';
+
 export interface PersonalStats {
 	total: number;
 	approvals: number;
@@ -15,9 +17,14 @@ export interface PersonalStats {
 	avgSubmitToClaimS: number | null;
 }
 
-export interface StatsPageData {
-	personal: PersonalStats;
-	windowDays: number;
+export interface DailyCount {
+	day: string; // "YYYY-MM-DD"
+	count: number;
+}
+
+export interface DailyAvgSeconds {
+	day: string;
+	avg_seconds: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -26,6 +33,30 @@ export interface StatsPageData {
 
 function windowStart(days: number): number {
 	return Math.floor(Date.now() / 1000) - days * 86_400;
+}
+
+export function windowStartForWindow(window: TimeWindow): number {
+	if (window === 'all') return 0;
+	const days = window === '7d' ? 7 : window === '30d' ? 30 : 90;
+	return Math.floor(Date.now() / 1000) - days * 86_400;
+}
+
+export function windowDaysForWindow(window: TimeWindow): number {
+	if (window === 'all') return 36500; // ~100 years = all time
+	return window === '7d' ? 7 : window === '30d' ? 30 : 90;
+}
+
+function fillGaps(rows: DailyCount[]): DailyCount[] {
+	if (rows.length === 0) return rows;
+	const map = new Map(rows.map((r) => [r.day, r.count]));
+	const start = new Date(rows[0].day + 'T00:00:00Z');
+	const end = new Date();
+	const result: DailyCount[] = [];
+	for (const d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
+		const key = d.toISOString().slice(0, 10);
+		result.push({ day: key, count: map.get(key) ?? 0 });
+	}
+	return result;
 }
 
 // ---------------------------------------------------------------------------
@@ -146,4 +177,67 @@ export function getSubmitToFirstClaimAvg(
 		.get(guildId, windowStartS, guildId) as { avg_time: number | null } | undefined;
 
 	return row?.avg_time ?? null;
+}
+
+// ---------------------------------------------------------------------------
+// Time-series queries
+// ---------------------------------------------------------------------------
+
+/**
+ * Daily decision counts for a moderator. Gap-filled to produce a dense array.
+ * Pass windowStartS=0 for all-time.
+ */
+export function getActivityTimeline(
+	userId: string,
+	guildId: string,
+	windowStartS: number
+): DailyCount[] {
+	const rows = db()
+		.prepare(
+			`SELECT date(created_at_s, 'unixepoch') AS day, COUNT(*) AS count
+			FROM action_log
+			WHERE guild_id = ? AND actor_id = ?
+				AND action IN ('approve', 'reject', 'perm_reject', 'kick', 'modmail_open')
+				AND (? = 0 OR created_at_s >= ?)
+			GROUP BY day
+			ORDER BY day ASC`
+		)
+		.all(guildId, userId, windowStartS, windowStartS) as DailyCount[];
+
+	return fillGaps(rows);
+}
+
+/**
+ * Daily average claim-to-decision time for a moderator (sparse — only days with data).
+ * Pass windowStartS=0 for all-time.
+ */
+export function getResponseTrend(
+	userId: string,
+	guildId: string,
+	windowStartS: number
+): DailyAvgSeconds[] {
+	return db()
+		.prepare(
+			`WITH decisions AS (
+				SELECT app_id, date(created_at_s, 'unixepoch') AS day, created_at_s AS decision_time
+				FROM action_log
+				WHERE guild_id = ? AND actor_id = ?
+					AND action IN ('approve', 'reject', 'perm_reject', 'kick', 'modmail_open')
+					AND app_id IS NOT NULL
+					AND (? = 0 OR created_at_s >= ?)
+			),
+			claims AS (
+				SELECT app_id, MAX(created_at_s) AS claim_time
+				FROM action_log
+				WHERE guild_id = ? AND actor_id = ? AND action = 'claim'
+				GROUP BY app_id
+			)
+			SELECT d.day, ROUND(AVG(d.decision_time - c.claim_time)) AS avg_seconds
+			FROM decisions d
+			INNER JOIN claims c ON d.app_id = c.app_id
+			WHERE c.claim_time < d.decision_time
+			GROUP BY d.day
+			ORDER BY d.day ASC`
+		)
+		.all(guildId, userId, windowStartS, windowStartS, guildId, userId) as DailyAvgSeconds[];
 }
