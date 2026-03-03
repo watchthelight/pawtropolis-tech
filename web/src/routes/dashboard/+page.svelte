@@ -26,7 +26,7 @@
 
 <SpringReveal stagger={30}>
 	<!-- Identity section -->
-	<div class="mb-[var(--space-section)] flex items-center gap-5">
+	<div class="mb-[var(--space-section)] flex items-center gap-5 max-md:gap-3">
 		<img
 			src={user.avatarUrl}
 			alt={user.globalName || user.username}
@@ -34,7 +34,7 @@
 			style:box-shadow="0 0 20px oklch(70% 0.15 var(--hue) / 0.15)"
 		/>
 		<div>
-			<h1 class="text-2xl font-semibold text-[var(--text-primary)] tracking-tight">
+			<h1 class="text-2xl max-md:text-xl font-semibold text-[var(--text-primary)] tracking-tight">
 				Welcome back, {user.globalName || user.username}
 			</h1>
 			<span class="inline-flex items-center rounded-[var(--radius-sm)] bg-[var(--surface-raised)] px-2.5 py-0.5 text-xs font-medium text-[var(--text-secondary)]">
@@ -46,7 +46,7 @@
 	<!-- Section: Your Queue -->
 	<div class="section-heading">Your Queue</div>
 
-	<div class="grid grid-cols-3 gap-[var(--space-section)]">
+	<div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-[var(--space-section)]">
 		<DataCard elevation="md" selected clickable onclick={() => goto('/dashboard/reviews?tab=all')}>
 			<StatNumber value={metrics.pending} label="Pending" />
 			{#if metrics.pendingYours > 0}
@@ -65,7 +65,7 @@
 	{#if metrics.openModmail != null}
 		<div class="section-heading mt-[var(--space-section)]">Server Status</div>
 
-		<div class="grid grid-cols-2 gap-[var(--space-section)]">
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-[var(--space-section)]">
 			<DataCard elevation="sm">
 				<StatNumber value={metrics.openModmail} label="Open Modmail" />
 			</DataCard>
