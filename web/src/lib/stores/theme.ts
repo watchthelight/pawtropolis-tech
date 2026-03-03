@@ -99,17 +99,39 @@ function extractImageHue(imageUrl: string): Promise<number | null> {
 	});
 }
 
+let _activeUserId: string | null = null;
+
 function setHue(hue: number): void {
 	if (typeof document !== 'undefined') {
-		document.documentElement.style.setProperty('--hue', String(Math.round(hue)));
+		const rounded = String(Math.round(hue));
+		document.documentElement.style.setProperty('--hue', rounded);
+		if (_activeUserId) {
+			try {
+				localStorage.setItem(`theme-hue-${_activeUserId}`, rounded);
+				localStorage.setItem('theme-last-uid', _activeUserId);
+			} catch {}
+		}
 	}
+}
+
+/**
+ * Restore cached hue for a specific user from localStorage.
+ * Call synchronously before applyTheme to prevent flash on reload.
+ */
+export function restoreCachedHue(userId: string): void {
+	if (typeof document === 'undefined') return;
+	try {
+		const cached = localStorage.getItem(`theme-hue-${userId}`);
+		if (cached) document.documentElement.style.setProperty('--hue', cached);
+	} catch {}
 }
 
 /**
  * Apply theme from Discord accent color.
  * Falls back to avatar color extraction when accent_color is 0/null.
  */
-export function applyTheme(accentColor: number | null, avatarUrl?: string | null): void {
+export function applyTheme(accentColor: number | null, avatarUrl?: string | null, userId?: string): void {
+	if (userId) _activeUserId = userId;
 	// Try accent color first (skip 0 = black, which Discord returns when theme isn't in API)
 	if (accentColor && accentColor !== 0) {
 		const hue = accentColorToHue(accentColor);

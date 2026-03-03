@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { slide } from 'svelte/transition';
 	import ConnectionIndicator from './ConnectionIndicator.svelte';
 
 	let { user, collapsed = false }: {
@@ -81,9 +82,9 @@
 
 	<!-- Navigation items -->
 	<ul class="flex-1 overflow-y-auto py-2">
-		{#each visibleItems as item}
+		{#each visibleItems as item (item.href)}
 			{@const active = isActive(item.href)}
-			<li>
+			<li transition:slide={{ duration: 200 }}>
 				<a
 					href={item.href}
 					aria-current={active ? 'page' : undefined}

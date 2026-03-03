@@ -22,6 +22,7 @@ import { logActionPretty } from "../../../logging/pretty.js";
 import type { ApplicationRow } from "../types.js";
 import { ensureReviewMessage } from "../../review.js";
 import { cacheUser } from "../../../lib/userCache.js";
+import { notifyDashboard } from "../../../web/notifyDashboard.js";
 
 // ===== Claim Handlers =====
 
@@ -138,6 +139,8 @@ export async function handleClaimToggle(interaction: ButtonInteraction, app: App
     captureException(err, { area: "claim:ensureReviewMessage", appId: app.id });
   }
 
+  notifyDashboard("review:claimed", { appId: app.id, reviewerId: interaction.user.id });
+
   // Update the review card message content to show who claimed it
   await replyOrEdit(interaction, {
     content: `<@${interaction.user.id}> has claimed this application.`,
@@ -232,6 +235,8 @@ export async function handleUnclaimAction(interaction: ButtonInteraction, app: A
     logger.warn({ err, appId: app.id }, "[review] failed to refresh review card after unclaim");
     captureException(err, { area: "unclaim:ensureReviewMessage", appId: app.id });
   }
+
+  notifyDashboard("review:unclaimed", { appId: app.id, reviewerId: interaction.user.id });
 
   // Send single ephemeral feedback to confirm unclaim (no public message)
   await replyOrEdit(interaction, {

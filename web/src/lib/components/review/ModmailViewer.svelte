@@ -3,6 +3,8 @@
 	import { invalidateAll } from '$app/navigation';
 	import type { ModmailThreadSummary } from '$lib/server/queries/modmail';
 	import { subscribe, unsubscribe } from '$lib/stores/sse.svelte';
+	import CopyableId from '$lib/components/data/CopyableId.svelte';
+	import { setBotOffline, setBotOnline, getBotOnline } from '$lib/stores/bot-status.svelte';
 	import type { SSEEvent } from '$lib/types/events';
 
 	let {
@@ -20,6 +22,8 @@
 	let actionError = $state<string | null>(null);
 	let messagesEnd: HTMLElement | undefined = $state();
 
+	let botOnline = $derived(getBotOnline());
+
 	// Find the open thread (if any) for send/close actions
 	const openThread = $derived(threads.find(t => t.status === 'open'));
 	// Most recent closed thread (for reopen)
@@ -31,10 +35,10 @@
 		return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 	}
 
-	function threadLabel(thread: ModmailThreadSummary): string {
+	function threadMeta(thread: ModmailThreadSummary): string {
 		const status = thread.status === 'open' ? 'open' : 'closed';
 		const date = thread.createdAt ? formatTime(thread.createdAt) : '';
-		return `Thread #${thread.id} (${status}${date ? ' · ' + date : ''})`;
+		return `(${status}${date ? ' · ' + date : ''})`;
 	}
 
 	function scrollToBottom() {
@@ -60,6 +64,7 @@
 			if (!result.success) {
 				sendError = result.error ?? 'Failed to send';
 			} else {
+				setBotOnline();
 				openThread.messages = [
 					...openThread.messages,
 					{
@@ -75,6 +80,7 @@
 			}
 		} catch {
 			sendError = 'Failed to connect';
+			setBotOffline();
 		} finally {
 			sending = false;
 		}
@@ -95,10 +101,12 @@
 			if (!result.success) {
 				actionError = result.error ?? 'Failed to close';
 			} else {
+				setBotOnline();
 				openThread.status = 'closed';
 			}
 		} catch {
 			actionError = 'Failed to connect';
+			setBotOffline();
 		} finally {
 			actionLoading = null;
 		}
@@ -119,10 +127,12 @@
 			if (!result.success) {
 				actionError = result.error ?? 'Failed to reopen';
 			} else {
+				setBotOnline();
 				recentClosedThread.status = 'open';
 			}
 		} catch {
 			actionError = 'Failed to connect';
+			setBotOffline();
 		} finally {
 			actionLoading = null;
 		}
@@ -151,13 +161,13 @@
 	<div class="thread-actions">
 		{#if openThread}
 			<span class="thread-status thread-status-open">Open</span>
-			<button class="action-btn action-btn-danger" onclick={handleClose} disabled={actionLoading !== null}>
-				{actionLoading === 'close' ? 'Closing...' : 'Close Thread'}
+			<button class="action-btn action-btn-danger" onclick={handleClose} disabled={actionLoading !== null || !botOnline}>
+				{actionLoading === 'close' ? 'Closing...' : !botOnline ? 'Bot offline' : 'Close Thread'}
 			</button>
 		{:else if recentClosedThread}
 			<span class="thread-status thread-status-closed">Closed</span>
-			<button class="action-btn" onclick={handleReopen} disabled={actionLoading !== null}>
-				{actionLoading === 'reopen' ? 'Reopening...' : 'Reopen'}
+			<button class="action-btn" onclick={handleReopen} disabled={actionLoading !== null || !botOnline}>
+				{actionLoading === 'reopen' ? 'Reopening...' : !botOnline ? 'Bot offline' : 'Reopen'}
 			</button>
 		{/if}
 		{#if actionError}
@@ -171,7 +181,7 @@
 			<div class="thread-separator"></div>
 		{/if}
 		<div class="thread-block">
-			<div class="thread-header">{threadLabel(thread)}</div>
+			<div class="thread-header">Thread <CopyableId value={String(thread.id)} label="#" /> {threadMeta(thread)}</div>
 			<div class="thread-messages">
 				{#each thread.messages as msg (msg.id)}
 					<div class="message" class:message-staff={msg.direction === 'to_user'} class:message-user={msg.direction === 'to_staff'}>
@@ -191,16 +201,16 @@
 		<div class="send-bar">
 			<textarea
 				class="send-input"
-				placeholder="Type a message..."
+				placeholder={!botOnline ? 'Bot offline...' : 'Type a message...'}
 				bind:value={messageInput}
 				onkeydown={handleKeydown}
-				disabled={sending}
+				disabled={sending || !botOnline}
 				rows={1}
 			></textarea>
 			<button
 				class="send-btn"
 				onclick={handleSend}
-				disabled={sending || !messageInput.trim()}
+				disabled={sending || !messageInput.trim() || !botOnline}
 				title="Send message"
 			>
 				{#if sending}

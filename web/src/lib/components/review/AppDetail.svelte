@@ -4,6 +4,7 @@
 	import type { ApplicationDetail } from '$lib/server/queries/reviews';
 	import type { ModmailThreadSummary } from '$lib/server/queries/modmail';
 	import RiskAura from '$lib/components/data/RiskAura.svelte';
+	import CopyableId from '$lib/components/data/CopyableId.svelte';
 	import ModmailViewer from '$lib/components/review/ModmailViewer.svelte';
 	import DiscordProfileCard from '$lib/components/review/DiscordProfileCard.svelte';
 	import type { CachedProfile } from '$lib/server/queries/reviews';
@@ -189,6 +190,7 @@
 	}
 
 	async function executeDecision(action: DecisionAction, reason?: string) {
+		if (detailBody) gsap.killTweensOf(detailBody);
 		decisionLoading = true;
 		decisionError = null;
 		try {
@@ -238,7 +240,10 @@
 		}
 	}
 
-	onDestroy(() => { if (kickTimer) clearInterval(kickTimer); });
+	onDestroy(() => {
+		if (kickTimer) clearInterval(kickTimer);
+		if (detailBody) gsap.killTweensOf(detailBody);
+	});
 </script>
 
 <div class="app-detail">
@@ -254,19 +259,23 @@
 			<!-- Header bar with meta + flip toggle -->
 			<div class="content-header">
 				<div class="content-meta">
-					<!-- svelte-ignore a11y_click_events_have_key_events -->
-					<!-- svelte-ignore a11y_no_static_element_interactions -->
-					<span class="user-id" title="Click to copy" onclick={() => navigator.clipboard.writeText(app.userId)}>{app.userId}</span>
+					<CopyableId value={app.userId} />
 					{#if app.submittedAt}
 						<span class="separator">·</span>
 						<span>Submitted {relativeTime(app.submittedAt)}</span>
 					{/if}
 					{#if isClaimedByMe}
 						<span class="separator">·</span>
-						<span class="claimed-info" style:color={claimAgeColor(app.claimedAt)}>Claimed by you</span>
+						<span class="claimed-info" style:color={claimAgeColor(app.claimedAt)}>
+							{#if app.claimedByAvatar}<img src={app.claimedByAvatar} alt="" class="claimer-avatar" />{/if}
+							Claimed by you
+						</span>
 					{:else if isClaimedByOther}
 						<span class="separator">·</span>
-						<span class="claimed-info" style:color={canAdminUnclaim ? claimAgeColor(app.claimedAt) : undefined}>Claimed by {app.claimedByName ?? 'unknown'}</span>
+						<span class="claimed-info" style:color={canAdminUnclaim ? claimAgeColor(app.claimedAt) : undefined}>
+							{#if app.claimedByAvatar}<img src={app.claimedByAvatar} alt="" class="claimer-avatar" />{/if}
+							Claimed by {app.claimedByName ?? 'unknown'}
+						</span>
 					{/if}
 				</div>
 				<div class="content-tabs">
@@ -275,9 +284,9 @@
 						<button class="tab-btn" class:tab-btn-active={showModmail} onclick={() => showModmail = !showModmail}>
 							Modmail ({modmail.reduce((a, t) => a + t.messageCount, 0)})
 						</button>
-					{:else}
-						<button class="tab-btn" onclick={handleOpenModmail} disabled={openingModmail}>
-							{openingModmail ? 'Opening...' : 'Open Modmail'}
+					{:else if isReviewable}
+						<button class="tab-btn" onclick={handleOpenModmail} disabled={openingModmail || !botOnline}>
+							{openingModmail ? 'Opening...' : !botOnline ? 'Bot offline' : 'Open Modmail'}
 						</button>
 						{#if openModmailError}
 							<span style="font-size:0.6rem;color:var(--status-danger)">{openModmailError}</span>
@@ -349,14 +358,27 @@
 				{/if}
 			</div>
 		{:else if isResolved}
-			<span class="action-resolved">{app.status.charAt(0).toUpperCase() + app.status.slice(1)}</span>
+			<span class="action-resolved">
+				{app.status.charAt(0).toUpperCase() + app.status.slice(1)}
+				{#if app.claimedByName}
+					{' '}by{' '}
+					{#if app.claimedByAvatar}<img src={app.claimedByAvatar} alt="" class="claimer-avatar" />{/if}
+					{app.claimedByName}
+				{/if}
+			</span>
 		{:else if isClaimedByOther && canAdminUnclaim}
-			<span class="action-placeholder" style:color={claimAgeColor(app.claimedAt)}>Claimed by {app.claimedByName ?? 'unknown'}</span>
+			<span class="action-placeholder" style:color={claimAgeColor(app.claimedAt)}>
+				{#if app.claimedByAvatar}<img src={app.claimedByAvatar} alt="" class="claimer-avatar" />{/if}
+				Claimed by {app.claimedByName ?? 'unknown'}
+			</span>
 			<button class="btn btn-admin-unclaim" onclick={handleUnclaim} disabled={claimLoading || !botOnline}>
 				{claimLoading ? 'Releasing...' : !botOnline ? 'Bot offline' : 'Unclaim (Admin)'}
 			</button>
 		{:else}
-			<span class="action-placeholder">Claimed by {app.claimedByName ?? 'unknown'}</span>
+			<span class="action-placeholder">
+				{#if app.claimedByAvatar}<img src={app.claimedByAvatar} alt="" class="claimer-avatar" />{/if}
+				Claimed by {app.claimedByName ?? 'unknown'}
+			</span>
 		{/if}
 	</div>
 </div>
@@ -449,24 +471,23 @@
 		overflow-y: auto;
 	}
 
-	.user-id {
-		font-family: monospace;
-		font-size: 0.65rem;
-		opacity: 0.7;
-		cursor: pointer;
-		transition: opacity 150ms;
-	}
-
-	.user-id:hover {
-		opacity: 1;
-	}
-
 	.separator {
 		opacity: 0.4;
 	}
 
 	.claimed-info {
 		font-size: 0.7rem;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+
+	.claimer-avatar {
+		width: 16px;
+		height: 16px;
+		border-radius: 50%;
+		object-fit: cover;
+		flex-shrink: 0;
 	}
 
 	.section-label {
@@ -511,6 +532,9 @@
 		font-size: 0.8rem;
 		color: var(--text-secondary);
 		opacity: 0.5;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
 	}
 
 	.claim-error {
@@ -575,5 +599,5 @@
 	@keyframes pulse-text { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
 
 	.decision-done { font-size: 0.9rem; font-weight: 600; color: var(--status-success); }
-	.action-resolved { font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); opacity: 0.7; }
+	.action-resolved { font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); opacity: 0.7; display: inline-flex; align-items: center; gap: 0.25rem; }
 </style>

@@ -21,8 +21,23 @@
 		if (invalidateTimer) clearTimeout(invalidateTimer);
 		invalidateTimer = setTimeout(() => invalidateAll(), 150);
 	}
+
+	// OS notification for new applications (only when tab is hidden)
+	function onReviewSubmitted(event: SSEEvent) {
+		if (typeof document === 'undefined' || !document.hidden) return;
+		if (!('Notification' in window) || Notification.permission !== 'granted') return;
+		const name = (event as SSEEvent & { applicantName?: string }).applicantName ?? 'Someone';
+		const n = new Notification('New Application', {
+			body: `${name} just submitted an application`,
+			icon: '/paw-logo.png'
+		});
+		n.onclick = () => { window.focus(); n.close(); };
+	}
+
 	subscribe('review:*', onReviewEvent);
+	subscribe('review:submitted', onReviewSubmitted);
 	onDestroy(() => {
+		unsubscribe('review:submitted', onReviewSubmitted);
 		unsubscribe('review:*', onReviewEvent);
 		if (invalidateTimer) clearTimeout(invalidateTimer);
 	});
@@ -152,6 +167,9 @@
 												<span class="status-dot" style:background-color={outcomeColor(item.status)}></span>
 												{outcomeLabel(item.status)}
 											</span>
+											{#if item.resolverName}
+												<span class="history-card-resolver">by {item.resolverName}</span>
+											{/if}
 											{#if item.reason}
 												<span class="history-card-reason">{item.reason.slice(0, 40)}{item.reason.length > 40 ? '...' : ''}</span>
 											{/if}
@@ -193,6 +211,7 @@
 							submittedAt={item.submittedAt}
 							claimedBy={item.claimedBy}
 							claimedByName={item.claimedByName}
+							claimedByAvatar={item.claimedByAvatar}
 							riskScore={item.riskScore}
 							selected={selectedAppId() === item.id}
 							onclick={() => goto(`/dashboard/reviews/${item.id}`)}
@@ -359,6 +378,12 @@
 		width: 0.375rem;
 		height: 0.375rem;
 		border-radius: 50%;
+		flex-shrink: 0;
+	}
+
+	.history-card-resolver {
+		color: var(--text-secondary);
+		font-size: 0.7rem;
 		flex-shrink: 0;
 	}
 

@@ -10,6 +10,7 @@ export interface ReviewQueueItem {
 	submittedAt: number | null;
 	claimedBy: string | null;
 	claimedByName: string | null;
+	claimedByAvatar: string | null;
 	claimedAt: number | null;
 	riskScore: number;
 }
@@ -23,6 +24,7 @@ interface ReviewQueueRow {
 	submitted_at: string | null;
 	reviewer_id: string | null;
 	reviewer_name: string | null;
+	reviewer_avatar_url: string | null;
 	claimed_at: string | number | null;
 	risk_score: number;
 }
@@ -57,6 +59,7 @@ export interface ApplicationDetail {
 	submittedAt: number | null;
 	claimedBy: string | null;
 	claimedByName: string | null;
+	claimedByAvatar: string | null;
 	claimedAt: number | null;
 	riskScore: number;
 	scan: AvatarScanDetail | null;
@@ -72,6 +75,7 @@ interface AppDetailRow {
 	submitted_at: string | null;
 	reviewer_id: string | null;
 	reviewer_name: string | null;
+	reviewer_avatar_url: string | null;
 	claimed_at: string | number | null;
 	risk_score: number;
 	scan_reason: string | null;
@@ -108,6 +112,7 @@ export function getApplicationDetail(appId: string, guildId: string): Applicatio
 			u.avatar_url,
 			c.reviewer_id,
 			COALESCE(ru.display_name, ru.global_name, ru.username) as reviewer_name,
+			ru.avatar_url as reviewer_avatar_url,
 			c.claimed_at,
 			COALESCE(s.final_pct, 0) as risk_score,
 			s.reason as scan_reason,
@@ -140,6 +145,7 @@ export function getApplicationDetail(appId: string, guildId: string): Applicatio
 		submittedAt: normalizeTimestamp(row.submitted_at),
 		claimedBy: row.reviewer_id,
 		claimedByName: row.reviewer_name ?? null,
+		claimedByAvatar: row.reviewer_avatar_url ?? null,
 		claimedAt: normalizeTimestamp(row.claimed_at),
 		riskScore: row.risk_score,
 		scan: row.scan_reason
@@ -192,6 +198,7 @@ export interface ReviewHistoryItem {
 	status: string;
 	resolvedAt: number | null;
 	resolverId: string | null;
+	resolverName: string | null;
 	reason: string | null;
 }
 
@@ -202,6 +209,7 @@ interface HistoryRow {
 	status: string;
 	resolved_at: string | null;
 	resolver_id: string | null;
+	resolver_name: string | null;
 	reason: string | null;
 }
 
@@ -214,6 +222,7 @@ export function getReviewHistory(guildId: string, limit: number = 50): ReviewHis
 			COALESCE(u.display_name, u.global_name, u.username, 'User ' || substr(a.user_id, -6)) as applicant_name,
 			u.avatar_url,
 			ra.moderator_id as resolver_id,
+			COALESCE(mu.display_name, mu.global_name, mu.username) as resolver_name,
 			ra.reason
 		FROM application a
 		LEFT JOIN user_cache u ON u.guild_id = a.guild_id AND u.user_id = a.user_id
@@ -223,6 +232,7 @@ export function getReviewHistory(guildId: string, limit: number = 50): ReviewHis
 			FROM review_action
 			WHERE action IN ('approve', 'reject', 'perm_reject', 'kick')
 		) ra ON ra.app_id = a.id AND ra.rn = 1
+		LEFT JOIN user_cache mu ON mu.guild_id = a.guild_id AND mu.user_id = ra.moderator_id
 		WHERE a.guild_id = ? AND a.status IN ('approved', 'rejected', 'kicked')
 		ORDER BY a.resolved_at DESC
 		LIMIT ?
@@ -235,6 +245,7 @@ export function getReviewHistory(guildId: string, limit: number = 50): ReviewHis
 		status: row.status,
 		resolvedAt: normalizeTimestamp(row.resolved_at),
 		resolverId: row.resolver_id,
+		resolverName: row.resolver_name ?? null,
 		reason: row.reason
 	}));
 }
@@ -254,6 +265,7 @@ export function getReviewQueue(guildId: string): ReviewQueueItem[] {
 			u.avatar_url,
 			c.reviewer_id,
 			COALESCE(ru.display_name, ru.global_name, ru.username) as reviewer_name,
+			ru.avatar_url as reviewer_avatar_url,
 			c.claimed_at,
 			COALESCE(s.final_pct, 0) as risk_score
 		FROM application a
@@ -274,6 +286,7 @@ export function getReviewQueue(guildId: string): ReviewQueueItem[] {
 		submittedAt: normalizeTimestamp(row.submitted_at),
 		claimedBy: row.reviewer_id,
 		claimedByName: row.reviewer_name ?? null,
+		claimedByAvatar: row.reviewer_avatar_url ?? null,
 		claimedAt: normalizeTimestamp(row.claimed_at),
 		riskScore: row.risk_score
 	}));

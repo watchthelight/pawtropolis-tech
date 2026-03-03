@@ -3,13 +3,14 @@
 	import RiskAura from '$lib/components/data/RiskAura.svelte';
 	import { relativeTime } from '$lib/utils/time';
 
-	let { applicantName, avatarUrl = null, status, submittedAt, claimedBy, claimedByName, riskScore, selected = false, onclick }: {
+	let { applicantName, avatarUrl = null, status, submittedAt, claimedBy, claimedByName, claimedByAvatar = null, riskScore, selected = false, onclick }: {
 		applicantName: string;
 		avatarUrl?: string | null;
 		status: string;
 		submittedAt: number | null;
 		claimedBy: string | null;
 		claimedByName: string | null;
+		claimedByAvatar?: string | null;
 		riskScore: number;
 		selected?: boolean;
 		onclick?: () => void;
@@ -58,7 +59,12 @@
 				<RiskAura variant="compact" {riskScore} />
 			</div>
 			{#if claimedBy}
-				<div class="review-card-claimed">Claimed by {claimedByName ?? 'unknown'}</div>
+				<div class="review-card-claimed">
+					{#if claimedByAvatar}
+						<img src={claimedByAvatar} alt="" class="claimer-avatar" />
+					{/if}
+					Claimed by {claimedByName ?? 'unknown'}
+				</div>
 			{/if}
 		</div>
 	</div>
@@ -167,5 +173,16 @@
 		color: var(--text-secondary);
 		margin-top: 0.25rem;
 		opacity: 0.7;
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+
+	.claimer-avatar {
+		width: 16px;
+		height: 16px;
+		border-radius: 50%;
+		object-fit: cover;
+		flex-shrink: 0;
 	}
 </style>

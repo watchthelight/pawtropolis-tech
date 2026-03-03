@@ -44,6 +44,7 @@ import {
 
 import { ensureReviewMessage } from "../../review.js";
 import { cacheUser } from "../../../lib/userCache.js";
+import { notifyDashboard } from "../../../web/notifyDashboard.js";
 
 // ===== Action Runner Functions =====
 
@@ -226,6 +227,8 @@ export async function runApproveAction(
       logger.warn({ err, appId: app.id }, "[review] failed to post public approval message");
     }
   }
+
+  notifyDashboard("review:approved", { appId: app.id, reviewerId: interaction.user.id, action: "approve" });
 }
 
 /**
@@ -367,6 +370,8 @@ export async function runRejectAction(
       logger.warn({ err, appId: app.id }, "[review] failed to post public rejection message");
     }
   }
+
+  notifyDashboard("review:rejected", { appId: app.id, reviewerId: interaction.user.id, action: "reject" });
 }
 
 /**
@@ -526,6 +531,8 @@ export async function runPermRejectAction(
       );
     }
   }
+
+  notifyDashboard("review:permrejected", { appId: app.id, reviewerId: interaction.user.id, action: "perm_reject" });
 }
 
 /**
@@ -641,4 +648,6 @@ export async function runKickAction(
       logger.warn({ err, appId: app.id }, "[review] failed to post public kick message");
     }
   }
+
+  notifyDashboard("review:kicked", { appId: app.id, reviewerId: interaction.user.id, action: "kick" });
 }

@@ -53,6 +53,7 @@ import { cacheUser } from "../lib/userCache.js";
 import { logActionPretty } from "../logging/pretty.js";
 import { getQuestions as getQuestionsShared } from "./gate/questions.js";
 import { touchSyncMarker } from "../lib/syncMarker.js";
+import { notifyDashboard } from "../web/notifyDashboard.js";
 import { isPanicMode } from "./panicStore.js";
 
 // Discord modal limits - these are API-enforced, not arbitrary.
@@ -1360,6 +1361,8 @@ export async function handleGateModalSubmit(
   } catch (err) {
     logger.warn({ err, appId: draftRow.id }, "Failed to ensure review card after submission");
   }
+
+  notifyDashboard("review:submitted", { appId: draftRow.id, applicantName: interaction.user.username });
 
   // Gatekeeper ping now handled by review.ts on card create (one-time)
   ctx.step("gatekeeper_ping");
