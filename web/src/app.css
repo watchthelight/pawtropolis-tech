@@ -15,19 +15,19 @@
 	--hue: 250;
 
 	/* Surfaces (all tinted with user's hue) */
-	--bg: oklch(15% 0.01 var(--hue));
-	--surface: oklch(20% 0.015 var(--hue));
-	--surface-raised: oklch(24% 0.02 var(--hue));
-	--border: oklch(30% 0.02 var(--hue));
-	--border-holdfast: oklch(35% 0.02 var(--hue));
+	--bg: oklch(14% 0.025 var(--hue));
+	--surface: oklch(19% 0.035 var(--hue));
+	--surface-raised: oklch(23% 0.04 var(--hue));
+	--border: oklch(32% 0.04 var(--hue));
+	--border-holdfast: oklch(36% 0.045 var(--hue));
 
 	/* Text */
-	--text-primary: oklch(90% 0.01 var(--hue));
-	--text-secondary: oklch(60% 0.02 var(--hue));
+	--text-primary: oklch(92% 0.02 var(--hue));
+	--text-secondary: oklch(62% 0.04 var(--hue));
 
 	/* Accent */
-	--accent: oklch(70% 0.15 var(--hue));
-	--accent-dim: oklch(40% 0.08 var(--hue));
+	--accent: oklch(72% 0.18 var(--hue));
+	--accent-dim: oklch(40% 0.10 var(--hue));
 
 	/* Warm shadows — hue ~40 (warm amber) for cozy depth regardless of accent */
 	--shadow-sm: 0 1px 3px oklch(5% 0.02 40 / 0.3);
@@ -35,8 +35,8 @@
 	--shadow-lg: 0 8px 24px oklch(5% 0.02 40 / 0.2);
 
 	/* Accent-tinted glows — use user's hue for interactive warmth */
-	--glow-accent: 0 0 12px oklch(70% 0.15 var(--hue) / 0.15);
-	--glow-hover: 0 0 20px oklch(70% 0.15 var(--hue) / 0.25);
+	--glow-accent: 0 0 12px oklch(72% 0.18 var(--hue) / 0.2);
+	--glow-hover: 0 0 20px oklch(72% 0.18 var(--hue) / 0.3);
 
 	/* Constrained radii — pixel art discipline, exactly 3 values */
 	--radius-sm: 6px;
