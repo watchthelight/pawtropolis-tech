@@ -1,14 +1,18 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import PageHeader from '$lib/components/layout/PageHeader.svelte';
-	import DataCard from '$lib/components/data/DataCard.svelte';
+	import { goto } from '$app/navigation';
 	import StatNumber from '$lib/components/data/StatNumber.svelte';
 	import EmptyState from '$lib/components/feedback/EmptyState.svelte';
 	import SpringReveal from '$lib/components/motion/SpringReveal.svelte';
+	import TimeWindowSelector from '$lib/components/charts/TimeWindowSelector.svelte';
+	import DonutChart from '$lib/components/charts/DonutChart.svelte';
+	import ActivityChart from '$lib/components/charts/ActivityChart.svelte';
+	import ResponseTimeChart from '$lib/components/charts/ResponseTimeChart.svelte';
 	import { formatDuration } from '$lib/utils/time';
 
 	let { data } = $props();
 	let personal = $derived(data.personal);
+	let hasData = $derived(personal.total > 0);
 
 	type TabId = 'mine' | 'team';
 	const VALID_TABS: TabId[] = ['mine', 'team'];
@@ -17,88 +21,131 @@
 		urlTab && VALID_TABS.includes(urlTab as TabId) ? (urlTab as TabId) : 'mine'
 	);
 
-	let hasData = $derived(personal.total > 0);
+	function switchTab(tab: TabId) {
+		activeTab = tab;
+		const params = new URLSearchParams($page.url.searchParams);
+		params.set('tab', tab);
+		goto(`?${params.toString()}`, { keepFocus: true, replaceState: true });
+	}
+
+	const donutSegments = $derived([
+		{ label: 'Approved', value: personal.approvals, color: 'oklch(65% 0.15 145)' },
+		{ label: 'Rejected', value: personal.rejections, color: 'oklch(70% 0.15 85)' },
+		{ label: 'Perm Reject', value: personal.permRejects, color: 'oklch(60% 0.15 25)' },
+		{ label: 'Kicks', value: personal.kicks, color: 'oklch(65% 0.12 290)' },
+		{ label: 'Modmail', value: personal.modmail, color: 'oklch(65% 0.12 200)' }
+	]);
 </script>
 
+<div class="terminal-bg">
 <SpringReveal stagger={30}>
-	<PageHeader title="Stats" subtitle="Your review performance" />
-
-	<!-- Tab bar -->
-	<div class="mb-6 flex gap-1 rounded-lg bg-[var(--surface)] p-1" role="tablist">
-		<button
-			role="tab"
-			aria-selected={activeTab === 'mine'}
-			class="tab-btn"
-			class:tab-active={activeTab === 'mine'}
-			onclick={() => (activeTab = 'mine')}
-		>
-			My Stats
-		</button>
-		<button
-			role="tab"
-			aria-selected={activeTab === 'team'}
-			class="tab-btn"
-			class:tab-active={activeTab === 'team'}
-			onclick={() => (activeTab = 'team')}
-		>
-			Team
-		</button>
+	<!-- Header -->
+	<div class="header">
+		<div class="header-left">
+			<h1 class="page-title">
+				<span class="title-prefix">//</span> OPERATOR STATS
+			</h1>
+			<!-- Tab bar -->
+			<div class="tab-bar" role="tablist">
+				<button
+					role="tab"
+					aria-selected={activeTab === 'mine'}
+					class="tab-chip"
+					class:tab-active={activeTab === 'mine'}
+					onclick={() => switchTab('mine')}
+				>
+					MY STATS
+				</button>
+				<button
+					role="tab"
+					aria-selected={activeTab === 'team'}
+					class="tab-chip"
+					class:tab-active={activeTab === 'team'}
+					onclick={() => switchTab('team')}
+				>
+					TEAM
+				</button>
+			</div>
+		</div>
+		{#if activeTab === 'mine'}
+			<TimeWindowSelector value={data.window} />
+		{/if}
 	</div>
 
 	{#if activeTab === 'mine'}
 		{#if hasData}
-			<!-- Decision counts -->
-			<div class="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-				<DataCard>
-					<StatNumber value={personal.total} label="Decisions" />
-				</DataCard>
-				<DataCard>
-					<StatNumber value={personal.approvals} label="Approvals" />
-				</DataCard>
-				<DataCard>
-					<StatNumber value={personal.rejections + personal.permRejects} label="Rejections" />
-				</DataCard>
-				<DataCard>
-					<StatNumber value={personal.kicks} label="Kicks" />
-				</DataCard>
-			</div>
-
-			<!-- Response times -->
-			<div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-				<DataCard>
-					<div class="flex flex-col gap-1">
-						<span class="text-2xl font-bold text-[var(--text-primary)]">
-							{formatDuration(personal.avgClaimToDecisionS)}
-						</span>
-						<span class="text-sm text-[var(--text-secondary)]">Avg claim to decision</span>
+			{#key data.window}
+				<div class="stats-grid">
+					<!-- Stat cards row -->
+					<a href="/dashboard/reviews" class="stat-card clickable" title="View review queue">
+						<span class="card-label">// DECISIONS</span>
+						<StatNumber value={personal.total} label="" />
+					</a>
+					<a href="/dashboard/reviews?tab=unclaimed" class="stat-card clickable" title="View unclaimed reviews">
+						<span class="card-label">// APPROVED</span>
+						<StatNumber value={personal.approvals} label="" />
+					</a>
+					<a href="/dashboard/reviews?tab=completed" class="stat-card clickable" title="View completed reviews">
+						<span class="card-label">// REJECTED</span>
+						<StatNumber value={personal.rejections + personal.permRejects + personal.kicks} label="" />
+					</a>
+					<div class="stat-card">
+						<span class="card-label">// MODMAIL</span>
+						<StatNumber value={personal.modmail} label="" />
 					</div>
-				</DataCard>
-				<DataCard>
-					<div class="flex flex-col gap-1">
-						<span class="text-2xl font-bold text-[var(--text-primary)]">
-							{formatDuration(personal.avgSubmitToClaimS)}
-						</span>
-						<span class="text-sm text-[var(--text-secondary)]">Avg submit to first claim (server)</span>
-					</div>
-				</DataCard>
-			</div>
 
-			<!-- Breakdown detail -->
-			{#if personal.modmail > 0 || personal.permRejects > 0}
-				<DataCard>
-					<div class="flex flex-wrap gap-x-6 gap-y-2 text-sm text-[var(--text-secondary)]">
-						{#if personal.permRejects > 0}
-							<span>{personal.permRejects} perm reject{personal.permRejects !== 1 ? 's' : ''}</span>
-						{/if}
-						{#if personal.modmail > 0}
-							<span>{personal.modmail} modmail{personal.modmail !== 1 ? 's' : ''} opened</span>
-						{/if}
+					<!-- Donut chart -->
+					<div class="chart-panel donut-panel scanlines">
+						<span class="card-label">// ACTION BREAKDOWN</span>
+						<div class="donut-wrap">
+							<DonutChart segments={donutSegments} />
+						</div>
 					</div>
-				</DataCard>
-			{/if}
 
-			<p class="mt-4 text-xs text-[var(--text-secondary)]">
-				Showing last {data.windowDays} days
+					<!-- Activity timeline -->
+					<div class="chart-panel activity-panel scanlines">
+						<span class="card-label">// ACTIVITY TIMELINE</span>
+						<ActivityChart data={data.timeline} />
+					</div>
+
+					<!-- Response time trend -->
+					<div class="chart-panel response-panel scanlines">
+						<span class="card-label">// RESPONSE TIME TREND</span>
+						<ResponseTimeChart data={data.responseTrend} />
+					</div>
+
+					<!-- Avg time cards -->
+					<div class="stat-card avg-card">
+						<span class="card-label">// AVG CLAIM → DECISION</span>
+						<span class="time-value">{formatDuration(personal.avgClaimToDecisionS)}</span>
+						<span class="time-sublabel">your avg response</span>
+					</div>
+					<div class="stat-card avg-card">
+						<span class="card-label">// AVG SUBMIT → CLAIM</span>
+						<span class="time-value">{formatDuration(personal.avgSubmitToClaimS)}</span>
+						<span class="time-sublabel">server avg queue time</span>
+					</div>
+
+					<!-- Breakdown detail row -->
+					{#if personal.permRejects > 0 || personal.kicks > 0}
+						<div class="breakdown-row">
+							{#if personal.permRejects > 0}
+								<span class="breakdown-tag">
+									{personal.permRejects} perm reject{personal.permRejects !== 1 ? 's' : ''}
+								</span>
+							{/if}
+							{#if personal.kicks > 0}
+								<span class="breakdown-tag">
+									{personal.kicks} kick{personal.kicks !== 1 ? 's' : ''}
+								</span>
+							{/if}
+						</div>
+					{/if}
+				</div>
+			{/key}
+
+			<p class="window-label">
+				{data.window === 'all' ? 'All time' : `Last ${data.window.replace('d', ' days')}`}
 			</p>
 		{:else}
 			<EmptyState
@@ -113,28 +160,349 @@
 		/>
 	{/if}
 </SpringReveal>
+</div>
 
 <style>
-	.tab-btn {
-		flex: 1;
-		padding: 0.5rem 1rem;
-		border-radius: 0.375rem;
-		font-size: 0.875rem;
-		font-weight: 500;
-		color: var(--text-secondary);
+	/* ─── Terminal background ─── */
+	.terminal-bg {
+		position: relative;
+		padding: 0 0 2rem;
+		background-image:
+			linear-gradient(var(--terminal-grid) 1px, transparent 1px),
+			linear-gradient(90deg, var(--terminal-grid) 1px, transparent 1px);
+		background-size: 32px 32px;
+		min-height: 100%;
+	}
+
+	/* ─── Header ─── */
+	.header {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 1rem;
+		margin-bottom: 1.5rem;
+		flex-wrap: wrap;
+	}
+
+	.header-left {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.page-title {
+		font-family: var(--terminal-font);
+		font-size: 1.3rem;
+		font-weight: 700;
+		color: var(--text-primary);
+		letter-spacing: 0.08em;
+		margin: 0;
+	}
+
+	.title-prefix {
+		color: var(--accent);
+		opacity: 0.6;
+	}
+
+	/* ─── Tabs ─── */
+	.tab-bar {
+		display: flex;
+		gap: 4px;
+	}
+
+	.tab-chip {
+		font-family: var(--terminal-font);
+		font-size: 0.65rem;
+		font-weight: 600;
+		letter-spacing: 0.12em;
+		padding: 5px 12px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
 		background: transparent;
-		border: none;
+		color: var(--text-secondary);
 		cursor: pointer;
 		transition: all 150ms ease;
 	}
 
-	.tab-btn:hover {
-		color: var(--text-primary);
+	@media (hover: hover) {
+		.tab-chip:hover {
+			color: var(--text-primary);
+			border-color: var(--terminal-border);
+		}
 	}
 
 	.tab-active {
-		background: var(--surface-raised);
 		color: var(--text-primary);
-		box-shadow: var(--shadow-sm);
+		background: oklch(72% 0.18 var(--hue) / 0.1);
+		border-color: var(--terminal-border);
+	}
+
+	/* ─── Grid layout ─── */
+	.stats-grid {
+		display: grid;
+		grid-template-columns: repeat(12, 1fr);
+		gap: 0.875rem;
+	}
+
+	/* ─── Stat cards ─── */
+	.stat-card {
+		grid-column: span 3;
+		position: relative;
+		background: oklch(16% 0.03 var(--hue));
+		border: 1px solid var(--terminal-border);
+		border-radius: 4px;
+		padding: 1.25rem;
+		box-shadow: var(--terminal-glow);
+		overflow: hidden;
+		text-decoration: none;
+		display: block;
+	}
+
+	.stat-card.clickable {
+		cursor: pointer;
+		transition: all 150ms ease;
+		color: inherit;
+	}
+
+	@media (hover: hover) {
+		.stat-card.clickable:hover {
+			border-color: var(--accent);
+			box-shadow:
+				0 0 24px oklch(72% 0.18 var(--hue) / 0.4),
+				inset 0 0 20px oklch(72% 0.18 var(--hue) / 0.05);
+			transform: translateY(-1px);
+		}
+	}
+
+	/* Corner brackets */
+	.stat-card::before,
+	.stat-card::after {
+		content: '';
+		position: absolute;
+		width: 10px;
+		height: 10px;
+		border-color: var(--accent);
+		border-style: solid;
+		opacity: 0.4;
+	}
+
+	.stat-card::before {
+		top: 5px;
+		left: 5px;
+		border-width: 1.5px 0 0 1.5px;
+	}
+
+	.stat-card::after {
+		bottom: 5px;
+		right: 5px;
+		border-width: 0 1.5px 1.5px 0;
+	}
+
+	.card-label {
+		display: block;
+		font-family: var(--terminal-font);
+		font-size: 0.6rem;
+		font-weight: 500;
+		letter-spacing: 0.12em;
+		color: var(--text-secondary);
+		margin-bottom: 0.5rem;
+		opacity: 0.7;
+	}
+
+	/* ─── Chart panels ─── */
+	.chart-panel {
+		position: relative;
+		background: oklch(16% 0.03 var(--hue));
+		border: 1px solid var(--terminal-border);
+		border-radius: 4px;
+		padding: 1.25rem;
+		box-shadow: var(--terminal-glow);
+		overflow: hidden;
+	}
+
+	.chart-panel::before,
+	.chart-panel::after {
+		content: '';
+		position: absolute;
+		width: 10px;
+		height: 10px;
+		border-color: var(--accent);
+		border-style: solid;
+		opacity: 0.4;
+	}
+
+	.chart-panel::before {
+		top: 5px;
+		left: 5px;
+		border-width: 1.5px 0 0 1.5px;
+	}
+
+	.chart-panel::after {
+		bottom: 5px;
+		right: 5px;
+		border-width: 0 1.5px 1.5px 0;
+	}
+
+	/* Scanline overlay */
+	.scanlines::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		z-index: 1;
+		background: repeating-linear-gradient(
+			to bottom,
+			transparent 0px,
+			transparent 3px,
+			oklch(0% 0 0 / 0.04) 3px,
+			oklch(0% 0 0 / 0.04) 4px
+		);
+		border-radius: inherit;
+	}
+
+	/* Fix: corner bracket is also ::before, so use an inner wrapper approach */
+	/* Actually, scanlines override corner bracket. Let's use outline for brackets instead */
+	.scanlines.chart-panel::before {
+		/* scanline takes priority — brackets via box-shadow on .chart-panel */
+		background: repeating-linear-gradient(
+			to bottom,
+			transparent 0px,
+			transparent 3px,
+			oklch(0% 0 0 / 0.04) 3px,
+			oklch(0% 0 0 / 0.04) 4px
+		);
+		border: none;
+		width: auto;
+		height: auto;
+		inset: 0;
+		top: 0;
+		left: 0;
+		opacity: 1;
+	}
+
+	.donut-panel {
+		grid-column: span 4;
+		grid-row: span 2;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.donut-wrap {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding-top: 0.5rem;
+	}
+
+	.activity-panel {
+		grid-column: span 8;
+	}
+
+	.response-panel {
+		grid-column: span 8;
+	}
+
+	/* ─── Avg time cards ─── */
+	.avg-card {
+		grid-column: span 6;
+	}
+
+	.time-value {
+		display: block;
+		font-family: var(--terminal-font);
+		font-size: 1.8rem;
+		font-weight: 700;
+		color: var(--text-primary);
+		line-height: 1.2;
+	}
+
+	.time-sublabel {
+		display: block;
+		font-family: var(--terminal-font);
+		font-size: 0.65rem;
+		color: var(--text-secondary);
+		margin-top: 0.25rem;
+	}
+
+	/* ─── Breakdown ─── */
+	.breakdown-row {
+		grid-column: 1 / -1;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+
+	.breakdown-tag {
+		font-family: var(--terminal-font);
+		font-size: 0.65rem;
+		color: var(--text-secondary);
+		background: oklch(16% 0.03 var(--hue));
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		padding: 4px 10px;
+	}
+
+	/* ─── Window label ─── */
+	.window-label {
+		font-family: var(--terminal-font);
+		font-size: 0.65rem;
+		color: var(--text-secondary);
+		margin-top: 1rem;
+		opacity: 0.6;
+	}
+
+	/* ─── Mobile ─── */
+	@media (max-width: 768px) {
+		.stats-grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+
+		.stat-card {
+			grid-column: span 1;
+		}
+
+		.donut-panel,
+		.activity-panel,
+		.response-panel {
+			grid-column: span 2;
+			grid-row: auto;
+		}
+
+		.avg-card {
+			grid-column: span 2;
+		}
+
+		.header {
+			flex-direction: column;
+		}
+
+		.tab-chip {
+			min-height: 44px;
+			display: flex;
+			align-items: center;
+		}
+
+		.time-value {
+			font-size: 1.4rem;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.stats-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.stat-card,
+		.donut-panel,
+		.activity-panel,
+		.response-panel,
+		.avg-card {
+			grid-column: span 1;
+		}
+
+		.donut-panel {
+			grid-row: auto;
+		}
 	}
 </style>
