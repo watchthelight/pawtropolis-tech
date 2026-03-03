@@ -10,7 +10,6 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import type { Database } from "better-sqlite3";
-import { logger } from "../src/lib/logger.js";
 import { columnExists, recordMigration, enableForeignKeys } from "./lib/helpers.js";
 
 export default function migrate(db: Database): void {
@@ -26,10 +25,10 @@ export default function migrate(db: Database): void {
   for (const col of columns) {
     if (!columnExists(db, "user_cache", col.name)) {
       db.prepare(`ALTER TABLE user_cache ADD COLUMN ${col.name} ${col.type}`).run();
-      logger.info(`[migration:046] Added user_cache.${col.name}`);
+      console.log(`[migration:046] Added user_cache.${col.name}`);
     }
   }
 
-  recordMigration(db, "046");
-  logger.info("[migration:046] extend_user_cache_profile complete");
+  recordMigration(db, "046", "extend_user_cache_profile");
+  console.log("[migration:046] extend_user_cache_profile complete");
 }
