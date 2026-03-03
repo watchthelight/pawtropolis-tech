@@ -3,9 +3,11 @@
 	import { applyTheme, restoreCachedHue } from '$lib/stores/theme';
 	import { connect, disconnect, onReconnect, offReconnect, subscribe, unsubscribe } from '$lib/stores/sse.svelte';
 	import { startMonitoring, stopMonitoring } from '$lib/stores/bot-status.svelte';
-	import { invalidateAll } from '$app/navigation';
+	import { initViewport, getIsMobile } from '$lib/stores/viewport.svelte';
+	import { afterNavigate, invalidateAll } from '$app/navigation';
 	import type { SSEEvent } from '$lib/types/events';
 	import Nav from '$lib/components/layout/Nav.svelte';
+	import ConnectionIndicator from '$lib/components/layout/ConnectionIndicator.svelte';
 
 	let { data, children } = $props();
 	let user = $derived(data.user);
@@ -23,11 +25,23 @@
 	let sidebarCollapsed = $state(false);
 	onMount(() => {
 		sidebarCollapsed = localStorage.getItem('sidebar-collapsed') === '1';
+		initViewport();
 	});
 	function toggleSidebar() {
 		sidebarCollapsed = !sidebarCollapsed;
 		localStorage.setItem('sidebar-collapsed', sidebarCollapsed ? '1' : '0');
 	}
+
+	// Mobile drawer
+	let isMobile = $derived(getIsMobile());
+	let drawerOpen = $state(false);
+
+	afterNavigate(() => { drawerOpen = false; });
+
+	$effect(() => {
+		if (typeof document === 'undefined') return;
+		document.body.classList.toggle('drawer-open', isMobile && drawerOpen);
+	});
 
 	$effect(() => {
 		restoreCachedHue(user.id);
@@ -90,23 +104,46 @@
 	});
 </script>
 
+{#if isMobile}
+	<header class="mobile-header">
+		<button class="mobile-menu-btn" onclick={() => drawerOpen = !drawerOpen} aria-label="Menu">
+			<span class="menu-line" class:menu-open={drawerOpen}></span>
+			<span class="menu-line" class:menu-open={drawerOpen}></span>
+			<span class="menu-line" class:menu-open={drawerOpen}></span>
+		</button>
+		<img src="/paw-logo.png" alt="" class="mobile-logo" />
+		<ConnectionIndicator />
+	</header>
+{/if}
+
 <div class="layout-root">
-	<aside class="sidebar-aside" class:sidebar-aside-collapsed={sidebarCollapsed}>
-		<Nav {user} collapsed={sidebarCollapsed} />
+	<aside
+		class="sidebar-aside"
+		class:sidebar-aside-collapsed={!isMobile && sidebarCollapsed}
+		class:sidebar-mobile={isMobile}
+		class:sidebar-mobile-open={isMobile && drawerOpen}
+	>
+		<Nav {user} collapsed={!isMobile && sidebarCollapsed} />
 	</aside>
 
-	<!-- Edge toggle on the divider -->
-	<button
-		class="edge-toggle"
-		class:edge-toggle-collapsed={sidebarCollapsed}
-		onclick={toggleSidebar}
-		title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-		aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-	>
-		<span class="edge-arrow" class:edge-arrow-flipped={sidebarCollapsed}>&#9666;</span>
-	</button>
+	{#if isMobile && drawerOpen}
+		<div class="drawer-backdrop" role="presentation" onclick={() => drawerOpen = false}></div>
+	{/if}
 
-	<main class="flex-1 p-8">
+	{#if !isMobile}
+		<!-- Edge toggle on the divider -->
+		<button
+			class="edge-toggle"
+			class:edge-toggle-collapsed={sidebarCollapsed}
+			onclick={toggleSidebar}
+			title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+			aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+		>
+			<span class="edge-arrow" class:edge-arrow-flipped={sidebarCollapsed}>&#9666;</span>
+		</button>
+	{/if}
+
+	<main class="flex-1 p-8 max-md:p-4 max-md:pt-[calc(var(--mobile-header-h)+1rem)]">
 		{@render children()}
 	</main>
 
@@ -118,11 +155,12 @@
 <style>
 	.layout-root {
 		display: flex;
-		min-height: 100vh;
+		min-height: var(--vh-full);
 		background: var(--bg);
 		position: relative;
 	}
 
+	/* ── Desktop sidebar ── */
 	.sidebar-aside {
 		position: sticky;
 		top: 0;
@@ -137,7 +175,77 @@
 		width: 3.5rem;
 	}
 
-	/* Edge toggle — small arrow on the sidebar border */
+	/* ── Mobile header bar ── */
+	.mobile-header {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: var(--mobile-header-h);
+		background: var(--bg);
+		border-bottom: 1px solid var(--border-holdfast);
+		display: flex;
+		align-items: center;
+		padding: 0 var(--mobile-pad);
+		gap: 0.75rem;
+		z-index: 50;
+	}
+
+	.mobile-logo {
+		width: 28px;
+		height: 28px;
+		filter: drop-shadow(0 2px 8px oklch(50% 0.2 330 / 0.25));
+	}
+
+	.mobile-menu-btn {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		padding: 8px;
+		background: none;
+		border: none;
+		cursor: pointer;
+	}
+
+	.menu-line {
+		width: 20px;
+		height: 2px;
+		background: var(--text-primary);
+		border-radius: 1px;
+		transition: transform 200ms var(--ease-smooth), opacity 200ms;
+	}
+
+	.menu-line:nth-child(1).menu-open { transform: translateY(6px) rotate(45deg); }
+	.menu-line:nth-child(2).menu-open { opacity: 0; }
+	.menu-line:nth-child(3).menu-open { transform: translateY(-6px) rotate(-45deg); }
+
+	/* ── Mobile drawer ── */
+	.sidebar-mobile {
+		position: fixed;
+		top: var(--mobile-header-h);
+		left: 0;
+		bottom: 0;
+		width: 16rem;
+		height: auto;
+		z-index: 40;
+		transform: translateX(-100%);
+		transition: transform 250ms var(--ease-smooth);
+	}
+
+	.sidebar-mobile-open {
+		transform: translateX(0);
+	}
+
+	.drawer-backdrop {
+		position: fixed;
+		inset: 0;
+		top: var(--mobile-header-h);
+		background: oklch(5% 0.01 var(--hue) / 0.6);
+		z-index: 35;
+		backdrop-filter: blur(2px);
+	}
+
+	/* ── Edge toggle — small arrow on the sidebar border ── */
 	.edge-toggle {
 		position: sticky;
 		top: 50%;
@@ -183,7 +291,7 @@
 		transform: rotate(180deg);
 	}
 
-	/* Tier change toast */
+	/* ── Tier change toast ── */
 	.tier-toast {
 		position: fixed;
 		bottom: 2rem;
