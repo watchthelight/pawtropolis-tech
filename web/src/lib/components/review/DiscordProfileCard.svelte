@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-
 	interface ProfileData {
 		bannerUrl?: string | null;
 		accentColor?: number | null;
@@ -10,6 +8,7 @@
 		globalName?: string | null;
 		displayName?: string;
 		avatarUrl?: string | null;
+		bio?: string | null;
 		roles?: Array<{ id: string; name: string; color: string | null; position: number }>;
 	}
 
@@ -25,9 +24,10 @@
 		cachedProfile?: { bannerUrl: string | null; accentColor: number | null; joinedAt: number | null; createdAt: number | null } | null;
 	} = $props();
 
-	let profile = $state<ProfileData | null>(cachedProfile ? { ...cachedProfile, avatarUrl, displayName: applicantName } : null);
+	let profile = $state<ProfileData | null>(null);
 	let loading = $state(false);
 	let error = $state<string | null>(null);
+	let lastFetchedId = $state('');
 
 	function formatDate(ms: number | null): string {
 		if (!ms) return '—';
@@ -61,8 +61,10 @@
 					globalName: result.data.globalName,
 					displayName: result.data.displayName,
 					avatarUrl: result.data.avatarUrl,
+					bio: result.data.bio ?? null,
 					roles: result.data.roles
 				};
+				lastFetchedId = userId;
 			}
 		} catch {
 			error = 'Failed to connect';
@@ -71,8 +73,13 @@
 		}
 	}
 
-	onMount(() => {
-		fetchProfile();
+	// Re-fetch when userId changes (clicking different apps in queue)
+	$effect(() => {
+		if (userId && userId !== lastFetchedId) {
+			// Reset to cached data immediately for fast render
+			profile = cachedProfile ? { ...cachedProfile, avatarUrl, displayName: applicantName } : { avatarUrl, displayName: applicantName };
+			fetchProfile();
+		}
 	});
 </script>
 
@@ -100,6 +107,15 @@
 			<p class="dc-username">@{profile.username}</p>
 		{/if}
 	</div>
+
+	<!-- Bio -->
+	{#if profile?.bio}
+		<div class="dc-divider"></div>
+		<div class="dc-section">
+			<p class="dc-section-label">About Me</p>
+			<p class="dc-bio">{profile.bio}</p>
+		</div>
+	{/if}
 
 	<div class="dc-divider"></div>
 
@@ -230,6 +246,15 @@
 		letter-spacing: 0.05em;
 		color: var(--text-secondary);
 		margin: 0 0 0.35rem;
+	}
+
+	.dc-bio {
+		font-size: 0.8rem;
+		color: var(--text-primary);
+		line-height: 1.4;
+		margin: 0;
+		white-space: pre-wrap;
+		word-break: break-word;
 	}
 
 	.dc-dates {
