@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { prefersReducedMotion } from '$lib/motion';
+	import RiskAura from '$lib/components/data/RiskAura.svelte';
 
 	let { applicantName, status, submittedAt, claimedBy, riskScore, selected = false, onclick }: {
 		applicantName: string;
@@ -21,12 +22,6 @@
 		if (hours < 24) return `${hours}h ago`;
 		const days = Math.floor(hours / 24);
 		return `${days}d ago`;
-	}
-
-	function riskColor(score: number): string {
-		if (score >= 50) return 'var(--status-danger)';
-		if (score >= 20) return 'var(--status-warning)';
-		return 'var(--status-success)';
 	}
 
 	const statusLabel: Record<string, string> = {
@@ -64,11 +59,7 @@
 			{statusLabel[status] ?? status}
 		</span>
 
-		{#if riskScore > 0}
-			<span class="review-card-risk" style:color={riskColor(riskScore)}>
-				{riskScore}%
-			</span>
-		{/if}
+		<RiskAura variant="compact" {riskScore} />
 	</div>
 
 	{#if claimedBy}
@@ -139,11 +130,6 @@
 		height: 0.375rem;
 		border-radius: 50%;
 		flex-shrink: 0;
-	}
-
-	.review-card-risk {
-		font-weight: 600;
-		font-size: 0.7rem;
 	}
 
 	.review-card-claimed {
