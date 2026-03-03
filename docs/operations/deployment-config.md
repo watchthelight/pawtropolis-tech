@@ -533,21 +533,20 @@ pm2 monit                # Monitor
 | **Instance Type** | `t3a.small` |
 | **Public IP** | `34.193.75.138` (Elastic IP) |
 | **EBS Volume** | `vol-05bbabd84993a6241` (32GB gp3) |
-| **SSH Alias** | `pawtech` or `watchthelight` |
+| **SSH Alias** | `bash-ec2` |
 
 ### SSH Access
 
 ```bash
 # Connect to server
-ssh pawtech
+ssh bash-ec2
 
 # SSH config (~/.ssh/config)
-Host pawtech
+Host bash-ec2
   HostName 34.193.75.138
   User ubuntu
-  IdentityFile ~/.ssh/pawtropolis-tech.pem
-  IdentitiesOnly yes
-  ServerAliveInterval 30
+  IdentityFile ~/pawtropolis-tech/authentication/pawtropolis.pem
+  StrictHostKeyChecking accept-new
 ```
 
 ### AWS CLI Commands
@@ -572,19 +571,19 @@ aws ec2 start-instances --instance-ids i-0b5c5db57b50ff74b --region us-east-1
 
 ```bash
 # Check disk usage
-ssh pawtech "df -h /"
+ssh bash-ec2 "df -h /"
 
 # Clean PM2 logs
-ssh pawtech "pm2 flush"
+ssh bash-ec2 "pm2 flush"
 
 # Clean journal logs (keep 7 days)
-ssh pawtech "sudo journalctl --vacuum-time=7d"
+ssh bash-ec2 "sudo journalctl --vacuum-time=7d"
 
 # Clean apt cache
-ssh pawtech "sudo apt-get clean"
+ssh bash-ec2 "sudo apt-get clean"
 
 # Find large files
-ssh pawtech "sudo du -sh /* 2>/dev/null | sort -h"
+ssh bash-ec2 "sudo du -sh /* 2>/dev/null | sort -h"
 ```
 
 ### Cost

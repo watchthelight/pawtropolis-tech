@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Pawtropolis Server Setup — run once on a fresh server
-# Usage: ssh pawtropolis 'bash -s' < scripts/setup-server.sh
+# Usage: ssh bash-ec2 'bash -s' < scripts/setup-server.sh
 
 REMOTE_PATH="/home/ubuntu/pawtropolis-tech"
 

@@ -8,14 +8,14 @@ Load past message data to see activity heatmaps.
 See what will happen without making changes:
 
 ```bash
-ssh pawtech "cd /home/ubuntu/pawtropolis-tech && npx tsx scripts/backfill-message-activity.ts 896070888594759740 8 --dry-run"
+ssh bash-ec2 "cd /home/ubuntu/pawtropolis-tech && npx tsx scripts/backfill-message-activity.ts 896070888594759740 8 --dry-run"
 ```
 
 ### Step 2: Run for Real
 If the test looks good, run it:
 
 ```bash
-ssh pawtech "cd /home/ubuntu/pawtropolis-tech && npx tsx scripts/backfill-message-activity.ts 896070888594759740 8"
+ssh bash-ec2 "cd /home/ubuntu/pawtropolis-tech && npx tsx scripts/backfill-message-activity.ts 896070888594759740 8"
 ```
 
 Change `896070888594759740` to your server ID if needed.
@@ -68,7 +68,7 @@ Make sure the bot has these permissions:
 After the backfill finishes:
 
 ```bash
-ssh pawtech "cd /home/ubuntu/pawtropolis-tech && npx tsx scripts/diagnostic-activity.ts 896070888594759740 8"
+ssh bash-ec2 "cd /home/ubuntu/pawtropolis-tech && npx tsx scripts/diagnostic-activity.ts 896070888594759740 8"
 ```
 
 You should see thousands of messages spread across multiple days.

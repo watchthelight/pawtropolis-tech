@@ -84,7 +84,7 @@ git checkout HEAD~1 && ./deploy-no-tests.sh
 If you mention a new migration, the agent runs it after deploy:
 
 ```bash
-ssh pawtech 'cd ~/pawtropolis-tech && npm run migrate'
+ssh bash-ec2 'cd ~/pawtropolis-tech && npm run migrate'
 ```
 
 ## Command Definition Sync
@@ -104,10 +104,10 @@ If you want to verify manually:
 curl http://34.193.75.138:3002/api/health
 
 # Check PM2 status
-ssh pawtech 'pm2 status pawtropolis'
+ssh bash-ec2 'pm2 status pawtropolis'
 
 # View recent logs
-ssh pawtech 'pm2 logs pawtropolis --lines 50'
+ssh bash-ec2 'pm2 logs pawtropolis --lines 50'
 
 # Full smoke test
 ./scripts/smoke-test.sh
@@ -137,38 +137,38 @@ git checkout HEAD~3  # Go back 3 commits
 
 1. Check if the bot process is running:
    ```bash
-   ssh pawtech 'pm2 status'
+   ssh bash-ec2 'pm2 status'
    ```
 
 2. Check logs for errors:
    ```bash
-   ssh pawtech 'pm2 logs pawtropolis --lines 100'
+   ssh bash-ec2 'pm2 logs pawtropolis --lines 100'
    ```
 
 3. Try restarting:
    ```bash
-   ssh pawtech 'pm2 restart pawtropolis'
+   ssh bash-ec2 'pm2 restart pawtropolis'
    ```
 
 ### SSH Connection Issues
 
 Verify SSH config:
 ```bash
-ssh pawtech 'echo "Connected"'
+ssh bash-ec2 'echo "Connected"'
 ```
 
-If this fails, check `~/.ssh/config` for the `pawtech` host entry.
+If this fails, check `~/.ssh/config` for the `bash-ec2` host entry.
 
 ### Deploy Script Fails
 
 1. Check disk space on remote:
    ```bash
-   ssh pawtech 'df -h'
+   ssh bash-ec2 'df -h'
    ```
 
 2. Check for locked files:
    ```bash
-   ssh pawtech 'lsof +D ~/pawtropolis-tech'
+   ssh bash-ec2 'lsof +D ~/pawtropolis-tech'
    ```
 
 ### Tests Fail During Deploy

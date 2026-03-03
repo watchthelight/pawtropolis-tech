@@ -211,8 +211,8 @@ Orphaned tickets: 0
 
 ```bash
 # Build and deploy
-rsync -av src/features/{opsHealth,modmail}.ts ubuntu@pawtech:pawtropolis-tech/src/features/
-ssh ubuntu@pawtech "cd pawtropolis-tech && npm run build && npx pm2 restart pawtropolis"
+rsync -av src/features/{opsHealth,modmail}.ts ubuntu@bash-ec2:pawtropolis-tech/src/features/
+ssh ubuntu@bash-ec2 "cd pawtropolis-tech && npm run build && npx pm2 restart pawtropolis"
 
 # Verified
 - Bot restarted successfully
@@ -276,7 +276,7 @@ UPDATE modmail_ticket SET status='open' WHERE id=999;
 ## Contact
 
 For questions or issues related to this fix:
-- **Logs:** `ssh ubuntu@pawtech "cd pawtropolis-tech && npx pm2 logs pawtropolis"`
+- **Logs:** `ssh ubuntu@bash-ec2 "cd pawtropolis-tech && npx pm2 logs pawtropolis"`
 - **Health:** `/health` command in Discord
 - **Database:** `sqlite3 pawtropolis-tech/data/data.db`
 

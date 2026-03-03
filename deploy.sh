@@ -7,7 +7,7 @@ set -euo pipefail
 # PM2 processes: pawtropolis (bot), pawtropolis-web (dashboard)
 
 REMOTE_USER="ubuntu"
-REMOTE_HOST="pawtropolis"
+REMOTE_HOST="bash-ec2"
 REMOTE_PATH="/home/ubuntu/pawtropolis-tech"
 PM2_PROCESS="pawtropolis"
 TARBALL="deploy.tar.gz"

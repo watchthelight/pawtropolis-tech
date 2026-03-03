@@ -26,7 +26,7 @@
 set -euo pipefail
 
 # === CONFIGURATION (Edit these for your environment) ===
-REMOTE_ALIAS="pawtropolis"
+REMOTE_ALIAS="bash-ec2"
 REMOTE_PATH="/home/ubuntu/pawtropolis-tech"
 PM2_NAME="pawtropolis"
 LOCAL_PORT=3000

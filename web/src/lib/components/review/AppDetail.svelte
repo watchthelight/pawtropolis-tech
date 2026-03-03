@@ -453,11 +453,6 @@
 		transition: all 150ms;
 	}
 
-	.tab-btn:hover {
-		color: var(--text-primary);
-		border-color: var(--accent);
-	}
-
 	.tab-btn-active {
 		background: var(--accent-dim);
 		color: var(--accent);
@@ -556,13 +551,8 @@
 	.btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 	.btn-claim { background: var(--accent); color: var(--bg); }
-	.btn-claim:hover:not(:disabled) { filter: brightness(1.1); box-shadow: var(--glow-accent); }
-
 	.btn-unclaim { background: var(--surface-raised); color: var(--text-secondary); border: 1px solid var(--border-holdfast); }
-	.btn-unclaim:hover:not(:disabled) { background: var(--surface); color: var(--text-primary); }
-
 	.btn-admin-unclaim { background: var(--surface-raised); color: var(--status-warning); border: 1px solid var(--status-warning); margin-left: auto; }
-	.btn-admin-unclaim:hover:not(:disabled) { background: var(--status-warning); color: var(--bg); }
 
 	.decision-buttons { display: flex; gap: 0.5rem; margin-left: auto; }
 
@@ -570,15 +560,8 @@
 	.btn-reject { background: var(--status-warning); color: var(--bg); }
 	.btn-kick { background: var(--status-danger); color: var(--bg); }
 	.btn-permreject { background: var(--bg); color: var(--status-danger); border: 2px solid var(--status-danger); font-weight: 700; }
-	.btn-permreject:hover:not(:disabled) { background: var(--status-danger); color: var(--bg); box-shadow: 0 0 16px oklch(70% 0.15 25 / 0.4); }
 	.btn-cancel { background: var(--surface-raised); color: var(--text-secondary); border: 1px solid var(--border-holdfast); }
-	.btn-cancel:hover:not(:disabled) { color: var(--text-primary); }
 	.btn-undo { background: var(--surface-raised); color: var(--status-danger); border: 1px solid var(--status-danger); }
-	.btn-undo:hover { background: var(--status-danger); color: var(--bg); }
-
-	.btn-approve:hover:not(:disabled) { filter: brightness(1.15); box-shadow: 0 0 12px oklch(70% 0.15 145 / 0.3); }
-	.btn-reject:hover:not(:disabled) { filter: brightness(1.15); box-shadow: 0 0 12px oklch(70% 0.15 80 / 0.3); }
-	.btn-kick:hover:not(:disabled) { filter: brightness(1.15); box-shadow: 0 0 12px oklch(70% 0.15 25 / 0.3); }
 
 	.reason-input {
 		flex: 1;
@@ -600,4 +583,64 @@
 
 	.decision-done { font-size: 0.9rem; font-weight: 600; color: var(--status-success); }
 	.action-resolved { font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); opacity: 0.7; display: inline-flex; align-items: center; gap: 0.25rem; }
+
+	/* ── Mobile ── */
+	@media (max-width: 767px) {
+		.detail-body {
+			flex-direction: column;
+		}
+
+		.profile-col {
+			width: 100%;
+			border-right: none;
+			border-bottom: 1px solid var(--border-holdfast);
+		}
+
+		.content-header {
+			flex-direction: column;
+			align-items: stretch;
+			gap: 0.5rem;
+		}
+
+		.content-meta {
+			flex-wrap: wrap;
+		}
+
+		.action-bar {
+			flex-wrap: wrap;
+			padding: var(--mobile-pad);
+			gap: 0.5rem;
+		}
+
+		.decision-buttons {
+			margin-left: 0;
+			width: 100%;
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 0.5rem;
+		}
+
+		.reason-input {
+			width: 100%;
+			flex: none;
+		}
+
+		.btn {
+			min-height: 44px;
+			padding: 0.625rem 1rem;
+		}
+	}
+
+	@media (hover: hover) {
+		.btn-claim:hover:not(:disabled) { filter: brightness(1.1); box-shadow: var(--glow-accent); }
+		.btn-unclaim:hover:not(:disabled) { background: var(--surface); color: var(--text-primary); }
+		.btn-approve:hover:not(:disabled) { filter: brightness(1.15); box-shadow: 0 0 12px oklch(70% 0.15 145 / 0.3); }
+		.btn-reject:hover:not(:disabled) { filter: brightness(1.15); box-shadow: 0 0 12px oklch(70% 0.15 80 / 0.3); }
+		.btn-kick:hover:not(:disabled) { filter: brightness(1.15); box-shadow: 0 0 12px oklch(70% 0.15 25 / 0.3); }
+		.btn-permreject:hover:not(:disabled) { background: var(--status-danger); color: var(--bg); box-shadow: 0 0 16px oklch(70% 0.15 25 / 0.4); }
+		.btn-cancel:hover:not(:disabled) { color: var(--text-primary); }
+		.btn-undo:hover { background: var(--status-danger); color: var(--bg); }
+		.btn-admin-unclaim:hover:not(:disabled) { background: var(--status-warning); color: var(--bg); }
+		.tab-btn:hover { color: var(--text-primary); border-color: var(--accent); }
+	}
 </style>

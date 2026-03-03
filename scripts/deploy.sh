@@ -12,7 +12,7 @@
 set -e
 
 # Configuration
-REMOTE_ALIAS="pawtropolis"
+REMOTE_ALIAS="bash-ec2"
 REMOTE_PATH="/home/ubuntu/pawtropolis-tech"
 PM2_NAME="pawtropolis"
 

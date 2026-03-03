@@ -14,10 +14,11 @@
 
 Add to `~/.ssh/config`:
 ```
-Host pawtropolis
+Host bash-ec2
     HostName 34.193.75.138
     User ubuntu
-    IdentityFile ~/.ssh/id_ed25519
+    IdentityFile ~/pawtropolis-tech/authentication/pawtropolis.pem
+    StrictHostKeyChecking accept-new
 ```
 
 ## Initial Setup

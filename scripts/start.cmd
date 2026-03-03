@@ -26,7 +26,7 @@ REM   - Copies them to _recovery\remote\ without overwriting
 REM ============================================================================
 
 REM === CONFIGURATION (Edit these for your environment) ===
-set REMOTE_ALIAS=pawtropolis
+set REMOTE_ALIAS=bash-ec2
 set REMOTE_PATH=/home/ubuntu/pawtropolis-tech
 set PM2_NAME=pawtropolis
 set LOCAL_PORT=3000

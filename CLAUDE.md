@@ -11,7 +11,7 @@ TypeScript, Discord.js 14, better-sqlite3, Node 20+, ESM modules.
 
 ## Quick Reference
 - **Repo**: https://github.com/watchthelight/pawtropolis-tech
-- **Server**: `ubuntu@34.193.75.138` (SSH alias: `pawtropolis`)
+- **Server**: `ubuntu@34.193.75.138` (SSH alias: `bash-ec2`)
 - **Remote path**: `/home/ubuntu/pawtropolis-tech`
 - **PM2 processes**: `pawtropolis` (bot), `pawtropolis-web` (dashboard)
 - **Database**: SQLite at `./data/data.db`
@@ -137,12 +137,13 @@ web/              # SvelteKit web dashboard (monorepo)
 
 ## SSH Config
 ```
-Host pawtropolis
+Host bash-ec2
     HostName 34.193.75.138
     User ubuntu
     IdentityFile ~/pawtropolis-tech/authentication/pawtropolis.pem
+    StrictHostKeyChecking accept-new
 ```
-All deploy scripts use `pawtropolis` as the SSH alias, matching the SSH config.
+All deploy scripts use `bash-ec2` as the SSH alias, matching the SSH config.
 
 ## Web Dashboard
 - **Framework**: SvelteKit (in `web/` directory)
