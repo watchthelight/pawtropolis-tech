@@ -40,9 +40,12 @@
 		});
 	}
 
-	let isClaimedByMe = $derived(app.claimedBy != null && app.claimedBy === sessionUserId);
-	let isClaimedByOther = $derived(app.claimedBy != null && app.claimedBy !== sessionUserId);
-	let isUnclaimed = $derived(app.claimedBy == null);
+	const REVIEWABLE_STATUSES = ['submitted', 'needs_info'];
+	let isReviewable = $derived(REVIEWABLE_STATUSES.includes(app.status));
+	let isClaimedByMe = $derived(isReviewable && app.claimedBy != null && app.claimedBy === sessionUserId);
+	let isClaimedByOther = $derived(isReviewable && app.claimedBy != null && app.claimedBy !== sessionUserId);
+	let isUnclaimed = $derived(isReviewable && app.claimedBy == null);
+	let isResolved = $derived(!isReviewable);
 
 	function claimAgeColor(claimedAt: number | null): string {
 		if (!claimedAt) return 'var(--text-secondary)';
@@ -306,6 +309,8 @@
 				<button class="btn btn-reject" onclick={() => startDecision('reject')} disabled={decisionLoading}>Reject</button>
 				<button class="btn btn-kick" onclick={() => startDecision('kick')} disabled={decisionLoading}>Kick</button>
 			</div>
+		{:else if isResolved}
+			<span class="action-resolved">{app.status.charAt(0).toUpperCase() + app.status.slice(1)}</span>
 		{:else}
 			<span class="action-placeholder">Claimed by another reviewer</span>
 		{/if}
@@ -575,5 +580,12 @@
 		font-size: 0.9rem;
 		font-weight: 600;
 		color: var(--status-success);
+	}
+
+	.action-resolved {
+		font-size: 0.8rem;
+		font-weight: 500;
+		color: var(--text-secondary);
+		opacity: 0.7;
 	}
 </style>
