@@ -32,6 +32,18 @@ export interface ApplicationAnswer {
 	answer: string;
 }
 
+export interface EvidenceEntry {
+	tag: string;
+	p: number;
+}
+
+export interface AvatarScanDetail {
+	reason: string;
+	evidenceHard: EvidenceEntry[];
+	evidenceSoft: EvidenceEntry[];
+	evidenceSafe: EvidenceEntry[];
+}
+
 export interface ApplicationDetail {
 	id: string;
 	userId: string;
@@ -42,6 +54,7 @@ export interface ApplicationDetail {
 	claimedBy: string | null;
 	claimedAt: number | null;
 	riskScore: number;
+	scan: AvatarScanDetail | null;
 	answers: ApplicationAnswer[];
 }
 
@@ -55,11 +68,21 @@ interface AppDetailRow {
 	reviewer_id: string | null;
 	claimed_at: string | number | null;
 	risk_score: number;
+	scan_reason: string | null;
+	scan_evidence_hard: string | null;
+	scan_evidence_soft: string | null;
+	scan_evidence_safe: string | null;
 }
 
 interface AppResponseRow {
 	question: string;
 	answer: string;
+}
+
+function parseEvidence(json: string | null): EvidenceEntry[] {
+	if (!json) return [];
+	try { return JSON.parse(json) as EvidenceEntry[]; }
+	catch { return []; }
 }
 
 export function getApplicationDetail(appId: string, guildId: string): ApplicationDetail | null {
@@ -73,7 +96,11 @@ export function getApplicationDetail(appId: string, guildId: string): Applicatio
 			u.avatar_url,
 			c.reviewer_id,
 			c.claimed_at,
-			COALESCE(s.final_pct, 0) as risk_score
+			COALESCE(s.final_pct, 0) as risk_score,
+			s.reason as scan_reason,
+			s.evidence_hard as scan_evidence_hard,
+			s.evidence_soft as scan_evidence_soft,
+			s.evidence_safe as scan_evidence_safe
 		FROM application a
 		LEFT JOIN (
 			SELECT guild_id, user_id, global_name, username, avatar_url,
@@ -104,6 +131,14 @@ export function getApplicationDetail(appId: string, guildId: string): Applicatio
 		claimedBy: row.reviewer_id,
 		claimedAt: normalizeTimestamp(row.claimed_at),
 		riskScore: row.risk_score,
+		scan: row.scan_reason
+			? {
+				reason: row.scan_reason,
+				evidenceHard: parseEvidence(row.scan_evidence_hard),
+				evidenceSoft: parseEvidence(row.scan_evidence_soft),
+				evidenceSafe: parseEvidence(row.scan_evidence_safe)
+			}
+			: null,
 		answers: responses
 	};
 }
