@@ -40,13 +40,24 @@ npm run check        # typecheck + lint + format:check + test
 ./deploy.sh --logs       # show logs after deploy
 ```
 
-#### What deploy.sh does (9 steps):
+### Targeted Deploy (fast)
+```bash
+./deploy.sh --web        # web-only: build web, deploy, restart pawtropolis-web (~10s)
+./deploy.sh --bot        # bot-only: build bot, deploy, restart pawtropolis (~15s)
+./deploy.sh --web --logs # targeted deploy + show relevant PM2 logs after
+```
+- `--web` and `--bot` are mutually exclusive
+- Both skip tests, migrations, and Discord command registration
+- Smart dep detection: skips `npm ci` on remote when `package-lock.json` hasn't changed (~20-30s saved)
+- Full deploy also uses smart dep detection
+
+#### What deploy.sh does (9 steps, full deploy):
 1. Run tests (`npm test`) - skipped with `--fast`
 2. Build (`npm run build` -> tsup)
 3. Inject build metadata (`npx tsx scripts/inject-build-info.ts` -> `.env.build`)
 4. Create tarball (`dist/ migrations/ scripts/ package.json package-lock.json .env.build`)
 5. Upload tarball via SCP to `pawtropolis:/home/ubuntu/pawtropolis-tech/`
-6. Extract + `npm ci --omit=dev` on remote
+6. Extract + smart `npm ci --omit=dev` (only if lockfile changed)
 6.5. Run migrations (`node scripts/migrate-remote.js`)
 6.6. Register slash commands with Discord (`npx dotenvx run -- tsx scripts/commands.ts --all`)
 7. Restart PM2 (`pm2 restart pawtropolis`)

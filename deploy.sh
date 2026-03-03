@@ -4,7 +4,7 @@ set -euo pipefail
 # Pawtropolis Deployment Script
 # Deploys to pawtropolis server (Ubuntu, user: ubuntu)
 # Remote path: /home/ubuntu/pawtropolis-tech/
-# PM2 process: pawtropolis
+# PM2 processes: pawtropolis (bot), pawtropolis-web (dashboard)
 
 REMOTE_USER="ubuntu"
 REMOTE_HOST="pawtropolis"
@@ -17,6 +17,8 @@ SHOW_LOGS=false
 RESTART_ONLY=false
 STATUS_ONLY=false
 SKIP_TESTS=false
+DEPLOY_WEB=false
+DEPLOY_BOT=false
 
 for arg in "$@"; do
   case $arg in
@@ -36,13 +38,58 @@ for arg in "$@"; do
       SKIP_TESTS=true
       shift
       ;;
+    --web)
+      DEPLOY_WEB=true
+      shift
+      ;;
+    --bot)
+      DEPLOY_BOT=true
+      shift
+      ;;
     *)
       echo "Unknown argument: $arg"
-      echo "Usage: $0 [--logs] [--restart] [--status] [--fast]"
+      echo "Usage: $0 [--logs] [--restart] [--status] [--fast] [--web] [--bot]"
       exit 1
       ;;
   esac
 done
+
+# Validate: --web and --bot are mutually exclusive
+if [ "$DEPLOY_WEB" = true ] && [ "$DEPLOY_BOT" = true ]; then
+  echo "Error: --web and --bot are mutually exclusive. Use neither for a full deploy."
+  exit 1
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# deps_changed - Compare local vs remote package-lock.json sha256
+# Args: $1 = local lockfile path, $2 = remote lockfile path
+# Returns: 0 if deps changed (or can't determine), 1 if unchanged
+# One SSH round-trip (~1s) saves ~20-30s of npm ci
+# ─────────────────────────────────────────────────────────────────────────────
+deps_changed() {
+  local local_lock="$1"
+  local remote_lock="$2"
+
+  if [ ! -f "$local_lock" ]; then
+    return 0  # can't determine, assume changed
+  fi
+
+  local local_hash
+  local_hash=$(sha256sum "$local_lock" | cut -d' ' -f1)
+
+  local remote_hash
+  remote_hash=$(ssh ${REMOTE_USER}@${REMOTE_HOST} "sha256sum ${remote_lock} 2>/dev/null | cut -d' ' -f1" 2>/dev/null || echo "")
+
+  if [ -z "$remote_hash" ]; then
+    return 0  # can't determine, assume changed
+  fi
+
+  if [ "$local_hash" = "$remote_hash" ]; then
+    return 1  # unchanged
+  fi
+
+  return 0  # changed
+}
 
 # Status only
 if [ "$STATUS_ONLY" = true ]; then
@@ -59,8 +106,112 @@ if [ "$RESTART_ONLY" = true ]; then
   exit 0
 fi
 
-# Full deployment
-echo "Starting deployment to ${REMOTE_HOST}..."
+# ═══════════════════════════════════════════════════════════════════════════════
+# WEB-ONLY DEPLOY (--web)
+# ═══════════════════════════════════════════════════════════════════════════════
+if [ "$DEPLOY_WEB" = true ]; then
+  echo "Starting WEB-ONLY deployment to ${REMOTE_HOST}..."
+  TARBALL="deploy-web.tar.gz"
+
+  # Step 1: Build web
+  echo "Step 1/4: Building web dashboard..."
+  (cd web && npm run build)
+
+  # Step 2: Create tarball (web/build only)
+  echo "Step 2/4: Creating web tarball..."
+  tar -czf ${TARBALL} web/build web/package.json web/package-lock.json
+
+  # Step 3: Upload + extract
+  echo "Step 3/4: Uploading and extracting..."
+  scp ${TARBALL} ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}/
+  ssh ${REMOTE_USER}@${REMOTE_HOST} "cd ${REMOTE_PATH} && tar -xzf ${TARBALL}"
+
+  # Check if web deps changed
+  if deps_changed "web/package-lock.json" "${REMOTE_PATH}/web/package-lock.json"; then
+    echo "  -> Web dependencies changed, running npm ci..."
+    ssh ${REMOTE_USER}@${REMOTE_HOST} "cd ${REMOTE_PATH}/web && npm ci --omit=dev"
+  else
+    echo "  -> Web dependencies unchanged, skipping npm ci"
+  fi
+
+  # Step 4: Restart web process + cleanup
+  echo "Step 4/4: Restarting web dashboard..."
+  ssh ${REMOTE_USER}@${REMOTE_HOST} "cd ${REMOTE_PATH} && pm2 restart pawtropolis-web && rm -f ${TARBALL}"
+  rm -f ${TARBALL}
+
+  echo ""
+  echo "╔══════════════════════════════════════════════════════════════╗"
+  echo "║                                                              ║"
+  echo "║   ✅ WEB DEPLOY COMPLETE                                     ║"
+  echo "║                                                              ║"
+  echo "╚══════════════════════════════════════════════════════════════╝"
+  echo ""
+  echo "::DEPLOY_DONE::"
+
+  if [ "$SHOW_LOGS" = true ]; then
+    echo "Showing recent web logs..."
+    ssh ${REMOTE_USER}@${REMOTE_HOST} "pm2 logs pawtropolis-web --lines 50"
+  fi
+  exit 0
+fi
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BOT-ONLY DEPLOY (--bot)
+# ═══════════════════════════════════════════════════════════════════════════════
+if [ "$DEPLOY_BOT" = true ]; then
+  echo "Starting BOT-ONLY deployment to ${REMOTE_HOST}..."
+  TARBALL="deploy-bot.tar.gz"
+
+  # Step 1: Build bot
+  echo "Step 1/5: Building bot..."
+  npm run build
+
+  # Step 2: Inject build metadata
+  echo "Step 2/5: Injecting build metadata..."
+  npx tsx scripts/inject-build-info.ts
+
+  # Step 3: Create tarball (dist + .env.build only)
+  echo "Step 3/5: Creating bot tarball..."
+  tar -czf ${TARBALL} dist .env.build package.json package-lock.json
+
+  # Step 4: Upload + extract
+  echo "Step 4/5: Uploading and extracting..."
+  scp ${TARBALL} ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}/
+  ssh ${REMOTE_USER}@${REMOTE_HOST} "cd ${REMOTE_PATH} && tar -xzf ${TARBALL}"
+
+  # Check if bot deps changed
+  if deps_changed "package-lock.json" "${REMOTE_PATH}/package-lock.json"; then
+    echo "  -> Bot dependencies changed, running npm ci..."
+    ssh ${REMOTE_USER}@${REMOTE_HOST} "cd ${REMOTE_PATH} && npm ci --omit=dev"
+  else
+    echo "  -> Bot dependencies unchanged, skipping npm ci"
+  fi
+
+  # Step 5: Restart bot process + cleanup
+  echo "Step 5/5: Restarting bot..."
+  ssh ${REMOTE_USER}@${REMOTE_HOST} "cd ${REMOTE_PATH} && pm2 restart pawtropolis && rm -f ${TARBALL}"
+  rm -f ${TARBALL}
+
+  echo ""
+  echo "╔══════════════════════════════════════════════════════════════╗"
+  echo "║                                                              ║"
+  echo "║   ✅ BOT DEPLOY COMPLETE                                     ║"
+  echo "║                                                              ║"
+  echo "╚══════════════════════════════════════════════════════════════╝"
+  echo ""
+  echo "::DEPLOY_DONE::"
+
+  if [ "$SHOW_LOGS" = true ]; then
+    echo "Showing recent bot logs..."
+    ssh ${REMOTE_USER}@${REMOTE_HOST} "pm2 logs pawtropolis --lines 50"
+  fi
+  exit 0
+fi
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# FULL DEPLOYMENT
+# ═══════════════════════════════════════════════════════════════════════════════
+echo "Starting FULL deployment to ${REMOTE_HOST}..."
 
 # Step 1: Run tests (unless --fast)
 if [ "$SKIP_TESTS" = true ]; then
@@ -101,9 +252,24 @@ tar -czf ${TARBALL} dist migrations scripts assets package.json package-lock.jso
 echo "Step 5/9: Uploading to remote server..."
 scp ${TARBALL} ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}/
 
-# Step 6: Extract and install on remote
-echo "Step 6/9: Extracting and installing on remote..."
-ssh ${REMOTE_USER}@${REMOTE_HOST} "cd ${REMOTE_PATH} && tar -xzf ${TARBALL} && npm ci --omit=dev && cd web && npm ci --omit=dev"
+# Step 6: Extract and install on remote (smart dep detection)
+echo "Step 6/9: Extracting on remote..."
+ssh ${REMOTE_USER}@${REMOTE_HOST} "cd ${REMOTE_PATH} && tar -xzf ${TARBALL}"
+
+# Smart dep detection: only run npm ci for lockfiles that actually changed
+if deps_changed "package-lock.json" "${REMOTE_PATH}/package-lock.json"; then
+  echo "  -> Bot dependencies changed, running npm ci..."
+  ssh ${REMOTE_USER}@${REMOTE_HOST} "cd ${REMOTE_PATH} && npm ci --omit=dev"
+else
+  echo "  -> Bot dependencies unchanged, skipping npm ci"
+fi
+
+if deps_changed "web/package-lock.json" "${REMOTE_PATH}/web/package-lock.json"; then
+  echo "  -> Web dependencies changed, running npm ci..."
+  ssh ${REMOTE_USER}@${REMOTE_HOST} "cd ${REMOTE_PATH}/web && npm ci --omit=dev"
+else
+  echo "  -> Web dependencies unchanged, skipping npm ci"
+fi
 
 # Step 6.5: Run migrations on remote
 echo "Step 6.5/9: Running migrations on remote..."
