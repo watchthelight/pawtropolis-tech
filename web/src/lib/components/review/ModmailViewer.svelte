@@ -8,7 +8,7 @@
 	let expanded = $state(false);
 
 	const totalMessages = $derived(threads.reduce((sum, t) => sum + t.messageCount, 0));
-	const latestPreview = $derived(() => {
+	const latestPreview = $derived.by(() => {
 		const first = threads[0];
 		if (!first?.latestMessage) return null;
 		const msg = first.latestMessage;
@@ -33,6 +33,7 @@
 		<button
 			class="modmail-header"
 			aria-expanded={expanded}
+			aria-controls="modmail-threads"
 			onclick={() => expanded = !expanded}
 		>
 			<div class="modmail-summary">
@@ -45,12 +46,12 @@
 			<span class="modmail-toggle">{expanded ? '▲' : '▼'}</span>
 		</button>
 
-		{#if !expanded && latestPreview()}
-			<div class="modmail-preview">{latestPreview()}</div>
+		{#if !expanded && latestPreview}
+			<div class="modmail-preview">{latestPreview}</div>
 		{/if}
 
 		{#if expanded}
-			<div class="modmail-threads">
+			<div id="modmail-threads" class="modmail-threads">
 				{#each threads as thread, i (thread.id)}
 					{#if i > 0}
 						<div class="thread-separator"></div>
