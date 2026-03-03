@@ -259,7 +259,7 @@
 	.queue-wrapper {
 		position: relative;
 		z-index: 1;
-		width: 320px;
+		width: 360px;
 		flex-shrink: 0;
 	}
 
@@ -267,8 +267,8 @@
 		height: 100%;
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
-		padding: 0.25rem;
+		gap: 0.625rem;
+		padding: 0.5rem;
 		overflow-y: auto;
 	}
 
@@ -309,16 +309,16 @@
 	}
 
 	.history-card-avatar {
-		width: 32px;
-		height: 32px;
+		width: 36px;
+		height: 36px;
 		border-radius: var(--radius-sm);
 		object-fit: cover;
 		flex-shrink: 0;
 	}
 
 	.history-card-avatar-ph {
-		width: 32px;
-		height: 32px;
+		width: 36px;
+		height: 36px;
 		border-radius: var(--radius-sm);
 		background: var(--accent-dim);
 		color: var(--accent);
