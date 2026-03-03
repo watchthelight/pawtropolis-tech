@@ -12,6 +12,22 @@
 		applyTheme(user.accentColor);
 	});
 
+	// Refresh Discord profile data once per browser session
+	$effect(() => {
+		if (typeof sessionStorage === 'undefined') return;
+		if (sessionStorage.getItem('profileRefreshed')) return;
+		sessionStorage.setItem('profileRefreshed', '1');
+
+		fetch('/api/refresh-session')
+			.then((r) => r.json())
+			.then((result) => {
+				if (result.changed && result.accentColor != null) {
+					applyTheme(result.accentColor);
+				}
+			})
+			.catch(() => {}); // silent on failure
+	});
+
 	$effect(() => {
 		const refreshOnReconnect = () => invalidateAll();
 		connect();
