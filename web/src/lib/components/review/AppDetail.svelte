@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
+	import { goto } from '$app/navigation';
 	import type { ApplicationDetail } from '$lib/server/queries/reviews';
 	import type { ModmailThreadSummary } from '$lib/server/queries/modmail';
 	import RiskAura from '$lib/components/data/RiskAura.svelte';
@@ -27,7 +28,7 @@
 	onMount(() => { tickInterval = setInterval(() => { now = Date.now(); }, 60_000); });
 	onDestroy(() => { if (tickInterval) clearInterval(tickInterval); });
 
-	function animateClaimSuccess() {
+	function animateActionBar() {
 		if (!actionBar) return;
 		gsap.from(actionBar.children, {
 			opacity: 0,
@@ -62,6 +63,8 @@
 		return `${days}d ago`;
 	}
 
+	// === Claim/Unclaim ===
+
 	async function handleClaim() {
 		claimLoading = true;
 		claimError = null;
@@ -77,8 +80,7 @@
 			} else {
 				app.claimedBy = sessionUserId;
 				app.claimedAt = Date.now();
-				// Spring animation on the action bar after state update
-				requestAnimationFrame(() => animateClaimSuccess());
+				requestAnimationFrame(() => animateActionBar());
 			}
 		} catch {
 			claimError = 'Failed to connect';
@@ -109,6 +111,98 @@
 			claimLoading = false;
 		}
 	}
+
+	// === Decision Actions ===
+
+	type DecisionAction = 'approve' | 'reject' | 'kick';
+
+	let activeAction = $state<DecisionAction | null>(null);
+	let reasonText = $state('');
+	let decisionLoading = $state(false);
+	let decisionError = $state<string | null>(null);
+	let decisionDone = $state<string | null>(null);
+	let kickCountdown = $state(0);
+	let kickTimer: ReturnType<typeof setInterval> | undefined;
+	let reasonInput: HTMLInputElement;
+
+	function startDecision(action: DecisionAction) {
+		if (action === 'approve') {
+			// Approve fires immediately (reason optional, skip input for speed)
+			executeDecision('approve');
+			return;
+		}
+		activeAction = action;
+		reasonText = '';
+		decisionError = null;
+		// Focus the input after it renders
+		requestAnimationFrame(() => reasonInput?.focus());
+	}
+
+	function cancelDecision() {
+		activeAction = null;
+		reasonText = '';
+		decisionError = null;
+		kickCountdown = 0;
+		if (kickTimer) { clearInterval(kickTimer); kickTimer = undefined; }
+	}
+
+	function submitReason() {
+		if (!activeAction || !reasonText.trim()) return;
+		if (activeAction === 'kick') {
+			startKickCountdown();
+		} else {
+			executeDecision(activeAction, reasonText.trim());
+		}
+	}
+
+	function startKickCountdown() {
+		kickCountdown = 3;
+		kickTimer = setInterval(() => {
+			kickCountdown--;
+			if (kickCountdown <= 0) {
+				clearInterval(kickTimer);
+				kickTimer = undefined;
+				executeDecision('kick', reasonText.trim());
+			}
+		}, 1000);
+	}
+
+	function undoKick() {
+		if (kickTimer) { clearInterval(kickTimer); kickTimer = undefined; }
+		kickCountdown = 0;
+		// Stay in reason input mode so they can re-submit or cancel
+	}
+
+	async function executeDecision(action: DecisionAction, reason?: string) {
+		decisionLoading = true;
+		decisionError = null;
+		try {
+			const res = await fetch(`/api/review/${action}`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ appId: app.id, ...(reason ? { reason } : {}) })
+			});
+			const result = await res.json();
+			if (!result.success) {
+				decisionError = result.error;
+				decisionLoading = false;
+				return;
+			}
+
+			// Success — show confirmation then navigate away
+			const labels: Record<DecisionAction, string> = { approve: 'Approved', reject: 'Rejected', kick: 'Kicked' };
+			decisionDone = labels[action];
+			activeAction = null;
+
+			// Brief pause to show success, then go back to queue
+			setTimeout(() => goto('/dashboard/reviews'), 800);
+		} catch {
+			decisionError = 'Failed to connect';
+			decisionLoading = false;
+		}
+	}
+
+	onDestroy(() => { if (kickTimer) clearInterval(kickTimer); });
 </script>
 
 <div class="app-detail">
@@ -163,22 +257,45 @@
 
 	<!-- Action bar -->
 	<div class="action-bar" bind:this={actionBar}>
-		{#if claimError}
-			<span class="claim-error">{claimError}</span>
+		{#if decisionDone}
+			<span class="decision-done">{decisionDone}</span>
+		{:else if claimError || decisionError}
+			<span class="claim-error">{claimError || decisionError}</span>
 		{/if}
 
-		{#if isUnclaimed}
+		{#if decisionDone}
+			<!-- Success state — navigating away -->
+		{:else if kickCountdown > 0}
+			<span class="kick-countdown">Kicking in {kickCountdown}s...</span>
+			<button class="btn btn-undo" onclick={undoKick}>Undo</button>
+		{:else if activeAction}
+			<input
+				bind:this={reasonInput}
+				bind:value={reasonText}
+				class="reason-input"
+				type="text"
+				placeholder="Reason{activeAction === 'reject' ? ' (required)' : ''}"
+				onkeydown={(e) => { if (e.key === 'Enter') submitReason(); if (e.key === 'Escape') cancelDecision(); }}
+				disabled={decisionLoading}
+			/>
+			<button class="btn btn-{activeAction}" onclick={submitReason} disabled={decisionLoading || !reasonText.trim()}>
+				{decisionLoading ? 'Sending...' : activeAction === 'reject' ? 'Reject' : 'Kick'}
+			</button>
+			<button class="btn btn-cancel" onclick={cancelDecision} disabled={decisionLoading}>Cancel</button>
+		{:else if isUnclaimed}
 			<button class="btn btn-claim" onclick={handleClaim} disabled={claimLoading}>
 				{claimLoading ? 'Claiming...' : 'Claim'}
 			</button>
 		{:else if isClaimedByMe}
-			<button class="btn btn-unclaim" onclick={handleUnclaim} disabled={claimLoading}>
+			<button class="btn btn-unclaim" onclick={handleUnclaim} disabled={claimLoading || decisionLoading}>
 				{claimLoading ? 'Releasing...' : 'Unclaim'}
 			</button>
 			<div class="decision-buttons">
-				<button class="btn btn-approve" disabled>Approve</button>
-				<button class="btn btn-reject" disabled>Reject</button>
-				<button class="btn btn-kick" disabled>Kick</button>
+				<button class="btn btn-approve" onclick={() => startDecision('approve')} disabled={decisionLoading}>
+					{decisionLoading && activeAction === 'approve' ? 'Approving...' : 'Approve'}
+				</button>
+				<button class="btn btn-reject" onclick={() => startDecision('reject')} disabled={decisionLoading}>Reject</button>
+				<button class="btn btn-kick" onclick={() => startDecision('kick')} disabled={decisionLoading}>Kick</button>
 			</div>
 		{:else}
 			<span class="action-placeholder">Claimed by another reviewer</span>
@@ -374,5 +491,80 @@
 	.btn-kick {
 		background: var(--status-danger);
 		color: var(--bg);
+	}
+
+	.btn-cancel {
+		background: var(--surface-raised);
+		color: var(--text-secondary);
+		border: 1px solid var(--border-holdfast);
+	}
+
+	.btn-cancel:hover:not(:disabled) {
+		color: var(--text-primary);
+	}
+
+	.btn-undo {
+		background: var(--surface-raised);
+		color: var(--status-danger);
+		border: 1px solid var(--status-danger);
+	}
+
+	.btn-undo:hover {
+		background: var(--status-danger);
+		color: var(--bg);
+	}
+
+	.btn-approve:hover:not(:disabled) {
+		filter: brightness(1.15);
+		box-shadow: 0 0 12px oklch(70% 0.15 145 / 0.3);
+	}
+
+	.btn-reject:hover:not(:disabled) {
+		filter: brightness(1.15);
+		box-shadow: 0 0 12px oklch(70% 0.15 80 / 0.3);
+	}
+
+	.btn-kick:hover:not(:disabled) {
+		filter: brightness(1.15);
+		box-shadow: 0 0 12px oklch(70% 0.15 25 / 0.3);
+	}
+
+	.reason-input {
+		flex: 1;
+		padding: 0.5rem 0.75rem;
+		border-radius: var(--radius-sm);
+		border: 1px solid var(--border-holdfast);
+		background: var(--surface);
+		color: var(--text-primary);
+		font-size: 0.8rem;
+		outline: none;
+		transition: border-color 150ms;
+	}
+
+	.reason-input:focus {
+		border-color: var(--accent);
+	}
+
+	.reason-input::placeholder {
+		color: var(--text-secondary);
+		opacity: 0.6;
+	}
+
+	.kick-countdown {
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--status-danger);
+		animation: pulse-text 1s ease infinite;
+	}
+
+	@keyframes pulse-text {
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0.6; }
+	}
+
+	.decision-done {
+		font-size: 0.9rem;
+		font-weight: 600;
+		color: var(--status-success);
 	}
 </style>
