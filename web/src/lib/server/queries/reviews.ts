@@ -81,8 +81,14 @@ interface AppResponseRow {
 
 function parseEvidence(json: string | null): EvidenceEntry[] {
 	if (!json) return [];
-	try { return JSON.parse(json) as EvidenceEntry[]; }
-	catch { return []; }
+	try {
+		const parsed = JSON.parse(json);
+		if (!Array.isArray(parsed)) return [];
+		return parsed.filter(
+			(e): e is EvidenceEntry =>
+				typeof e === 'object' && e !== null && typeof e.tag === 'string' && typeof e.p === 'number'
+		);
+	} catch { return []; }
 }
 
 export function getApplicationDetail(appId: string, guildId: string): ApplicationDetail | null {

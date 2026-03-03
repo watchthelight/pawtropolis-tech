@@ -16,7 +16,7 @@
 	);
 
 	const tierLabel = $derived(
-		tier === 'high' ? 'High risk' : tier === 'elevated' ? 'Elevated risk' : 'Low risk'
+		tier === 'high' ? 'High risk' : tier === 'elevated' ? 'Elevated risk' : 'All clear'
 	);
 
 	const tierColor = $derived(
@@ -33,6 +33,8 @@
 
 	const reducedMotion = $derived(prefersReducedMotion());
 
+	const glowIntensity = $derived(riskScore / 100);
+
 	const hasEvidence = $derived(
 		evidence && (evidence.hard.length > 0 || evidence.soft.length > 0)
 	);
@@ -40,7 +42,7 @@
 
 {#if riskScore > 0}
 	{#if variant === 'compact'}
-		<span class="risk-aura-compact" aria-label={ariaLabel} title={ariaLabel}>
+		<span class="risk-aura-compact" role="img" aria-label={ariaLabel} title={ariaLabel}>
 			<svg class="risk-shape" width="12" height="12" viewBox="0 0 12 12" style:color={tierColor}>
 				{#if tier === 'safe'}
 					<circle cx="6" cy="6" r="5" fill="currentColor" />
@@ -55,11 +57,11 @@
 	{:else}
 		<div
 			class="risk-aura-expanded"
-			class:risk-glow-safe={tier === 'safe'}
 			class:risk-glow-elevated={tier === 'elevated'}
 			class:risk-glow-high={tier === 'high'}
 			class:risk-no-animate={reducedMotion}
 			aria-label={ariaLabel}
+			style:--glow-intensity={glowIntensity}
 		>
 			<div class="risk-header">
 				<svg class="risk-shape-lg" width="16" height="16" viewBox="0 0 12 12" style:color={tierColor}>
@@ -116,10 +118,6 @@
 		background: var(--surface-raised);
 	}
 
-	.risk-glow-safe {
-		box-shadow: 0 0 8px oklch(65% 0.15 145 / 0.15);
-	}
-
 	.risk-glow-elevated {
 		animation: glow-elevated 2s ease-in-out infinite;
 	}
@@ -130,22 +128,22 @@
 
 	.risk-no-animate.risk-glow-elevated {
 		animation: none;
-		box-shadow: 0 0 12px oklch(70% 0.15 85 / 0.35);
+		box-shadow: 0 0 12px oklch(70% 0.15 85 / calc(var(--glow-intensity) * 0.7));
 	}
 
 	.risk-no-animate.risk-glow-high {
 		animation: none;
-		box-shadow: 0 0 16px oklch(60% 0.15 25 / 0.6);
+		box-shadow: 0 0 16px oklch(60% 0.15 25 / calc(var(--glow-intensity) * 0.7));
 	}
 
 	@keyframes glow-elevated {
-		0%, 100% { box-shadow: 0 0 8px oklch(70% 0.15 85 / 0.25); }
-		50% { box-shadow: 0 0 16px oklch(70% 0.15 85 / 0.5); }
+		0%, 100% { box-shadow: 0 0 8px oklch(70% 0.15 85 / calc(var(--glow-intensity) * 0.5)); }
+		50% { box-shadow: 0 0 16px oklch(70% 0.15 85 / var(--glow-intensity)); }
 	}
 
 	@keyframes glow-high {
-		0%, 100% { box-shadow: 0 0 12px oklch(60% 0.15 25 / 0.4); }
-		50% { box-shadow: 0 0 20px oklch(60% 0.15 25 / 0.8); }
+		0%, 100% { box-shadow: 0 0 12px oklch(60% 0.15 25 / calc(var(--glow-intensity) * 0.5)); }
+		50% { box-shadow: 0 0 20px oklch(60% 0.15 25 / var(--glow-intensity)); }
 	}
 
 	.risk-header {
