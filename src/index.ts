@@ -140,6 +140,7 @@ export const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildVoiceStates, // For movie night attendance tracking
+    GatewayIntentBits.GuildPresences,   // For dashboard profile status display
   ],
   partials: [Partials.Channel],
   // Cache limits to prevent unbounded memory growth in large servers
@@ -150,7 +151,7 @@ export const client = new Client({
     MessageManager: 200,        // Recent messages per channel
     GuildMemberManager: 500,    // Members per guild (we need members for role checks)
     UserManager: 500,           // Users across all guilds
-    PresenceManager: 0,         // We don't use presence data
+    PresenceManager: 500,       // For dashboard profile status display
     VoiceStateManager: 200,     // For movie night tracking
     ReactionManager: 0,         // We don't use reactions
     ReactionUserManager: 0,     // We don't use reaction users

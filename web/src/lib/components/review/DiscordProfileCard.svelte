@@ -9,8 +9,17 @@
 		displayName?: string;
 		avatarUrl?: string | null;
 		bio?: string | null;
+		status?: string | null;
+		customStatus?: string | null;
 		roles?: Array<{ id: string; name: string; color: string | null; position: number }>;
 	}
+
+	const STATUS_COLORS: Record<string, string> = {
+		online: 'var(--status-success)',
+		idle: 'var(--status-warning)',
+		dnd: 'var(--status-danger)',
+		offline: 'var(--text-secondary)'
+	};
 
 	let {
 		userId,
@@ -62,6 +71,8 @@
 					displayName: result.data.displayName,
 					avatarUrl: result.data.avatarUrl,
 					bio: result.data.bio ?? null,
+					status: result.data.status ?? null,
+					customStatus: result.data.customStatus ?? null,
 					roles: result.data.roles
 				};
 				lastFetchedId = userId;
@@ -91,13 +102,18 @@
 		{/if}
 	</div>
 
-	<!-- Avatar -->
+	<!-- Avatar with status indicator -->
 	<div class="dc-avatar-row">
-		{#if profile?.avatarUrl || avatarUrl}
-			<img src={profile?.avatarUrl ?? avatarUrl} alt={applicantName} class="dc-avatar" />
-		{:else}
-			<div class="dc-avatar dc-avatar-placeholder">{applicantName.charAt(0).toUpperCase()}</div>
-		{/if}
+		<div class="dc-avatar-wrap">
+			{#if profile?.avatarUrl || avatarUrl}
+				<img src={profile?.avatarUrl ?? avatarUrl} alt={applicantName} class="dc-avatar" />
+			{:else}
+				<div class="dc-avatar dc-avatar-placeholder">{applicantName.charAt(0).toUpperCase()}</div>
+			{/if}
+			{#if profile?.status}
+				<span class="dc-status-dot" style:background-color={STATUS_COLORS[profile.status] ?? STATUS_COLORS.offline} title={profile.status}></span>
+			{/if}
+		</div>
 	</div>
 
 	<!-- Identity -->
@@ -105,6 +121,9 @@
 		<p class="dc-displayname">{profile?.displayName ?? applicantName}</p>
 		{#if profile?.username}
 			<p class="dc-username">@{profile.username}</p>
+		{/if}
+		{#if profile?.customStatus}
+			<p class="dc-custom-status">{profile.customStatus}</p>
 		{/if}
 	</div>
 
@@ -192,6 +211,11 @@
 		z-index: 1;
 	}
 
+	.dc-avatar-wrap {
+		position: relative;
+		display: inline-block;
+	}
+
 	.dc-avatar {
 		width: 56px;
 		height: 56px;
@@ -211,6 +235,16 @@
 		background: var(--accent-dim);
 	}
 
+	.dc-status-dot {
+		position: absolute;
+		bottom: 2px;
+		right: 2px;
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		border: 3px solid var(--surface);
+	}
+
 	.dc-identity {
 		padding: 0.25rem 0.75rem 0;
 	}
@@ -227,6 +261,13 @@
 		font-size: 0.75rem;
 		color: var(--text-secondary);
 		margin: 0;
+	}
+
+	.dc-custom-status {
+		font-size: 0.7rem;
+		color: var(--text-secondary);
+		margin: 0.2rem 0 0;
+		font-style: italic;
 	}
 
 	.dc-divider {

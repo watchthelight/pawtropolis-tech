@@ -477,6 +477,17 @@ export async function startDashboardApi(client: Client): Promise<void> {
             .map(r => ({ id: r.id, name: r.name, color: r.hexColor === "#000000" ? null : r.hexColor, position: r.position }))
         : [];
 
+      // Read presence from cache (requires GuildPresences intent)
+      const presence = member?.presence ?? guild?.presences.cache.get(targetUserId) ?? null;
+      let status: string | null = presence?.status ?? null; // "online" | "idle" | "dnd" | "offline"
+      let customStatus: string | null = null;
+      if (presence?.activities) {
+        const custom = presence.activities.find(a => a.type === 4); // ActivityType.Custom
+        if (custom) {
+          customStatus = [custom.emoji?.toString(), custom.state].filter(Boolean).join(" ") || null;
+        }
+      }
+
       return {
         success: true,
         data: {
@@ -490,6 +501,8 @@ export async function startDashboardApi(client: Client): Promise<void> {
           joinedAt: member?.joinedTimestamp ? Math.floor(member.joinedTimestamp / 1000) : null,
           createdAt: Math.floor(snowflakeToTimestamp(user.id) / 1000),
           roles,
+          status,
+          customStatus,
         },
       } satisfies ApiSuccess;
     } catch (err) {
