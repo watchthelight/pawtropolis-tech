@@ -24,7 +24,7 @@ import { logActionPretty } from "../logging/pretty.js";
 import { closeModmailForApplication } from "../features/modmail.js";
 import { postWelcomeCard } from "../features/welcome.js";
 import { shortCode } from "../lib/ids.js";
-import { cacheUser } from "../lib/userCache.js";
+import { cacheUser, snowflakeToTimestamp } from "../lib/userCache.js";
 
 // ===== Tier Check =====
 
@@ -451,6 +451,51 @@ export async function startDashboardApi(client: Client): Promise<void> {
     }
 
     return { success: true, data: { users: resolved } } satisfies ApiSuccess;
+  });
+
+  // POST /api/review/profile — fetch full Discord profile for an applicant
+  server.post<{ Body: { userId: string; tier: string; targetUserId: string } }>("/api/review/profile", async (request, reply) => {
+    const { userId, tier, targetUserId } = request.body ?? {};
+    if (!userId || !tier || !targetUserId) return reply.code(400).send({ success: false, error: "Missing userId, tier, or targetUserId" } satisfies ApiError);
+    if (!hasMinTier(tier, "gk")) return reply.code(403).send({ success: false, error: "Insufficient permissions" } satisfies ApiError);
+
+    try {
+      // Force API call to get banner and accent color (not available from cache)
+      const user = await client.users.fetch(targetUserId, { force: true });
+      const guild = getGuild();
+      const member = guild ? await guild.members.fetch(targetUserId).catch(() => null) : null;
+
+      // Cache enriched data
+      cacheUser(user, GUILD_ID, member);
+
+      const avatarUrl = member?.displayAvatarURL({ size: 256 }) ?? user.displayAvatarURL({ size: 256 });
+      const bannerUrl = user.bannerURL?.({ size: 512 }) ?? null;
+      const roles = member
+        ? [...member.roles.cache.values()]
+            .filter(r => r.id !== guild?.id) // exclude @everyone
+            .sort((a, b) => b.position - a.position)
+            .map(r => ({ id: r.id, name: r.name, color: r.hexColor === "#000000" ? null : r.hexColor, position: r.position }))
+        : [];
+
+      return {
+        success: true,
+        data: {
+          userId: user.id,
+          username: user.username,
+          globalName: user.globalName,
+          displayName: member?.displayName ?? user.globalName ?? user.username,
+          avatarUrl,
+          bannerUrl,
+          accentColor: user.accentColor ?? null,
+          joinedAt: member?.joinedTimestamp ? Math.floor(member.joinedTimestamp / 1000) : null,
+          createdAt: Math.floor(snowflakeToTimestamp(user.id) / 1000),
+          roles,
+        },
+      } satisfies ApiSuccess;
+    } catch (err) {
+      logger.warn({ err, targetUserId }, "[dashboardApi] failed to fetch user profile");
+      return reply.code(404).send({ success: false, error: "User not found" } satisfies ApiError);
+    }
   });
 
   // Start server
