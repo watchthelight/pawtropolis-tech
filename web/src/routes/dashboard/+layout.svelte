@@ -65,10 +65,21 @@
 	});
 </script>
 
-<div class="flex min-h-screen bg-[var(--bg)]">
+<div class="layout-root">
 	<aside class="sidebar-aside" class:sidebar-aside-collapsed={sidebarCollapsed}>
-		<Nav {user} collapsed={sidebarCollapsed} ontoggle={toggleSidebar} />
+		<Nav {user} collapsed={sidebarCollapsed} />
 	</aside>
+
+	<!-- Edge toggle on the divider -->
+	<button
+		class="edge-toggle"
+		class:edge-toggle-collapsed={sidebarCollapsed}
+		onclick={toggleSidebar}
+		title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+		aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+	>
+		<span class="edge-arrow" class:edge-arrow-flipped={sidebarCollapsed}>&#9666;</span>
+	</button>
 
 	<main class="flex-1 p-8">
 		{@render children()}
@@ -76,6 +87,13 @@
 </div>
 
 <style>
+	.layout-root {
+		display: flex;
+		min-height: 100vh;
+		background: var(--bg);
+		position: relative;
+	}
+
 	.sidebar-aside {
 		position: sticky;
 		top: 0;
@@ -88,5 +106,51 @@
 
 	.sidebar-aside-collapsed {
 		width: 3.5rem;
+	}
+
+	/* Edge toggle — small arrow on the sidebar border */
+	.edge-toggle {
+		position: sticky;
+		top: 50%;
+		z-index: 10;
+		width: 14px;
+		height: 40px;
+		margin-left: -7px;
+		margin-right: -7px;
+		align-self: flex-start;
+		margin-top: calc(50vh - 20px);
+		border: 1px solid var(--border-holdfast);
+		border-radius: 999px;
+		background: var(--surface);
+		color: var(--text-secondary);
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: all 150ms;
+		opacity: 0;
+		flex-shrink: 0;
+	}
+
+	.layout-root:hover .edge-toggle,
+	.edge-toggle:focus-visible {
+		opacity: 1;
+	}
+
+	.edge-toggle:hover {
+		background: var(--surface-raised);
+		color: var(--text-primary);
+		border-color: var(--accent);
+		box-shadow: var(--glow-accent);
+	}
+
+	.edge-arrow {
+		font-size: 0.55rem;
+		line-height: 1;
+		transition: transform 200ms;
+	}
+
+	.edge-arrow-flipped {
+		transform: rotate(180deg);
 	}
 </style>

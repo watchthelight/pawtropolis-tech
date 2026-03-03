@@ -2,7 +2,7 @@
 	import { page } from '$app/stores';
 	import ConnectionIndicator from './ConnectionIndicator.svelte';
 
-	let { user, collapsed = false, ontoggle }: {
+	let { user, collapsed = false }: {
 		user: {
 			username: string;
 			globalName: string | null;
@@ -10,7 +10,6 @@
 			tier: string;
 		};
 		collapsed?: boolean;
-		ontoggle?: () => void;
 	} = $props();
 
 	// Inline tier check — $lib/server/roles.ts can't be imported client-side
@@ -107,17 +106,6 @@
 	<div class="footer" class:footer-collapsed={collapsed}>
 		{#if !collapsed}
 			<ConnectionIndicator />
-		{/if}
-		<button
-			class="toggle-btn"
-			onclick={ontoggle}
-			title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-			aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-		>
-			<span class="toggle-icon" class:toggle-icon-flipped={collapsed}>&#9666;</span>
-			{#if !collapsed}<span class="toggle-label">Collapse</span>{/if}
-		</button>
-		{#if !collapsed}
 			<a
 				href="/auth/logout"
 				class="block text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"

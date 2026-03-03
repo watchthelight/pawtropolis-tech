@@ -5,7 +5,7 @@
 	import type { ModmailThreadSummary } from '$lib/server/queries/modmail';
 	import RiskAura from '$lib/components/data/RiskAura.svelte';
 	import ModmailViewer from '$lib/components/review/ModmailViewer.svelte';
-	import ProfilePanel from '$lib/components/review/ProfilePanel.svelte';
+	import DiscordProfileCard from '$lib/components/review/DiscordProfileCard.svelte';
 	import type { CachedProfile } from '$lib/server/queries/reviews';
 	import gsap from 'gsap';
 	import { SPRINGS } from '$lib/motion';
@@ -28,6 +28,9 @@
 	let claimLoading = $state(false);
 	let claimError = $state<string | null>(null);
 	let actionBar: HTMLElement;
+
+	// Flip state: 'answers' (front) or 'modmail' (back)
+	let showModmail = $state(false);
 
 	// Reactive tick so stale claim indicator updates over time
 	let now = $state(Date.now());
@@ -91,7 +94,6 @@
 				invalidateAll();
 			} else {
 				setBotOnline();
-				// Navigate to My Claims tab with this app selected
 				goto(`/dashboard/reviews/${app.id}?tab=mine`);
 			}
 		} catch {
@@ -145,7 +147,6 @@
 		activeAction = action;
 		reasonText = '';
 		decisionError = null;
-		// Focus the input after it renders
 		requestAnimationFrame(() => reasonInput?.focus());
 	}
 
@@ -160,7 +161,6 @@
 	function submitReason() {
 		if (!activeAction) return;
 		const trimmed = reasonText.trim();
-		// Approve allows empty reason; reject/kick require it
 		if (activeAction !== 'approve' && !trimmed) return;
 		if (activeAction === 'kick') {
 			startKickCountdown();
@@ -184,7 +184,6 @@
 	function undoKick() {
 		if (kickTimer) { clearInterval(kickTimer); kickTimer = undefined; }
 		kickCountdown = 0;
-		// Stay in reason input mode so they can re-submit or cancel
 	}
 
 	async function executeDecision(action: DecisionAction, reason?: string) {
@@ -204,14 +203,10 @@
 			}
 
 			setBotOnline();
-
-			// Success — show confirmation then navigate away
 			const labels: Record<DecisionAction, string> = { approve: 'Approved', reject: 'Rejected', kick: 'Kicked' };
 			decisionDone = labels[action];
 			decisionError = null;
 			activeAction = null;
-
-			// Brief pause to show success, then go back to queue
 			setTimeout(() => goto('/dashboard/reviews'), 800);
 		} catch {
 			decisionError = 'Failed to connect';
@@ -224,63 +219,61 @@
 </script>
 
 <div class="app-detail">
-	<!-- Applicant header -->
-	<div class="applicant-header">
-		<div class="applicant-avatar">
-			{#if app.avatarUrl}
-				<img src={app.avatarUrl} alt={app.applicantName} class="avatar-img" />
-			{:else}
-				<div class="avatar-placeholder">{app.applicantName.charAt(0).toUpperCase()}</div>
-			{/if}
+	<!-- Two-panel body -->
+	<div class="detail-body">
+		<!-- Left: Discord Profile Card -->
+		<div class="profile-col">
+			<DiscordProfileCard userId={app.userId} avatarUrl={app.avatarUrl} applicantName={app.applicantName} {cachedProfile} />
 		</div>
-		<div class="applicant-info">
-			<h2 class="applicant-name">{app.applicantName}</h2>
-			<p class="applicant-meta">
-				<!-- svelte-ignore a11y_click_events_have_key_events -->
-			<!-- svelte-ignore a11y_no_static_element_interactions -->
-			<span class="user-id" title="Click to copy" onclick={() => navigator.clipboard.writeText(app.userId)}>{app.userId}</span>
-				{#if app.submittedAt}
-					<span class="separator">·</span>
-					<span>Submitted {relativeTime(app.submittedAt)}</span>
-				{/if}
-			</p>
-			{#if isClaimedByMe}
-				<p class="claimed-info" style:color={claimAgeColor(app.claimedAt)}>
-					Claimed by you · {relativeTime(app.claimedAt)}
-				</p>
-			{:else if isClaimedByOther}
-				<p class="claimed-info" style:color={canAdminUnclaim ? claimAgeColor(app.claimedAt) : 'var(--text-secondary)'}>
-				Claimed by {app.claimedByName ?? 'unknown'}{canAdminUnclaim ? ` · ${relativeTime(app.claimedAt)}` : ''}
-			</p>
-			{/if}
-		</div>
-		<RiskAura
-			variant="expanded"
-			riskScore={app.riskScore}
-			reason={app.scan?.reason}
-			evidence={app.scan ? { hard: app.scan.evidenceHard, soft: app.scan.evidenceSoft, safe: app.scan.evidenceSafe } : undefined}
-		/>
-	</div>
 
-	<!-- Profile panel (expandable) -->
-	<ProfilePanel userId={app.userId} avatarUrl={app.avatarUrl} {cachedProfile} />
-
-	<!-- Answers section -->
-	<div class="answers-section">
-		<div class="section-label">Responses</div>
-		{#each app.answers as qa}
-			<div class="qa-block">
-				<div class="qa-question">{qa.question}</div>
-				<div class="qa-answer">{qa.answer}</div>
+		<!-- Right: Answers / Modmail (flip) -->
+		<div class="content-col">
+			<!-- Header bar with meta + flip toggle -->
+			<div class="content-header">
+				<div class="content-meta">
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
+					<!-- svelte-ignore a11y_no_static_element_interactions -->
+					<span class="user-id" title="Click to copy" onclick={() => navigator.clipboard.writeText(app.userId)}>{app.userId}</span>
+					{#if app.submittedAt}
+						<span class="separator">·</span>
+						<span>Submitted {relativeTime(app.submittedAt)}</span>
+					{/if}
+					{#if isClaimedByMe}
+						<span class="separator">·</span>
+						<span class="claimed-info" style:color={claimAgeColor(app.claimedAt)}>Claimed by you</span>
+					{:else if isClaimedByOther}
+						<span class="separator">·</span>
+						<span class="claimed-info">Claimed by {app.claimedByName ?? 'unknown'}</span>
+					{/if}
+				</div>
+				<div class="content-tabs">
+					<RiskAura variant="compact" riskScore={app.riskScore} />
+					{#if modmail.length > 0}
+						<button class="tab-btn" class:tab-btn-active={showModmail} onclick={() => showModmail = !showModmail}>
+							Modmail ({modmail.reduce((a, t) => a + t.messageCount, 0)})
+						</button>
+					{/if}
+				</div>
 			</div>
-		{/each}
 
-		{#if modmail.length > 0}
-			<ModmailViewer threads={modmail} />
-		{/if}
+			<!-- Content area: answers or modmail -->
+			<div class="content-body">
+				{#if showModmail && modmail.length > 0}
+					<ModmailViewer threads={modmail} />
+				{:else}
+					<div class="section-label">Responses</div>
+					{#each app.answers as qa}
+						<div class="qa-block">
+							<div class="qa-question">{qa.question}</div>
+							<div class="qa-answer">{qa.answer}</div>
+						</div>
+					{/each}
+				{/if}
+			</div>
+		</div>
 	</div>
 
-	<!-- Action bar -->
+	<!-- Action bar (full width) -->
 	<div class="action-bar" bind:this={actionBar}>
 		{#if decisionDone}
 			<span class="decision-done">{decisionDone}</span>
@@ -299,7 +292,7 @@
 				bind:value={reasonText}
 				class="reason-input"
 				type="text"
-				placeholder={activeAction === 'approve' ? 'Note (optional)' : activeAction === 'reject' ? 'Reason (required)' : 'Reason (required)'}
+				placeholder={activeAction === 'approve' ? 'Note (optional)' : 'Reason (required)'}
 				onkeydown={(e) => { if (e.key === 'Enter') submitReason(); if (e.key === 'Escape') cancelDecision(); }}
 				disabled={decisionLoading}
 			/>
@@ -342,63 +335,90 @@
 		height: 100%;
 	}
 
-	/* Applicant header */
-	.applicant-header {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
-		padding: var(--space-card);
-		border-bottom: 1px solid var(--border-holdfast);
-	}
-
-	.applicant-avatar {
-		flex-shrink: 0;
-	}
-
-	.avatar-img {
-		width: 48px;
-		height: 48px;
-		border-radius: var(--radius-md);
-		object-fit: cover;
-	}
-
-	.avatar-placeholder {
-		width: 48px;
-		height: 48px;
-		border-radius: var(--radius-md);
-		background: var(--accent-dim);
-		color: var(--accent);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-weight: 700;
-		font-size: 1.25rem;
-	}
-
-	.applicant-info {
+	/* Two-panel body */
+	.detail-body {
 		flex: 1;
+		display: flex;
+		min-height: 0;
+	}
+
+	.profile-col {
+		width: 220px;
+		flex-shrink: 0;
+		padding: 0.5rem;
+		overflow-y: auto;
+		border-right: 1px solid var(--border-holdfast);
+	}
+
+	.content-col {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
 		min-width: 0;
 	}
 
-	.applicant-name {
-		font-size: 1.1rem;
-		font-weight: 600;
-		color: var(--text-primary);
-		margin: 0;
+	/* Content header */
+	.content-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0.5rem var(--space-card);
+		border-bottom: 1px solid var(--border-holdfast);
+		gap: 0.75rem;
+		flex-shrink: 0;
 	}
 
-	.applicant-meta {
-		font-size: 0.75rem;
+	.content-meta {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: 0.7rem;
 		color: var(--text-secondary);
-		margin: 0.25rem 0 0;
+		flex: 1;
+		min-width: 0;
+		overflow: hidden;
+	}
+
+	.content-tabs {
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
+		flex-shrink: 0;
+	}
+
+	.tab-btn {
+		padding: 0.25rem 0.6rem;
+		border-radius: var(--radius-sm);
+		border: 1px solid var(--border-holdfast);
+		background: var(--surface-raised);
+		color: var(--text-secondary);
+		font-size: 0.7rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 150ms;
+	}
+
+	.tab-btn:hover {
+		color: var(--text-primary);
+		border-color: var(--accent);
+	}
+
+	.tab-btn-active {
+		background: var(--accent-dim);
+		color: var(--accent);
+		border-color: var(--accent);
+	}
+
+	/* Content body (scrollable) */
+	.content-body {
+		flex: 1;
+		padding: var(--space-card);
+		overflow-y: auto;
 	}
 
 	.user-id {
 		font-family: monospace;
-		font-size: 0.7rem;
+		font-size: 0.65rem;
 		opacity: 0.7;
 		cursor: pointer;
 		transition: opacity 150ms;
@@ -414,15 +434,6 @@
 
 	.claimed-info {
 		font-size: 0.7rem;
-		color: var(--status-warning);
-		margin: 0.25rem 0 0;
-	}
-
-	/* Answers */
-	.answers-section {
-		flex: 1;
-		padding: var(--space-card);
-		overflow-y: auto;
 	}
 
 	.section-label {
@@ -460,6 +471,7 @@
 		display: flex;
 		align-items: center;
 		gap: 0.75rem;
+		flex-shrink: 0;
 	}
 
 	.action-placeholder {
@@ -484,100 +496,30 @@
 		transition: all 150ms var(--ease-smooth);
 	}
 
-	.btn:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
+	.btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-	.btn-claim {
-		background: var(--accent);
-		color: var(--bg);
-	}
+	.btn-claim { background: var(--accent); color: var(--bg); }
+	.btn-claim:hover:not(:disabled) { filter: brightness(1.1); box-shadow: var(--glow-accent); }
 
-	.btn-claim:hover:not(:disabled) {
-		filter: brightness(1.1);
-		box-shadow: var(--glow-accent);
-	}
+	.btn-unclaim { background: var(--surface-raised); color: var(--text-secondary); border: 1px solid var(--border-holdfast); }
+	.btn-unclaim:hover:not(:disabled) { background: var(--surface); color: var(--text-primary); }
 
-	.btn-unclaim {
-		background: var(--surface-raised);
-		color: var(--text-secondary);
-		border: 1px solid var(--border-holdfast);
-	}
+	.btn-admin-unclaim { background: var(--surface-raised); color: var(--status-warning); border: 1px solid var(--status-warning); margin-left: auto; }
+	.btn-admin-unclaim:hover:not(:disabled) { background: var(--status-warning); color: var(--bg); }
 
-	.btn-unclaim:hover:not(:disabled) {
-		background: var(--surface);
-		color: var(--text-primary);
-	}
+	.decision-buttons { display: flex; gap: 0.5rem; margin-left: auto; }
 
-	.btn-admin-unclaim {
-		background: var(--surface-raised);
-		color: var(--status-warning);
-		border: 1px solid var(--status-warning);
-		margin-left: auto;
-	}
+	.btn-approve { background: var(--status-success); color: var(--bg); }
+	.btn-reject { background: var(--status-warning); color: var(--bg); }
+	.btn-kick { background: var(--status-danger); color: var(--bg); }
+	.btn-cancel { background: var(--surface-raised); color: var(--text-secondary); border: 1px solid var(--border-holdfast); }
+	.btn-cancel:hover:not(:disabled) { color: var(--text-primary); }
+	.btn-undo { background: var(--surface-raised); color: var(--status-danger); border: 1px solid var(--status-danger); }
+	.btn-undo:hover { background: var(--status-danger); color: var(--bg); }
 
-	.btn-admin-unclaim:hover:not(:disabled) {
-		background: var(--status-warning);
-		color: var(--bg);
-	}
-
-	.decision-buttons {
-		display: flex;
-		gap: 0.5rem;
-		margin-left: auto;
-	}
-
-	.btn-approve {
-		background: var(--status-success);
-		color: var(--bg);
-	}
-
-	.btn-reject {
-		background: var(--status-warning);
-		color: var(--bg);
-	}
-
-	.btn-kick {
-		background: var(--status-danger);
-		color: var(--bg);
-	}
-
-	.btn-cancel {
-		background: var(--surface-raised);
-		color: var(--text-secondary);
-		border: 1px solid var(--border-holdfast);
-	}
-
-	.btn-cancel:hover:not(:disabled) {
-		color: var(--text-primary);
-	}
-
-	.btn-undo {
-		background: var(--surface-raised);
-		color: var(--status-danger);
-		border: 1px solid var(--status-danger);
-	}
-
-	.btn-undo:hover {
-		background: var(--status-danger);
-		color: var(--bg);
-	}
-
-	.btn-approve:hover:not(:disabled) {
-		filter: brightness(1.15);
-		box-shadow: 0 0 12px oklch(70% 0.15 145 / 0.3);
-	}
-
-	.btn-reject:hover:not(:disabled) {
-		filter: brightness(1.15);
-		box-shadow: 0 0 12px oklch(70% 0.15 80 / 0.3);
-	}
-
-	.btn-kick:hover:not(:disabled) {
-		filter: brightness(1.15);
-		box-shadow: 0 0 12px oklch(70% 0.15 25 / 0.3);
-	}
+	.btn-approve:hover:not(:disabled) { filter: brightness(1.15); box-shadow: 0 0 12px oklch(70% 0.15 145 / 0.3); }
+	.btn-reject:hover:not(:disabled) { filter: brightness(1.15); box-shadow: 0 0 12px oklch(70% 0.15 80 / 0.3); }
+	.btn-kick:hover:not(:disabled) { filter: brightness(1.15); box-shadow: 0 0 12px oklch(70% 0.15 25 / 0.3); }
 
 	.reason-input {
 		flex: 1;
@@ -591,37 +533,12 @@
 		transition: border-color 150ms;
 	}
 
-	.reason-input:focus {
-		border-color: var(--accent);
-	}
+	.reason-input:focus { border-color: var(--accent); }
+	.reason-input::placeholder { color: var(--text-secondary); opacity: 0.6; }
 
-	.reason-input::placeholder {
-		color: var(--text-secondary);
-		opacity: 0.6;
-	}
+	.kick-countdown { font-size: 0.85rem; font-weight: 600; color: var(--status-danger); animation: pulse-text 1s ease infinite; }
+	@keyframes pulse-text { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
 
-	.kick-countdown {
-		font-size: 0.85rem;
-		font-weight: 600;
-		color: var(--status-danger);
-		animation: pulse-text 1s ease infinite;
-	}
-
-	@keyframes pulse-text {
-		0%, 100% { opacity: 1; }
-		50% { opacity: 0.6; }
-	}
-
-	.decision-done {
-		font-size: 0.9rem;
-		font-weight: 600;
-		color: var(--status-success);
-	}
-
-	.action-resolved {
-		font-size: 0.8rem;
-		font-weight: 500;
-		color: var(--text-secondary);
-		opacity: 0.7;
-	}
+	.decision-done { font-size: 0.9rem; font-weight: 600; color: var(--status-success); }
+	.action-resolved { font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); opacity: 0.7; }
 </style>

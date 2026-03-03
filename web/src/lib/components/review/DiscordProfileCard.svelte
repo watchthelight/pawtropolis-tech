@@ -1,0 +1,321 @@
+<script lang="ts">
+	import { onMount } from 'svelte';
+
+	interface ProfileData {
+		bannerUrl?: string | null;
+		accentColor?: number | null;
+		joinedAt?: number | null;
+		createdAt?: number | null;
+		username?: string;
+		globalName?: string | null;
+		displayName?: string;
+		avatarUrl?: string | null;
+		roles?: Array<{ id: string; name: string; color: string | null; position: number }>;
+	}
+
+	let {
+		userId,
+		avatarUrl = null,
+		applicantName = 'Unknown',
+		cachedProfile = null
+	}: {
+		userId: string;
+		avatarUrl?: string | null;
+		applicantName?: string;
+		cachedProfile?: { bannerUrl: string | null; accentColor: number | null; joinedAt: number | null; createdAt: number | null } | null;
+	} = $props();
+
+	let profile = $state<ProfileData | null>(cachedProfile ? { ...cachedProfile, avatarUrl, displayName: applicantName } : null);
+	let loading = $state(false);
+	let error = $state<string | null>(null);
+
+	function formatDate(ms: number | null): string {
+		if (!ms) return '—';
+		return new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+	}
+
+	function accentHex(color: number | null): string {
+		if (!color) return 'var(--accent)';
+		return `#${color.toString(16).padStart(6, '0')}`;
+	}
+
+	async function fetchProfile() {
+		loading = true;
+		error = null;
+		try {
+			const res = await fetch('/api/review/profile', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ targetUserId: userId })
+			});
+			const result = await res.json();
+			if (!result.success) {
+				error = result.error ?? 'Failed to load';
+			} else {
+				profile = {
+					bannerUrl: result.data.bannerUrl,
+					accentColor: result.data.accentColor,
+					joinedAt: result.data.joinedAt ? result.data.joinedAt * 1000 : null,
+					createdAt: result.data.createdAt ? result.data.createdAt * 1000 : null,
+					username: result.data.username,
+					globalName: result.data.globalName,
+					displayName: result.data.displayName,
+					avatarUrl: result.data.avatarUrl,
+					roles: result.data.roles
+				};
+			}
+		} catch {
+			error = 'Failed to connect';
+		} finally {
+			loading = false;
+		}
+	}
+
+	onMount(() => {
+		fetchProfile();
+	});
+</script>
+
+<div class="dc-card">
+	<!-- Banner -->
+	<div class="dc-banner" style:background-color={profile?.bannerUrl ? undefined : accentHex(profile?.accentColor ?? null)}>
+		{#if profile?.bannerUrl}
+			<img src={profile.bannerUrl} alt="" class="dc-banner-img" />
+		{/if}
+	</div>
+
+	<!-- Avatar -->
+	<div class="dc-avatar-row">
+		{#if profile?.avatarUrl || avatarUrl}
+			<img src={profile?.avatarUrl ?? avatarUrl} alt={applicantName} class="dc-avatar" />
+		{:else}
+			<div class="dc-avatar dc-avatar-placeholder">{applicantName.charAt(0).toUpperCase()}</div>
+		{/if}
+	</div>
+
+	<!-- Identity -->
+	<div class="dc-identity">
+		<p class="dc-displayname">{profile?.displayName ?? applicantName}</p>
+		{#if profile?.username}
+			<p class="dc-username">@{profile.username}</p>
+		{/if}
+	</div>
+
+	<div class="dc-divider"></div>
+
+	<!-- Member Since -->
+	<div class="dc-section">
+		<p class="dc-section-label">Member Since</p>
+		<div class="dc-dates">
+			<span class="dc-date" title="Server joined">
+				<svg class="dc-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 1.5a5.5 5.5 0 110 11 5.5 5.5 0 010-11zM6 4v5l4 2 .75-1.25L8 8V4H6z"/></svg>
+				{formatDate(profile?.joinedAt ?? null)}
+			</span>
+			<span class="dc-date" title="Account created">
+				<svg class="dc-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M14 2H2a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1V3a1 1 0 00-1-1zm-1 10H3V4h10v8z"/></svg>
+				{formatDate(profile?.createdAt ?? null)}
+			</span>
+		</div>
+	</div>
+
+	<!-- Roles -->
+	{#if profile?.roles && profile.roles.length > 0}
+		<div class="dc-divider"></div>
+		<div class="dc-section">
+			<p class="dc-section-label">Roles</p>
+			<div class="dc-roles">
+				{#each profile.roles as role}
+					<span class="dc-role" style:border-color={role.color ?? 'var(--border-holdfast)'} style:color={role.color ?? 'var(--text-secondary)'}>
+						{#if role.color}<span class="dc-role-dot" style:background-color={role.color}></span>{/if}
+						{role.name}
+					</span>
+				{/each}
+			</div>
+		</div>
+	{/if}
+
+	<!-- Loading / Error / Refresh -->
+	<div class="dc-footer">
+		{#if loading}
+			<span class="dc-loading">Loading...</span>
+		{:else if error}
+			<span class="dc-error">{error}</span>
+		{/if}
+		<button class="dc-refresh" onclick={fetchProfile} disabled={loading} title="Refresh from Discord">
+			<svg class="dc-refresh-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M13.65 2.35A7.96 7.96 0 008 0C3.58 0 0 3.58 0 8s3.58 8 8 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 018 14 6 6 0 1114 8h-3l4-4z"/></svg>
+		</button>
+	</div>
+</div>
+
+<style>
+	.dc-card {
+		background: var(--surface);
+		border-radius: var(--radius-md);
+		border: 1px solid var(--border-holdfast);
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.dc-banner {
+		height: 60px;
+		overflow: hidden;
+		flex-shrink: 0;
+	}
+
+	.dc-banner-img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.dc-avatar-row {
+		padding: 0 0.75rem;
+		margin-top: -28px;
+		position: relative;
+		z-index: 1;
+	}
+
+	.dc-avatar {
+		width: 56px;
+		height: 56px;
+		border-radius: 50%;
+		border: 3px solid var(--surface);
+		object-fit: cover;
+		background: var(--surface-raised);
+	}
+
+	.dc-avatar-placeholder {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-weight: 700;
+		font-size: 1.25rem;
+		color: var(--accent);
+		background: var(--accent-dim);
+	}
+
+	.dc-identity {
+		padding: 0.25rem 0.75rem 0;
+	}
+
+	.dc-displayname {
+		font-size: 1rem;
+		font-weight: 700;
+		color: var(--text-primary);
+		margin: 0;
+		line-height: 1.3;
+	}
+
+	.dc-username {
+		font-size: 0.75rem;
+		color: var(--text-secondary);
+		margin: 0;
+	}
+
+	.dc-divider {
+		height: 1px;
+		background: var(--border-holdfast);
+		margin: 0.5rem 0.75rem;
+	}
+
+	.dc-section {
+		padding: 0 0.75rem;
+	}
+
+	.dc-section-label {
+		font-size: 0.6rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--text-secondary);
+		margin: 0 0 0.35rem;
+	}
+
+	.dc-dates {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	.dc-date {
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+		font-size: 0.7rem;
+		color: var(--text-primary);
+	}
+
+	.dc-icon {
+		width: 0.75rem;
+		height: 0.75rem;
+		flex-shrink: 0;
+		opacity: 0.6;
+	}
+
+	.dc-roles {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.25rem;
+	}
+
+	.dc-role {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.2rem;
+		padding: 0.1rem 0.4rem;
+		border-radius: 999px;
+		border: 1px solid;
+		font-size: 0.6rem;
+		font-weight: 500;
+		background: var(--surface-raised);
+	}
+
+	.dc-role-dot {
+		width: 0.35rem;
+		height: 0.35rem;
+		border-radius: 50%;
+		flex-shrink: 0;
+	}
+
+	.dc-footer {
+		padding: 0.5rem 0.75rem;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-top: auto;
+	}
+
+	.dc-loading, .dc-error {
+		font-size: 0.65rem;
+	}
+
+	.dc-loading { color: var(--text-secondary); }
+	.dc-error { color: var(--status-danger); }
+
+	.dc-refresh {
+		margin-left: auto;
+		padding: 0.25rem;
+		border: none;
+		border-radius: var(--radius-sm);
+		background: none;
+		color: var(--text-secondary);
+		cursor: pointer;
+		transition: all 150ms;
+	}
+
+	.dc-refresh:hover:not(:disabled) {
+		color: var(--text-primary);
+		background: var(--surface-raised);
+	}
+
+	.dc-refresh:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
+
+	.dc-refresh-icon {
+		width: 0.85rem;
+		height: 0.85rem;
+	}
+</style>
