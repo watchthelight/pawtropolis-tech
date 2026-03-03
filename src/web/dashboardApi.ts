@@ -421,6 +421,38 @@ export async function startDashboardApi(client: Client): Promise<void> {
     return { success: true, data: { appId, action: "perm_reject" } } satisfies ApiSuccess;
   });
 
+  // POST /api/users/resolve — batch resolve user identities for dashboard display
+  server.post<{ Body: { userId: string; tier: string; targetUserIds: string[] } }>("/api/users/resolve", async (request, reply) => {
+    const { userId, tier, targetUserIds } = request.body ?? {};
+    if (!userId || !tier || !targetUserIds?.length) return reply.code(400).send({ success: false, error: "Missing userId, tier, or targetUserIds" } satisfies ApiError);
+    if (!hasMinTier(tier, "gk")) return reply.code(403).send({ success: false, error: "Insufficient permissions" } satisfies ApiError);
+    if (targetUserIds.length > 50) return reply.code(400).send({ success: false, error: "Max 50 user IDs per request" } satisfies ApiError);
+
+    const guild = getGuild();
+    const resolved: Array<{ userId: string; username: string; globalName: string | null; displayName: string; avatarUrl: string | null }> = [];
+
+    for (const targetId of targetUserIds) {
+      try {
+        const user = await client.users.fetch(targetId);
+        const member = guild ? await guild.members.fetch(targetId).catch(() => null) : null;
+        cacheUser(user, GUILD_ID, member);
+        const avatarUrl = member?.displayAvatarURL({ size: 128 }) ?? user.displayAvatarURL({ size: 128 });
+        resolved.push({
+          userId: targetId,
+          username: user.username,
+          globalName: user.globalName,
+          displayName: member?.displayName ?? user.globalName ?? user.username,
+          avatarUrl,
+        });
+      } catch {
+        // User may have deleted account or left all mutual servers
+        resolved.push({ userId: targetId, username: `User ${targetId.slice(-6)}`, globalName: null, displayName: `User ${targetId.slice(-6)}`, avatarUrl: null });
+      }
+    }
+
+    return { success: true, data: { users: resolved } } satisfies ApiSuccess;
+  });
+
   // Start server
   await server.listen({ port: DASHBOARD_API_PORT, host: "0.0.0.0" });
   logger.info({ port: DASHBOARD_API_PORT }, "[dashboardApi] Dashboard API started");
