@@ -6,8 +6,9 @@
 	let app = $derived(data.app);
 	let modmail = $derived(data.modmail);
 	let sessionUserId = $derived(data.sessionUserId);
+	let canAdminUnclaim = $derived(data.canAdminUnclaim);
 </script>
 
 <SpringReveal stagger={30}>
-	<AppDetail {app} {modmail} {sessionUserId} />
+	<AppDetail {app} {modmail} {sessionUserId} {canAdminUnclaim} />
 </SpringReveal>

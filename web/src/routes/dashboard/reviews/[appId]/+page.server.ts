@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 import { getApplicationDetail } from '$lib/server/queries/reviews';
 import { getModmailForApplication } from '$lib/server/queries/modmail';
+import { hasMinTier } from '$lib/server/roles';
 import type { PageServerLoad } from './$types';
 
 const GUILD_ID = process.env.GUILD_ID!;
@@ -14,5 +15,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	const modmail = getModmailForApplication(app.userId, GUILD_ID);
 
-	return { app, modmail, sessionUserId: locals.user?.id ?? null };
+	return {
+		app,
+		modmail,
+		sessionUserId: locals.user?.id ?? null,
+		canAdminUnclaim: hasMinTier(locals.user?.tier ?? 'none', 'admin')
+	};
 };

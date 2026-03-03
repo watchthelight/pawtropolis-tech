@@ -2,11 +2,12 @@
 	import { prefersReducedMotion } from '$lib/motion';
 	import RiskAura from '$lib/components/data/RiskAura.svelte';
 
-	let { applicantName, status, submittedAt, claimedBy, riskScore, selected = false, onclick }: {
+	let { applicantName, status, submittedAt, claimedBy, claimedByName, riskScore, selected = false, onclick }: {
 		applicantName: string;
 		status: string;
 		submittedAt: number | null;
 		claimedBy: string | null;
+		claimedByName: string | null;
 		riskScore: number;
 		selected?: boolean;
 		onclick?: () => void;
@@ -63,7 +64,7 @@
 	</div>
 
 	{#if claimedBy}
-		<div class="review-card-claimed">Claimed</div>
+		<div class="review-card-claimed">Claimed by {claimedByName ?? 'unknown'}</div>
 	{/if}
 </div>
 

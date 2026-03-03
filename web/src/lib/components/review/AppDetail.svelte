@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import type { ApplicationDetail } from '$lib/server/queries/reviews';
 	import type { ModmailThreadSummary } from '$lib/server/queries/modmail';
 	import RiskAura from '$lib/components/data/RiskAura.svelte';
@@ -12,11 +12,13 @@
 	let {
 		app,
 		modmail = [],
-		sessionUserId = null
+		sessionUserId = null,
+		canAdminUnclaim = false
 	}: {
 		app: ApplicationDetail;
 		modmail?: ModmailThreadSummary[];
 		sessionUserId?: string | null;
+		canAdminUnclaim?: boolean;
 	} = $props();
 
 	let claimLoading = $state(false);
@@ -82,9 +84,11 @@
 			const result = await res.json();
 			if (!result.success) {
 				claimError = result.error;
+				invalidateAll();
 			} else {
 				setBotOnline();
 				app.claimedBy = sessionUserId;
+				app.claimedByName = null;
 				app.claimedAt = Date.now();
 				requestAnimationFrame(() => animateActionBar());
 			}
@@ -111,6 +115,7 @@
 			} else {
 				setBotOnline();
 				app.claimedBy = null;
+				app.claimedByName = null;
 				app.claimedAt = null;
 			}
 		} catch {
@@ -242,7 +247,9 @@
 					Claimed by you · {relativeTime(app.claimedAt)}
 				</p>
 			{:else if isClaimedByOther}
-				<p class="claimed-info">Claimed by {app.claimedBy}</p>
+				<p class="claimed-info" style:color={canAdminUnclaim ? claimAgeColor(app.claimedAt) : 'var(--text-secondary)'}>
+				Claimed by {app.claimedByName ?? 'unknown'}{canAdminUnclaim ? ` · ${relativeTime(app.claimedAt)}` : ''}
+			</p>
 			{/if}
 		</div>
 		<RiskAura
@@ -312,8 +319,13 @@
 			</div>
 		{:else if isResolved}
 			<span class="action-resolved">{app.status.charAt(0).toUpperCase() + app.status.slice(1)}</span>
+		{:else if isClaimedByOther && canAdminUnclaim}
+			<span class="action-placeholder">Claimed by {app.claimedByName ?? 'unknown'}</span>
+			<button class="btn btn-admin-unclaim" onclick={handleUnclaim} disabled={claimLoading || !botOnline}>
+				{claimLoading ? 'Releasing...' : !botOnline ? 'Bot offline' : 'Unclaim (Admin)'}
+			</button>
 		{:else}
-			<span class="action-placeholder">Claimed by another reviewer</span>
+			<span class="action-placeholder">Claimed by {app.claimedByName ?? 'unknown'}</span>
 		{/if}
 	</div>
 </div>
@@ -485,6 +497,18 @@
 	.btn-unclaim:hover:not(:disabled) {
 		background: var(--surface);
 		color: var(--text-primary);
+	}
+
+	.btn-admin-unclaim {
+		background: var(--surface-raised);
+		color: var(--status-warning);
+		border: 1px solid var(--status-warning);
+		margin-left: auto;
+	}
+
+	.btn-admin-unclaim:hover:not(:disabled) {
+		background: var(--status-warning);
+		color: var(--bg);
 	}
 
 	.decision-buttons {

@@ -187,6 +187,7 @@
 							status={item.status}
 							submittedAt={item.submittedAt}
 							claimedBy={item.claimedBy}
+							claimedByName={item.claimedByName}
 							riskScore={item.riskScore}
 							selected={selectedAppId() === item.id}
 							onclick={() => goto(`/dashboard/reviews/${item.id}`)}
