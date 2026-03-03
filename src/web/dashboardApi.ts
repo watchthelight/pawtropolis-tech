@@ -25,6 +25,8 @@ import { closeModmailForApplication, dashboardSendMessage, dashboardOpenThread, 
 import { postWelcomeCard } from "../features/welcome.js";
 import { shortCode } from "../lib/ids.js";
 import { cacheUser, snowflakeToTimestamp } from "../lib/userCache.js";
+import { SAFE_ALLOWED_MENTIONS } from "../lib/constants.js";
+import type { TextChannel } from "discord.js";
 
 // ===== Tier Check =====
 
@@ -97,6 +99,24 @@ export async function startDashboardApi(client: Client): Promise<void> {
     } catch { /* best-effort */ }
   }
 
+  /** Post a confirmation message in the review channel, replying to the review card. */
+  async function postReviewChannelMessage(appId: string, content: string, reviewMessageId?: string): Promise<void> {
+    try {
+      const cfg = getConfig(GUILD_ID);
+      const channelId = cfg?.review_channel_id;
+      if (!channelId) return;
+      const channel = await client.channels.fetch(channelId);
+      if (!channel || !channel.isTextBased()) return;
+      await (channel as TextChannel).send({
+        content,
+        allowedMentions: SAFE_ALLOWED_MENTIONS,
+        ...(reviewMessageId ? { reply: { messageReference: reviewMessageId, failIfNotExists: false } } : {}),
+      });
+    } catch (err) {
+      logger.warn({ err, appId }, "[dashboardApi] failed to post review channel message");
+    }
+  }
+
   // ===== Routes =====
 
   // POST /api/review/claim
@@ -122,8 +142,11 @@ export async function startDashboardApi(client: Client): Promise<void> {
       // Discord side-effects: refresh review card + audit log
       const guild = getGuild();
       if (guild) {
-        ensureReviewMessage(client, appId).catch((err) =>
-          logger.warn({ err, appId }, "[dashboardApi] failed to refresh review card after claim"));
+        const cardResult = await ensureReviewMessage(client, appId).catch((err) => {
+          logger.warn({ err, appId }, "[dashboardApi] failed to refresh review card after claim");
+          return null;
+        });
+        postReviewChannelMessage(appId, `<@${userId}> has claimed this application.`, cardResult?.messageId);
         logActionPretty(guild, { appId, appCode: shortCode(appId), actorId: userId, subjectId: app?.user_id ?? "", action: "claim" }).catch((err) =>
           logger.warn({ err, appId }, "[dashboardApi] failed to log claim action"));
       }
@@ -178,8 +201,11 @@ export async function startDashboardApi(client: Client): Promise<void> {
     const guild = getGuild();
     if (guild) {
       const appForLog = loadApplication(appId);
-      ensureReviewMessage(client, appId).catch((err) =>
-        logger.warn({ err, appId }, "[dashboardApi] failed to refresh review card after unclaim"));
+      const cardResult = await ensureReviewMessage(client, appId).catch((err) => {
+        logger.warn({ err, appId }, "[dashboardApi] failed to refresh review card after unclaim");
+        return null;
+      });
+      postReviewChannelMessage(appId, `<@${userId}> has unclaimed this application.`, cardResult?.messageId);
       logActionPretty(guild, { appId, appCode: shortCode(appId), actorId: userId, subjectId: appForLog?.user_id ?? "", action: "unclaim" }).catch((err) =>
         logger.warn({ err, appId }, "[dashboardApi] failed to log unclaim action"));
     }
@@ -246,9 +272,12 @@ export async function startDashboardApi(client: Client): Promise<void> {
         logger.warn({ err, appId }, "[dashboardApi] failed to auto-close modmail on approve"));
     }
 
-    // Refresh review card in Discord
-    ensureReviewMessage(client, appId).catch((err) =>
-      logger.warn({ err, appId }, "[dashboardApi] failed to refresh review card after approve"));
+    // Refresh review card in Discord + post confirmation
+    const approveCard = await ensureReviewMessage(client, appId).catch((err) => {
+      logger.warn({ err, appId }, "[dashboardApi] failed to refresh review card after approve");
+      return null;
+    });
+    postReviewChannelMessage(appId, "Application approved.", approveCard?.messageId);
 
     cacheModerator(userId);
     notifyDashboard("review:approved", { appId, reviewerId: userId, action: "approve", reason });
@@ -298,9 +327,12 @@ export async function startDashboardApi(client: Client): Promise<void> {
         logger.warn({ err, appId }, "[dashboardApi] failed to auto-close modmail on reject"));
     }
 
-    // Refresh review card in Discord
-    ensureReviewMessage(client, appId).catch((err) =>
-      logger.warn({ err, appId }, "[dashboardApi] failed to refresh review card after reject"));
+    // Refresh review card in Discord + post confirmation
+    const rejectCard = await ensureReviewMessage(client, appId).catch((err) => {
+      logger.warn({ err, appId }, "[dashboardApi] failed to refresh review card after reject");
+      return null;
+    });
+    postReviewChannelMessage(appId, "Application rejected.", rejectCard?.messageId);
 
     cacheModerator(userId);
     notifyDashboard("review:rejected", { appId, reviewerId: userId, action: "reject", reason });
@@ -349,9 +381,12 @@ export async function startDashboardApi(client: Client): Promise<void> {
         logger.warn({ err, appId }, "[dashboardApi] failed to auto-close modmail on kick"));
     }
 
-    // Refresh review card in Discord
-    ensureReviewMessage(client, appId).catch((err) =>
-      logger.warn({ err, appId }, "[dashboardApi] failed to refresh review card after kick"));
+    // Refresh review card in Discord + post confirmation
+    const kickCard = await ensureReviewMessage(client, appId).catch((err) => {
+      logger.warn({ err, appId }, "[dashboardApi] failed to refresh review card after kick");
+      return null;
+    });
+    postReviewChannelMessage(appId, "Application kicked.", kickCard?.messageId);
 
     cacheModerator(userId);
     notifyDashboard("review:kicked", { appId, reviewerId: userId, action: "kick", reason });
@@ -401,9 +436,12 @@ export async function startDashboardApi(client: Client): Promise<void> {
         logger.warn({ err, appId }, "[dashboardApi] failed to auto-close modmail on perm_reject"));
     }
 
-    // Refresh review card in Discord
-    ensureReviewMessage(client, appId).catch((err) =>
-      logger.warn({ err, appId }, "[dashboardApi] failed to refresh review card after perm_reject"));
+    // Refresh review card in Discord + post confirmation
+    const permRejectCard = await ensureReviewMessage(client, appId).catch((err) => {
+      logger.warn({ err, appId }, "[dashboardApi] failed to refresh review card after perm_reject");
+      return null;
+    });
+    postReviewChannelMessage(appId, "Application permanently rejected.", permRejectCard?.messageId);
 
     cacheModerator(userId);
     notifyDashboard("review:permrejected", { appId, reviewerId: userId, action: "perm_reject", reason });
