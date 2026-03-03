@@ -43,6 +43,7 @@ import {
 } from "../flows/index.js";
 
 import { ensureReviewMessage } from "../../review.js";
+import { cacheUser } from "../../../lib/userCache.js";
 
 // ===== Action Runner Functions =====
 
@@ -98,6 +99,10 @@ export async function runApproveAction(
     e.addEntity({ type: "application", id: app.id, code: shortCode(app.id) });
     e.addAttr("applicantId", app.user_id);
   });
+
+  // Cache moderator identity for dashboard display
+  const member = interaction.member instanceof GuildMember ? interaction.member : null;
+  cacheUser(interaction.user, guild.id, member);
 
   const cfg = getConfig(guild.id);
   let approvedMember: GuildMember | null = null;
@@ -285,6 +290,12 @@ export async function runRejectAction(
     e.addAttr("reason", trimmed.slice(0, 100));
   });
 
+  // Cache moderator identity for dashboard display
+  if (interaction.guild) {
+    const member = interaction.member instanceof GuildMember ? interaction.member : null;
+    cacheUser(interaction.user, interaction.guild.id, member);
+  }
+
   const user = await interaction.client.users.fetch(app.user_id).catch(() => null);
   const guildName = interaction.guild?.name ?? "this server";
   let dmDelivered = false;
@@ -419,6 +430,12 @@ export async function runPermRejectAction(
     e.addAttr("applicantId", app.user_id);
     e.addAttr("reason", trimmed.slice(0, 100));
   });
+
+  // Cache moderator identity for dashboard display
+  if (interaction.guild) {
+    const member = interaction.member instanceof GuildMember ? interaction.member : null;
+    cacheUser(interaction.user, interaction.guild.id, member);
+  }
 
   const user = await interaction.client.users.fetch(app.user_id).catch(() => null);
   const guildName = interaction.guild?.name ?? "this server";
@@ -563,6 +580,10 @@ export async function runKickAction(
     e.addAttr("applicantId", app.user_id);
     if (reason) e.addAttr("reason", reason.slice(0, 100));
   });
+
+  // Cache moderator identity for dashboard display
+  const kickMember = interaction.member instanceof GuildMember ? interaction.member : null;
+  cacheUser(interaction.user, guild.id, kickMember);
 
   const flow = await kickFlow(guild, app.user_id, reason ?? undefined);
   updateReviewActionMeta(tx.reviewActionId, flow);

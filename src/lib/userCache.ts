@@ -27,7 +27,7 @@ const UPSERT_SQL = `
  */
 export function cacheUser(user: User, guildId: string, member?: GuildMember | null): void {
   try {
-    const avatarUrl = user.displayAvatarURL({ size: 128 });
+    const avatarUrl = member?.displayAvatarURL({ size: 128 }) ?? user.displayAvatarURL({ size: 128 });
     const displayName = member?.displayName ?? user.globalName ?? user.username;
     db.prepare(UPSERT_SQL).run(
       user.id,

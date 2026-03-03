@@ -21,6 +21,7 @@ import { logActionPretty } from "../../../logging/pretty.js";
 
 import type { ApplicationRow } from "../types.js";
 import { ensureReviewMessage } from "../../review.js";
+import { cacheUser } from "../../../lib/userCache.js";
 
 // ===== Claim Handlers =====
 
@@ -109,6 +110,12 @@ export async function handleClaimToggle(interaction: ButtonInteraction, app: App
     "[review] application claimed successfully"
   );
 
+  // Cache moderator identity for dashboard display
+  if (interaction.guild) {
+    const member = interaction.member && "displayAvatarURL" in interaction.member ? interaction.member as import("discord.js").GuildMember : null;
+    cacheUser(interaction.user, app.guild_id, member);
+  }
+
   // Log claim action via pretty embed
   if (interaction.guild) {
     await logActionPretty(interaction.guild, {
@@ -196,6 +203,12 @@ export async function handleUnclaimAction(interaction: ButtonInteraction, app: A
     },
     "[review] application unclaimed successfully"
   );
+
+  // Cache moderator identity for dashboard display
+  if (interaction.guild) {
+    const member = interaction.member && "displayAvatarURL" in interaction.member ? interaction.member as import("discord.js").GuildMember : null;
+    cacheUser(interaction.user, app.guild_id, member);
+  }
 
   // Log unclaim action via pretty embed
   if (interaction.guild) {

@@ -889,6 +889,14 @@ client.on("guildMemberAdd", wrapEvent("guildMemberAdd", async (member) => {
 
   logger.debug({ userId: member.id, guildId: member.guild.id }, "[metrics] member join logged");
 
+  // Cache user identity for dashboard display
+  try {
+    const { cacheUser } = await import("./lib/userCache.js");
+    cacheUser(member.user, member.guild.id, member);
+  } catch (err) {
+    logger.debug({ err, userId: member.id }, "[guildMemberAdd] failed to cache user");
+  }
+
   // Track join for Silent-Since-Join detection (PR8)
   const { trackJoin } = await import("./features/activityTracker.js");
   const joinedAt = Math.floor((member.joinedTimestamp || Date.now()) / 1000);
