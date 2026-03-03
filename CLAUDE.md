@@ -153,6 +153,18 @@ All deploy scripts use `pawtropolis` as the SSH alias, matching the SSH config.
 - **Port**: 3000 (proxied via Nginx)
 - **Design**: Indie game polish, dynamic Discord identity theming, no template aesthetic
 
+## MCP Servers (Browser Tools)
+Available via Claude Max subscription — use for web dashboard dev/testing:
+- **chrome-devtools**: Chrome DevTools Protocol — inspect pages, take screenshots/snapshots, performance traces, network/console monitoring, evaluate JS
+- **playwright**: Playwright browser automation — navigate, click, fill forms, take snapshots/screenshots, multi-tab support
+- **lighthouse**: Lighthouse auditing — performance scores, accessibility, SEO, best practices (target: 95+)
+
+Use cases:
+- Test web dashboard UI at `https://pawtropolis.tech` or `http://localhost:3000`
+- Run Lighthouse audits to verify performance targets
+- Debug SSE real-time updates, OAuth flows, animation performance
+- Take screenshots for visual regression checks
+
 ## Important Notes
 - Node >= 20.0.0 required
 - ESM modules (`"type": "module"`)
