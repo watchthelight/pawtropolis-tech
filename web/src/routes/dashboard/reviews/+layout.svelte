@@ -2,6 +2,8 @@
 	import { onDestroy } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto, invalidateAll } from '$app/navigation';
+	import { slide } from 'svelte/transition';
+	import { flip } from 'svelte/animate';
 	import { subscribe, unsubscribe } from '$lib/stores/sse.svelte';
 	import type { SSEEvent } from '$lib/types/events';
 	import PageHeader from '$lib/components/layout/PageHeader.svelte';
@@ -183,6 +185,7 @@
 					onscroll={onQueueScroll}
 				>
 					{#each filteredItems as item (item.id)}
+						<div transition:slide={{ duration: 200 }} animate:flip={{ duration: 200 }}>
 						<ReviewCard
 							applicantName={item.applicantName}
 							avatarUrl={item.avatarUrl}
@@ -194,6 +197,7 @@
 							selected={selectedAppId() === item.id}
 							onclick={() => goto(`/dashboard/reviews/${item.id}`)}
 						/>
+						</div>
 					{/each}
 				</div>
 				{#if glowRect}

@@ -9,6 +9,7 @@
 	import type { CachedProfile } from '$lib/server/queries/reviews';
 	import { setBotOffline, setBotOnline, getBotOnline } from '$lib/stores/bot-status.svelte';
 	import { relativeTime } from '$lib/utils/time';
+	import gsap from 'gsap';
 
 	let {
 		app,
@@ -26,6 +27,7 @@
 
 	let claimLoading = $state(false);
 	let claimError = $state<string | null>(null);
+	let detailBody: HTMLElement;
 
 	// Flip state: 'answers' (front) or 'modmail' (back)
 	let showModmail = $state(false);
@@ -107,7 +109,7 @@
 
 	// === Decision Actions ===
 
-	type DecisionAction = 'approve' | 'reject' | 'kick';
+	type DecisionAction = 'approve' | 'reject' | 'kick' | 'permreject';
 
 	let activeAction = $state<DecisionAction | null>(null);
 	let reasonText = $state('');
@@ -165,11 +167,15 @@
 		decisionLoading = true;
 		decisionError = null;
 		try {
+			const controller = new AbortController();
+			const timeout = setTimeout(() => controller.abort(), 5000);
 			const res = await fetch(`/api/review/${action}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ appId: app.id, ...(reason ? { reason } : {}) })
+				body: JSON.stringify({ appId: app.id, ...(reason ? { reason } : {}) }),
+				signal: controller.signal
 			});
+			clearTimeout(timeout);
 			const result = await res.json();
 			if (!result.success) {
 				decisionError = result.error;
@@ -178,16 +184,32 @@
 			}
 
 			setBotOnline();
-			const labels: Record<DecisionAction, string> = { approve: 'Approved', reject: 'Rejected', kick: 'Kicked' };
+			const labels: Record<DecisionAction, string> = { approve: 'Approved', reject: 'Rejected', kick: 'Kicked', permreject: 'Permanently Rejected' };
 			decisionDone = labels[action];
 			decisionError = null;
 			activeAction = null;
 			decisionLoading = false;
-			setTimeout(() => goto('/dashboard/reviews'), 800);
-		} catch {
-			decisionError = 'Failed to connect';
+
+			// Sweep animation then navigate to unclaimed tab
+			if (detailBody) {
+				gsap.to(detailBody, {
+					x: 80,
+					opacity: 0,
+					duration: 0.35,
+					ease: 'power2.in',
+					onComplete: () => goto('/dashboard/reviews?tab=unclaimed')
+				});
+			} else {
+				setTimeout(() => goto('/dashboard/reviews?tab=unclaimed'), 400);
+			}
+		} catch (err) {
+			if (err instanceof DOMException && err.name === 'AbortError') {
+				decisionError = 'Request timed out';
+			} else {
+				decisionError = 'Failed to connect';
+				setBotOffline();
+			}
 			decisionLoading = false;
-			setBotOffline();
 		}
 	}
 
@@ -196,7 +218,7 @@
 
 <div class="app-detail">
 	<!-- Two-panel body -->
-	<div class="detail-body">
+	<div class="detail-body" bind:this={detailBody}>
 		<!-- Left: Discord Profile Card -->
 		<div class="profile-col">
 			<DiscordProfileCard userId={app.userId} avatarUrl={app.avatarUrl} applicantName={app.applicantName} {cachedProfile} />
@@ -273,7 +295,7 @@
 				disabled={decisionLoading}
 			/>
 			<button class="btn btn-{activeAction}" onclick={submitReason} disabled={decisionLoading || (activeAction !== 'approve' && !reasonText.trim())}>
-				{decisionLoading ? 'Sending...' : activeAction === 'approve' ? 'Approve' : activeAction === 'reject' ? 'Reject' : 'Kick'}
+				{decisionLoading ? 'Sending...' : activeAction === 'approve' ? 'Approve' : activeAction === 'reject' ? 'Reject' : activeAction === 'permreject' ? 'Perm Reject' : 'Kick'}
 			</button>
 			<button class="btn btn-cancel" onclick={cancelDecision} disabled={decisionLoading}>Cancel</button>
 		{:else if isUnclaimed}
@@ -290,6 +312,9 @@
 				</button>
 				<button class="btn btn-reject" onclick={() => startDecision('reject')} disabled={decisionLoading || !botOnline}>Reject</button>
 				<button class="btn btn-kick" onclick={() => startDecision('kick')} disabled={decisionLoading || !botOnline}>Kick</button>
+				{#if canAdminUnclaim}
+					<button class="btn btn-permreject" onclick={() => startDecision('permreject')} disabled={decisionLoading || !botOnline}>Perm Reject</button>
+				{/if}
 			</div>
 		{:else if isResolved}
 			<span class="action-resolved">{app.status.charAt(0).toUpperCase() + app.status.slice(1)}</span>
@@ -488,6 +513,8 @@
 	.btn-approve { background: var(--status-success); color: var(--bg); }
 	.btn-reject { background: var(--status-warning); color: var(--bg); }
 	.btn-kick { background: var(--status-danger); color: var(--bg); }
+	.btn-permreject { background: var(--bg); color: var(--status-danger); border: 2px solid var(--status-danger); font-weight: 700; }
+	.btn-permreject:hover:not(:disabled) { background: var(--status-danger); color: var(--bg); box-shadow: 0 0 16px oklch(70% 0.15 25 / 0.4); }
 	.btn-cancel { background: var(--surface-raised); color: var(--text-secondary); border: 1px solid var(--border-holdfast); }
 	.btn-cancel:hover:not(:disabled) { color: var(--text-primary); }
 	.btn-undo { background: var(--surface-raised); color: var(--status-danger); border: 1px solid var(--status-danger); }

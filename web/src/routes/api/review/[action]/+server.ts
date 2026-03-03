@@ -3,10 +3,11 @@ import type { RequestHandler } from './$types';
 import { callBotApi } from '$lib/server/botApi';
 import { hasMinTier } from '$lib/server/roles';
 
-const VALID_ACTIONS = ['claim', 'unclaim', 'approve', 'reject', 'kick'] as const;
+const VALID_ACTIONS = ['claim', 'unclaim', 'approve', 'reject', 'kick', 'permreject'] as const;
 type ReviewAction = (typeof VALID_ACTIONS)[number];
 
-const REASON_REQUIRED: ReviewAction[] = ['reject', 'kick'];
+const REASON_REQUIRED: ReviewAction[] = ['reject', 'kick', 'permreject'];
+const ADMIN_REQUIRED: ReviewAction[] = ['permreject'];
 
 export const POST: RequestHandler = async ({ params, locals, request }) => {
 	const action = params.action as string;
@@ -19,7 +20,8 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
 		error(401, 'Not authenticated');
 	}
 
-	if (!hasMinTier(locals.user.tier, 'gk')) {
+	const minTier = ADMIN_REQUIRED.includes(action as ReviewAction) ? 'admin' : 'gk';
+	if (!hasMinTier(locals.user.tier, minTier)) {
 		error(403, 'Insufficient permissions');
 	}
 
