@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import type { ApplicationDetail } from '$lib/server/queries/reviews';
 	import type { ModmailThreadSummary } from '$lib/server/queries/modmail';
 	import RiskAura from '$lib/components/data/RiskAura.svelte';
@@ -21,6 +21,12 @@
 	let claimError = $state<string | null>(null);
 	let actionBar: HTMLElement;
 
+	// Reactive tick so stale claim indicator updates over time
+	let now = $state(Date.now());
+	let tickInterval: ReturnType<typeof setInterval> | undefined;
+	onMount(() => { tickInterval = setInterval(() => { now = Date.now(); }, 60_000); });
+	onDestroy(() => { if (tickInterval) clearInterval(tickInterval); });
+
 	function animateClaimSuccess() {
 		if (!actionBar) return;
 		gsap.from(actionBar.children, {
@@ -38,7 +44,7 @@
 
 	function claimAgeColor(claimedAt: number | null): string {
 		if (!claimedAt) return 'var(--text-secondary)';
-		const hours = (Date.now() - claimedAt) / 3_600_000;
+		const hours = (now - claimedAt) / 3_600_000;
 		if (hours < 2) return 'var(--status-success)';
 		if (hours < 8) return 'var(--status-warning)';
 		return 'var(--status-danger)';
@@ -46,7 +52,7 @@
 
 	function relativeTime(ms: number | null): string {
 		if (!ms) return '';
-		const diff = Date.now() - ms;
+		const diff = now - ms;
 		const mins = Math.floor(diff / 60_000);
 		if (mins < 1) return 'just now';
 		if (mins < 60) return `${mins}m ago`;
