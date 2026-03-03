@@ -4,7 +4,8 @@
 	import { connect, disconnect, onReconnect, offReconnect, subscribe, unsubscribe } from '$lib/stores/sse.svelte';
 	import { startMonitoring, stopMonitoring } from '$lib/stores/bot-status.svelte';
 	import { initViewport, getIsMobile } from '$lib/stores/viewport.svelte';
-	import { afterNavigate, invalidateAll } from '$app/navigation';
+	import { afterNavigate, goto, invalidateAll } from '$app/navigation';
+	import { page } from '$app/stores';
 	import type { SSEEvent } from '$lib/types/events';
 	import Nav from '$lib/components/layout/Nav.svelte';
 	import ConnectionIndicator from '$lib/components/layout/ConnectionIndicator.svelte';
@@ -42,6 +43,58 @@
 		if (typeof document === 'undefined') return;
 		document.body.classList.toggle('drawer-open', isMobile && drawerOpen);
 	});
+
+	// Swipe navigation between pages (mobile only)
+	const TIER_ORDER = ['owner','cm','cdl','sa','admin','sm','mod','jm','gk','viewer','none'];
+	const NAV_ITEMS = [
+		{ href: '/dashboard',          minTier: 'gk' },
+		{ href: '/dashboard/reviews',  minTier: 'gk' },
+		{ href: '/dashboard/stats',    minTier: 'gk' },
+		{ href: '/dashboard/pulse',    minTier: 'mod' },
+		{ href: '/dashboard/flags',    minTier: 'sm' },
+		{ href: '/dashboard/heatmap',  minTier: 'sm' },
+		{ href: '/dashboard/art',      minTier: 'sm' },
+		{ href: '/dashboard/config',   minTier: 'admin' },
+		{ href: '/dashboard/audit',    minTier: 'admin' },
+		{ href: '/dashboard/security', minTier: 'sa' },
+		{ href: '/dashboard/system',   minTier: 'owner' },
+	] as const;
+
+	function hasMinTier(userTier: string, minTier: string): boolean {
+		const ui = TIER_ORDER.indexOf(userTier);
+		const mi = TIER_ORDER.indexOf(minTier);
+		return ui !== -1 && mi !== -1 && ui <= mi;
+	}
+
+	let visiblePages = $derived(NAV_ITEMS.filter(n => hasMinTier(user.tier, n.minTier)).map(n => n.href));
+
+	let touchStartX = 0;
+	let touchStartY = 0;
+
+	function onTouchStart(e: TouchEvent) {
+		touchStartX = e.touches[0].clientX;
+		touchStartY = e.touches[0].clientY;
+	}
+
+	function onTouchEnd(e: TouchEvent) {
+		if (!isMobile) return;
+		const dx = e.changedTouches[0].clientX - touchStartX;
+		const dy = e.changedTouches[0].clientY - touchStartY;
+		// Only trigger on horizontal swipes (> 60px, angle < 30°)
+		if (Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx) * 0.58) return;
+
+		const currentPath = $page.url.pathname;
+		// Match current page to its base nav item
+		const currentIdx = visiblePages.findIndex(href =>
+			href === currentPath || (href !== '/dashboard' && currentPath.startsWith(href + '/'))
+		);
+		if (currentIdx === -1) return;
+
+		const nextIdx = dx < 0 ? currentIdx + 1 : currentIdx - 1;
+		if (nextIdx >= 0 && nextIdx < visiblePages.length) {
+			goto(visiblePages[nextIdx]);
+		}
+	}
 
 	$effect(() => {
 		restoreCachedHue(user.id);
@@ -143,7 +196,12 @@
 		</button>
 	{/if}
 
-	<main class="flex-1 p-8 max-md:p-4 max-md:pt-[calc(var(--mobile-header-h)+1rem)]">
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<main
+		class="flex-1 p-8 max-md:p-4 max-md:pt-[calc(var(--mobile-header-h)+1rem)]"
+		ontouchstart={isMobile ? onTouchStart : undefined}
+		ontouchend={isMobile ? onTouchEnd : undefined}
+	>
 		{@render children()}
 	</main>
 
