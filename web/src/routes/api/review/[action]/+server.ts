@@ -39,7 +39,8 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
 		error(400, 'reason is required for this action');
 	}
 
-	const result = await callBotApi(`/api/review/${action}`, {
+	const botPath = `/api/review/${action}`;
+	const result = await callBotApi(botPath, {
 		userId: locals.user.id,
 		tier: locals.user.tier,
 		appId,
@@ -47,7 +48,14 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
 	});
 
 	if (!result.success) {
-		return json(result, { status: 400 });
+		// Map error messages to appropriate HTTP status codes
+		const errMsg = result.error.toLowerCase();
+		let status = 400;
+		if (errMsg.includes('not found')) status = 404;
+		else if (errMsg.includes('already claimed') || errMsg.includes('claimed by another') || errMsg.includes('not claimed') || errMsg.includes('not in a reviewable')) status = 409;
+		else if (errMsg.includes('permission') || errMsg.includes('insufficient')) status = 403;
+		else if (errMsg.includes('unreachable') || errMsg.includes('timed out') || errMsg.includes('offline')) status = 502;
+		return json(result, { status });
 	}
 
 	return json(result);

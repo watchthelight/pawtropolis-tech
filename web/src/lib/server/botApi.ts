@@ -54,11 +54,17 @@ export async function callBotApi<T = Record<string, unknown>>(
 
 		clearTimeout(timeout);
 
-		if (!res.ok && res.status === 401) {
+		if (res.status === 401) {
 			return { success: false, error: 'Bot API authentication failed' };
 		}
 
-		const json = await res.json();
+		let json: unknown;
+		try {
+			json = await res.json();
+		} catch {
+			return { success: false, error: `Bot API returned non-JSON response (HTTP ${res.status})` };
+		}
+
 		return json as BotApiResponse<T>;
 	} catch (err) {
 		if (err instanceof DOMException && err.name === 'AbortError') {

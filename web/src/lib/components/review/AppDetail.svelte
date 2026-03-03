@@ -1,8 +1,11 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import type { ApplicationDetail } from '$lib/server/queries/reviews';
 	import type { ModmailThreadSummary } from '$lib/server/queries/modmail';
 	import RiskAura from '$lib/components/data/RiskAura.svelte';
 	import ModmailViewer from '$lib/components/review/ModmailViewer.svelte';
+	import gsap from 'gsap';
+	import { SPRINGS } from '$lib/motion';
 
 	let {
 		app,
@@ -16,6 +19,18 @@
 
 	let claimLoading = $state(false);
 	let claimError = $state<string | null>(null);
+	let actionBar: HTMLElement;
+
+	function animateClaimSuccess() {
+		if (!actionBar) return;
+		gsap.from(actionBar.children, {
+			opacity: 0,
+			y: 8,
+			duration: 0.4,
+			ease: SPRINGS.gentle,
+			stagger: 0.06
+		});
+	}
 
 	let isClaimedByMe = $derived(app.claimedBy != null && app.claimedBy === sessionUserId);
 	let isClaimedByOther = $derived(app.claimedBy != null && app.claimedBy !== sessionUserId);
@@ -54,10 +69,10 @@
 			if (!result.success) {
 				claimError = result.error;
 			} else {
-				// Optimistic: page will reload via invalidateAll on SSE event
-				// For now, show immediate feedback
 				app.claimedBy = sessionUserId;
 				app.claimedAt = Date.now();
+				// Spring animation on the action bar after state update
+				requestAnimationFrame(() => animateClaimSuccess());
 			}
 		} catch {
 			claimError = 'Failed to connect';
@@ -141,7 +156,7 @@
 	</div>
 
 	<!-- Action bar -->
-	<div class="action-bar">
+	<div class="action-bar" bind:this={actionBar}>
 		{#if claimError}
 			<span class="claim-error">{claimError}</span>
 		{/if}
@@ -154,7 +169,11 @@
 			<button class="btn btn-unclaim" onclick={handleUnclaim} disabled={claimLoading}>
 				{claimLoading ? 'Releasing...' : 'Unclaim'}
 			</button>
-			<span class="action-placeholder">Decision actions coming soon</span>
+			<div class="decision-buttons">
+				<button class="btn btn-approve" disabled>Approve</button>
+				<button class="btn btn-reject" disabled>Reject</button>
+				<button class="btn btn-kick" disabled>Kick</button>
+			</div>
 		{:else}
 			<span class="action-placeholder">Claimed by another reviewer</span>
 		{/if}
@@ -328,5 +347,26 @@
 	.btn-unclaim:hover:not(:disabled) {
 		background: var(--surface);
 		color: var(--text-primary);
+	}
+
+	.decision-buttons {
+		display: flex;
+		gap: 0.5rem;
+		margin-left: auto;
+	}
+
+	.btn-approve {
+		background: var(--status-success);
+		color: var(--bg);
+	}
+
+	.btn-reject {
+		background: var(--status-warning);
+		color: var(--bg);
+	}
+
+	.btn-kick {
+		background: var(--status-danger);
+		color: var(--bg);
 	}
 </style>
