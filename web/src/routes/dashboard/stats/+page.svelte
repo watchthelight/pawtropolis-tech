@@ -12,6 +12,8 @@
 
 	let { data } = $props();
 	let personal = $derived(data.personal);
+	let trend = $derived(data.trend);
+	let showTrend = $derived(data.window !== 'all');
 	let hasData = $derived(personal.total > 0);
 
 	type TabId = 'mine' | 'team';
@@ -79,15 +81,24 @@
 					<!-- Stat cards row -->
 					<a href="/dashboard/reviews" class="stat-card clickable" title="View review queue">
 						<span class="card-label">// DECISIONS</span>
-						<StatNumber value={personal.total} label="" />
+						<StatNumber value={personal.total} label="" trend={showTrend ? trend.total.direction : undefined} />
+						{#if showTrend && trend.total.label}
+							<span class="trend-label">{trend.total.label}</span>
+						{/if}
 					</a>
 					<a href="/dashboard/reviews?tab=unclaimed" class="stat-card clickable" title="View unclaimed reviews">
 						<span class="card-label">// APPROVED</span>
-						<StatNumber value={personal.approvals} label="" />
+						<StatNumber value={personal.approvals} label="" trend={showTrend ? trend.approvals.direction : undefined} />
+						{#if showTrend && trend.approvals.label}
+							<span class="trend-label">{trend.approvals.label}</span>
+						{/if}
 					</a>
 					<a href="/dashboard/reviews?tab=completed" class="stat-card clickable" title="View completed reviews">
 						<span class="card-label">// REJECTED</span>
-						<StatNumber value={personal.rejections + personal.permRejects + personal.kicks} label="" />
+						<StatNumber value={personal.rejections + personal.permRejects + personal.kicks} label="" trend={showTrend ? trend.rejections.direction : undefined} />
+						{#if showTrend && trend.rejections.label}
+							<span class="trend-label">{trend.rejections.label}</span>
+						{/if}
 					</a>
 					<div class="stat-card">
 						<span class="card-label">// MODMAIL</span>
@@ -117,13 +128,35 @@
 					<!-- Avg time cards -->
 					<div class="stat-card avg-card">
 						<span class="card-label">// AVG CLAIM → DECISION</span>
-						<span class="time-value">{formatDuration(personal.avgClaimToDecisionS)}</span>
-						<span class="time-sublabel">your avg response</span>
+						<div class="time-row">
+							<span class="time-value">{formatDuration(personal.avgClaimToDecisionS)}</span>
+							{#if showTrend && trend.avgClaimToDecision.direction !== 'neutral'}
+								<span class="trend-arrow" class:trend-up={trend.avgClaimToDecision.direction === 'up'} class:trend-down={trend.avgClaimToDecision.direction === 'down'}>
+									{trend.avgClaimToDecision.direction === 'up' ? '↑' : '↓'}
+								</span>
+							{/if}
+						</div>
+						{#if showTrend && trend.avgClaimToDecision.label}
+							<span class="trend-label">{trend.avgClaimToDecision.label}</span>
+						{:else}
+							<span class="time-sublabel">your avg response</span>
+						{/if}
 					</div>
 					<div class="stat-card avg-card">
 						<span class="card-label">// AVG SUBMIT → CLAIM</span>
-						<span class="time-value">{formatDuration(personal.avgSubmitToClaimS)}</span>
-						<span class="time-sublabel">server avg queue time</span>
+						<div class="time-row">
+							<span class="time-value">{formatDuration(personal.avgSubmitToClaimS)}</span>
+							{#if showTrend && trend.avgSubmitToClaim.direction !== 'neutral'}
+								<span class="trend-arrow" class:trend-up={trend.avgSubmitToClaim.direction === 'up'} class:trend-down={trend.avgSubmitToClaim.direction === 'down'}>
+									{trend.avgSubmitToClaim.direction === 'up' ? '↑' : '↓'}
+								</span>
+							{/if}
+						</div>
+						{#if showTrend && trend.avgSubmitToClaim.label}
+							<span class="trend-label">{trend.avgSubmitToClaim.label}</span>
+						{:else}
+							<span class="time-sublabel">server avg queue time</span>
+						{/if}
 					</div>
 
 					<!-- Breakdown detail row -->
@@ -423,6 +456,35 @@
 		font-size: 0.65rem;
 		color: var(--text-secondary);
 		margin-top: 0.25rem;
+	}
+
+	.time-row {
+		display: flex;
+		align-items: baseline;
+		gap: 0.5rem;
+	}
+
+	.trend-arrow {
+		font-size: 1.1rem;
+		font-weight: 700;
+	}
+
+	.trend-up {
+		color: var(--status-success);
+	}
+
+	.trend-down {
+		color: var(--status-danger);
+	}
+
+	/* ─── Trend labels ─── */
+	.trend-label {
+		display: block;
+		font-family: var(--terminal-font);
+		font-size: 0.6rem;
+		color: var(--text-secondary);
+		margin-top: 0.25rem;
+		opacity: 0.8;
 	}
 
 	/* ─── Breakdown ─── */
