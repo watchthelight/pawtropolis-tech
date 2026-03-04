@@ -101,13 +101,59 @@ function extractImageHue(imageUrl: string): Promise<number | null> {
 
 let _activeUserId: string | null = null;
 
+/**
+ * Adaptive natural palette generator.
+ *
+ * Every seed hue gets two companions that feel like a natural landscape:
+ *   --hue-warm:  earth/amber tone  (target ~50°, bark/sand/lichen)
+ *   --hue-cool:  stone/slate tone  (target ~235°, granite/shadow/sky)
+ *
+ * If the seed is already near warm or cool, the companion shifts away
+ * to maintain at least 50° of perceptual distance.
+ *
+ * Example for green seed (145°):
+ *   warm = 50° (amber earth)  — Yosemite soil
+ *   cool = 235° (slate blue)  — granite shadows
+ */
+function generateCompanionHues(seed: number): { warm: number; cool: number } {
+	const WARM_TARGET = 50;  // amber/earth
+	const COOL_TARGET = 235; // slate/stone
+
+	// Angular distance on hue wheel (0-180)
+	const dist = (a: number, b: number) => {
+		const d = Math.abs(a - b) % 360;
+		return d > 180 ? 360 - d : d;
+	};
+
+	let warm = WARM_TARGET;
+	let cool = COOL_TARGET;
+
+	// If seed is too close to warm target, push warm away
+	if (dist(seed, warm) < 50) {
+		warm = (seed + 140) % 360; // opposite-ish, still warm-leaning
+	}
+
+	// If seed is too close to cool target, push cool away
+	if (dist(seed, cool) < 50) {
+		cool = (seed + 140) % 360; // opposite-ish, still cool-leaning
+	}
+
+	// Ensure warm and cool aren't too close to each other
+	if (dist(warm, cool) < 60) {
+		cool = (warm + 180) % 360;
+	}
+
+	return { warm: Math.round(warm), cool: Math.round(cool) };
+}
+
 function setHue(hue: number): void {
 	if (typeof document !== 'undefined') {
 		const rounded = String(Math.round(hue));
+		const { warm, cool } = generateCompanionHues(hue);
 		const root = document.documentElement.style;
 		root.setProperty('--hue', rounded);
-		root.setProperty('--hue-secondary', String(Math.round((hue + 150) % 360)));
-		root.setProperty('--hue-tertiary', String(Math.round((hue + 40) % 360)));
+		root.setProperty('--hue-warm', String(warm));
+		root.setProperty('--hue-cool', String(cool));
 		root.setProperty('--hue-complement', String(Math.round((hue + 180) % 360)));
 		if (_activeUserId) {
 			try {
@@ -128,10 +174,11 @@ export function restoreCachedHue(userId: string): void {
 		const cached = localStorage.getItem(`theme-hue-${userId}`);
 		if (cached) {
 			const h = parseInt(cached);
+			const { warm, cool } = generateCompanionHues(h);
 			const root = document.documentElement.style;
 			root.setProperty('--hue', cached);
-			root.setProperty('--hue-secondary', String((h + 150) % 360));
-			root.setProperty('--hue-tertiary', String((h + 40) % 360));
+			root.setProperty('--hue-warm', String(warm));
+			root.setProperty('--hue-cool', String(cool));
 			root.setProperty('--hue-complement', String((h + 180) % 360));
 		}
 	} catch {}
