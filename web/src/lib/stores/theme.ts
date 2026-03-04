@@ -1,3 +1,5 @@
+import { formatHex, clampChroma } from 'culori';
+
 export const FALLBACK_HUE = 250;
 
 /**
@@ -102,65 +104,72 @@ function extractImageHue(imageUrl: string): Promise<number | null> {
 let _activeUserId: string | null = null;
 
 /**
- * Adaptive natural palette generator.
- *
- * Every seed hue gets two companions that feel like a natural landscape:
- *   --hue-warm:  earth/amber tone  (target ~50°, bark/sand/lichen)
- *   --hue-cool:  stone/slate tone  (target ~235°, granite/shadow/sky)
- *
- * If the seed is already near warm or cool, the companion shifts away
- * to maintain at least 50° of perceptual distance.
- *
- * Example for green seed (145°):
- *   warm = 50° (amber earth)  — Yosemite soil
- *   cool = 235° (slate blue)  — granite shadows
+ * Generate a gamut-safe hex color from OKLCH values using culori's clampChroma.
+ * This ensures colors are displayable in sRGB without ugly clipping.
  */
-function generateCompanionHues(seed: number): { warm: number; cool: number } {
-	const WARM_TARGET = 50;  // amber/earth
-	const COOL_TARGET = 235; // slate/stone
-
-	// Angular distance on hue wheel (0-180)
-	const dist = (a: number, b: number) => {
-		const d = Math.abs(a - b) % 360;
-		return d > 180 ? 360 - d : d;
-	};
-
-	let warm = WARM_TARGET;
-	let cool = COOL_TARGET;
-
-	// If seed is too close to warm target, push warm away
-	if (dist(seed, warm) < 50) {
-		warm = (seed + 140) % 360; // opposite-ish, still warm-leaning
-	}
-
-	// If seed is too close to cool target, push cool away
-	if (dist(seed, cool) < 50) {
-		cool = (seed + 140) % 360; // opposite-ish, still cool-leaning
-	}
-
-	// Ensure warm and cool aren't too close to each other
-	if (dist(warm, cool) < 60) {
-		cool = (warm + 180) % 360;
-	}
-
-	return { warm: Math.round(warm), cool: Math.round(cool) };
+function safeOklchHex(l: number, c: number, h: number): string {
+	return formatHex(clampChroma({ mode: 'oklch', l, c, h }, 'oklch')) ?? '#000000';
 }
 
-function setHue(hue: number): void {
-	if (typeof document !== 'undefined') {
-		const rounded = String(Math.round(hue));
-		const { warm, cool } = generateCompanionHues(hue);
-		const root = document.documentElement.style;
-		root.setProperty('--hue', rounded);
-		root.setProperty('--hue-warm', String(warm));
-		root.setProperty('--hue-cool', String(cool));
-		root.setProperty('--hue-complement', String(Math.round((hue + 180) % 360)));
-		if (_activeUserId) {
-			try {
-				localStorage.setItem(`theme-hue-${_activeUserId}`, rounded);
-				localStorage.setItem('theme-last-uid', _activeUserId);
-			} catch {}
-		}
+/**
+ * Triadic palette generation using culori + OKLCH.
+ *
+ * From one seed hue, generates two companion hues at +120° and +240° (triadic).
+ * OKLCH is perceptually uniform, so equal angular distance = equal visual difference.
+ *
+ * Examples of genuinely different palettes:
+ *   green (145°) → warm=265° (violet), cool=25° (warm coral)
+ *   blue (220°)  → warm=340° (rose),   cool=100° (lime)
+ *   red (25°)    → warm=145° (green),   cool=265° (violet)
+ *
+ * Also generates pre-computed accent hex colors at key lightness stops
+ * for CSS consumption, ensuring gamut safety via culori's clampChroma.
+ */
+function generatePalette(seed: number) {
+	const warm = Math.round((seed + 120) % 360); // triadic companion 1
+	const cool = Math.round((seed + 240) % 360); // triadic companion 2
+	const complement = Math.round((seed + 180) % 360);
+
+	// Pre-compute key accent colors at gamut-safe chroma values
+	// These are injected as CSS custom properties for components that need hex
+	return {
+		warm,
+		cool,
+		complement,
+		// Accent swatches (seed hue)
+		accentHex: safeOklchHex(0.72, 0.18, seed),
+		accentDimHex: safeOklchHex(0.40, 0.10, seed),
+		// Warm swatches (triadic +120°)
+		warmHex: safeOklchHex(0.68, 0.12, warm),
+		warmDimHex: safeOklchHex(0.38, 0.06, warm),
+		// Cool swatches (triadic +240°)
+		coolHex: safeOklchHex(0.65, 0.10, cool),
+		coolDimHex: safeOklchHex(0.36, 0.05, cool),
+	};
+}
+
+function applyPalette(hue: number): void {
+	if (typeof document === 'undefined') return;
+	const rounded = String(Math.round(hue));
+	const p = generatePalette(hue);
+	const root = document.documentElement.style;
+
+	// Hue seeds (consumed by oklch() in CSS custom properties)
+	root.setProperty('--hue', rounded);
+	root.setProperty('--hue-warm', String(p.warm));
+	root.setProperty('--hue-cool', String(p.cool));
+	root.setProperty('--hue-complement', String(p.complement));
+
+	// Pre-computed gamut-safe hex colors (for SVG fills, canvas, etc.)
+	root.setProperty('--accent-hex', p.accentHex);
+	root.setProperty('--warm-hex', p.warmHex);
+	root.setProperty('--cool-hex', p.coolHex);
+
+	if (_activeUserId) {
+		try {
+			localStorage.setItem(`theme-hue-${_activeUserId}`, rounded);
+			localStorage.setItem('theme-last-uid', _activeUserId);
+		} catch {}
 	}
 }
 
@@ -172,15 +181,7 @@ export function restoreCachedHue(userId: string): void {
 	if (typeof document === 'undefined') return;
 	try {
 		const cached = localStorage.getItem(`theme-hue-${userId}`);
-		if (cached) {
-			const h = parseInt(cached);
-			const { warm, cool } = generateCompanionHues(h);
-			const root = document.documentElement.style;
-			root.setProperty('--hue', cached);
-			root.setProperty('--hue-warm', String(warm));
-			root.setProperty('--hue-cool', String(cool));
-			root.setProperty('--hue-complement', String((h + 180) % 360));
-		}
+		if (cached) applyPalette(parseInt(cached));
 	} catch {}
 }
 
@@ -194,7 +195,7 @@ export function applyTheme(accentColor: number | null, avatarUrl?: string | null
 	if (accentColor && accentColor !== 0) {
 		const hue = accentColorToHue(accentColor);
 		if (hue != null) {
-			setHue(hue);
+			applyPalette(hue);
 			return;
 		}
 	}
@@ -203,13 +204,13 @@ export function applyTheme(accentColor: number | null, avatarUrl?: string | null
 	if (avatarUrl && typeof document !== 'undefined') {
 		extractImageHue(avatarUrl).then((hue) => {
 			if (hue != null) {
-				setHue(hue);
+				applyPalette(hue);
 			} else {
-				setHue(FALLBACK_HUE);
+				applyPalette(FALLBACK_HUE);
 			}
 		});
 		return;
 	}
 
-	setHue(FALLBACK_HUE);
+	applyPalette(FALLBACK_HUE);
 }
