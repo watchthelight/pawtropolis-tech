@@ -2,6 +2,7 @@ import { error } from '@sveltejs/kit';
 import { hasMinTier } from '$lib/server/roles';
 import {
 	getPersonalStats,
+	getPersonalStatsTrend,
 	getActivityTimeline,
 	getResponseTrend,
 	windowStartForWindow,
@@ -29,8 +30,9 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const days = windowDaysForWindow(window);
 
 	const personal = getPersonalStats(userId, guildId, days);
+	const trend = getPersonalStatsTrend(userId, guildId, window);
 	const timeline = getActivityTimeline(userId, guildId, windowStartS);
 	const responseTrend = getResponseTrend(userId, guildId, windowStartS);
 
-	return { personal, timeline, responseTrend, window, windowDays: days };
+	return { personal, trend, timeline, responseTrend, window, windowDays: days };
 };
