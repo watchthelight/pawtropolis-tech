@@ -155,7 +155,7 @@
 	}
 
 	.axis-label {
-		font-family: var(--terminal-font);
+
 		font-size: 0.6rem;
 		fill: var(--text-secondary);
 	}
@@ -165,7 +165,7 @@
 	}
 
 	.empty {
-		font-family: var(--terminal-font);
+
 		font-size: 0.75rem;
 		color: var(--text-secondary);
 		padding: 2rem;

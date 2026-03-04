@@ -107,14 +107,14 @@
 	}
 
 	.center-value {
-		font-family: var(--terminal-font);
+
 		font-size: 1.8rem;
 		font-weight: 700;
 		fill: var(--text-primary);
 	}
 
 	.center-label {
-		font-family: var(--terminal-font);
+
 		font-size: 0.5rem;
 		letter-spacing: 0.15em;
 		fill: var(--text-secondary);
@@ -131,7 +131,7 @@
 		display: flex;
 		align-items: center;
 		gap: 6px;
-		font-family: var(--terminal-font);
+
 		font-size: 0.7rem;
 	}
 

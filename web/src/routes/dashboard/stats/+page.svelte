@@ -244,10 +244,9 @@
 	}
 
 	.tab-chip {
-		font-family: var(--terminal-font);
-		font-size: 0.65rem;
+		font-size: 0.75rem;
 		font-weight: 600;
-		letter-spacing: 0.12em;
+		letter-spacing: 0.04em;
 		padding: 5px 12px;
 		border: 1px solid var(--border);
 		border-radius: 4px;
@@ -441,7 +440,6 @@
 
 	.time-value {
 		display: block;
-		font-family: var(--terminal-font);
 		font-size: 1.8rem;
 		font-weight: 700;
 		color: var(--text-primary);
@@ -450,8 +448,7 @@
 
 	.time-sublabel {
 		display: block;
-		font-family: var(--terminal-font);
-		font-size: 0.65rem;
+		font-size: 0.75rem;
 		color: var(--text-secondary);
 		margin-top: 0.25rem;
 	}
@@ -478,8 +475,7 @@
 	/* ─── Trend labels ─── */
 	.trend-label {
 		display: block;
-		font-family: var(--terminal-font);
-		font-size: 0.6rem;
+		font-size: 0.7rem;
 		color: var(--text-secondary);
 		margin-top: 0.25rem;
 		opacity: 0.8;
@@ -494,8 +490,7 @@
 	}
 
 	.breakdown-tag {
-		font-family: var(--terminal-font);
-		font-size: 0.65rem;
+		font-size: 0.75rem;
 		color: var(--text-secondary);
 		background: var(--surface);
 		border: 1px solid var(--border);
@@ -505,8 +500,7 @@
 
 	/* ─── Window label ─── */
 	.window-label {
-		font-family: var(--terminal-font);
-		font-size: 0.65rem;
+		font-size: 0.75rem;
 		color: var(--text-secondary);
 		margin-top: 1rem;
 		opacity: 0.6;

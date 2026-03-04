@@ -41,7 +41,7 @@
 	}
 
 	.chip {
-		font-family: var(--terminal-font);
+
 		font-size: 0.7rem;
 		font-weight: 600;
 		letter-spacing: 0.12em;
