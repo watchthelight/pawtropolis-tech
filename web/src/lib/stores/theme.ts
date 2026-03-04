@@ -104,9 +104,11 @@ let _activeUserId: string | null = null;
 function setHue(hue: number): void {
 	if (typeof document !== 'undefined') {
 		const rounded = String(Math.round(hue));
-		const secondary = String(Math.round((hue + 150) % 360));
-		document.documentElement.style.setProperty('--hue', rounded);
-		document.documentElement.style.setProperty('--hue-secondary', secondary);
+		const root = document.documentElement.style;
+		root.setProperty('--hue', rounded);
+		root.setProperty('--hue-secondary', String(Math.round((hue + 150) % 360)));
+		root.setProperty('--hue-tertiary', String(Math.round((hue + 40) % 360)));
+		root.setProperty('--hue-complement', String(Math.round((hue + 180) % 360)));
 		if (_activeUserId) {
 			try {
 				localStorage.setItem(`theme-hue-${_activeUserId}`, rounded);
@@ -125,8 +127,12 @@ export function restoreCachedHue(userId: string): void {
 	try {
 		const cached = localStorage.getItem(`theme-hue-${userId}`);
 		if (cached) {
-			document.documentElement.style.setProperty('--hue', cached);
-			document.documentElement.style.setProperty('--hue-secondary', String((parseInt(cached) + 150) % 360));
+			const h = parseInt(cached);
+			const root = document.documentElement.style;
+			root.setProperty('--hue', cached);
+			root.setProperty('--hue-secondary', String((h + 150) % 360));
+			root.setProperty('--hue-tertiary', String((h + 40) % 360));
+			root.setProperty('--hue-complement', String((h + 180) % 360));
 		}
 	} catch {}
 }

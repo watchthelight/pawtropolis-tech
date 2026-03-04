@@ -12,28 +12,32 @@
 
 :root {
 	/* ── Hue seeds ──
-	   --hue from Discord accentColor, set dynamically by theme store.
-	   --hue-secondary is split-complementary (+150°) for natural contrast. */
+	   --hue: from Discord accentColor, set dynamically by theme store.
+	   --hue-secondary: split-complementary (+150°) for natural contrast.
+	   --hue-tertiary: analogous (+40°) for warm variety.
+	   --hue-complement: direct complement (+180°) for pop accents. */
 	--hue: 250;
 	--hue-secondary: calc(var(--hue) + 150);
+	--hue-tertiary: calc(var(--hue) + 40);
+	--hue-complement: calc(var(--hue) + 180);
 
-	/* ── Surfaces (wider contrast spread for stronger depth) ── */
-	--bg: oklch(10% 0.02 var(--hue));
-	--surface: oklch(16% 0.03 var(--hue));
+	/* ── Surfaces (softened for comfortable reading) ── */
+	--bg: oklch(12% 0.02 var(--hue));
+	--surface: oklch(17% 0.03 var(--hue));
 	--surface-raised: oklch(22% 0.035 var(--hue));
-	--surface-overlay: oklch(28% 0.04 var(--hue));
+	--surface-overlay: oklch(27% 0.04 var(--hue));
 
 	/* ── Borders (3 tiers) ── */
-	--border: oklch(28% 0.03 var(--hue));
-	--border-holdfast: oklch(34% 0.04 var(--hue));
-	--border-strong: oklch(42% 0.05 var(--hue));
+	--border: oklch(27% 0.03 var(--hue));
+	--border-holdfast: oklch(33% 0.04 var(--hue));
+	--border-strong: oklch(40% 0.05 var(--hue));
 
-	/* ── Text (4 levels + on-accent) ── */
-	--text-primary: oklch(95% 0.01 var(--hue));
-	--text-secondary: oklch(75% 0.025 var(--hue));
-	--text-tertiary: oklch(58% 0.02 var(--hue));
-	--text-muted: oklch(45% 0.02 var(--hue));
-	--text-on-accent: oklch(10% 0.02 var(--hue));
+	/* ── Text (4 levels + on-accent — softened primaries for less eye strain) ── */
+	--text-primary: oklch(90% 0.015 var(--hue));
+	--text-secondary: oklch(68% 0.03 var(--hue));
+	--text-tertiary: oklch(54% 0.025 var(--hue));
+	--text-muted: oklch(42% 0.02 var(--hue));
+	--text-on-accent: oklch(12% 0.02 var(--hue));
 
 	/* ── Primary accent (5 shades) ── */
 	--accent: oklch(72% 0.18 var(--hue));
@@ -48,10 +52,19 @@
 	--secondary-soft: oklch(23% 0.05 var(--hue-secondary));
 	--secondary-strong: oklch(78% 0.20 var(--hue-secondary));
 
+	/* ── Tertiary accent (analogous hue — warm variety) ── */
+	--tertiary: oklch(68% 0.14 var(--hue-tertiary));
+	--tertiary-dim: oklch(36% 0.07 var(--hue-tertiary));
+	--tertiary-soft: oklch(22% 0.04 var(--hue-tertiary));
+
+	/* ── Complement accent (pop moments) ── */
+	--complement: oklch(65% 0.14 var(--hue-complement));
+	--complement-dim: oklch(35% 0.07 var(--hue-complement));
+
 	/* ── Interactive states ── */
 	--hover-bg: oklch(20% 0.04 var(--hue));
 	--active-bg: oklch(24% 0.05 var(--hue));
-	--selected-bg: oklch(22% 0.06 var(--hue));
+	--selected-bg: oklch(22% 0.06 var(--hue-tertiary));
 
 	/* ── Warm shadows — hue ~40 (warm amber) for cozy depth regardless of accent ── */
 	--shadow-sm: 0 1px 3px oklch(5% 0.02 40 / 0.3);
@@ -63,6 +76,8 @@
 	--glow-hover: 0 0 20px oklch(72% 0.18 var(--hue) / 0.3);
 	--glow-strong: 0 0 28px oklch(72% 0.18 var(--hue) / 0.4);
 	--glow-secondary: 0 0 14px oklch(70% 0.15 var(--hue-secondary) / 0.2);
+	--glow-tertiary: 0 0 12px oklch(68% 0.14 var(--hue-tertiary) / 0.18);
+	--glow-complement: 0 0 10px oklch(65% 0.14 var(--hue-complement) / 0.15);
 
 	/* ── Constrained radii — pixel art discipline, exactly 3 values ── */
 	--radius-sm: 6px;
@@ -147,7 +162,7 @@ body::after {
 
 /* Micro-gradient — subtle top-lit surface, opt-in per component */
 .surface-gradient {
-	background: linear-gradient(180deg, oklch(20% 0.015 var(--hue)) 0%, var(--surface) 100%);
+	background: linear-gradient(180deg, oklch(21% 0.02 var(--hue)) 0%, var(--surface) 100%);
 }
 
 /* Focus ring — accent-colored, keyboard-only via :focus-visible */
