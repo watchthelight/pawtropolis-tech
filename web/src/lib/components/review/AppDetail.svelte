@@ -38,6 +38,12 @@
 	let openingModmail = $state(false);
 	let openModmailError = $state<string | null>(null);
 
+	// Reset modmail view when navigating to a different application
+	$effect(() => {
+		app.id; // track app identity
+		showModmail = false;
+	});
+
 	async function handleOpenModmail() {
 		if (openingModmail) return;
 		openingModmail = true;
