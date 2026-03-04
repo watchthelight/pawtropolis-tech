@@ -32,7 +32,7 @@
 	class:cursor-pointer={clickable}
 	class:border-l-4={selected}
 	style:box-shadow={shadowVar[elevation]}
-	style:border-color={selected ? 'var(--accent)' : 'var(--border-holdfast)'}
+	style:border-color={selected ? 'var(--secondary)' : 'var(--border-holdfast)'}
 	style:transition-duration="var(--duration-fast)"
 	onmouseenter={canHover ? (e) => {
 		const el = e.currentTarget;

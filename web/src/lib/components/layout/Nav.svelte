@@ -178,12 +178,12 @@
 	.nav-active {
 		color: var(--text-primary);
 		font-weight: 500;
-		background: var(--surface);
-		box-shadow: inset 3px 0 0 var(--accent), var(--glow-accent);
+		background: var(--selected-bg);
+		box-shadow: inset 3px 0 0 var(--secondary), var(--glow-secondary);
 	}
 
 	.nav-item-collapsed.nav-active {
-		box-shadow: var(--glow-accent);
+		box-shadow: var(--glow-secondary);
 	}
 
 	.nav-inactive {
