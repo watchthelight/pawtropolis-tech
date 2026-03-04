@@ -233,8 +233,8 @@
 	}
 
 	.title-prefix {
-		color: var(--accent);
-		opacity: 0.6;
+		color: var(--secondary);
+		opacity: 0.7;
 	}
 
 	/* ─── Tabs ─── */
@@ -266,8 +266,8 @@
 
 	.tab-active {
 		color: var(--text-primary);
-		background: oklch(72% 0.18 var(--hue) / 0.1);
-		border-color: var(--terminal-border);
+		background: var(--secondary-soft);
+		border-color: var(--secondary-dim);
 	}
 
 	/* ─── Grid layout ─── */
@@ -281,7 +281,7 @@
 	.stat-card {
 		grid-column: span 3;
 		position: relative;
-		background: oklch(16% 0.03 var(--hue));
+		background: var(--surface);
 		border: 1px solid var(--terminal-border);
 		border-radius: 4px;
 		padding: 1.25rem;
@@ -299,24 +299,22 @@
 
 	@media (hover: hover) {
 		.stat-card.clickable:hover {
-			border-color: var(--accent);
-			box-shadow:
-				0 0 24px oklch(72% 0.18 var(--hue) / 0.4),
-				inset 0 0 20px oklch(72% 0.18 var(--hue) / 0.05);
+			border-color: var(--secondary);
+			box-shadow: var(--glow-secondary);
 			transform: translateY(-1px);
 		}
 	}
 
-	/* Corner brackets */
+	/* Corner brackets — warm earth tone */
 	.stat-card::before,
 	.stat-card::after {
 		content: '';
 		position: absolute;
 		width: 10px;
 		height: 10px;
-		border-color: var(--accent);
+		border-color: var(--secondary);
 		border-style: solid;
-		opacity: 0.4;
+		opacity: 0.35;
 	}
 
 	.stat-card::before {
@@ -345,7 +343,7 @@
 	/* ─── Chart panels ─── */
 	.chart-panel {
 		position: relative;
-		background: oklch(16% 0.03 var(--hue));
+		background: var(--surface);
 		border: 1px solid var(--terminal-border);
 		border-radius: 4px;
 		padding: 1.25rem;
@@ -359,9 +357,9 @@
 		position: absolute;
 		width: 10px;
 		height: 10px;
-		border-color: var(--accent);
+		border-color: var(--secondary);
 		border-style: solid;
-		opacity: 0.4;
+		opacity: 0.35;
 	}
 
 	.chart-panel::before {
@@ -499,7 +497,7 @@
 		font-family: var(--terminal-font);
 		font-size: 0.65rem;
 		color: var(--text-secondary);
-		background: oklch(16% 0.03 var(--hue));
+		background: var(--surface);
 		border: 1px solid var(--border);
 		border-radius: 4px;
 		padding: 4px 10px;

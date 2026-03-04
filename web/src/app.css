@@ -22,16 +22,16 @@
 	--hue-cool: 235;
 	--hue-complement: calc(var(--hue) + 180);
 
-	/* ── Surfaces (neutral dark — no hue tint, color lives in accents only) ── */
-	--bg: oklch(12% 0.006 var(--hue-cool));
-	--surface: oklch(17% 0.008 var(--hue-cool));
-	--surface-raised: oklch(22% 0.010 var(--hue-cool));
-	--surface-overlay: oklch(27% 0.012 var(--hue-cool));
+	/* ── Surfaces (lifted dark — not black, comfortable for long sessions) ── */
+	--bg: oklch(16% 0.006 var(--hue-cool));
+	--surface: oklch(20% 0.008 var(--hue-cool));
+	--surface-raised: oklch(25% 0.010 var(--hue-cool));
+	--surface-overlay: oklch(30% 0.012 var(--hue-cool));
 
 	/* ── Borders (warm earth tint on holdfast, cool slate on base) ── */
-	--border: oklch(27% 0.010 var(--hue-cool));
-	--border-holdfast: oklch(33% 0.020 var(--hue-warm));
-	--border-strong: oklch(40% 0.025 var(--hue-warm));
+	--border: oklch(30% 0.010 var(--hue-cool));
+	--border-holdfast: oklch(36% 0.020 var(--hue-warm));
+	--border-strong: oklch(43% 0.025 var(--hue-warm));
 
 	/* ── Text (near-white primary, warm-tinted secondary for readability) ── */
 	--text-primary: oklch(90% 0.004 var(--hue-warm));
@@ -63,9 +63,9 @@
 	--complement-dim: oklch(35% 0.07 var(--hue-complement));
 
 	/* ── Interactive states (warm hover, cool selected for variety) ── */
-	--hover-bg: oklch(20% 0.02 var(--hue-warm));
-	--active-bg: oklch(24% 0.03 var(--hue));
-	--selected-bg: oklch(22% 0.03 var(--hue-cool));
+	--hover-bg: oklch(24% 0.02 var(--hue-warm));
+	--active-bg: oklch(28% 0.03 var(--hue));
+	--selected-bg: oklch(26% 0.03 var(--hue-cool));
 
 	/* ── Warm shadows — hue ~40 (warm amber) for cozy depth regardless of accent ── */
 	--shadow-sm: 0 1px 3px oklch(5% 0.02 40 / 0.3);
@@ -111,10 +111,10 @@
 	--mobile-header-h: 3.25rem;
 	--mobile-pad: 1rem;
 
-	/* ── EDEX-UI terminal aesthetic (stats page) ── */
-	--terminal-grid: oklch(32% 0.04 var(--hue) / 0.35);
-	--terminal-border: oklch(72% 0.18 var(--hue) / 0.5);
-	--terminal-glow: 0 0 16px oklch(72% 0.18 var(--hue) / 0.25);
+	/* ── EDEX-UI terminal aesthetic (stats page — uses cool slate + warm accents) ── */
+	--terminal-grid: oklch(32% 0.015 var(--hue-cool) / 0.3);
+	--terminal-border: oklch(50% 0.06 var(--hue-warm) / 0.5);
+	--terminal-glow: 0 0 16px oklch(60% 0.08 var(--hue-warm) / 0.2);
 	--terminal-font: 'Courier New', 'Courier', monospace;
 }
 
@@ -163,7 +163,7 @@ body::after {
 
 /* Micro-gradient — subtle top-lit surface, opt-in per component */
 .surface-gradient {
-	background: linear-gradient(180deg, oklch(21% 0.012 var(--hue-cool)) 0%, var(--surface) 100%);
+	background: linear-gradient(180deg, oklch(24% 0.012 var(--hue-cool)) 0%, var(--surface) 100%);
 }
 
 /* Focus ring — accent-colored, keyboard-only via :focus-visible */
