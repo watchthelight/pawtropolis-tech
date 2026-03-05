@@ -655,7 +655,7 @@ export async function startDashboardApi(client: Client): Promise<void> {
 
     try {
       if (flagType === "nsfw") {
-        const result = db().prepare("UPDATE nsfw_flags SET reviewed = 1 WHERE guild_id = ? AND user_id = ?").run(guild.id, targetUserId);
+        const result = db().prepare("UPDATE nsfw_flags SET reviewed = 1, reviewed_by = ?, reviewed_at = datetime('now') WHERE guild_id = ? AND user_id = ?").run(userId, guild.id, targetUserId);
         if (result.changes === 0) return reply.code(404).send({ success: false, error: "NSFW flag not found" } satisfies ApiError);
       } else {
         const result = db().prepare("UPDATE user_activity SET flagged_at = NULL, flagged_reason = NULL, manual_flag = 0, flagged_by = NULL WHERE guild_id = ? AND user_id = ? AND flagged_at IS NOT NULL").run(guild.id, targetUserId);
@@ -667,6 +667,15 @@ export async function startDashboardApi(client: Client): Promise<void> {
     }
 
     logger.info({ moderatorId: userId, targetUserId, flagType }, "[dashboardApi] Flag dismissed");
+
+    // Audit trail — every other action logs, dismiss should too
+    logActionPretty(guild, {
+      actorId: userId,
+      subjectId: targetUserId,
+      action: "flag_dismissed",
+      meta: { flagType },
+    }).catch((err) => logger.warn({ err, targetUserId }, "[dashboardApi] failed to log flag dismiss"));
+
     notifyDashboard("flag:dismissed", { userId: targetUserId, flagType });
     return { success: true, data: { targetUserId, flagType } } satisfies ApiSuccess;
   });

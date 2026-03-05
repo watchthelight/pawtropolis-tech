@@ -75,7 +75,8 @@ export type ActionType =
   | "byte_token_redeemed"
   | "byte_multiplier_applied"
   | "byte_multiplier_expired"
-  | "byte_multiplier_replaced";
+  | "byte_multiplier_replaced"
+  | "flag_dismissed";
 
 /**
  * Parameters for logging an action
@@ -359,6 +360,11 @@ function getActionMeta(action: ActionType): ActionMeta {
       title: "XP Multiplier Upgraded",
       color: 0xfee75c, // Yellow
       emoji: "⬆️",
+    },
+    flag_dismissed: {
+      title: "Flag Dismissed",
+      color: 0x99aab5, // Gray
+      emoji: "🏳️",
     },
   };
 

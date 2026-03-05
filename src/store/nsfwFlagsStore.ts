@@ -52,6 +52,8 @@ export interface NsfwFlagRow {
   flagged_by: string;
   flagged_at: string;
   reviewed: number;    // SQLite doesn't have booleans. 0 = false, 1 = true. Welcome to 1985.
+  reviewed_by: string | null;  // Discord user ID of who dismissed the flag
+  reviewed_at: string | null;  // ISO datetime of when the flag was dismissed
 }
 
 /**
