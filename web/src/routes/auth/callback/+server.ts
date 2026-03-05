@@ -3,8 +3,7 @@ import type { RequestHandler } from './$types';
 import { exchangeCode, fetchUser, fetchGuildMember, avatarUrl, bannerUrl } from '$lib/server/discord';
 import { detectTier } from '$lib/server/roles';
 import { setSession } from '$lib/server/session';
-
-const GUILD_ID = process.env.GUILD_ID!;
+import { getGuildId, getOAuth2RedirectUri } from '$lib/server/env';
 
 export const GET: RequestHandler = async ({ url, cookies }) => {
 	const code = url.searchParams.get('code');
@@ -21,7 +20,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 
 	try {
 		// Exchange code for tokens
-		const tokens = await exchangeCode(code, process.env.OAUTH2_REDIRECT_URI!);
+		const tokens = await exchangeCode(code, getOAuth2RedirectUri());
 
 		// Fetch user profile (includes accent_color, banner)
 		const user = await fetchUser(tokens.access_token);
@@ -31,7 +30,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 		// Fetch guild member (includes roles)
 		let member;
 		try {
-			member = await fetchGuildMember(tokens.access_token, GUILD_ID);
+			member = await fetchGuildMember(tokens.access_token, getGuildId());
 		} catch {
 			error(403, 'You must be a member of the Pawtropolis server to access this dashboard.');
 		}

@@ -30,16 +30,22 @@ export interface SSEClient {
 // ---------------------------------------------------------------------------
 
 const clients = new Map<string, SSEClient>();
+const MAX_CLIENTS = 200;
 
 /** Generate a unique connection ID */
 export function generateClientId(): string {
 	return crypto.randomUUID();
 }
 
-/** Register a new SSE client connection */
-export function addClient(client: SSEClient): void {
+/** Register a new SSE client connection. Returns false if at capacity. */
+export function addClient(client: SSEClient): boolean {
+	if (clients.size >= MAX_CLIENTS) {
+		console.log(`[SSE] Client rejected (at capacity ${MAX_CLIENTS}): user=${client.userId}`);
+		return false;
+	}
 	clients.set(client.id, client);
 	console.log(`[SSE] Client connected: ${client.id} (user=${client.userId}, tier=${client.tier}, total=${clients.size})`);
+	return true;
 }
 
 /** Remove a disconnected SSE client */

@@ -33,12 +33,17 @@ export const GET: RequestHandler = ({ locals }) => {
 			};
 
 			// Register with fan-out
-			addClient({
+			const accepted = addClient({
 				id: clientId,
 				userId: user.id,
 				tier: user.tier,
 				send
 			});
+
+			if (!accepted) {
+				controller.close();
+				return;
+			}
 
 			// Initial heartbeat to confirm stream is live
 			send(':heartbeat\n\n');
