@@ -11,6 +11,7 @@
 
 import type { Guild, GuildMember } from "discord.js";
 import { logger } from "../lib/logger.js";
+import { db } from "../db/db.js";
 import {
   assignRole,
   getLevelRewards,
@@ -117,6 +118,25 @@ export async function handleLevelRoleAdded(
       roleName: tier.tier_name,
     }, `User leveled up to ${level}`);
 
+    // Dedup: check if we already granted rewards for this user+level recently.
+    // This prevents duplicate DMs when Amaribot re-syncs and re-adds the same level role.
+    const recentGrant = db.prepare(`
+      SELECT 1 FROM role_assignments
+      WHERE guild_id = ? AND user_id = ? AND reason = ? AND action = 'add'
+        AND created_at > ?
+      LIMIT 1
+    `).get(guild.id, member.id, `level_${level}_reward`, Math.floor(Date.now() / 1000) - 86400);
+
+    if (recentGrant) {
+      logger.info({
+        evt: "level_reward_dedup",
+        guildId: guild.id,
+        userId: member.id,
+        level,
+      }, `Skipping duplicate level ${level} reward (already granted in last 24h)`);
+      return results;
+    }
+
     // Get rewards for this level
     const rewards = getLevelRewards(guild.id, level);
     if (rewards.length === 0) {
@@ -172,19 +192,9 @@ export async function handleLevelRoleAdded(
           rewardRole: reward.role_name,
         }, `Granted reward: ${reward.role_name}`);
         grantedRewards.push({ name: reward.role_name, id: reward.role_id });
-      } else if (result.action === "skipped") {
-        // "skipped" usually means user already has the role. This is normal
-        // for users who re-join or when Amaribot re-syncs levels after downtime.
-        logger.info({
-          evt: "reward_skipped",
-          guildId: guild.id,
-          userId: member.id,
-          level,
-          rewardRole: reward.role_name,
-          reason: result.reason,
-        }, `Skipped reward: ${reward.role_name} (${result.reason})`);
-        skippedRewards.push({ name: reward.role_name, id: reward.role_id, reason: result.reason || "Already has role" });
       } else if (!result.success) {
+        // Failed skips: role not found, permission errors, member gone, etc.
+        // Must check BEFORE the benign "already has role" skip below.
         logger.error({
           evt: "reward_error",
           guildId: guild.id,
@@ -194,6 +204,18 @@ export async function handleLevelRoleAdded(
           error: result.error,
         }, `Failed to grant reward: ${reward.role_name}`);
         failedRewards.push({ name: reward.role_name, id: reward.role_id, error: result.error || "Unknown error" });
+      } else if (result.action === "skipped") {
+        // Benign skip: user already has the role (success=true, action=skipped).
+        // Normal for re-joins or Amaribot re-syncs.
+        logger.info({
+          evt: "reward_skipped",
+          guildId: guild.id,
+          userId: member.id,
+          level,
+          rewardRole: reward.role_name,
+          reason: result.reason,
+        }, `Skipped reward: ${reward.role_name} (${result.reason})`);
+        skippedRewards.push({ name: reward.role_name, id: reward.role_id, reason: result.reason || "Already has role" });
       }
 
       // Rate limit delay between role grants to avoid hitting Discord's 429s
