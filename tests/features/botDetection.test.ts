@@ -18,6 +18,7 @@ import {
   DETECTION_CONFIG,
   SCORING,
   MAX_SCORE,
+  REASON_CODES,
 } from "../../src/features/botDetection.js";
 import { createMockMember, createMockUser, createMockRole } from "../utils/discordMocks.js";
 import type { GuildMember, Role } from "discord.js";
@@ -253,7 +254,7 @@ describe("botDetection", () => {
 
       const result = analyzeMember(member, "guild-123");
 
-      expect(result.reasons).toContain("No avatar (default profile)");
+      expect(result.reasons.some(r => r.code === REASON_CODES.NO_AVATAR)).toBe(true);
       expect(result.score).toBeGreaterThanOrEqual(SCORING.NO_AVATAR);
     });
 
@@ -271,7 +272,7 @@ describe("botDetection", () => {
 
       const result = analyzeMember(member, "guild-123");
 
-      expect(result.reasons.some(r => r.includes("days old"))).toBe(true);
+      expect(result.reasons.some(r => r.code === REASON_CODES.NEW_ACCOUNT)).toBe(true);
       expect(result.score).toBeGreaterThanOrEqual(SCORING.NEW_ACCOUNT);
     });
 
@@ -289,7 +290,7 @@ describe("botDetection", () => {
 
       const result = analyzeMember(member, "guild-123");
 
-      expect(result.reasons.some(r => r.includes("Suspicious username"))).toBe(true);
+      expect(result.reasons.some(r => r.code === REASON_CODES.BOT_USERNAME)).toBe(true);
       expect(result.score).toBeGreaterThanOrEqual(SCORING.BOT_USERNAME);
     });
 
@@ -358,40 +359,40 @@ describe("botDetection", () => {
   describe("updateStats", () => {
     it("increments noAvatar counter", () => {
       const stats = createEmptyStats();
-      updateStats(stats, ["No avatar (default profile)"]);
+      updateStats(stats, [{ code: REASON_CODES.NO_AVATAR, label: "No avatar (default profile)" }]);
       expect(stats.noAvatar).toBe(1);
     });
 
     it("increments newAccount counter", () => {
       const stats = createEmptyStats();
-      updateStats(stats, ["Account 3 days old"]);
+      updateStats(stats, [{ code: REASON_CODES.NEW_ACCOUNT, label: "Account 3 days old" }]);
       expect(stats.newAccount).toBe(1);
     });
 
     it("increments noActivity counter", () => {
       const stats = createEmptyStats();
-      updateStats(stats, ["No recorded message activity"]);
+      updateStats(stats, [{ code: REASON_CODES.NO_ACTIVITY, label: "No recorded message activity" }]);
       expect(stats.noActivity).toBe(1);
     });
 
     it("increments lowLevel counter", () => {
       const stats = createEmptyStats();
-      updateStats(stats, ["Below Level 5 (no engagement)"]);
+      updateStats(stats, [{ code: REASON_CODES.LOW_LEVEL, label: "Below Level 5 (no engagement)" }]);
       expect(stats.lowLevel).toBe(1);
     });
 
     it("increments botUsername counter", () => {
       const stats = createEmptyStats();
-      updateStats(stats, ["Suspicious username: default Discord format"]);
+      updateStats(stats, [{ code: REASON_CODES.BOT_USERNAME, label: "Suspicious username: default Discord format" }]);
       expect(stats.botUsername).toBe(1);
     });
 
     it("handles multiple reasons at once", () => {
       const stats = createEmptyStats();
       updateStats(stats, [
-        "No avatar (default profile)",
-        "Account 2 days old",
-        "Suspicious username: high entropy",
+        { code: REASON_CODES.NO_AVATAR, label: "No avatar (default profile)" },
+        { code: REASON_CODES.NEW_ACCOUNT, label: "Account 2 days old" },
+        { code: REASON_CODES.BOT_USERNAME, label: "Suspicious username: high entropy" },
       ]);
       expect(stats.noAvatar).toBe(1);
       expect(stats.newAccount).toBe(1);
