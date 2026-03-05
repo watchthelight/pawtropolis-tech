@@ -834,9 +834,9 @@ client.once(Events.ClientReady, async () => {
 });
 
 client.on("guildCreate", wrapEvent("guildCreate", async (guild) => {
-  // Only allow Pawtropolis - auto-leave any other server
-  const ALLOWED_GUILD = "896070888594759740";
-  if (guild.id !== ALLOWED_GUILD) {
+  // Only allow the configured guild - auto-leave any other server
+  const allowedGuild = env.GUILD_ID ?? "896070888594759740";
+  if (guild.id !== allowedGuild) {
     logger.info({ guildId: guild.id, guildName: guild.name }, "[guild] auto-leaving unauthorized server");
     await guild.leave();
     return;
@@ -922,18 +922,31 @@ client.on("guildMemberAdd", wrapEvent("guildMemberAdd", async (member) => {
 // DOCS: https://discord.js.org/#/docs/discord.js/main/class/Client?scrollTo=e-guildMemberRemove
 client.on("guildMemberRemove", wrapEvent("guildMemberRemove", async (member) => {
   if (!member.guild) return;
+  const guildId = member.guild.id;
+  const userId = member.id;
+
+  // Auto-dismiss flags for departed members — no point reviewing flags for users who left/were banned
+  try {
+    const nsfwResult = db.prepare("UPDATE nsfw_flags SET reviewed = 1, reviewed_by = 'system', reviewed_at = datetime('now') WHERE guild_id = ? AND user_id = ? AND reviewed = 0").run(guildId, userId);
+    const behavResult = db.prepare("UPDATE user_activity SET flagged_at = NULL, flagged_reason = NULL, manual_flag = 0, flagged_by = NULL WHERE guild_id = ? AND user_id = ? AND flagged_at IS NOT NULL").run(guildId, userId);
+    if (nsfwResult.changes > 0 || behavResult.changes > 0) {
+      logger.info({ guildId, userId, nsfwDismissed: nsfwResult.changes, behavDismissed: behavResult.changes }, "[guildMemberRemove] auto-dismissed flags for departed member");
+    }
+  } catch (err) {
+    logger.warn({ err, guildId, userId }, "[guildMemberRemove] failed to auto-dismiss flags");
+  }
 
   // Find pending applications for this user
   const pendingApps = db.prepare(`
     SELECT id FROM application
     WHERE guild_id = ? AND user_id = ? AND status = 'submitted'
-  `).all(member.guild.id, member.id) as Array<{ id: string }>;
+  `).all(guildId, userId) as Array<{ id: string }>;
 
   if (pendingApps.length === 0) return;
 
   logger.info({
-    userId: member.id,
-    guildId: member.guild.id,
+    userId,
+    guildId,
     pendingApps: pendingApps.length,
   }, "[guildMemberRemove] refreshing review cards for departed user");
 
@@ -946,8 +959,8 @@ client.on("guildMemberRemove", wrapEvent("guildMemberRemove", async (member) => 
       logger.error({
         err,
         appId: app.id,
-        userId: member.id,
-        guildId: member.guild.id,
+        userId,
+        guildId,
       }, "[guildMemberRemove] failed to refresh review card");
     }
   }
