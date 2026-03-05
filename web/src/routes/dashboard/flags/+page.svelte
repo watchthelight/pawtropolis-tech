@@ -6,9 +6,20 @@
 	import { relativeTime } from '$lib/utils/time';
 	import { slide } from 'svelte/transition';
 	import { invalidateAll } from '$app/navigation';
+	import { browser } from '$app/environment';
 
 	let { data } = $props();
 	let flags = $derived(data.flags);
+
+	// View mode (persisted to localStorage)
+	type ViewMode = 'list' | 'compact' | 'icon';
+	const STORAGE_KEY = 'flags-view-mode';
+	let viewMode = $state<ViewMode>(
+		(browser && localStorage.getItem(STORAGE_KEY) as ViewMode) || 'list'
+	);
+	$effect(() => {
+		if (browser) localStorage.setItem(STORAGE_KEY, viewMode);
+	});
 
 	// Search / sort / filter state
 	let search = $state('');
@@ -144,6 +155,18 @@
 				>{label}</button>
 			{/each}
 		</div>
+
+		<div class="view-toggle">
+			<button class="view-btn" class:view-btn-active={viewMode === 'list'} onclick={() => viewMode = 'list'} title="List view">
+				<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><rect x="0" y="1" width="16" height="3" rx="0.5"/><rect x="0" y="6.5" width="16" height="3" rx="0.5"/><rect x="0" y="12" width="16" height="3" rx="0.5"/></svg>
+			</button>
+			<button class="view-btn" class:view-btn-active={viewMode === 'compact'} onclick={() => viewMode = 'compact'} title="Compact view">
+				<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><rect x="0" y="0.5" width="16" height="2" rx="0.5"/><rect x="0" y="4.5" width="16" height="2" rx="0.5"/><rect x="0" y="8.5" width="16" height="2" rx="0.5"/><rect x="0" y="12.5" width="16" height="2" rx="0.5"/></svg>
+			</button>
+			<button class="view-btn" class:view-btn-active={viewMode === 'icon'} onclick={() => viewMode = 'icon'} title="Icon view">
+				<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><rect x="0" y="0" width="7" height="7" rx="1"/><rect x="9" y="0" width="7" height="7" rx="1"/><rect x="0" y="9" width="7" height="7" rx="1"/><rect x="9" y="9" width="7" height="7" rx="1"/></svg>
+			</button>
+		</div>
 	</div>
 
 	{#if processedFlags.length === 0}
@@ -152,122 +175,168 @@
 			subtitle={search || filterType !== 'all' ? 'Try adjusting your search or filters.' : 'All flagged users have been reviewed.'}
 		/>
 	{:else}
-		<div class="flag-list">
+		<div class="flag-list" class:flag-list-icon={viewMode === 'icon'}>
 			{#each processedFlags as flag (flag.userId + flag.flagType)}
 				{@const key = flag.userId + flag.flagType}
 				{@const isExpanded = expandedId === key}
-				<!-- svelte-ignore a11y_click_events_have_key_events -->
-				<div
-					class="flag-row"
-					class:flag-row-expanded={isExpanded}
-					role="button"
-					tabindex="0"
-					onclick={() => toggleExpand(key)}
-					onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpand(key); } }}
-				>
-					<div class="flag-summary">
-						<div class="flag-avatar-col">
+
+				{#if viewMode === 'icon'}
+					<!-- Icon view: avatar grid tile -->
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
+					<div class="icon-tile" role="button" tabindex="0" onclick={() => toggleExpand(key)} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpand(key); } }}>
+						<div class="icon-avatar-wrap">
 							{#if flag.avatarUrl}
-								<!-- svelte-ignore a11y_click_events_have_key_events -->
-								<img
-									src={flag.avatarUrl}
-									alt={flag.displayName}
-									class="flag-avatar"
-									role="button"
-									tabindex="-1"
-									onclick={(e) => { e.stopPropagation(); openLightbox(flag.avatarUrl!); }}
-								/>
+								<img src={flag.avatarUrl} alt={flag.displayName} class="icon-avatar" />
 							{:else}
-								<div class="flag-avatar-ph">{flag.displayName.charAt(0).toUpperCase()}</div>
+								<div class="icon-avatar-ph">{flag.displayName.charAt(0).toUpperCase()}</div>
+							{/if}
+							<span class="severity-dot icon-sev" class:severity-high={flag.severity === 'high'} class:severity-medium={flag.severity === 'medium'} class:severity-low={flag.severity === 'low'}></span>
+						</div>
+						<span class="icon-name">{flag.displayName}</span>
+						<div class="icon-badges">
+							<span class="flag-type-badge" class:flag-type-nsfw={flag.flagType === 'nsfw'} class:flag-type-behavioral={flag.flagType === 'behavioral'}>
+								{flag.flagType === 'nsfw' ? 'NSFW' : 'Behav'}
+							</span>
+							{#if flag.flagType === 'nsfw' && flag.nsfwScore != null}
+								<span class="nsfw-score">{Math.round(flag.nsfwScore * 100)}%</span>
 							{/if}
 						</div>
-
-						<div class="flag-info">
-							<div class="flag-top">
-								<span class="flag-name">{flag.displayName}</span>
-								<div class="flag-badges">
-									<span class="severity-dot" class:severity-high={flag.severity === 'high'} class:severity-medium={flag.severity === 'medium'} class:severity-low={flag.severity === 'low'}></span>
-									<span class="flag-type-badge" class:flag-type-nsfw={flag.flagType === 'nsfw'} class:flag-type-behavioral={flag.flagType === 'behavioral'}>
-										{flag.flagType === 'nsfw' ? 'NSFW' : 'Behavioral'}
-									</span>
-									{#if flag.flagType === 'nsfw' && flag.nsfwScore != null}
-										<span class="nsfw-score">{Math.round(flag.nsfwScore * 100)}%</span>
-									{/if}
-									{#if flag.isManual}
-										<span class="manual-badge">Manual</span>
-									{/if}
-								</div>
-							</div>
-							<div class="flag-bottom">
-								<span class="flag-reason">{flag.reason}</span>
-								<span class="flag-time">{relativeTime(flag.flaggedAt)}</span>
-							</div>
-							<div class="flag-uid" onclick={(e) => e.stopPropagation()}>
-								<CopyableId value={flag.userId} />
-							</div>
-						</div>
-
-						<!-- Actions (always visible) -->
-						<div class="row-actions" onclick={(e) => e.stopPropagation()}>
+						<!-- Hover overlay actions -->
+						<div class="icon-actions" onclick={(e) => e.stopPropagation()}>
 							{#if kickConfirm === key}
-								<span class="kick-confirm-label">Kick {flag.displayName}?</span>
-								<button
-									class="kick-confirm-btn"
-									disabled={kicking === flag.userId}
-									onclick={() => kickUser(flag.userId, flag.displayName)}
-								>
-									{kicking === flag.userId ? '...' : 'Yes'}
+								<button class="kick-confirm-btn" disabled={kicking === flag.userId} onclick={() => kickUser(flag.userId, flag.displayName)}>
+									{kicking === flag.userId ? '...' : 'Kick'}
 								</button>
 								<button class="kick-cancel-btn" onclick={() => kickConfirm = null}>No</button>
 							{:else}
-								<button
-									class="action-btn dismiss-btn"
-									disabled={dismissing === key}
-									onclick={() => dismissFlag(flag.userId, flag.flagType)}
-								>
+								<button class="action-btn dismiss-btn" disabled={dismissing === key} onclick={() => dismissFlag(flag.userId, flag.flagType)}>
 									{dismissing === key ? '...' : 'Dismiss'}
 								</button>
-								<button
-									class="action-btn kick-btn"
-									onclick={() => kickConfirm = key}
-								>
-									Kick
-								</button>
+								<button class="action-btn kick-btn" onclick={() => kickConfirm = key}>Kick</button>
 							{/if}
 						</div>
 					</div>
-
-					<!-- Expanded detail -->
-					{#if isExpanded}
-						<!-- svelte-ignore a11y_click_events_have_key_events -->
-						<div class="flag-detail" transition:slide={{ duration: 200 }} onclick={(e) => e.stopPropagation()}>
-							<div class="detail-grid">
-								<div class="detail-item">
-									<span class="detail-label">Joined</span>
-									<span class="detail-value">{flag.joinedAt ? relativeTime(flag.joinedAt) : 'Unknown'}</span>
-								</div>
-								<div class="detail-item">
-									<span class="detail-label">First Message</span>
-									<span class="detail-value">{flag.firstMessageAt ? relativeTime(flag.firstMessageAt) : 'None'}</span>
-								</div>
-								{#if flag.flaggedBy}
-									<div class="detail-item">
-										<span class="detail-label">Flagged By</span>
-										<span class="detail-value" onclick={(e) => e.stopPropagation()}><CopyableId value={flag.flaggedBy} /></span>
-									</div>
+				{:else}
+					<!-- List / Compact view -->
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
+					<div
+						class="flag-row"
+						class:flag-row-expanded={isExpanded}
+						class:flag-row-compact={viewMode === 'compact'}
+						role="button"
+						tabindex="0"
+						onclick={() => toggleExpand(key)}
+						onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpand(key); } }}
+					>
+						<div class="flag-summary" class:flag-summary-compact={viewMode === 'compact'}>
+							<div class="flag-avatar-col">
+								{#if flag.avatarUrl}
+									<!-- svelte-ignore a11y_click_events_have_key_events -->
+									<img
+										src={flag.avatarUrl}
+										alt={flag.displayName}
+										class="flag-avatar"
+										class:flag-avatar-compact={viewMode === 'compact'}
+										role="button"
+										tabindex="-1"
+										onclick={(e) => { e.stopPropagation(); openLightbox(flag.avatarUrl!); }}
+									/>
+								{:else}
+									<div class="flag-avatar-ph" class:flag-avatar-ph-compact={viewMode === 'compact'}>{flag.displayName.charAt(0).toUpperCase()}</div>
 								{/if}
-								{#if flag.flagType === 'nsfw' && flag.nsfwAvatarUrl}
-									<div class="detail-item">
-										<span class="detail-label">Flagged Avatar</span>
-										<button class="nsfw-thumb" onclick={(e) => { e.stopPropagation(); openLightbox(flag.nsfwAvatarUrl!); }}>
-											View
-										</button>
+							</div>
+
+							<div class="flag-info">
+								<div class="flag-top">
+									<span class="flag-name">{flag.displayName}</span>
+									<div class="flag-badges">
+										<span class="severity-dot" class:severity-high={flag.severity === 'high'} class:severity-medium={flag.severity === 'medium'} class:severity-low={flag.severity === 'low'}></span>
+										<span class="flag-type-badge" class:flag-type-nsfw={flag.flagType === 'nsfw'} class:flag-type-behavioral={flag.flagType === 'behavioral'}>
+											{flag.flagType === 'nsfw' ? 'NSFW' : 'Behavioral'}
+										</span>
+										{#if flag.flagType === 'nsfw' && flag.nsfwScore != null}
+											<span class="nsfw-score">{Math.round(flag.nsfwScore * 100)}%</span>
+										{/if}
+										{#if flag.isManual}
+											<span class="manual-badge">Manual</span>
+										{/if}
 									</div>
+								</div>
+								{#if viewMode === 'list'}
+									<div class="flag-bottom">
+										<span class="flag-reason">{flag.reason}</span>
+										<span class="flag-time">{relativeTime(flag.flaggedAt)}</span>
+									</div>
+									<div class="flag-uid" onclick={(e) => e.stopPropagation()}>
+										<CopyableId value={flag.userId} />
+									</div>
+								{:else}
+									<span class="flag-time compact-time">{relativeTime(flag.flaggedAt)}</span>
+								{/if}
+							</div>
+
+							<!-- Actions (always visible) -->
+							<div class="row-actions" onclick={(e) => e.stopPropagation()}>
+								{#if kickConfirm === key}
+									<span class="kick-confirm-label">Kick {flag.displayName}?</span>
+									<button
+										class="kick-confirm-btn"
+										disabled={kicking === flag.userId}
+										onclick={() => kickUser(flag.userId, flag.displayName)}
+									>
+										{kicking === flag.userId ? '...' : 'Yes'}
+									</button>
+									<button class="kick-cancel-btn" onclick={() => kickConfirm = null}>No</button>
+								{:else}
+									<button
+										class="action-btn dismiss-btn"
+										disabled={dismissing === key}
+										onclick={() => dismissFlag(flag.userId, flag.flagType)}
+									>
+										{dismissing === key ? '...' : 'Dismiss'}
+									</button>
+									<button
+										class="action-btn kick-btn"
+										onclick={() => kickConfirm = key}
+									>
+										Kick
+									</button>
 								{/if}
 							</div>
 						</div>
-					{/if}
-				</div>
+
+						<!-- Expanded detail (list + compact) -->
+						{#if isExpanded}
+							<!-- svelte-ignore a11y_click_events_have_key_events -->
+							<div class="flag-detail" transition:slide={{ duration: 200 }} onclick={(e) => e.stopPropagation()}>
+								<div class="detail-grid">
+									<div class="detail-item">
+										<span class="detail-label">Joined</span>
+										<span class="detail-value">{flag.joinedAt ? relativeTime(flag.joinedAt) : 'Unknown'}</span>
+									</div>
+									<div class="detail-item">
+										<span class="detail-label">First Message</span>
+										<span class="detail-value">{flag.firstMessageAt ? relativeTime(flag.firstMessageAt) : 'None'}</span>
+									</div>
+									{#if flag.flaggedBy}
+										<div class="detail-item">
+											<span class="detail-label">Flagged By</span>
+											<span class="detail-value" onclick={(e) => e.stopPropagation()}><CopyableId value={flag.flaggedBy} /></span>
+										</div>
+									{/if}
+									{#if flag.flagType === 'nsfw' && flag.nsfwAvatarUrl}
+										<div class="detail-item">
+											<span class="detail-label">Flagged Avatar</span>
+											<button class="nsfw-thumb" onclick={(e) => { e.stopPropagation(); openLightbox(flag.nsfwAvatarUrl!); }}>
+												View
+											</button>
+										</div>
+									{/if}
+								</div>
+							</div>
+						{/if}
+					</div>
+				{/if}
 			{/each}
 		</div>
 
@@ -355,10 +424,48 @@
 		box-shadow: var(--glow-accent);
 	}
 
+	/* ─── View toggle ─── */
+	.view-toggle {
+		display: flex;
+		gap: 2px;
+		border: 1px solid var(--border-holdfast);
+		border-radius: var(--radius-sm);
+		overflow: hidden;
+	}
+
+	.view-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 30px;
+		height: 28px;
+		border: none;
+		background: transparent;
+		color: var(--text-secondary);
+		cursor: pointer;
+		transition: all 150ms var(--ease-smooth);
+	}
+
+	.view-btn:hover {
+		color: var(--text-primary);
+		background: var(--surface-raised);
+	}
+
+	.view-btn-active {
+		color: var(--text-primary);
+		background: var(--surface);
+	}
+
 	/* ─── Flag list ─── */
 	.flag-list {
 		display: flex;
 		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.flag-list-icon {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
 		gap: 0.5rem;
 	}
 
@@ -676,6 +783,116 @@
 		border-radius: var(--radius-md);
 		box-shadow: 0 0 60px oklch(0% 0 0 / 0.5);
 		cursor: default;
+	}
+
+	/* ─── Compact mode ─── */
+	.flag-row-compact {
+		border-radius: var(--radius-sm);
+	}
+
+	.flag-summary-compact {
+		padding: 0.5rem 0.75rem;
+		gap: 0.5rem;
+	}
+
+	.flag-avatar-compact {
+		width: 28px;
+		height: 28px;
+	}
+
+	.flag-avatar-ph-compact {
+		width: 28px;
+		height: 28px;
+		font-size: 0.7rem;
+	}
+
+	.compact-time {
+		font-size: 0.65rem;
+		color: var(--text-secondary);
+		opacity: 0.7;
+	}
+
+	/* ─── Icon mode ─── */
+	.icon-tile {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.375rem;
+		padding: 0.75rem 0.5rem;
+		background: var(--surface);
+		border: 1px solid var(--border-holdfast);
+		border-radius: var(--radius-md);
+		cursor: pointer;
+		transition: all 150ms var(--ease-smooth);
+		text-align: center;
+	}
+
+	.icon-tile:hover {
+		background: var(--surface-raised);
+	}
+
+	.icon-avatar-wrap {
+		position: relative;
+	}
+
+	.icon-avatar {
+		width: 48px;
+		height: 48px;
+		border-radius: var(--radius-sm);
+		object-fit: cover;
+	}
+
+	.icon-avatar-ph {
+		width: 48px;
+		height: 48px;
+		border-radius: var(--radius-sm);
+		background: var(--accent-dim);
+		color: var(--accent);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-weight: 700;
+		font-size: 1rem;
+	}
+
+	.icon-sev {
+		position: absolute;
+		bottom: -2px;
+		right: -2px;
+	}
+
+	.icon-name {
+		font-size: 0.75rem;
+		font-weight: 500;
+		color: var(--text-primary);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		max-width: 100%;
+	}
+
+	.icon-badges {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+
+	.icon-actions {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.25rem;
+		background: oklch(10% 0 0 / 0.85);
+		border-radius: var(--radius-md);
+		opacity: 0;
+		transition: opacity 150ms var(--ease-smooth);
+	}
+
+	.icon-tile:hover .icon-actions {
+		opacity: 1;
 	}
 
 	/* ─── Mobile ─── */
