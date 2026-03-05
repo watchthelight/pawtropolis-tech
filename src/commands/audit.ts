@@ -894,12 +894,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
       }
 
       // No active session - show normal confirmation
-      // NOTE: This fetches ALL members into memory at once. For a 10k member guild,
-      // that's fine. For 100k+, this could be problematic. The actual scan uses
-      // pagination (guild.members.list), but this confirmation count doesn't.
-      // Could be optimized if we ever run this on massive guilds.
-      const members = await guild.members.fetch();
-      const memberCount = members.size;
+      const memberCount = guild.memberCount;
 
       // For NSFW flagged scope, count flagged members
       let targetCount = memberCount;

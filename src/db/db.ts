@@ -240,8 +240,9 @@ try {
     `CREATE INDEX IF NOT EXISTS idx_action_log_guild_action_created
      ON action_log(guild_id, action, created_at_s)`
   ).run();
-} catch {
+} catch (err) {
   // Table may not exist yet if action_log schema hasn't been created
+  logger.debug({ err }, "action_log index creation skipped (table may not exist yet)");
 }
 
 // NOTE: sync_marker table is created by migration 026_sync_marker.ts

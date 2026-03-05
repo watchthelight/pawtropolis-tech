@@ -297,10 +297,10 @@ async function executeCheck(ctx: CommandContext<ChatInputCommandInteraction>) {
     // SSH options explained:
     // - ConnectTimeout=10: Don't hang forever if server is unreachable
     // - ServerAliveInterval=5: Detect dead connections faster
-    // - StrictHostKeyChecking=no: Don't fail on first connect (risky in prod, fine here)
+    // - StrictHostKeyChecking=accept-new: Trust on first connect, verify after
     // - BatchMode=yes: Never prompt for password (fail instead)
     // The inner timeout is a belt-and-suspenders with execAsync timeout.
-    const remoteCmd = `ssh -o ConnectTimeout=10 -o ServerAliveInterval=5 -o StrictHostKeyChecking=no -o BatchMode=yes ${remoteAlias} "bash -c 'cd ${remotePath} && timeout 10 node scripts/verify-db-integrity.js data/data.db --verbose 2>&1'"`;
+    const remoteCmd = `ssh -o ConnectTimeout=10 -o ServerAliveInterval=5 -o StrictHostKeyChecking=accept-new -o BatchMode=yes ${remoteAlias} "bash -c 'cd ${remotePath} && timeout 10 node scripts/verify-db-integrity.js data/data.db --verbose 2>&1'"`;
 
     const { stdout, stderr } = await execAsync(remoteCmd, { timeout: 20000 });
 

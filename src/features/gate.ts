@@ -1352,8 +1352,7 @@ export async function handleGateModalSubmit(
     });
   }
 
-  // Ensure review card is created (fire-and-forget)
-  // GOTCHA: This is NOT fire-and-forget - we await it. The comment lies.
+  // GOTCHA: This is NOT fire-and-forget - we await it.
   // We need the review card to exist before we tell the user "submitted"
   // because staff might see the card before this function returns.
   try {

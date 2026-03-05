@@ -116,9 +116,7 @@ export function getRecentActionsForApp(appId: string, limit = 4): RecentAction[]
   const rows = getRecentActionsForAppStmt.all(appId, limit) as RecentAction[];
 
   const ms = Date.now() - start;
-  // Info-level log for query observability. If this shows up taking >10ms consistently,
-  // the index may be missing or fragmented.
-  logger.info(
+  logger.debug(
     { query: "getRecentActionsForApp", appId, limit, n: rows.length, ms },
     "[review] history_fetch"
   );

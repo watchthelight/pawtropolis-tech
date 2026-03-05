@@ -41,10 +41,8 @@ const getFlaggedUserIdsStmt = db.prepare(
   `SELECT user_id FROM user_activity WHERE guild_id = ? AND flagged_at IS NOT NULL LIMIT 10000`
 );
 
-// SELECT * is lazy but we only use this for existence checks. Could be
-// SELECT 1 for a tiny performance gain that nobody would ever notice.
 const checkExistingRowStmt = db.prepare(
-  `SELECT * FROM user_activity WHERE guild_id = ? AND user_id = ?`
+  `SELECT 1 FROM user_activity WHERE guild_id = ? AND user_id = ?`
 );
 
 const updateManualFlagStmt = db.prepare(
