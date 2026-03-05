@@ -11,10 +11,14 @@ import { nowUtc } from "../src/lib/time.js";
 import {
   recalcModMetrics,
   getCachedMetrics,
-  getModeratorMetrics,
-  getTopModerators,
   __test__clearModMetricsCache,
 } from "../src/features/modPerformance.js";
+
+/** Helper: get metrics for a specific moderator (replaces removed getModeratorMetrics) */
+async function getModeratorMetrics(guildId: string, moderatorId: string) {
+  const all = await getCachedMetrics(guildId);
+  return all.find((m) => m.moderator_id === moderatorId) ?? null;
+}
 
 /**
  * These tests exercise the mod performance metrics engine which tracks reviewer activity
@@ -438,125 +442,6 @@ describe("Mod Performance Engine", () => {
       // Clean up
       db.prepare(`DELETE FROM action_log WHERE guild_id = ?`).run(cacheGuildId);
       db.prepare(`DELETE FROM mod_metrics WHERE guild_id = ?`).run(cacheGuildId);
-    });
-  });
-
-  /**
-   * Leaderboard query tests. The leaderboard is sorted by accepts by default
-   * because that's the primary productivity metric for mod teams.
-   */
-  describe("getTopModerators", () => {
-    /**
-     * Simulates a typical leaderboard query. We set up three mods with clearly
-     * different accept counts to verify ordering works correctly.
-     */
-    it("should return moderators sorted by total_accepts DESC", async () => {
-      const now = nowUtc();
-
-      const insertAction = db.prepare(`
-        INSERT INTO action_log (
-          guild_id, app_id, app_code, actor_id, subject_id,
-          action, reason, meta_json, created_at_s
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `);
-
-      // Mod 1: 5 accepts
-      for (let i = 0; i < 5; i++) {
-        insertAction.run(
-          TEST_GUILD_ID,
-          `app-1-${i}`,
-          `CODE${i}`,
-          TEST_MOD_1,
-          `user-${i}`,
-          "approve",
-          "Good",
-          null,
-          now - i
-        );
-      }
-
-      // Mod 2: 3 accepts
-      for (let i = 0; i < 3; i++) {
-        insertAction.run(
-          TEST_GUILD_ID,
-          `app-2-${i}`,
-          `CODE${i}`,
-          TEST_MOD_2,
-          `user-${i}`,
-          "approve",
-          "Good",
-          null,
-          now - i
-        );
-      }
-
-      // Mod 3: 1 accept
-      insertAction.run(
-        TEST_GUILD_ID,
-        "app-3-0",
-        "CODE0",
-        TEST_MOD_3,
-        "user-0",
-        "approve",
-        "Good",
-        null,
-        now
-      );
-
-      await recalcModMetrics(TEST_GUILD_ID);
-
-      // Get top 10
-      const topMods = await getTopModerators(TEST_GUILD_ID, 10);
-      expect(topMods.length).toBe(3);
-      expect(topMods[0].moderator_id).toBe(TEST_MOD_1);
-      expect(topMods[0].total_accepts).toBe(5);
-      expect(topMods[1].moderator_id).toBe(TEST_MOD_2);
-      expect(topMods[1].total_accepts).toBe(3);
-      expect(topMods[2].moderator_id).toBe(TEST_MOD_3);
-      expect(topMods[2].total_accepts).toBe(1);
-    });
-
-    /**
-     * Large guilds might have 100+ mods. The limit parameter prevents
-     * returning massive result sets for UI display.
-     */
-    it("should respect limit parameter", async () => {
-      const limitGuildId = "test-guild-limit-" + Date.now();
-      const now = nowUtc();
-
-      const insertAction = db.prepare(`
-        INSERT INTO action_log (
-          guild_id, app_id, app_code, actor_id, subject_id,
-          action, reason, meta_json, created_at_s
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `);
-
-      // Create 5 moderators
-      for (let modIdx = 0; modIdx < 5; modIdx++) {
-        insertAction.run(
-          limitGuildId,
-          `app-${modIdx}`,
-          `CODE${modIdx}`,
-          `mod-${modIdx}`,
-          `user-${modIdx}`,
-          "approve",
-          "Good",
-          null,
-          now - modIdx
-        );
-      }
-
-      await recalcModMetrics(limitGuildId);
-
-      // Get top 3 (sortBy defaults to "accepts")
-      const topMods = await getTopModerators(limitGuildId, "accepts", 3);
-      expect(topMods.length).toBe(3);
-
-      // Clean up
-      db.prepare(`DELETE FROM action_log WHERE guild_id = ?`).run(limitGuildId);
-      db.prepare(`DELETE FROM mod_metrics WHERE guild_id = ?`).run(limitGuildId);
     });
   });
 

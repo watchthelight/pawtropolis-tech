@@ -4,7 +4,7 @@
  * WHY: Centralize claim logic to prevent race conditions and duplicate reviews.
  * FLOWS:
  *  - claimGuard: Check if another moderator has claimed the application
- *  - getClaim/getReviewClaim: Retrieve current claim status
+ *  - getClaim: Retrieve current claim status
  *  - clearClaim: Release a claim after resolution
  * NOTE: For atomic claim operations, use claimTx() from reviewActions.ts
  * DOCS:
@@ -52,21 +52,6 @@ export function claimGuard(claim: ReviewClaimRow | null, userId: string): string
 // ===== Claim Queries =====
 
 /**
- * getReviewClaim
- * WHAT: Fetch the current claim for an application.
- * WHY: Needed for displaying claim status on review cards.
- * @param appId - The application ID
- * @returns Claim row or undefined if unclaimed
- */
-export function getReviewClaim(appId: string): ReviewClaimRow | undefined {
-  // LIMIT 1 is technically unnecessary since app_id is unique, but it makes
-  // the query optimizer happy and documents the intent. Belt and suspenders.
-  return db
-    .prepare("SELECT reviewer_id, claimed_at FROM review_claim WHERE app_id = ? LIMIT 1")
-    .get(appId) as ReviewClaimRow | undefined;
-}
-
-/**
  * getClaim
  * WHAT: Fetch the current claim for an application (null-safe).
  * WHY: Provides a null return instead of undefined for cleaner conditionals.
@@ -74,12 +59,6 @@ export function getReviewClaim(appId: string): ReviewClaimRow | undefined {
  * @returns Claim row or null if unclaimed
  */
 export function getClaim(appId: string): ReviewClaimRow | null {
-  /*
-   * You might be wondering: "Why do we have both getClaim and getReviewClaim?"
-   * One returns undefined, one returns null. Some callers prefer ?? null patterns,
-   * others use undefined checks. Neither is wrong, both exist, and merging them
-   * would require touching a dozen files. Welcome to legacy code.
-   */
   const row = db
     .prepare(`SELECT reviewer_id, claimed_at FROM review_claim WHERE app_id = ?`)
     .get(appId) as ReviewClaimRow | undefined;

@@ -1,4 +1,4 @@
-1; /**
+/**
  * Pawtropolis Tech — src/features/gate.ts
  * WHAT: Gate entry UX (Start button + modal pages), draft persistence, submission, and optional avatar scan queueing.
  * WHY: Keeps applicant-facing interactions and staff review linkage in one module.
@@ -1363,13 +1363,6 @@ export async function handleGateModalSubmit(
   }
 
   notifyDashboard("review:submitted", { appId: draftRow.id, applicantName: interaction.user.username });
-
-  // Gatekeeper ping now handled by review.ts on card create (one-time)
-  ctx.step("gatekeeper_ping");
-  logger.debug(
-    { guildId, appId: draftRow.id },
-    "[gate] skipping separate ping; review card handles one-time ping on create"
-  );
 
   ctx.step("render_card");
   // final ack to the applicant — ephemeral to avoid channel noise

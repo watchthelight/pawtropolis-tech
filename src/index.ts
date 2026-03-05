@@ -1013,7 +1013,7 @@ client.on("guildMemberUpdate", wrapEvent("guildMemberUpdate", async (oldMember, 
 
   // Check each new role to see if it's a level role
   // Process independently so one failure doesn't block others
-  for (const [roleId, role] of addedRoles) {
+  for (const [roleId] of addedRoles) {
     try {
       await handleLevelRoleAdded(newMember.guild, newMember, roleId);
     } catch (err) {

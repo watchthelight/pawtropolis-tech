@@ -46,7 +46,6 @@ export {
 export {
   CLAIMED_MESSAGE,
   claimGuard,
-  getReviewClaim,
   getClaim,
   clearClaim,
 } from "./claims.js";

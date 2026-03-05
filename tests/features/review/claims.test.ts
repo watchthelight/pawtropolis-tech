@@ -29,7 +29,6 @@ vi.mock("../../../src/db/db.js", () => ({
 import {
   claimGuard,
   CLAIMED_MESSAGE,
-  getReviewClaim,
   getClaim,
   clearClaim,
 } from "../../../src/features/review/claims.js";
@@ -100,49 +99,7 @@ describe("claimGuard", () => {
   });
 });
 
-// ===== getReviewClaim Tests =====
-
-describe("getReviewClaim", () => {
-  it("returns claim row when claim exists", () => {
-    const expectedClaim = {
-      reviewer_id: "reviewer-123",
-      claimed_at: "2024-01-15T10:00:00Z",
-    };
-
-    mockDbStatement.get.mockReturnValue(expectedClaim);
-
-    const result = getReviewClaim("app-123");
-
-    expect(mockDb.prepare).toHaveBeenCalledWith(
-      expect.stringContaining("SELECT")
-    );
-    expect(result).toEqual(expectedClaim);
-  });
-
-  it("returns undefined when no claim exists", () => {
-    mockDbStatement.get.mockReturnValue(undefined);
-
-    const result = getReviewClaim("app-nonexistent");
-
-    expect(result).toBeUndefined();
-  });
-
-  it("queries the correct table and app_id", () => {
-    mockDbStatement.get.mockReturnValue(undefined);
-
-    getReviewClaim("test-app-id");
-
-    expect(mockDb.prepare).toHaveBeenCalledWith(
-      expect.stringMatching(/review_claim.*app_id/)
-    );
-    expect(mockDbStatement.get).toHaveBeenCalledWith("test-app-id");
-  });
-});
-
 // ===== getClaim Tests =====
-
-// getClaim vs getReviewClaim: getClaim returns null instead of undefined for
-// missing claims. This matters for claimGuard which uses null to mean "no claim".
 describe("getClaim", () => {
   it("returns claim row when claim exists", () => {
     const expectedClaim = {

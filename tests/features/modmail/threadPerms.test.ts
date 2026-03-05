@@ -533,35 +533,6 @@ describe("features/modmail/threadPerms", () => {
       );
     });
 
-    it("includes configured parent channel", async () => {
-      mockAll.mockReturnValue([]);
-      mockGetConfig.mockReturnValue({
-        mod_role_ids: "role1",
-        modmail_parent_channel_id: "configured-parent",
-      });
-
-      const mockParent = {
-        id: "configured-parent",
-        type: ChannelType.GuildText,
-        permissionsFor: vi.fn().mockReturnValue({
-          has: vi.fn().mockReturnValue(true),
-        }),
-        permissionOverwrites: { edit: vi.fn() },
-        guild: { id: "guild-123", client: { user: { id: "bot" } } },
-      };
-
-      const mockGuild = {
-        id: "guild-123",
-        channels: {
-          fetch: vi.fn().mockResolvedValue(mockParent),
-        },
-      } as any;
-
-      await retrofitModmailParentsForGuild(mockGuild);
-
-      expect(mockGuild.channels.fetch).toHaveBeenCalledWith("configured-parent");
-    });
-
     it("skips non-text/forum channels", async () => {
       mockAll.mockReturnValue([{ thread_id: "thread-1" }]);
       mockGetConfig.mockReturnValue({ mod_role_ids: "role1" });

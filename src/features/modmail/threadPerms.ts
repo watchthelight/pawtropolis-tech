@@ -407,17 +407,6 @@ export async function retrofitModmailParentsForGuild(guild: Guild) {
       }
     }
 
-    // (B) Optional: known configured parent if config stores it
-    const cfg = getConfig(guild.id);
-    const configuredParentId = (cfg as any)?.modmail_parent_channel_id as string | undefined;
-    if (configuredParentId) {
-      parentIds.add(configuredParentId);
-      logger.debug(
-        { guildId: guild.id, parentId: configuredParentId },
-        "[modmail] retrofit: added configured parent channel"
-      );
-    }
-
     logger.info(
       { guildId: guild.id, parentCount: parentIds.size },
       "[modmail] retrofit: discovered parents to process"

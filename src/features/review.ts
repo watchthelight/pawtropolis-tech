@@ -63,7 +63,6 @@ export type {
 export {
   CLAIMED_MESSAGE,
   claimGuard,
-  getReviewClaim,
   getClaim,
   clearClaim,
 } from "./review/claims.js";

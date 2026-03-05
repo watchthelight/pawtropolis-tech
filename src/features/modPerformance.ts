@@ -425,57 +425,5 @@ export async function getCachedMetrics(
   return metrics;
 }
 
-/**
- * WHAT: Get metrics for a specific moderator.
- * WHY: Powers /modstats user mode for personal summaries.
- *
- * @param guildId - Discord guild ID
- * @param moderatorId - Discord moderator user ID
- * @returns Moderator metrics or null if not found
- */
-export async function getModeratorMetrics(
-  guildId: string,
-  moderatorId: string
-): Promise<ModMetrics | null> {
-  const allMetrics = await getCachedMetrics(guildId);
-  return allMetrics.find((m) => m.moderator_id === moderatorId) || null;
-}
 
-/**
- * WHAT: Get top moderators sorted by a metric.
- * WHY: Powers /modstats leaderboard mode.
- *
- * @param guildId - Discord guild ID
- * @param sortBy - Metric to sort by
- * @param limit - Max number of moderators to return
- * @returns Sorted array of moderator metrics
- */
-export async function getTopModerators(
-  guildId: string,
-  sortBy: "accepts" | "claims" | "response_time" = "accepts",
-  limit = 10
-): Promise<ModMetrics[]> {
-  const allMetrics = await getCachedMetrics(guildId);
-
-  // In-memory sort is fine here - typical guild has <100 mods.
-  // If you somehow have thousands of mods, push sort to SQL.
-  const sorted = [...allMetrics].sort((a, b) => {
-    switch (sortBy) {
-      case "accepts":
-        return b.total_accepts - a.total_accepts;
-      case "claims":
-        return b.total_claims - a.total_claims;
-      case "response_time":
-        // Lower response time is better. Mods with no response data (null)
-        // go to the bottom - they either have no claims or data predates tracking.
-        if (a.avg_response_time_s === null) return 1;
-        if (b.avg_response_time_s === null) return -1;
-        return a.avg_response_time_s - b.avg_response_time_s;
-      default:
-        return 0;
-    }
-  });
-
-  return sorted.slice(0, limit);
-}
 
