@@ -34,7 +34,9 @@ export type SSEEventType =
 	| 'modmail:message_sent'
 	| 'modmail:thread_opened'
 	| 'modmail:thread_closed'
-	| 'modmail:thread_reopened';
+	| 'modmail:thread_reopened'
+	| 'flag:dismissed'
+	| 'flag:kicked';
 
 // ---------------------------------------------------------------------------
 // Typed payloads per event
@@ -99,6 +101,16 @@ export interface ModmailThreadReopenedPayload {
 	staffUserId: string;
 }
 
+export interface FlagDismissedPayload {
+	userId: string;
+	flagType: 'nsfw' | 'behavioral';
+}
+
+export interface FlagKickedPayload {
+	userId: string;
+	kickedBy: string;
+}
+
 // ---------------------------------------------------------------------------
 // Event-to-payload type map (for type-safe consumption)
 // ---------------------------------------------------------------------------
@@ -117,6 +129,8 @@ export interface SSEEventMap {
 	'modmail:thread_opened': ModmailThreadOpenedPayload;
 	'modmail:thread_closed': ModmailThreadClosedPayload;
 	'modmail:thread_reopened': ModmailThreadReopenedPayload;
+	'flag:dismissed': FlagDismissedPayload;
+	'flag:kicked': FlagKickedPayload;
 }
 
 // ---------------------------------------------------------------------------
