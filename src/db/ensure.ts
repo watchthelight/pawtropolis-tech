@@ -275,7 +275,7 @@ export function ensureApplicationStatusIndex() {
  * steps 1-3 are also undone. Check the logs for the actual error - it's usually an FK violation
  * during the INSERT because someone added data that violates a constraint we're now enforcing.
  */
-function runReviewActionMigration(db: any) {
+function runReviewActionMigration() {
   const migrate = db.transaction(() => {
     // Check if review_action exists before attempting backup
     const tableExists = db
@@ -460,7 +460,7 @@ export function ensureReviewActionFreeText() {
     logger.info("[ensure] running review_action free-text migration");
 
     // Run migration inline (avoids module resolution issues)
-    runReviewActionMigration(db);
+    runReviewActionMigration();
 
     logger.info("[ensure] review_action upgraded (free-text actions + created_at)");
   } catch (err) {
@@ -497,14 +497,6 @@ function hasColumn(table: string, column: string): boolean {
   return rows.some((r) => r.name === column);
 }
 
-/**
- * ensureActionLogSchema
- * WHAT: Creates action_log and guild_config tables for analytics and logging.
- * WHY: Enables /modstats command and pretty action logging to configured channels.
- * FLOWS:
- *  - Check table existence → create tables + indexes if missing
- *  - Migrate existing guild_config to add logging_channel_id if needed
- */
 /**
  * ensureManualFlagColumns
  * WHAT: Adds flagged_reason and manual_flag columns to user_activity table if missing.
@@ -547,6 +539,14 @@ export function ensureManualFlagColumns() {
   }
 }
 
+/**
+ * ensureActionLogSchema
+ * WHAT: Creates action_log and guild_config tables for analytics and logging.
+ * WHY: Enables /modstats command and pretty action logging to configured channels.
+ * FLOWS:
+ *  - Check table existence → create tables + indexes if missing
+ *  - Migrate existing guild_config to add logging_channel_id if needed
+ */
 export function ensureActionLogSchema() {
   try {
     // Check if action_log exists
@@ -628,12 +628,6 @@ export function ensureActionLogSchema() {
 }
 
 /**
- * ensureActionLogFreeText
- * WHAT: Removes CHECK constraint on action_log.action to allow new actions without schema edits.
- * WHY: member_join and future actions were blocked by the CHECK constraint.
- * HOW: Recreates table without CHECK constraint if it exists.
- */
-/**
  * ensureSearchIndexes
  * WHAT: Creates commonly-used indexes for application search if missing.
  * WHY: Speeds up lookups by user_id and guild_id in application table.
@@ -666,6 +660,12 @@ export function ensureSearchIndexes() {
   }
 }
 
+/**
+ * ensureActionLogFreeText
+ * WHAT: Removes CHECK constraint on action_log.action to allow new actions without schema edits.
+ * WHY: member_join and future actions were blocked by the CHECK constraint.
+ * HOW: Recreates table without CHECK constraint if it exists.
+ */
 export function ensureActionLogFreeText() {
   try {
     const tableExists = db

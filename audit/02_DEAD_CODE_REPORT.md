@@ -6,25 +6,27 @@ Generated: 2026-01-11
 
 Found **42 potentially unused exports** and **10 TODO/deprecated markers**. Most are type exports or intentionally public APIs. A few are genuine dead code that can be safely removed.
 
+**2026 audit update:** 3 exports removed (invalidateDraftsCache, getModeratorMetrics, getTopModerators). 3 flagged exports found to be actively imported (FALSE ALARM: getAssignmentHistory, getShortBuildId, getBuildAge). Remaining 5 unresolved.
+
 ---
 
 ## 1. Unused Exports (ts-prune analysis)
 
 ### High Confidence - Safe to Remove
 
-| File | Export | Notes |
-|------|--------|-------|
-| `src/commands/listopen.ts:285` | `invalidateDraftsCache` | Not imported anywhere |
-| `src/features/metricsEpoch.ts:158` | `clearMetricsEpoch` | Not imported anywhere |
-| `src/features/modPerformance.ts:441` | `getModeratorMetrics` | Not imported (has similar `getCachedMetrics`) |
-| `src/features/modPerformance.ts:458` | `getTopModerators` | Not imported anywhere |
-| `src/features/modPerformance.ts:38` | `APPLICANT_ACTIONS` | Constant not used |
-| `src/features/notifyConfig.ts:186` | `getConfiguredGuilds` | Not imported anywhere |
-| `src/features/roleAutomation.ts:472` | `getAssignmentHistory` | Not imported anywhere |
-| `src/features/roleAutomation.ts:489` | `getRecentAssignments` | Not imported anywhere |
-| `src/lib/buildInfo.ts:394` | `getShortBuildId` | Not imported anywhere |
-| `src/lib/buildInfo.ts:416` | `getBuildAge` | Not imported anywhere |
-| `src/lib/constants.ts:61` | `OAUTH_RATE_LIMIT_MAX_REQUESTS` | Not imported anywhere |
+| File | Export | Notes | Status |
+|------|--------|-------|--------|
+| `src/commands/listopen.ts:285` | `invalidateDraftsCache` | Not imported anywhere | **RESOLVED** — already removed |
+| `src/features/metricsEpoch.ts:158` | `clearMetricsEpoch` | Not imported anywhere | |
+| `src/features/modPerformance.ts:441` | `getModeratorMetrics` | Not imported (has similar `getCachedMetrics`) | **RESOLVED** — removed in 2026 audit Pass 1 |
+| `src/features/modPerformance.ts:458` | `getTopModerators` | Not imported anywhere | **RESOLVED** — removed in 2026 audit Pass 1 |
+| `src/features/modPerformance.ts:38` | `APPLICANT_ACTIONS` | Constant not used | |
+| `src/features/notifyConfig.ts:186` | `getConfiguredGuilds` | Not imported anywhere | |
+| `src/features/artistRotation/queue.ts:464` | `getAssignmentHistory` | Imported by artistqueue.ts | **FALSE ALARM** — actively used |
+| `src/features/roleAutomation.ts:489` | `getRecentAssignments` | Not imported anywhere | |
+| `src/lib/buildInfo.ts:394` | `getShortBuildId` | Imported by errorCardV2.ts | **FALSE ALARM** — actively used |
+| `src/lib/buildInfo.ts:416` | `getBuildAge` | Imported by errorCardV2.ts, health.ts | **FALSE ALARM** — actively used |
+| `src/lib/constants.ts:61` | `OAUTH_RATE_LIMIT_MAX_REQUESTS` | Not imported anywhere | |
 
 ### Type Exports - Keep (Public API)
 
@@ -147,7 +149,7 @@ rg "deprecated" src/ --type ts
 
 | Category | Count | Action |
 |----------|-------|--------|
-| Safe to remove | 11 | Remove in next cleanup commit |
+| Safe to remove | 5 | Remove in next cleanup commit (6 resolved/false alarm) |
 | Type exports | ~15 | Keep (public API) |
 | TODOs | 2 | Address or document |
 | Deprecated | 3 | Migrate and remove |
