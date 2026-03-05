@@ -70,12 +70,9 @@ const originalPrepare = db.prepare.bind(db);
             evt: "db_error",
             m: method,
             sql,
-            err: {
-              name: (err as any)?.name,
-              code: (err as any)?.code,
-              message: (err as any)?.message,
-              stack: (err as any)?.stack,
-            },
+            err: err instanceof Error
+              ? { name: err.name, code: (err as { code?: string }).code, message: err.message, stack: err.stack }
+              : { name: String(err) },
           },
           "db error"
         );

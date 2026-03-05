@@ -20,6 +20,8 @@ import {
   ButtonStyle,
   MessageFlags,
   StringSelectMenuBuilder,
+  type ButtonInteraction,
+  type StringSelectMenuInteraction,
 } from "discord.js";
 import { db } from "../db/db.js";
 import { shortCode } from "../lib/ids.js";
@@ -642,7 +644,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
  * EDGE CASE: If a user clicks "Next" but all remaining apps were resolved
  * since the embed was rendered, they'll see "No more pages available."
  */
-export async function handleListOpenPagination(interaction: any): Promise<void> {
+export async function handleListOpenPagination(interaction: ButtonInteraction): Promise<void> {
   const customId = interaction.customId;
   // Match with optional view mode suffix (:all or :drafts)
   const match = customId.match(/^listopen:([a-f0-9]{8}):(prev|next):(\d+)(:(all|drafts))?$/);
@@ -735,7 +737,7 @@ export async function handleListOpenPagination(interaction: any): Promise<void> 
  *
  * CUSTOM ID FORMAT: listopen:{nonce}:page:drafts
  */
-export async function handleListOpenPageSelect(interaction: any): Promise<void> {
+export async function handleListOpenPageSelect(interaction: StringSelectMenuInteraction): Promise<void> {
   const customId = interaction.customId;
   const match = customId.match(/^listopen:([a-f0-9]{8}):page:drafts$/);
 

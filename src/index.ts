@@ -1134,7 +1134,7 @@ client.on("interactionCreate", wrapEvent("interactionCreate", async (interaction
                 : "other",
         cmd: interaction.isChatInputCommand()
           ? interaction.commandName
-          : (interaction as any).customId,
+          : ("customId" in interaction ? interaction.customId : "unknown"),
       },
       "Owner override activated - bypassing permission checks"
     );

@@ -76,7 +76,7 @@ function resolveAvatarUrl(subject: ScanSubject): string | null {
       extension: "png",
       forceStatic: true,
       size: 1024,
-    } as any);
+    });
     return typeof url === "string" && url.length > 0 ? url : null;
   } catch (err) {
     logger.warn({ err, userId: subject.id }, "[avatarScan] failed to resolve avatar URL");

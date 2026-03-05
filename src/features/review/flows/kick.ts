@@ -171,7 +171,7 @@ export async function kickFlow(guild: Guild, memberId: string, reason?: string |
       "[review] member kicked successfully"
     );
   } catch (err) {
-    const errorCode = (err as any)?.code;
+    const errorCode = (err as { code?: number })?.code;
     const message = err instanceof Error ? err.message : "Unknown error";
 
     // Check for specific error codes
