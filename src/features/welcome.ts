@@ -12,6 +12,7 @@ import {
 } from "discord.js";
 import { logger } from "../lib/logger.js";
 import type { GuildConfig } from "../lib/config.js";
+import { sleep } from "../lib/retry.js";
 
 /**
  * postWelcomeCard
@@ -216,7 +217,3 @@ function isTransientError(err: unknown): boolean {
   );
 }
 
-/** Simple sleep helper */
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}

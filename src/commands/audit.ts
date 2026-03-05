@@ -38,6 +38,7 @@ import {
 import { isAlreadyFlagged, upsertManualFlag, getFlaggedUserIds } from "../store/flagsStore.js";
 import { detectNsfwVision } from "../features/googleVision.js";
 import { upsertNsfwFlag } from "../store/nsfwFlagsStore.js";
+import { sleep } from "../lib/retry.js";
 import { googleReverseImageUrl } from "../ui/reviewCard.js";
 import {
   createSession,
@@ -1678,8 +1679,3 @@ async function runNsfwAudit(
   }
 }
 
-// Yes, we're promisifying setTimeout in 2024. No, there's no built-in for this.
-// Node 16+ has timers/promises but we're keeping it simple.
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}

@@ -144,11 +144,7 @@ export async function withRetry<T>(
   throw lastError;
 }
 
-/**
- * Simple sleep helper.
- * Not exported because it's trivial enough that every project has its own version.
- * If you need sleep() elsewhere, just copy this or use timers/promises.
- */
-function sleep(ms: number): Promise<void> {
+/** Simple sleep/delay helper. */
+export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }

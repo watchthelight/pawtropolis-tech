@@ -171,7 +171,7 @@ db.prepare(
 // Migration helper: probe schema and add a column if absent.
 // Uses PRAGMA table_info to introspect: https://sqlite.org/pragma.html#pragma_table_info
 // SECURITY: table/column names validated to prevent SQL injection
-const SQL_IDENTIFIER_RE = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+import { SQL_IDENTIFIER_RE } from "./utils.js";
 
 const addColumnIfMissing = (table: string, column: string, definition: string) => {
   // Validate identifiers to prevent SQL injection

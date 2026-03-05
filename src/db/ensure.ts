@@ -482,7 +482,7 @@ export function ensureReviewActionFreeText() {
 // WHY the regex validation? Paranoia, mostly. PRAGMA table_info() doesn't interpolate
 // values the same way as a normal query, but I've seen weirder SQLite edge cases.
 // The cost of checking is negligible; the cost of a SQL injection in schema code is... not.
-const SQL_IDENTIFIER_RE = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+import { SQL_IDENTIFIER_RE } from "./utils.js";
 
 function hasColumn(table: string, column: string): boolean {
   // Validate identifiers to prevent SQL injection via PRAGMA
