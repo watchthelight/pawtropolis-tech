@@ -11,20 +11,36 @@
 	let { data } = $props();
 	let flags = $derived(data.flags);
 
-	// View mode (persisted to localStorage)
+	// View mode + sort + filter (all persisted to localStorage)
 	type ViewMode = 'list' | 'compact' | 'icon';
-	const STORAGE_KEY = 'flags-view-mode';
-	let viewMode = $state<ViewMode>(
-		(browser && localStorage.getItem(STORAGE_KEY) as ViewMode) || 'list'
-	);
+	type SortOption = 'severity' | 'newest' | 'oldest' | 'name' | 'nsfw';
+	type FilterOption = 'all' | 'nsfw' | 'behavioral' | 'manual';
+
+	let viewMode = $state<ViewMode>('list');
+	let sortBy = $state<SortOption>('severity');
+	let filterType = $state<FilterOption>('all');
+	let search = $state('');
+
+	// Restore from localStorage on mount
+	let hydrated = $state(false);
 	$effect(() => {
-		if (browser) localStorage.setItem(STORAGE_KEY, viewMode);
+		if (!browser || hydrated) return;
+		const vm = localStorage.getItem('flags-view-mode');
+		const sb = localStorage.getItem('flags-sort');
+		const ft = localStorage.getItem('flags-filter');
+		if (vm && ['list', 'compact', 'icon'].includes(vm)) viewMode = vm as ViewMode;
+		if (sb && ['severity', 'newest', 'oldest', 'name', 'nsfw'].includes(sb)) sortBy = sb as SortOption;
+		if (ft && ['all', 'nsfw', 'behavioral', 'manual'].includes(ft)) filterType = ft as FilterOption;
+		hydrated = true;
 	});
 
-	// Search / sort / filter state
-	let search = $state('');
-	let sortBy = $state<'severity' | 'newest' | 'oldest' | 'name' | 'nsfw'>('severity');
-	let filterType = $state<'all' | 'nsfw' | 'behavioral' | 'manual'>('all');
+	// Persist changes after hydration
+	$effect(() => {
+		if (!browser || !hydrated) return;
+		localStorage.setItem('flags-view-mode', viewMode);
+		localStorage.setItem('flags-sort', sortBy);
+		localStorage.setItem('flags-filter', filterType);
+	});
 
 	// Expandable detail
 	let expandedId = $state<string | null>(null);
