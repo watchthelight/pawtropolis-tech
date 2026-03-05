@@ -54,26 +54,23 @@ export function getPulseMetrics(guildId: string): PulseMetrics {
 		guildId
 	);
 
-	// Estimated bots: users with no first message and no activity in message_activity.
-	// Mirrors the core signals from botDetection.ts (no activity = +2 score).
+	// Estimated bots: users tracked in user_activity with no first_message_at.
+	// Using first_message_at IS NULL is fast (indexed column, no joins needed).
+	// This is a conservative estimate — some real lurkers will be counted as bots.
 	const estimatedBots = count(
-		`SELECT COUNT(*) as count FROM user_activity ua
-		 WHERE ua.guild_id = ? AND ua.first_message_at IS NULL
-		 AND NOT EXISTS (
-			SELECT 1 FROM message_activity ma
-			WHERE ma.guild_id = ua.guild_id AND ma.user_id = ua.user_id
-		 )`,
+		'SELECT COUNT(*) as count FROM user_activity WHERE guild_id = ? AND first_message_at IS NULL',
 		guildId
 	);
 
 	const estimatedRealUsers = Math.max(0, totalMembers - estimatedBots);
 
-	// Active real users: 100+ messages in the past 14 days
+	// Active real users: 100+ messages in the past 14 days.
+	// Uses the (guild_id, created_at_s) index for the WHERE filter.
 	const fourteenDaysAgoS = Math.floor(Date.now() / 1000) - 14 * 86400;
 	const activeRealUsers = count(
 		`SELECT COUNT(*) as count FROM (
 			SELECT user_id FROM message_activity
-			WHERE guild_id = ? AND timestamp_s >= ?
+			WHERE guild_id = ? AND created_at_s >= ?
 			GROUP BY user_id
 			HAVING COUNT(*) >= 100
 		)`,
