@@ -37,11 +37,28 @@ export const SCORING = {
 
 export const MAX_SCORE = Object.values(SCORING).reduce((a, b) => a + b, 0);
 
+// Structured reason codes for reliable stats tracking.
+// Previously updateStats used fragile substring matching against free-text reasons.
+export const REASON_CODES = {
+  NO_AVATAR: "no_avatar",
+  NEW_ACCOUNT: "new_account",
+  NO_ACTIVITY: "no_activity",
+  LOW_LEVEL: "low_level",
+  BOT_USERNAME: "bot_username",
+} as const;
+
+export type ReasonCode = typeof REASON_CODES[keyof typeof REASON_CODES];
+
+export interface AuditReason {
+  code: ReasonCode;
+  label: string; // Human-readable display text
+}
+
 export interface AuditResult {
   userId: string;
   username: string;
   score: number;
-  reasons: string[];
+  reasons: AuditReason[];
   shouldFlag: boolean;
 }
 
@@ -168,7 +185,7 @@ export function checkActivityLevel(guildId: string, userId: string): ActivityChe
  * Analyze a member for bot-like characteristics
  */
 export function analyzeMember(member: GuildMember, guildId: string): AuditResult {
-  const reasons: string[] = [];
+  const reasons: AuditReason[] = [];
   let score = 0;
 
   const user = member.user;
@@ -177,7 +194,7 @@ export function analyzeMember(member: GuildMember, guildId: string): AuditResult
   // 1. No avatar (default profile)
   if (!user.avatar) {
     score += SCORING.NO_AVATAR;
-    reasons.push("No avatar (default profile)");
+    reasons.push({ code: REASON_CODES.NO_AVATAR, label: "No avatar (default profile)" });
   }
 
   // 2. Low account age (under 7 days)
@@ -185,27 +202,27 @@ export function analyzeMember(member: GuildMember, guildId: string): AuditResult
   const accountAgeDays = accountAgeMs / (1000 * 60 * 60 * 24);
   if (accountAgeDays < DETECTION_CONFIG.ACCOUNT_AGE_DAYS) {
     score += SCORING.NEW_ACCOUNT;
-    reasons.push(`Account ${Math.floor(accountAgeDays)} days old`);
+    reasons.push({ code: REASON_CODES.NEW_ACCOUNT, label: `Account ${Math.floor(accountAgeDays)} days old` });
   }
 
   // 3. Low server activity
   const activity = checkActivityLevel(guildId, user.id);
   if (!activity.hasActivity) {
     score += SCORING.NO_ACTIVITY;
-    reasons.push("No recorded message activity");
+    reasons.push({ code: REASON_CODES.NO_ACTIVITY, label: "No recorded message activity" });
   }
 
   // 4. Low server level (no Level 5+ role)
   if (!hasLevelRole(member, DETECTION_CONFIG.MIN_LEVEL)) {
     score += SCORING.LOW_LEVEL;
-    reasons.push(`Below Level ${DETECTION_CONFIG.MIN_LEVEL} (no engagement)`);
+    reasons.push({ code: REASON_CODES.LOW_LEVEL, label: `Below Level ${DETECTION_CONFIG.MIN_LEVEL} (no engagement)` });
   }
 
   // 5. Bot-like username patterns
   const patternCheck = matchesBotPattern(username);
   if (patternCheck.match) {
     score += SCORING.BOT_USERNAME;
-    reasons.push(`Suspicious username: ${patternCheck.pattern}`);
+    reasons.push({ code: REASON_CODES.BOT_USERNAME, label: `Suspicious username: ${patternCheck.pattern}` });
   }
 
   // 6. Suspicious bio (if accessible) - skip for now as bio requires additional fetch
@@ -256,15 +273,14 @@ export function createEmptyStats(): AuditStats {
   };
 }
 
-// This string-matching approach is fragile. If someone changes the reason text
-// in analyzeMember, this silently breaks. A proper fix would use an enum or
-// structured reasons, but this works and I have other problems to solve.
-export function updateStats(stats: AuditStats, reasons: string[]): void {
+export function updateStats(stats: AuditStats, reasons: AuditReason[]): void {
   for (const reason of reasons) {
-    if (reason.includes("No avatar")) stats.noAvatar++;
-    if (reason.includes("days old")) stats.newAccount++;
-    if (reason.includes("No recorded message")) stats.noActivity++;
-    if (reason.includes("Below Level")) stats.lowLevel++;
-    if (reason.includes("Suspicious username")) stats.botUsername++;
+    switch (reason.code) {
+      case REASON_CODES.NO_AVATAR: stats.noAvatar++; break;
+      case REASON_CODES.NEW_ACCOUNT: stats.newAccount++; break;
+      case REASON_CODES.NO_ACTIVITY: stats.noActivity++; break;
+      case REASON_CODES.LOW_LEVEL: stats.lowLevel++; break;
+      case REASON_CODES.BOT_USERNAME: stats.botUsername++; break;
+    }
   }
 }

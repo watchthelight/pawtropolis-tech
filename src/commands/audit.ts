@@ -1247,7 +1247,7 @@ async function runMembersAudit(
           upsertManualFlag({
             guildId: guild.id,
             userId: member.user.id,
-            reason: `[Audit] ${result.reasons.join(", ")}`,
+            reason: `[Audit] ${result.reasons.map((r) => r.label).join(", ")}`,
             flaggedBy: interaction.user.id,
             joinedAt: joinedAtSec,
           });
@@ -1263,7 +1263,7 @@ async function runMembersAudit(
             .addFields(
               { name: "User", value: `${member} (\`${member.id}\`)`, inline: true },
               { name: "Score", value: `${result.score}/${MAX_SCORE}`, inline: true },
-              { name: "Flags", value: result.reasons.map((r) => `• ${r}`).join("\n") || "None" }
+              { name: "Flags", value: result.reasons.map((r) => `• ${r.label}`).join("\n") || "None" }
             )
             .setFooter({ text: `Scanned: ${totalScanned.toLocaleString()} members` });
 
