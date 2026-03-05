@@ -5,6 +5,7 @@
 	import CopyableId from '$lib/components/data/CopyableId.svelte';
 	import { relativeTime } from '$lib/utils/time';
 	import { slide } from 'svelte/transition';
+	import { invalidateAll } from '$app/navigation';
 
 	let { data } = $props();
 	let flags = $derived(data.flags);
@@ -41,11 +42,8 @@
 				body: JSON.stringify({ targetUserId: userId, flagType })
 			});
 			if (res.ok) {
-				// Remove from local array by triggering a re-derive
-				data.flags = data.flags.filter(
-					(f: typeof flags[0]) => !(f.userId === userId && f.flagType === flagType)
-				);
 				expandedId = null;
+				await invalidateAll();
 			}
 		} catch { /* ignore */ }
 		dismissing = null;
