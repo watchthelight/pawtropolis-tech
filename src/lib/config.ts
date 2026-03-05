@@ -148,6 +148,8 @@ export type GuildConfig = {
   // Flag rate limiting
   flag_rate_limit_ms?: number | null; // Cooldown between flag commands (default: 2000)
   flag_cooldown_ttl_ms?: number | null; // TTL for flag cooldown cache (default: 3600000)
+  // NSFW alert role (pinged on NSFW avatar detection)
+  nsfw_alert_role_id?: string | null;
   // Banner sync toggle
   banner_sync_enabled?: number | null; // 1=enabled, 0=disabled (default: 1)
   // These fields are NOT optional. Ask me how I know.

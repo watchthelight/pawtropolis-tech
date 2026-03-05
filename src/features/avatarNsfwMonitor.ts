@@ -16,6 +16,7 @@ import { logger } from "../lib/logger.js";
 import { enrichEvent } from "../lib/reqctx.js";
 import { detectNsfwVision, calculateVisionScore } from "./googleVision.js";
 import { getLoggingChannelId } from "../config/loggingStore.js";
+import { getConfig } from "../lib/config.js";
 import { upsertNsfwFlag } from "../store/nsfwFlagsStore.js";
 import { googleReverseImageUrl } from "../ui/reviewCard.js";
 import { checkCooldown, COOLDOWNS } from "../lib/rateLimiter.js";
@@ -25,8 +26,14 @@ import { checkCooldown, COOLDOWNS } from "../lib/rateLimiter.js";
 // At 80%, we only catch the obvious stuff. Lower this at your own peril.
 const NSFW_THRESHOLD = 0.8;
 
-// Role to ping for NSFW avatar alerts
-const NSFW_ALERT_ROLE_ID = "987662057069482024";
+// Fallback role to ping for NSFW avatar alerts (used if not configured in guild_config)
+const NSFW_ALERT_ROLE_ID_FALLBACK = "987662057069482024";
+
+/** Get the NSFW alert role ID from guild config, falling back to hardcoded value */
+function getNsfwAlertRoleId(guildId: string): string {
+  const config = getConfig(guildId);
+  return config?.nsfw_alert_role_id ?? NSFW_ALERT_ROLE_ID_FALLBACK;
+}
 
 /**
  * Build a standardized NSFW alert embed.
@@ -193,7 +200,7 @@ export async function handleAvatarChange(
     }
 
     // Ping the designated NSFW alert role
-    const rolePing = `<@&${NSFW_ALERT_ROLE_ID}>`;
+    const rolePing = `<@&${getNsfwAlertRoleId(guildId)}>`;
 
     // The embed is intentionally attention-grabbing. Mods need to see this.
     const alertEmbed = buildNsfwAlertEmbed({ member: newMember, userId, visionScore, avatarUrl, trigger: "avatar_change" });
@@ -324,7 +331,7 @@ export async function handleMemberJoin(member: GuildMember): Promise<void> {
       return;
     }
 
-    const rolePing = `<@&${NSFW_ALERT_ROLE_ID}>`;
+    const rolePing = `<@&${getNsfwAlertRoleId(guildId)}>`;
     const alertEmbed = buildNsfwAlertEmbed({ member, userId, visionScore, avatarUrl, trigger: "member_join" });
 
     await (channel as TextChannel).send({
