@@ -55,6 +55,12 @@
 			<StatNumber value={metrics.estimatedBots} label="" />
 			<span class="card-sub">no messages or activity</span>
 		</div>
+
+		<div class="card highlight-green">
+			<span class="card-label">Active Real Users</span>
+			<StatNumber value={metrics.activeRealUsers} label="" />
+			<span class="card-sub">100+ msgs in last 14 days</span>
+		</div>
 	</div>
 </SpringReveal>
 

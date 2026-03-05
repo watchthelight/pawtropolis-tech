@@ -8,6 +8,7 @@ export interface PulseMetrics {
 	totalMembers: number;
 	estimatedBots: number;
 	estimatedRealUsers: number;
+	activeRealUsers: number;
 }
 
 function count(sql: string, ...params: unknown[]): number {
@@ -67,5 +68,18 @@ export function getPulseMetrics(guildId: string): PulseMetrics {
 
 	const estimatedRealUsers = Math.max(0, totalMembers - estimatedBots);
 
-	return { pendingApps, openModmail, activeFlags, decisionsToday, totalMembers, estimatedBots, estimatedRealUsers };
+	// Active real users: 100+ messages in the past 14 days
+	const fourteenDaysAgoS = Math.floor(Date.now() / 1000) - 14 * 86400;
+	const activeRealUsers = count(
+		`SELECT COUNT(*) as count FROM (
+			SELECT user_id FROM message_activity
+			WHERE guild_id = ? AND timestamp_s >= ?
+			GROUP BY user_id
+			HAVING COUNT(*) >= 100
+		)`,
+		guildId,
+		fourteenDaysAgoS
+	);
+
+	return { pendingApps, openModmail, activeFlags, decisionsToday, totalMembers, estimatedBots, estimatedRealUsers, activeRealUsers };
 }
