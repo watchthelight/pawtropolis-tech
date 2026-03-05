@@ -49,6 +49,25 @@
 		dismissing = null;
 	}
 
+	// Kick
+	let kicking = $state<string | null>(null);
+	let kickConfirm = $state<string | null>(null);
+	async function kickUser(userId: string, displayName: string) {
+		kicking = userId;
+		try {
+			const res = await fetch('/api/flag/kick', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ targetUserId: userId, reason: `Kicked via flag triage (${displayName})` })
+			});
+			if (res.ok) {
+				kickConfirm = null;
+				await invalidateAll();
+			}
+		} catch { /* ignore */ }
+		kicking = null;
+	}
+
 	// Severity rank for sorting
 	const SEV_RANK = { high: 0, medium: 1, low: 2 } as const;
 
@@ -187,6 +206,35 @@
 								<CopyableId value={flag.userId} />
 							</div>
 						</div>
+
+						<!-- Actions (always visible) -->
+						<div class="row-actions" onclick={(e) => e.stopPropagation()}>
+							{#if kickConfirm === key}
+								<span class="kick-confirm-label">Kick {flag.displayName}?</span>
+								<button
+									class="kick-confirm-btn"
+									disabled={kicking === flag.userId}
+									onclick={() => kickUser(flag.userId, flag.displayName)}
+								>
+									{kicking === flag.userId ? '...' : 'Yes'}
+								</button>
+								<button class="kick-cancel-btn" onclick={() => kickConfirm = null}>No</button>
+							{:else}
+								<button
+									class="action-btn dismiss-btn"
+									disabled={dismissing === key}
+									onclick={() => dismissFlag(flag.userId, flag.flagType)}
+								>
+									{dismissing === key ? '...' : 'Dismiss'}
+								</button>
+								<button
+									class="action-btn kick-btn"
+									onclick={() => kickConfirm = key}
+								>
+									Kick
+								</button>
+							{/if}
+						</div>
 					</div>
 
 					<!-- Expanded detail -->
@@ -216,15 +264,6 @@
 										</button>
 									</div>
 								{/if}
-							</div>
-							<div class="detail-actions">
-								<button
-									class="dismiss-btn"
-									disabled={dismissing === key}
-									onclick={(e) => { e.stopPropagation(); dismissFlag(flag.userId, flag.flagType); }}
-								>
-									{dismissing === key ? 'Dismissing...' : 'Dismiss'}
-								</button>
 							</div>
 						</div>
 					{/if}
@@ -522,32 +561,78 @@
 		color: var(--text-primary);
 	}
 
-	.detail-actions {
-		margin-top: 0.75rem;
+	/* ─── Row actions ─── */
+	.row-actions {
 		display: flex;
-		gap: 0.5rem;
+		align-items: center;
+		gap: 0.375rem;
+		flex-shrink: 0;
+		margin-left: auto;
 	}
 
-	.dismiss-btn {
-		padding: 0.375rem 1rem;
+	.action-btn {
+		padding: 0.3rem 0.625rem;
 		border: 1px solid var(--border-holdfast);
 		border-radius: var(--radius-sm);
 		background: var(--surface-raised);
-		color: var(--text-primary);
-		font-size: 0.75rem;
+		color: var(--text-secondary);
+		font-size: 0.7rem;
 		font-weight: 500;
 		cursor: pointer;
 		transition: all 150ms var(--ease-smooth);
+		white-space: nowrap;
 	}
 
-	.dismiss-btn:hover {
+	.action-btn:hover {
+		color: var(--text-primary);
+		border-color: var(--text-secondary);
+	}
+
+	.action-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.kick-btn:hover {
 		border-color: var(--status-danger);
 		color: var(--status-danger);
 	}
 
-	.dismiss-btn:disabled {
+	.kick-confirm-label {
+		font-size: 0.7rem;
+		color: var(--status-danger);
+		font-weight: 500;
+		white-space: nowrap;
+	}
+
+	.kick-confirm-btn {
+		padding: 0.25rem 0.5rem;
+		border: 1px solid var(--status-danger);
+		border-radius: var(--radius-sm);
+		background: var(--status-danger);
+		color: var(--text-primary);
+		font-size: 0.7rem;
+		font-weight: 600;
+		cursor: pointer;
+	}
+
+	.kick-confirm-btn:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+
+	.kick-cancel-btn {
+		padding: 0.25rem 0.5rem;
+		border: 1px solid var(--border-holdfast);
+		border-radius: var(--radius-sm);
+		background: var(--surface-raised);
+		color: var(--text-secondary);
+		font-size: 0.7rem;
+		cursor: pointer;
+	}
+
+	.kick-cancel-btn:hover {
+		color: var(--text-primary);
 	}
 
 	.nsfw-thumb {
