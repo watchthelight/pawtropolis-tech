@@ -14,7 +14,7 @@ import type { GuildMember, PartialGuildMember, TextChannel } from "discord.js";
 import { EmbedBuilder } from "discord.js";
 import { logger } from "../lib/logger.js";
 import { enrichEvent } from "../lib/reqctx.js";
-import { detectNsfwVision } from "./googleVision.js";
+import { detectNsfwVision, calculateVisionScore } from "./googleVision.js";
 import { getLoggingChannelId } from "../config/loggingStore.js";
 import { upsertNsfwFlag } from "../store/nsfwFlagsStore.js";
 import { googleReverseImageUrl } from "../ui/reviewCard.js";
@@ -27,6 +27,40 @@ const NSFW_THRESHOLD = 0.8;
 
 // Role to ping for NSFW avatar alerts
 const NSFW_ALERT_ROLE_ID = "987662057069482024";
+
+/**
+ * Build a standardized NSFW alert embed.
+ * Used by both avatar change and member join handlers to avoid duplication.
+ */
+function buildNsfwAlertEmbed(params: {
+  member: GuildMember;
+  userId: string;
+  visionScore: number;
+  avatarUrl: string;
+  trigger: "avatar_change" | "member_join";
+}): EmbedBuilder {
+  const { member, userId, visionScore, avatarUrl, trigger } = params;
+  const reverseSearchUrl = googleReverseImageUrl(avatarUrl);
+  const isJoin = trigger === "member_join";
+
+  return new EmbedBuilder()
+    .setTitle(isJoin ? "🔞 NSFW Avatar Detected on Join" : "🔞 NSFW Avatar Detected")
+    .setDescription(
+      isJoin
+        ? `A new member joined with a potentially NSFW avatar.\n\n**Action Required:** Review and take appropriate action.`
+        : `A user changed their avatar to potentially NSFW content.\n\n**Action Required:** Review and take appropriate action.`
+    )
+    .setColor(0xE74C3C) // Red
+    .setThumbnail(member.displayAvatarURL({ size: 128 }))
+    .addFields(
+      { name: "User", value: `${member} (\`${userId}\`)`, inline: true },
+      { name: "Score", value: `${Math.round(visionScore * 100)}%`, inline: true },
+      { name: "Detection", value: isJoin ? "New member join" : "Real-time avatar change", inline: true },
+      { name: "Avatar", value: `[Reverse Image Search](${reverseSearchUrl})` }
+    )
+    .setTimestamp()
+    .setFooter({ text: isJoin ? "Auto-detected on member join" : "Auto-detected by avatar monitor" });
+}
 
 /**
  * Handle avatar changes from guildMemberUpdate event
@@ -103,20 +137,25 @@ export async function handleAvatarChange(
     return;
   }
 
+  // Use calculateVisionScore for consistency with avatarScan.ts —
+  // considers adult, racy (0.6x weight), and violence (0.3x weight) scores.
+  // Previously only checked adultScore, which missed racy-but-not-adult avatars.
+  const visionScore = calculateVisionScore(visionResult);
+
   logger.debug(
-    { guildId, userId, adultScore: visionResult.adultScore },
+    { guildId, userId, visionScore, adultScore: visionResult.adultScore, racyScore: visionResult.racyScore },
     "[avatarNsfwMonitor] Scan complete"
   );
 
   // Check if above threshold
   // Below 80% we let it slide. False positives are annoying for everyone.
-  if (visionResult.adultScore < NSFW_THRESHOLD) {
+  if (visionScore < NSFW_THRESHOLD) {
     return; // Clean avatar
   }
 
   // NSFW detected! Flag and alert
   logger.warn(
-    { guildId, userId, adultScore: visionResult.adultScore },
+    { guildId, userId, visionScore, adultScore: visionResult.adultScore },
     "[avatarNsfwMonitor] NSFW avatar detected!"
   );
 
@@ -124,6 +163,7 @@ export async function handleAvatarChange(
   enrichEvent((e) => {
     e.setFeature("nsfw_monitor", "avatar_flagged");
     e.addEntity({ type: "user", id: userId });
+    e.addAttr("visionScore", visionScore);
     e.addAttr("adultScore", visionResult.adultScore);
     e.addAttr("trigger", "avatar_change");
   });
@@ -133,7 +173,7 @@ export async function handleAvatarChange(
     guildId,
     userId,
     avatarUrl,
-    nsfwScore: visionResult.adultScore,
+    nsfwScore: visionScore,
     reason: "auto_scan",
     flaggedBy: "system",
   });
@@ -155,25 +195,8 @@ export async function handleAvatarChange(
     // Ping the designated NSFW alert role
     const rolePing = `<@&${NSFW_ALERT_ROLE_ID}>`;
 
-    const reverseSearchUrl = googleReverseImageUrl(avatarUrl);
     // The embed is intentionally attention-grabbing. Mods need to see this.
-    // If the color/emoji feels aggressive, that's by design.
-    const alertEmbed = new EmbedBuilder()
-      .setTitle("🔞 NSFW Avatar Detected")
-      .setDescription(
-        `A user changed their avatar to potentially NSFW content.\n\n` +
-        `**Action Required:** Review and take appropriate action.`
-      )
-      .setColor(0xE74C3C) // Red
-      .setThumbnail(newMember.displayAvatarURL({ size: 128 }))
-      .addFields(
-        { name: "User", value: `${newMember} (\`${userId}\`)`, inline: true },
-        { name: "Score", value: `${Math.round(visionResult.adultScore * 100)}%`, inline: true },
-        { name: "Detection", value: "Real-time avatar change", inline: true },
-        { name: "Avatar", value: `[Reverse Image Search](${reverseSearchUrl})` }
-      )
-      .setTimestamp()
-      .setFooter({ text: "Auto-detected by avatar monitor" });
+    const alertEmbed = buildNsfwAlertEmbed({ member: newMember, userId, visionScore, avatarUrl, trigger: "avatar_change" });
 
     await (channel as TextChannel).send({
       content: rolePing || undefined,
@@ -181,7 +204,7 @@ export async function handleAvatarChange(
     });
 
     logger.info(
-      { guildId, userId, adultScore: visionResult.adultScore },
+      { guildId, userId, visionScore },
       "[avatarNsfwMonitor] Alert sent to logging channel"
     );
   } catch (err) {
@@ -250,19 +273,21 @@ export async function handleMemberJoin(member: GuildMember): Promise<void> {
     return;
   }
 
+  const visionScore = calculateVisionScore(visionResult);
+
   logger.debug(
-    { guildId, userId, adultScore: visionResult.adultScore },
+    { guildId, userId, visionScore, adultScore: visionResult.adultScore, racyScore: visionResult.racyScore },
     "[avatarNsfwMonitor] Join scan complete"
   );
 
   // Check if above threshold
-  if (visionResult.adultScore < NSFW_THRESHOLD) {
+  if (visionScore < NSFW_THRESHOLD) {
     return; // Clean avatar
   }
 
   // NSFW detected on join!
   logger.warn(
-    { guildId, userId, adultScore: visionResult.adultScore },
+    { guildId, userId, visionScore, adultScore: visionResult.adultScore },
     "[avatarNsfwMonitor] NSFW avatar detected on new member!"
   );
 
@@ -270,6 +295,7 @@ export async function handleMemberJoin(member: GuildMember): Promise<void> {
   enrichEvent((e) => {
     e.setFeature("nsfw_monitor", "avatar_flagged");
     e.addEntity({ type: "user", id: userId });
+    e.addAttr("visionScore", visionScore);
     e.addAttr("adultScore", visionResult.adultScore);
     e.addAttr("trigger", "member_join");
   });
@@ -279,7 +305,7 @@ export async function handleMemberJoin(member: GuildMember): Promise<void> {
     guildId,
     userId,
     avatarUrl,
-    nsfwScore: visionResult.adultScore,
+    nsfwScore: visionScore,
     reason: "join_scan",
     flaggedBy: "system",
   });
@@ -299,24 +325,7 @@ export async function handleMemberJoin(member: GuildMember): Promise<void> {
     }
 
     const rolePing = `<@&${NSFW_ALERT_ROLE_ID}>`;
-    const reverseSearchUrl = googleReverseImageUrl(avatarUrl);
-
-    const alertEmbed = new EmbedBuilder()
-      .setTitle("🔞 NSFW Avatar Detected on Join")
-      .setDescription(
-        `A new member joined with a potentially NSFW avatar.\n\n` +
-        `**Action Required:** Review and take appropriate action.`
-      )
-      .setColor(0xE74C3C) // Red
-      .setThumbnail(member.displayAvatarURL({ size: 128 }))
-      .addFields(
-        { name: "User", value: `${member} (\`${userId}\`)`, inline: true },
-        { name: "Score", value: `${Math.round(visionResult.adultScore * 100)}%`, inline: true },
-        { name: "Detection", value: "New member join", inline: true },
-        { name: "Avatar", value: `[Reverse Image Search](${reverseSearchUrl})` }
-      )
-      .setTimestamp()
-      .setFooter({ text: "Auto-detected on member join" });
+    const alertEmbed = buildNsfwAlertEmbed({ member, userId, visionScore, avatarUrl, trigger: "member_join" });
 
     await (channel as TextChannel).send({
       content: rolePing,
@@ -324,7 +333,7 @@ export async function handleMemberJoin(member: GuildMember): Promise<void> {
     });
 
     logger.info(
-      { guildId, userId, adultScore: visionResult.adultScore },
+      { guildId, userId, visionScore },
       "[avatarNsfwMonitor] Join alert sent to logging channel"
     );
   } catch (err) {
