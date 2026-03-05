@@ -625,7 +625,7 @@ export function upsertConfig(guildId: string, partial: Partial<Omit<GuildConfig,
       "retry_max_attempts", "retry_initial_delay_ms", "retry_max_delay_ms",
       "circuit_breaker_threshold", "circuit_breaker_reset_ms",
       "avatar_scan_hard_threshold", "avatar_scan_soft_threshold", "avatar_scan_racy_threshold",
-      "flag_rate_limit_ms", "flag_cooldown_ttl_ms", "banner_sync_enabled",
+      "flag_rate_limit_ms", "flag_cooldown_ttl_ms", "nsfw_alert_role_id", "banner_sync_enabled",
     ]);
 
     const validKeys = keys.filter((k) => ALLOWED_CONFIG_COLUMNS.has(k as string));
