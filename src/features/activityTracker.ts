@@ -220,14 +220,16 @@ async function evaluateAndFlag(
       config.channelId
     );
 
-    // Update flagged_at timestamp
+    // Update flagged_at timestamp + reason + who flagged
     db.prepare(
       `
       UPDATE user_activity
-      SET flagged_at = ?
+      SET flagged_at = ?,
+          flagged_reason = ?,
+          flagged_by = 'system'
       WHERE guild_id = ? AND user_id = ?
     `
-    ).run(firstMessageAt, guildId, userId);
+    ).run(firstMessageAt, `Silent for ${silentDays} days before first message`, guildId, userId);
 
     logger.info({ guildId, userId, silentDays }, "[flagger] flag alert posted successfully");
 

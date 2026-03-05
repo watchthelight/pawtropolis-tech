@@ -118,6 +118,8 @@ export async function scanAvatar(
   // Use high-res avatar for Google Vision
   // Force size=1024 even if a different size was in the URL. Vision API accuracy
   // improves with larger images, and 1024 is a good balance of quality vs. bandwidth.
+  // NOTE: avatarNsfwMonitor.ts uses 256px for fast real-time monitoring.
+  // The difference is intentional: scan=detailed review, monitor=fast real-time.
   //
   // GOTCHA: This regex is fragile. If Discord changes their CDN query params format,
   // this will silently stop working. We've been burned before. Check the Discord docs

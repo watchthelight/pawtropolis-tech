@@ -47,7 +47,7 @@ export interface NsfwFlagRow {
   guild_id: string;
   user_id: string;
   avatar_url: string;
-  nsfw_score: number;  // 0-100, where 80+ means "you need to explain this to HR"
+  nsfw_score: number;  // 0-1 probability, where 0.8+ means "you need to explain this to HR"
   reason: string;
   flagged_by: string;
   flagged_at: string;

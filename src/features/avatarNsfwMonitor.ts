@@ -56,6 +56,8 @@ export async function handleAvatarChange(
   // Get the current avatar URL (prefer server avatar if set)
   // WHY 256px? Larger = more API cost and slower. Smaller = Vision API struggles.
   // 256 is the sweet spot for NSFW detection accuracy vs performance.
+  // NOTE: avatarScan.ts uses 1024px for thorough application review scans.
+  // The difference is intentional: monitor=fast real-time, scan=detailed review.
   const avatarUrl = newMember.avatar
     ? newMember.displayAvatarURL({ extension: "png", size: 256 })
     : newMember.user.avatar
