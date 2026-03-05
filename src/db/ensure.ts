@@ -14,6 +14,7 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 import { db } from "./db.js";
 import { logger } from "../lib/logger.js";
+import { SQL_IDENTIFIER_RE } from "./utils.js";
 
 /*
  * Schema self-heal: runs once on startup.
@@ -482,7 +483,6 @@ export function ensureReviewActionFreeText() {
 // WHY the regex validation? Paranoia, mostly. PRAGMA table_info() doesn't interpolate
 // values the same way as a normal query, but I've seen weirder SQLite edge cases.
 // The cost of checking is negligible; the cost of a SQL injection in schema code is... not.
-import { SQL_IDENTIFIER_RE } from "./utils.js";
 
 function hasColumn(table: string, column: string): boolean {
   // Validate identifiers to prevent SQL injection via PRAGMA

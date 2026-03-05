@@ -52,7 +52,7 @@ function decrypt(encoded: string): string | null {
 		const ciphertext = buf.subarray(28);
 		const decipher = createDecipheriv(ALGORITHM, getEncryptionKey(), iv);
 		decipher.setAuthTag(tag);
-		return decipher.update(ciphertext) + decipher.final('utf8');
+		return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8');
 	} catch {
 		return null;
 	}

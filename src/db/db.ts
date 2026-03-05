@@ -19,6 +19,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { env } from "../lib/env.js";
 import { logger } from "../lib/logger.js";
+import { SQL_IDENTIFIER_RE } from "./utils.js";
 
 const DB_BUSY_TIMEOUT_MS = 5000;
 const DB_DEFAULT_PATH = "data/data.db";
@@ -171,7 +172,6 @@ db.prepare(
 // Migration helper: probe schema and add a column if absent.
 // Uses PRAGMA table_info to introspect: https://sqlite.org/pragma.html#pragma_table_info
 // SECURITY: table/column names validated to prevent SQL injection
-import { SQL_IDENTIFIER_RE } from "./utils.js";
 
 const addColumnIfMissing = (table: string, column: string, definition: string) => {
   // Validate identifiers to prevent SQL injection

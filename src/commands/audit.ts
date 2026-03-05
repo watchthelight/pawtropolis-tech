@@ -332,7 +332,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
         } catch (editErr: unknown) {
           const e = editErr instanceof Error ? editErr : new Error(String(editErr));
           logger.error(
-            { err: e.message, code: (e as { code?: string }).code, rawError: editErr },
+            { err: e.message, code: (e as { code?: number }).code, rawError: editErr },
             "[audit:security] Failed to send final embed"
           );
           // Try sending a simpler fallback embed

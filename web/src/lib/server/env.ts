@@ -13,6 +13,7 @@ function getRequired(name: string): string {
 
 let _guildId: string | undefined;
 let _sessionSecret: string | undefined;
+let _oauthRedirect: string | undefined;
 
 export function getGuildId(): string {
 	return (_guildId ??= getRequired('GUILD_ID'));
@@ -23,5 +24,5 @@ export function getSessionSecret(): string {
 }
 
 export function getOAuth2RedirectUri(): string {
-	return process.env.OAUTH2_REDIRECT_URI ?? '';
+	return (_oauthRedirect ??= getRequired('OAUTH2_REDIRECT_URI'));
 }
