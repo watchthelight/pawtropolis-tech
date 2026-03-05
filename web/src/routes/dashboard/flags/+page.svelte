@@ -12,7 +12,7 @@
 
 	// Search / sort / filter state
 	let search = $state('');
-	let sortBy = $state<'severity' | 'newest' | 'oldest' | 'name'>('severity');
+	let sortBy = $state<'severity' | 'newest' | 'oldest' | 'name' | 'nsfw'>('severity');
 	let filterType = $state<'all' | 'nsfw' | 'behavioral' | 'manual'>('all');
 
 	// Expandable detail
@@ -81,6 +81,12 @@
 				case 'newest': return b.flaggedAt - a.flaggedAt;
 				case 'oldest': return a.flaggedAt - b.flaggedAt;
 				case 'name': return a.displayName.localeCompare(b.displayName);
+				case 'nsfw': {
+					// Highest NSFW score first, nulls (behavioral) at bottom
+					const aScore = a.nsfwScore ?? -1;
+					const bScore = b.nsfwScore ?? -1;
+					return bScore - aScore;
+				}
 				default: return 0;
 			}
 		});
@@ -108,6 +114,7 @@
 			<option value="newest">Newest</option>
 			<option value="oldest">Oldest</option>
 			<option value="name">Name A-Z</option>
+			<option value="nsfw">NSFW Score</option>
 		</select>
 		<div class="filter-chips">
 			{#each [['all', 'All'], ['nsfw', 'NSFW'], ['behavioral', 'Behavioral'], ['manual', 'Manual']] as [value, label]}
