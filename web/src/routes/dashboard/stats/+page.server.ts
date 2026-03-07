@@ -5,6 +5,7 @@ import {
 	getPersonalStatsTrend,
 	getActivityTimeline,
 	getResponseTrend,
+	getTeamStats,
 	windowStartForWindow,
 	windowDaysForWindow,
 	type TimeWindow
@@ -33,6 +34,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const trend = getPersonalStatsTrend(userId, guildId, window);
 	const timeline = getActivityTimeline(userId, guildId, windowStartS);
 	const responseTrend = getResponseTrend(userId, guildId, windowStartS);
+	const team = getTeamStats(guildId, windowStartS);
 
-	return { personal, trend, timeline, responseTrend, window, windowDays: days };
+	return { personal, trend, timeline, responseTrend, team, window, windowDays: days, userId };
 };
