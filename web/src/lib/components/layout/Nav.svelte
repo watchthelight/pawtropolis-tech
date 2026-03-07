@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import { slide } from 'svelte/transition';
 	import ConnectionIndicator from './ConnectionIndicator.svelte';
+	import ThemeControls from './ThemeControls.svelte';
 
 	let { user, collapsed = false }: {
 		user: {
@@ -105,6 +106,7 @@
 
 	<!-- Footer section -->
 	<div class="footer" class:footer-collapsed={collapsed}>
+		<ThemeControls {collapsed} />
 		{#if !collapsed}
 			<ConnectionIndicator />
 			<a

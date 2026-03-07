@@ -102,6 +102,8 @@ function extractImageHue(imageUrl: string): Promise<number | null> {
 }
 
 let _activeUserId: string | null = null;
+let _discordAccentColor: number | null = null;
+let _discordAvatarUrl: string | null | undefined = null;
 
 /**
  * Generate a gamut-safe hex color from OKLCH values using culori's clampChroma.
@@ -148,7 +150,7 @@ function generatePalette(seed: number) {
 	};
 }
 
-function applyPalette(hue: number): void {
+export function applyPalette(hue: number): void {
 	if (typeof document === 'undefined') return;
 	const rounded = String(Math.round(hue));
 	const p = generatePalette(hue);
@@ -191,6 +193,8 @@ export function restoreCachedHue(userId: string): void {
  */
 export function applyTheme(accentColor: number | null, avatarUrl?: string | null, userId?: string): void {
 	if (userId) _activeUserId = userId;
+	_discordAccentColor = accentColor;
+	_discordAvatarUrl = avatarUrl;
 	// Try accent color first (skip 0 = black, which Discord returns when theme isn't in API)
 	if (accentColor && accentColor !== 0) {
 		const hue = accentColorToHue(accentColor);
@@ -213,4 +217,12 @@ export function applyTheme(accentColor: number | null, avatarUrl?: string | null
 	}
 
 	applyPalette(FALLBACK_HUE);
+}
+
+/**
+ * Reset to the user's Discord-derived theme.
+ * Re-runs applyTheme with cached Discord data.
+ */
+export function resetToDiscordTheme(): void {
+	applyTheme(_discordAccentColor, _discordAvatarUrl, _activeUserId ?? undefined);
 }
