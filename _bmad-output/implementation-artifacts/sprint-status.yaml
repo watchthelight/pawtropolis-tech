@@ -106,8 +106,8 @@ development_status:
   epic-6-retrospective: optional
 
   # Epic 7: Art Queue (stories 7.1-7.3 combined into single story)
-  epic-7: in-progress
-  7-1-art-query-layer-queue-view: ready-for-dev
+  epic-7: done
+  7-1-art-query-layer-queue-view: done
   epic-7-retrospective: optional
 
   # Epic 8: Configuration Viewer

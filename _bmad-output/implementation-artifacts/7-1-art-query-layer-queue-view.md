@@ -1,6 +1,6 @@
 # Story 7.1: Art Query Layer & Queue View
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
