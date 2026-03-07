@@ -110,11 +110,9 @@ development_status:
   7-1-art-query-layer-queue-view: done
   epic-7-retrospective: optional
 
-  # Epic 8: Configuration Viewer
-  epic-8: backlog
-  8-1-config-query-layer-page-shell: backlog
-  8-2-configuration-sections-display: backlog
-  8-3-configuration-value-formatting: backlog
+  # Epic 8: Configuration Viewer (stories 8.1-8.3 combined)
+  epic-8: done
+  8-1-config-viewer: done
   epic-8-retrospective: optional
 
   # Epic 9: Audit Log
