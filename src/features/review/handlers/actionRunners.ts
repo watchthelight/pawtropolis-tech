@@ -116,6 +116,32 @@ export async function runApproveAction(
     roleError = flow.roleError ?? null;
   }
 
+  // BLOCK: If accepted_role_id is configured but role grant failed, abort the approval.
+  // The DB transaction already committed, but we skip DM/welcome so the user doesn't
+  // think they're verified when they're not. Reviewer gets a loud error to fix manually.
+  if (cfg?.accepted_role_id && !roleApplied) {
+    const roleMention = `<@&${cfg.accepted_role_id}>`;
+    const errorReason = roleError?.message ?? "Unknown error";
+    const errorMsg = `**Role grant failed** — could not assign ${roleMention} to <@${app.user_id}>. Reason: ${errorReason}.\n\n**The user was NOT sent a welcome DM.** Please assign the role manually and welcome them, or investigate the issue.`;
+
+    logger.error(
+      { guildId: guild.id, appId: app.id, userId: app.user_id, roleError: errorReason },
+      "[approve] BLOCKED: Role grant failed after retries — user left in limbo"
+    );
+
+    if (interaction.channel && "send" in interaction.channel) {
+      await interaction.channel.send({
+        content: errorMsg,
+        allowedMentions: SAFE_ALLOWED_MENTIONS,
+      }).catch(() => {});
+    }
+
+    updateReviewActionMeta(result.reviewActionId, { roleApplied, dmDelivered: false });
+    notifyDashboard("review:approved", { appId: app.id, reviewerId: interaction.user.id, action: "approve" });
+    notifyDashboard("stats:updated", { userId: interaction.user.id });
+    return;
+  }
+
   // Note: We intentionally preserve the claim record after resolution
   // so the review card continues to show who handled the application
 
@@ -229,6 +255,7 @@ export async function runApproveAction(
   }
 
   notifyDashboard("review:approved", { appId: app.id, reviewerId: interaction.user.id, action: "approve" });
+  notifyDashboard("stats:updated", { userId: interaction.user.id });
 }
 
 /**
@@ -372,6 +399,7 @@ export async function runRejectAction(
   }
 
   notifyDashboard("review:rejected", { appId: app.id, reviewerId: interaction.user.id, action: "reject" });
+  notifyDashboard("stats:updated", { userId: interaction.user.id });
 }
 
 /**
@@ -533,6 +561,7 @@ export async function runPermRejectAction(
   }
 
   notifyDashboard("review:permrejected", { appId: app.id, reviewerId: interaction.user.id, action: "perm_reject" });
+  notifyDashboard("stats:updated", { userId: interaction.user.id });
 }
 
 /**
@@ -650,4 +679,5 @@ export async function runKickAction(
   }
 
   notifyDashboard("review:kicked", { appId: app.id, reviewerId: interaction.user.id, action: "kick" });
+  notifyDashboard("stats:updated", { userId: interaction.user.id });
 }
