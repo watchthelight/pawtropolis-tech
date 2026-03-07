@@ -115,12 +115,9 @@ development_status:
   8-1-config-viewer: done
   epic-8-retrospective: optional
 
-  # Epic 9: Audit Log
-  epic-9: backlog
-  9-1-audit-query-layer-page-shell: backlog
-  9-2-audit-log-table-display: backlog
-  9-3-audit-log-filters: backlog
-  9-4-audit-log-pagination: backlog
+  # Epic 9: Audit Log (stories 9.1-9.4 combined)
+  epic-9: done
+  9-1-audit-log: done
   epic-9-retrospective: optional
 
   # Epic 10: Security Dashboard
