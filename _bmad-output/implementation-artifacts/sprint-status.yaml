@@ -1,0 +1,140 @@
+# generated: 2026-03-01
+# project: pawtropolis
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-03-01
+project: pawtropolis
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # Epic 1: Dashboard Shell & Identity
+  epic-1: done
+  1-1-sqlite-access-layer: done
+  1-2-oklch-theming-engine: done
+  1-3-motion-foundation-shared-ui-primitives: done
+  1-4-dashboard-layout-shell-tier-gated-nav: done
+  1-5-dashboard-home-landing-page: done
+  1-6-splash-page-auth-experience: done
+  1-7-design-system-foundation-rework: done
+  1-8-component-polish-pass: done
+  epic-1-retrospective: optional
+
+  # Epic 2: Review Workstation
+  epic-2: done
+  2-1-bot-dashboard-api-foundation: done
+  2-2-sse-server-infrastructure: done
+  2-3-sse-client-store-connection-management: done
+  2-4-review-queue-page-shell: done
+  2-4b-review-queue-tab-filtering: done
+  2-4c-session-color-refresh: done
+  2-4d-tier-and-permission-fixes: done
+  2-5-application-detail-panel: done
+  2-6-avatar-scan-risk-aura: done
+  2-7-modmail-viewer: done
+  2-8-review-claim-system: done
+  2-9-review-decision-actions: done
+  2-10-live-queue-updates: done
+  2-11-bot-offline-error-handling: done
+  2-12-live-tier-expansion: done
+  epic-2-retrospective: done
+
+  # Epic 3: Staff Analytics
+  epic-3: done
+  3-1-stats-query-layer-page-shell: done
+  3-2-personal-performance-display: done
+  3-3-trend-analysis-period-comparison: done
+  3-4-team-stats-tab: done
+  3-5-real-time-stats-updates: done
+  epic-3-retrospective: optional
+
+  # Epic 4: Server Pulse
+  epic-4: in-progress
+  4-1-pulse-query-layer-page-shell: done
+  4-2-pending-applications-card: backlog # deferred — duplicates Home, needs message_activity data first
+  4-3-open-modmail-active-flags-cards: backlog # deferred
+  4-4-activity-summary-card: backlog # deferred — message_activity table empty
+  4-5-real-time-pulse-updates: backlog # deferred
+  epic-4-retrospective: optional
+
+  # Epic 5: Flag Management
+  epic-5: done
+  5-1-flag-query-layer-queue-view: done
+  5-2-flag-detail-context: done
+  5-3-flag-dismiss-escalate-actions: done # dismiss implemented, escalate deferred (needs DB schema design)
+  5-4-real-time-flag-updates: done
+  5-5-flag-sse-events-and-dismiss-api: done # flag:created SSE, live updates, dismiss endpoint
+  epic-5-retrospective: optional
+
+  # Epic 6: Activity Heatmap
+  epic-6: backlog
+  6-1-activity-query-layer-page-shell: backlog
+  6-2-heatmap-visualization: backlog
+  6-3-heatmap-hover-detail: backlog
+  epic-6-retrospective: optional
+
+  # Epic 7: Art Queue (stories 7.1-7.3 combined into single story)
+  epic-7: in-progress
+  7-1-art-query-layer-queue-view: ready-for-dev
+  epic-7-retrospective: optional
+
+  # Epic 8: Configuration Viewer
+  epic-8: backlog
+  8-1-config-query-layer-page-shell: backlog
+  8-2-configuration-sections-display: backlog
+  8-3-configuration-value-formatting: backlog
+  epic-8-retrospective: optional
+
+  # Epic 9: Audit Log
+  epic-9: backlog
+  9-1-audit-query-layer-page-shell: backlog
+  9-2-audit-log-table-display: backlog
+  9-3-audit-log-filters: backlog
+  9-4-audit-log-pagination: backlog
+  epic-9-retrospective: optional
+
+  # Epic 10: Security Dashboard
+  epic-10: backlog
+  10-1-security-query-layer-page-shell: backlog
+  10-2-security-snapshot-display: backlog
+  10-3-security-change-highlighting: backlog
+  epic-10-retrospective: optional
+
+  # Epic 11: System Health
+  epic-11: backlog
+  11-1-system-query-layer-page-shell: backlog
+  11-2-health-metrics-display: backlog
+  11-3-health-alert-history: backlog
+  epic-11-retrospective: optional
