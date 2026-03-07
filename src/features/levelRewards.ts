@@ -20,7 +20,6 @@ import {
 } from "./roleAutomation.js";
 import { isPanicMode } from "./panicStore.js";
 import { logActionPretty } from "../logging/pretty.js";
-import { getConfig } from "../lib/config.js";
 
 /**
  * Handle when a user receives a level role from Amaribot.
@@ -260,29 +259,8 @@ export async function handleLevelRoleAdded(
     }
 
     if (skippedRewards.length > 0) {
-      // DM the user about skipped rewards (they already have them)
-      let skippedDmStatus = "✅ DM Sent";
-
-      // Build support message from config or use fallback
-      const config = getConfig(guild.id);
-      const supportChannelId = config?.support_channel_id;
-      let dmContent = `Thanks for being a part of our community! We tried to give you your rewards, but you never redeemed your last ones, and we can't give you them twice!`;
-      if (supportChannelId) {
-        // Generate dynamic support link using guild ID and configured channel
-        dmContent += ` Open a support ticket to resolve this issue: https://discord.com/channels/${guild.id}/${supportChannelId}`;
-      } else {
-        // Fallback when no support channel is configured
-        dmContent += ` Please contact a server moderator to resolve this issue.`;
-      }
-
-      await member.send({
-        content: dmContent,
-      }).catch((err) => {
-        skippedDmStatus = "❌ DM Failed (closed)";
-        logger.debug({ err, guildId: guild.id, userId: member.id },
-          "[levelRewards] Could not DM user about skipped rewards");
-      });
-
+      // User already has the reward role(s). This is normal for Amaribot re-syncs
+      // or re-joins. No DM needed — "already has role" means they got their rewards.
       await logActionPretty(guild, {
         actorId: botId,
         subjectId: member.id,
@@ -294,7 +272,6 @@ export async function handleLevelRoleAdded(
           levelRoleId: tier.role_id,
           rewardRoles: skippedRewards.map(r => `${r.name} (<@&${r.id}>)`),
           rewardCount: skippedRewards.length,
-          dmStatus: skippedDmStatus,
         },
       }).catch((err) => {
         logger.warn({ err, guildId: guild.id, userId: member.id },
