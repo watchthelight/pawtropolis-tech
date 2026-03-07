@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
 	import PageHeader from '$lib/components/layout/PageHeader.svelte';
 	import EmptyState from '$lib/components/feedback/EmptyState.svelte';
 	import SpringReveal from '$lib/components/motion/SpringReveal.svelte';
@@ -7,6 +8,7 @@
 	import { slide } from 'svelte/transition';
 	import { invalidateAll } from '$app/navigation';
 	import { browser } from '$app/environment';
+	import { subscribe, unsubscribe, onReconnect, offReconnect } from '$lib/stores/sse.svelte';
 
 	let { data } = $props();
 	let flags = $derived(data.flags);
@@ -40,6 +42,24 @@
 		localStorage.setItem('flags-view-mode', viewMode);
 		localStorage.setItem('flags-sort', sortBy);
 		localStorage.setItem('flags-filter', filterType);
+	});
+
+	// Live updates — any flag event refreshes data from DB (debounced)
+	let refreshTimer: ReturnType<typeof setTimeout> | undefined;
+	function debouncedRefresh() {
+		clearTimeout(refreshTimer);
+		refreshTimer = setTimeout(() => invalidateAll(), 150);
+	}
+	function onFlagEvent() {
+		debouncedRefresh();
+	}
+	const refreshOnReconnect = () => invalidateAll();
+	subscribe('flag:*', onFlagEvent);
+	onReconnect(refreshOnReconnect);
+	onDestroy(() => {
+		offReconnect(refreshOnReconnect);
+		unsubscribe('flag:*', onFlagEvent);
+		clearTimeout(refreshTimer);
 	});
 
 	// Expandable detail

@@ -23,6 +23,7 @@ import { env } from "../lib/env.js";
 import { getExistingFlag, isAlreadyFlagged, upsertManualFlag } from "../store/flagsStore.js";
 import { type CommandContext, withStep, withSql } from "../lib/cmdWrap.js";
 import { logActionPretty } from "../logging/pretty.js";
+import { notifyDashboard } from "../web/notifyDashboard.js";
 
 /**
  * Rate limiter for flag command (per moderator per guild).
@@ -200,6 +201,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
       );
 
       flagCooldowns.set(cooldownKey, Date.now());
+      notifyDashboard("flag:created", { userId: targetUser.id, flagType: "behavioral", reason });
       return f;
     });
 

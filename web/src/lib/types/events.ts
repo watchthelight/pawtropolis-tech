@@ -35,6 +35,7 @@ export type SSEEventType =
 	| 'modmail:thread_opened'
 	| 'modmail:thread_closed'
 	| 'modmail:thread_reopened'
+	| 'flag:created'
 	| 'flag:dismissed'
 	| 'flag:kicked';
 
@@ -101,6 +102,12 @@ export interface ModmailThreadReopenedPayload {
 	staffUserId: string;
 }
 
+export interface FlagCreatedPayload {
+	userId: string;
+	flagType: 'nsfw' | 'behavioral';
+	reason: string;
+}
+
 export interface FlagDismissedPayload {
 	userId: string;
 	flagType: 'nsfw' | 'behavioral';
@@ -129,6 +136,7 @@ export interface SSEEventMap {
 	'modmail:thread_opened': ModmailThreadOpenedPayload;
 	'modmail:thread_closed': ModmailThreadClosedPayload;
 	'modmail:thread_reopened': ModmailThreadReopenedPayload;
+	'flag:created': FlagCreatedPayload;
 	'flag:dismissed': FlagDismissedPayload;
 	'flag:kicked': FlagKickedPayload;
 }

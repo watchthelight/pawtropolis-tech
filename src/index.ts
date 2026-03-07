@@ -131,6 +131,7 @@ import { REST, Routes } from "discord.js";
 import { syncCommandsToAllGuilds, syncCommandsToGuild } from "./commands/sync.js";
 import { logActionPretty } from "./logging/pretty.js";
 import { handleDbRecoveryButton } from "./features/dbRecoveryButtons.js";
+import { notifyDashboard } from "./web/notifyDashboard.js";
 
 export const client = new Client({
   intents: [
@@ -931,6 +932,8 @@ client.on("guildMemberRemove", wrapEvent("guildMemberRemove", async (member) => 
     const behavResult = db.prepare("UPDATE user_activity SET flagged_at = NULL, flagged_reason = NULL, manual_flag = 0, flagged_by = NULL WHERE guild_id = ? AND user_id = ? AND flagged_at IS NOT NULL").run(guildId, userId);
     if (nsfwResult.changes > 0 || behavResult.changes > 0) {
       logger.info({ guildId, userId, nsfwDismissed: nsfwResult.changes, behavDismissed: behavResult.changes }, "[guildMemberRemove] auto-dismissed flags for departed member");
+      if (nsfwResult.changes > 0) notifyDashboard("flag:dismissed", { userId, flagType: "nsfw" });
+      if (behavResult.changes > 0) notifyDashboard("flag:dismissed", { userId, flagType: "behavioral" });
     }
   } catch (err) {
     logger.warn({ err, guildId, userId }, "[guildMemberRemove] failed to auto-dismiss flags");

@@ -20,6 +20,7 @@ import { getConfig } from "../lib/config.js";
 import { upsertNsfwFlag } from "../store/nsfwFlagsStore.js";
 import { googleReverseImageUrl } from "../ui/reviewCard.js";
 import { checkCooldown, COOLDOWNS } from "../lib/rateLimiter.js";
+import { notifyDashboard } from "../web/notifyDashboard.js";
 
 // 80% threshold is intentionally high to minimize false positives.
 // Google Vision flags anime characters, furry art, and beach photos pretty aggressively.
@@ -184,6 +185,7 @@ export async function handleAvatarChange(
     reason: "auto_scan",
     flaggedBy: "system",
   });
+  notifyDashboard("flag:created", { userId, flagType: "nsfw", reason: "auto_scan" });
 
   // Send alert to logging channel
   const loggingChannelId = getLoggingChannelId(guildId);
@@ -316,6 +318,7 @@ export async function handleMemberJoin(member: GuildMember): Promise<void> {
     reason: "join_scan",
     flaggedBy: "system",
   });
+  notifyDashboard("flag:created", { userId, flagType: "nsfw", reason: "join_scan" });
 
   // Send alert to logging channel
   const loggingChannelId = getLoggingChannelId(guildId);
