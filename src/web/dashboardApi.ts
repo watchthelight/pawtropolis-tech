@@ -243,6 +243,24 @@ export async function startDashboardApi(client: Client): Promise<void> {
       const cfg = getConfig(GUILD_ID);
       if (cfg) {
         const flowResult = await approveFlow(guild, app.user_id, cfg);
+
+        // BLOCK: If role grant failed, skip DM and welcome so user doesn't think they're verified
+        if (cfg.accepted_role_id && !flowResult.roleApplied) {
+          const errorReason = flowResult.roleError?.message ?? "Unknown error";
+          logger.error(
+            { appId, userId: app.user_id, roleError: errorReason },
+            "[dashboardApi] BLOCKED: Role grant failed after retries — user left in limbo"
+          );
+          updateReviewActionMeta(txResult.reviewActionId, { roleApplied: false, dmDelivered: false });
+          // Still return success (DB approved) but include the role error for the dashboard to show
+          notifyDashboard("review:approved", { appId, reviewerId: userId, action: "approve" });
+          notifyDashboard("stats:updated", { userId });
+          return reply.code(207).send({
+            success: true,
+            data: { appId, roleApplied: false, roleError: errorReason },
+          } satisfies ApiSuccess);
+        }
+
         let dmDelivered = false;
         if (flowResult.member) {
           dmDelivered = await deliverApprovalDm(flowResult.member, guild.name, reason);

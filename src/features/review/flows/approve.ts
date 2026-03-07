@@ -24,6 +24,8 @@ import { canManageRole } from "../../roleAutomation.js";
 // ===== Constants =====
 
 const FLOW_TIMEOUT_MS = 30000;
+const ROLE_GRANT_RETRIES = 2;
+const ROLE_GRANT_RETRY_DELAY_MS = 2000;
 
 // ===== Helpers =====
 
@@ -130,17 +132,29 @@ export async function approveFlow(
       ).catch(() => null));
     if (role) {
       if (!result.member.roles.cache.has(role.id)) {
-        // Pre-flight permission check: verify bot can manage this role before attempting
-        const roleCheck = await canManageRole(guild, role.id);
-        if (!roleCheck.canManage) {
-          result.roleApplied = false;
-          result.roleError = { message: roleCheck.reason };
-          logger.warn(
-            { guildId: guild.id, memberId, roleId: role.id, reason: roleCheck.reason },
-            "[approve] Cannot manage accepted role - check role hierarchy"
-          );
-          // Don't attempt the operation - it would fail with 50013
-        } else {
+        // Retry loop: transient failures (cache staleness, timeouts) are common
+        for (let attempt = 0; attempt <= ROLE_GRANT_RETRIES; attempt++) {
+          if (attempt > 0) {
+            logger.info(
+              { guildId: guild.id, memberId, roleId: role.id, attempt },
+              "[approve] Retrying role grant"
+            );
+            await new Promise((r) => setTimeout(r, ROLE_GRANT_RETRY_DELAY_MS));
+            // Re-fetch role to refresh cache on retry
+            await guild.roles.fetch(role.id).catch(() => null);
+          }
+
+          const roleCheck = await canManageRole(guild, role.id);
+          if (!roleCheck.canManage) {
+            result.roleApplied = false;
+            result.roleError = { message: roleCheck.reason };
+            logger.warn(
+              { guildId: guild.id, memberId, roleId: role.id, reason: roleCheck.reason, attempt },
+              "[approve] Cannot manage accepted role - check role hierarchy"
+            );
+            continue; // retry — cache may be stale
+          }
+
           try {
             await withTimeout(
               result.member.roles.add(role, "Gate approval"),
@@ -148,13 +162,14 @@ export async function approveFlow(
               "approveFlow:addRole"
             );
             result.roleApplied = true;
+            break; // success
           } catch (err) {
             const code = (err as { code?: number }).code;
             const message = err instanceof Error ? err.message : undefined;
             result.roleError = { code, message };
             logger.warn(
-              { err, guildId: guild.id, memberId, roleId },
-              "Failed to grant approval role"
+              { err, guildId: guild.id, memberId, roleId, attempt },
+              "[approve] Failed to grant approval role"
             );
             if (!isMissingPermissionError(err)) {
               captureException(err, {
@@ -162,13 +177,21 @@ export async function approveFlow(
                 guildId: guild.id,
                 userId: memberId,
                 roleId,
+                attempt,
               });
             }
+            // continue to retry
           }
         }
       } else {
         result.roleApplied = true;
       }
+    } else {
+      result.roleError = { message: "Accepted role not found in guild" };
+      logger.error(
+        { guildId: guild.id, memberId, roleId },
+        "[approve] Accepted role not found — check guild config"
+      );
     }
   }
 
