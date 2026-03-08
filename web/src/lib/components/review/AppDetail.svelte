@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { goto, invalidateAll } from '$app/navigation';
-	import type { ApplicationDetail } from '$lib/server/queries/reviews';
+	import type { ApplicationDetail, PriorDecision } from '$lib/server/queries/reviews';
 	import type { ModmailThreadSummary } from '$lib/server/queries/modmail';
 	import RiskAura from '$lib/components/data/RiskAura.svelte';
 	import CopyableId from '$lib/components/data/CopyableId.svelte';
@@ -18,13 +18,15 @@
 		modmail = [],
 		sessionUserId = null,
 		canAdminUnclaim = false,
-		cachedProfile = null
+		cachedProfile = null,
+		priorDecisions = []
 	}: {
 		app: ApplicationDetail;
 		modmail?: ModmailThreadSummary[];
 		sessionUserId?: string | null;
 		canAdminUnclaim?: boolean;
 		cachedProfile?: CachedProfile | null;
+		priorDecisions?: PriorDecision[];
 	} = $props();
 
 	let claimLoading = $state(false);
@@ -256,6 +258,40 @@
 </script>
 
 <div class="app-detail">
+	<!-- Prior decision warning banner -->
+	{#if priorDecisions.length > 0}
+		{@const hasBan = priorDecisions.some(d => d.action === 'perm_reject')}
+		{@const hasReject = priorDecisions.some(d => d.action === 'reject')}
+		{@const hasKick = priorDecisions.some(d => d.action === 'kick')}
+		<div class="prior-warning" class:prior-warning-severe={hasBan}>
+			<div class="prior-warning-header">
+				<span class="prior-warning-icon">{hasBan ? '&#9888;' : '&#9432;'}</span>
+				<strong>
+					{hasBan ? 'Previously Permanently Rejected' : hasKick ? 'Previously Kicked' : hasReject ? 'Previously Rejected' : 'Prior Application History'}
+				</strong>
+				<span class="prior-warning-count">{priorDecisions.length} prior {priorDecisions.length === 1 ? 'decision' : 'decisions'}</span>
+			</div>
+			<div class="prior-warning-list">
+				{#each priorDecisions as decision}
+					<div class="prior-item">
+						<span class="prior-action" class:prior-action-ban={decision.action === 'perm_reject'} class:prior-action-reject={decision.action === 'reject' || decision.action === 'kick'} class:prior-action-approve={decision.action === 'approve'}>
+							{decision.action === 'perm_reject' ? 'PERM REJECT' : decision.action === 'reject' ? 'REJECTED' : decision.action === 'kick' ? 'KICKED' : 'APPROVED'}
+						</span>
+						{#if decision.reason}
+							<span class="prior-reason">{decision.reason}</span>
+						{/if}
+						{#if decision.moderatorName}
+							<span class="prior-mod">by {decision.moderatorName}</span>
+						{/if}
+						{#if decision.decidedAt}
+							<span class="prior-date">{relativeTime(decision.decidedAt)}</span>
+						{/if}
+					</div>
+				{/each}
+			</div>
+		</div>
+	{/if}
+
 	<!-- Two-panel body -->
 	<div class="detail-body" bind:this={detailBody}>
 		<!-- Left/Top: Discord Profile Card -->
@@ -676,5 +712,91 @@
 		.btn-undo:hover { background: var(--status-danger); color: var(--bg); }
 		.btn-admin-unclaim:hover:not(:disabled) { background: var(--status-warning); color: var(--bg); }
 		.tab-btn:hover { color: var(--text-primary); border-color: var(--accent); }
+	}
+
+	/* Prior decision warning banner */
+	.prior-warning {
+		border: 1px solid var(--status-warning);
+		border-left: 4px solid var(--status-warning);
+		background: oklch(25% 0.04 85 / 0.3);
+		border-radius: var(--radius-md);
+		padding: 0.75rem 1rem;
+		margin-bottom: 1rem;
+	}
+
+	.prior-warning-severe {
+		border-color: var(--status-danger);
+		border-left-color: var(--status-danger);
+		background: oklch(22% 0.04 25 / 0.3);
+	}
+
+	.prior-warning-header {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.85rem;
+		color: var(--text-primary);
+		margin-bottom: 0.5rem;
+	}
+
+	.prior-warning-icon {
+		font-size: 1.1rem;
+	}
+
+	.prior-warning-count {
+		font-size: 0.7rem;
+		color: var(--text-secondary);
+		margin-left: auto;
+	}
+
+	.prior-warning-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+	}
+
+	.prior-item {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.75rem;
+		flex-wrap: wrap;
+	}
+
+	.prior-action {
+		font-size: 0.6rem;
+		font-weight: 700;
+		letter-spacing: 0.05em;
+		padding: 0.1rem 0.35rem;
+		border-radius: 3px;
+		flex-shrink: 0;
+	}
+
+	.prior-action-ban {
+		background: var(--status-danger);
+		color: var(--bg);
+	}
+
+	.prior-action-reject {
+		background: oklch(50% 0.08 25);
+		color: var(--bg);
+	}
+
+	.prior-action-approve {
+		background: oklch(40% 0.08 145);
+		color: var(--bg);
+	}
+
+	.prior-reason {
+		color: var(--text-primary);
+	}
+
+	.prior-mod {
+		color: var(--text-secondary);
+	}
+
+	.prior-date {
+		color: var(--text-muted);
+		margin-left: auto;
 	}
 </style>

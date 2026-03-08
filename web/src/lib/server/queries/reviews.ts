@@ -161,6 +161,56 @@ export function getApplicationDetail(appId: string, guildId: string): Applicatio
 }
 
 // ---------------------------------------------------------------------------
+// Prior decisions for an applicant (ban/rejection history)
+// ---------------------------------------------------------------------------
+
+export interface PriorDecision {
+	appId: string;
+	status: string;
+	action: string;
+	reason: string | null;
+	moderatorName: string | null;
+	decidedAt: number | null;
+}
+
+interface PriorDecisionRow {
+	app_id: string;
+	status: string;
+	action: string;
+	reason: string | null;
+	moderator_name: string | null;
+	decided_at: number | null;
+}
+
+export function getUserPriorDecisions(userId: string, guildId: string, excludeAppId?: string): PriorDecision[] {
+	const rows = db().prepare(`
+		SELECT
+			a.id as app_id,
+			a.status,
+			ra.action,
+			ra.reason,
+			COALESCE(mu.display_name, mu.global_name, mu.username) as moderator_name,
+			ra.created_at as decided_at
+		FROM application a
+		INNER JOIN review_action ra ON ra.app_id = a.id
+		LEFT JOIN user_cache mu ON mu.guild_id = a.guild_id AND mu.user_id = ra.moderator_id
+		WHERE a.guild_id = ? AND a.user_id = ?
+			AND a.id != ?
+			AND ra.action IN ('reject', 'perm_reject', 'kick', 'approve')
+		ORDER BY ra.created_at DESC
+	`).all(guildId, userId, excludeAppId ?? '') as PriorDecisionRow[];
+
+	return rows.map((row) => ({
+		appId: row.app_id,
+		status: row.status,
+		action: row.action,
+		reason: row.reason,
+		moderatorName: row.moderator_name ?? null,
+		decidedAt: row.decided_at ? row.decided_at * 1000 : null
+	}));
+}
+
+// ---------------------------------------------------------------------------
 // Applicant profile (cached from user_cache)
 // ---------------------------------------------------------------------------
 

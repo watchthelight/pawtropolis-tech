@@ -10,6 +10,7 @@
 	let sessionUserId = $derived(data.sessionUserId);
 	let canAdminUnclaim = $derived(data.canAdminUnclaim);
 	let cachedProfile = $derived(data.cachedProfile);
+	let priorDecisions = $derived(data.priorDecisions);
 
 	let isMobile = $derived(getIsMobile());
 
@@ -42,7 +43,7 @@
 {/if}
 
 <SpringReveal stagger={30}>
-	<AppDetail {app} {modmail} {sessionUserId} {canAdminUnclaim} {cachedProfile} />
+	<AppDetail {app} {modmail} {sessionUserId} {canAdminUnclaim} {cachedProfile} {priorDecisions} />
 </SpringReveal>
 
 <style>

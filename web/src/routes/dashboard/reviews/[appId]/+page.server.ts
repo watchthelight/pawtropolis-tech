@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit';
-import { getApplicationDetail, getCachedProfile } from '$lib/server/queries/reviews';
+import { getApplicationDetail, getCachedProfile, getUserPriorDecisions } from '$lib/server/queries/reviews';
 import { getModmailForApplication } from '$lib/server/queries/modmail';
 import { hasMinTier } from '$lib/server/roles';
 import type { PageServerLoad } from './$types';
@@ -15,11 +15,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	const modmail = getModmailForApplication(app.userId, GUILD_ID);
 	const cachedProfile = getCachedProfile(app.userId, GUILD_ID);
+	const priorDecisions = getUserPriorDecisions(app.userId, GUILD_ID, app.id);
 
 	return {
 		app,
 		modmail,
 		cachedProfile,
+		priorDecisions,
 		sessionUserId: locals.user?.id ?? null,
 		canAdminUnclaim: hasMinTier(locals.user?.tier ?? 'none', 'admin')
 	};
