@@ -5,7 +5,7 @@
 	import ThemeControls from './ThemeControls.svelte';
 	import {
 		House, ClipboardCheck, BarChart3, Activity, Flag,
-		Grid3x3, Palette, Settings, ScrollText, Shield, Server
+		Grid3x3, Palette, Settings, ScrollText, Server
 	} from 'lucide-svelte';
 
 	let { user, collapsed = false }: {
@@ -44,7 +44,7 @@
 	const ICON_MAP: Record<string, typeof House> = {
 		Home: House, Reviews: ClipboardCheck, Stats: BarChart3, Pulse: Activity,
 		Flags: Flag, Heatmap: Grid3x3, Art: Palette,
-		Config: Settings, Audit: ScrollText, Security: Shield, System: Server
+		Config: Settings, Audit: ScrollText, System: Server
 	};
 
 	const NAV_ITEMS = [
@@ -57,7 +57,6 @@
 		{ label: 'Art',      href: '/dashboard/art',      minTier: 'sm',    group: 'ops' },
 		{ label: 'Config',   href: '/dashboard/config',   minTier: 'admin', group: 'admin' },
 		{ label: 'Audit',    href: '/dashboard/audit',    minTier: 'admin', group: 'admin' },
-		{ label: 'Security', href: '/dashboard/security', minTier: 'sa',    group: 'admin' },
 		{ label: 'System',   href: '/dashboard/system',   minTier: 'owner', group: 'admin' },
 	] as const;
 

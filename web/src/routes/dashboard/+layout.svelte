@@ -56,7 +56,6 @@
 		{ href: '/dashboard/art',      minTier: 'sm' },
 		{ href: '/dashboard/config',   minTier: 'admin' },
 		{ href: '/dashboard/audit',    minTier: 'admin' },
-		{ href: '/dashboard/security', minTier: 'sa' },
 		{ href: '/dashboard/system',   minTier: 'owner' },
 	] as const;
 

@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import PageHeader from '$lib/components/layout/PageHeader.svelte';
 	import EmptyState from '$lib/components/feedback/EmptyState.svelte';
 	import SpringReveal from '$lib/components/motion/SpringReveal.svelte';
 	import CopyableId from '$lib/components/data/CopyableId.svelte';
@@ -86,7 +85,7 @@
 </script>
 
 <SpringReveal stagger={30}>
-	<PageHeader title="Audit" subtitle="Action log" badge={data.total || undefined} />
+	<!-- PageHeader is rendered by the audit layout -->
 
 	<!-- Filter bar -->
 	<div class="filter-bar">

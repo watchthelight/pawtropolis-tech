@@ -1,12 +1,7 @@
-import { error } from '@sveltejs/kit';
-import { hasMinTier } from '$lib/server/roles';
 import { getAuditLog, getActionTypes, type AuditFilters } from '$lib/server/queries/audit';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ locals, url }) => {
-	if (!locals.user || !hasMinTier(locals.user.tier, 'admin')) {
-		error(403, "You don't have permission to view this page.");
-	}
+export const load: PageServerLoad = async ({ url }) => {
 	if (!process.env.GUILD_ID) throw new Error('GUILD_ID environment variable is required');
 	const guildId = process.env.GUILD_ID;
 
