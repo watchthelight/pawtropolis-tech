@@ -115,8 +115,8 @@
 		width: 4.5rem;
 		height: 4.5rem;
 		border-radius: var(--radius-md);
-		ring: 2px solid var(--accent);
-		ring-offset: 3px var(--bg);
+		outline: 2px solid var(--accent);
+		outline-offset: 3px;
 		flex-shrink: 0;
 	}
 

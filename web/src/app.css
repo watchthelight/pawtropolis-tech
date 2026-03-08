@@ -124,6 +124,8 @@
 /* Base styles */
 body {
 	background-color: var(--bg);
+	background-image: radial-gradient(ellipse at 50% 0%, oklch(18% 0.006 var(--hue)) 0%, var(--bg) 70%);
+	background-attachment: fixed;
 	color: var(--text-primary);
 	font-family: 'Inter Variable', system-ui, -apple-system, sans-serif;
 	font-size: 0.9375rem; /* 15px — comfortable for long sessions */

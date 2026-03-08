@@ -197,11 +197,11 @@
 		color: var(--text-primary);
 		font-weight: 500;
 		background: var(--selected-bg);
-		box-shadow: inset 3px 0 0 var(--secondary), var(--glow-secondary);
+		box-shadow: inset 3px 0 0 var(--accent), 0 0 12px oklch(72% 0.18 var(--hue) / 0.15);
 	}
 
 	.nav-item-collapsed.nav-active {
-		box-shadow: var(--glow-secondary);
+		box-shadow: 0 0 12px oklch(72% 0.18 var(--hue) / 0.15);
 	}
 
 	.nav-inactive {

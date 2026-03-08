@@ -70,6 +70,15 @@
 		border-top-color: var(--accent);
 	}
 
+	.card-accent {
+		animation: accent-breathe 3s ease-in-out infinite;
+	}
+
+	@keyframes accent-breathe {
+		0%, 100% { border-top-color: var(--accent); }
+		50% { border-top-color: var(--accent-dim); }
+	}
+
 	.card-selected {
 		border-left: 4px solid var(--accent);
 		box-shadow: var(--glow-accent);
