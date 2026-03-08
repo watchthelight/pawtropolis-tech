@@ -37,7 +37,14 @@ export type SSEEventType =
 	| 'modmail:thread_reopened'
 	| 'flag:created'
 	| 'flag:dismissed'
-	| 'flag:kicked';
+	| 'flag:kicked'
+	| 'audit:scan_started'
+	| 'audit:scan_progress'
+	| 'audit:scan_completed'
+	| 'audit:scan_cancelled'
+	| 'audit:security_snapshot'
+	| 'audit:issue_acknowledged'
+	| 'audit:issue_unacknowledged';
 
 // ---------------------------------------------------------------------------
 // Typed payloads per event
@@ -118,6 +125,51 @@ export interface FlagKickedPayload {
 	kickedBy: string;
 }
 
+// Audit payloads
+
+export interface AuditScanStartedPayload {
+	sessionId: number;
+	auditType: 'members' | 'nsfw';
+	totalToScan: number;
+	startedBy: string;
+}
+
+export interface AuditScanProgressPayload {
+	sessionId: number;
+	auditType: 'members' | 'nsfw';
+	scannedCount: number;
+	flaggedCount: number;
+	totalToScan: number;
+	apiCalls: number;
+}
+
+export interface AuditScanCompletedPayload {
+	sessionId: number;
+	auditType: 'members' | 'nsfw';
+	scannedCount: number;
+	flaggedCount: number;
+}
+
+export interface AuditScanCancelledPayload {
+	sessionId: number;
+	auditType: 'members' | 'nsfw';
+}
+
+export interface AuditSecuritySnapshotPayload {
+	snapshotId: number;
+	issueCount: number;
+	criticalCount: number;
+}
+
+export interface AuditIssueAcknowledgedPayload {
+	issueKey: string;
+	acknowledgedBy: string;
+}
+
+export interface AuditIssueUnacknowledgedPayload {
+	issueKey: string;
+}
+
 // ---------------------------------------------------------------------------
 // Event-to-payload type map (for type-safe consumption)
 // ---------------------------------------------------------------------------
@@ -139,6 +191,13 @@ export interface SSEEventMap {
 	'flag:created': FlagCreatedPayload;
 	'flag:dismissed': FlagDismissedPayload;
 	'flag:kicked': FlagKickedPayload;
+	'audit:scan_started': AuditScanStartedPayload;
+	'audit:scan_progress': AuditScanProgressPayload;
+	'audit:scan_completed': AuditScanCompletedPayload;
+	'audit:scan_cancelled': AuditScanCancelledPayload;
+	'audit:security_snapshot': AuditSecuritySnapshotPayload;
+	'audit:issue_acknowledged': AuditIssueAcknowledgedPayload;
+	'audit:issue_unacknowledged': AuditIssueUnacknowledgedPayload;
 }
 
 // ---------------------------------------------------------------------------
@@ -158,6 +217,7 @@ export const EVENT_TIER_VISIBILITY: Record<string, DashboardTier> = {
 	// Future domains
 	'flag:': 'mod',
 	'pulse:': 'mod',
+	'audit:': 'admin',
 	'system:': 'owner'
 };
 
