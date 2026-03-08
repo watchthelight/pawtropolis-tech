@@ -698,6 +698,45 @@ export async function startDashboardApi(client: Client): Promise<void> {
     return { success: true, data: { targetUserId, flagType } } satisfies ApiSuccess;
   });
 
+  // ── Audit: Acknowledge Security Issue ──────────────────────────
+  server.post<{ Body: Record<string, unknown> }>("/api/audit/acknowledge", async (request, reply) => {
+    const { userId, tier, issueKey, severity, title, permissionHash, reason } = request.body ?? {};
+    if (!userId || !tier || !issueKey || !severity || !title || !permissionHash)
+      return reply.code(400).send({ success: false, error: "Missing required fields" } satisfies ApiError);
+    if (!hasMinTier(tier as string, "sa"))
+      return reply.code(403).send({ success: false, error: "Insufficient permissions (sa+ required)" } satisfies ApiError);
+
+    const { acknowledgeIssue } = await import("../store/acknowledgedSecurityStore.js");
+    acknowledgeIssue({
+      guildId: guild.id,
+      issueKey: issueKey as string,
+      severity: severity as string,
+      title: title as string,
+      permissionHash: permissionHash as string,
+      acknowledgedBy: userId as string,
+      reason: reason as string | undefined,
+    });
+
+    notifyDashboard("audit:issue_acknowledged", { issueKey, acknowledgedBy: userId });
+    return { success: true, data: { issueKey } } satisfies ApiSuccess;
+  });
+
+  // ── Audit: Unacknowledge Security Issue ────────────────────────
+  server.post<{ Body: Record<string, unknown> }>("/api/audit/unacknowledge", async (request, reply) => {
+    const { userId, tier, issueKey } = request.body ?? {};
+    if (!userId || !tier || !issueKey)
+      return reply.code(400).send({ success: false, error: "Missing required fields" } satisfies ApiError);
+    if (!hasMinTier(tier as string, "sa"))
+      return reply.code(403).send({ success: false, error: "Insufficient permissions (sa+ required)" } satisfies ApiError);
+
+    const { unacknowledgeIssue } = await import("../store/acknowledgedSecurityStore.js");
+    const removed = unacknowledgeIssue(guild.id, issueKey as string);
+    if (!removed) return reply.code(404).send({ success: false, error: "Issue was not acknowledged" } satisfies ApiError);
+
+    notifyDashboard("audit:issue_unacknowledged", { issueKey });
+    return { success: true, data: { issueKey } } satisfies ApiSuccess;
+  });
+
   // Start server
   await server.listen({ port: DASHBOARD_API_PORT, host: "0.0.0.0" });
   logger.info({ port: DASHBOARD_API_PORT }, "[dashboardApi] Dashboard API started");

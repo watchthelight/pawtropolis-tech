@@ -35,6 +35,29 @@
 		[...issues].sort((a, b) => (SEVERITY_ORDER[a.severity ?? ''] ?? 9) - (SEVERITY_ORDER[b.severity ?? ''] ?? 9))
 	);
 
+	let ackLoading = $state<string | null>(null);
+
+	async function toggleAcknowledge(issue: typeof issues[number]) {
+		const key = issue.key ?? '';
+		if (!key || ackLoading) return;
+		ackLoading = key;
+		const isAcked = acknowledged.has(key);
+		const endpoint = isAcked ? '/api/audit/unacknowledge' : '/api/audit/acknowledge';
+		const body = isAcked
+			? { issueKey: key }
+			: { issueKey: key, severity: issue.severity ?? 'unknown', title: issue.title ?? '', permissionHash: key };
+		try {
+			const res = await fetch(endpoint, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(body)
+			});
+			if (res.ok) invalidateAll();
+		} finally {
+			ackLoading = null;
+		}
+	}
+
 	function severityColor(severity: string | undefined): string {
 		switch (severity) {
 			case 'critical': return 'var(--status-danger)';
@@ -97,9 +120,17 @@
 						{#if issue.category}
 							<span class="issue-category">{issue.category}</span>
 						{/if}
-						{#if isAcknowledged}
-							<span class="issue-ack-badge">ACK</span>
-						{/if}
+						<!-- svelte-ignore a11y_click_events_have_key_events -->
+					<!-- svelte-ignore a11y_no_static_element_interactions -->
+					<span
+						class="ack-btn"
+						class:ack-btn-undo={isAcknowledged}
+						role="button"
+						tabindex="0"
+						onclick={(e) => { e.stopPropagation(); toggleAcknowledge(issue); }}
+					>
+						{ackLoading === (issue.key ?? '') ? '...' : isAcknowledged ? 'UNDO' : 'ACK'}
+					</span>
 					</button>
 					{#if expandedIssue === (issue.key ?? String(i)) && issue.description}
 						<div class="issue-detail">
@@ -223,14 +254,32 @@
 		flex-shrink: 0;
 	}
 
-	.issue-ack-badge {
+	.ack-btn {
 		font-size: 0.55rem;
 		font-weight: 700;
-		color: var(--status-success);
-		border: 1px solid var(--status-success);
+		color: var(--accent);
+		border: 1px solid var(--accent);
 		border-radius: 3px;
-		padding: 0 0.25rem;
+		padding: 0.1rem 0.35rem;
 		flex-shrink: 0;
+		cursor: pointer;
+		transition: all var(--duration-fast);
+		user-select: none;
+	}
+
+	.ack-btn:hover {
+		background: var(--accent);
+		color: var(--bg);
+	}
+
+	.ack-btn-undo {
+		color: var(--status-success);
+		border-color: var(--status-success);
+	}
+
+	.ack-btn-undo:hover {
+		background: var(--status-success);
+		color: var(--bg);
 	}
 
 	.issue-detail {
