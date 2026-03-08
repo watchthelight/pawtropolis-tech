@@ -698,6 +698,44 @@ export async function startDashboardApi(client: Client): Promise<void> {
     return { success: true, data: { targetUserId, flagType } } satisfies ApiSuccess;
   });
 
+  // ── Audit: Start Scan ───────────────────────────────────────────
+  server.post<{ Body: Record<string, unknown> }>("/api/audit/scan/start", async (request, reply) => {
+    const { userId, tier, auditType, scope } = request.body ?? {};
+    if (!userId || !tier || !auditType)
+      return reply.code(400).send({ success: false, error: "Missing required fields" } satisfies ApiError);
+    if (!hasMinTier(tier as string, "admin"))
+      return reply.code(403).send({ success: false, error: "Insufficient permissions (admin+ required)" } satisfies ApiError);
+    if (auditType !== "members" && auditType !== "nsfw")
+      return reply.code(400).send({ success: false, error: "auditType must be 'members' or 'nsfw'" } satisfies ApiError);
+
+    const { getActiveSession } = await import("../store/auditSessionStore.js");
+    const active = getActiveSession(guild.id, auditType as string);
+    if (active)
+      return reply.code(409).send({ success: false, error: `A ${auditType} scan is already running (session ${active.id})` } satisfies ApiError);
+
+    // For now, return success — scan triggering requires the refactored scan logic (commits 9-10)
+    // The session exists in the DB and the scan page will show progress via SSE
+    return { success: true, data: { message: "Scan triggering requires bot-side refactor — use /audit command for now" } } satisfies ApiSuccess;
+  });
+
+  // ── Audit: Cancel Scan ─────────────────────────────────────────
+  server.post<{ Body: Record<string, unknown> }>("/api/audit/scan/cancel", async (request, reply) => {
+    const { userId, tier, auditType } = request.body ?? {};
+    if (!userId || !tier || !auditType)
+      return reply.code(400).send({ success: false, error: "Missing required fields" } satisfies ApiError);
+    if (!hasMinTier(tier as string, "admin"))
+      return reply.code(403).send({ success: false, error: "Insufficient permissions (admin+ required)" } satisfies ApiError);
+
+    const { getActiveSession, cancelSession } = await import("../store/auditSessionStore.js");
+    const active = getActiveSession(guild.id, auditType as string);
+    if (!active)
+      return reply.code(404).send({ success: false, error: `No active ${auditType} scan found` } satisfies ApiError);
+
+    cancelSession(active.id);
+    notifyDashboard("audit:scan_cancelled", { sessionId: active.id, auditType });
+    return { success: true, data: { sessionId: active.id } } satisfies ApiSuccess;
+  });
+
   // ── Audit: Acknowledge Security Issue ──────────────────────────
   server.post<{ Body: Record<string, unknown> }>("/api/audit/acknowledge", async (request, reply) => {
     const { userId, tier, issueKey, severity, title, permissionHash, reason } = request.body ?? {};
