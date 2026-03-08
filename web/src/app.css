@@ -22,22 +22,22 @@
 	--hue-cool: 235;
 	--hue-complement: calc(var(--hue) + 180);
 
-	/* ── Surfaces (lifted dark — not black, comfortable for long sessions) ── */
-	--bg: oklch(16% 0.006 var(--hue-cool));
-	--surface: oklch(20% 0.008 var(--hue-cool));
-	--surface-raised: oklch(25% 0.010 var(--hue-cool));
-	--surface-overlay: oklch(30% 0.012 var(--hue-cool));
+	/* ── Surfaces (true neutral, subtly tinted by user accent) ── */
+	--bg: oklch(13% 0.003 var(--hue));
+	--surface: oklch(18% 0.005 var(--hue));
+	--surface-raised: oklch(23% 0.007 var(--hue));
+	--surface-overlay: oklch(28% 0.008 var(--hue));
 
-	/* ── Borders (warm earth tint on holdfast, cool slate on base) ── */
-	--border: oklch(30% 0.010 var(--hue-cool));
-	--border-holdfast: oklch(36% 0.020 var(--hue-warm));
-	--border-strong: oklch(43% 0.025 var(--hue-warm));
+	/* ── Borders (accent-tinted — user identity visible in structure) ── */
+	--border: oklch(25% 0.010 var(--hue));
+	--border-holdfast: oklch(30% 0.03 var(--hue));
+	--border-strong: oklch(40% 0.04 var(--hue));
 
-	/* ── Text (near-white primary, warm-tinted secondary for readability) ── */
-	--text-primary: oklch(90% 0.004 var(--hue-warm));
-	--text-secondary: oklch(68% 0.012 var(--hue-warm));
-	--text-tertiary: oklch(54% 0.008 var(--hue-cool));
-	--text-muted: oklch(42% 0.006 var(--hue-cool));
+	/* ── Text (near-white primary, neutral secondary for clarity) ── */
+	--text-primary: oklch(92% 0.004 var(--hue));
+	--text-secondary: oklch(72% 0.008 var(--hue));
+	--text-tertiary: oklch(54% 0.006 var(--hue));
+	--text-muted: oklch(42% 0.004 var(--hue));
 	--text-on-accent: oklch(12% 0.01 var(--hue));
 
 	/* ── Primary accent — user's Discord identity color ── */
@@ -62,15 +62,18 @@
 	--complement: oklch(65% 0.14 var(--hue-complement));
 	--complement-dim: oklch(35% 0.07 var(--hue-complement));
 
-	/* ── Interactive states (warm hover, cool selected for variety) ── */
-	--hover-bg: oklch(24% 0.02 var(--hue-warm));
-	--active-bg: oklch(28% 0.03 var(--hue));
-	--selected-bg: oklch(26% 0.03 var(--hue-cool));
+	/* ── Accent surface — highlighted cards, active elements ── */
+	--accent-glow-bg: oklch(22% 0.04 var(--hue));
 
-	/* ── Warm shadows — hue ~40 (warm amber) for cozy depth regardless of accent ── */
-	--shadow-sm: 0 1px 3px oklch(5% 0.02 40 / 0.3);
-	--shadow-md: 0 4px 12px oklch(5% 0.02 40 / 0.25);
-	--shadow-lg: 0 8px 24px oklch(5% 0.02 40 / 0.2);
+	/* ── Interactive states (accent-tinted) ── */
+	--hover-bg: oklch(22% 0.02 var(--hue));
+	--active-bg: oklch(26% 0.03 var(--hue));
+	--selected-bg: oklch(24% 0.03 var(--hue));
+
+	/* ── Shadows (neutral — no sepia tint) ── */
+	--shadow-sm: 0 1px 3px oklch(3% 0.005 var(--hue) / 0.4);
+	--shadow-md: 0 4px 12px oklch(3% 0.005 var(--hue) / 0.35);
+	--shadow-lg: 0 8px 24px oklch(3% 0.005 var(--hue) / 0.3);
 
 	/* ── Glows (primary=accent, warm=earth, cool=slate) ── */
 	--glow-accent: 0 0 12px oklch(72% 0.18 var(--hue) / 0.2);
@@ -163,7 +166,7 @@ body::after {
 
 /* Micro-gradient — subtle top-lit surface, opt-in per component */
 .surface-gradient {
-	background: linear-gradient(180deg, oklch(24% 0.012 var(--hue-cool)) 0%, var(--surface) 100%);
+	background: linear-gradient(180deg, oklch(22% 0.008 var(--hue)) 0%, var(--surface) 100%);
 }
 
 /* Focus ring — accent-colored, keyboard-only via :focus-visible */
