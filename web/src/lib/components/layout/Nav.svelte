@@ -3,6 +3,10 @@
 	import { slide } from 'svelte/transition';
 	import ConnectionIndicator from './ConnectionIndicator.svelte';
 	import ThemeControls from './ThemeControls.svelte';
+	import {
+		House, ClipboardCheck, BarChart3, Activity, Flag,
+		Grid3x3, Palette, Settings, ScrollText, Shield, Server
+	} from 'lucide-svelte';
 
 	let { user, collapsed = false }: {
 		user: {
@@ -37,18 +41,24 @@
 		none: 'No Access'
 	};
 
+	const ICON_MAP: Record<string, typeof House> = {
+		Home: House, Reviews: ClipboardCheck, Stats: BarChart3, Pulse: Activity,
+		Flags: Flag, Heatmap: Grid3x3, Art: Palette,
+		Config: Settings, Audit: ScrollText, Security: Shield, System: Server
+	};
+
 	const NAV_ITEMS = [
-		{ label: 'Home',     href: '/dashboard',          minTier: 'gk' },
-		{ label: 'Reviews',  href: '/dashboard/reviews',  minTier: 'gk' },
-		{ label: 'Stats',    href: '/dashboard/stats',    minTier: 'gk' },
-		{ label: 'Pulse',    href: '/dashboard/pulse',    minTier: 'mod' },
-		{ label: 'Flags',    href: '/dashboard/flags',    minTier: 'sm' },
-		{ label: 'Heatmap',  href: '/dashboard/heatmap',  minTier: 'sm' },
-		{ label: 'Art',      href: '/dashboard/art',      minTier: 'sm' },
-		{ label: 'Config',   href: '/dashboard/config',   minTier: 'admin' },
-		{ label: 'Audit',    href: '/dashboard/audit',    minTier: 'admin' },
-		{ label: 'Security', href: '/dashboard/security', minTier: 'sa' },
-		{ label: 'System',   href: '/dashboard/system',   minTier: 'owner' },
+		{ label: 'Home',     href: '/dashboard',          minTier: 'gk',    group: 'ops' },
+		{ label: 'Reviews',  href: '/dashboard/reviews',  minTier: 'gk',    group: 'ops' },
+		{ label: 'Stats',    href: '/dashboard/stats',    minTier: 'gk',    group: 'ops' },
+		{ label: 'Pulse',    href: '/dashboard/pulse',    minTier: 'mod',   group: 'ops' },
+		{ label: 'Flags',    href: '/dashboard/flags',    minTier: 'sm',    group: 'ops' },
+		{ label: 'Heatmap',  href: '/dashboard/heatmap',  minTier: 'sm',    group: 'ops' },
+		{ label: 'Art',      href: '/dashboard/art',      minTier: 'sm',    group: 'ops' },
+		{ label: 'Config',   href: '/dashboard/config',   minTier: 'admin', group: 'admin' },
+		{ label: 'Audit',    href: '/dashboard/audit',    minTier: 'admin', group: 'admin' },
+		{ label: 'Security', href: '/dashboard/security', minTier: 'sa',    group: 'admin' },
+		{ label: 'System',   href: '/dashboard/system',   minTier: 'owner', group: 'admin' },
 	] as const;
 
 	let visibleItems = $derived(NAV_ITEMS.filter(item => hasMinTier(user.tier, item.minTier)));
@@ -83,8 +93,12 @@
 
 	<!-- Navigation items -->
 	<ul class="flex-1 overflow-y-auto py-2">
-		{#each visibleItems as item (item.href)}
+		{#each visibleItems as item, i (item.href)}
 			{@const active = isActive(item.href)}
+			{@const prevItem = visibleItems[i - 1]}
+			{#if prevItem && prevItem.group === 'ops' && item.group === 'admin'}
+				<li class="nav-divider" aria-hidden="true"></li>
+			{/if}
 			<li transition:slide={{ duration: 200 }}>
 				<a
 					href={item.href}
@@ -95,7 +109,9 @@
 					class:nav-inactive={!active}
 					class:nav-item-collapsed={collapsed}
 				>
-					<span class="nav-letter" class:nav-letter-show={collapsed}>{item.label.charAt(0)}</span>
+					<span class="nav-icon" class:nav-icon-active={active}>
+						<svelte:component this={ICON_MAP[item.label]} size={18} strokeWidth={active ? 2.25 : 1.75} />
+					</span>
 					{#if !collapsed}
 						<span class="nav-label">{item.label}</span>
 					{/if}
@@ -208,21 +224,31 @@
 		background: var(--surface-raised);
 	}
 
-	/* Letter icon (shown when collapsed) */
-	.nav-letter {
-		display: none;
-		width: 1.5rem;
-		height: 1.5rem;
-		border-radius: var(--radius-sm);
-		font-size: 0.7rem;
-		font-weight: 600;
+	/* Nav icon */
+	.nav-icon {
+		display: flex;
 		align-items: center;
 		justify-content: center;
 		flex-shrink: 0;
+		color: var(--text-tertiary);
+		transition: color 150ms var(--ease-smooth);
 	}
 
-	.nav-letter-show {
-		display: flex;
+	.nav-icon-active {
+		color: var(--accent);
+	}
+
+	@media (hover: hover) {
+		.nav-inactive:hover .nav-icon {
+			color: var(--text-primary);
+		}
+	}
+
+	/* Divider between ops and admin groups */
+	.nav-divider {
+		height: 1px;
+		margin: 0.5rem 1rem;
+		background: var(--border-holdfast);
 	}
 
 	.nav-label {
