@@ -2,9 +2,10 @@
 	import type { Snippet } from 'svelte';
 	import { prefersReducedMotion } from '$lib/motion';
 
-	let { selected = false, clickable = false, elevation = 'md', children, onclick }: {
+	let { selected = false, clickable = false, accent = false, elevation = 'md', children, onclick }: {
 		selected?: boolean;
 		clickable?: boolean;
+		accent?: boolean;
 		elevation?: 'sm' | 'md' | 'lg';
 		children: Snippet;
 		onclick?: () => void;
@@ -17,9 +18,9 @@
 	} as const;
 
 	const hoverShadowVar = {
-		sm: 'var(--shadow-md), var(--glow-hover)',
-		md: 'var(--shadow-lg), var(--glow-hover)',
-		lg: 'var(--shadow-lg), var(--glow-hover)'
+		sm: 'var(--shadow-md), var(--glow-accent)',
+		md: 'var(--shadow-lg), var(--glow-accent)',
+		lg: 'var(--shadow-lg), var(--glow-accent)'
 	} as const;
 
 	const canHover = typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches;
@@ -28,11 +29,11 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <div
-	class="surface-gradient rounded-[var(--radius-md)] border bg-[var(--surface)] p-[var(--space-card)] transition-all"
+	class="card"
+	class:card-accent={accent}
+	class:card-selected={selected}
 	class:cursor-pointer={clickable}
-	class:border-l-4={selected}
 	style:box-shadow={shadowVar[elevation]}
-	style:border-color={selected ? 'var(--secondary)' : 'var(--border-holdfast)'}
 	style:transition-duration="var(--duration-fast)"
 	onmouseenter={canHover ? (e) => {
 		const el = e.currentTarget;
@@ -51,3 +52,26 @@
 >
 	{@render children()}
 </div>
+
+<style>
+	.card {
+		background: var(--surface);
+		background-image: linear-gradient(180deg, oklch(100% 0 0 / 0.03) 0%, transparent 50%);
+		border: 1px solid color-mix(in oklch, var(--accent) 15%, var(--border-holdfast));
+		border-radius: var(--radius-md);
+		padding: var(--space-card);
+		transition: all var(--duration-fast) var(--ease-smooth);
+	}
+
+	.card-accent {
+		background: var(--accent-glow-bg);
+		border-top: 3px solid var(--accent);
+		border-color: color-mix(in oklch, var(--accent) 30%, var(--border-holdfast));
+		border-top-color: var(--accent);
+	}
+
+	.card-selected {
+		border-left: 4px solid var(--accent);
+		box-shadow: var(--glow-accent);
+	}
+</style>
