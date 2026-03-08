@@ -35,7 +35,7 @@
 
 <div class="flex flex-col">
 	<div class="flex items-baseline gap-1.5">
-		<span class="odometer text-2xl font-bold text-[var(--text-primary)]">
+		<span class="odometer stat-value">
 			{#each digits as d (d.key)}
 				{#if d.char.match(/\d/)}
 					<span class="digit-wrapper">
@@ -60,10 +60,25 @@
 			</span>
 		{/if}
 	</div>
-	<span class="text-sm text-[var(--text-secondary)]">{label}</span>
+	{#if label}
+		<span class="stat-label">{label}</span>
+	{/if}
 </div>
 
 <style>
+	.stat-value {
+		font-size: 2.5rem;
+		font-weight: 700;
+		color: var(--text-primary);
+		line-height: 1.1;
+	}
+
+	.stat-label {
+		font-size: 0.8rem;
+		color: var(--accent-muted);
+		margin-top: 0.15rem;
+	}
+
 	.odometer {
 		display: inline-flex;
 		align-items: baseline;
