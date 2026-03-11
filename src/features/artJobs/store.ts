@@ -478,6 +478,23 @@ export function getArtistStats(guildId: string, artistId: string): ArtistMonthly
   };
 }
 
+/**
+ * setJobThumbnail
+ * WHAT: Store the latest uploaded art preview URL for a job.
+ * WHY: Called after file upload; stores relative URL for dashboard display.
+ */
+export function setJobThumbnail(jobId: number, thumbnailUrl: string | null): boolean {
+  const result = db
+    .prepare(`UPDATE art_job SET thumbnail_url = ?, updated_at = datetime('now') WHERE id = ?`)
+    .run(thumbnailUrl, jobId);
+
+  if (result.changes > 0) {
+    logger.info({ jobId, thumbnailUrl }, "[artJobs] Thumbnail updated");
+    return true;
+  }
+  return false;
+}
+
 // Pads to 4 digits. Will look silly if we ever hit job #10000 but
 // that's 10,000 art commissions so I think we'll survive the embarrassment.
 export function formatJobNumber(num: number): string {

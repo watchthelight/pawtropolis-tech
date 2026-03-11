@@ -40,6 +40,8 @@ export interface ArtJobRow {
   notes: string | null;
   // Links back to the assignment log entry that spawned this job
   assignment_log_id: number | null;
+  // Latest uploaded art preview (relative URL like /api/art/uploads/42/timestamp.webp)
+  thumbnail_url: string | null;
 }
 
 /** Options for creating a new art job */

@@ -14,7 +14,7 @@ import { logger } from "../lib/logger.js";
 import { getConfig } from "../lib/config.js";
 import { getArtistConfig } from "../features/artistRotation/constants.js";
 import { addArtist, removeArtist, moveToPosition, skipArtist, unskipArtist, getNextArtist, logAssignment, processAssignment } from "../features/artistRotation/queue.js";
-import { createJob, updateJobStatus, finishJob, cancelJob, getJobById } from "../features/artJobs/store.js";
+import { createJob, updateJobStatus, finishJob, cancelJob, getJobById, setJobThumbnail } from "../features/artJobs/store.js";
 import type { JobStatus } from "../features/artJobs/types.js";
 import type { ArtType } from "../features/artistRotation/constants.js";
 import { nowUtc } from "../lib/time.js";
@@ -990,6 +990,26 @@ export async function startDashboardApi(client: Client): Promise<void> {
     ).catch(() => {});
 
     return { success: true, data: { jobId } } satisfies ApiSuccess;
+  });
+
+  // POST /api/art/jobs/thumbnail — set the thumbnail URL for a job (called after file upload)
+  server.post<{ Body: Record<string, unknown> }>("/api/art/jobs/thumbnail", async (request, reply) => {
+    const { userId: actorId, tier, jobId, thumbnailUrl } = request.body ?? {};
+    if (!actorId || !tier || !jobId) return reply.code(400).send({ success: false, error: "Missing required fields" } satisfies ApiError);
+
+    const job = getJobById(Number(jobId));
+    if (!job) return reply.code(404).send({ success: false, error: "Job not found" } satisfies ApiError);
+
+    // Artists can update thumbnails on their own jobs; staff can update any
+    const isOwner = job.artist_id === actorId;
+    const isStaff = hasMinTier(tier as string, "sm");
+    if (!isOwner && !isStaff) return reply.code(403).send({ success: false, error: "Can only update thumbnails on your own jobs" } satisfies ApiError);
+
+    const ok = setJobThumbnail(Number(jobId), thumbnailUrl as string | null);
+    if (!ok) return reply.code(409).send({ success: false, error: "Failed to update thumbnail" } satisfies ApiError);
+
+    notifyDashboard("art:job_thumbnail", { jobId, artistId: job.artist_id, thumbnailUrl });
+    return { success: true, data: { jobId, thumbnailUrl } } satisfies ApiSuccess;
   });
 
   // POST /api/art/jobs/cancel — cancel job with optional reason
