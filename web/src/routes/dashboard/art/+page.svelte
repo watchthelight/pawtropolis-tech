@@ -651,7 +651,7 @@
 				{#each queue as artist, idx (artist.userId)}
 					{@const rowState = getRowState(artist.userId)}
 					<div
-						class="table-row"
+						class="table-row queue-row"
 						class:row-next-up={artist.userId === nextUpUserId}
 						class:row-skipped={artist.skipped}
 						class:drag-over={dragOverIndex === idx}
@@ -1480,8 +1480,33 @@
 		.col-time { display: none; }
 		.col-count { width: 2.5rem; }
 		.jobs-header .col-name:nth-child(3),
-		.table-row .col-name:nth-child(3) { display: none; }
+		.history-header .col-name:nth-child(3),
+		.table-row:not(.queue-row) .col-name:nth-child(3) { display: none; }
 		.tab { min-height: 44px; }
+	}
+
+	@media (max-width: 640px) {
+		/* Queue rows: 2-line grid so artist names are never crushed */
+		.queue-row {
+			display: grid;
+			grid-template-areas:
+				"drag pos name status"
+				"drag .   acts acts";
+			grid-template-columns: 1.25rem 2rem 1fr auto;
+			gap: 0.375rem 0.5rem;
+			min-width: 0;
+		}
+		.queue-row .col-drag   { grid-area: drag; align-self: center; width: auto; }
+		.queue-row .col-pos    { grid-area: pos;  width: auto; }
+		.queue-row .col-name   { grid-area: name; min-width: 0; }
+		.queue-row .col-count  { display: none; }
+		.queue-row .col-status { grid-area: status; width: auto; align-self: start; }
+		.queue-row .col-queue-actions { grid-area: acts; width: auto; }
+
+		/* Active jobs: stack stage pills and actions on separate rows */
+		.jc-bottom { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+		.jc-actions { margin-left: 0; align-self: flex-end; }
+		.stage-pill { padding: 0.15rem 0.4rem; font-size: 0.65rem; }
 	}
 
 	@media (max-width: 480px) {
