@@ -18,6 +18,7 @@
 		"@tailwindcss/vite": "^4.2.1",
 		"@types/better-sqlite3": "^7.6.13",
 		"@types/d3": "^7.4.3",
+		"@types/sharp": "^0.31.1",
 		"svelte": "^5.51.0",
 		"svelte-check": "^4.4.2",
 		"tailwindcss": "^4.2.1",
@@ -32,6 +33,7 @@
 		"d3": "^7.9.0",
 		"dotenv": "^17.3.1",
 		"gsap": "^3.14.2",
-		"lucide-svelte": "^0.577.0"
+		"lucide-svelte": "^0.577.0",
+		"sharp": "^0.34.5"
 	}
 }

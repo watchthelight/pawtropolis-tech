@@ -48,6 +48,7 @@ export interface ArtJobItem {
 	status: string;
 	assignedAt: number;
 	updatedAt: number;
+	thumbnailUrl: string | null;
 }
 
 /**
@@ -109,7 +110,8 @@ export function getActiveJobs(guildId: string): ArtJobItem[] {
 				j.ticket_type,
 				j.status,
 				j.assigned_at,
-				j.updated_at
+				j.updated_at,
+				j.thumbnail_url
 			FROM art_job j
 			LEFT JOIN user_cache ua ON j.artist_id = ua.user_id AND ua.guild_id = ?
 			LEFT JOIN user_cache ur ON j.recipient_id = ur.user_id AND ur.guild_id = ?
@@ -129,6 +131,7 @@ export function getActiveJobs(guildId: string): ArtJobItem[] {
 		status: string;
 		assigned_at: string;
 		updated_at: string;
+		thumbnail_url: string | null;
 	}[];
 
 	return rows.map((r) => ({
@@ -142,7 +145,8 @@ export function getActiveJobs(guildId: string): ArtJobItem[] {
 		ticketType: r.ticket_type,
 		status: r.status,
 		assignedAt: normalizeTimestamp(r.assigned_at) ?? 0,
-		updatedAt: normalizeTimestamp(r.updated_at) ?? 0
+		updatedAt: normalizeTimestamp(r.updated_at) ?? 0,
+		thumbnailUrl: r.thumbnail_url ?? null
 	}));
 }
 
