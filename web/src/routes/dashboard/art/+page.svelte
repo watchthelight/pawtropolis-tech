@@ -556,15 +556,15 @@
 					<div class="table-row">
 						<span class="col-thumb">
 							{#if job.thumbnailUrl}
-								<button class="thumb-btn" onclick={() => openThumbJobId = openThumbJobId === job.id ? null : job.id} title="View art">
+								<button class="thumb-btn" onclick={() => openThumbJobId = openThumbJobId === job.id ? null : job.id} title="View art preview">
 									<img src={job.thumbnailUrl} alt="Art preview" class="thumb-img" />
 								</button>
 							{:else}
-								<button class="thumb-placeholder" title="Upload art" onclick={() => triggerFileInput(job.id)}>
+								<button class="thumb-placeholder" onclick={() => triggerFileInput(job.id)}>
 									{#if isUploading}
-										<span class="upload-spin">↻</span>
+										<span class="upload-spin" title="Uploading…">↻</span>
 									{:else}
-										<span class="upload-icon">↑</span>
+										<span class="upload-icon" title="Upload art">↑</span>
 									{/if}
 								</button>
 							{/if}
@@ -620,11 +620,11 @@
 								<span class="loading-text">…</span>
 							{:else}
 								{#if job.thumbnailUrl}
-									<button class="btn-ghost-sm" title="Replace art" onclick={() => triggerFileInput(job.id)}>
-										{#if isUploading}…{:else}↑ Replace{/if}
+									<button class="btn-ghost-sm" onclick={() => triggerFileInput(job.id)}>
+										{isUploading ? 'Uploading…' : '↑ Replace Art'}
 									</button>
 								{/if}
-								<button class="btn-finish" title="Finish job" onclick={() => setRowState(rowId, 'confirming')}>✓</button>
+								<button class="btn-finish" onclick={() => setRowState(rowId, 'confirming')}>✓ Mark Done</button>
 							{/if}
 						</span>
 					</div>
@@ -704,10 +704,10 @@
 								<span class="loading-text">…</span>
 							{:else if artist.skipped}
 								<button class="btn-ghost-sm" onclick={() => unskipArtist(artist.userId)}>Resume</button>
-								<button class="btn-ghost-sm" onclick={() => setRowState(artist.userId, 'confirming')}>Remove</button>
+								<button class="btn-remove-sm" onclick={() => setRowState(artist.userId, 'confirming')}>Remove</button>
 							{:else}
-								<button class="btn-ghost-sm" onclick={() => setRowState(artist.userId, 'entering-reason')}>Skip</button>
-								<button class="btn-ghost-sm" onclick={() => setRowState(artist.userId, 'confirming')}>Remove</button>
+								<button class="btn-skip-sm" onclick={() => setRowState(artist.userId, 'entering-reason')}>Skip</button>
+								<button class="btn-remove-sm" onclick={() => setRowState(artist.userId, 'confirming')}>Remove</button>
 							{/if}
 						</span>
 					</div>
@@ -721,107 +721,83 @@
 		{#if activeJobs.length === 0}
 			<EmptyState message="No active jobs" subtitle="All art jobs are completed or cancelled." />
 		{:else}
-			<div class="table-card">
-				<div class="table-header jobs-header">
-					<span class="col-thumb"></span>
-					<span class="col-job">#</span>
-					<span class="col-name">Artist</span>
-					<span class="col-name">Recipient</span>
-					<span class="col-type">Type</span>
-					<span class="col-job-status">Status</span>
-					<span class="col-time">Assigned</span>
-					<span class="col-actions">Actions</span>
-				</div>
+			<div class="job-cards">
 				{#each activeJobs as job (job.id)}
-					{@const colors = STATUS_COLORS[job.status] ?? STATUS_COLORS.assigned}
 					{@const rowId = `job-${job.id}`}
 					{@const rowState = getRowState(rowId)}
 					{@const isUploading = uploadingJobId === job.id}
-					<div class="table-row">
-						<span class="col-thumb">
+					<div class="job-card">
+						<!-- Thumbnail -->
+						<div class="jc-thumb">
 							{#if job.thumbnailUrl}
-								<button class="thumb-btn" onclick={() => openThumbJobId = openThumbJobId === job.id ? null : job.id} title="View art">
-									<img src={job.thumbnailUrl} alt="Art preview" class="thumb-img" />
+								<button class="thumb-btn" onclick={() => openThumbJobId = openThumbJobId === job.id ? null : job.id} title="View art preview">
+									<img src={job.thumbnailUrl} alt="Art preview" class="thumb-img thumb-img-lg" />
 								</button>
 							{:else}
-								<button class="thumb-placeholder" title="Upload art" onclick={() => triggerFileInput(job.id)}>
-									{#if isUploading}
-										<span class="upload-spin">↻</span>
-									{:else}
-										<span class="upload-icon">↑</span>
-									{/if}
+								<button class="thumb-placeholder thumb-placeholder-lg" onclick={() => triggerFileInput(job.id)}>
+									{#if isUploading}<span class="upload-label upload-spin">↻ Uploading…</span>{:else}<span class="upload-label">↑ Upload Art</span>{/if}
 								</button>
 							{/if}
-							<input
-								id="upload-{job.id}"
-								type="file"
-								accept="image/jpeg,image/png,image/gif,image/webp"
-								class="file-input-hidden"
-								onchange={(e) => onFileSelected(job.id, e)}
-							/>
-						</span>
-						<span class="col-job job-number">#{job.jobNumber}</span>
-						<span class="col-name">{job.artistName}</span>
-						<span class="col-name">{job.recipientName}</span>
-						<span class="col-type"><span class="type-badge">{ticketLabel(job.ticketType)}</span></span>
-						<span class="col-job-status">
-							<div class="status-dropdown-wrap">
-								<button
-									class="status-badge status-badge-btn"
-									style:background={colors.bg}
-									style:color={colors.text}
-									onclick={() => openStatusJobId = openStatusJobId === job.id ? null : job.id}
-								>
-									{job.status}
-								</button>
-								{#if openStatusJobId === job.id}
-									<div class="status-dropdown">
-										{#each ACTIVE_STATUSES as s}
-											<button
-												class="status-dropdown-item"
-												class:status-dropdown-item-active={job.status === s}
-												onclick={() => updateJobStatus(job.id, s)}
-											>
-												{s}
-											</button>
-										{/each}
-									</div>
-								{/if}
+							<input id="upload-{job.id}" type="file" accept="image/jpeg,image/png,image/gif,image/webp" class="file-input-hidden" onchange={(e) => onFileSelected(job.id, e)} />
+						</div>
+
+						<!-- Info + controls -->
+						<div class="jc-body">
+							<!-- Top row: job# · type · names · time -->
+							<div class="jc-top">
+								<span class="jc-num">#{job.jobNumber}</span>
+								<span class="type-badge">{ticketLabel(job.ticketType)}</span>
+								<span class="jc-names">{job.artistName} → {job.recipientName}</span>
+								<span class="jc-time">{relativeTime(job.assignedAt)}</span>
 							</div>
-						</span>
-						<span class="col-time">{relativeTime(job.assignedAt)}</span>
-						<span class="col-actions">
-							{#if uploadErrors.get(job.id)}
-								<span class="inline-error">{uploadErrors.get(job.id)}</span>
-								<button class="btn-ghost-sm" onclick={() => { const e = new Map(uploadErrors); e.delete(job.id); uploadErrors = e; }}>✕</button>
-							{:else if rowState === 'error'}
-								<span class="inline-error">{rowErrors.get(rowId)}</span>
-								<button class="btn-ghost-sm" onclick={() => clearRow(rowId)}>Dismiss</button>
-							{:else if rowState === 'confirming'}
-								<span class="confirm-text">Mark #{job.jobNumber} done?</span>
-								<button class="btn-confirm" onclick={() => finishJob(job.id)}>Yes</button>
-								<button class="btn-ghost-sm" onclick={() => clearRow(rowId)}>No</button>
-							{:else if rowState === 'entering-reason'}
-								<input
-									class="reason-input"
-									placeholder="Cancel reason (optional)"
-									value={getRowInput(rowId)}
-									oninput={(e) => setRowInput(rowId, (e.target as HTMLInputElement).value)}
-								/>
-								<button class="btn-danger-sm" onclick={() => cancelJob(job.id)}>Cancel Job</button>
-								<button class="btn-ghost-sm" onclick={() => clearRow(rowId)}>✕</button>
-							{:else if rowState === 'loading'}
-								<span class="loading-text">…</span>
-							{:else}
-								{#if job.thumbnailUrl}
-									<button class="btn-ghost-sm" title="Replace art" onclick={() => triggerFileInput(job.id)}>
-										{#if isUploading}…{:else}↑{/if}
-									</button>
-								{/if}
-								<button class="btn-finish" title="Finish job" onclick={() => setRowState(rowId, 'confirming')}>✓</button>
-								<button class="btn-cancel" title="Cancel job" onclick={() => setRowState(rowId, 'entering-reason')}>✕</button>
-							{/if}
-						</span>
+
+							<!-- Bottom row: stage pills + actions -->
+							<div class="jc-bottom">
+								<!-- Stage selector -->
+								<div class="stage-pills">
+									{#each ACTIVE_STATUSES as s}
+										{@const sc = STATUS_COLORS[s]}
+										<button
+											class="stage-pill"
+											class:stage-pill-active={job.status === s}
+											style:--spbg={sc.bg}
+											style:--sptx={sc.text}
+											onclick={() => { if (job.status !== s) updateJobStatus(job.id, s); }}
+											disabled={rowState === 'loading'}
+										>
+											{s}
+										</button>
+									{/each}
+								</div>
+
+								<!-- Action area -->
+								<div class="jc-actions">
+									{#if uploadErrors.get(job.id)}
+										<span class="inline-error">{uploadErrors.get(job.id)}</span>
+										<button class="btn-ghost-sm" onclick={() => { const e = new Map(uploadErrors); e.delete(job.id); uploadErrors = e; }}>✕</button>
+									{:else if rowState === 'error'}
+										<span class="inline-error">{rowErrors.get(rowId)}</span>
+										<button class="btn-ghost-sm" onclick={() => clearRow(rowId)}>Dismiss</button>
+									{:else if rowState === 'confirming'}
+										<span class="confirm-text">Mark done?</span>
+										<button class="btn-confirm" onclick={() => finishJob(job.id)}>Yes</button>
+										<button class="btn-ghost-sm" onclick={() => clearRow(rowId)}>No</button>
+									{:else if rowState === 'entering-reason'}
+										<input class="reason-input" placeholder="Cancel reason…" value={getRowInput(rowId)} oninput={(e) => setRowInput(rowId, (e.target as HTMLInputElement).value)} />
+										<button class="btn-danger-sm" onclick={() => cancelJob(job.id)}>Cancel</button>
+										<button class="btn-ghost-sm" onclick={() => clearRow(rowId)}>✕</button>
+									{:else if rowState === 'loading'}
+										<span class="loading-text">…</span>
+									{:else}
+										{#if job.thumbnailUrl}
+											<button class="btn-ghost-sm" onclick={() => triggerFileInput(job.id)}>{isUploading ? 'Uploading…' : '↑ Replace Art'}</button>
+										{/if}
+										<button class="btn-finish" onclick={() => setRowState(rowId, 'confirming')}>✓ Mark Done</button>
+										<button class="btn-cancel" onclick={() => setRowState(rowId, 'entering-reason')}>✕ Cancel Job</button>
+									{/if}
+								</div>
+							</div>
+						</div>
 					</div>
 				{/each}
 			</div>
@@ -944,7 +920,7 @@
 						const inp = document.getElementById(`upload-lb-${job.id}`) as HTMLInputElement|null;
 						inp?.click();
 					}}>
-						{#if uploadingJobId === job.id}Uploading…{:else}↑ Replace{/if}
+						{#if uploadingJobId === job.id}Uploading Art…{:else}↑ Replace Art{/if}
 					</button>
 					<input
 						id="upload-lb-{job.id}"
@@ -1256,6 +1232,70 @@
 	}
 	.btn-cancel:hover { opacity: 0.8; }
 
+	/* ─── Queue action buttons ─── */
+	.btn-skip-sm {
+		padding: 0.2rem 0.5rem; border: 1px solid oklch(45% 0.14 55); border-radius: var(--radius-sm);
+		background: oklch(22% 0.07 55); color: oklch(72% 0.14 55);
+		font-size: 0.7rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 100ms;
+	}
+	.btn-skip-sm:hover { background: oklch(28% 0.09 55); }
+
+	.btn-remove-sm {
+		padding: 0.2rem 0.5rem; border: 1px solid oklch(45% 0.16 25); border-radius: var(--radius-sm);
+		background: oklch(22% 0.07 25); color: oklch(70% 0.18 25);
+		font-size: 0.7rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 100ms;
+	}
+	.btn-remove-sm:hover { background: oklch(28% 0.1 25); }
+
+	/* ─── Job cards ─── */
+	.job-cards { display: flex; flex-direction: column; gap: 0.5rem; }
+
+	.job-card {
+		display: flex; gap: 0.875rem; align-items: stretch;
+		background: var(--surface); border: 1px solid var(--border-holdfast);
+		border-radius: var(--radius-md); padding: 0.75rem 1rem;
+		transition: border-color 150ms;
+	}
+	@media (hover: hover) {
+		.job-card:hover { border-color: oklch(from var(--accent) l c h / 0.4); }
+	}
+
+	.jc-thumb { flex-shrink: 0; display: flex; align-items: center; }
+	.thumb-img-lg { width: 3rem; height: 3rem; object-fit: cover; border-radius: var(--radius-sm); }
+	.thumb-placeholder-lg { width: 3rem; height: 3rem; }
+
+	.jc-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.5rem; justify-content: center; }
+
+	.jc-top {
+		display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+		font-size: 0.85rem;
+	}
+	.jc-num { font-weight: 700; color: var(--text-secondary); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+	.jc-names { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-primary); }
+	.jc-time { font-size: 0.72rem; color: var(--text-secondary); flex-shrink: 0; margin-left: auto; }
+
+	.jc-bottom { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+
+	/* Stage pills — inline stage selector */
+	.stage-pills { display: flex; gap: 0.25rem; flex-wrap: wrap; }
+
+	.stage-pill {
+		padding: 0.2rem 0.55rem; border: 1px solid transparent;
+		border-radius: var(--radius-sm); font-size: 0.7rem; font-weight: 500;
+		cursor: pointer; text-transform: capitalize; transition: all 120ms;
+		background: var(--surface-raised); color: var(--text-secondary); border-color: var(--border);
+	}
+	.stage-pill:hover:not(:disabled):not(.stage-pill-active) {
+		color: var(--text-primary); border-color: var(--text-secondary);
+	}
+	.stage-pill-active {
+		background: var(--spbg); color: var(--sptx); border-color: transparent;
+		font-weight: 700; cursor: default;
+	}
+	.stage-pill:disabled { opacity: 0.5; cursor: not-allowed; }
+
+	.jc-actions { display: flex; align-items: center; gap: 0.3rem; margin-left: auto; flex-shrink: 0; }
+
 	/* ─── Add artist dropdown ─── */
 	.add-artist-wrap { position: relative; }
 	.dropdown-panel {
@@ -1391,6 +1431,18 @@
 		font-size: 0.85rem; transition: all 150ms;
 	}
 	.thumb-placeholder:hover { border-color: var(--accent); color: var(--accent); }
+
+	/* Large placeholder for job cards — shows text label */
+	.thumb-placeholder-lg {
+		width: 3rem; height: 3rem; border: 1px dashed var(--border); border-radius: var(--radius-sm);
+		background: var(--surface-raised); cursor: pointer; display: flex;
+		align-items: center; justify-content: center; color: var(--text-secondary);
+		font-size: 0.6rem; font-weight: 500; text-align: center; line-height: 1.2;
+		transition: all 150ms; padding: 0.2rem;
+	}
+	.thumb-placeholder-lg:hover { border-color: var(--accent); color: var(--accent); }
+
+	.upload-label { font-size: 0.6rem; font-weight: 500; text-align: center; line-height: 1.3; }
 
 	.upload-spin { display: inline-block; animation: spin 1s linear infinite; }
 	@keyframes spin { to { transform: rotate(360deg); } }
