@@ -12,6 +12,7 @@
 
 	let { data, children } = $props();
 	let user = $derived(data.user);
+	let isArtist = $derived(data.isArtist ?? false);
 
 	// Tier change toast
 	const TIER_LABELS: Record<string, string> = {
@@ -65,7 +66,11 @@
 		return ui !== -1 && mi !== -1 && ui <= mi;
 	}
 
-	let visiblePages = $derived(NAV_ITEMS.filter(n => hasMinTier(user.tier, n.minTier)).map(n => n.href));
+	let visiblePages = $derived(NAV_ITEMS.filter(n =>
+		n.minTier === 'none' ||
+		hasMinTier(user.tier, n.minTier) ||
+		(n.href === '/dashboard/art' && isArtist)
+	).map(n => n.href));
 
 	let touchStartX = 0;
 	let touchStartY = 0;
