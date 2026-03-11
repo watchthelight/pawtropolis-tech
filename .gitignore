@@ -89,3 +89,5 @@ docs/DEPLOYMENT_ISSUES_AND_SOLUTIONS.md
 docs/DEPLOY_CHECKLIST.md
 docs/DEPLOYMENT_VERIFICATION_2025-11-12.md
 .playwright-mcp/
+_bmad-output
+.claude

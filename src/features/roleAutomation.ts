@@ -80,7 +80,7 @@ export async function canManageRole(guild: Guild, roleId: string): Promise<{
   canManage: boolean;
   reason?: string;
 }> {
-  const botMember = guild.members.me;
+  const botMember = guild.members.me ?? await guild.members.fetchMe().catch(() => null);
   if (!botMember) {
     return { canManage: false, reason: "Bot member not found in guild" };
   }

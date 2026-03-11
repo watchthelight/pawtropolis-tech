@@ -72,7 +72,7 @@ export async function getLoggingChannel(guild: Guild): Promise<TextChannel | nul
   // This prevents silent failures where we think logging is working but embeds
   // are just getting dropped due to missing perms.
   const textChannel = channel as TextChannel;
-  const botMember = guild.members.me;
+  const botMember = guild.members.me ?? await guild.members.fetchMe().catch(() => null);
   if (!botMember) {
     logger.warn({ guildId: guild.id, channelId }, "[logger] bot member not found in guild");
     return null;
