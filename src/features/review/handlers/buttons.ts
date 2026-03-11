@@ -45,6 +45,21 @@ import {
 import { runKickAction } from "./actionRunners.js";
 import { handleClaimToggle, handleUnclaimAction } from "./claimHandlers.js";
 
+// ===== Button Rate Limiting =====
+
+// Per-user per-app cooldown to prevent spam-clicking review buttons.
+// Key: "userId:appCode", Value: timestamp of last processed click.
+const buttonCooldowns = new Map<string, number>();
+const BUTTON_COOLDOWN_MS = 3_000; // 3 seconds between clicks on the same app
+
+// Cleanup stale entries every 60 seconds
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, ts] of buttonCooldowns) {
+    if (now - ts > BUTTON_COOLDOWN_MS * 2) buttonCooldowns.delete(key);
+  }
+}, 60_000).unref();
+
 // ===== Exported Button Handlers =====
 
 /**
@@ -60,6 +75,20 @@ export async function handleReviewButton(interaction: ButtonInteraction) {
   if (!requireInteractionStaff(interaction)) return;
 
   const [, action, code] = match;
+
+  // Rate limit: prevent spam-clicking the same app's buttons
+  const cooldownKey = `${interaction.user.id}:${code}`;
+  const lastClick = buttonCooldowns.get(cooldownKey);
+  const now = Date.now();
+  if (lastClick && now - lastClick < BUTTON_COOLDOWN_MS) {
+    logger.debug({ userId: interaction.user.id, action, code }, "[review] button click rate-limited");
+    // Silently acknowledge to dismiss the loading state
+    if (!interaction.deferred && !interaction.replied) {
+      await interaction.deferUpdate().catch(() => {});
+    }
+    return;
+  }
+  buttonCooldowns.set(cooldownKey, now);
 
   try {
     // reject opens modal; no defer needed yet

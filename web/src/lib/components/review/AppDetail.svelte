@@ -265,7 +265,7 @@
 		{@const hasKick = priorDecisions.some(d => d.action === 'kick')}
 		<div class="prior-warning" class:prior-warning-severe={hasBan}>
 			<div class="prior-warning-header">
-				<span class="prior-warning-icon">{hasBan ? '&#9888;' : '&#9432;'}</span>
+				<span class="prior-warning-icon">{hasBan ? '⚠' : 'ℹ'}</span>
 				<strong>
 					{hasBan ? 'Previously Permanently Rejected' : hasKick ? 'Previously Kicked' : hasReject ? 'Previously Rejected' : 'Prior Application History'}
 				</strong>
@@ -753,6 +753,8 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.35rem;
+		max-height: 12rem;
+		overflow-y: auto;
 	}
 
 	.prior-item {

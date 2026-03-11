@@ -146,7 +146,7 @@ export async function openRejectModal(interaction: ButtonInteraction, app: Appli
   modal.addComponents(row);
 
   if (app.status === "rejected" || app.status === "approved" || app.status === "kicked") {
-    await replyOrEdit(interaction, { content: "This application is already resolved." }).catch((err) => {
+    await replyOrEdit(interaction, { content: "This application is already resolved.", flags: MessageFlags.Ephemeral }).catch((err) => {
       logger.debug({ err, appId: app.id, action: "reject" }, "[review] already-resolved reply failed");
     });
     return;
@@ -155,7 +155,7 @@ export async function openRejectModal(interaction: ButtonInteraction, app: Appli
   const claim = getClaim(app.id);
   const claimError = claimGuard(claim, interaction.user.id);
   if (claimError) {
-    await replyOrEdit(interaction, { content: claimError }).catch((err) => {
+    await replyOrEdit(interaction, { content: claimError, flags: MessageFlags.Ephemeral }).catch((err) => {
       logger.debug({ err, appId: app.id, action: "reject" }, "[review] claim-guard reply failed");
     });
     return;
@@ -173,7 +173,7 @@ export async function openRejectModal(interaction: ButtonInteraction, app: Appli
  */
 export async function openAcceptModal(interaction: ButtonInteraction, app: ApplicationRow) {
   if (app.status === "rejected" || app.status === "approved" || app.status === "kicked") {
-    await replyOrEdit(interaction, { content: "This application is already resolved." }).catch((err) => {
+    await replyOrEdit(interaction, { content: "This application is already resolved.", flags: MessageFlags.Ephemeral }).catch((err) => {
       logger.debug({ err, appId: app.id, action: "accept" }, "[review] already-resolved reply failed");
     });
     return;
@@ -182,7 +182,7 @@ export async function openAcceptModal(interaction: ButtonInteraction, app: Appli
   const claim = getClaim(app.id);
   const claimError = claimGuard(claim, interaction.user.id);
   if (claimError) {
-    await replyOrEdit(interaction, { content: claimError }).catch((err) => {
+    await replyOrEdit(interaction, { content: claimError, flags: MessageFlags.Ephemeral }).catch((err) => {
       logger.debug({ err, appId: app.id, action: "accept" }, "[review] claim-guard reply failed");
     });
     return;
@@ -216,6 +216,7 @@ export async function openPermRejectModal(interaction: ButtonInteraction, app: A
   if (claim && claim.reviewer_id !== interaction.user.id) {
     await replyOrEdit(interaction, {
       content: "You did not claim this application.",
+      flags: MessageFlags.Ephemeral,
     }).catch((err) => {
       logger.debug({ err, appId: app.id, action: "perm_reject" }, "[review] not-claimed reply failed");
     });
@@ -248,7 +249,7 @@ export async function openPermRejectModal(interaction: ButtonInteraction, app: A
  */
 export async function openKickModal(interaction: ButtonInteraction, app: ApplicationRow) {
   if (app.status === "rejected" || app.status === "approved" || app.status === "kicked") {
-    await replyOrEdit(interaction, { content: "This application is already resolved." }).catch((err) => {
+    await replyOrEdit(interaction, { content: "This application is already resolved.", flags: MessageFlags.Ephemeral }).catch((err) => {
       logger.debug({ err, appId: app.id, action: "kick" }, "[review] already-resolved reply failed");
     });
     return;
@@ -257,7 +258,7 @@ export async function openKickModal(interaction: ButtonInteraction, app: Applica
   const claim = getClaim(app.id);
   const claimError = claimGuard(claim, interaction.user.id);
   if (claimError) {
-    await replyOrEdit(interaction, { content: claimError }).catch((err) => {
+    await replyOrEdit(interaction, { content: claimError, flags: MessageFlags.Ephemeral }).catch((err) => {
       logger.debug({ err, appId: app.id, action: "kick" }, "[review] claim-guard reply failed");
     });
     return;
@@ -289,7 +290,7 @@ export async function openKickModal(interaction: ButtonInteraction, app: Applica
  */
 export async function openUnclaimModal(interaction: ButtonInteraction, app: ApplicationRow) {
   if (app.status === "rejected" || app.status === "approved" || app.status === "kicked") {
-    await replyOrEdit(interaction, { content: "This application is already resolved." }).catch((err) => {
+    await replyOrEdit(interaction, { content: "This application is already resolved.", flags: MessageFlags.Ephemeral }).catch((err) => {
       logger.debug({ err, appId: app.id, action: "unclaim" }, "[review] already-resolved reply failed");
     });
     return;
@@ -297,14 +298,14 @@ export async function openUnclaimModal(interaction: ButtonInteraction, app: Appl
 
   const claim = getClaim(app.id);
   if (!claim) {
-    await replyOrEdit(interaction, { content: "This application is not currently claimed." }).catch((err) => {
+    await replyOrEdit(interaction, { content: "This application is not currently claimed.", flags: MessageFlags.Ephemeral }).catch((err) => {
       logger.debug({ err, appId: app.id, action: "unclaim" }, "[review] not-claimed reply failed");
     });
     return;
   }
 
   if (claim.reviewer_id !== interaction.user.id) {
-    await replyOrEdit(interaction, { content: "You did not claim this application. Only the claim owner can unclaim it." }).catch((err) => {
+    await replyOrEdit(interaction, { content: "You did not claim this application. Only the claim owner can unclaim it.", flags: MessageFlags.Ephemeral }).catch((err) => {
       logger.debug({ err, appId: app.id, action: "unclaim" }, "[review] not-owner reply failed");
     });
     return;
