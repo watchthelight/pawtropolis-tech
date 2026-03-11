@@ -714,6 +714,9 @@ export async function startDashboardApi(client: Client): Promise<void> {
     if (auditType !== "members" && auditType !== "nsfw")
       return reply.code(400).send({ success: false, error: "auditType must be 'members' or 'nsfw'" } satisfies ApiError);
 
+    const guild = getGuild();
+    if (!guild) return reply.code(503).send({ success: false, error: "Bot not ready" } satisfies ApiError);
+
     const { getActiveSession } = await import("../store/auditSessionStore.js");
     const active = getActiveSession(guild.id, auditType as string);
     if (active)
@@ -731,6 +734,9 @@ export async function startDashboardApi(client: Client): Promise<void> {
       return reply.code(400).send({ success: false, error: "Missing required fields" } satisfies ApiError);
     if (!hasMinTier(tier as string, "admin"))
       return reply.code(403).send({ success: false, error: "Insufficient permissions (admin+ required)" } satisfies ApiError);
+
+    const guild = getGuild();
+    if (!guild) return reply.code(503).send({ success: false, error: "Bot not ready" } satisfies ApiError);
 
     const { getActiveSession, cancelSession } = await import("../store/auditSessionStore.js");
     const active = getActiveSession(guild.id, auditType as string);
