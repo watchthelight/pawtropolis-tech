@@ -234,8 +234,9 @@
 	// JOB MANAGEMENT
 	// ═══════════════════════════════════════════════════════════
 
-	// Status dropdown
+	// Status dropdown & thumbnail lightbox
 	let openStatusJobId = $state<number | null>(null);
+	let openThumbJobId = $state<number | null>(null);
 
 	async function updateJobStatus(jobId: number, status: string) {
 		openStatusJobId = null;
@@ -289,6 +290,59 @@
 		if (!result) {
 			activeJobs = [...activeJobs, job].sort((a, b) => b.assignedAt - a.assignedAt);
 		}
+	}
+
+	// ═══════════════════════════════════════════════════════════
+	// FILE UPLOAD
+	// ═══════════════════════════════════════════════════════════
+
+	// Track upload state per job
+	let uploadingJobId = $state<number | null>(null);
+	let uploadErrors = $state<Map<number, string>>(new Map());
+
+	async function uploadArt(jobId: number, file: File) {
+		uploadingJobId = jobId;
+		const errs = new Map(uploadErrors);
+		errs.delete(jobId);
+		uploadErrors = errs;
+
+		try {
+			const formData = new FormData();
+			formData.append('file', file);
+
+			const res = await fetch(`/api/art/jobs/${jobId}/upload`, {
+				method: 'POST',
+				body: formData
+			});
+			const json = await res.json();
+
+			if (!json.success) {
+				const e = new Map(uploadErrors);
+				e.set(jobId, json.error ?? 'Upload failed');
+				uploadErrors = e;
+			} else {
+				const url = json.data.thumbnailUrl as string;
+				// Optimistic update in both job lists
+				activeJobs = activeJobs.map((j) => j.id === jobId ? { ...j, thumbnailUrl: url } : j);
+				myJobs = myJobs.map((j) => j.id === jobId ? { ...j, thumbnailUrl: url } : j);
+			}
+		} catch {
+			const e = new Map(uploadErrors);
+			e.set(jobId, 'Network error');
+			uploadErrors = e;
+		} finally {
+			uploadingJobId = null;
+		}
+	}
+
+	function triggerFileInput(jobId: number) {
+		const input = document.getElementById(`upload-${jobId}`) as HTMLInputElement | null;
+		input?.click();
+	}
+
+	function onFileSelected(jobId: number, e: Event) {
+		const file = (e.target as HTMLInputElement).files?.[0];
+		if (file) uploadArt(jobId, file);
 	}
 
 	// ─── New Assignment Modal ───
@@ -406,6 +460,7 @@
 		const target = e.target as HTMLElement;
 		if (!target.closest('.status-dropdown-wrap')) openStatusJobId = null;
 		if (!target.closest('.add-artist-wrap')) { addArtistOpen = false; addArtistResults = []; }
+		if (!target.closest('.thumb-btn') && !target.closest('.thumb-lightbox')) openThumbJobId = null;
 	}
 </script>
 
@@ -485,6 +540,7 @@
 		{:else}
 			<div class="table-card">
 				<div class="table-header jobs-header">
+					<span class="col-thumb"></span>
 					<span class="col-job">#</span>
 					<span class="col-name">Recipient</span>
 					<span class="col-type">Type</span>
@@ -496,7 +552,30 @@
 					{@const colors = STATUS_COLORS[job.status] ?? STATUS_COLORS.assigned}
 					{@const rowId = `job-${job.id}`}
 					{@const rowState = getRowState(rowId)}
+					{@const isUploading = uploadingJobId === job.id}
 					<div class="table-row">
+						<span class="col-thumb">
+							{#if job.thumbnailUrl}
+								<button class="thumb-btn" onclick={() => openThumbJobId = openThumbJobId === job.id ? null : job.id} title="View art">
+									<img src={job.thumbnailUrl} alt="Art preview" class="thumb-img" />
+								</button>
+							{:else}
+								<button class="thumb-placeholder" title="Upload art" onclick={() => triggerFileInput(job.id)}>
+									{#if isUploading}
+										<span class="upload-spin">↻</span>
+									{:else}
+										<span class="upload-icon">↑</span>
+									{/if}
+								</button>
+							{/if}
+							<input
+								id="upload-{job.id}"
+								type="file"
+								accept="image/jpeg,image/png,image/gif,image/webp"
+								class="file-input-hidden"
+								onchange={(e) => onFileSelected(job.id, e)}
+							/>
+						</span>
 						<span class="col-job job-number">#{job.jobNumber}</span>
 						<span class="col-name">{job.recipientName}</span>
 						<span class="col-type"><span class="type-badge">{ticketLabel(job.ticketType)}</span></span>
@@ -527,7 +606,10 @@
 						</span>
 						<span class="col-time">{relativeTime(job.assignedAt)}</span>
 						<span class="col-actions">
-							{#if rowState === 'error'}
+							{#if uploadErrors.get(job.id)}
+								<span class="inline-error">{uploadErrors.get(job.id)}</span>
+								<button class="btn-ghost-sm" onclick={() => { const e = new Map(uploadErrors); e.delete(job.id); uploadErrors = e; }}>✕</button>
+							{:else if rowState === 'error'}
 								<span class="inline-error">{rowErrors.get(rowId)}</span>
 								<button class="btn-ghost-sm" onclick={() => clearRow(rowId)}>Dismiss</button>
 							{:else if rowState === 'confirming'}
@@ -537,6 +619,11 @@
 							{:else if rowState === 'loading'}
 								<span class="loading-text">…</span>
 							{:else}
+								{#if job.thumbnailUrl}
+									<button class="btn-ghost-sm" title="Replace art" onclick={() => triggerFileInput(job.id)}>
+										{#if isUploading}…{:else}↑ Replace{/if}
+									</button>
+								{/if}
 								<button class="btn-finish" title="Finish job" onclick={() => setRowState(rowId, 'confirming')}>✓</button>
 							{/if}
 						</span>
@@ -636,6 +723,7 @@
 		{:else}
 			<div class="table-card">
 				<div class="table-header jobs-header">
+					<span class="col-thumb"></span>
 					<span class="col-job">#</span>
 					<span class="col-name">Artist</span>
 					<span class="col-name">Recipient</span>
@@ -648,7 +736,30 @@
 					{@const colors = STATUS_COLORS[job.status] ?? STATUS_COLORS.assigned}
 					{@const rowId = `job-${job.id}`}
 					{@const rowState = getRowState(rowId)}
+					{@const isUploading = uploadingJobId === job.id}
 					<div class="table-row">
+						<span class="col-thumb">
+							{#if job.thumbnailUrl}
+								<button class="thumb-btn" onclick={() => openThumbJobId = openThumbJobId === job.id ? null : job.id} title="View art">
+									<img src={job.thumbnailUrl} alt="Art preview" class="thumb-img" />
+								</button>
+							{:else}
+								<button class="thumb-placeholder" title="Upload art" onclick={() => triggerFileInput(job.id)}>
+									{#if isUploading}
+										<span class="upload-spin">↻</span>
+									{:else}
+										<span class="upload-icon">↑</span>
+									{/if}
+								</button>
+							{/if}
+							<input
+								id="upload-{job.id}"
+								type="file"
+								accept="image/jpeg,image/png,image/gif,image/webp"
+								class="file-input-hidden"
+								onchange={(e) => onFileSelected(job.id, e)}
+							/>
+						</span>
 						<span class="col-job job-number">#{job.jobNumber}</span>
 						<span class="col-name">{job.artistName}</span>
 						<span class="col-name">{job.recipientName}</span>
@@ -680,7 +791,10 @@
 						</span>
 						<span class="col-time">{relativeTime(job.assignedAt)}</span>
 						<span class="col-actions">
-							{#if rowState === 'error'}
+							{#if uploadErrors.get(job.id)}
+								<span class="inline-error">{uploadErrors.get(job.id)}</span>
+								<button class="btn-ghost-sm" onclick={() => { const e = new Map(uploadErrors); e.delete(job.id); uploadErrors = e; }}>✕</button>
+							{:else if rowState === 'error'}
 								<span class="inline-error">{rowErrors.get(rowId)}</span>
 								<button class="btn-ghost-sm" onclick={() => clearRow(rowId)}>Dismiss</button>
 							{:else if rowState === 'confirming'}
@@ -699,6 +813,11 @@
 							{:else if rowState === 'loading'}
 								<span class="loading-text">…</span>
 							{:else}
+								{#if job.thumbnailUrl}
+									<button class="btn-ghost-sm" title="Replace art" onclick={() => triggerFileInput(job.id)}>
+										{#if isUploading}…{:else}↑{/if}
+									</button>
+								{/if}
 								<button class="btn-finish" title="Finish job" onclick={() => setRowState(rowId, 'confirming')}>✓</button>
 								<button class="btn-cancel" title="Cancel job" onclick={() => setRowState(rowId, 'entering-reason')}>✕</button>
 							{/if}
@@ -807,6 +926,38 @@
 		</div>
 	{/if}
 </SpringReveal>
+
+<!-- ══════════════════ THUMBNAIL LIGHTBOX ══════════════════ -->
+{#if openThumbJobId !== null}
+	{@const job = [...activeJobs, ...myJobs].find((j) => j.id === openThumbJobId)}
+	{#if job?.thumbnailUrl}
+		<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+		<div class="lightbox-backdrop" onclick={() => openThumbJobId = null}>
+			<div class="thumb-lightbox" onclick={(e) => e.stopPropagation()}>
+				<div class="lightbox-header">
+					<span class="lightbox-title">#{job.jobNumber} — {ticketLabel(job.ticketType)} for {job.recipientName}</span>
+					<button class="modal-close" onclick={() => openThumbJobId = null}>✕</button>
+				</div>
+				<img src={job.thumbnailUrl} alt="Art for job #{job.jobNumber}" class="lightbox-img" />
+				<div class="lightbox-footer">
+					<button class="btn-ghost-sm" onclick={() => {
+						const inp = document.getElementById(`upload-lb-${job.id}`) as HTMLInputElement|null;
+						inp?.click();
+					}}>
+						{#if uploadingJobId === job.id}Uploading…{:else}↑ Replace{/if}
+					</button>
+					<input
+						id="upload-lb-{job.id}"
+						type="file"
+						accept="image/jpeg,image/png,image/gif,image/webp"
+						class="file-input-hidden"
+						onchange={(e) => { openThumbJobId = null; onFileSelected(job.id, e); }}
+					/>
+				</div>
+			</div>
+		</div>
+	{/if}
+{/if}
 
 <!-- ══════════════════ NEW ASSIGNMENT MODAL ══════════════════ -->
 {#if assignModalOpen}
@@ -1220,6 +1371,56 @@
 	}
 	.ticket-pill:hover { border-color: var(--accent); color: var(--text-primary); }
 	.ticket-pill-active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+
+	/* ─── Thumbnails ─── */
+	.col-thumb { width: 2.5rem; flex-shrink: 0; }
+
+	.thumb-btn {
+		width: 2.25rem; height: 2.25rem; border: none; padding: 0;
+		background: transparent; cursor: pointer; border-radius: var(--radius-sm);
+		overflow: hidden; display: flex; align-items: center; justify-content: center;
+		transition: opacity 150ms;
+	}
+	.thumb-btn:hover { opacity: 0.85; }
+	.thumb-img { width: 2.25rem; height: 2.25rem; object-fit: cover; border-radius: var(--radius-sm); display: block; }
+
+	.thumb-placeholder {
+		width: 2.25rem; height: 2.25rem; border: 1px dashed var(--border); border-radius: var(--radius-sm);
+		background: var(--surface-raised); cursor: pointer; display: flex;
+		align-items: center; justify-content: center; color: var(--text-secondary);
+		font-size: 0.85rem; transition: all 150ms;
+	}
+	.thumb-placeholder:hover { border-color: var(--accent); color: var(--accent); }
+
+	.upload-spin { display: inline-block; animation: spin 1s linear infinite; }
+	@keyframes spin { to { transform: rotate(360deg); } }
+
+	.file-input-hidden { display: none; }
+
+	/* ─── Lightbox ─── */
+	.lightbox-backdrop {
+		position: fixed; inset: 0; z-index: 110;
+		background: oklch(5% 0.01 var(--hue, 220) / 0.85);
+		backdrop-filter: blur(6px);
+		display: flex; align-items: center; justify-content: center; padding: 1rem;
+	}
+	.thumb-lightbox {
+		background: var(--surface); border: 1px solid var(--border-holdfast);
+		border-radius: var(--radius-lg, var(--radius-md));
+		max-width: min(90vw, 640px); width: 100%;
+		box-shadow: 0 24px 64px oklch(0% 0 0 / 0.6);
+		display: flex; flex-direction: column; overflow: hidden;
+	}
+	.lightbox-header {
+		display: flex; align-items: center; justify-content: space-between;
+		padding: 0.875rem 1.25rem; border-bottom: 1px solid var(--border);
+	}
+	.lightbox-title { font-size: 0.875rem; font-weight: 600; color: var(--text-primary); }
+	.lightbox-img { width: 100%; max-height: 70vh; object-fit: contain; display: block; background: oklch(10% 0.02 var(--hue, 220)); }
+	.lightbox-footer {
+		display: flex; align-items: center; justify-content: flex-end;
+		padding: 0.75rem 1.25rem; border-top: 1px solid var(--border); gap: 0.5rem;
+	}
 
 	/* ─── Mobile ─── */
 	@media (max-width: 768px) {
