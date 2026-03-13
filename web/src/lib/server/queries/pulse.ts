@@ -86,13 +86,13 @@ export function getPulseMetrics(guildId: string): PulseMetrics {
 	}
 	const messagesToday = hourlyDistribution.reduce((a, b) => a + b, 0);
 
-	// 7-day average: total messages in [7 days ago, today midnight) / 7
+	// 7-day average: total messages / distinct days with data (max 7 days lookback)
 	const sevenDaysAgoS = todayMidnightS - 7 * 86400;
-	const weekTotal = count(
-		'SELECT COUNT(*) as count FROM message_activity WHERE guild_id = ? AND created_at_s >= ? AND created_at_s < ?',
-		guildId, sevenDaysAgoS, todayMidnightS
-	);
-	const messagesAvg7d = Math.round(weekTotal / 7);
+	const weekStats = db().prepare(
+		`SELECT COUNT(*) as total, COUNT(DISTINCT(created_at_s / 86400)) as days
+		 FROM message_activity WHERE guild_id = ? AND created_at_s >= ? AND created_at_s < ?`
+	).get(guildId, sevenDaysAgoS, todayMidnightS) as { total: number; days: number };
+	const messagesAvg7d = weekStats.days > 0 ? Math.round(weekStats.total / weekStats.days) : 0;
 
 	// Member count estimates from user_activity (tracks all known guild members)
 	const totalMembers = count(
