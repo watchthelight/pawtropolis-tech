@@ -2,10 +2,40 @@
 	import PageHeader from '$lib/components/layout/PageHeader.svelte';
 	import StatNumber from '$lib/components/data/StatNumber.svelte';
 	import SpringReveal from '$lib/components/motion/SpringReveal.svelte';
-	import { ClipboardList, Mail, Flag, CheckCircle, Users, UserCheck, Bot, Zap } from 'lucide-svelte';
+	import { ClipboardList, Mail, Flag, CheckCircle, Users, UserCheck, Bot, Zap, MessageSquare } from 'lucide-svelte';
+	import { relativeTime } from '$lib/utils/time';
 
 	let { data } = $props();
 	let metrics = $derived(data.metrics);
+	let pendingTrend = $derived<'up' | 'down' | undefined>(
+		metrics.submittedToday === 0 && metrics.decisionsToday === 0
+			? undefined
+			: metrics.submittedToday > metrics.decisionsToday
+				? 'up'
+				: metrics.decisionsToday > metrics.submittedToday
+					? 'down'
+					: undefined
+	);
+	let modmailPreview = $derived(
+		metrics.latestModmailAt ? `latest: ${relativeTime(new Date(metrics.latestModmailAt).getTime())}` : null
+	);
+	let totalFlags = $derived(metrics.activeFlags + metrics.behavioralFlags);
+	let flagBreakdown = $derived.by(() => {
+		const parts: string[] = [];
+		if (metrics.activeFlags > 0) parts.push(`${metrics.activeFlags} avatar`);
+		if (metrics.behavioralFlags > 0) parts.push(`${metrics.behavioralFlags} behavioral`);
+		return parts.join(' \u00b7 ');
+	});
+	let activityTrend = $derived<'up' | 'down' | undefined>(
+		metrics.messagesToday === 0 || metrics.messagesAvg7d === 0
+			? undefined
+			: metrics.messagesToday > metrics.messagesAvg7d * 1.2
+				? 'up'
+				: metrics.messagesToday < metrics.messagesAvg7d * 0.8
+					? 'down'
+					: undefined
+	);
+	let maxHour = $derived(Math.max(...metrics.hourlyDistribution, 1));
 </script>
 
 <SpringReveal stagger={30}>
@@ -18,7 +48,7 @@
 				<span class="status-dot" class:status-green={metrics.pendingApps === 0} class:status-amber={metrics.pendingApps > 0}></span>
 			</div>
 			<span class="card-label">Pending Applications</span>
-			<StatNumber value={metrics.pendingApps} label="" />
+			<StatNumber value={metrics.pendingApps} label="" trend={pendingTrend} invertColors={true} />
 			<span class="card-sub">{metrics.pendingApps === 0 ? 'All clear' : 'in the queue'}</span>
 		</a>
 
@@ -29,17 +59,17 @@
 			</div>
 			<span class="card-label">Open Modmail</span>
 			<StatNumber value={metrics.openModmail} label="" />
-			<span class="card-sub">{metrics.openModmail === 0 ? 'No open threads' : 'active threads'}</span>
+			<span class="card-sub">{metrics.openModmail === 0 ? 'No open threads' : modmailPreview ?? 'active threads'}</span>
 		</div>
 
-		<a href="/dashboard/flags" class="card clickable" class:card-accent={metrics.activeFlags > 0}>
+		<a href="/dashboard/flags" class="card clickable" class:card-accent={totalFlags > 0}>
 			<div class="card-icon-row">
-				<Flag size={16} color={metrics.activeFlags > 0 ? 'var(--accent)' : 'var(--text-tertiary)'} />
-				<span class="status-dot" class:status-green={metrics.activeFlags === 0} class:status-amber={metrics.activeFlags > 0}></span>
+				<Flag size={16} color={totalFlags > 0 ? 'var(--accent)' : 'var(--text-tertiary)'} />
+				<span class="status-dot" class:status-green={totalFlags === 0} class:status-amber={totalFlags > 0}></span>
 			</div>
 			<span class="card-label">Active Flags</span>
-			<StatNumber value={metrics.activeFlags} label="" />
-			<span class="card-sub">{metrics.activeFlags === 0 ? 'No active flags' : 'awaiting review'}</span>
+			<StatNumber value={totalFlags} label="" />
+			<span class="card-sub">{totalFlags === 0 ? 'No active flags' : flagBreakdown}</span>
 		</a>
 
 		<div class="card">
@@ -49,6 +79,30 @@
 			<span class="card-label">Decisions Today</span>
 			<StatNumber value={metrics.decisionsToday} label="" />
 			<span class="card-sub">{metrics.decisionsToday === 0 ? 'No decisions yet' : 'team actions today'}</span>
+		</div>
+
+		<div class="card" class:card-accent={activityTrend !== undefined}>
+			<div class="card-icon-row">
+				<MessageSquare size={16} color={activityTrend !== undefined ? 'var(--accent)' : 'var(--text-tertiary)'} />
+				<span class="status-dot" class:status-green={activityTrend === undefined} class:status-amber={activityTrend !== undefined}></span>
+			</div>
+			<span class="card-label">Activity Today</span>
+			<StatNumber value={metrics.messagesToday} label="" trend={activityTrend} />
+			{#if metrics.messagesToday > 0}
+				<svg class="hourly-bars" viewBox="0 0 96 32" preserveAspectRatio="none" aria-hidden="true">
+					{#each metrics.hourlyDistribution as count, i}
+						<rect
+							x={i * 4}
+							y={32 - (count / maxHour) * 32}
+							width="3"
+							height={(count / maxHour) * 32}
+							fill="var(--accent)"
+							opacity="0.7"
+						/>
+					{/each}
+				</svg>
+			{/if}
+			<span class="card-sub">{metrics.messagesToday === 0 ? 'No activity data' : `avg: ${metrics.messagesAvg7d}/day`}</span>
 		</div>
 	</div>
 
@@ -190,6 +244,13 @@
 		border-radius: 50%;
 		background: var(--accent);
 		flex-shrink: 0;
+	}
+
+	.hourly-bars {
+		width: 100%;
+		height: 32px;
+		margin-top: 0.25rem;
+		display: block;
 	}
 
 	.card.highlight-accent {
