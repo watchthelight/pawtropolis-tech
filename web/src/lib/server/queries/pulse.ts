@@ -3,8 +3,14 @@ import { db } from '$lib/server/db';
 export interface PulseMetrics {
 	pendingApps: number;
 	openModmail: number;
+	latestModmailAt: string | null;
 	activeFlags: number;
+	behavioralFlags: number;
 	decisionsToday: number;
+	submittedToday: number;
+	messagesToday: number;
+	messagesAvg7d: number;
+	hourlyDistribution: number[];
 	totalMembers: number;
 	estimatedBots: number;
 	estimatedRealUsers: number;
@@ -15,16 +21,17 @@ function count(sql: string, ...params: unknown[]): number {
 	return (db().prepare(sql).get(...params) as { count: number }).count;
 }
 
-function getTodayMidnightS(): number {
-	const now = new Date();
-	return Math.floor(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) / 1000);
-}
-
 /**
  * Server-wide pulse metrics for the M+ dashboard.
  * Aggregates pending apps, open modmail, NSFW flags, and today's decision count.
  */
 export function getPulseMetrics(guildId: string): PulseMetrics {
+	// Compute UTC midnight once — used by decisionsToday (epoch seconds) and submittedToday (ISO text)
+	const now = new Date();
+	const midnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+	const todayMidnightS = Math.floor(midnight.getTime() / 1000);
+	const todayMidnightISO = midnight.toISOString().slice(0, 19).replace('T', ' ');
+
 	const pendingApps = count(
 		"SELECT COUNT(*) as count FROM application WHERE guild_id = ? AND status IN ('submitted', 'needs_info')",
 		guildId
@@ -35,8 +42,18 @@ export function getPulseMetrics(guildId: string): PulseMetrics {
 		guildId
 	);
 
+	const latestModmail = db().prepare(
+		"SELECT created_at FROM modmail_ticket WHERE guild_id = ? AND status = 'open' ORDER BY created_at DESC LIMIT 1"
+	).get(guildId) as { created_at: string } | undefined;
+	const latestModmailAt = latestModmail?.created_at ?? null;
+
 	const activeFlags = count(
 		'SELECT COUNT(*) as count FROM nsfw_flags WHERE guild_id = ? AND reviewed = 0',
+		guildId
+	);
+
+	const behavioralFlags = count(
+		'SELECT COUNT(*) as count FROM user_activity WHERE guild_id = ? AND flagged_at IS NOT NULL',
 		guildId
 	);
 
@@ -45,8 +62,37 @@ export function getPulseMetrics(guildId: string): PulseMetrics {
 		 WHERE guild_id = ? AND action IN ('approve', 'reject', 'perm_reject', 'kick')
 		 AND created_at_s >= ?`,
 		guildId,
-		getTodayMidnightS()
+		todayMidnightS
 	);
+
+	const submittedToday = count(
+		'SELECT COUNT(*) as count FROM application WHERE guild_id = ? AND created_at >= ?',
+		guildId,
+		todayMidnightISO
+	);
+
+	// Hourly message distribution for today — uses (guild_id, hour_bucket) index
+	const hourlyRows = db().prepare(
+		`SELECT hour_bucket, COUNT(*) as count
+		 FROM message_activity
+		 WHERE guild_id = ? AND hour_bucket >= ? AND hour_bucket < ?
+		 GROUP BY hour_bucket
+		 ORDER BY hour_bucket`
+	).all(guildId, todayMidnightS, todayMidnightS + 24 * 3600) as { hour_bucket: number; count: number }[];
+
+	const hourlyDistribution = new Array(24).fill(0);
+	for (const row of hourlyRows) {
+		hourlyDistribution[(row.hour_bucket - todayMidnightS) / 3600] = row.count;
+	}
+	const messagesToday = hourlyDistribution.reduce((a, b) => a + b, 0);
+
+	// 7-day average: total messages in [7 days ago, today midnight) / 7
+	const sevenDaysAgoS = todayMidnightS - 7 * 86400;
+	const weekTotal = count(
+		'SELECT COUNT(*) as count FROM message_activity WHERE guild_id = ? AND created_at_s >= ? AND created_at_s < ?',
+		guildId, sevenDaysAgoS, todayMidnightS
+	);
+	const messagesAvg7d = Math.round(weekTotal / 7);
 
 	// Member count estimates from user_activity (tracks all known guild members)
 	const totalMembers = count(
@@ -78,5 +124,5 @@ export function getPulseMetrics(guildId: string): PulseMetrics {
 		fourteenDaysAgoS
 	);
 
-	return { pendingApps, openModmail, activeFlags, decisionsToday, totalMembers, estimatedBots, estimatedRealUsers, activeRealUsers };
+	return { pendingApps, openModmail, latestModmailAt, activeFlags, behavioralFlags, decisionsToday, submittedToday, messagesToday, messagesAvg7d, hourlyDistribution, totalMembers, estimatedBots, estimatedRealUsers, activeRealUsers };
 }
