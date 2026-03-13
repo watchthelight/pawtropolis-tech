@@ -1,7 +1,10 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
+	import { invalidateAll } from '$app/navigation';
 	import PageHeader from '$lib/components/layout/PageHeader.svelte';
 	import StatNumber from '$lib/components/data/StatNumber.svelte';
 	import SpringReveal from '$lib/components/motion/SpringReveal.svelte';
+	import { subscribe, unsubscribe, onReconnect, offReconnect } from '$lib/stores/sse.svelte';
 	import { ClipboardList, Mail, Flag, CheckCircle, Users, UserCheck, Bot, Zap, MessageSquare } from 'lucide-svelte';
 	import { relativeTime } from '$lib/utils/time';
 
@@ -36,6 +39,27 @@
 					: undefined
 	);
 	let maxHour = $derived(Math.max(...metrics.hourlyDistribution, 1));
+
+	// Live pulse updates — review/modmail/flag events refresh metrics (debounced)
+	let invalidateTimer: ReturnType<typeof setTimeout> | undefined;
+	function onPulseEvent() {
+		if (invalidateTimer) clearTimeout(invalidateTimer);
+		invalidateTimer = setTimeout(() => invalidateAll(), 150);
+	}
+	function onSSEReconnect() { invalidateAll(); }
+
+	subscribe('review:*', onPulseEvent);
+	subscribe('modmail:*', onPulseEvent);
+	subscribe('flag:*', onPulseEvent);
+	onReconnect(onSSEReconnect);
+
+	onDestroy(() => {
+		unsubscribe('review:*', onPulseEvent);
+		unsubscribe('modmail:*', onPulseEvent);
+		unsubscribe('flag:*', onPulseEvent);
+		offReconnect(onSSEReconnect);
+		if (invalidateTimer) clearTimeout(invalidateTimer);
+	});
 </script>
 
 <SpringReveal stagger={30}>
