@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { prefersReducedMotion } from '$lib/motion';
 
-	let { value, label, trend }: {
+	let { value, label, trend, invertColors = false }: {
 		value: number;
 		label: string;
 		trend?: 'up' | 'down' | 'neutral';
+		invertColors?: boolean;
 	} = $props();
 
 	const formatter = new Intl.NumberFormat();
@@ -20,11 +21,19 @@
 		}))
 	);
 
-	const trendColor: Record<string, string> = {
+	const defaultTrendColor: Record<string, string> = {
 		up: 'var(--status-success)',
 		down: 'var(--status-danger)',
 		neutral: 'var(--text-secondary)'
 	};
+
+	const invertedTrendColor: Record<string, string> = {
+		up: 'var(--status-danger)',
+		down: 'var(--status-success)',
+		neutral: 'var(--text-secondary)'
+	};
+
+	let trendColor = $derived(invertColors ? invertedTrendColor : defaultTrendColor);
 
 	const trendSymbol: Record<string, string> = {
 		up: '\u2191',
