@@ -81,13 +81,13 @@ development_status:
   epic-3-retrospective: optional
 
   # Epic 4: Server Pulse
-  epic-4: in-progress
+  epic-4: done
   4-1-pulse-query-layer-page-shell: done
-  4-2-pending-applications-card: backlog # deferred — duplicates Home, needs message_activity data first
-  4-3-open-modmail-active-flags-cards: backlog # deferred
-  4-4-activity-summary-card: backlog # deferred — message_activity table empty
-  4-5-real-time-pulse-updates: backlog # deferred
-  epic-4-retrospective: optional
+  4-2-pending-applications-card: done
+  4-3-open-modmail-active-flags-cards: done
+  4-4-activity-summary-card: done
+  4-5-real-time-pulse-updates: done
+  epic-4-retrospective: done
 
   # Epic 5: Flag Management
   epic-5: done
@@ -99,8 +99,8 @@ development_status:
   epic-5-retrospective: optional
 
   # Epic 6: Activity Heatmap
-  epic-6: backlog
-  6-1-activity-query-layer-page-shell: backlog
+  epic-6: in-progress
+  6-1-activity-query-layer-page-shell: done
   6-2-heatmap-visualization: backlog
   6-3-heatmap-hover-detail: backlog
   epic-6-retrospective: optional
