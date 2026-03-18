@@ -305,3 +305,86 @@ export function googleReverseImageUrl(imageUrl: string): string {
   const encoded = encodeURIComponent(imageUrl);
   return `https://lens.google.com/uploadbyurl?url=${encoded}`;
 }
+
+// ─── Dashboard Scan Support ─────────────────────────────────────────────────
+
+export interface FullScanData {
+  avatarUrl: string | null;
+  nsfwScore: number | null;
+  finalPct: number;
+  reason: RiskReason;
+  evidence: RiskSummary["evidence"];
+  bannerUrl: string | null;
+  bannerNsfwScore: number | null;
+  bannerFinalPct: number;
+  bannerReason: RiskReason | null;
+  bannerEvidence: RiskSummary["evidence"] | null;
+  avatarAiScore: number | null;
+  bannerAiScore: number | null;
+}
+
+/**
+ * Upsert full scan results (avatar NSFW + banner NSFW + AI scores) for a single application.
+ * Used by the dashboard scan API endpoints to write all scan data in one operation.
+ */
+export function upsertFullScan(applicationId: string, data: FullScanData): void {
+  db.prepare(`
+    INSERT INTO avatar_scan (
+      application_id, avatar_url, nsfw_score, final_pct, reason,
+      evidence_hard, evidence_soft, evidence_safe,
+      banner_url, banner_nsfw_score, banner_final_pct, banner_reason,
+      banner_evidence_hard, banner_evidence_soft, banner_evidence_safe,
+      avatar_ai_score, banner_ai_score,
+      scanned_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), unixepoch())
+    ON CONFLICT(application_id) DO UPDATE SET
+      avatar_url = excluded.avatar_url,
+      nsfw_score = COALESCE(excluded.nsfw_score, avatar_scan.nsfw_score),
+      final_pct = CASE WHEN excluded.nsfw_score IS NOT NULL THEN excluded.final_pct ELSE avatar_scan.final_pct END,
+      reason = CASE WHEN excluded.nsfw_score IS NOT NULL THEN excluded.reason ELSE avatar_scan.reason END,
+      evidence_hard = CASE WHEN excluded.nsfw_score IS NOT NULL THEN excluded.evidence_hard ELSE avatar_scan.evidence_hard END,
+      evidence_soft = CASE WHEN excluded.nsfw_score IS NOT NULL THEN excluded.evidence_soft ELSE avatar_scan.evidence_soft END,
+      evidence_safe = CASE WHEN excluded.nsfw_score IS NOT NULL THEN excluded.evidence_safe ELSE avatar_scan.evidence_safe END,
+      banner_url = COALESCE(excluded.banner_url, avatar_scan.banner_url),
+      banner_nsfw_score = COALESCE(excluded.banner_nsfw_score, avatar_scan.banner_nsfw_score),
+      banner_final_pct = CASE WHEN excluded.banner_nsfw_score IS NOT NULL THEN excluded.banner_final_pct ELSE avatar_scan.banner_final_pct END,
+      banner_reason = CASE WHEN excluded.banner_nsfw_score IS NOT NULL THEN excluded.banner_reason ELSE avatar_scan.banner_reason END,
+      banner_evidence_hard = CASE WHEN excluded.banner_nsfw_score IS NOT NULL THEN excluded.banner_evidence_hard ELSE avatar_scan.banner_evidence_hard END,
+      banner_evidence_soft = CASE WHEN excluded.banner_nsfw_score IS NOT NULL THEN excluded.banner_evidence_soft ELSE avatar_scan.banner_evidence_soft END,
+      banner_evidence_safe = CASE WHEN excluded.banner_nsfw_score IS NOT NULL THEN excluded.banner_evidence_safe ELSE avatar_scan.banner_evidence_safe END,
+      avatar_ai_score = COALESCE(excluded.avatar_ai_score, avatar_scan.avatar_ai_score),
+      banner_ai_score = COALESCE(excluded.banner_ai_score, avatar_scan.banner_ai_score),
+      updated_at = unixepoch()
+  `).run(
+    applicationId,
+    data.avatarUrl,
+    data.nsfwScore,
+    data.finalPct,
+    data.reason,
+    data.evidence ? JSON.stringify(data.evidence.hard) : null,
+    data.evidence ? JSON.stringify(data.evidence.soft) : null,
+    data.evidence ? JSON.stringify(data.evidence.safe) : null,
+    data.bannerUrl,
+    data.bannerNsfwScore,
+    data.bannerFinalPct,
+    data.bannerReason,
+    data.bannerEvidence ? JSON.stringify(data.bannerEvidence.hard) : null,
+    data.bannerEvidence ? JSON.stringify(data.bannerEvidence.soft) : null,
+    data.bannerEvidence ? JSON.stringify(data.bannerEvidence.safe) : null,
+    data.avatarAiScore,
+    data.bannerAiScore
+  );
+}
+
+/**
+ * Update only AI detection scores for an application. Used by the AI scan endpoint.
+ */
+export function updateAiScores(applicationId: string, avatarAiScore: number | null, bannerAiScore: number | null): void {
+  db.prepare(`
+    UPDATE avatar_scan
+    SET avatar_ai_score = COALESCE(?, avatar_ai_score),
+        banner_ai_score = COALESCE(?, banner_ai_score),
+        updated_at = unixepoch()
+    WHERE application_id = ?
+  `).run(avatarAiScore, bannerAiScore, applicationId);
+}

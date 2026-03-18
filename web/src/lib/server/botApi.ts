@@ -30,7 +30,8 @@ export type BotApiResponse<T = Record<string, unknown>> = BotApiSuccess<T> | Bot
  */
 export async function callBotApi<T = Record<string, unknown>>(
 	path: string,
-	body: Record<string, unknown>
+	body: Record<string, unknown>,
+	timeoutMs: number = REQUEST_TIMEOUT_MS
 ): Promise<BotApiResponse<T>> {
 	if (!BOT_API_SECRET) {
 		return { success: false, error: 'BOT_API_SECRET not configured' };
@@ -40,7 +41,7 @@ export async function callBotApi<T = Record<string, unknown>>(
 
 	try {
 		const controller = new AbortController();
-		const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+		const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
 		const res = await fetch(url, {
 			method: 'POST',

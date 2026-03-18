@@ -63,7 +63,19 @@ export interface ApplicationDetail {
 	claimedAt: number | null;
 	riskScore: number;
 	scan: AvatarScanDetail | null;
+	scanScores: ScanScores | null;
 	answers: ApplicationAnswer[];
+}
+
+export interface ScanScores {
+	avatarNsfwPct: number;
+	bannerNsfwPct: number;
+	avatarAiPct: number | null;
+	bannerAiPct: number | null;
+	bannerReason: string | null;
+	bannerEvidenceHard: EvidenceEntry[];
+	bannerEvidenceSoft: EvidenceEntry[];
+	bannerEvidenceSafe: EvidenceEntry[];
 }
 
 interface AppDetailRow {
@@ -82,6 +94,13 @@ interface AppDetailRow {
 	scan_evidence_hard: string | null;
 	scan_evidence_soft: string | null;
 	scan_evidence_safe: string | null;
+	banner_final_pct: number | null;
+	banner_reason: string | null;
+	banner_evidence_hard: string | null;
+	banner_evidence_soft: string | null;
+	banner_evidence_safe: string | null;
+	avatar_ai_score: number | null;
+	banner_ai_score: number | null;
 }
 
 interface AppResponseRow {
@@ -118,7 +137,14 @@ export function getApplicationDetail(appId: string, guildId: string): Applicatio
 			s.reason as scan_reason,
 			s.evidence_hard as scan_evidence_hard,
 			s.evidence_soft as scan_evidence_soft,
-			s.evidence_safe as scan_evidence_safe
+			s.evidence_safe as scan_evidence_safe,
+			s.banner_final_pct,
+			s.banner_reason,
+			s.banner_evidence_hard,
+			s.banner_evidence_soft,
+			s.banner_evidence_safe,
+			s.avatar_ai_score,
+			s.banner_ai_score
 		FROM application a
 		LEFT JOIN user_cache u ON u.guild_id = a.guild_id AND u.user_id = a.user_id
 		LEFT JOIN review_claim c ON a.id = c.app_id
@@ -154,6 +180,18 @@ export function getApplicationDetail(appId: string, guildId: string): Applicatio
 				evidenceHard: parseEvidence(row.scan_evidence_hard),
 				evidenceSoft: parseEvidence(row.scan_evidence_soft),
 				evidenceSafe: parseEvidence(row.scan_evidence_safe)
+			}
+			: null,
+		scanScores: (row.scan_reason || row.banner_reason || row.avatar_ai_score !== null || row.banner_ai_score !== null)
+			? {
+				avatarNsfwPct: row.risk_score,
+				bannerNsfwPct: row.banner_final_pct ?? 0,
+				avatarAiPct: row.avatar_ai_score !== null ? Math.round(row.avatar_ai_score * 100) : null,
+				bannerAiPct: row.banner_ai_score !== null ? Math.round(row.banner_ai_score * 100) : null,
+				bannerReason: row.banner_reason,
+				bannerEvidenceHard: parseEvidence(row.banner_evidence_hard),
+				bannerEvidenceSoft: parseEvidence(row.banner_evidence_soft),
+				bannerEvidenceSafe: parseEvidence(row.banner_evidence_safe)
 			}
 			: null,
 		answers: responses

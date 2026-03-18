@@ -4,6 +4,7 @@
 	import type { ApplicationDetail, PriorDecision } from '$lib/server/queries/reviews';
 	import type { ModmailThreadSummary } from '$lib/server/queries/modmail';
 	import RiskAura from '$lib/components/data/RiskAura.svelte';
+	import ScanPanel from '$lib/components/review/ScanPanel.svelte';
 	import CopyableId from '$lib/components/data/CopyableId.svelte';
 	import ModmailViewer from '$lib/components/review/ModmailViewer.svelte';
 	import DiscordProfileCard from '$lib/components/review/DiscordProfileCard.svelte';
@@ -351,10 +352,8 @@
 				{#if showModmail}
 					<ModmailViewer threads={modmail} targetUserId={app.userId} />
 				{:else}
-					{#if app.scan && app.riskScore > 0}
-						<div class="section-label">Avatar Scan</div>
-						<RiskAura variant="expanded" riskScore={app.riskScore} reason={app.scan.reason} evidence={{ hard: app.scan.evidenceHard, soft: app.scan.evidenceSoft, safe: app.scan.evidenceSafe }} />
-					{/if}
+					<div class="section-label">Image Scans</div>
+					<ScanPanel appId={app.id} scan={app.scan} scanScores={app.scanScores} riskScore={app.riskScore} />
 					<div class="section-label">Responses</div>
 					{#each app.answers as qa}
 						<div class="qa-block">

@@ -141,6 +141,25 @@ export function ensureAvatarScanSchema() {
       db.prepare(`ALTER TABLE avatar_scan ADD COLUMN updated_at INTEGER`).run();
     }
 
+    // Banner NSFW + AI detection columns (migration 054)
+    const bannerAiCols: Array<[string, string]> = [
+      ["banner_url", "TEXT"],
+      ["banner_nsfw_score", "REAL"],
+      ["banner_final_pct", "INTEGER DEFAULT 0"],
+      ["banner_reason", "TEXT"],
+      ["banner_evidence_hard", "TEXT"],
+      ["banner_evidence_soft", "TEXT"],
+      ["banner_evidence_safe", "TEXT"],
+      ["avatar_ai_score", "REAL"],
+      ["banner_ai_score", "REAL"],
+    ];
+    for (const [name, type] of bannerAiCols) {
+      if (!colNames.includes(name)) {
+        logger.info(`[ensure] adding ${name} column`);
+        db.prepare(`ALTER TABLE avatar_scan ADD COLUMN ${name} ${type}`).run();
+      }
+    }
+
     // ensure unique index (idempotent)
     db.prepare(
       `CREATE UNIQUE INDEX IF NOT EXISTS ux_avatar_scan_application ON avatar_scan(application_id)`
