@@ -7,12 +7,13 @@
 	import { subscribe, unsubscribe } from '$lib/stores/sse.svelte';
 	import type { SSEEvent } from '$lib/types/events';
 	import { getIsMobile } from '$lib/stores/viewport.svelte';
-	import PageHeader from '$lib/components/layout/PageHeader.svelte';
+	// PageHeader removed — title is inline with tabs
 	import EmptyState from '$lib/components/feedback/EmptyState.svelte';
 	import SpringReveal from '$lib/components/motion/SpringReveal.svelte';
 	import ReviewCard from '$lib/components/review/ReviewCard.svelte';
 	import TabBar from '$lib/components/review/TabBar.svelte';
 	import { relativeTime } from '$lib/utils/time';
+	import { openLightbox } from '$lib/stores/lightbox.svelte';
 
 	let { data, children } = $props();
 
@@ -44,8 +45,16 @@
 	});
 	let queue = $derived(data.queue);
 	let history = $derived(data.history);
+	let historyLimit = $derived(data.historyLimit);
 	let userId = $derived(data.userId);
 	let tabCounts = $derived(data.tabCounts);
+
+	function setHistoryLimit(limit: number) {
+		const url = new URL($page.url);
+		url.searchParams.set('limit', String(limit));
+		url.searchParams.set('tab', 'history');
+		goto(url.toString(), { replaceState: true, invalidateAll: true });
+	}
 
 	type TabId = 'unclaimed' | 'mine' | 'all' | 'history';
 	const VALID_TABS: TabId[] = ['unclaimed', 'mine', 'all', 'history'];
@@ -125,10 +134,17 @@
 	let hasSelectedApp = $derived($page.url.pathname !== '/dashboard/reviews');
 </script>
 
+<div class="reviews-page">
 <SpringReveal stagger={30}>
-	<PageHeader title="Reviews" subtitle="Application review queue" badge={tabCounts.unclaimed} />
-
-	<TabBar active={activeTab} counts={tabCounts} onchange={(tab) => activeTab = tab} />
+	<div class="reviews-header">
+		<div class="reviews-title-row">
+			<h1 class="reviews-title">Reviews</h1>
+			{#if tabCounts.unclaimed > 0}
+				<span class="reviews-badge">{tabCounts.unclaimed}</span>
+			{/if}
+		</div>
+		<TabBar active={activeTab} counts={tabCounts} onchange={(tab) => activeTab = tab} />
+	</div>
 
 	{#if isHistoryTab}
 		{#if history.length === 0}
@@ -141,6 +157,15 @@
 		{:else}
 			<div class="review-layout">
 				<div class="queue-wrapper" bind:this={queueWrapper}>
+					<div class="history-controls">
+						<span class="history-showing">Showing {history.length}</span>
+						<select class="history-limit-select" value={historyLimit} onchange={(e) => setHistoryLimit(Number((e.target as HTMLSelectElement).value))}>
+							<option value={10}>10</option>
+							<option value={25}>25</option>
+							<option value={50}>50</option>
+							<option value={100}>100</option>
+						</select>
+					</div>
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<!-- svelte-ignore a11y_mouse_events_have_key_events -->
 					<div
@@ -162,7 +187,8 @@
 							>
 								<div class="history-card-row">
 									{#if item.avatarUrl}
-										<img src={item.avatarUrl} alt={item.applicantName} class="history-card-avatar" />
+										<!-- svelte-ignore a11y_no_static_element_interactions -->
+									<img src={item.avatarUrl} alt={item.applicantName} class="history-card-avatar" style="cursor: zoom-in" onclick={(e) => { e.stopPropagation(); openLightbox(item.avatarUrl!); }} />
 									{:else}
 										<div class="history-card-avatar-ph">{item.applicantName.charAt(0).toUpperCase()}</div>
 									{/if}
@@ -180,7 +206,7 @@
 												<span class="history-card-resolver">by {item.resolverName}</span>
 											{/if}
 											{#if item.reason}
-												<span class="history-card-reason">{item.reason.slice(0, 40)}{item.reason.length > 40 ? '...' : ''}</span>
+												<span class="history-card-reason">{item.reason}</span>
 											{/if}
 										</div>
 									</div>
@@ -248,18 +274,63 @@
 		</div>
 	{/if}
 </SpringReveal>
+</div>
 
 <style>
+	/* Reclaim container padding for the reviews page — extend into parent's p-8 */
+	.reviews-page {
+		margin: -0.75rem;
+	}
+
+	/* Inline header: title + badge on the left, tabs on the right */
+	.reviews-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 0.75rem;
+	}
+
+	.reviews-title-row {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.reviews-title {
+		font-size: 1.5rem;
+		font-weight: 600;
+		color: var(--text-primary);
+		letter-spacing: -0.02em;
+	}
+
+	.reviews-badge {
+		display: inline-flex;
+		align-items: center;
+		border-radius: var(--radius-sm);
+		background: var(--accent-dim);
+		padding: 0.125rem 0.5rem;
+		font-size: 0.75rem;
+		font-weight: 500;
+		color: var(--accent);
+	}
+
+	/* Remove TabBar bottom border/margin when inline — header row handles spacing */
+	.reviews-header :global(.tab-bar) {
+		padding-bottom: 0;
+		margin-bottom: 0;
+		border-bottom: none;
+	}
+
 	.review-layout {
 		display: flex;
-		gap: var(--space-section);
-		height: calc(100vh - 260px);
+		gap: 1rem;
+		height: calc(100vh - 170px);
 	}
 
 	.queue-wrapper {
 		position: relative;
 		z-index: 1;
-		width: 360px;
+		width: 320px;
 		flex-shrink: 0;
 	}
 
@@ -281,7 +352,7 @@
 		position: absolute;
 		pointer-events: none;
 		border-radius: var(--radius-md);
-		box-shadow: var(--glow-hover);
+		box-shadow: var(--shadow-md);
 		transition: top 100ms ease, left 100ms ease, width 100ms ease, height 100ms ease;
 	}
 
@@ -309,16 +380,16 @@
 	}
 
 	.history-card-avatar {
-		width: 36px;
-		height: 36px;
+		width: 48px;
+		height: 48px;
 		border-radius: var(--radius-sm);
 		object-fit: cover;
 		flex-shrink: 0;
 	}
 
 	.history-card-avatar-ph {
-		width: 36px;
-		height: 36px;
+		width: 48px;
+		height: 48px;
 		border-radius: var(--radius-sm);
 		background: var(--accent-dim);
 		color: var(--accent);
@@ -348,7 +419,7 @@
 	.history-card-selected {
 		border-left: 3px solid var(--accent);
 		background: var(--surface-raised);
-		box-shadow: var(--glow-accent);
+		box-shadow: var(--shadow-sm);
 	}
 
 	.history-card-top {
@@ -376,8 +447,9 @@
 
 	.history-card-bottom {
 		display: flex;
-		align-items: center;
-		gap: 0.75rem;
+		align-items: baseline;
+		gap: 0.5rem;
+		flex-wrap: wrap;
 		font-size: 0.75rem;
 	}
 
@@ -402,11 +474,35 @@
 	}
 
 	.history-card-reason {
+		color: var(--text-tertiary);
+		font-size: 0.65rem;
+		font-style: italic;
+		line-height: 1.4;
+		width: 100%;
+		margin-top: 0.2rem;
+	}
+
+	.history-controls {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 0.5rem;
+		padding: 0 0.25rem 0.5rem;
+	}
+
+	.history-showing {
+		font-size: 0.65rem;
+		color: var(--text-tertiary);
+	}
+
+	.history-limit-select {
+		background: var(--surface);
 		color: var(--text-secondary);
-		font-size: 0.7rem;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-sm);
+		padding: 0.2rem 0.4rem;
+		font-size: 0.65rem;
+		cursor: pointer;
 	}
 
 	/* Mobile: full-width detail wrapper */

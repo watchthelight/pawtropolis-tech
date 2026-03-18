@@ -18,9 +18,9 @@
 	} as const;
 
 	const hoverShadowVar = {
-		sm: 'var(--shadow-md), var(--glow-accent)',
-		md: 'var(--shadow-lg), var(--glow-accent)',
-		lg: 'var(--shadow-lg), var(--glow-accent)'
+		sm: 'var(--shadow-md)',
+		md: 'var(--shadow-lg)',
+		lg: 'var(--shadow-lg)'
 	} as const;
 
 	const canHover = typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches;
@@ -38,11 +38,13 @@
 	onmouseenter={canHover ? (e) => {
 		const el = e.currentTarget;
 		el.style.boxShadow = hoverShadowVar[elevation];
+		el.style.borderColor = 'var(--border-holdfast)';
 		if (!prefersReducedMotion()) el.style.transform = 'translateY(-2px)';
 	} : undefined}
 	onmouseleave={canHover ? (e) => {
 		const el = e.currentTarget;
 		el.style.boxShadow = shadowVar[elevation];
+		el.style.borderColor = '';
 		if (!prefersReducedMotion()) el.style.transform = 'translateY(0)';
 	} : undefined}
 	onclick={() => { if (clickable && onclick) onclick(); }}
@@ -56,8 +58,7 @@
 <style>
 	.card {
 		background: var(--surface);
-		background-image: linear-gradient(180deg, oklch(100% 0 0 / 0.03) 0%, transparent 50%);
-		border: 1px solid color-mix(in oklch, var(--accent) 15%, var(--border-holdfast));
+		border: 1px solid var(--border);
 		border-radius: var(--radius-md);
 		padding: var(--space-card);
 		transition: all var(--duration-fast) var(--ease-smooth);
@@ -65,22 +66,11 @@
 
 	.card-accent {
 		background: var(--accent-glow-bg);
-		border-top: 3px solid var(--accent);
-		border-color: color-mix(in oklch, var(--accent) 30%, var(--border-holdfast));
-		border-top-color: var(--accent);
-	}
-
-	.card-accent {
-		animation: accent-breathe 3s ease-in-out infinite;
-	}
-
-	@keyframes accent-breathe {
-		0%, 100% { border-top-color: var(--accent); }
-		50% { border-top-color: var(--accent-dim); }
+		border: 1px solid oklch(50% 0.04 var(--hue) / 0.3);
+		border-top: 2px solid var(--accent);
 	}
 
 	.card-selected {
 		border-left: 4px solid var(--accent);
-		box-shadow: var(--glow-accent);
 	}
 </style>

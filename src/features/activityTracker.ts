@@ -42,7 +42,8 @@ export function trackJoin(guildId: string, userId: string, joinedAt: number): vo
       INSERT INTO user_activity (guild_id, user_id, joined_at)
       VALUES (?, ?, ?)
       ON CONFLICT(guild_id, user_id) DO UPDATE SET
-        joined_at = excluded.joined_at
+        joined_at = excluded.joined_at,
+        left_at = NULL
     `
     ).run(guildId, userId, joinedAt);
 
@@ -58,6 +59,22 @@ export function trackJoin(guildId: string, userId: string, joinedAt: number): vo
     }
     // Log other errors but don't throw (activity tracking is non-critical)
     logger.warn({ err, guildId, userId, joinedAt }, "[activity] failed to track join");
+  }
+}
+
+/**
+ * WHAT: Track user leave event in user_activity table.
+ * WHY: Allows pulse metrics to show current members only (not all-time).
+ */
+export function trackLeave(guildId: string, userId: string): void {
+  try {
+    db.prepare(
+      `UPDATE user_activity SET left_at = ? WHERE guild_id = ? AND user_id = ?`
+    ).run(Math.floor(Date.now() / 1000), guildId, userId);
+    logger.debug({ guildId, userId }, "[activity] leave tracked");
+  } catch (err: any) {
+    if (err?.message?.includes("no such table") || err?.message?.includes("no such column")) return;
+    logger.warn({ err, guildId, userId }, "[activity] failed to track leave");
   }
 }
 

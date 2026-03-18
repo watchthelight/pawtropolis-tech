@@ -102,8 +102,6 @@ function extractImageHue(imageUrl: string): Promise<number | null> {
 }
 
 let _activeUserId: string | null = null;
-let _discordAccentColor: number | null = null;
-let _discordAvatarUrl: string | null | undefined = null;
 
 /**
  * Generate a gamut-safe hex color from OKLCH values using culori's clampChroma.
@@ -166,25 +164,6 @@ export function applyPalette(hue: number): void {
 	root.setProperty('--accent-hex', p.accentHex);
 	root.setProperty('--warm-hex', p.warmHex);
 	root.setProperty('--cool-hex', p.coolHex);
-
-	if (_activeUserId) {
-		try {
-			localStorage.setItem(`theme-hue-${_activeUserId}`, rounded);
-			localStorage.setItem('theme-last-uid', _activeUserId);
-		} catch {}
-	}
-}
-
-/**
- * Restore cached hue for a specific user from localStorage.
- * Call synchronously before applyTheme to prevent flash on reload.
- */
-export function restoreCachedHue(userId: string): void {
-	if (typeof document === 'undefined') return;
-	try {
-		const cached = localStorage.getItem(`theme-hue-${userId}`);
-		if (cached) applyPalette(parseInt(cached));
-	} catch {}
 }
 
 /**
@@ -193,8 +172,15 @@ export function restoreCachedHue(userId: string): void {
  */
 export function applyTheme(accentColor: number | null, avatarUrl?: string | null, userId?: string): void {
 	if (userId) _activeUserId = userId;
-	_discordAccentColor = accentColor;
-	_discordAvatarUrl = avatarUrl;
+
+	// Clear stale theme cache from previous sessions
+	if (typeof localStorage !== 'undefined') {
+		try {
+			localStorage.removeItem('theme-last-uid');
+			if (userId) localStorage.removeItem(`theme-hue-${userId}`);
+		} catch {}
+	}
+
 	// Try accent color first (skip 0 = black, which Discord returns when theme isn't in API)
 	if (accentColor && accentColor !== 0) {
 		const hue = accentColorToHue(accentColor);
@@ -219,10 +205,3 @@ export function applyTheme(accentColor: number | null, avatarUrl?: string | null
 	applyPalette(FALLBACK_HUE);
 }
 
-/**
- * Reset to the user's Discord-derived theme.
- * Re-runs applyTheme with cached Discord data.
- */
-export function resetToDiscordTheme(): void {
-	applyTheme(_discordAccentColor, _discordAvatarUrl, _activeUserId ?? undefined);
-}

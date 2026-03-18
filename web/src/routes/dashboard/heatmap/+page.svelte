@@ -2,6 +2,7 @@
 	import PageHeader from '$lib/components/layout/PageHeader.svelte';
 	import StatNumber from '$lib/components/data/StatNumber.svelte';
 	import EmptyState from '$lib/components/feedback/EmptyState.svelte';
+	import HeatmapGrid from '$lib/components/charts/HeatmapGrid.svelte';
 	import SpringReveal from '$lib/components/motion/SpringReveal.svelte';
 	import { BarChart3, Clock, TrendingUp, Calendar } from 'lucide-svelte';
 
@@ -62,8 +63,14 @@
 			</div>
 		</div>
 
-		<div class="heatmap-placeholder card">
-			<EmptyState message="Heatmap visualization" subtitle="Grid visualization coming in the next story." />
+		<div class="heatmap-card card">
+			<div class="heatmap-scroll">
+				<HeatmapGrid
+					grid={heatmap.weeks[0].grid}
+					maxValue={heatmap.maxValue}
+					dates={heatmap.weeks[0].dates}
+				/>
+			</div>
 		</div>
 	{:else}
 		<EmptyState message="No message activity recorded yet" subtitle="Activity data will appear here once messages are tracked." />
@@ -79,7 +86,6 @@
 
 	.card {
 		background: var(--surface);
-		background-image: linear-gradient(180deg, oklch(100% 0 0 / 0.03) 0%, transparent 50%);
 		border: 1px solid color-mix(in oklch, var(--accent) 15%, var(--border-holdfast));
 		border-radius: var(--radius-md);
 		padding: var(--space-card);
@@ -123,8 +129,13 @@
 		border-color: color-mix(in oklch, var(--accent) 40%, transparent);
 	}
 
-	.heatmap-placeholder {
+	.heatmap-card {
 		margin-top: 1.5rem;
+	}
+
+	.heatmap-scroll {
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
 	}
 
 	@media (max-width: 768px) {

@@ -2,6 +2,7 @@
 	import { prefersReducedMotion } from '$lib/motion';
 	import RiskAura from '$lib/components/data/RiskAura.svelte';
 	import { relativeTime } from '$lib/utils/time';
+	import { openLightbox } from '$lib/stores/lightbox.svelte';
 
 	let { applicantName, avatarUrl = null, status, submittedAt, claimedBy, claimedByName, claimedByAvatar = null, riskScore, selected = false, onclick }: {
 		applicantName: string;
@@ -42,7 +43,8 @@
 >
 	<div class="review-card-row">
 		{#if avatarUrl}
-			<img src={avatarUrl} alt={applicantName} class="review-card-avatar" />
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<img src={avatarUrl} alt={applicantName} class="review-card-avatar clickable-avatar" onclick={(e) => { e.stopPropagation(); openLightbox(avatarUrl!); }} />
 		{:else}
 			<div class="review-card-avatar-placeholder">{applicantName.charAt(0).toUpperCase()}</div>
 		{/if}
@@ -83,7 +85,7 @@
 	@media (hover: hover) {
 		.review-card:hover {
 			background: var(--surface-raised);
-			box-shadow: var(--glow-hover);
+			box-shadow: var(--shadow-md);
 		}
 	}
 
@@ -94,7 +96,7 @@
 	.review-card-selected {
 		border-left: 3px solid var(--accent);
 		background: var(--surface-raised);
-		box-shadow: var(--glow-accent);
+		box-shadow: var(--shadow-sm);
 	}
 
 	.review-card-row {
@@ -104,16 +106,25 @@
 	}
 
 	.review-card-avatar {
-		width: 36px;
-		height: 36px;
+		width: 48px;
+		height: 48px;
 		border-radius: var(--radius-sm);
 		object-fit: cover;
 		flex-shrink: 0;
 	}
 
+	.clickable-avatar {
+		cursor: zoom-in;
+		transition: transform 150ms var(--ease-smooth);
+	}
+
+	.clickable-avatar:hover {
+		transform: scale(1.1);
+	}
+
 	.review-card-avatar-placeholder {
-		width: 36px;
-		height: 36px;
+		width: 48px;
+		height: 48px;
 		border-radius: var(--radius-sm);
 		background: var(--accent-dim);
 		color: var(--accent);
@@ -185,8 +196,8 @@
 	}
 
 	.claimer-avatar {
-		width: 16px;
-		height: 16px;
+		width: 20px;
+		height: 20px;
 		border-radius: 50%;
 		object-fit: cover;
 		flex-shrink: 0;

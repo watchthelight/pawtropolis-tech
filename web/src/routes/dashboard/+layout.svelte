@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { applyTheme, restoreCachedHue } from '$lib/stores/theme';
+	import { applyTheme } from '$lib/stores/theme';
 	import { connect, disconnect, onReconnect, offReconnect, subscribe, unsubscribe } from '$lib/stores/sse.svelte';
 	import { startMonitoring, stopMonitoring } from '$lib/stores/bot-status.svelte';
 	import { initViewport, getIsMobile } from '$lib/stores/viewport.svelte';
@@ -9,6 +9,7 @@
 	import type { SSEEvent } from '$lib/types/events';
 	import Nav from '$lib/components/layout/Nav.svelte';
 	import ConnectionIndicator from '$lib/components/layout/ConnectionIndicator.svelte';
+	import Lightbox from '$lib/components/feedback/Lightbox.svelte';
 
 	let { data, children } = $props();
 	let user = $derived(data.user);
@@ -101,7 +102,6 @@
 	}
 
 	$effect(() => {
-		restoreCachedHue(user.id);
 		applyTheme(user.accentColor, user.avatarUrl, user.id);
 	});
 
@@ -202,7 +202,7 @@
 
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<main
-		class="flex-1 p-8 max-md:p-4 max-md:pt-[calc(var(--mobile-header-h)+1rem)]"
+		class="flex-1 p-6 max-md:p-4 max-md:pt-[calc(var(--mobile-header-h)+0.75rem)]"
 		ontouchstart={isMobile ? onTouchStart : undefined}
 		ontouchend={isMobile ? onTouchEnd : undefined}
 	>
@@ -213,6 +213,8 @@
 		<div class="tier-toast">{tierToast}</div>
 	{/if}
 </div>
+
+<Lightbox />
 
 <style>
 	.layout-root {
@@ -340,7 +342,7 @@
 		background: var(--surface-raised);
 		color: var(--text-primary);
 		border-color: var(--accent);
-		box-shadow: var(--glow-accent);
+		box-shadow: var(--shadow-sm);
 	}
 
 	.edge-arrow {

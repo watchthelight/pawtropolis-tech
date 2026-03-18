@@ -4,12 +4,18 @@
 	import PageHeader from '$lib/components/layout/PageHeader.svelte';
 	import StatNumber from '$lib/components/data/StatNumber.svelte';
 	import SpringReveal from '$lib/components/motion/SpringReveal.svelte';
+	import InsightsPanel from '$lib/components/pulse/InsightsPanel.svelte';
+	import NewsletterStatsCard from '$lib/components/pulse/NewsletterStatsCard.svelte';
 	import { subscribe, unsubscribe, onReconnect, offReconnect } from '$lib/stores/sse.svelte';
-	import { ClipboardList, Mail, Flag, CheckCircle, Users, UserCheck, Bot, Zap, MessageSquare } from 'lucide-svelte';
+	import { ClipboardList, Mail, Flag, CheckCircle, Users, UserCheck, Bot, Zap, MessageSquare, Wifi, Mic, Award } from 'lucide-svelte';
 	import { relativeTime } from '$lib/utils/time';
 
 	let { data } = $props();
 	let metrics = $derived(data.metrics);
+	let insights = $derived(data.insights);
+	let newsletterStats = $derived(data.newsletterStats);
+	let guildSnapshot = $derived(data.guildSnapshot);
+	let topVoiceChannels = $derived(data.topVoiceChannels);
 	let pendingTrend = $derived<'up' | 'down' | undefined>(
 		metrics.submittedToday === 0 && metrics.decisionsToday === 0
 			? undefined
@@ -130,44 +136,88 @@
 		</div>
 	</div>
 
+	<h3 class="section-title">Insights</h3>
+	<InsightsPanel {insights} />
+
 	<h3 class="section-title">Membership</h3>
 	<div class="pulse-grid">
-		<div class="card">
+		<a href="/dashboard/audit/scans" class="card clickable">
 			<div class="card-icon-row">
 				<Users size={16} color="var(--text-tertiary)" />
 			</div>
-			<span class="card-label">Total Tracked</span>
-			<StatNumber value={metrics.totalMembers} label="" />
-			<span class="card-sub">members in database</span>
-		</div>
+			<span class="card-label">Total Members</span>
+			{#if guildSnapshot}
+				<StatNumber value={guildSnapshot.memberCount} label="" />
+				<span class="card-sub">tracked: {metrics.allTimeMembers.toLocaleString()} − {metrics.membersLeft.toLocaleString()} left = {metrics.totalMembers.toLocaleString()}</span>
+			{:else}
+				<StatNumber value={metrics.totalMembers} label="" />
+				<span class="card-sub">{metrics.allTimeMembers.toLocaleString()} all time − {metrics.membersLeft.toLocaleString()} left</span>
+			{/if}
+		</a>
 
-		<div class="card highlight-accent">
+		{#if guildSnapshot?.onlineCount}
+			<div class="card">
+				<div class="card-icon-row">
+					<Wifi size={16} color="var(--status-success)" />
+				</div>
+				<span class="card-label">Currently Online</span>
+				<StatNumber value={guildSnapshot.onlineCount} label="" />
+				<span class="card-sub">live from Discord</span>
+			</div>
+		{/if}
+
+		{#if guildSnapshot}
+			<div class="card">
+				<div class="card-icon-row">
+					<Mic size={16} color="var(--accent)" />
+				</div>
+				<span class="card-label">In Voice Now</span>
+				<StatNumber value={guildSnapshot.voiceUsersNow} label="" />
+				<span class="card-sub">{guildSnapshot.voiceUsersNow === 0 ? 'no one in voice' : 'connected to voice'}</span>
+			</div>
+		{/if}
+
+		{#if guildSnapshot}
+			<div class="card">
+				<div class="card-icon-row">
+					<Award size={16} color="var(--secondary)" />
+				</div>
+				<span class="card-label">Boost Status</span>
+				<StatNumber value={guildSnapshot.boostCount} label="" />
+				<span class="card-sub">Level {guildSnapshot.boostTier}</span>
+			</div>
+		{/if}
+
+		<a href="/dashboard/audit/scans" class="card clickable">
 			<div class="card-icon-row">
 				<UserCheck size={16} color="var(--accent)" />
 			</div>
 			<span class="card-label">Estimated Real Users</span>
 			<StatNumber value={metrics.estimatedRealUsers} label="" />
 			<span class="card-sub">members with activity</span>
-		</div>
+		</a>
 
-		<div class="card">
+		<a href="/dashboard/audit/scans" class="card clickable">
 			<div class="card-icon-row">
 				<Bot size={16} color="var(--text-tertiary)" />
 			</div>
 			<span class="card-label">Estimated Bots</span>
 			<StatNumber value={metrics.estimatedBots} label="" />
 			<span class="card-sub">no messages or activity</span>
-		</div>
+		</a>
 
-		<div class="card highlight-accent">
+		<a href="/dashboard/audit/scans" class="card clickable">
 			<div class="card-icon-row">
 				<Zap size={16} color="var(--accent)" />
 			</div>
 			<span class="card-label">Active Real Users</span>
 			<StatNumber value={metrics.activeRealUsers} label="" />
 			<span class="card-sub">100+ msgs in last 14 days</span>
-		</div>
+		</a>
 	</div>
+
+	<h3 class="section-title">Weekly Newsletter</h3>
+	<NewsletterStatsCard stats={newsletterStats} {guildSnapshot} {topVoiceChannels} />
 </SpringReveal>
 
 <style>
@@ -179,8 +229,7 @@
 
 	.card {
 		background: var(--surface);
-		background-image: linear-gradient(180deg, oklch(100% 0 0 / 0.03) 0%, transparent 50%);
-		border: 1px solid color-mix(in oklch, var(--accent) 15%, var(--border-holdfast));
+		border: 1px solid var(--border);
 		border-radius: var(--radius-md);
 		padding: var(--space-card);
 		box-shadow: var(--shadow-sm);
@@ -197,15 +246,15 @@
 
 	@media (hover: hover) {
 		.card.clickable:hover {
-			box-shadow: var(--shadow-md), var(--glow-accent);
+			box-shadow: var(--shadow-md);
+			border-color: var(--border-holdfast);
 			transform: translateY(-2px);
 		}
 	}
 
 	.card-accent {
-		background: var(--accent-glow-bg);
-		border-top: 3px solid var(--accent);
-		border-color: color-mix(in oklch, var(--accent) 30%, var(--border-holdfast));
+		border-top: 2px solid var(--accent);
+		border-color: oklch(50% 0.04 var(--hue) / 0.3);
 		border-top-color: var(--accent);
 	}
 
@@ -238,8 +287,16 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		color: var(--accent-muted);
+		color: var(--text-tertiary);
 		margin-bottom: 0.5rem;
+	}
+
+	.card-breakdown {
+		display: block;
+		font-size: 0.65rem;
+		color: var(--text-tertiary);
+		font-weight: 500;
+		letter-spacing: 0.02em;
 	}
 
 	.card-sub {
@@ -258,7 +315,7 @@
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 		color: var(--text-secondary);
-		margin: 1.5rem 0 0.75rem;
+		margin: 1rem 0 0.5rem;
 	}
 
 	.section-title::before {
@@ -277,9 +334,6 @@
 		display: block;
 	}
 
-	.card.highlight-accent {
-		border-color: color-mix(in oklch, var(--accent) 40%, transparent);
-	}
 
 	@media (max-width: 768px) {
 		.pulse-grid {

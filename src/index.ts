@@ -140,8 +140,9 @@ export const client = new Client({
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildVoiceStates, // For movie night attendance tracking
-    GatewayIntentBits.GuildPresences,   // For dashboard profile status display
+    GatewayIntentBits.GuildVoiceStates, // For movie night attendance + voice session tracking
+    GatewayIntentBits.GuildPresences,   // For dashboard profile status display + online count
+    GatewayIntentBits.GuildInvites,     // For invite usage tracking (growth source attribution)
   ],
   partials: [Partials.Channel],
   // Cache limits to prevent unbounded memory growth in large servers
@@ -375,6 +376,34 @@ client.once(Events.ClientReady, async () => {
     logger.error({ err }, "[startup] Game session recovery failed");
   }
 
+  // Seed voice session tracking for users currently in voice channels
+  // WHAT: Closes stale open sessions from last run, opens new sessions for current VC users
+  // WHY: Ensures continuous tracking across bot restarts — no time gaps in voice_session data
+  try {
+    const { seedCurrentVoiceSessions } = await import("./features/voiceSessionTracker.js");
+    seedCurrentVoiceSessions(client);
+  } catch (err) {
+    logger.error({ err }, "[startup] Voice session seeding failed");
+  }
+
+  // Sync channel names to channel_cache table for web dashboard
+  try {
+    const { syncAllChannels } = await import("./features/channelCacheSync.js");
+    for (const [, guild] of client.guilds.cache) {
+      syncAllChannels(guild);
+    }
+  } catch (err) {
+    logger.error({ err }, "[startup] Channel cache sync failed");
+  }
+
+  // Initialize invite tracking cache (growth source attribution)
+  try {
+    const { initInviteCache } = await import("./features/inviteTracker.js");
+    await initInviteCache(client);
+  } catch (err) {
+    logger.error({ err }, "[startup] Invite cache init failed");
+  }
+
   // Hydrate open modmail threads from database into memory
   // WHAT: Populates OPEN_MODMAIL_THREADS set from open_modmail table
   // WHY: Enables efficient O(1) lookups in messageCreate to route modmail messages
@@ -466,6 +495,15 @@ client.once(Events.ClientReady, async () => {
       { err },
       "[startup] mod metrics scheduler failed to start - continuing without periodic refresh"
     );
+  }
+
+  // Guild snapshot scheduler: writes live Discord data to SQLite every 5 minutes
+  // WHY: Web dashboard reads member count, online count, boost status, voice users from DB
+  try {
+    const { startGuildSnapshotScheduler } = await import("./scheduler/guildSnapshotScheduler.js");
+    startGuildSnapshotScheduler(client);
+  } catch (err) {
+    logger.warn({ err }, "[startup] guild snapshot scheduler failed to start");
   }
 
   // Start ops health periodic check scheduler
@@ -588,6 +626,9 @@ client.once(Events.ClientReady, async () => {
       const { stopModMetricsScheduler } = await import("./scheduler/modMetricsScheduler.js");
       stopModMetricsScheduler();
 
+      const { stopGuildSnapshotScheduler } = await import("./scheduler/guildSnapshotScheduler.js");
+      stopGuildSnapshotScheduler();
+
       const { stopOpsHealthScheduler } = await import("./scheduler/opsHealthScheduler.js");
       stopOpsHealthScheduler();
 
@@ -661,6 +702,15 @@ client.once(Events.ClientReady, async () => {
         logger.debug("[shutdown] Movie sessions persisted");
       } catch (err) {
         logger.warn({ err }, "[shutdown] Movie session persist failed (non-fatal)");
+      }
+
+      // 6b. Close all open voice sessions
+      try {
+        const { closeAllOpenSessions } = await import("./features/voiceSessionTracker.js");
+        closeAllOpenSessions();
+        logger.debug("[shutdown] Voice sessions closed");
+      } catch (err) {
+        logger.warn({ err }, "[shutdown] Voice session close failed (non-fatal)");
       }
 
       // 7. Remove all event listeners before destroying client
@@ -916,6 +966,14 @@ client.on("guildMemberAdd", wrapEvent("guildMemberAdd", async (member) => {
       guildId: member.guild.id,
     }, "[guildMemberAdd] Failed to scan avatar for NSFW");
   }
+
+  // Track which invite the new member used (growth source attribution)
+  try {
+    const { trackMemberInvite } = await import("./features/inviteTracker.js");
+    await trackMemberInvite(member);
+  } catch (err) {
+    logger.debug({ err, userId: member.id }, "[guildMemberAdd] Invite tracking failed (non-fatal)");
+  }
 }));
 
 // REVIEW CARD: Refresh pending apps when user leaves server
@@ -925,6 +983,10 @@ client.on("guildMemberRemove", wrapEvent("guildMemberRemove", async (member) => 
   if (!member.guild) return;
   const guildId = member.guild.id;
   const userId = member.id;
+
+  // Track member departure in user_activity
+  const { trackLeave } = await import("./features/activityTracker.js");
+  trackLeave(guildId, userId);
 
   // Auto-dismiss flags for departed members — no point reviewing flags for users who left/were banned
   try {
@@ -1057,6 +1119,7 @@ import {
   handleGameVoiceJoin,
   handleGameVoiceLeave,
 } from "./features/events/gameNight.js";
+import { handleVoiceStateUpdate } from "./features/voiceSessionTracker.js";
 
 client.on("voiceStateUpdate", wrapEvent("voiceStateUpdate", async (oldState, newState) => {
   const guildId = newState.guild?.id;
@@ -1064,6 +1127,9 @@ client.on("voiceStateUpdate", wrapEvent("voiceStateUpdate", async (oldState, new
 
   const userId = newState.member?.id;
   if (!userId) return;
+
+  // Global voice session tracking (newsletter stats + insights)
+  handleVoiceStateUpdate(oldState, newState);
 
   // Check for active movie event
   const movieEvent = getActiveMovieEvent(guildId);
@@ -1094,6 +1160,32 @@ client.on("voiceStateUpdate", wrapEvent("voiceStateUpdate", async (oldState, new
       handleGameVoiceLeave(guildId, userId);
     }
   }
+}));
+
+// Channel cache sync: keep channel_cache table up to date for web dashboard
+import { syncChannel, removeChannel } from "./features/channelCacheSync.js";
+
+client.on("channelCreate", wrapEvent("channelCreate", async (channel) => {
+  if ("guild" in channel && channel.guild) syncChannel(channel);
+}));
+
+client.on("channelUpdate", wrapEvent("channelUpdate", async (_old, channel) => {
+  if ("guild" in channel && channel.guild) syncChannel(channel);
+}));
+
+client.on("channelDelete", wrapEvent("channelDelete", async (channel) => {
+  removeChannel(channel);
+}));
+
+// Invite tracking: detect which invite each new member used
+import { handleInviteCreate, handleInviteDelete } from "./features/inviteTracker.js";
+
+client.on("inviteCreate", wrapEvent("inviteCreate", async (invite) => {
+  handleInviteCreate(invite);
+}));
+
+client.on("inviteDelete", wrapEvent("inviteDelete", async (invite) => {
+  handleInviteDelete(invite);
 }));
 
 // GOTCHA: This handler is ~700 lines of pure routing logic. If you're adding a new

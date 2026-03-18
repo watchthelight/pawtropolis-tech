@@ -6,7 +6,7 @@ import { hasMinTier } from '$lib/server/roles';
 const VALID_ACTIONS = ['claim', 'unclaim', 'approve', 'reject', 'kick', 'permreject'] as const;
 type ReviewAction = (typeof VALID_ACTIONS)[number];
 
-const REASON_REQUIRED: ReviewAction[] = ['reject', 'kick', 'permreject'];
+const REASON_REQUIRED: ReviewAction[] = ['kick', 'permreject'];
 const ADMIN_REQUIRED: ReviewAction[] = ['permreject'];
 
 export const POST: RequestHandler = async ({ params, locals, request }) => {

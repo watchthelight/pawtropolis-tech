@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { openLightbox } from '$lib/stores/lightbox.svelte';
+
 	interface ProfileData {
 		bannerUrl?: string | null;
 		accentColor?: number | null;
@@ -100,7 +102,9 @@
 	<!-- Banner -->
 	<div class="dc-banner" style:background-color={profile?.bannerUrl ? undefined : accentHex(profile?.accentColor ?? null)}>
 		{#if profile?.bannerUrl}
-			<img src={profile.bannerUrl} alt="" class="dc-banner-img" />
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
+			<img src={profile.bannerUrl} alt="" class="dc-banner-img" style="cursor: zoom-in" onclick={() => openLightbox(profile!.bannerUrl!)} />
 		{/if}
 	</div>
 
@@ -108,7 +112,9 @@
 	<div class="dc-avatar-row">
 		<div class="dc-avatar-wrap">
 			{#if profile?.avatarUrl || avatarUrl}
-				<img src={profile?.avatarUrl ?? avatarUrl} alt={applicantName} class="dc-avatar" />
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<img src={profile?.avatarUrl ?? avatarUrl} alt={applicantName} class="dc-avatar" style="cursor: zoom-in" onclick={() => openLightbox((profile?.avatarUrl ?? avatarUrl)!)} />
 			{:else}
 				<div class="dc-avatar dc-avatar-placeholder">{applicantName.charAt(0).toUpperCase()}</div>
 			{/if}

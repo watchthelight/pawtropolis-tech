@@ -5,13 +5,14 @@ import type { LayoutServerLoad } from './$types';
 
 const GUILD_ID = process.env.GUILD_ID!;
 
-export const load: LayoutServerLoad = async ({ locals }) => {
+export const load: LayoutServerLoad = async ({ locals, url }) => {
 	if (!locals.user || !hasMinTier(locals.user.tier, 'gk')) {
 		error(403, "You don't have permission to view this page.");
 	}
 
+	const historyLimit = Math.min(Math.max(Number(url.searchParams.get('limit')) || 25, 10), 100);
 	const queue = getReviewQueue(GUILD_ID);
-	const history = getReviewHistory(GUILD_ID, 50);
+	const history = getReviewHistory(GUILD_ID, historyLimit);
 
 	const userId = locals.user.id;
 	const unclaimed = queue.filter((item) => !item.claimedBy).length;
@@ -20,6 +21,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 	return {
 		queue,
 		history,
+		historyLimit,
 		userId,
 		tabCounts: {
 			unclaimed,

@@ -313,7 +313,7 @@
 	.tab-active {
 		color: var(--text-primary);
 		background: var(--surface);
-		box-shadow: var(--glow-accent);
+		box-shadow: var(--shadow-sm);
 	}
 
 	/* ─── Grid layout ─── */
@@ -344,7 +344,7 @@
 
 	@media (hover: hover) {
 		.card.clickable:hover {
-			box-shadow: var(--shadow-md), var(--glow-hover);
+			box-shadow: var(--shadow-md);
 			transform: translateY(-2px);
 		}
 	}

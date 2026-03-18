@@ -1,7 +1,5 @@
 <script lang="ts">
 	import type { EvidenceEntry } from '$lib/server/queries/reviews';
-	import { prefersReducedMotion } from '$lib/motion';
-
 	let { riskScore, reason, evidence, variant = 'compact' }: {
 		riskScore: number;
 		reason?: string;
@@ -31,12 +29,8 @@
 				: `High risk — ${reason ?? 'flagged'}`
 	);
 
-	const reducedMotion = $derived(prefersReducedMotion());
-
-	const glowIntensity = $derived(riskScore / 100);
-
 	const hasEvidence = $derived(
-		evidence && (evidence.hard.length > 0 || evidence.soft.length > 0)
+		evidence && (evidence.hard.length > 0 || evidence.soft.length > 0 || evidence.safe.length > 0)
 	);
 </script>
 
@@ -53,15 +47,16 @@
 				{/if}
 			</svg>
 			<span class="risk-score" style:color={tierColor}>{riskScore}%</span>
+			{#if reason && reason !== 'none'}
+				<span class="risk-reason" style:color={tierColor}>{reason.replace(/_/g, ' ')}</span>
+			{/if}
 		</span>
 	{:else}
 		<div
 			class="risk-aura-expanded"
 			class:risk-glow-elevated={tier === 'elevated'}
 			class:risk-glow-high={tier === 'high'}
-			class:risk-no-animate={reducedMotion}
 			aria-label={ariaLabel}
-			style:--glow-intensity={glowIntensity}
 		>
 			<div class="risk-header">
 				<svg class="risk-shape-lg" width="16" height="16" viewBox="0 0 12 12" style:color={tierColor}>
@@ -87,6 +82,9 @@
 						{#each evidence.soft as entry}
 							<span class="evidence-tag evidence-soft">{entry.tag}: {Math.round(entry.p * 100)}%</span>
 						{/each}
+						{#each evidence.safe as entry}
+							<span class="evidence-tag evidence-safe">{entry.tag}: {Math.round(entry.p * 100)}%</span>
+						{/each}
 					{/if}
 				</div>
 			{/if}
@@ -111,6 +109,13 @@
 		font-size: 0.7rem;
 	}
 
+	.risk-reason {
+		font-size: 0.6rem;
+		font-weight: 500;
+		text-transform: capitalize;
+		opacity: 0.8;
+	}
+
 	/* ── Expanded variant ───────────────────────────────────── */
 	.risk-aura-expanded {
 		padding: 0.5rem 0.75rem;
@@ -119,31 +124,11 @@
 	}
 
 	.risk-glow-elevated {
-		animation: glow-elevated 2s ease-in-out infinite;
+		border-left: 3px solid oklch(70% 0.15 85);
 	}
 
 	.risk-glow-high {
-		animation: glow-high 1.5s ease-in-out infinite;
-	}
-
-	.risk-no-animate.risk-glow-elevated {
-		animation: none;
-		box-shadow: 0 0 12px oklch(70% 0.15 85 / calc(var(--glow-intensity) * 0.7));
-	}
-
-	.risk-no-animate.risk-glow-high {
-		animation: none;
-		box-shadow: 0 0 16px oklch(60% 0.15 25 / calc(var(--glow-intensity) * 0.7));
-	}
-
-	@keyframes glow-elevated {
-		0%, 100% { box-shadow: 0 0 8px oklch(70% 0.15 85 / calc(var(--glow-intensity) * 0.5)); }
-		50% { box-shadow: 0 0 16px oklch(70% 0.15 85 / var(--glow-intensity)); }
-	}
-
-	@keyframes glow-high {
-		0%, 100% { box-shadow: 0 0 12px oklch(60% 0.15 25 / calc(var(--glow-intensity) * 0.5)); }
-		50% { box-shadow: 0 0 20px oklch(60% 0.15 25 / var(--glow-intensity)); }
+		border-left: 3px solid oklch(60% 0.15 25);
 	}
 
 	.risk-header {
@@ -200,5 +185,10 @@
 	.evidence-soft {
 		color: var(--status-warning);
 		background: oklch(70% 0.05 85 / 0.15);
+	}
+
+	.evidence-safe {
+		color: var(--status-success);
+		background: oklch(65% 0.05 145 / 0.15);
 	}
 </style>

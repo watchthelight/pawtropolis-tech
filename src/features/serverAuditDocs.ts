@@ -14,6 +14,7 @@ import { writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import { notifyDashboard } from "../web/notifyDashboard.js";
 import {
   getAcknowledgedIssues,
   clearStaleAcknowledgments,
@@ -1496,6 +1497,15 @@ export async function generateAuditDocs(guild: Guild, outputDir?: string): Promi
 
     // Prune old snapshots to prevent unbounded growth (keep last 30)
     pruneOldSnapshots(guild.id, 30);
+
+    // Notify dashboard so Security tab auto-refreshes
+    if (snapshotId) {
+      notifyDashboard("audit:security_snapshot", {
+        snapshotId,
+        issueCount: active.length,
+        criticalCount: critical,
+      });
+    }
   } catch {
     // Snapshot storage is non-critical, don't fail the audit
   }

@@ -63,6 +63,7 @@ import {
   getDangerousChanges,
   hasMeaningfulChanges,
 } from "../features/securityDiff.js";
+import { notifyDashboard } from "../web/notifyDashboard.js";
 
 // Allowed role IDs (Admin+ and Server Dev)
 // Uses centralized ROLE_IDS from roles.ts for consistency
@@ -1185,22 +1186,26 @@ async function runMembersAudit(
 ): Promise<void> {
   const startTime = Date.now();
   const stats: AuditStats = createEmptyStats();
-  let flaggedCount = 0;
+  let flaggedCount = resumeSession?.flagged_count ?? 0;
   let skippedCount = 0;
-  let totalScanned = 0;
+  let totalScanned = resumeSession?.scanned_count ?? 0;
+
+  // Load already-scanned user IDs if resuming
+  const alreadyScanned = resumeSession ? getScannedUserIds(resumeSession.id) : new Set<string>();
 
   try {
     // Paginate through members using list() - much faster than fetch() for large guilds
     // WHY list() instead of fetch(): fetch() loads ALL members into memory at once.
     // list() with pagination keeps memory usage constant regardless of guild size.
     // For a 50k member guild, this is the difference between 500MB RAM spike vs ~10MB.
-    logger.info({ guildId: guild.id }, "[audit:members] Starting paginated member scan...");
+    logger.info({ guildId: guild.id, resuming: !!resumeSession }, "[audit:members] Starting paginated member scan...");
 
+    // Collect all members first for accurate totalToScan
+    const allMembers: GuildMember[] = [];
     let lastMemberId: string | undefined;
     let processedBatches = 0;
     const BATCH_SIZE = 1000; // Discord's max for guild.members.list()
 
-    // Process members in batches
     while (true) {
       const batch = await guild.members.list({
         limit: BATCH_SIZE,
@@ -1214,89 +1219,143 @@ async function runMembersAudit(
         guildId: guild.id,
         batchNumber: processedBatches,
         batchSize: batch.size,
-        totalSoFar: totalScanned + batch.size,
-      }, "[audit:members] Processing batch");
+      }, "[audit:members] Fetching batch");
 
       for (const member of batch.values()) {
-        totalScanned++;
+        allMembers.push(member);
         lastMemberId = member.id;
+      }
+    }
 
-        // Skip bots
-        if (member.user.bot) {
-          continue;
-        }
+    const totalMembers = allMembers.length;
 
-        // Skip already flagged users
-        if (isAlreadyFlagged(guild.id, member.user.id)) {
-          skippedCount++;
-          continue;
-        }
+    // Create or reuse session
+    let sessionId: number;
+    if (resumeSession) {
+      sessionId = resumeSession.id;
+    } else {
+      sessionId = createSession({
+        guildId: guild.id,
+        auditType: "members",
+        scope: null,
+        startedBy: interaction.user.id,
+        totalToScan: totalMembers,
+        channelId: channel.id,
+      });
+    }
 
-        // Analyze member
-        const result = analyzeMember(member, guild.id);
+    notifyDashboard("audit:scan_started", {
+      sessionId,
+      auditType: "members",
+      totalToScan: totalMembers,
+      startedBy: interaction.user.id,
+    });
 
-        if (result.shouldFlag) {
-          // Flag the user
-          const joinedAtSec = member.joinedTimestamp
-            ? Math.floor(member.joinedTimestamp / 1000)
-            : null;
+    // Process members
+    for (const member of allMembers) {
+      // Skip if already scanned in this session (for resume)
+      if (alreadyScanned.has(member.id)) {
+        continue;
+      }
 
-          upsertManualFlag({
-            guildId: guild.id,
-            userId: member.user.id,
-            reason: `[Audit] ${result.reasons.map((r) => r.label).join(", ")}`,
-            flaggedBy: interaction.user.id,
-            joinedAt: joinedAtSec,
-          });
+      totalScanned++;
+      markUserScanned(sessionId, member.id);
 
-          flaggedCount++;
-          updateStats(stats, result.reasons);
+      // Skip bots
+      if (member.user.bot) {
+        continue;
+      }
 
-          // Send flag embed to channel
-          const flagEmbed = new EmbedBuilder()
-            .setTitle(`🚨 Suspicious Account [${flaggedCount}]`)
-            .setColor(0xED4245) // Red
-            .setThumbnail(member.user.displayAvatarURL({ size: 64 }))
-            .addFields(
-              { name: "User", value: `${member} (\`${member.id}\`)`, inline: true },
-              { name: "Score", value: `${result.score}/${MAX_SCORE}`, inline: true },
-              { name: "Flags", value: result.reasons.map((r) => `• ${r.label}`).join("\n") || "None" }
-            )
-            .setFooter({ text: `Scanned: ${totalScanned.toLocaleString()} members` });
+      // Skip already flagged users
+      if (isAlreadyFlagged(guild.id, member.user.id)) {
+        skippedCount++;
+        continue;
+      }
 
-          await channel.send({ embeds: [flagEmbed] });
+      // Analyze member
+      const result = analyzeMember(member, guild.id);
 
-          // Small delay to avoid rate limits
-          // WHY 300ms: Discord's message rate limit is ~5/5sec per channel.
-          // 300ms gives us headroom without making the audit painfully slow.
-          await sleep(300);
-        }
+      if (result.shouldFlag) {
+        // Flag the user
+        const joinedAtSec = member.joinedTimestamp
+          ? Math.floor(member.joinedTimestamp / 1000)
+          : null;
 
-        // Update progress every 50 members for real-time feedback
+        upsertManualFlag({
+          guildId: guild.id,
+          userId: member.user.id,
+          reason: `[Audit] ${result.reasons.map((r) => r.label).join(", ")}`,
+          flaggedBy: interaction.user.id,
+          joinedAt: joinedAtSec,
+        });
+
+        flaggedCount++;
+        updateStats(stats, result.reasons);
+
+        // Send flag embed to channel
+        const flagEmbed = new EmbedBuilder()
+          .setTitle(`🚨 Suspicious Account [${flaggedCount}]`)
+          .setColor(0xED4245) // Red
+          .setThumbnail(member.user.displayAvatarURL({ size: 64 }))
+          .addFields(
+            { name: "User", value: `${member} (\`${member.id}\`)`, inline: true },
+            { name: "Score", value: `${result.score}/${MAX_SCORE}`, inline: true },
+            { name: "Flags", value: result.reasons.map((r) => `• ${r.label}`).join("\n") || "None" }
+          )
+          .setFooter({ text: `Scanned: ${totalScanned.toLocaleString()} members` });
+
+        await channel.send({ embeds: [flagEmbed] });
+
+        // Small delay to avoid rate limits
+        // WHY 300ms: Discord's message rate limit is ~5/5sec per channel.
+        // 300ms gives us headroom without making the audit painfully slow.
+        await sleep(300);
+      }
+
+      // Update progress every 50 members for real-time feedback
+      if (totalScanned % 50 === 0) {
+        updateProgress(sessionId, totalScanned, flaggedCount, 0);
+        notifyDashboard("audit:scan_progress", {
+          sessionId,
+          auditType: "members",
+          scannedCount: totalScanned,
+          flaggedCount,
+          totalToScan: totalMembers,
+          apiCalls: 0,
+        });
+
         // GOTCHA: interaction.editReply can fail if the interaction token expired
         // (15 min limit) or if the message was deleted. We catch and log but don't
         // abort the audit - the channel embeds are the real output anyway.
-        if (totalScanned % 50 === 0) {
-          try {
-            const elapsed = Math.round((Date.now() - startTime) / 1000);
-            await interaction.editReply({
-              embeds: [
-                new EmbedBuilder()
-                  .setTitle("🔍 Auditing members...")
-                  .setDescription(
-                    `**${totalScanned.toLocaleString()}** members scanned\n` +
-                    `**${flaggedCount}** flagged · **${skippedCount}** already flagged\n` +
-                    `⏱️ ${elapsed}s elapsed`
-                  )
-                  .setColor(0x3B82F6),
-              ],
-            });
-          } catch (err) {
-            logger.debug({ err, guildId: guild.id, totalScanned }, "[audit] Progress update failed (non-fatal)");
-          }
+        try {
+          const elapsed = Math.round((Date.now() - startTime) / 1000);
+          await interaction.editReply({
+            embeds: [
+              new EmbedBuilder()
+                .setTitle("🔍 Auditing members...")
+                .setDescription(
+                  `**${totalScanned.toLocaleString()}** members scanned\n` +
+                  `**${flaggedCount}** flagged · **${skippedCount}** already flagged\n` +
+                  `⏱️ ${elapsed}s elapsed`
+                )
+                .setColor(0x3B82F6),
+            ],
+          });
+        } catch (err) {
+          logger.debug({ err, guildId: guild.id, totalScanned }, "[audit] Progress update failed (non-fatal)");
         }
       }
     }
+
+    // Mark session complete
+    updateProgress(sessionId, totalScanned, flaggedCount, 0);
+    completeSession(sessionId);
+    notifyDashboard("audit:scan_completed", {
+      sessionId,
+      auditType: "members",
+      scannedCount: totalScanned,
+      flaggedCount,
+    });
 
     // Calculate duration
     const durationSec = Math.round((Date.now() - startTime) / 1000);
@@ -1321,6 +1380,10 @@ async function runMembersAudit(
         }
       )
       .setTimestamp();
+
+    if (resumeSession) {
+      summaryEmbed.addFields({ name: "Resumed", value: `Skipped ${alreadyScanned.size} already-scanned`, inline: true });
+    }
 
     await channel.send({ embeds: [summaryEmbed] });
 
@@ -1469,6 +1532,13 @@ async function runNsfwAudit(
       });
     }
 
+    notifyDashboard("audit:scan_started", {
+      sessionId,
+      auditType: "nsfw",
+      totalToScan: totalMembers,
+      startedBy: interaction.user.id,
+    });
+
     // Filter members to scan (skip already-scanned for resume, bots, no avatar)
     const membersToProcess: Array<{ member: GuildMember; avatarUrl: string }> = [];
     for (const member of membersToScan) {
@@ -1581,8 +1651,16 @@ async function runNsfwAudit(
       // We save to DB frequently so resume works even if the bot crashes mid-scan.
       // The conditional ensures we don't spam the database on every single member.
       if (processedInThisRun % PROGRESS_UPDATE_INTERVAL === 0 || i + VISION_BATCH_SIZE >= membersToProcess.length) {
-        // Save progress to database
+        // Save progress to database + notify dashboard
         updateProgress(sessionId, totalScanned, flaggedCount, apiCallCount);
+        notifyDashboard("audit:scan_progress", {
+          sessionId,
+          auditType: "nsfw",
+          scannedCount: totalScanned,
+          flaggedCount,
+          totalToScan: totalMembers,
+          apiCalls: apiCallCount,
+        });
 
         try {
           const elapsed = Math.round((Date.now() - startTime) / 1000);
@@ -1608,6 +1686,12 @@ async function runNsfwAudit(
 
     // Mark session complete
     completeSession(sessionId);
+    notifyDashboard("audit:scan_completed", {
+      sessionId,
+      auditType: "nsfw",
+      scannedCount: totalScanned,
+      flaggedCount,
+    });
 
     // Calculate duration
     const durationSec = Math.round((Date.now() - startTime) / 1000);

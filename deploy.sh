@@ -246,7 +246,7 @@ npx tsx scripts/inject-build-info.ts
 # Step 4: Create tarball
 # Include .env.build so the build metadata is available on the server
 echo "Step 4/9: Creating deployment tarball..."
-tar -czf ${TARBALL} dist migrations scripts assets package.json package-lock.json .env.build ecosystem.config.cjs web/build web/package.json web/package-lock.json
+tar -czf ${TARBALL} dist src migrations scripts assets package.json package-lock.json .env.build ecosystem.config.cjs web/build web/package.json web/package-lock.json
 
 # Step 5: Upload to remote
 echo "Step 5/9: Uploading to remote server..."

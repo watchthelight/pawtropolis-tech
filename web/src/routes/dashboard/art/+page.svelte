@@ -1052,7 +1052,7 @@
 		.tab:hover { color: var(--text-primary); background: var(--surface-raised); }
 	}
 	.tab:active { background: var(--surface-raised); }
-	.tab-active { color: var(--text-primary); background: var(--surface); box-shadow: var(--glow-accent); }
+	.tab-active { color: var(--text-primary); background: var(--surface); box-shadow: var(--shadow-sm); }
 
 	.tab-count {
 		font-size: 0.65rem;

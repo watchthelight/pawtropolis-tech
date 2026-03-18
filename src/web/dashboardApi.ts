@@ -313,7 +313,6 @@ export async function startDashboardApi(client: Client): Promise<void> {
   server.post<{ Body: ReviewBody }>("/api/review/reject", async (request, reply) => {
     const { userId, tier, appId, reason } = request.body ?? {};
     if (!userId || !tier || !appId) return reply.code(400).send({ success: false, error: "Missing userId, tier, or appId" } satisfies ApiError);
-    if (!reason) return reply.code(400).send({ success: false, error: "Reason is required for rejection" } satisfies ApiError);
     if (!hasMinTier(tier, "gk")) return reply.code(403).send({ success: false, error: "Insufficient permissions" } satisfies ApiError);
 
     const app = loadApplication(appId);
@@ -324,7 +323,8 @@ export async function startDashboardApi(client: Client): Promise<void> {
       return reply.code(409).send({ success: false, error: "Application is claimed by another reviewer" } satisfies ApiError);
     }
 
-    const txResult = rejectTx(appId, userId, reason);
+    const rejectReason = (reason as string) || "No reason given, try a new application";
+    const txResult = rejectTx(appId, userId, rejectReason);
     if (txResult.kind !== "changed") {
       return reply.code(409).send({ success: false, error: "Application is not in a reviewable state" } satisfies ApiError);
     }
@@ -336,7 +336,7 @@ export async function startDashboardApi(client: Client): Promise<void> {
     if (guild) {
       try {
         const user = await client.users.fetch(app.user_id);
-        const flowResult = await rejectFlow(user, { guildName: guild.name, reason });
+        const flowResult = await rejectFlow(user, { guildName: guild.name, reason: rejectReason });
         updateReviewActionMeta(txResult.reviewActionId, { dmDelivered: flowResult.dmDelivered });
       } catch (err) {
         logger.warn({ err, appId, userId: app.user_id }, "[dashboardApi] Failed to send rejection DM");
@@ -718,13 +718,22 @@ export async function startDashboardApi(client: Client): Promise<void> {
     if (!guild) return reply.code(503).send({ success: false, error: "Bot not ready" } satisfies ApiError);
 
     const { getActiveSession } = await import("../store/auditSessionStore.js");
-    const active = getActiveSession(guild.id, auditType as string);
+    const active = getActiveSession(guild.id, auditType as "members" | "nsfw");
     if (active)
       return reply.code(409).send({ success: false, error: `A ${auditType} scan is already running (session ${active.id})` } satisfies ApiError);
 
-    // For now, return success — scan triggering requires the refactored scan logic (commits 9-10)
-    // The session exists in the DB and the scan page will show progress via SSE
-    return { success: true, data: { message: "Scan triggering requires bot-side refactor — use /audit command for now" } } satisfies ApiSuccess;
+    // Trigger the scan in the background — returns session ID immediately
+    const { triggerMemberScan, triggerNsfwScan } = await import("../features/auditRunner.js");
+    let sessionId: number;
+
+    if (auditType === "members") {
+      sessionId = triggerMemberScan(guild, userId as string);
+    } else {
+      const nsfwScope = (scope === "flagged" ? "flagged" : "all") as "all" | "flagged";
+      sessionId = triggerNsfwScan(guild, userId as string, nsfwScope);
+    }
+
+    return { success: true, data: { sessionId } } satisfies ApiSuccess;
   });
 
   // ── Audit: Cancel Scan ─────────────────────────────────────────

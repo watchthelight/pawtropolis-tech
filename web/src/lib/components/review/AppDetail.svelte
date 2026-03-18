@@ -175,7 +175,8 @@
 	function submitReason() {
 		if (!activeAction) return;
 		const trimmed = reasonText.trim();
-		if (activeAction !== 'approve' && !trimmed) return;
+		if (activeAction === 'kick' && !trimmed) return;
+		if (activeAction === 'permreject' && !trimmed) return;
 		if (activeAction === 'kick') {
 			startKickCountdown();
 		} else {
@@ -329,7 +330,7 @@
 					{/if}
 				</div>
 				<div class="content-tabs">
-					<RiskAura variant="compact" riskScore={app.riskScore} />
+					<RiskAura variant="compact" riskScore={app.riskScore} reason={app.scan?.reason} evidence={app.scan ? { hard: app.scan.evidenceHard, soft: app.scan.evidenceSoft, safe: app.scan.evidenceSafe } : undefined} />
 					{#if modmail.length > 0}
 						<button class="tab-btn" class:tab-btn-active={showModmail} onclick={() => showModmail = !showModmail}>
 							Modmail ({modmail.reduce((a, t) => a + t.messageCount, 0)})
@@ -350,6 +351,10 @@
 				{#if showModmail}
 					<ModmailViewer threads={modmail} targetUserId={app.userId} />
 				{:else}
+					{#if app.scan && app.riskScore > 0}
+						<div class="section-label">Avatar Scan</div>
+						<RiskAura variant="expanded" riskScore={app.riskScore} reason={app.scan.reason} evidence={{ hard: app.scan.evidenceHard, soft: app.scan.evidenceSoft, safe: app.scan.evidenceSafe }} />
+					{/if}
 					<div class="section-label">Responses</div>
 					{#each app.answers as qa}
 						<div class="qa-block">
@@ -381,11 +386,11 @@
 				bind:value={reasonText}
 				class="reason-input"
 				type="text"
-				placeholder={activeAction === 'approve' ? 'Note (optional)' : 'Reason (required)'}
+				placeholder={activeAction === 'approve' || activeAction === 'reject' ? 'Reason (optional)' : 'Reason (required)'}
 				onkeydown={(e) => { if (e.key === 'Enter') submitReason(); if (e.key === 'Escape') cancelDecision(); }}
 				disabled={decisionLoading}
 			/>
-			<button class="btn btn-{activeAction}" onclick={submitReason} disabled={decisionLoading || (activeAction !== 'approve' && !reasonText.trim())}>
+			<button class="btn btn-{activeAction}" onclick={submitReason} disabled={decisionLoading || ((activeAction === 'kick' || activeAction === 'permreject') && !reasonText.trim())}>
 				{decisionLoading ? 'Sending...' : activeAction === 'approve' ? 'Approve' : activeAction === 'reject' ? 'Reject' : activeAction === 'permreject' ? 'Perm Reject' : 'Kick'}
 			</button>
 			<button class="btn btn-cancel" onclick={cancelDecision} disabled={decisionLoading}>Cancel</button>
@@ -448,7 +453,7 @@
 	}
 
 	.profile-col {
-		width: 220px;
+		width: 200px;
 		flex-shrink: 0;
 		padding: 0.5rem;
 		overflow-y: auto;
@@ -467,7 +472,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 0.5rem var(--space-card);
+		padding: 0.5rem 1rem;
 		border-bottom: 1px solid var(--border-holdfast);
 		gap: 0.75rem;
 		flex-shrink: 0;
@@ -512,7 +517,7 @@
 	/* Content body (scrollable) */
 	.content-body {
 		flex: 1;
-		padding: var(--space-card);
+		padding: 1rem;
 		overflow-y: auto;
 	}
 
@@ -528,8 +533,8 @@
 	}
 
 	.claimer-avatar {
-		width: 16px;
-		height: 16px;
+		width: 20px;
+		height: 20px;
 		border-radius: 50%;
 		object-fit: cover;
 		flex-shrink: 0;
@@ -541,13 +546,13 @@
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 		color: var(--text-secondary);
-		margin-bottom: 1rem;
-		padding-bottom: 0.5rem;
+		margin-bottom: 0.75rem;
+		padding-bottom: 0.35rem;
 		border-bottom: 1px solid var(--border-holdfast);
 	}
 
 	.qa-block {
-		margin-bottom: 1.25rem;
+		margin-bottom: 1rem;
 	}
 
 	.qa-question {
@@ -565,7 +570,7 @@
 
 	/* Action bar */
 	.action-bar {
-		padding: var(--space-card);
+		padding: 0.75rem 1rem;
 		border-top: 1px solid var(--border-holdfast);
 		display: flex;
 		align-items: center;
@@ -702,12 +707,12 @@
 	}
 
 	@media (hover: hover) {
-		.btn-claim:hover:not(:disabled) { filter: brightness(1.1); box-shadow: var(--glow-accent); }
+		.btn-claim:hover:not(:disabled) { filter: brightness(1.1); box-shadow: var(--shadow-md); }
 		.btn-unclaim:hover:not(:disabled) { background: var(--surface); color: var(--text-primary); }
-		.btn-approve:hover:not(:disabled) { filter: brightness(1.15); box-shadow: 0 0 12px oklch(70% 0.15 145 / 0.3); }
-		.btn-reject:hover:not(:disabled) { filter: brightness(1.15); box-shadow: 0 0 12px oklch(70% 0.15 80 / 0.3); }
-		.btn-kick:hover:not(:disabled) { filter: brightness(1.15); box-shadow: 0 0 12px oklch(70% 0.15 25 / 0.3); }
-		.btn-permreject:hover:not(:disabled) { background: var(--status-danger); color: var(--bg); box-shadow: 0 0 16px oklch(70% 0.15 25 / 0.4); }
+		.btn-approve:hover:not(:disabled) { filter: brightness(1.15); box-shadow: var(--shadow-md); }
+		.btn-reject:hover:not(:disabled) { filter: brightness(1.15); box-shadow: var(--shadow-md); }
+		.btn-kick:hover:not(:disabled) { filter: brightness(1.15); box-shadow: var(--shadow-md); }
+		.btn-permreject:hover:not(:disabled) { background: var(--status-danger); color: var(--bg); box-shadow: var(--shadow-md); }
 		.btn-cancel:hover:not(:disabled) { color: var(--text-primary); }
 		.btn-undo:hover { background: var(--status-danger); color: var(--bg); }
 		.btn-admin-unclaim:hover:not(:disabled) { background: var(--status-warning); color: var(--bg); }

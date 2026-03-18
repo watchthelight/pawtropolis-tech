@@ -23,15 +23,15 @@
 	--hue-complement: calc(var(--hue) + 180);
 
 	/* ── Surfaces (true neutral, subtly tinted by user accent) ── */
-	--bg: oklch(13% 0.003 var(--hue));
+	--bg: oklch(10% 0.003 var(--hue));
 	--surface: oklch(18% 0.005 var(--hue));
 	--surface-raised: oklch(23% 0.007 var(--hue));
 	--surface-overlay: oklch(28% 0.008 var(--hue));
 
-	/* ── Borders (accent-tinted — user identity visible in structure) ── */
-	--border: oklch(25% 0.010 var(--hue));
-	--border-holdfast: oklch(30% 0.03 var(--hue));
-	--border-strong: oklch(40% 0.04 var(--hue));
+	/* ── Borders (near-neutral, faint hue tint for identity) ── */
+	--border: oklch(25% 0.004 var(--hue));
+	--border-holdfast: oklch(30% 0.012 var(--hue));
+	--border-strong: oklch(40% 0.02 var(--hue));
 
 	/* ── Text (near-white primary, neutral secondary for clarity) ── */
 	--text-primary: oklch(92% 0.004 var(--hue));
@@ -63,34 +63,36 @@
 	--complement-dim: oklch(35% 0.07 var(--hue-complement));
 
 	/* ── Accent surface — highlighted cards, active elements ── */
-	--accent-glow-bg: oklch(22% 0.04 var(--hue));
+	--accent-glow-bg: oklch(20% 0.05 var(--hue));
 
 	/* ── Interactive states (accent-tinted) ── */
 	--hover-bg: oklch(22% 0.02 var(--hue));
 	--active-bg: oklch(26% 0.03 var(--hue));
 	--selected-bg: oklch(24% 0.03 var(--hue));
 
-	/* ── Shadows (neutral — no sepia tint) ── */
-	--shadow-sm: 0 1px 3px oklch(3% 0.005 var(--hue) / 0.4);
-	--shadow-md: 0 4px 12px oklch(3% 0.005 var(--hue) / 0.35);
-	--shadow-lg: 0 8px 24px oklch(3% 0.005 var(--hue) / 0.3);
+	/* ── Shadows (compound: inset top highlight + tight + diffuse) ── */
+	--shadow-sm:
+		inset 0 1px 0 oklch(100% 0 0 / 0.04),
+		0 1px 2px oklch(0% 0 0 / 0.2),
+		0 2px 4px oklch(0% 0 0 / 0.1);
+	--shadow-md:
+		inset 0 1px 0 oklch(100% 0 0 / 0.04),
+		0 2px 4px oklch(0% 0 0 / 0.2),
+		0 8px 16px oklch(0% 0 0 / 0.15);
+	--shadow-lg:
+		inset 0 1px 0 oklch(100% 0 0 / 0.04),
+		0 4px 8px oklch(0% 0 0 / 0.25),
+		0 16px 32px oklch(0% 0 0 / 0.2);
 
-	/* ── Glows (primary=accent, warm=earth, cool=slate) ── */
-	--glow-accent: 0 0 12px oklch(72% 0.18 var(--hue) / 0.2);
-	--glow-hover: 0 0 20px oklch(68% 0.12 var(--hue-warm) / 0.2);
-	--glow-strong: 0 0 28px oklch(72% 0.18 var(--hue) / 0.4);
-	--glow-secondary: 0 0 14px oklch(68% 0.12 var(--hue-warm) / 0.18);
-	--glow-tertiary: 0 0 12px oklch(65% 0.10 var(--hue-cool) / 0.15);
-	--glow-complement: 0 0 10px oklch(65% 0.14 var(--hue-complement) / 0.15);
 
 	/* ── Constrained radii — pixel art discipline, exactly 3 values ── */
 	--radius-sm: 6px;
 	--radius-md: 12px;
 	--radius-lg: 16px;
 
-	/* ── Generous spacing ── */
-	--space-card: 24px;
-	--space-section: 32px;
+	/* ── Spacing (viewport-scaled) ── */
+	--space-card: clamp(14px, 2.5vw, 24px);
+	--space-section: clamp(16px, 3vw, 28px);
 
 	/* ── Status colors (fixed — not themed) ── */
 	--status-success: oklch(65% 0.15 145);
@@ -117,15 +119,12 @@
 	/* ── EDEX-UI terminal aesthetic (stats page — uses cool slate + warm accents) ── */
 	--terminal-grid: oklch(32% 0.015 var(--hue-cool) / 0.3);
 	--terminal-border: oklch(50% 0.06 var(--hue-warm) / 0.5);
-	--terminal-glow: 0 0 16px oklch(60% 0.08 var(--hue-warm) / 0.2);
 	--terminal-font: 'Courier New', 'Courier', monospace;
 }
 
 /* Base styles */
 body {
 	background-color: var(--bg);
-	background-image: radial-gradient(ellipse at 50% 0%, oklch(18% 0.006 var(--hue)) 0%, var(--bg) 70%);
-	background-attachment: fixed;
 	color: var(--text-primary);
 	font-family: 'Inter Variable', system-ui, -apple-system, sans-serif;
 	font-size: 0.9375rem; /* 15px — comfortable for long sessions */
@@ -134,18 +133,6 @@ body {
 	-moz-osx-font-smoothing: grayscale;
 }
 
-/* Noise texture overlay — soft matte material feel */
-body::after {
-	content: '';
-	position: fixed;
-	inset: 0;
-	z-index: 9999;
-	pointer-events: none;
-	opacity: 0.025;
-	background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-	background-repeat: repeat;
-	background-size: 200px 200px;
-}
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
@@ -164,11 +151,6 @@ body::after {
 
 ::-webkit-scrollbar-thumb:hover {
 	background: var(--text-secondary);
-}
-
-/* Micro-gradient — subtle top-lit surface, opt-in per component */
-.surface-gradient {
-	background: linear-gradient(180deg, oklch(22% 0.008 var(--hue)) 0%, var(--surface) 100%);
 }
 
 /* Focus ring — accent-colored, keyboard-only via :focus-visible */

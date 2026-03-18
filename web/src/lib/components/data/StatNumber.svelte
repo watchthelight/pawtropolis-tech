@@ -11,13 +11,13 @@
 	const formatter = new Intl.NumberFormat();
 	let reduced = prefersReducedMotion();
 
-	// Split formatted number into characters for odometer effect.
+	// Split formatted number into characters for rolling effect.
 	// Key from right so digit positions stay stable across boundary
 	// transitions (e.g. 999 → 1,000 — rightmost digits keep their keys).
 	let digits = $derived(
 		formatter.format(value).split('').map((char, i, arr) => ({
 			char,
-			key: arr.length - 1 - i // key from right: rightmost = 0, leftmost = len-1
+			key: arr.length - 1 - i
 		}))
 	);
 
@@ -44,22 +44,22 @@
 
 <div class="flex flex-col">
 	<div class="flex items-baseline gap-1.5">
-		<span class="odometer stat-value">
+		<span class="roller stat-value">
 			{#each digits as d (d.key)}
 				{#if d.char.match(/\d/)}
-					<span class="digit-wrapper">
+					<span class="reel">
 						<span
-							class="digit-column"
-							class:no-transition={reduced}
+							class="reel-strip"
+							class:no-motion={reduced}
 							style:transform="translateY(-{Number(d.char) * 1.2}em)"
 						>
 							{#each Array(10) as _, n}
-								<span class="digit">{n}</span>
+								<span class="reel-digit">{n}</span>
 							{/each}
 						</span>
 					</span>
 				{:else}
-					<span class="separator">{d.char}</span>
+					<span class="sep">{d.char}</span>
 				{/if}
 			{/each}
 		</span>
@@ -76,7 +76,7 @@
 
 <style>
 	.stat-value {
-		font-size: 2.5rem;
+		font-size: clamp(1.75rem, 4vw, 2.5rem);
 		font-weight: 700;
 		color: var(--text-primary);
 		line-height: 1.1;
@@ -88,35 +88,40 @@
 		margin-top: 0.15rem;
 	}
 
-	.odometer {
+	.roller {
 		display: inline-flex;
 		align-items: baseline;
 	}
 
-	.digit-wrapper {
+	.reel {
 		display: inline-block;
 		height: 1.2em;
 		overflow: hidden;
 		line-height: 1.2;
+		/* Fade edges for depth: top and bottom of the reel window are slightly masked */
+		mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+		-webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
 	}
 
-	.digit-column {
+	.reel-strip {
 		display: flex;
 		flex-direction: column;
-		transition: transform 0.4s var(--ease-spring);
+		transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+		will-change: transform;
 	}
 
-	.digit-column.no-transition {
+	.reel-strip.no-motion {
 		transition: none;
 	}
 
-	.digit {
+	.reel-digit {
 		display: block;
 		height: 1.2em;
 		line-height: 1.2;
 	}
 
-	.separator {
+	.sep {
 		line-height: 1.2;
+		opacity: 0.4;
 	}
 </style>

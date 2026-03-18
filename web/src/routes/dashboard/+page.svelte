@@ -6,6 +6,7 @@
 	import EmptyState from '$lib/components/feedback/EmptyState.svelte';
 	import SpringReveal from '$lib/components/motion/SpringReveal.svelte';
 	import { ClipboardList, UserCheck, CheckCircle, Mail, AlertTriangle } from 'lucide-svelte';
+	import { openLightbox } from '$lib/stores/lightbox.svelte';
 
 	let { data } = $props();
 	let user = $derived(data.user);
@@ -34,11 +35,14 @@
 <SpringReveal stagger={30}>
 	<!-- Identity section -->
 	<div class="mb-[var(--space-section)] flex items-center gap-5 max-md:gap-3">
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<img
 			src={user.avatarUrl}
 			alt={user.globalName || user.username}
 			class="welcome-avatar"
-			style:box-shadow="0 0 24px oklch(70% 0.15 var(--hue) / 0.2)"
+			style="cursor: zoom-in"
+			onclick={() => openLightbox(user.avatarUrl)}
 		/>
 		<div>
 			<h1 class="text-2xl max-md:text-xl font-bold text-[var(--text-primary)]" style="letter-spacing: -0.02em">
@@ -112,8 +116,8 @@
 
 <style>
 	.welcome-avatar {
-		width: 4.5rem;
-		height: 4.5rem;
+		width: 3.5rem;
+		height: 3.5rem;
 		border-radius: var(--radius-md);
 		outline: 2px solid var(--accent);
 		outline-offset: 3px;

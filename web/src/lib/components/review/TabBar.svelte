@@ -34,8 +34,8 @@
 	.tab-bar {
 		display: flex;
 		gap: 0.25rem;
-		padding-bottom: 0.75rem;
-		margin-bottom: 0.75rem;
+		padding-bottom: 0.5rem;
+		margin-bottom: 0.5rem;
 		border-bottom: 1px solid var(--border-holdfast);
 	}
 
@@ -68,7 +68,7 @@
 	.tab-active {
 		color: var(--text-primary);
 		background: var(--surface);
-		box-shadow: var(--glow-accent);
+		box-shadow: var(--shadow-sm);
 	}
 
 	.tab-badge {

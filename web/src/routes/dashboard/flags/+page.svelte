@@ -9,6 +9,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import { subscribe, unsubscribe, onReconnect, offReconnect } from '$lib/stores/sse.svelte';
+	import { openLightbox } from '$lib/stores/lightbox.svelte';
 
 	let { data } = $props();
 	let flags = $derived(data.flags);
@@ -68,15 +69,6 @@
 		expandedId = expandedId === key ? null : key;
 	}
 
-	// Avatar lightbox
-	let lightboxUrl = $state<string | null>(null);
-	function openLightbox(url: string) {
-		// Get full-res from Discord CDN
-		lightboxUrl = url.replace(/\?size=\d+/, '?size=4096');
-		if (!lightboxUrl.includes('?')) lightboxUrl += '?size=4096';
-	}
-	function closeLightbox() { lightboxUrl = null; }
-	function onLightboxKey(e: KeyboardEvent) { if (e.key === 'Escape') closeLightbox(); }
 
 	// Dismiss
 	let dismissing = $state<string | null>(null);
@@ -380,14 +372,6 @@
 	{/if}
 </SpringReveal>
 
-<!-- Avatar lightbox -->
-{#if lightboxUrl}
-	<!-- svelte-ignore a11y_click_events_have_key_events -->
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="lightbox" onclick={closeLightbox} transition:slide={{ duration: 150 }}>
-		<img src={lightboxUrl} alt="Full resolution avatar" class="lightbox-img" />
-	</div>
-{/if}
 
 <style>
 	/* ─── Toolbar ─── */
@@ -457,7 +441,7 @@
 	.chip-active {
 		color: var(--text-primary);
 		background: var(--surface);
-		box-shadow: var(--glow-accent);
+		box-shadow: var(--shadow-sm);
 	}
 
 	/* ─── View toggle ─── */
@@ -535,8 +519,8 @@
 	}
 
 	.flag-avatar {
-		width: 40px;
-		height: 40px;
+		width: 48px;
+		height: 48px;
 		border-radius: var(--radius-sm);
 		object-fit: cover;
 		cursor: zoom-in;
@@ -548,8 +532,8 @@
 	}
 
 	.flag-avatar-ph {
-		width: 40px;
-		height: 40px;
+		width: 48px;
+		height: 48px;
 		border-radius: var(--radius-sm);
 		background: var(--accent-dim);
 		color: var(--accent);
@@ -801,26 +785,6 @@
 		opacity: 0.6;
 	}
 
-	/* ─── Avatar lightbox ─── */
-	.lightbox {
-		position: fixed;
-		inset: 0;
-		z-index: 9999;
-		background: oklch(5% 0 0 / 0.85);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		cursor: pointer;
-	}
-
-	.lightbox-img {
-		max-width: 90vw;
-		max-height: 90vh;
-		border-radius: var(--radius-md);
-		box-shadow: 0 0 60px oklch(0% 0 0 / 0.5);
-		cursor: default;
-	}
-
 	/* ─── Compact mode ─── */
 	.flag-row-compact {
 		border-radius: var(--radius-sm);
@@ -832,13 +796,13 @@
 	}
 
 	.flag-avatar-compact {
-		width: 28px;
-		height: 28px;
+		width: 36px;
+		height: 36px;
 	}
 
 	.flag-avatar-ph-compact {
-		width: 28px;
-		height: 28px;
+		width: 36px;
+		height: 36px;
 		font-size: 0.7rem;
 	}
 

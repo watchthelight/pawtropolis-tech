@@ -6,7 +6,7 @@
 	} = $props();
 </script>
 
-<header class="mb-[var(--space-section)]">
+<header class="mb-4">
 	<div class="flex items-center gap-2">
 		<h1 class="page-title">{title}</h1>
 		{#if badge != null}

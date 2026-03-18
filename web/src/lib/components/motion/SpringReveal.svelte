@@ -18,12 +18,11 @@
 		if (prefersReducedMotion() || !container) return;
 
 		tl = gsap.timeline();
-		tl.from(container.children, {
+		tl.from(container, {
 			opacity: 0,
-			y,
-			duration: 0.5,
-			ease: SPRINGS.gentle,
-			stagger: stagger / 1000,
+			y: 10,
+			duration: 0.3,
+			ease: 'power2.out',
 			delay: delay / 1000
 		});
 	});

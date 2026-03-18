@@ -113,6 +113,141 @@ function getWeekDates(referenceDate: Date): string[] {
 	return dates;
 }
 
+// KEEP IN SYNC with web/src/lib/components/charts/HeatmapGrid.svelte (formatHourLabel)
+function formatHourLabel(hour: number): string {
+	if (hour === 0) return '12a';
+	if (hour < 12) return `${hour}a`;
+	if (hour === 12) return '12p';
+	return `${hour - 12}p`;
+}
+
+// KEEP IN SYNC with web/src/lib/components/charts/HeatmapGrid.svelte (cellOpacity)
+function cellOpacity(count: number, maxValue: number): number {
+	if (count === 0) return 0.04;
+	return 0.04 + (count / maxValue) * 0.96;
+}
+
+describe('heatmap grid component helpers', () => {
+	describe('formatHourLabel', () => {
+		it('formats midnight as 12a', () => {
+			expect(formatHourLabel(0)).toBe('12a');
+		});
+
+		it('formats noon as 12p', () => {
+			expect(formatHourLabel(12)).toBe('12p');
+		});
+
+		it('formats morning hours correctly', () => {
+			expect(formatHourLabel(1)).toBe('1a');
+			expect(formatHourLabel(6)).toBe('6a');
+			expect(formatHourLabel(11)).toBe('11a');
+		});
+
+		it('formats afternoon hours correctly', () => {
+			expect(formatHourLabel(13)).toBe('1p');
+			expect(formatHourLabel(18)).toBe('6p');
+			expect(formatHourLabel(23)).toBe('11p');
+		});
+
+		it('formats all 24 hours without errors', () => {
+			for (let h = 0; h < 24; h++) {
+				const label = formatHourLabel(h);
+				expect(label).toMatch(/^\d{1,2}[ap]$/);
+			}
+		});
+	});
+
+	describe('cellOpacity', () => {
+		it('returns base opacity (0.04) for zero count', () => {
+			expect(cellOpacity(0, 100)).toBe(0.04);
+		});
+
+		it('returns 1.0 for max count', () => {
+			expect(cellOpacity(100, 100)).toBe(1);
+		});
+
+		it('returns ~0.52 for half max count', () => {
+			const result = cellOpacity(50, 100);
+			expect(result).toBeCloseTo(0.52, 2);
+		});
+
+		it('returns base opacity for zero count even with maxValue=1', () => {
+			expect(cellOpacity(0, 1)).toBe(0.04);
+		});
+
+		it('returns 1.0 when count equals maxValue=1', () => {
+			expect(cellOpacity(1, 1)).toBe(1);
+		});
+
+		it('scales linearly between base and 1.0', () => {
+			const quarter = cellOpacity(25, 100);
+			const half = cellOpacity(50, 100);
+			const threeQuarter = cellOpacity(75, 100);
+			expect(quarter).toBeLessThan(half);
+			expect(half).toBeLessThan(threeQuarter);
+			expect(threeQuarter).toBeLessThan(1);
+		});
+	});
+	// KEEP IN SYNC with web/src/lib/components/charts/HeatmapGrid.svelte (formatHourRange)
+	describe('formatHourRange', () => {
+		function formatHourRange(hour: number): string {
+			const startH = hour % 12 || 12;
+			const startAmPm = hour < 12 ? 'AM' : 'PM';
+			const endHour = (hour + 1) % 24;
+			const endH = endHour % 12 || 12;
+			const endAmPm = endHour < 12 ? 'AM' : 'PM';
+			return `${startH}:00 ${startAmPm} – ${endH}:00 ${endAmPm}`;
+		}
+
+		it('formats midnight correctly', () => {
+			expect(formatHourRange(0)).toBe('12:00 AM – 1:00 AM');
+		});
+
+		it('formats noon correctly', () => {
+			expect(formatHourRange(12)).toBe('12:00 PM – 1:00 PM');
+		});
+
+		it('formats last hour wrapping to midnight', () => {
+			expect(formatHourRange(23)).toBe('11:00 PM – 12:00 AM');
+		});
+
+		it('formats standard AM hour', () => {
+			expect(formatHourRange(9)).toBe('9:00 AM – 10:00 AM');
+		});
+
+		it('formats standard PM hour', () => {
+			expect(formatHourRange(14)).toBe('2:00 PM – 3:00 PM');
+		});
+
+		it('formats AM-to-PM boundary', () => {
+			expect(formatHourRange(11)).toBe('11:00 AM – 12:00 PM');
+		});
+	});
+
+	// KEEP IN SYNC with web/src/lib/components/charts/HeatmapGrid.svelte (formatDayName)
+	describe('formatDayName', () => {
+		function formatDayName(isoDate: string): string {
+			return new Date(isoDate).toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
+		}
+
+		it('returns Monday for a Monday ISO date', () => {
+			expect(formatDayName('2026-03-09')).toBe('Monday');
+		});
+
+		it('returns Sunday for a Sunday ISO date', () => {
+			expect(formatDayName('2026-03-15')).toBe('Sunday');
+		});
+
+		it('returns Wednesday for a Wednesday ISO date', () => {
+			expect(formatDayName('2026-03-11')).toBe('Wednesday');
+		});
+
+		it('returns Saturday for a Saturday ISO date', () => {
+			expect(formatDayName('2026-03-14')).toBe('Saturday');
+		});
+	});
+});
+
 describe('heatmap helpers', () => {
 	describe('formatHour', () => {
 		it('formats midnight as 12am', () => {

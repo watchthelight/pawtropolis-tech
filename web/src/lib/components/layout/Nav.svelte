@@ -2,7 +2,6 @@
 	import { page } from '$app/stores';
 	import { slide } from 'svelte/transition';
 	import ConnectionIndicator from './ConnectionIndicator.svelte';
-	import ThemeControls from './ThemeControls.svelte';
 	import {
 		House, ClipboardCheck, BarChart3, Activity, Flag,
 		Grid3x3, Palette, Settings, ScrollText, Server
@@ -121,7 +120,6 @@
 
 	<!-- Footer section -->
 	<div class="footer" class:footer-collapsed={collapsed}>
-		<ThemeControls {collapsed} />
 		{#if !collapsed}
 			<ConnectionIndicator />
 			<a
@@ -195,12 +193,12 @@
 	.nav-active {
 		color: var(--text-primary);
 		font-weight: 500;
-		background: var(--selected-bg);
-		box-shadow: inset 3px 0 0 var(--accent), 0 0 12px oklch(72% 0.18 var(--hue) / 0.15);
+		background: var(--surface);
+		box-shadow: inset 3px 0 0 var(--accent);
 	}
 
 	.nav-item-collapsed.nav-active {
-		box-shadow: 0 0 12px oklch(72% 0.18 var(--hue) / 0.15);
+		background: var(--selected-bg);
 	}
 
 	.nav-inactive {
