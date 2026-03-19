@@ -16,6 +16,8 @@
 	let newsletterStats = $derived(data.newsletterStats);
 	let guildSnapshot = $derived(data.guildSnapshot);
 	let topVoiceChannels = $derived(data.topVoiceChannels);
+	let levelRoleStats = $derived(data.levelRoleStats);
+	let maxRoleCount = $derived(levelRoleStats ? Math.max(...levelRoleStats.roles.map((r: { count: number }) => r.count), 1) : 1);
 	let pendingTrend = $derived<'up' | 'down' | undefined>(
 		metrics.submittedToday === 0 && metrics.decisionsToday === 0
 			? undefined
@@ -216,6 +218,45 @@
 		</a>
 	</div>
 
+	{#if levelRoleStats && levelRoleStats.roles.length > 0}
+		<h3 class="section-title">Level Roles</h3>
+		<div class="card level-role-card">
+			<table class="level-role-table">
+				<thead>
+					<tr>
+						<th class="col-role">Role</th>
+						<th class="col-count">Members</th>
+						<th class="col-pct">%</th>
+						<th class="col-bar">Distribution</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each levelRoleStats.roles as role}
+						{@const pct = levelRoleStats.totalMembers > 0 ? (role.count / levelRoleStats.totalMembers) * 100 : 0}
+						<tr>
+							<td class="col-role">
+								<span class="role-dot" style:background={role.color ?? 'var(--text-tertiary)'}></span>
+								<span class="role-name">{role.roleName}</span>
+							</td>
+							<td class="col-count">{role.count.toLocaleString()}</td>
+							<td class="col-pct">{pct.toFixed(1)}%</td>
+							<td class="col-bar">
+								<div class="bar-track">
+									<div
+										class="bar-fill"
+										style:width="{(role.count / maxRoleCount) * 100}%"
+										style:background={role.color ?? 'var(--accent)'}
+									></div>
+								</div>
+							</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+			<span class="card-sub" style="margin-top: 0.75rem;">out of {levelRoleStats.totalMembers.toLocaleString()} total members</span>
+		</div>
+	{/if}
+
 	<h3 class="section-title">Weekly Newsletter</h3>
 	<NewsletterStatsCard stats={newsletterStats} {guildSnapshot} {topVoiceChannels} />
 </SpringReveal>
@@ -335,6 +376,99 @@
 	}
 
 
+	.level-role-card {
+		padding: var(--space-card);
+	}
+
+	.level-role-table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.8rem;
+	}
+
+	.level-role-table th {
+		font-size: 0.65rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--text-tertiary);
+		text-align: left;
+		padding: 0 0.5rem 0.5rem 0;
+		border-bottom: 1px solid var(--border);
+	}
+
+	.level-role-table td {
+		padding: 0.5rem 0.5rem 0.5rem 0;
+		border-bottom: 1px solid oklch(50% 0 0 / 0.06);
+		vertical-align: middle;
+	}
+
+	.level-role-table tbody tr:last-child td {
+		border-bottom: none;
+	}
+
+	.col-role {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		min-width: 0;
+	}
+
+	th.col-role {
+		display: table-cell;
+	}
+
+	.role-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		flex-shrink: 0;
+	}
+
+	.role-name {
+		font-weight: 500;
+		color: var(--text-primary);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.col-count {
+		text-align: right;
+		font-variant-numeric: tabular-nums;
+		color: var(--text-primary);
+		font-weight: 600;
+		white-space: nowrap;
+		width: 5rem;
+	}
+
+	.col-pct {
+		text-align: right;
+		font-variant-numeric: tabular-nums;
+		color: var(--text-secondary);
+		white-space: nowrap;
+		width: 4rem;
+	}
+
+	.col-bar {
+		width: 40%;
+		min-width: 80px;
+	}
+
+	.bar-track {
+		height: 6px;
+		background: oklch(50% 0 0 / 0.08);
+		border-radius: 3px;
+		overflow: hidden;
+	}
+
+	.bar-fill {
+		height: 100%;
+		border-radius: 3px;
+		opacity: 0.8;
+		transition: width 0.3s var(--ease-smooth);
+	}
+
 	@media (max-width: 768px) {
 		.pulse-grid {
 			grid-template-columns: repeat(2, 1fr);
@@ -344,6 +478,14 @@
 	@media (max-width: 480px) {
 		.pulse-grid {
 			grid-template-columns: 1fr;
+		}
+
+		.col-bar {
+			display: none;
+		}
+
+		th.col-bar {
+			display: none;
 		}
 	}
 </style>

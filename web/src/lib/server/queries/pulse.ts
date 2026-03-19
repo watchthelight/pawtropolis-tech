@@ -1,4 +1,5 @@
 import { db } from '$lib/server/db';
+import { callBotApi } from '$lib/server/botApi';
 
 export interface PulseMetrics {
 	pendingApps: number;
@@ -1041,4 +1042,26 @@ export function getInsights(guildId: string): Insight[] {
 	insights.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
 
 	return insights;
+}
+
+// ─── Level Role Stats ────────────────────────────────────────────────────────
+
+export interface LevelRoleStat {
+	tierName: string;
+	roleId: string;
+	roleName: string;
+	color: string | null;
+	threshold: number;
+	count: number;
+}
+
+export interface LevelRoleStats {
+	roles: LevelRoleStat[];
+	totalMembers: number;
+}
+
+export async function getLevelRoleStats(userId: string, tier: string): Promise<LevelRoleStats | null> {
+	const result = await callBotApi<LevelRoleStats>('/api/level-role-stats', { userId, tier });
+	if (!result.success) return null;
+	return result.data;
 }
