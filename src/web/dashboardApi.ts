@@ -1205,7 +1205,14 @@ export async function startDashboardApi(client: Client): Promise<void> {
 
     try {
       const tiers = getRoleTiers(GUILD_ID, "level");
-      if (tiers.length === 0) {
+      // Deduplicate by role_id (DB may have multiple entries for the same Discord role)
+      const seen = new Set<string>();
+      const uniqueTiers = tiers.filter((t) => {
+        if (seen.has(t.role_id)) return false;
+        seen.add(t.role_id);
+        return true;
+      });
+      if (uniqueTiers.length === 0) {
         return { success: true, data: { roles: [], totalMembers: guild.memberCount } } satisfies ApiSuccess;
       }
 
@@ -1213,7 +1220,7 @@ export async function startDashboardApi(client: Client): Promise<void> {
       const members = await guild.members.fetch();
       const totalMembers = members.size;
 
-      const roles = tiers
+      const roles = uniqueTiers
         .map((t) => {
           const role = guild.roles.cache.get(t.role_id);
           const count = members.filter((m) => m.roles.cache.has(t.role_id)).size;
