@@ -5,7 +5,7 @@
 	import { slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import { subscribe, unsubscribe } from '$lib/stores/sse.svelte';
-	import type { SSEEvent } from '$lib/types/events';
+	import type { SSEEvent, ReviewSubmittedPayload } from '$lib/types/events';
 	import { getIsMobile } from '$lib/stores/viewport.svelte';
 	// PageHeader removed — title is inline with tabs
 	import EmptyState from '$lib/components/feedback/EmptyState.svelte';
@@ -28,7 +28,7 @@
 	function onReviewSubmitted(event: SSEEvent) {
 		if (typeof document === 'undefined' || !document.hidden) return;
 		if (!('Notification' in window) || Notification.permission !== 'granted') return;
-		const name = (event as SSEEvent & { applicantName?: string }).applicantName ?? 'Someone';
+		const name = (event.payload as ReviewSubmittedPayload).applicantName ?? 'Someone';
 		const n = new Notification('New Application', {
 			body: `${name} just submitted an application`,
 			icon: '/paw-logo.png'

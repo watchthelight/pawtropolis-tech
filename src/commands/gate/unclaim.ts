@@ -30,6 +30,7 @@ import {
   shouldBypass,
   type GuildMember,
 } from "./shared.js";
+import { notifyDashboard } from "../../web/notifyDashboard.js";
 
 /*
  * Three ways to specify the target: short code, @mention, or raw user ID.
@@ -173,6 +174,7 @@ export async function executeUnclaim(ctx: CommandContext<ChatInputCommandInterac
 
   await withStep(ctx, "clear_claim", async () => {
     withSql(ctx, "DELETE review_claim", () => clearClaim(app.id));
+    notifyDashboard("review:unclaimed", { appId: app.id, reviewerId: interaction.user.id });
   });
 
   await withStep(ctx, "refresh_review", async () => {
