@@ -117,22 +117,22 @@ export async function handleLevelRoleAdded(
       roleName: tier.tier_name,
     }, `User leveled up to ${level}`);
 
-    // Dedup: check if we already granted rewards for this user+level recently.
-    // This prevents duplicate DMs when Amaribot re-syncs and re-adds the same level role.
-    const recentGrant = db.prepare(`
+    // Dedup: check if we have EVER granted rewards for this user+level.
+    // Level milestones are permanent one-time achievements — no time window.
+    // INC-005: Previous 24h window allowed duplicates when Amaribot re-synced days later.
+    const previousGrant = db.prepare(`
       SELECT 1 FROM role_assignments
       WHERE guild_id = ? AND user_id = ? AND reason = ? AND action = 'add'
-        AND created_at > ?
       LIMIT 1
-    `).get(guild.id, member.id, `level_${level}_reward`, Math.floor(Date.now() / 1000) - 86400);
+    `).get(guild.id, member.id, `level_${level}_reward`);
 
-    if (recentGrant) {
+    if (previousGrant) {
       logger.info({
         evt: "level_reward_dedup",
         guildId: guild.id,
         userId: member.id,
         level,
-      }, `Skipping duplicate level ${level} reward (already granted in last 24h)`);
+      }, `Skipping duplicate level ${level} reward (already granted previously)`);
       return results;
     }
 
@@ -147,6 +147,16 @@ export async function handleLevelRoleAdded(
       return results;
     }
 
+    // Write dedup marker BEFORE granting to prevent TOCTOU race condition.
+    // INC-005: Concurrent guildMemberUpdate events could all pass the dedup check
+    // before any of them wrote role_assignments entries.
+    const dedupReason = `level_${level}_reward`;
+    const botId = guild.client.user?.id ?? "system";
+    db.prepare(`
+      INSERT INTO role_assignments (guild_id, user_id, role_id, role_name, action, reason, triggered_by, details, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(guild.id, member.id, "dedup_marker", `Level ${level} dedup`, "add", dedupReason, botId, null, Math.floor(Date.now() / 1000));
+
     logger.info({
       evt: "granting_level_rewards",
       guildId: guild.id,
@@ -154,10 +164,6 @@ export async function handleLevelRoleAdded(
       level,
       rewardCount: rewards.length,
     }, `Granting ${rewards.length} rewards for level ${level}`);
-
-    // Bot ID for audit trail - "system" fallback should never happen in practice
-    // but makes logs parseable if guild.client.user is somehow null
-    const botId = guild.client.user?.id ?? "system";
 
     // Grant rewards sequentially, not in parallel.
     // Why? Discord rate limits role changes per guild. Parallel requests
