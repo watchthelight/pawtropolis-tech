@@ -77,6 +77,17 @@ export async function trackMemberInvite(member: GuildMember): Promise<void> {
   upsertStmt().run(guildId, member.id, usedCode, inviterId, Math.floor(Date.now() / 1000));
 }
 
+/** Look up which invite a user joined with. */
+export function getInviteForUser(
+  guildId: string,
+  userId: string
+): { code: string | null; inviterId: string | null } | null {
+  const row = db
+    .prepare(`SELECT invite_code, inviter_id FROM invite_usage WHERE guild_id = ? AND user_id = ?`)
+    .get(guildId, userId) as { invite_code: string | null; inviter_id: string | null } | undefined;
+  return row ? { code: row.invite_code, inviterId: row.inviter_id } : null;
+}
+
 /** Update cache when an invite is created. */
 export function handleInviteCreate(invite: Invite): void {
   if (!invite.guild) return;

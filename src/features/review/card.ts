@@ -805,6 +805,10 @@ export async function ensureReviewMessage(
         }
       | undefined;
 
+    // Get invite source for this applicant
+    const { getInviteForUser } = await import("../inviteTracker.js");
+    const inviteSource = getInviteForUser(app.guild_id, app.user_id);
+
     // Get existing review card mapping (needed for messageId in buttons)
     const mapping = db
       .prepare(`SELECT channel_id, message_id FROM review_card WHERE app_id = ?`)
@@ -856,6 +860,7 @@ export async function ensureReviewMessage(
         recentActions,
         previousApps,
         appNumber,
+        inviteSource,
       });
     });
 

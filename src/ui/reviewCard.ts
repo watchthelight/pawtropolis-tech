@@ -67,6 +67,7 @@ export interface BuildEmbedOptions {
   appNumber?: number | null;
   isSample?: boolean;
   reasonAttachment?: AttachmentBuilder | null;
+  inviteSource?: { code: string | null; inviterId: string | null } | null;
 }
 
 // ============================================================================
@@ -363,6 +364,7 @@ export function buildReviewEmbedV3(
     previousApps = null,
     appNumber = null,
     isSample = false,
+    inviteSource = null,
   } = opts;
 
   const code = shortCode(app.id);
@@ -441,6 +443,14 @@ export function buildReviewEmbedV3(
   // Account age
   if (typeof accountCreatedAt === 'number' && Number.isFinite(accountCreatedAt) && accountCreatedAt > 0) {
     lines.push(`**Account created:**  ${ts(accountCreatedAt, 'f')} • ${ts(accountCreatedAt, 'R')}`);
+  }
+
+  // Invite source
+  if (inviteSource?.code) {
+    const inviterPart = inviteSource.inviterId ? ` (by <@${inviteSource.inviterId}>)` : '';
+    lines.push(`**Invite:**  discord.gg/${inviteSource.code}${inviterPart}`);
+  } else if (inviteSource) {
+    lines.push('**Invite:**  Unknown');
   }
 
   lines.push(EMPTY);
