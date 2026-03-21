@@ -96,6 +96,13 @@ const getAllTimeCompletedStmt = db.prepare(
    WHERE guild_id = ? AND artist_id = ? AND status = 'done'`
 );
 
+const getActiveJobCountsByArtistStmt = db.prepare(
+  `SELECT artist_id, COUNT(*) as active_count
+   FROM art_job
+   WHERE guild_id = ? AND status NOT IN ('done', 'cancelled')
+   GROUP BY artist_id`
+);
+
 /**
  * createJobTransaction
  * WHAT: Atomically create a job with proper number assignment.
@@ -239,6 +246,15 @@ export function getAllActiveJobs(guildId: string): ArtJobRow[] {
  */
 export function getActiveJobsForRecipient(guildId: string, recipientId: string): ArtJobRow[] {
   return getActiveJobsForRecipientStmt.all(guildId, recipientId) as ArtJobRow[];
+}
+
+export function getActiveJobCountsByArtist(guildId: string): Map<string, number> {
+  const rows = getActiveJobCountsByArtistStmt.all(guildId) as { artist_id: string; active_count: number }[];
+  const map = new Map<string, number>();
+  for (const row of rows) {
+    map.set(row.artist_id, row.active_count);
+  }
+  return map;
 }
 
 /*

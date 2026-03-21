@@ -40,6 +40,7 @@ import {
   getArtistStats,
   getIgnoredArtistUsers,
 } from "../features/artistRotation/index.js";
+import { getActiveJobCountsByArtist } from "../features/artJobs/index.js";
 import { fmtAgeShort } from "../lib/timefmt.js";
 import { nowUtc } from "../lib/time.js";
 
@@ -187,6 +188,10 @@ async function handleList(
     return withSql(ctx, "SELECT * FROM artist_queue", () => getAllArtists(guildId));
   });
 
+  const activeJobCounts = await withStep(ctx, "fetch_active_counts", async () => {
+    return withSql(ctx, "SELECT active job counts", () => getActiveJobCountsByArtist(guildId));
+  });
+
   if (artists.length === 0) {
     const embed = new EmbedBuilder()
       .setTitle("Server Artist Queue")
@@ -197,33 +202,47 @@ async function handleList(
     return;
   }
 
-  // Build queue list. We're building one long string here which can get
-  // dicey with Discord's 4096 char embed description limit. With, say,
-  // 50 artists at ~80 chars each, we'd be at 4000 chars. Close call.
-  // Something to watch if the server ever gets really popular.
-  const lines: string[] = [];
+  // Split into active (in rotation) vs on-break (skipped) for clear visual grouping.
+  // Entropy feedback: "(skipped)" inline was hard to scan at a glance.
+  const active = artists.filter((a) => !a.skipped);
+  const onBreak = artists.filter((a) => a.skipped);
   let totalAssignments = 0;
 
-  for (const artist of artists) {
-    const skipIndicator = artist.skipped ? " (skipped)" : "";
-    // The epoch dance: SQLite stores ISO strings, we convert to epoch for
-    // the formatting helper. This is the kind of thing that makes you miss
-    // having a proper ORM with date handling. Or not - ORMs have their own sins.
-    const lastAssigned = artist.last_assigned_at
+  const formatLastAssigned = (artist: typeof artists[number]) =>
+    artist.last_assigned_at
       ? fmtAgeShort(Math.floor(new Date(artist.last_assigned_at).getTime() / 1000), nowUtc()) + " ago"
       : "Never";
 
+  // Active artists get sequential position numbers reflecting actual rotation order
+  const lines: string[] = [];
+  let pos = 1;
+  for (const artist of active) {
+    const activeCount = activeJobCounts.get(artist.user_id) ?? 0;
     lines.push(
-      `**#${artist.position}** <@${artist.user_id}>${skipIndicator} - ${artist.assignments_count} assignments - Last: ${lastAssigned}`
+      `**#${pos}** <@${artist.user_id}> - ${activeCount} active - Last: ${formatLastAssigned(artist)}`
     );
-    totalAssignments += artist.assignments_count;
+    totalAssignments += activeCount;
+    pos++;
+  }
+
+  // On-break artists listed below with no position numbers (they're not in rotation)
+  if (onBreak.length > 0) {
+    lines.push("", "**On Break**");
+    for (const artist of onBreak) {
+      const reason = artist.skip_reason ? ` — ${artist.skip_reason}` : "";
+      const activeCount = activeJobCounts.get(artist.user_id) ?? 0;
+      lines.push(
+        `<@${artist.user_id}> - ${activeCount} active - Last: ${formatLastAssigned(artist)}${reason}`
+      );
+      totalAssignments += activeCount;
+    }
   }
 
   const embed = new EmbedBuilder()
     .setTitle("Server Artist Queue")
     .setDescription(lines.join("\n"))
     .setColor(0x2f0099)
-    .setFooter({ text: `${artists.length} artists | ${totalAssignments} total assignments` });
+    .setFooter({ text: `${active.length} active, ${onBreak.length} on break | ${totalAssignments} active tickets` });
 
   await interaction.editReply({ embeds: [embed] });
 }
