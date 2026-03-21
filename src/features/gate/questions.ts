@@ -70,10 +70,10 @@ export function upsertQuestion(
   required: 0 | 1,
   ctx?: SqlTrackingCtx
 ): void {
-  // WHY 0-4? Discord modals max out at 5 text inputs. This is a hard platform limit.
-  // If Discord ever raises this, we can bump the cap, but don't hold your breath.
-  if (qIndex < 0 || qIndex > 4) {
-    throw new Error(`Question index must be between 0 and 4, got ${qIndex}`);
+  // Discord modals allow 5 inputs per page. Multi-page modals support more questions.
+  // Cap at 10 (2 pages) to keep applications reasonable.
+  if (qIndex < 0 || qIndex > 9) {
+    throw new Error(`Question index must be between 0 and 9, got ${qIndex}`);
   }
 
   if (!prompt || typeof prompt !== 'string') {
