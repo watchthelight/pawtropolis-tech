@@ -216,13 +216,17 @@ export async function deliverApprovalDm(
   reason?: string | null
 ): Promise<boolean> {
   try {
-    let content = `Hi, welcome to ${guildName}! Your application has been approved.`;
-    if (reason) {
-      content += `\n\n**Note from reviewer:** ${reason}`;
-    }
-    content += `\n\nEnjoy your stay!`;
+    const { EmbedBuilder } = await import("discord.js");
+    const embed = new EmbedBuilder()
+      .setTitle("Application Approved!")
+      .setColor(0x00cc00)
+      .setDescription(
+        `Hi, welcome to **${guildName}**! Your application has been approved.` +
+        (reason ? `\n\n**Note from reviewer:** ${reason}` : "") +
+        `\n\nEnjoy your stay!`
+      );
     // DM may fail if recipient has privacy settings enabled; we fail-soft and do not block approval.
-    await withTimeout(member.send({ content }), FLOW_TIMEOUT_MS, "deliverApprovalDm");
+    await withTimeout(member.send({ embeds: [embed] }), FLOW_TIMEOUT_MS, "deliverApprovalDm");
     return true;
   } catch (err) {
     logger.warn({ err, userId: member.id }, "Failed to DM applicant after approval");

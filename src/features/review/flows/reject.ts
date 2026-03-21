@@ -109,18 +109,25 @@ export async function rejectFlow(
 ) {
   // DM might fail. we tried.
   const result = { dmDelivered: false };
-  const lines = options.permanent
-    ? [
-        `You've been permanently rejected from **${options.guildName}** and cannot apply again. Thanks for stopping by.`,
-      ]
-    : [
-        `Hello, thanks for applying to ${options.guildName}. The moderation team was not able to approve this application. You can submit a new one anytime!`,
-        `Reason: ${options.reason}.`,
-      ];
+
+  const { EmbedBuilder } = await import("discord.js");
+  const embed = new EmbedBuilder()
+    .setColor(options.permanent ? 0x800000 : 0xff4444);
+
+  if (options.permanent) {
+    embed.setTitle("Application Permanently Rejected");
+    embed.setDescription(`You've been permanently rejected from **${options.guildName}** and cannot apply again. Thanks for stopping by.`);
+  } else {
+    embed.setTitle("Application Not Approved");
+    embed.setDescription(
+      `Hello, thanks for applying to **${options.guildName}**. The moderation team was not able to approve this application. You can submit a new one anytime!\n\n**Reason:** ${options.reason}`
+    );
+  }
+
   try {
     // DM can fail; we record dmDelivered=false and continue moderation flow.
     await withTimeout(
-      user.send({ content: lines.join("\n") }),
+      user.send({ embeds: [embed] }),
       FLOW_TIMEOUT_MS,
       "rejectFlow:sendDm"
     );

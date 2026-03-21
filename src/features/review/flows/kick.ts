@@ -134,17 +134,21 @@ export async function kickFlow(guild: Guild, memberId: string, reason?: string |
     return result;
   }
 
-  // Build DM message
-  const dmLines = [
-    `Hi, your application with ${guild.name} was reviewed and you were removed from the server. If you believe this was a mistake, you may re-apply in the future.`,
-    reason ? `Reason: ${reason}.` : null,
-  ].filter(Boolean);
+  // Build DM embed
+  const { EmbedBuilder } = await import("discord.js");
+  const embed = new EmbedBuilder()
+    .setTitle("Removed from Server")
+    .setColor(0xff8800)
+    .setDescription(
+      `Hi, your application with **${guild.name}** was reviewed and you were removed from the server. If you believe this was a mistake, you may re-apply in the future.` +
+      (reason ? `\n\n**Reason:** ${reason}` : "")
+    );
 
   // Attempt to DM user before kicking (best-effort)
   // WHY: Provides context to user; failure should not block the kick
   try {
     await withTimeout(
-      member.send({ content: dmLines.join("\n") }),
+      member.send({ embeds: [embed] }),
       FLOW_TIMEOUT_MS,
       "kickFlow:sendDm"
     );
