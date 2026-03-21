@@ -301,20 +301,13 @@ async function handleConfirm(
     return;
   }
 
-  // Check for existing active multiplier
+  // Check for existing active multiplier (for logging purposes)
   const existingMultiplier = getActiveMultiplier(guild.id, interaction.user.id);
+  const isUpgrade = existingMultiplier !== null;
+
+  // Calculate expiration time
   const nowSeconds = Math.floor(Date.now() / 1000);
-  const isExtending = existingMultiplier !== null && existingMultiplier.expires_at > nowSeconds;
-
-  // Calculate expiration time: extend existing expiry if active, otherwise fresh
-  const baseExpiry = isExtending ? existingMultiplier.expires_at : nowSeconds;
-  const expiresAt = baseExpiry + tokenConfig.durationHours * 60 * 60;
-
-  // Use whichever multiplier is higher (existing or new)
-  const useHigherMultiplier = isExtending && existingMultiplier.multiplier_value > tokenConfig.multiplierValue;
-  const effectiveConfig = useHigherMultiplier
-    ? { roleId: existingMultiplier.multiplier_role_id, name: existingMultiplier.multiplier_name, value: existingMultiplier.multiplier_value, rarity: existingMultiplier.token_rarity }
-    : { roleId: tokenConfig.multiplierRoleId, name: tokenConfig.multiplierRoleName, value: tokenConfig.multiplierValue, rarity: tokenConfig.rarity };
+  const expiresAt = nowSeconds + tokenConfig.durationHours * 60 * 60;
 
   try {
     // Step 1: Remove token role
@@ -323,10 +316,11 @@ async function handleConfirm(
       `Byte token redeemed for ${tokenConfig.multiplierRoleName}`
     );
 
-    // Step 2: Remove multiplier roles that aren't the effective one
+    // Step 2: Remove ALL existing multiplier roles to prevent stacking
+    // This removes any multiplier roles the user has, whether from DB or manual grants
     const rolesToRemove = ALL_MULTIPLIER_ROLE_IDS.filter(
       (roleId) =>
-        roleId !== effectiveConfig.roleId && // Don't remove the one we're keeping/adding
+        roleId !== tokenConfig.multiplierRoleId && // Don't remove the one we're about to add
         guildMember.roles.cache.has(roleId)
     );
 
@@ -350,13 +344,11 @@ async function handleConfirm(
       }
     }
 
-    // Step 3: Add multiplier role (may already have it if extending same tier)
-    if (!guildMember.roles.cache.has(effectiveConfig.roleId)) {
-      await guildMember.roles.add(
-        effectiveConfig.roleId,
-        `${tokenConfig.tokenRoleName} redeemed - expires <t:${expiresAt}:R>`
-      );
-    }
+    // Step 3: Add multiplier role
+    await guildMember.roles.add(
+      tokenConfig.multiplierRoleId,
+      `${tokenConfig.tokenRoleName} redeemed - expires in ${tokenConfig.durationHours}h`
+    );
 
     // Step 3.5: Post-add cleanup for race conditions
     // If user clicked multiple confirm buttons rapidly, another request might have added
@@ -366,7 +358,7 @@ async function handleConfirm(
     if (freshMember) {
       const staleRoles = ALL_MULTIPLIER_ROLE_IDS.filter(
         (roleId) =>
-          roleId !== effectiveConfig.roleId &&
+          roleId !== tokenConfig.multiplierRoleId &&
           freshMember.roles.cache.has(roleId)
       );
       if (staleRoles.length > 0) {
@@ -393,11 +385,11 @@ async function handleConfirm(
     upsertActiveMultiplier({
       guildId: guild.id,
       userId: interaction.user.id,
-      multiplierRoleId: effectiveConfig.roleId,
-      multiplierName: effectiveConfig.name,
-      multiplierValue: effectiveConfig.value,
+      multiplierRoleId: tokenConfig.multiplierRoleId,
+      multiplierName: tokenConfig.multiplierRoleName,
+      multiplierValue: tokenConfig.multiplierValue,
       expiresAt,
-      tokenRarity: effectiveConfig.rarity,
+      tokenRarity: tokenConfig.rarity,
       redeemedBy: interaction.user.id,
     });
 
@@ -425,13 +417,17 @@ async function handleConfirm(
       .setColor(0x00cc00)
       .setDescription(
         [
-          `**Multiplier:** ${effectiveConfig.value}x XP`,
-          `**Added:** ${formatDuration(tokenConfig.durationHours)}`,
+          `**Multiplier:** ${tokenConfig.multiplierValue}x XP`,
+          `**Duration:** ${tokenConfig.durationHours} hours`,
           `**Expires:** <t:${expiresAt}:R>`,
           "",
-          isExtending ? "Time added to your active multiplier!" : "Enjoy your XP boost!",
+          "Enjoy your XP boost!",
         ].join("\n")
       );
+
+    if (isUpgrade) {
+      embed.setFooter({ text: "Note: Your previous multiplier was replaced." });
+    }
 
     await interaction.editReply({
       embeds: [embed],
@@ -557,7 +553,7 @@ export async function handleUseByteSelectMenu(
 
   const embed = new EmbedBuilder()
     .setTitle("Byte Token Redemption")
-    .setColor(0x00cc00)
+    .setColor(wouldReplace ? 0xffaa00 : 0x00cc00)
     .setThumbnail(guildMember.displayAvatarURL({ size: 64 }));
 
   const descLines: string[] = [
@@ -568,12 +564,12 @@ export async function handleUseByteSelectMenu(
     "",
   ];
 
-  // Info about extending active multiplier
+  // Warning if replacing active multiplier
   if (wouldReplace && current) {
     descLines.push(
-      `You have an active **${current.multiplier_name}** ` +
+      `**Warning:** You have an active ${current.multiplier_name} ` +
         `(expires <t:${current.expires_at}:R>). ` +
-        `This token's duration will be **added** to your existing time.`
+        `Redeeming this token will **replace** your current multiplier.`
     );
   }
 
@@ -584,7 +580,7 @@ export async function handleUseByteSelectMenu(
     new ButtonBuilder()
       .setCustomId(`usebyte:${confirmId}:confirm:${member.id}:${selectedRarity}`)
       .setLabel(`Redeem ${tokenConfig.multiplierValue}x Multiplier`)
-      .setStyle(ButtonStyle.Success)
+      .setStyle(wouldReplace ? ButtonStyle.Primary : ButtonStyle.Success)
       .setEmoji("✅"),
     new ButtonBuilder()
       .setCustomId(`usebyte:${confirmId}:cancel:${member.id}`)

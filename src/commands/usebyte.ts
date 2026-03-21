@@ -43,12 +43,12 @@ import {
  *
  * Flow: User has Token Role → /usebyte → Token removed, Multiplier granted
  *
- * Duration values (updated per Werewolf 2026-03-20):
- * - Common: 2x for 2 hours
- * - Rare: 3x for 6 hours
- * - Epic: 4x for 12 hours
- * - Legendary: 4x for 24 hours
- * - Mythic: 6x for 72 hours (3 days)
+ * Duration values from the Reward System channel:
+ * - Common: 2x for 12 hours
+ * - Rare: 3x for 24 hours
+ * - Epic: 5x for 48 hours
+ * - Legendary: 5x for 72 hours
+ * - Mythic: 10x for 168 hours (1 week)
  */
 
 interface ByteTokenConfig {
@@ -70,7 +70,7 @@ export const BYTE_TOKEN_CONFIG: Record<TokenRarity, ByteTokenConfig> = {
     multiplierRoleId: "1407484898910011443",
     multiplierRoleName: "[2x] Byte",
     multiplierValue: 2,
-    durationHours: 2,
+    durationHours: 12,
     rarity: "common",
   },
   rare: {
@@ -79,34 +79,34 @@ export const BYTE_TOKEN_CONFIG: Record<TokenRarity, ByteTokenConfig> = {
     multiplierRoleId: "1408385868414193744",
     multiplierRoleName: "[3x] Byte",
     multiplierValue: 3,
-    durationHours: 6,
+    durationHours: 24,
     rarity: "rare",
   },
   epic: {
     tokenRoleId: "1385195081065173033",
     tokenRoleName: "Byte Token [Epic]",
     multiplierRoleId: "1405369052829974543",
-    multiplierRoleName: "[4x] Byte",
-    multiplierValue: 4,
-    durationHours: 12,
+    multiplierRoleName: "[5x] Byte",
+    multiplierValue: 5,
+    durationHours: 48,
     rarity: "epic",
   },
   legendary: {
     tokenRoleId: "1385054324295733278",
     tokenRoleName: "Byte Token [Legendary]",
-    multiplierRoleId: "1405369052829974543", // Same as Epic (4x)
-    multiplierRoleName: "[4x] Byte",
-    multiplierValue: 4,
-    durationHours: 24,
+    multiplierRoleId: "1405369052829974543", // Same as Epic (5x)
+    multiplierRoleName: "[5x] Byte",
+    multiplierValue: 5,
+    durationHours: 72,
     rarity: "legendary",
   },
   mythic: {
     tokenRoleId: "1385195450856112198",
     tokenRoleName: "Byte Token [Mythic]",
     multiplierRoleId: "1269171052836294787",
-    multiplierRoleName: "[6x] Byte",
-    multiplierValue: 6,
-    durationHours: 72, // 3 days
+    multiplierRoleName: "[x10] Byte",
+    multiplierValue: 10,
+    durationHours: 168, // 7 days
     rarity: "mythic",
   },
 };
@@ -128,11 +128,11 @@ export const data = new SlashCommandBuilder()
       .setDescription("Which token to redeem (leave empty to see your options)")
       .setRequired(false)
       .addChoices(
-        { name: "Common (2x for 2h)", value: "common" },
-        { name: "Rare (3x for 6h)", value: "rare" },
-        { name: "Epic (4x for 12h)", value: "epic" },
-        { name: "Legendary (4x for 24h)", value: "legendary" },
-        { name: "Mythic (6x for 72h)", value: "mythic" }
+        { name: "Common (2x for 12h)", value: "common" },
+        { name: "Rare (3x for 24h)", value: "rare" },
+        { name: "Epic (5x for 48h)", value: "epic" },
+        { name: "Legendary (5x for 72h)", value: "legendary" },
+        { name: "Mythic (10x for 7 days)", value: "mythic" }
       )
   );
 
@@ -203,7 +203,7 @@ async function showConfirmation(
 
   const embed = new EmbedBuilder()
     .setTitle("Byte Token Redemption")
-    .setColor(0x00cc00)
+    .setColor(wouldReplace ? 0xffaa00 : 0x00cc00)
     .setThumbnail(member.displayAvatarURL({ size: 64 }));
 
   const descLines: string[] = [
@@ -222,12 +222,12 @@ async function showConfirmation(
     descLines.push("");
   }
 
-  // Info about extending active multiplier
+  // Warning if replacing active multiplier
   if (wouldReplace && current) {
     descLines.push(
-      `You have an active **${current.multiplier_name}** ` +
+      `**Warning:** You have an active ${current.multiplier_name} ` +
         `(expires <t:${current.expires_at}:R>). ` +
-        `This token's duration will be **added** to your existing time.`
+        `Redeeming this token will **replace** your current multiplier.`
     );
   }
 
@@ -239,7 +239,7 @@ async function showConfirmation(
     new ButtonBuilder()
       .setCustomId(`usebyte:${confirmId}:confirm:${member.id}:${selectedToken.rarity}`)
       .setLabel(`Redeem ${selectedToken.multiplierValue}x Multiplier`)
-      .setStyle(ButtonStyle.Success)
+      .setStyle(wouldReplace ? ButtonStyle.Primary : ButtonStyle.Success)
       .setEmoji("✅"),
     new ButtonBuilder()
       .setCustomId(`usebyte:${confirmId}:cancel:${member.id}`)
