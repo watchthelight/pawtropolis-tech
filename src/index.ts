@@ -98,6 +98,7 @@ import {
 import {
   handleModmailOpenButton,
   handleModmailCloseButton,
+  handleModmailContextMenu,
   executeModmailCommand,
   getOpenTicketByUser,
   getTicketByThread,
@@ -394,6 +395,14 @@ client.once(Events.ClientReady, async () => {
     }
   } catch (err) {
     logger.error({ err }, "[startup] Channel cache sync failed");
+  }
+
+  // One-time sweep: strip stacked Patreon donor roles (retroactive fix)
+  try {
+    const { sweepPatreonRoleStacks } = await import("./features/patreonRoleDedup.js");
+    await sweepPatreonRoleStacks(client);
+  } catch (err) {
+    logger.error({ err }, "[startup] Patreon role dedup sweep failed");
   }
 
   // Initialize invite tracking cache (growth source attribution)
@@ -1064,6 +1073,7 @@ client.on("threadDelete", wrapEvent("threadDelete", async (thread) => {
 import { handleLevelRoleAdded } from "./features/levelRewards.js";
 import { handleArtistRoleChange } from "./features/artistRotation/index.js";
 import { handleAvatarChange } from "./features/avatarNsfwMonitor.js";
+import { handlePatreonRoleDedup, isPatreonDonorRole } from "./features/patreonRoleDedup.js";
 
 client.on("guildMemberUpdate", wrapEvent("guildMemberUpdate", async (oldMember, newMember) => {
   // Server Artist role detection (handles both add and remove)
@@ -1082,12 +1092,25 @@ client.on("guildMemberUpdate", wrapEvent("guildMemberUpdate", async (oldMember, 
     }, "[guildMemberUpdate] Failed to scan avatar for NSFW");
   }
 
-  // Detect newly added roles for level rewards
+  // Detect newly added roles for level rewards + Patreon dedup
   const addedRoles = newMember.roles.cache.filter(
     (role) => !oldMember.roles.cache.has(role.id)
   );
 
   if (addedRoles.size === 0) return;
+
+  // Patreon donor role dedup: if a donor role was just added, strip lower-tier stacks
+  if (addedRoles.some((role) => isPatreonDonorRole(role.id))) {
+    try {
+      await handlePatreonRoleDedup(newMember);
+    } catch (err) {
+      logger.error({
+        err,
+        userId: newMember.id,
+        guildId: newMember.guild.id,
+      }, "[guildMemberUpdate] Failed to dedup Patreon donor roles");
+    }
+  }
 
   // Check each new role to see if it's a level role
   // Process independently so one failure doesn't block others
@@ -2062,6 +2085,22 @@ client.on("interactionCreate", wrapEvent("interactionCreate", async (interaction
               "route: isitreal context menu"
             );
             await isitreal.handleIsItRealContextMenu(interaction);
+            succeeded = true;
+            return;
+          }
+
+          if (interaction.commandName === "Modmail: Open") {
+            logger.info(
+              {
+                evt: "ix_route_match",
+                kind: "contextMenu",
+                route: "modmail",
+                commandName: interaction.commandName,
+                traceId,
+              },
+              "route: modmail context menu"
+            );
+            await handleModmailContextMenu(interaction);
             succeeded = true;
             return;
           }
