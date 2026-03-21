@@ -993,6 +993,10 @@ client.on("guildMemberRemove", wrapEvent("guildMemberRemove", async (member) => 
   const guildId = member.guild.id;
   const userId = member.id;
 
+  // Clean up any active DM verification session
+  const { cleanupSession } = await import("./features/gate/dmVerification.js");
+  cleanupSession(guildId, userId);
+
   // Track member departure in user_activity
   const { trackLeave } = await import("./features/activityTracker.js");
   trackLeave(guildId, userId);
@@ -1530,6 +1534,14 @@ client.on("interactionCreate", wrapEvent("interactionCreate", async (interaction
           }
           if (customId.startsWith("v1:start")) {
             await handleStartButton(interaction);
+            succeeded = true;
+            return;
+          }
+
+          // DM verification buttons (submit/cancel in DMs)
+          if (customId.startsWith("v1:dm:")) {
+            const { handleDmButton } = await import("./features/gate/dmVerification.js");
+            await handleDmButton(interaction);
             succeeded = true;
             return;
           }
@@ -2245,6 +2257,13 @@ client.on("messageCreate", wrapEvent("messageCreate", async (message) => {
 
     // Check if message is a DM
     if (message.channel.type === ChannelType.DM) {
+      // DM gate verification — check before modmail routing
+      const { hasActiveSession, handleDmAnswer } = await import("./features/gate/dmVerification.js");
+      if (hasActiveSession(message.author.id)) {
+        await handleDmAnswer(message);
+        return;
+      }
+
       // what if we kissed in the DMs (modmail edition)
       // Find open ticket for this user across all guilds
       const tickets = db

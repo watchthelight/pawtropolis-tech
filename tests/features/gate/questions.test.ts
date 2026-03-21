@@ -134,8 +134,8 @@ describe("features/gate/questions", () => {
 
   describe("upsertQuestion", () => {
     it("validates q_index range", () => {
-      expect(() => upsertQuestion("guild123", -1, "Prompt", 1)).toThrow("between 0 and 4");
-      expect(() => upsertQuestion("guild123", 5, "Prompt", 1)).toThrow("between 0 and 4");
+      expect(() => upsertQuestion("guild123", -1, "Prompt", 1)).toThrow("between 0 and 9");
+      expect(() => upsertQuestion("guild123", 10, "Prompt", 1)).toThrow("between 0 and 9");
     });
 
     it("validates prompt is non-empty string", () => {
@@ -143,9 +143,9 @@ describe("features/gate/questions", () => {
       expect(() => upsertQuestion("guild123", 0, "   ", 1)).toThrow("empty or whitespace");
     });
 
-    it("validates prompt length limit (45 chars)", () => {
-      const longPrompt = "A".repeat(50);
-      expect(() => upsertQuestion("guild123", 0, longPrompt, 1)).toThrow("45 characters or less");
+    it("validates prompt length limit (200 chars)", () => {
+      const longPrompt = "A".repeat(201);
+      expect(() => upsertQuestion("guild123", 0, longPrompt, 1)).toThrow("200 characters or less");
     });
 
     it("validates required is 0 or 1", () => {

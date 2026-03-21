@@ -72,7 +72,7 @@ const INPUT_MAX_LENGTH = 1000;
  * WHAT: Get the max character length for gate answers
  * WHY: Now configurable via /config set gate_answer_length (100-4000)
  */
-function getAnswerMaxLength(guildId: string): number {
+export function getAnswerMaxLength(guildId: string): number {
   const cfg = getConfig(guildId);
   return cfg?.gate_answer_max_length ?? DEFAULT_ANSWER_MAX_LENGTH;
 }
@@ -80,7 +80,7 @@ const LABEL_MAX_LENGTH = 45;    // Discord enforces 45 chars max for labels
 const PLACEHOLDER_MAX_LENGTH = 100;
 // WHY teal? Because that's what the designer picked in 2022. Don't change it
 // unless you want to hear about it in every staff meeting for six months.
-const BRAND_COLOR = 0x22ccaa;
+export const BRAND_COLOR = 0x22ccaa;
 // Footer text doubles as a sentinel for identifying our gate messages when searching.
 // Keep both legacy and current values so we can still find old gate entries after updates.
 const GATE_ENTRY_FOOTER = "If you're having issues DM an online moderator.";
@@ -88,7 +88,7 @@ const GATE_ENTRY_FOOTER_MATCHES = new Set([GATE_ENTRY_FOOTER, "GateEntry v1"]);
 
 // schema is now application_id, edge_score (no legacy columns)
 
-type GateQuestion = {
+export type GateQuestion = {
   q_index: number;
   prompt: string;
   required: boolean;
@@ -204,7 +204,7 @@ function buildModalForPage(
  * Edge case: User with 'needs_info' status trying to start fresh. We block this
  * because 'needs_info' implies staff is waiting for a response on their existing app.
  */
-function getOrCreateDraft(db: BetterSqliteDatabase, guildId: string, userId: string) {
+export function getOrCreateDraft(db: BetterSqliteDatabase, guildId: string, userId: string) {
   const permReject = db
     .prepare(
       `SELECT permanently_rejected FROM application WHERE guild_id = ? AND user_id = ? AND permanently_rejected = 1 LIMIT 1`
@@ -269,7 +269,7 @@ function getOrCreateDraft(db: BetterSqliteDatabase, guildId: string, userId: str
   return { application_id: id };
 }
 
-function getDraft(db: BetterSqliteDatabase, appId: string, ctx?: CmdCtx) {
+export function getDraft(db: BetterSqliteDatabase, appId: string, ctx?: CmdCtx) {
   const selectAppSql = `SELECT id, guild_id, user_id, status FROM application WHERE id = ?`;
   const app = (
     ctx
@@ -296,7 +296,7 @@ function getDraft(db: BetterSqliteDatabase, appId: string, ctx?: CmdCtx) {
  * THEN we write. Yes, it's 3 queries where 1 might work. But the debugging
  * time saved when something goes wrong is worth the extra roundtrips.
  */
-function upsertAnswer(
+export function upsertAnswer(
   db: BetterSqliteDatabase,
   appId: string,
   q_index: number,
@@ -345,7 +345,7 @@ function upsertAnswer(
   }
 }
 
-function submitApplication(db: BetterSqliteDatabase, appId: string, ctx?: CmdCtx) {
+export function submitApplication(db: BetterSqliteDatabase, appId: string, ctx?: CmdCtx) {
   const submitSql = `
       UPDATE application
       SET status = 'submitted',
@@ -473,7 +473,7 @@ async function waitForReviewCardMapping(
  * unhandled rejections differently than you'd expect. The outer catch handles
  * sync errors in callback setup, inner handles async errors. Don't simplify.
  */
-function queueAvatarScan(params: {
+export function queueAvatarScan(params: {
   appId: string;
   user: User;
   cfg: GuildConfig;
@@ -1042,71 +1042,10 @@ export async function handleStartButton(interaction: ButtonInteraction) {
       await interaction.reply({ flags: MessageFlags.Ephemeral, content: "Guild only." });
       return;
     }
-    const guildId = interaction.guildId;
-    const userId = interaction.user.id;
-    const questions = getQuestions(guildId);
-    if (questions.length === 0) {
-      if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({
-          flags: MessageFlags.Ephemeral,
-          content: "No questions configured for this guild.",
-        });
-      }
-      return;
-    }
-    const pages = paginate(questions);
-    const requestedPage = parsePage(interaction.customId);
-    const page = pages[requestedPage];
-    if (!page) {
-      // respond fast or Discord returns 10062: Unknown interaction (3s SLA)
-      // We use an ephemeral reply to keep the channel tidy.
-      // docs: https://discord.com/developers/docs/interactions/receiving-and-responding
-      await interaction.reply({
-        flags: MessageFlags.Ephemeral,
-        content: "That page is unavailable. Start over.",
-      });
-      return;
-    }
-    let draft;
-    try {
-      draft = getOrCreateDraft(db, guildId, userId);
-    } catch (err) {
-      if (err instanceof Error && err.message === "User is permanently rejected") {
-        // Ephemeral reply for permanent rejection
-        const guildName = interaction.guild?.name ?? "this server";
-        await interaction.reply({
-          flags: MessageFlags.Ephemeral,
-          content: `You have been permanently rejected from **${guildName}**.`,
-        });
-        logger.info(
-          { userId, guildId },
-          "[gate] Application start blocked - user permanently rejected"
-        );
-        return;
-      }
-      if (err instanceof Error && err.message === "Active application already submitted") {
-        // ephemeral + quick reply under 3 seconds
-        await interaction.reply({
-          flags: MessageFlags.Ephemeral,
-          content: "You already have a submitted application.",
-        });
-        return;
-      }
-      throw err;
-    }
-    const draftData = getDraft(db, draft.application_id);
-    const answerMap = draftData ? toAnswerMap(draftData.responses) : new Map();
-    const modal = buildModalForPage(page, answerMap, draft.application_id);
 
-    addBreadcrumb({
-      message: "Gate entry modal opened",
-      category: "gate",
-      data: { guildId, userId, pageIndex: page.pageIndex },
-      level: "info",
-    });
-
-    // showModal acknowledges the interaction with a modal UI; no reply yet needed
-    await interaction.showModal(modal);
+    // Delegate to DM-based verification flow
+    const { startDmVerification } = await import("./gate/dmVerification.js");
+    await startDmVerification(interaction, interaction.guildId, interaction.user.id);
   } catch (err) {
     captureException(err, {
       guildId: interaction.guildId ?? "unknown",
@@ -1168,7 +1107,7 @@ export async function handleGateModalSubmit(
   }
 
   const appIdMatch = interaction.customId.match(/^v1:modal:([^:]+):p/);
-  const appId = appIdMatch ? appIdMatch[1] : null;
+  const appIdRaw = appIdMatch ? appIdMatch[1] : null;
 
   ctx.step("read_fields");
 
@@ -1195,21 +1134,45 @@ export async function handleGateModalSubmit(
     return;
   }
 
+  // Resolve the draft row. "NEW" means handleStartButton deferred draft creation
+  // to avoid DB writes before showModal() (which must complete within 3 seconds).
+  // Now that we’re deferred, we can safely create the draft here.
   const draftByIdSql = `SELECT id, guild_id, user_id, status FROM application WHERE id = ?`;
-  const draftByUserSql = `SELECT id, guild_id, user_id, status FROM application WHERE guild_id = ? AND user_id = ? AND status = 'draft'`;
+  const draftByUserSql = `SELECT id, guild_id, user_id, status FROM application WHERE guild_id = ? AND user_id = ? AND status = ‘draft’`;
   type DraftRow = { id: string; guild_id: string; user_id: string; status: string };
   let draftRow: DraftRow | undefined;
-  if (appId) {
-    draftRow = withSql(ctx, draftByIdSql, () => db.prepare(draftByIdSql).get(appId)) as
+
+  if (appIdRaw === "NEW" || !appIdRaw) {
+    ctx.step("create_draft");
+    try {
+      const draft = getOrCreateDraft(db, guildId, userId);
+      draftRow = withSql(ctx, draftByIdSql, () => db.prepare(draftByIdSql).get(draft.application_id)) as
+        | DraftRow
+        | undefined;
+    } catch (err) {
+      if (err instanceof Error && err.message === "User is permanently rejected") {
+        await replyOrEdit(interaction, {
+          content: `You have been permanently rejected from this server.`,
+          flags: MessageFlags.Ephemeral,
+        });
+        return;
+      }
+      if (err instanceof Error && err.message === "Active application already submitted") {
+        await replyOrEdit(interaction, {
+          content: "You already have a submitted application.",
+          flags: MessageFlags.Ephemeral,
+        });
+        return;
+      }
+      throw err;
+    }
+  } else {
+    draftRow = withSql(ctx, draftByIdSql, () => db.prepare(draftByIdSql).get(appIdRaw)) as
       | DraftRow
       | undefined;
     if (draftRow && (draftRow.guild_id !== guildId || draftRow.user_id !== userId)) {
       draftRow = undefined;
     }
-  } else {
-    draftRow = withSql(ctx, draftByUserSql, () =>
-      db.prepare(draftByUserSql).get(guildId, userId)
-    ) as DraftRow | undefined;
   }
 
   if (!draftRow) {

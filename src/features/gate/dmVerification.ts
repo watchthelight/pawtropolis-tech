@@ -1,0 +1,516 @@
+/**
+ * Pawtropolis Tech — src/features/gate/dmVerification.ts
+ * WHAT: DM-based gate verification flow — replaces Discord modals
+ * WHY: Modal labels cap at 45 chars, DMs allow full question text with no limits
+ * FLOWS:
+ *  - User clicks Verify → bot DMs first question → user replies → next question → summary → submit
+ *  - DM failure → ephemeral warning to enable DMs
+ */
+// SPDX-License-Identifier: LicenseRef-ANW-1.0
+
+import {
+  type ButtonInteraction,
+  type Client,
+  type Message,
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  MessageFlags,
+} from "discord.js";
+import { db } from "../../db/db.js";
+import { logger } from "../../lib/logger.js";
+import { captureException } from "../../lib/sentry.js";
+import { cacheUser } from "../../lib/userCache.js";
+import { getConfig } from "../../lib/config.js";
+import { getQuestions } from "./questions.js";
+import { isPanicMode } from "../panicStore.js";
+import { ensureReviewMessage } from "../review.js";
+import { notifyDashboard } from "../../web/notifyDashboard.js";
+import { logActionPretty } from "../../logging/pretty.js";
+import {
+  BRAND_COLOR,
+  type GateQuestion,
+  getOrCreateDraft,
+  getDraft,
+  upsertAnswer,
+  submitApplication,
+  queueAvatarScan,
+} from "../gate.js";
+
+// ============================================================================
+// Session Management
+// ============================================================================
+
+interface DmSession {
+  guildId: string;
+  userId: string;
+  appId: string;
+  questions: GateQuestion[];
+  answers: Map<number, string>;
+  currentQuestionIndex: number;
+  startedAt: number;
+  phase: "questioning" | "summary";
+}
+
+const activeSessions = new Map<string, DmSession>();
+
+const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+
+// Cleanup stale sessions every 5 minutes
+const cleanupTimer = setInterval(() => {
+  const now = Date.now();
+  for (const [key, session] of activeSessions) {
+    if (now - session.startedAt > SESSION_TIMEOUT_MS) {
+      activeSessions.delete(key);
+      logger.debug({ key, userId: session.userId }, "[dmVerify] Session timed out");
+    }
+  }
+}, 5 * 60 * 1000);
+cleanupTimer.unref();
+
+function sessionKey(guildId: string, userId: string): string {
+  return `${guildId}:${userId}`;
+}
+
+export function hasActiveSession(userId: string): boolean {
+  for (const session of activeSessions.values()) {
+    if (session.userId === userId) return true;
+  }
+  return false;
+}
+
+export function getSessionForUser(userId: string): DmSession | undefined {
+  for (const session of activeSessions.values()) {
+    if (session.userId === userId) return session;
+  }
+  return undefined;
+}
+
+export function cleanupSession(guildId: string, userId: string): void {
+  activeSessions.delete(sessionKey(guildId, userId));
+}
+
+// ============================================================================
+// Question & Summary Embeds
+// ============================================================================
+
+function buildQuestionEmbed(question: GateQuestion, index: number, total: number): EmbedBuilder {
+  return new EmbedBuilder()
+    .setTitle(`Question ${index + 1} of ${total}`)
+    .setDescription(question.prompt)
+    .setColor(BRAND_COLOR)
+    .setFooter({ text: "Type your answer below" });
+}
+
+function buildCancelRow(): ActionRowBuilder<ButtonBuilder> {
+  return new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId("v1:dm:cancel")
+      .setLabel("Cancel")
+      .setStyle(ButtonStyle.Secondary)
+      .setEmoji("❌")
+  );
+}
+
+function buildSummaryEmbed(session: DmSession): EmbedBuilder {
+  const embed = new EmbedBuilder()
+    .setTitle("Application Summary")
+    .setDescription("Review your answers below. Click **Submit** when ready, or **Cancel** to discard.")
+    .setColor(BRAND_COLOR);
+
+  for (const question of session.questions) {
+    const answer = session.answers.get(question.q_index) ?? "_No answer_";
+    const label = `${question.q_index + 1}. ${question.prompt}`;
+    // Embed field name max is 256, value max is 1024
+    embed.addFields({
+      name: label.length > 256 ? label.slice(0, 253) + "..." : label,
+      value: answer.length > 1024 ? answer.slice(0, 1021) + "..." : answer,
+      inline: false,
+    });
+  }
+
+  return embed;
+}
+
+function buildSummaryRow(): ActionRowBuilder<ButtonBuilder> {
+  return new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId("v1:dm:submit")
+      .setLabel("Submit Application")
+      .setStyle(ButtonStyle.Success)
+      .setEmoji("✅"),
+    new ButtonBuilder()
+      .setCustomId("v1:dm:cancel")
+      .setLabel("Cancel")
+      .setStyle(ButtonStyle.Danger)
+      .setEmoji("❌")
+  );
+}
+
+// ============================================================================
+// Entry Point
+// ============================================================================
+
+export async function startDmVerification(
+  interaction: ButtonInteraction,
+  guildId: string,
+  userId: string
+): Promise<void> {
+  // Check for existing active session
+  const existingKey = sessionKey(guildId, userId);
+  if (activeSessions.has(existingKey)) {
+    await interaction.reply({
+      content: "You already have a verification in progress! Check your DMs.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  // Panic mode check
+  if (isPanicMode(guildId)) {
+    await interaction.reply({
+      content: "Applications are temporarily paused. Please try again later.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  // Load questions
+  const rawQuestions = getQuestions(guildId);
+  if (rawQuestions.length === 0) {
+    await interaction.reply({
+      content: "No verification questions are configured. Please contact staff.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  const questions: GateQuestion[] = rawQuestions.map((q) => ({
+    q_index: q.q_index,
+    prompt: q.prompt,
+    required: q.required === 1,
+  }));
+
+  // Create or reuse draft
+  let appId: string;
+  try {
+    const draft = getOrCreateDraft(db, guildId, userId);
+    appId = draft.application_id;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes("permanently rejected")) {
+      await interaction.reply({
+        content: "You have been permanently rejected from this server.",
+        flags: MessageFlags.Ephemeral,
+      });
+    } else if (msg.includes("already submitted")) {
+      await interaction.reply({
+        content: "You already have a submitted application under review.",
+        flags: MessageFlags.Ephemeral,
+      });
+    } else {
+      await interaction.reply({
+        content: "Something went wrong. Please try again.",
+        flags: MessageFlags.Ephemeral,
+      });
+      captureException(err);
+    }
+    return;
+  }
+
+  // Load existing draft answers for resume
+  const draftData = getDraft(db, appId);
+  const existingAnswers = new Map<number, string>();
+  if (draftData?.responses) {
+    for (const r of draftData.responses) {
+      if (r.answer && r.answer.trim().length > 0) {
+        existingAnswers.set(r.q_index, r.answer);
+      }
+    }
+  }
+
+  // Find starting question (first unanswered required question, or first question)
+  let startIndex = 0;
+  if (existingAnswers.size > 0) {
+    const firstUnanswered = questions.findIndex(
+      (q) => q.required && !existingAnswers.has(q.q_index)
+    );
+    startIndex = firstUnanswered >= 0 ? firstUnanswered : 0;
+  }
+
+  // Try to DM the first question
+  const firstQuestion = questions[startIndex];
+  const embed = buildQuestionEmbed(firstQuestion, startIndex, questions.length);
+
+  try {
+    await interaction.user.send({
+      embeds: [embed],
+      components: [buildCancelRow()],
+    });
+  } catch (err: unknown) {
+    // Discord error 50007 = "Cannot send messages to this user"
+    const code = (err as { code?: number })?.code;
+    if (code === 50007) {
+      await interaction.reply({
+        content:
+          "I couldn't send you a DM. Please enable **Allow direct messages from server members** " +
+          "in your Privacy Settings for this server, then try again.",
+        flags: MessageFlags.Ephemeral,
+      });
+    } else {
+      await interaction.reply({
+        content: "Something went wrong sending you a DM. Please try again.",
+        flags: MessageFlags.Ephemeral,
+      });
+      captureException(err);
+    }
+    return;
+  }
+
+  // DM succeeded — create session
+  const session: DmSession = {
+    guildId,
+    userId,
+    appId,
+    questions,
+    answers: existingAnswers,
+    currentQuestionIndex: startIndex,
+    startedAt: Date.now(),
+    phase: "questioning",
+  };
+  activeSessions.set(existingKey, session);
+
+  // Acknowledge in gate channel
+  await interaction.reply({
+    content: "Check your DMs! I've sent you the verification questions.",
+    flags: MessageFlags.Ephemeral,
+  });
+
+  logger.info(
+    { guildId, userId, appId, questionCount: questions.length, startIndex },
+    "[dmVerify] DM verification started"
+  );
+}
+
+// ============================================================================
+// Answer Handler
+// ============================================================================
+
+export async function handleDmAnswer(message: Message): Promise<void> {
+  const session = getSessionForUser(message.author.id);
+  if (!session) return;
+
+  // Ignore messages during summary phase
+  if (session.phase === "summary") {
+    await message.reply("Use the buttons above to submit or cancel your application.");
+    return;
+  }
+
+  const question = session.questions[session.currentQuestionIndex];
+  const answer = message.content.trim();
+
+  // Validate required questions
+  if (question.required && answer.length === 0) {
+    await message.reply("This question is required. Please provide an answer.");
+    return;
+  }
+
+  // Store answer
+  if (answer.length > 0) {
+    session.answers.set(question.q_index, answer);
+
+    // Persist to DB immediately
+    try {
+      upsertAnswer(db, session.appId, question.q_index, answer);
+    } catch (err) {
+      logger.error({ err, appId: session.appId, qIndex: question.q_index }, "[dmVerify] Failed to save answer");
+      await message.reply("Failed to save your answer. Please try again.");
+      return;
+    }
+  }
+
+  // Move to next question
+  const nextIndex = session.currentQuestionIndex + 1;
+
+  if (nextIndex < session.questions.length) {
+    // Send next question
+    session.currentQuestionIndex = nextIndex;
+    const nextQuestion = session.questions[nextIndex];
+    const embed = buildQuestionEmbed(nextQuestion, nextIndex, session.questions.length);
+
+    await message.channel.send({
+      embeds: [embed],
+      components: [buildCancelRow()],
+    });
+  } else {
+    // All questions answered — show summary
+    session.phase = "summary";
+    const summaryEmbed = buildSummaryEmbed(session);
+
+    await message.channel.send({
+      embeds: [summaryEmbed],
+      components: [buildSummaryRow()],
+    });
+
+    logger.info(
+      { userId: session.userId, appId: session.appId },
+      "[dmVerify] All questions answered, summary shown"
+    );
+  }
+}
+
+// ============================================================================
+// Button Handler (Submit / Cancel)
+// ============================================================================
+
+export async function handleDmButton(interaction: ButtonInteraction): Promise<void> {
+  const session = getSessionForUser(interaction.user.id);
+  if (!session) {
+    await interaction.reply({
+      content: "No active verification session. Click **Verify** in the server to start.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  const action = interaction.customId.split(":")[2]; // v1:dm:submit or v1:dm:cancel
+
+  if (action === "cancel") {
+    await handleCancel(interaction, session);
+  } else if (action === "submit") {
+    await handleSubmit(interaction, session);
+  }
+}
+
+async function handleCancel(interaction: ButtonInteraction, session: DmSession): Promise<void> {
+  // Delete draft and responses
+  try {
+    db.prepare("DELETE FROM application_response WHERE app_id = ?").run(session.appId);
+    db.prepare("DELETE FROM application WHERE id = ? AND status = 'draft'").run(session.appId);
+  } catch (err) {
+    logger.warn({ err, appId: session.appId }, "[dmVerify] Failed to delete draft on cancel");
+  }
+
+  cleanupSession(session.guildId, session.userId);
+
+  await interaction.update({
+    embeds: [
+      new EmbedBuilder()
+        .setTitle("Verification Cancelled")
+        .setDescription("No changes were made. You can start over by clicking **Verify** in the server.")
+        .setColor(0x808080),
+    ],
+    components: [],
+  });
+
+  logger.info({ userId: session.userId, appId: session.appId }, "[dmVerify] Cancelled by user");
+}
+
+async function handleSubmit(interaction: ButtonInteraction, session: DmSession): Promise<void> {
+  await interaction.deferUpdate();
+
+  // Final validation — check all required questions have answers
+  const missing = session.questions.filter(
+    (q) => q.required && !session.answers.has(q.q_index)
+  );
+
+  if (missing.length > 0) {
+    await interaction.editReply({
+      embeds: [
+        new EmbedBuilder()
+          .setTitle("Missing Required Answers")
+          .setDescription(
+            "You're missing answers to required questions:\n" +
+            missing.map((q) => `• ${q.prompt}`).join("\n") +
+            "\n\nPlease click Verify in the server to restart."
+          )
+          .setColor(0xff0000),
+      ],
+      components: [],
+    });
+    cleanupSession(session.guildId, session.userId);
+    return;
+  }
+
+  // Submit the application
+  try {
+    submitApplication(db, session.appId);
+  } catch (err) {
+    logger.error({ err, appId: session.appId }, "[dmVerify] Failed to submit application");
+    await interaction.editReply({
+      embeds: [
+        new EmbedBuilder()
+          .setTitle("Submission Failed")
+          .setDescription("Something went wrong. Please try again or contact staff.")
+          .setColor(0xff0000),
+      ],
+      components: [],
+    });
+    cleanupSession(session.guildId, session.userId);
+    return;
+  }
+
+  // Cache user for review card display
+  const guild = interaction.client.guilds.cache.get(session.guildId);
+  if (guild) {
+    const member = await guild.members.fetch(session.userId).catch(() => null);
+    cacheUser(interaction.user, session.guildId, member);
+  }
+
+  // Queue avatar scan
+  const cfg = getConfig(session.guildId);
+  if (cfg?.avatar_scan_enabled) {
+    queueAvatarScan({
+      appId: session.appId,
+      user: interaction.user,
+      cfg,
+      client: interaction.client,
+    });
+  }
+
+  // Post review card
+  try {
+    await ensureReviewMessage(interaction.client, session.appId);
+  } catch (err) {
+    logger.error({ err, appId: session.appId }, "[dmVerify] Failed to create review card");
+  }
+
+  // Notify dashboard
+  notifyDashboard("review:submitted", {
+    appId: session.appId,
+    applicantName: interaction.user.username,
+  });
+
+  // Log action
+  await logActionPretty(guild!, {
+    actorId: session.userId,
+    subjectId: session.userId,
+    action: "gate_submit",
+    reason: "Application submitted via DM verification",
+    meta: { appId: session.appId, questionCount: session.questions.length },
+  }).catch((err) => {
+    logger.warn({ err }, "[dmVerify] Failed to log submit action");
+  });
+
+  // Update DM with confirmation
+  await interaction.editReply({
+    embeds: [
+      new EmbedBuilder()
+        .setTitle("Application Submitted!")
+        .setDescription(
+          "Your application has been submitted. Staff will review it shortly.\n\n" +
+          "You'll be notified when a decision is made."
+        )
+        .setColor(0x00cc00),
+    ],
+    components: [],
+  });
+
+  cleanupSession(session.guildId, session.userId);
+
+  logger.info(
+    { guildId: session.guildId, userId: session.userId, appId: session.appId },
+    "[dmVerify] Application submitted successfully"
+  );
+}
