@@ -85,9 +85,10 @@ export function upsertQuestion(
     throw new Error('Question prompt cannot be empty or whitespace only');
   }
 
-  // 45 chars, not 80. Discord modal LABELS are shorter than input VALUES. Ask me how I know.
-  if (trimmedPrompt.length > 45) {
-    throw new Error('Question prompt must be 45 characters or less (Discord modal label limit)');
+  // Modal labels are 45 chars max, but we store the full question and truncate at display time.
+  // See gate.ts buildGateModal() which slices to LABEL_MAX_LENGTH with "..." suffix.
+  if (trimmedPrompt.length > 200) {
+    throw new Error('Question prompt must be 200 characters or less');
   }
 
   if (required !== 0 && required !== 1) {
