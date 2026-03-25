@@ -4,7 +4,8 @@
 	import ConnectionIndicator from './ConnectionIndicator.svelte';
 	import {
 		House, ClipboardCheck, BarChart3, Activity, Flag,
-		Grid3x3, Palette, Settings, ScrollText, Server
+		Grid3x3, Palette, Settings, ScrollText, Server,
+		MessageCircleQuestion
 	} from 'lucide-svelte';
 
 	let { user, collapsed = false }: {
@@ -42,7 +43,7 @@
 
 	const ICON_MAP: Record<string, typeof House> = {
 		Home: House, Reviews: ClipboardCheck, Stats: BarChart3, Pulse: Activity,
-		Flags: Flag, Heatmap: Grid3x3, Art: Palette,
+		Flags: Flag, Heatmap: Grid3x3, Art: Palette, QOTD: MessageCircleQuestion,
 		Config: Settings, Audit: ScrollText, System: Server
 	};
 
@@ -54,6 +55,7 @@
 		{ label: 'Flags',    href: '/dashboard/flags',    minTier: 'sm',    group: 'ops' },
 		{ label: 'Heatmap',  href: '/dashboard/heatmap',  minTier: 'sm',    group: 'ops' },
 		{ label: 'Art',      href: '/dashboard/art',      minTier: 'sm',    group: 'ops' },
+		{ label: 'QOTD',     href: '/dashboard/qotd',     minTier: 'gk',    group: 'ops' },
 		{ label: 'Config',   href: '/dashboard/config',   minTier: 'admin', group: 'admin' },
 		{ label: 'Audit',    href: '/dashboard/audit',    minTier: 'admin', group: 'admin' },
 		{ label: 'System',   href: '/dashboard/system',   minTier: 'owner', group: 'admin' },
