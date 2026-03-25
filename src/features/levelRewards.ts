@@ -117,22 +117,28 @@ export async function handleLevelRoleAdded(
       roleName: tier.tier_name,
     }, `User leveled up to ${level}`);
 
-    // Dedup: check if we have EVER granted rewards for this user+level.
-    // Level milestones are permanent one-time achievements — no time window.
-    // INC-005: Previous 24h window allowed duplicates when Amaribot re-synced days later.
-    const previousGrant = db.prepare(`
-      SELECT 1 FROM role_assignments
-      WHERE guild_id = ? AND user_id = ? AND reason = ? AND action = 'add'
-      LIMIT 1
-    `).get(guild.id, member.id, `level_${level}_reward`);
+    // Dedup: atomic INSERT OR IGNORE into dedicated table with UNIQUE constraint.
+    // INC-005: Previous approaches (24h window, dedup markers in role_assignments)
+    // failed because pre-fix grants had no markers. This table was backfilled by
+    // migration 057 so ALL historical grants are covered.
+    //
+    // How it works:
+    //  - INSERT OR IGNORE + UNIQUE(guild_id, user_id, level) = atomic check-and-write
+    //  - changes === 0 means row already existed → skip (duplicate)
+    //  - changes === 1 means row was inserted → proceed (first time)
+    //  - No TOCTOU race possible — SQLite enforces the constraint at engine level
+    const dedupResult = db.prepare(`
+      INSERT OR IGNORE INTO level_reward_granted (guild_id, user_id, level)
+      VALUES (?, ?, ?)
+    `).run(guild.id, member.id, level);
 
-    if (previousGrant) {
+    if (dedupResult.changes === 0) {
       logger.info({
         evt: "level_reward_dedup",
         guildId: guild.id,
         userId: member.id,
         level,
-      }, `Skipping duplicate level ${level} reward (already granted previously)`);
+      }, `Skipping duplicate level ${level} reward (already granted)`);
       return results;
     }
 
@@ -147,15 +153,7 @@ export async function handleLevelRoleAdded(
       return results;
     }
 
-    // Write dedup marker BEFORE granting to prevent TOCTOU race condition.
-    // INC-005: Concurrent guildMemberUpdate events could all pass the dedup check
-    // before any of them wrote role_assignments entries.
-    const dedupReason = `level_${level}_reward`;
     const botId = guild.client.user?.id ?? "system";
-    db.prepare(`
-      INSERT INTO role_assignments (guild_id, user_id, role_id, role_name, action, reason, triggered_by, details, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(guild.id, member.id, "dedup_marker", `Level ${level} dedup`, "add", dedupReason, botId, null, Math.floor(Date.now() / 1000));
 
     logger.info({
       evt: "granting_level_rewards",
