@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import { describe, it, expect } from 'vitest';
+import { formatHourRange, formatDayName, TOTAL_COLS, TOTAL_ROWS } from '../../web/src/lib/utils/heatmap';
 
 // KEEP IN SYNC with web/src/lib/server/queries/heatmap.ts (formatHour)
 function formatHour(hour: number): string {
@@ -188,17 +189,7 @@ describe('heatmap grid component helpers', () => {
 			expect(threeQuarter).toBeLessThan(1);
 		});
 	});
-	// KEEP IN SYNC with web/src/lib/components/charts/HeatmapGrid.svelte (formatHourRange)
 	describe('formatHourRange', () => {
-		function formatHourRange(hour: number): string {
-			const startH = hour % 12 || 12;
-			const startAmPm = hour < 12 ? 'AM' : 'PM';
-			const endHour = (hour + 1) % 24;
-			const endH = endHour % 12 || 12;
-			const endAmPm = endHour < 12 ? 'AM' : 'PM';
-			return `${startH}:00 ${startAmPm} – ${endH}:00 ${endAmPm}`;
-		}
-
 		it('formats midnight correctly', () => {
 			expect(formatHourRange(0)).toBe('12:00 AM – 1:00 AM');
 		});
@@ -224,12 +215,7 @@ describe('heatmap grid component helpers', () => {
 		});
 	});
 
-	// KEEP IN SYNC with web/src/lib/components/charts/HeatmapGrid.svelte (formatDayName)
 	describe('formatDayName', () => {
-		function formatDayName(isoDate: string): string {
-			return new Date(isoDate).toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
-		}
-
 		it('returns Monday for a Monday ISO date', () => {
 			expect(formatDayName('2026-03-09')).toBe('Monday');
 		});
@@ -244,6 +230,39 @@ describe('heatmap grid component helpers', () => {
 
 		it('returns Saturday for a Saturday ISO date', () => {
 			expect(formatDayName('2026-03-14')).toBe('Saturday');
+		});
+	});
+
+	describe('tooltip position (anchorAbove)', () => {
+		it('anchors below for top rows (rowFraction <= 0.5)', () => {
+			// Day 0 (Mon): rowFraction = (0+1)/8 = 0.125
+			expect((0 + 1) / TOTAL_ROWS).toBeLessThanOrEqual(0.5);
+			// Day 2 (Wed): rowFraction = (2+1)/8 = 0.375
+			expect((2 + 1) / TOTAL_ROWS).toBeLessThanOrEqual(0.5);
+			// Day 3 (Thu): rowFraction = (3+1)/8 = 0.5
+			expect((3 + 1) / TOTAL_ROWS).toBeLessThanOrEqual(0.5);
+		});
+
+		it('anchors above for bottom rows (rowFraction > 0.5)', () => {
+			// Day 4 (Fri): rowFraction = (4+1)/8 = 0.625
+			expect((4 + 1) / TOTAL_ROWS).toBeGreaterThan(0.5);
+			// Day 6 (Sun): rowFraction = (6+1)/8 = 0.875
+			expect((6 + 1) / TOTAL_ROWS).toBeGreaterThan(0.5);
+		});
+
+		it('grid constants match expected dimensions', () => {
+			expect(TOTAL_COLS).toBe(25); // 1 label + 24 hours
+			expect(TOTAL_ROWS).toBe(8);  // 1 label + 7 days
+		});
+	});
+
+	describe('count formatting', () => {
+		it('formats large numbers with separators', () => {
+			const fmt = new Intl.NumberFormat();
+			expect(fmt.format(1234)).toBe('1,234');
+			expect(fmt.format(0)).toBe('0');
+			expect(fmt.format(999)).toBe('999');
+			expect(fmt.format(1000000)).toBe('1,000,000');
 		});
 	});
 });

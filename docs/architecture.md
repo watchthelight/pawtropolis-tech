@@ -14,7 +14,7 @@ Pawtropolis Tech is a production-grade Discord bot backend built as a monolithic
 | Runtime | Node.js | 20+ | ESM modules, stable LTS |
 | Framework | Discord.js | 14.16.3 | Official Discord API wrapper, slash commands, interactions |
 | Database | better-sqlite3 | 12.4.1 | Synchronous, deterministic, embedded (no external DB server) |
-| Web Server | Fastify | - | Lightweight HTTP for dashboard/OAuth2 endpoints |
+| Web Server | Fastify | ^5.7.4 | Lightweight HTTP for dashboard/OAuth2 endpoints |
 | Image Processing | canvas, sharp | 3.2.0, 0.34.4 | Embed rendering, image optimization |
 | Error Tracking | @sentry/node | 10.20.0 | Production error monitoring + performance profiling |
 | Logging | pino | 10.0.0 | Structured JSON logging with pretty dev output |
@@ -55,7 +55,7 @@ Pawtropolis Tech is a production-grade Discord bot backend built as a monolithic
               ┌────────────────▼──────────────────────────┐
               │              src/db/                       │
               │     SQLite (better-sqlite3, WAL mode)     │
-              │     Prepared statements, 30+ tables       │
+              │     Prepared statements, 40+ tables       │
               └───────────────────────────────────────────┘
 ```
 

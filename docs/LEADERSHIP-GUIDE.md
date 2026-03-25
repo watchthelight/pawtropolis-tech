@@ -150,8 +150,8 @@ Track artwork from assignment to completion.
 Detailed oversight of individual moderator performance.
 
 **Commands:**
-- `/modhistory moderator:@ModName days:N` — See everything a mod has done
-- `/modhistory moderator:@ModName export:true` — Download as CSV
+- `/stats history moderator:@ModName days:N` — See everything a mod has done
+- `/stats history moderator:@ModName export:true` — Download as CSV
 
 **You'll see:**
 - Every accept, reject, and kick they've made
@@ -174,10 +174,10 @@ Detailed oversight of individual moderator performance.
 Charts and exports for understanding server activity trends.
 
 **Commands:**
-- `/analytics` — Visual charts showing review activity over time
-- `/analytics bucket:day` — Group by day (weekly patterns)
-- `/analytics bucket:week` — Group by week (long-term trends)
-- `/analytics-export` — Download chart data as CSV
+- `/stats approval-rate` — View server-wide approval/rejection rate analytics
+- `/stats approval-rate days:N` — Analyze a specific time period
+- `/stats leaderboard` — Ranked moderator performance
+- `/stats leaderboard export:true` — Download as CSV
 
 **The charts show:**
 - Application volume trends

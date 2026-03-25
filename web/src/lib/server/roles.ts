@@ -68,6 +68,7 @@ export function detectTier(roleIds: string[], userId: string): DashboardTier {
 	if (roleIds.includes(ROLE_IDS.JUNIOR_MOD)) return 'jm';
 	if (roleIds.includes(ROLE_IDS.GATEKEEPER)) return 'gk';
 	if (roleIds.includes(ROLE_IDS.MOD_TEAM)) return 'viewer';
+	if (roleIds.includes(ROLE_IDS.SERVER_ARTIST)) return 'viewer';
 
 	return 'none';
 }

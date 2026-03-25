@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { prefersReducedMotion } from '$lib/motion';
+	import { formatHourRange, formatDayName, TOTAL_COLS, TOTAL_ROWS } from '$lib/utils/heatmap';
 
 	let { grid, maxValue, dates }: {
 		grid: number[][];
@@ -18,21 +19,6 @@
 		return `${hour - 12}p`;
 	}
 
-	/** Full hour range for tooltip: "2:00 PM – 3:00 PM" */
-	export function formatHourRange(hour: number): string {
-		const startH = hour % 12 || 12;
-		const startAmPm = hour < 12 ? 'AM' : 'PM';
-		const endHour = (hour + 1) % 24;
-		const endH = endHour % 12 || 12;
-		const endAmPm = endHour < 12 ? 'AM' : 'PM';
-		return `${startH}:00 ${startAmPm} – ${endH}:00 ${endAmPm}`;
-	}
-
-	/** Full day name from ISO date string */
-	export function formatDayName(isoDate: string): string {
-		return new Date(isoDate).toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
-	}
-
 	const LABELED_HOURS = [0, 3, 6, 9, 12, 15, 18, 21];
 
 	function cellOpacity(count: number): number {
@@ -40,9 +26,16 @@
 		return 0.04 + (count / maxValue) * 0.96;
 	}
 
+	/** Build aria-label for a cell so screen readers can announce the data */
+	function cellLabel(dayIndex: number, hour: number, count: number): string {
+		const dayName = dates[dayIndex] ? formatDayName(dates[dayIndex]) : DAY_LABELS[dayIndex];
+		return `${dayName}, ${formatHourRange(hour)}: ${countFmt.format(count)} messages`;
+	}
+
 	// ── Hover/touch state ──
 	let hoveredDay = $state<number | null>(null);
 	let hoveredHour = $state<number | null>(null);
+	let leaveTimer: ReturnType<typeof setTimeout> | null = null;
 
 	let tooltip = $derived.by(() => {
 		if (hoveredDay === null || hoveredHour === null) return null;
@@ -50,19 +43,21 @@
 		const dayName = dates[hoveredDay] ? formatDayName(dates[hoveredDay]) : DAY_LABELS[hoveredDay];
 		const hourRange = formatHourRange(hoveredHour);
 
-		// Position: column offset (skip day-label col) + row offset (skip hour-label row)
-		// Grid has 25 columns (1 day-label + 24 hours), 8 rows (1 hour-label + 7 days)
-		const colFraction = (hoveredHour + 1) / 25; // +1 for the day-label column
-		const rowFraction = (hoveredDay + 1) / 8;   // +1 for the hour-label row
+		const colFraction = (hoveredHour + 1) / TOTAL_COLS;
+		const rowFraction = (hoveredDay + 1) / TOTAL_ROWS;
 		const anchorAbove = rowFraction > 0.5;
+		// Clamp left% so tooltip doesn't overflow container edges
+		const leftPct = Math.max(8, Math.min(92, colFraction * 100));
 
-		return { dayName, hourRange, count, colFraction, rowFraction, anchorAbove };
+		return { dayName, hourRange, count, leftPct, rowFraction, anchorAbove };
 	});
 
 	// Event delegation: extract day/hour from data attributes on the grid container
 	function onCellEnter(e: MouseEvent) {
 		const target = e.target as HTMLElement;
 		if (!target.dataset.day) return;
+		// Cancel any pending leave — prevents flicker when crossing 2px grid gaps
+		if (leaveTimer) { clearTimeout(leaveTimer); leaveTimer = null; }
 		hoveredDay = Number(target.dataset.day);
 		hoveredHour = Number(target.dataset.hour);
 	}
@@ -70,8 +65,12 @@
 	function onCellLeave(e: MouseEvent) {
 		const related = e.relatedTarget as HTMLElement | null;
 		if (related?.dataset?.day) return; // moving to another cell — don't clear
-		hoveredDay = null;
-		hoveredHour = null;
+		// Debounce: short delay lets the mouse cross 2px grid gaps without flickering
+		leaveTimer = setTimeout(() => {
+			hoveredDay = null;
+			hoveredHour = null;
+			leaveTimer = null;
+		}, 30);
 	}
 
 	// Touch: tap to show, tap outside to dismiss
@@ -125,6 +124,8 @@
 					style:opacity={cellOpacity(count)}
 					data-day={dayIndex}
 					data-hour={hour}
+					role="gridcell"
+					aria-label={cellLabel(dayIndex, hour, count)}
 				></div>
 			{/each}
 		{/each}
@@ -136,10 +137,10 @@
 			class="tooltip"
 			class:no-transition={reduced}
 			class:anchor-above={tooltip.anchorAbove}
-			style:left="{tooltip.colFraction * 100}%"
+			style:left="{tooltip.leftPct}%"
 			style:top={tooltip.anchorAbove
 				? `calc(${tooltip.rowFraction * 100}% - 8px)`
-				: `calc(${tooltip.rowFraction * 100}% + ${100 / 8}% + 8px)`}
+				: `calc(${tooltip.rowFraction * 100}% + ${100 / TOTAL_ROWS}% + 8px)`}
 		>
 			<span class="tooltip-day">{tooltip.dayName}</span>
 			<span class="tooltip-hour">{tooltip.hourRange}</span>

@@ -63,7 +63,7 @@ Run events and track who attends. Both movie nights and game nights are supporte
 See when the server is busiest.
 
 **Command:**
-- `/activity [weeks:N]` — Show activity heatmap (default: 4 weeks, max: 8)
+- `/stats activity [weeks:N]` — Show activity heatmap (default: 4 weeks, max: 8)
 
 The heatmap shows message activity by day and hour. Useful for:
 - Planning events at peak times
@@ -115,7 +115,7 @@ Lower numbers = more skulls. Set to 1000 for rare skulls, 1 for constant skulls.
 ## Tips for This Level
 
 1. **Event timing matters** — Start tracking when the event begins, end when it finishes
-2. **Check activity before events** — Use `/activity` to pick good times
+2. **Check activity before events** — Use `/stats activity` to pick good times
 3. **Bot status is visible to everyone** — Keep it appropriate
 4. **Skull mode is opt-in** — Make sure leadership wants it enabled before turning it on
 

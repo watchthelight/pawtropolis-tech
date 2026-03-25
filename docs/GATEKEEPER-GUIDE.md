@@ -95,8 +95,8 @@ The bot uses multiple detection services and shows confidence scores. Not perfec
 Curious how you're doing? The bot tracks your reviews.
 
 **Commands:**
-- `/modstats user moderator:@YourName` — Your personal stats
-- `/modstats leaderboard` — See how everyone's doing
+- `/stats user moderator:@YourName` — Your personal stats
+- `/stats leaderboard` — See how everyone's doing
 
 Stats include:
 - Total reviews (accepts, rejects, kicks)

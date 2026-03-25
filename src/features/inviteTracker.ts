@@ -15,6 +15,8 @@ import type { Client, Guild, GuildMember, Invite } from "discord.js";
 
 // guild_id -> (invite_code -> uses)
 const inviteCache = new Map<string, Map<string, number>>();
+// guild_id -> vanity URL uses count (tracked separately since vanity URLs aren't in guild.invites)
+const vanityCache = new Map<string, number>();
 
 // Lazy-init to avoid DB access at import time (table may not exist yet)
 let _upsert: ReturnType<typeof db.prepare> | null = null;
@@ -34,6 +36,16 @@ async function cacheGuildInvites(guild: Guild): Promise<void> {
   } catch (err) {
     // Bot may lack MANAGE_GUILD permission — non-fatal
     logger.debug({ err, guildId: guild.id }, "[invite-tracker] Failed to cache invites (may lack permission)");
+  }
+
+  // Cache vanity URL uses separately (not included in guild.invites.fetch())
+  if (guild.vanityURLCode) {
+    try {
+      const vanity = await guild.fetchVanityData();
+      vanityCache.set(guild.id, vanity.uses);
+    } catch {
+      // Vanity fetch requires MANAGE_GUILD — non-fatal
+    }
   }
 }
 
@@ -67,6 +79,21 @@ export async function trackMemberInvite(member: GuildMember): Promise<void> {
 
     // Update cache with fresh data
     inviteCache.set(guildId, new Map(newInvites.map(i => [i.code, i.uses ?? 0])));
+
+    // Vanity URL fallback: if no regular invite matched and guild has a vanity URL,
+    // check if its uses count increased. Vanity URLs aren't in guild.invites.fetch().
+    if (!usedCode && member.guild.vanityURLCode) {
+      try {
+        const vanity = await member.guild.fetchVanityData();
+        const oldVanityUses = vanityCache.get(guildId) ?? 0;
+        if (vanity.uses > oldVanityUses) {
+          usedCode = member.guild.vanityURLCode;
+        }
+        vanityCache.set(guildId, vanity.uses);
+      } catch {
+        // Vanity fetch may fail — non-fatal
+      }
+    }
   } catch {
     // Non-critical — record with null invite
   }

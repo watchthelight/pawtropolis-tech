@@ -99,10 +99,10 @@ development_status:
   epic-5-retrospective: optional
 
   # Epic 6: Activity Heatmap
-  epic-6: in-progress
+  epic-6: done
   6-1-activity-query-layer-page-shell: done
   6-2-heatmap-visualization: done
-  6-3-heatmap-hover-detail: review
+  6-3-heatmap-hover-detail: done
   epic-6-retrospective: optional
 
   # Epic 7: Art Queue (stories 7.1-7.3 combined into single story)
@@ -121,15 +121,15 @@ development_status:
   epic-9-retrospective: optional
 
   # Epic 10: Security Dashboard
-  epic-10: backlog
-  10-1-security-query-layer-page-shell: backlog
-  10-2-security-snapshot-display: backlog
-  10-3-security-change-highlighting: backlog
+  epic-10: done # Already implemented under /dashboard/audit/security/
+  10-1-security-query-layer-page-shell: done # queries/auditSystems.ts + +page.server.ts
+  10-2-security-snapshot-display: done # Summary cards, issue list, acknowledge toggle
+  10-3-security-change-highlighting: done # Snapshot detail view at [id]/, securityDiff.ts available
   epic-10-retrospective: optional
 
   # Epic 11: System Health
-  epic-11: backlog
-  11-1-system-query-layer-page-shell: backlog
-  11-2-health-metrics-display: backlog
-  11-3-health-alert-history: backlog
+  epic-11: done
+  11-1-system-query-layer-page-shell: done
+  11-2-health-metrics-display: done # Covered by 11-1: metrics grid with threshold colors
+  11-3-health-alert-history: done # Covered by 11-1: alert list with severity, status, resolution time
   epic-11-retrospective: optional

@@ -21,33 +21,19 @@ export const load: PageServerLoad = async ({ locals }) => {
 	// Artist's own jobs (always loaded for both roles)
 	const myJobs = activeJobs.filter((j) => j.artistId === locals.user!.id);
 
-	if (isStaff) {
-		const queue = getArtistQueue(guildId);
-		const jobHistory = getJobHistory(guildId, 1, 20);
-		const monthlyLeaderboard = getLeaderboard(guildId, 'monthly', 10);
-		const allTimeLeaderboard = getLeaderboard(guildId, 'alltime', 10);
+	const queue = getArtistQueue(guildId);
+	const jobHistory = getJobHistory(guildId, 1, 20);
+	const monthlyLeaderboard = getLeaderboard(guildId, 'monthly', 10);
+	const allTimeLeaderboard = getLeaderboard(guildId, 'alltime', 10);
 
-		return {
-			isArtist,
-			isStaff,
-			queue,
-			activeJobs,
-			myJobs,
-			jobHistory,
-			monthlyLeaderboard,
-			allTimeLeaderboard
-		};
-	}
-
-	// Artist-only view: just their own jobs
 	return {
 		isArtist,
 		isStaff,
-		queue: [],
-		activeJobs: [],
+		queue,
+		activeJobs,
 		myJobs,
-		jobHistory: [],
-		monthlyLeaderboard: [],
-		allTimeLeaderboard: []
+		jobHistory,
+		monthlyLeaderboard,
+		allTimeLeaderboard
 	};
 };

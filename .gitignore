@@ -63,6 +63,9 @@ _bmad-output/
 # Recovery files
 _recovery/
 
+# Private moderation case files
+docs/moderation/
+
 # Claude Code local settings
 .claude/settings.local.json
 .claude/avatar-nsfw-roadmap.md

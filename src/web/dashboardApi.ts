@@ -1244,6 +1244,73 @@ export async function startDashboardApi(client: Client): Promise<void> {
     }
   });
 
+  // ===== System Health =====
+
+  server.post("/api/dashboard/health", async (request, reply) => {
+    const body = request.body as { userId?: string; tier?: string } | null;
+    if (!body?.userId || !body?.tier) {
+      return reply.code(400).send({ success: false, error: "Missing userId or tier" } satisfies ApiError);
+    }
+    if (!hasMinTier(body.tier, "owner")) {
+      return reply.code(403).send({ success: false, error: "Insufficient permissions" } satisfies ApiError);
+    }
+
+    try {
+      const { getSummary } = await import("../features/opsHealth.js");
+      const summary = await getSummary(GUILD_ID);
+
+      // Process memory
+      const mem = process.memoryUsage();
+      const heapUsedMB = Math.round(mem.heapUsed / 1024 / 1024);
+      const heapTotalMB = Math.round(mem.heapTotal / 1024 / 1024);
+      const rssMB = Math.round(mem.rss / 1024 / 1024);
+
+      // Disk space (Linux)
+      let disk = { usedGB: 0, totalGB: 0, percentUsed: 0 };
+      try {
+        const { execFile } = await import("node:child_process");
+        const { promisify } = await import("node:util");
+        const execFileAsync = promisify(execFile);
+        const { stdout: dfOutput } = await execFileAsync("df", ["-B1", "/"], { timeout: 3000 });
+        const lines = dfOutput.trim().split("\n");
+        if (lines.length >= 2) {
+          const parts = lines[1].split(/\s+/);
+          const totalBytes = parseInt(parts[1], 10);
+          const usedBytes = parseInt(parts[2], 10);
+          disk = {
+            totalGB: Math.round(totalBytes / 1024 / 1024 / 1024 * 10) / 10,
+            usedGB: Math.round(usedBytes / 1024 / 1024 / 1024 * 10) / 10,
+            percentUsed: Math.round((usedBytes / totalBytes) * 100),
+          };
+        }
+      } catch {
+        // Disk info unavailable (Windows dev, non-Linux, etc.)
+      }
+
+      const uptime = process.uptime();
+      const hours = Math.floor(uptime / 3600);
+      const minutes = Math.floor((uptime % 3600) / 60);
+      const uptimeFormatted = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+
+      return {
+        success: true,
+        data: {
+          uptime: Math.round(uptime),
+          uptimeFormatted,
+          wsPingMs: summary.wsPingMs,
+          memory: { heapUsedMB, heapTotalMB, rssMB },
+          disk,
+          activeAlertCount: summary.activeAlerts.length,
+          pm2: summary.pm2,
+          dbIntegrity: summary.db,
+        },
+      } satisfies ApiSuccess;
+    } catch (err) {
+      logger.warn({ err }, "[dashboardApi] Failed to fetch health summary");
+      return reply.code(500).send({ success: false, error: "Failed to fetch health data" } satisfies ApiError);
+    }
+  });
+
   // Start server
   await server.listen({ port: DASHBOARD_API_PORT, host: "0.0.0.0" });
   logger.info({ port: DASHBOARD_API_PORT }, "[dashboardApi] Dashboard API started");

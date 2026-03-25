@@ -445,12 +445,12 @@ export function buildReviewEmbedV3(
     lines.push(`**Account created:**  ${ts(accountCreatedAt, 'f')} • ${ts(accountCreatedAt, 'R')}`);
   }
 
-  // Invite source
+  // Invite source — only show when we actually detected a code.
+  // When code is null (vanity URL miss, bot restart, rate limit) omit the field
+  // rather than showing "Unknown" which is noise for reviewers.
   if (inviteSource?.code) {
     const inviterPart = inviteSource.inviterId ? ` (by <@${inviteSource.inviterId}>)` : '';
     lines.push(`**Invite:**  discord.gg/${inviteSource.code}${inviterPart}`);
-  } else if (inviteSource) {
-    lines.push('**Invite:**  Unknown');
   }
 
   lines.push(EMPTY);
