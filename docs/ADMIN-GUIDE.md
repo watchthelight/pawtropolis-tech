@@ -47,6 +47,7 @@ You control how the bot behaves across your entire server.
 | `gatekeeper` | Role for gatekeeper features |
 | `modmail_log_channel` | Where modmail logs go |
 | `review_roles` | How roles appear on review cards |
+| `qotd_review_channel_id` | Channel where QOTD suggestions are posted for staff review |
 
 📖 [Full documentation →](../BOT-HANDBOOK.md#config)
 
@@ -107,8 +108,8 @@ When role automation goes wrong, you can stop everything immediately.
 Export and manage moderator statistics for performance reviews.
 
 **Commands:**
-- `/modstats export days:N` — Download stats as CSV for spreadsheet analysis
-- `/modstats reset password:...` — Reset all metrics to start fresh (nuclear option)
+- `/stats export days:N` — Download stats as CSV for spreadsheet analysis
+- `/stats reset password:...` — Reset all metrics to start fresh (nuclear option)
 
 **Export includes:**
 - Every action (accepts, rejects, kicks)
@@ -166,7 +167,7 @@ When you advance to **Leadership** (Community Manager and above), you'll unlock:
 - **Data Management** — `/backfill` to rebuild activity data, `/resetdata` for metrics
 - **Bot Branding** — `/update banner` and `/update avatar` to customize the bot
 - **Artist Rotation** — Full queue management with `/artistqueue`
-- **Moderation History** — `/modhistory` for detailed performance reviews
+- **Moderation History** — `/stats history` for detailed performance reviews
 
 📖 [LEADERSHIP-GUIDE.md →](LEADERSHIP-GUIDE.md)
 

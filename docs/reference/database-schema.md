@@ -23,7 +23,7 @@ CREATE TABLE configs (
 );
 ```
 
-**Known Issue:** `logging_channel_id` column is missing. Need to add it with a migration.
+**Note:** `logging_channel_id` column added by migration 001.
 
 ### review_action
 Stores join applications.
@@ -98,6 +98,56 @@ CREATE TABLE user_activity (
 );
 ```
 
+### qotd_suggestion
+Stores member-submitted QOTD questions and their review status.
+
+```sql
+CREATE TABLE qotd_suggestion (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  guild_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  question TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  short_code TEXT,
+  review_message_id TEXT,
+  reviewed_by TEXT,
+  reviewed_at_s INTEGER,
+  reject_reason TEXT,
+  used_by TEXT,
+  used_at_s INTEGER,
+  created_at_s INTEGER NOT NULL,
+  CHECK (status IN ('pending', 'approved', 'rejected', 'used'))
+);
+```
+
+**Notes:**
+- `status` tracks the suggestion lifecycle: `pending` -> `approved` -> `used`, or `pending` -> `rejected`
+- `short_code` is a unique identifier for internal tracking (same format as application short codes)
+- `review_message_id` references the review card in the QOTD review channel
+- `reviewed_by` and `reviewed_at_s` record who approved/rejected and when
+- `reject_reason` is populated when a suggestion is rejected (from the rejection modal)
+- `used_by` and `used_at_s` record who pulled the question and when
+- Requires `qotd_review_channel_id` in `guild_config` for review card posting
+
+### level_reward_granted
+Tracks which level rewards have been granted to prevent duplicates. Added by migration 057 to resolve INC-005.
+
+```sql
+CREATE TABLE level_reward_granted (
+  guild_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  level INTEGER NOT NULL,
+  granted_at_s INTEGER NOT NULL,
+  UNIQUE(guild_id, user_id, level)
+);
+```
+
+**Notes:**
+- The `UNIQUE(guild_id, user_id, level)` constraint enforces at the schema level that a user can only receive rewards for a given level once
+- Grant logic uses `INSERT OR IGNORE` — if the row already exists, the insert silently fails and no rewards are processed
+- Migration 057 backfills all historical grants from `role_assignments` to cover pre-fix grants
+- Replaces the old time-windowed dedup approach that was vulnerable to TOCTOU races
+
 ## Running Migrations
 
 Migrations are in `migrations/` folder with numbered files like `033_audit_sessions.ts`.
@@ -127,15 +177,6 @@ GROUP BY moderator_id;
 SELECT * FROM open_modmail WHERE status = 'open';
 ```
 
-## Adding logging_channel_id
+## Migration Notes
 
-To fix the missing column:
-
-```typescript
-// migrations/XXX_add_logging_channel.ts
-export function migrate() {
-  db.prepare("ALTER TABLE configs ADD COLUMN logging_channel_id TEXT").run();
-}
-```
-
-Then run `npm run migrate`.
+The `logging_channel_id` column was added by migration 001 (`migrations/001_add_logging_channel_id.ts`).

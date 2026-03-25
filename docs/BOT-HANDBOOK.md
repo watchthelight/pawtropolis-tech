@@ -26,12 +26,13 @@ All bot commands and how to use them.
 2. [Mod Tools](#moderator-tools) — Stats, flags, audits
 3. [Artist Rotation](#artist-rotation) — Art queue and jobs
 4. [Events](#events) — Movie & game night tracking
+5. [QOTD](#qotd-question-of-the-day) — Community question suggestions
 6. [Role Automation](#role-automation) — Auto-assign roles
-6. [Configuration](#configuration) — Bot settings
-7. [Utility Commands](#utility--admin) — Help, send, purge, etc.
-8. [Permissions](#permission-reference) — Who can do what
-9. [Troubleshooting](#troubleshooting) — Fix common problems
-10. [Quick Reference](#quick-reference) — Commands at a glance
+7. [Configuration](#configuration) — Bot settings
+8. [Utility Commands](#utility--admin) — Help, send, purge, etc.
+9. [Permissions](#permission-reference) — Who can do what
+10. [Troubleshooting](#troubleshooting) — Fix common problems
+11. [Quick Reference](#quick-reference) — Commands at a glance
 
 ---
 
@@ -1525,6 +1526,58 @@ Use `/config get game_config` to view current settings.
 
 ---
 
+## QOTD (Question of the Day)
+
+Let members suggest questions for the server's Question of the Day. Staff reviews suggestions before they go into the pool, and can pull approved ones when it's time to post.
+
+### How It Works
+
+1. **A member submits a question** — They run `/qotd suggest`, which opens a modal where they type their question (10-500 characters)
+2. **Bot creates a review card** — The suggestion appears in the configured QOTD review channel with Approve and Reject buttons
+3. **Staff reviews it** — Any Gatekeeper+ can click Approve or Reject. Rejecting opens a modal for a reason.
+4. **The suggester gets a DM** — Whether approved or rejected, the bot sends the member a DM with the result (and the reason, if rejected)
+5. **Staff pulls a question** — When it's time for QOTD, a Gatekeeper+ runs `/qotd pull` to grab a random approved suggestion. The bot shows it ephemerally and marks it as used so it won't come up again.
+
+### Rate Limits
+
+Members are limited to **1 suggestion per hour** and can have at most **5 pending suggestions** at a time. This prevents spam while still letting people contribute regularly.
+
+### `/qotd suggest`
+**Who can use it:** Anyone
+
+Opens a modal to submit a QOTD question. The question must be between 10 and 500 characters. Once submitted, the bot posts a review card in the QOTD review channel for staff to approve or reject.
+
+**Examples:**
+```
+/qotd suggest
+→ Modal opens: "What's a movie you've rewatched the most?"
+```
+
+### `/qotd queue`
+**Who can use it:** Gatekeeper+
+
+Shows the current count of approved and pending suggestions in the queue. Useful for checking if you have enough approved questions to keep QOTD going.
+
+### `/qotd pull`
+**Who can use it:** Gatekeeper+
+
+Pulls a random approved suggestion and shows it to you ephemerally. The suggestion is marked as "used" so it won't be pulled again. You can then copy the question and post it however your server handles QOTD.
+
+### Review Card Buttons
+
+Review cards are posted in the QOTD review channel (configured via `qotd_review_channel_id` in guild config).
+
+| Button | Who can click | What it does |
+|--------|---------------|--------------|
+| Approve | Gatekeeper+ | Marks the suggestion as approved and DMs the suggester |
+| Reject | Gatekeeper+ | Opens a modal for a rejection reason, then DMs the suggester |
+
+### Database
+
+Suggestions are stored in the `qotd_suggestion` table. Each suggestion gets a short code (like application short codes) for internal tracking. Status values: `pending`, `approved`, `rejected`, `used`.
+
+---
+
 ## Role Automation
 
 Set up automatic role assignments based on Amaribot levels and event attendance (movie & game nights). This feature watches for certain events (like someone leveling up or completing an event) and automatically gives them roles without staff needing to do it manually.
@@ -1980,11 +2033,11 @@ Redeem your Byte Token for an XP multiplier. This is a self-service command — 
 
 | Token | Multiplier | Duration |
 |-------|------------|----------|
-| Byte Token [Common] | 2x XP | 12 hours |
-| Byte Token [Rare] | 3x XP | 24 hours |
-| Byte Token [Epic] | 5x XP | 48 hours |
-| Byte Token [Legendary] | 5x XP | 72 hours |
-| Byte Token [Mythic] | 10x XP | 168 hours (1 week) |
+| Byte Token [Common] | 2x XP | 2 hours |
+| Byte Token [Rare] | 3x XP | 6 hours |
+| Byte Token [Epic] | 4x XP | 12 hours |
+| Byte Token [Legendary] | 4x XP | 24 hours |
+| Byte Token [Mythic] | 6x XP | 72 hours (3 days) |
 
 **Upgrading:** If you already have an active multiplier and use another token, the new one replaces the old one. Time remaining on the old multiplier is lost — you'll see a warning before confirming.
 

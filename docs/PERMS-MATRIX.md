@@ -79,6 +79,7 @@ Commands available to all server members:
 | `/help` | Interactive help system with category browsing and search |
 | `/health` | Check bot status, uptime, and connection health |
 | `/art getstatus` | Check progress of your personal art reward |
+| `/qotd suggest` | Submit a QOTD question for staff review (1/hour, max 5 pending) |
 | `/sample` | Preview UI components for training purposes |
 
 ---
@@ -107,6 +108,8 @@ Commands restricted to the Gatekeeper role specifically. Higher roles do NOT aut
 | `/search` | Search application history by user (also available to all Staff) |
 | `/stats leaderboard` | View ranked list of moderators by application decisions |
 | `/stats user @moderator` | View detailed stats for a specific moderator |
+| `/qotd queue` | View count of approved and pending QOTD suggestions |
+| `/qotd pull` | Pull a random approved QOTD suggestion (marks as used) |
 
 ---
 
@@ -242,13 +245,24 @@ Commands for the Server Artist functional role (`896070888749940770`):
 | `/art finish @recipient` | Mark a job as complete |
 | `/art view @recipient` | View details of a specific job |
 
-**Note:** Administrator+ can also access these commands for management purposes.
+**Note:** Administrator+ can also access these commands for management purposes. Server Artists also receive dashboard "viewer" tier access.
+
+---
+
+### Event Roles
+
+The `/event` command accepts two special roles in addition to the Moderator+ hierarchy:
+
+| Role | ID | Access |
+|------|----|--------|
+| Event Host | `1243805450835853383` | `/event movie`, `/event game` |
+| Events Manager | `1243805681904259124` | `/event movie`, `/event game` |
 
 ---
 
 ## Review Card Buttons
 
-All review card buttons require **Gatekeeper [GK]** role specifically:
+All application review card buttons require **Gatekeeper [GK]** role specifically:
 
 | Button | Action |
 |--------|--------|
@@ -262,6 +276,15 @@ All review card buttons require **Gatekeeper [GK]** role specifically:
 | Copy UID | Copy user ID to clipboard |
 | Ping | Mention the applicant in channel |
 
+### QOTD Review Buttons
+
+QOTD suggestion review buttons require **Gatekeeper+ (GK+)**:
+
+| Button | Action |
+|--------|--------|
+| Approve | Approve the QOTD suggestion (DMs the suggester) |
+| Reject | Reject with reason (opens modal, DMs the suggester) |
+
 ---
 
 ## Permission Denied Messages
@@ -273,7 +296,7 @@ When a user lacks permission, they see an ephemeral embed with specific informat
 ```
 Permission Denied
 
-Command: /activity
+Command: /stats activity
 
 This command views the server activity heatmap with message trends.
 
@@ -360,9 +383,9 @@ The permission system always checks bypass conditions first:
 
 | Level | Notation | Example Commands |
 |-------|----------|------------------|
-| Public | Anyone | `/help`, `/health` |
+| Public | Anyone | `/help`, `/health`, `/qotd suggest` |
 | Gatekeeper | [GK] | `/accept`, `/reject`, `/kick` |
-| Gatekeeper+ | GK+ | `/search`, `/stats leaderboard`, `/stats user` |
+| Gatekeeper+ | GK+ | `/search`, `/stats leaderboard`, `/qotd queue`, `/qotd pull` |
 | Junior Mod+ | JM+ | `/flag`, `/isitreal` |
 | Moderator+ | M+ | `/movie`, `/event` |
 | Senior Mod+ | SM+ | `/stats activity`, `/skullmode` |
