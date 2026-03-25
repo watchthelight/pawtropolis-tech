@@ -23,7 +23,7 @@ import { data as configData } from "./config.js";
 import { data as databaseData } from "./database.js";
 // This one lives in features/ because modmail is both a command AND a feature module.
 // Not ideal, but refactoring it would be a three-hour yak shave.
-import { modmailCommand } from "../features/modmail.js";
+import { modmailCommand, modmailContextMenu } from "../features/modmail.js";
 import { isitRealContextMenu } from "./isitreal.js";
 import { data as statsData } from "./stats/index.js";
 import { data as eventData } from "./event/index.js";
@@ -56,6 +56,7 @@ import { data as testData } from "./test.js";
 import { data as skullmodeData } from "./skullmode.js";
 import { data as reportData } from "./report.js";
 import { data as attendanceData } from "./attendance.js";
+import { data as qotdData } from "./qotd.js";
 
 // Returns an array of command JSON objects for Discord's bulk command registration.
 // Discord has a limit of 100 slash commands per bot per guild, so we're fine here.
@@ -125,11 +126,14 @@ export function buildCommands() {
     // Event attendance stats and leaderboards
     attendanceData.toJSON(),
 
+    // QOTD suggestion system
+    qotdData.toJSON(),
+
     /*
      * Context menu commands are registered alongside slash commands in Discord.js v14.
-     * These show up when you right-click a user or message. Only 5 of each type allowed.
-     * "Is It Real?" lets staff quickly check images for AI generation.
+     * These show up when you right-click a user or message. Up to 15 of each type allowed.
      */
     isitRealContextMenu.toJSON(),
+    modmailContextMenu.toJSON(),
   ];
 }

@@ -74,6 +74,11 @@ export const MODAL_18_RE = /^v1:avatar:confirm18:code([0-9A-F]{6})$/;
 export const BTN_REPORT_RESOLVE_RE = /^v1:report:resolve:([0-9A-F]{6})$/;
 export const MODAL_REPORT_RESOLVE_RE = /^v1:modal:report:resolve:([0-9A-F]{6})$/;
 
+// QOTD suggestion system - approve/reject buttons and suggest/reject modals
+export const BTN_QOTD_RE = /^qotd:(approve|reject):code([0-9A-F]{6})$/;
+export const MODAL_QOTD_SUGGEST_RE = /^v1:modal:qotd:suggest$/;
+export const MODAL_QOTD_REJECT_RE = /^v1:modal:qotd:reject:([0-9A-F]{6})$/;
+
 /**
  * Discriminated union for routed modal types. Allows type-safe handling
  * in the modal submission handler via switch on `type`.
@@ -86,7 +91,9 @@ export type ModalRoute =
   | { type: "review_kick"; code: string }
   | { type: "review_unclaim"; code: string }
   | { type: "avatar_confirm18"; code: string }
-  | { type: "report_resolve"; code: string };
+  | { type: "report_resolve"; code: string }
+  | { type: "qotd_suggest" }
+  | { type: "qotd_reject"; code: string };
 
 /**
  * Routes a modal customId to a typed handler. Returns null if the ID doesn't
@@ -137,6 +144,16 @@ export function identifyModalRoute(id: string): ModalRoute | null {
   const reportResolve = id.match(MODAL_REPORT_RESOLVE_RE);
   if (reportResolve) {
     return { type: "report_resolve", code: reportResolve[1] };
+  }
+
+  const qotdSuggest = id.match(MODAL_QOTD_SUGGEST_RE);
+  if (qotdSuggest) {
+    return { type: "qotd_suggest" };
+  }
+
+  const qotdReject = id.match(MODAL_QOTD_REJECT_RE);
+  if (qotdReject) {
+    return { type: "qotd_reject", code: qotdReject[1] };
   }
 
   return null;

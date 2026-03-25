@@ -152,6 +152,8 @@ export type GuildConfig = {
   nsfw_alert_role_id?: string | null;
   // Banner sync toggle
   banner_sync_enabled?: number | null; // 1=enabled, 0=disabled (default: 1)
+  // QOTD suggestion system (056_qotd migration)
+  qotd_review_channel_id?: string | null;
   // These fields are NOT optional. Ask me how I know.
   // (Hint: it involved a production outage and a missing COALESCE)
   image_search_url_template: string;

@@ -290,6 +290,10 @@ commands.set(report.data.name, wrapCommand("report", report.execute));
 import * as attendance from "./commands/attendance.js";
 commands.set(attendance.data.name, wrapCommand("attendance", attendance.execute));
 
+// QOTD suggestion system
+import * as qotd from "./commands/qotd.js";
+commands.set(qotd.data.name, wrapCommand("qotd", qotd.execute));
+
 client.once(Events.ClientReady, async () => {
   // schema self-heal before anything else
   // sudo make it work
@@ -1583,6 +1587,24 @@ client.on("interactionCreate", wrapEvent("interactionCreate", async (interaction
             return;
           }
 
+          // QOTD suggestion review buttons (approve/reject)
+          if (customId.startsWith("qotd:")) {
+            logger.info(
+              {
+                evt: "ix_route_match",
+                kind: "button",
+                route: "qotd",
+                id: customId,
+                traceId,
+              },
+              "route: qotd button"
+            );
+            const { handleQotdButton } = await import("./features/qotd/handlers.js");
+            await handleQotdButton(interaction);
+            succeeded = true;
+            return;
+          }
+
           // Listopen pagination buttons (with optional view mode: :all or :drafts)
           // That 8-char hex is a session ID to prevent button hijacking across users.
           // Yes, someone tried clicking someone else's pagination buttons. No, it didn't end well.
@@ -2026,6 +2048,40 @@ client.on("interactionCreate", wrapEvent("interactionCreate", async (interaction
                 "report_resolve",
                 async (commandCtx) => {
                   await handleReportResolveModal(commandCtx.interaction, route.code);
+                }
+              );
+              await executor(interaction);
+              succeeded = true;
+              return;
+            }
+
+            if (route?.type === "qotd_suggest") {
+              logger.info(
+                { evt: "ix_route_match", kind: "modal", route: "qotd_suggest", id: customId, traceId },
+                "route: qotd suggest modal"
+              );
+              const { handleQotdSuggestModal } = await import("./features/qotd/handlers.js");
+              const executor = wrapCommand<ModalSubmitInteraction>(
+                "qotd_suggest",
+                async (commandCtx) => {
+                  await handleQotdSuggestModal(commandCtx.interaction);
+                }
+              );
+              await executor(interaction);
+              succeeded = true;
+              return;
+            }
+
+            if (route?.type === "qotd_reject") {
+              logger.info(
+                { evt: "ix_route_match", kind: "modal", route: "qotd_reject", id: customId, code: route.code, traceId },
+                "route: qotd reject modal"
+              );
+              const { handleQotdRejectModal } = await import("./features/qotd/handlers.js");
+              const executor = wrapCommand<ModalSubmitInteraction>(
+                "qotd_reject",
+                async (commandCtx) => {
+                  await handleQotdRejectModal(commandCtx.interaction, route.code);
                 }
               );
               await executor(interaction);
