@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import { slide } from 'svelte/transition';
 	import ConnectionIndicator from './ConnectionIndicator.svelte';
+	import StyleSwitcher from './StyleSwitcher.svelte';
 	import {
 		House, ClipboardCheck, BarChart3, Activity, Flag,
 		Grid3x3, Palette, Settings, ScrollText, Server,
@@ -123,6 +124,7 @@
 	<!-- Footer section -->
 	<div class="footer" class:footer-collapsed={collapsed}>
 		{#if !collapsed}
+			<StyleSwitcher />
 			<ConnectionIndicator />
 			<a
 				href="/auth/logout"
@@ -130,6 +132,8 @@
 			>
 				Logout
 			</a>
+		{:else}
+			<StyleSwitcher collapsed />
 		{/if}
 	</div>
 </nav>
