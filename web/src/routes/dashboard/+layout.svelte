@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { applyTheme } from '$lib/stores/theme';
+	import { getStoredStyle, applyStyle } from '$lib/stores/style';
 	import { connect, disconnect, onReconnect, offReconnect, subscribe, unsubscribe } from '$lib/stores/sse.svelte';
 	import { startMonitoring, stopMonitoring } from '$lib/stores/bot-status.svelte';
 	import { initViewport, getIsMobile } from '$lib/stores/viewport.svelte';
@@ -30,6 +31,7 @@
 	onMount(() => {
 		sidebarCollapsed = localStorage.getItem('sidebar-collapsed') === '1';
 		initViewport();
+		applyStyle(getStoredStyle());
 	});
 	function toggleSidebar() {
 		sidebarCollapsed = !sidebarCollapsed;
