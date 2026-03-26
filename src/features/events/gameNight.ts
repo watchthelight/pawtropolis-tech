@@ -12,7 +12,7 @@
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
-import type { Guild, VoiceBasedChannel } from "discord.js";
+import { EmbedBuilder, type Guild, type VoiceBasedChannel } from "discord.js";
 import { db } from "../../db/db.js";
 import { logger } from "../../lib/logger.js";
 import { getGameConfig } from "../../store/gameConfigStore.js";
@@ -920,7 +920,11 @@ export async function updateGameTierRole(guild: Guild, userId: string): Promise<
       }
 
       dmStatus = "✅ DM Sent";
-      await member.send({ content: dmMessage }).catch((err) => {
+      const gameEmbed = new EmbedBuilder()
+        .setColor(0x10b981)
+        .setTitle("Game Night 🎮")
+        .setDescription(dmMessage);
+      await member.send({ embeds: [gameEmbed] }).catch((err) => {
         dmStatus = "❌ DM Failed (closed)";
         logger.debug({ err, guildId: guild.id, userId },
           "[gameNight] Could not DM user about game progress");

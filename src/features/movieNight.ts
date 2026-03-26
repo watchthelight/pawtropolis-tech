@@ -12,7 +12,7 @@
  *  - Discord.js VoiceState: https://discord.js.org/#/docs/discord.js/main/class/VoiceState
  */
 
-import type { Guild, VoiceBasedChannel } from "discord.js";
+import { EmbedBuilder, type Guild, type VoiceBasedChannel } from "discord.js";
 import { db } from "../db/db.js";
 import { logger } from "../lib/logger.js";
 import { assignRole, getRoleTiers, removeRole, type RoleAssignmentResult } from "./roleAutomation.js";
@@ -481,7 +481,11 @@ export async function updateMovieTierRole(guild: Guild, userId: string): Promise
       }
 
       dmStatus = "✅ DM Sent";
-      await member.send({ content: dmMessage }).catch((err) => {
+      const movieEmbed = new EmbedBuilder()
+        .setColor(0x8b5cf6)
+        .setTitle("Movie Night 🎬")
+        .setDescription(dmMessage);
+      await member.send({ embeds: [movieEmbed] }).catch((err) => {
         dmStatus = "❌ DM Failed (closed)";
         logger.debug({ err, guildId: guild.id, userId },
           "[movieNight] Could not DM user about movie progress");

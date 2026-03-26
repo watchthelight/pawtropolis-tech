@@ -2,10 +2,12 @@
 	import { prefersReducedMotion } from '$lib/motion';
 	import { formatHourRange, formatDayName, TOTAL_COLS, TOTAL_ROWS } from '$lib/utils/heatmap';
 
-	let { grid, maxValue, dates }: {
+	let { grid, maxValue, dates, title, showLegend = true }: {
 		grid: number[][];
 		maxValue: number;
 		dates: string[];
+		title?: string;
+		showLegend?: boolean;
 	} = $props();
 
 	const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -103,6 +105,10 @@
 	onmouseout={onCellLeave}
 	onclick={onCellClick}
 >
+	{#if title}
+		<h3 class="week-title">{title}</h3>
+	{/if}
+
 	<div class="grid-container">
 		<!-- Hour labels row -->
 		<div class="corner-cell"></div>
@@ -148,14 +154,16 @@
 		</div>
 	{/if}
 
-	<div class="axis-note">All times UTC</div>
+	{#if showLegend}
+		<div class="axis-note">All times UTC</div>
 
-	<!-- Legend -->
-	<div class="legend">
-		<span class="legend-label">Less</span>
-		<div class="legend-gradient"></div>
-		<span class="legend-label">More</span>
-	</div>
+		<!-- Legend -->
+		<div class="legend">
+			<span class="legend-label">Less</span>
+			<div class="legend-gradient"></div>
+			<span class="legend-label">More</span>
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -164,6 +172,14 @@
 		flex-direction: column;
 		gap: 0.75rem;
 		position: relative;
+	}
+
+	.week-title {
+		font-size: 0.8rem;
+		font-weight: 600;
+		color: var(--text-secondary);
+		margin: 0;
+		letter-spacing: 0.04em;
 	}
 
 	.grid-container {

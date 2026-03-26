@@ -8,7 +8,10 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import {
+  ActionRowBuilder,
+  ButtonBuilder,
   ButtonInteraction,
+  ButtonStyle,
   GuildMember,
   MessageFlags,
   PermissionFlagsBits,
@@ -42,7 +45,7 @@ import {
   openUnclaimModal,
 } from "./helpers.js";
 
-import { runKickAction } from "./actionRunners.js";
+import { runRejectAction, runKickAction } from "./actionRunners.js";
 import { handleClaimToggle, handleUnclaimAction } from "./claimHandlers.js";
 
 // ===== Button Rate Limiting =====
@@ -91,6 +94,30 @@ export async function handleReviewButton(interaction: ButtonInteraction) {
   buttonCooldowns.set(cooldownKey, now);
 
   try {
+    // wrong_password: instant reject with preset reason (no modal)
+    if (action === "wrong_password") {
+      if (!interaction.deferred && !interaction.replied) {
+        await interaction.deferUpdate().catch((err) => {
+          logger.debug({ err, action, code, interactionId: interaction.id }, "[review] deferUpdate failed");
+        });
+      }
+      const app = await resolveApplication(interaction, code);
+      if (!app) return;
+      const tryAgainRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId("v1:start")
+          .setLabel("Try Again")
+          .setStyle(ButtonStyle.Success)
+      );
+      await runRejectAction(
+        interaction,
+        app,
+        "That is not the right password, which you can find by reading the rules carefully! It's hidden well on purpose. Please fill out a new application with the correct password.",
+        { dmComponents: [tryAgainRow] }
+      );
+      return;
+    }
+
     // reject opens modal; no defer needed yet
     if (action === "reject") {
       const app = await resolveApplication(interaction, code);

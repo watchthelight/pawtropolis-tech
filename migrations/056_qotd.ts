@@ -57,6 +57,11 @@ export function migrate056Qotd(db: Database): void {
     db.exec(`ALTER TABLE guild_config ADD COLUMN qotd_review_channel_id TEXT`);
   }
 
+  if (!columnExists(db, "guild_config", "qotd_role_id")) {
+    logger.info("[migration 056] Adding guild_config.qotd_role_id");
+    db.exec(`ALTER TABLE guild_config ADD COLUMN qotd_role_id TEXT`);
+  }
+
   recordMigration(db, "056", "qotd");
 
   logger.info("[migration 056] Complete");

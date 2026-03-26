@@ -10,7 +10,8 @@
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
-import type { User } from "discord.js";
+import type { User, MessageActionRowComponentBuilder } from "discord.js";
+import { ActionRowBuilder } from "discord.js";
 import { db } from "../../../db/db.js";
 import { logger } from "../../../lib/logger.js";
 import { nowUtc } from "../../../lib/time.js";
@@ -105,7 +106,7 @@ export function rejectTx(
  */
 export async function rejectFlow(
   user: User,
-  options: { guildName: string; reason: string; permanent?: boolean }
+  options: { guildName: string; reason: string; permanent?: boolean; components?: ActionRowBuilder<MessageActionRowComponentBuilder>[] }
 ) {
   // DM might fail. we tried.
   const result = { dmDelivered: false };
@@ -127,7 +128,10 @@ export async function rejectFlow(
   try {
     // DM can fail; we record dmDelivered=false and continue moderation flow.
     await withTimeout(
-      user.send({ embeds: [embed] }),
+      user.send({
+        embeds: [embed],
+        ...(options.components?.length ? { components: options.components } : {}),
+      }),
       FLOW_TIMEOUT_MS,
       "rejectFlow:sendDm"
     );

@@ -8,6 +8,7 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import {
+  EmbedBuilder,
   type ChatInputCommandInteraction,
   type PrivateThreadChannel,
 } from "discord.js";
@@ -129,10 +130,11 @@ export async function reopenModmailThread(params: {
     // Notify applicant
     try {
       const user = await interaction.client.users.fetch(ticket.user_id);
-      await user.send({
-        content: `Your modmail thread for **${interaction.guild?.name ?? "the server"}** has been reopened by staff.`,
-        allowedMentions: SAFE_ALLOWED_MENTIONS,
-      });
+      const reopenEmbed = new EmbedBuilder()
+        .setColor(0x3b82f6)
+        .setTitle("Modmail Reopened")
+        .setDescription(`Your modmail thread for **${interaction.guild?.name ?? "the server"}** has been reopened by staff.`);
+      await user.send({ embeds: [reopenEmbed] });
     } catch (err) {
       logger.warn(
         { err, ticketId: ticket.id, userId: ticket.user_id },

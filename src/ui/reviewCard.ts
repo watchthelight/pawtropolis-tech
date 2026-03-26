@@ -67,7 +67,7 @@ export interface BuildEmbedOptions {
   appNumber?: number | null;
   isSample?: boolean;
   reasonAttachment?: AttachmentBuilder | null;
-  inviteSource?: { code: string | null; inviterId: string | null } | null;
+  inviteSource?: { code: string | null; inviterId: string | null; label?: string | null } | null;
 }
 
 // ============================================================================
@@ -186,6 +186,10 @@ export function buildActionRowsV2(
     const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder().setCustomId(`review:accept:${idSuffix}`).setLabel("Accept").setStyle(ButtonStyle.Primary),
       new ButtonBuilder().setCustomId(`review:reject:${idSuffix}`).setLabel("Reject").setStyle(ButtonStyle.Danger),
+      new ButtonBuilder()
+        .setCustomId(`review:wrong_password:${idSuffix}`)
+        .setLabel("Wrong Password")
+        .setStyle(ButtonStyle.Danger),
       new ButtonBuilder()
         .setCustomId(`review:perm_reject:${idSuffix}`)
         .setLabel("Perm Reject")
@@ -425,32 +429,40 @@ export function buildReviewEmbedV3(
   // ═══════════════════════════════════════════════════════════════════════════
   lines.push("**Application**");
   lines.push(`**Applicant:**  <@${app.user_id}>`);
-  lines.push(`**Submitted:**  ${ts(submittedDate, 'f')} • ${ts(submittedDate, 'R')}`);
+  lines.push(`**Submitted** ${ts(submittedDate, 'R')} on ${ts(submittedDate, 'f')}`);
 
   // Claim status
   if (claim) {
     const claimEpoch = parseClaimedAt(claim.claimed_at);
     if (claimEpoch) {
       const claimTs = claimEpoch * 1000;
-      lines.push(`**Claimed by:**  <@${claim.reviewer_id}> • ${ts(claimTs, 'R')}`);
+      lines.push(`**Claimed** ${ts(claimTs, 'R')} by <@${claim.reviewer_id}>`);
     } else {
-      lines.push(`**Claimed by:**  <@${claim.reviewer_id}>`);
+      lines.push(`**Claimed** by <@${claim.reviewer_id}>`);
     }
   } else {
-    lines.push(`**Claimed by:** Unclaimed`);
+    lines.push(`**Claimed:** Unclaimed`);
   }
 
   // Account age
   if (typeof accountCreatedAt === 'number' && Number.isFinite(accountCreatedAt) && accountCreatedAt > 0) {
-    lines.push(`**Account created:**  ${ts(accountCreatedAt, 'f')} • ${ts(accountCreatedAt, 'R')}`);
+    lines.push(`**Account created** ${ts(accountCreatedAt, 'R')} on ${ts(accountCreatedAt, 'f')}`);
   }
 
-  // Invite source — only show when we actually detected a code.
-  // When code is null (vanity URL miss, bot restart, rate limit) omit the field
-  // rather than showing "Unknown" which is noise for reviewers.
+  // Join method — show who invited them and the link
   if (inviteSource?.code) {
-    const inviterPart = inviteSource.inviterId ? ` (by <@${inviteSource.inviterId}>)` : '';
-    lines.push(`**Invite:**  discord.gg/${inviteSource.code}${inviterPart}`);
+    const link = `[discord.gg/${inviteSource.code}](https://discord.gg/${inviteSource.code})`;
+    if (inviteSource.label && inviteSource.inviterId) {
+      lines.push(`**Joined via:** ${inviteSource.label}: ${link} (created by <@${inviteSource.inviterId}>)`);
+    } else if (inviteSource.label) {
+      lines.push(`**Joined via:** ${inviteSource.label}: ${link}`);
+    } else if (inviteSource.inviterId) {
+      lines.push(`**Joined via:** <@${inviteSource.inviterId}>'s invite: ${link}`);
+    } else {
+      lines.push(`**Joined via:** ${link}`);
+    }
+  } else {
+    lines.push(`**Joined via:** Unknown`);
   }
 
   lines.push(EMPTY);
@@ -518,12 +530,12 @@ export function buildReviewEmbedV3(
       const appCode = shortCode(pastApp.id);
       const submittedTs = pastApp.submitted_at ? new Date(pastApp.submitted_at) : null;
       const timeStr = submittedTs ? ts(submittedTs, 'R') : 'unknown';
-      let line = `${statusIcon} #${appCode} • ${pastApp.status} • ${timeStr}`;
+      let line = `${statusIcon} #${appCode} • ${pastApp.status} ${timeStr}`;
       if (pastApp.resolution_reason) {
         const truncatedReason = pastApp.resolution_reason.length > 50
           ? pastApp.resolution_reason.slice(0, 47) + '...'
           : pastApp.resolution_reason;
-        line += ` — "${truncatedReason}"`;
+        line += `: "${truncatedReason}"`;
       }
       sectionLines.push(line);
     }
@@ -544,7 +556,7 @@ export function buildReviewEmbedV3(
 
     for (const a of recentActions.slice(0, 7)) {
       const actionDisplay = formatActionWithIcon(a.action);
-      sectionLines.push(`${actionDisplay} by <@${a.moderator_id}> — ${ts(a.created_at * 1000, 'R')}`);
+      sectionLines.push(`${actionDisplay} ${ts(a.created_at * 1000, 'R')} by <@${a.moderator_id}>`);
     }
 
     sectionLines.push(EMPTY, DIVIDER, EMPTY);

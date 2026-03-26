@@ -9,6 +9,7 @@
 
 import {
   ChannelType,
+  EmbedBuilder,
   type Client,
   type Guild,
   type ThreadChannel,
@@ -230,10 +231,11 @@ export async function dashboardCloseThread(params: {
     // Notify applicant
     try {
       const user = await client.users.fetch(ticket.user_id);
-      await user.send({
-        content: `Your modmail thread for **${guild.name}** has been closed by staff.`,
-        allowedMentions: SAFE_ALLOWED_MENTIONS,
-      });
+      const closeEmbed = new EmbedBuilder()
+        .setColor(0x64748b)
+        .setTitle("Modmail Closed")
+        .setDescription(`Your modmail thread for **${guild.name}** has been closed by staff.`);
+      await user.send({ embeds: [closeEmbed] });
     } catch (err) {
       logger.warn({ err, ticketId, userId: ticket.user_id }, "[modmail:dashboard] failed to DM applicant on close");
     }
@@ -340,10 +342,11 @@ export async function dashboardReopenThread(params: {
     // Notify applicant
     try {
       const user = await client.users.fetch(ticket.user_id);
-      await user.send({
-        content: `Your modmail thread for **${guild.name}** has been reopened by staff.`,
-        allowedMentions: SAFE_ALLOWED_MENTIONS,
-      });
+      const reopenEmbed = new EmbedBuilder()
+        .setColor(0x3b82f6)
+        .setTitle("Modmail Reopened")
+        .setDescription(`Your modmail thread for **${guild.name}** has been reopened by staff.`);
+      await user.send({ embeds: [reopenEmbed] });
     } catch (err) {
       logger.warn({ err, ticketId, userId: ticket.user_id }, "[modmail:dashboard] failed to DM applicant on reopen");
     }

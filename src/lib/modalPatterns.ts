@@ -32,7 +32,7 @@ export const MODAL_PAGE_RE = /^v1:modal:([^:]+):p(\d+)$/;
 // Review decision buttons. "accept" is a legacy alias for "approve" - kept for
 // backwards compat with old button embeds that might still exist in channels.
 // These buttons can live in channels for weeks, so backwards compat matters here.
-export const BTN_DECIDE_RE = /^(?:v1:decide|review):(approve|accept|reject|kick|claim|unclaim):code([0-9A-F]{6})$/;
+export const BTN_DECIDE_RE = /^(?:v1:decide|review):(approve|accept|reject|kick|claim|unclaim|wrong_password):code([0-9A-F]{6})$/;
 
 // Modmail button - opens a DM thread with the applicant
 export const BTN_MODMAIL_RE = /^(?:v1:decide|review):modmail:code([0-9A-F]{6})$/;

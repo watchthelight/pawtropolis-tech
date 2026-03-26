@@ -9,7 +9,7 @@
  *  - Discord.js GuildMember: https://discord.js.org/#/docs/discord.js/main/class/GuildMember
  */
 
-import type { Guild, GuildMember } from "discord.js";
+import { EmbedBuilder, type Guild, type GuildMember } from "discord.js";
 import { logger } from "../lib/logger.js";
 import { db } from "../db/db.js";
 import {
@@ -234,9 +234,11 @@ export async function handleLevelRoleAdded(
       // DM the user about their rewards first, so we can log the status
       const rewardList = grantedRewards.map(r => `**${r.name}**`).join(", ");
       let dmStatus = "✅ DM Sent";
-      await member.send({
-        content: `Thanks for being a part of our community! We slid ya ${rewardList} for reaching **Level ${level}**! 🎉`,
-      }).catch((err) => {
+      const rewardEmbed = new EmbedBuilder()
+        .setColor(0xf59e0b)
+        .setTitle("Level Rewards Unlocked! 🎉")
+        .setDescription(`Thanks for being a part of our community! We slid ya ${rewardList} for reaching **Level ${level}**!`);
+      await member.send({ embeds: [rewardEmbed] }).catch((err) => {
         dmStatus = "❌ DM Failed (closed)";
         logger.debug({ err, guildId: guild.id, userId: member.id },
           "[levelRewards] Could not DM user about rewards");

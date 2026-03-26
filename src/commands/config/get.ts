@@ -315,7 +315,8 @@ export async function executeView(ctx: CommandContext<ChatInputCommandInteractio
   jsonValue += `- artist_ignored_users_json: ${safeJsonLen(cfg.artist_ignored_users_json)}\n`;
   jsonValue += `- artist_ticket_roles_json: ${cfg.artist_ticket_roles_json ? "configured" : "*not set*"}\n`;
   jsonValue += `- poke_category_ids_json: ${safeJsonLen(cfg.poke_category_ids_json)}\n`;
-  jsonValue += `- poke_excluded_channel_ids_json: ${safeJsonLen(cfg.poke_excluded_channel_ids_json)}`;
+  jsonValue += `- poke_excluded_channel_ids_json: ${safeJsonLen(cfg.poke_excluded_channel_ids_json)}\n`;
+  jsonValue += `- pulse_excluded_category_ids_json: ${safeJsonLen(cfg.pulse_excluded_category_ids_json)}`;
   embed3.addFields({ name: "JSON Configs", value: jsonValue, inline: false });
 
     result.push(embed3);

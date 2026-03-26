@@ -10,6 +10,8 @@
 import {
   GuildMember,
   type Guild,
+  type MessageActionRowComponentBuilder,
+  type ActionRowBuilder,
 } from "discord.js";
 import { logger } from "../../../lib/logger.js";
 import { captureException } from "../../../lib/sentry.js";
@@ -266,7 +268,8 @@ export async function runApproveAction(
 export async function runRejectAction(
   interaction: ReviewStaffInteraction,
   app: ApplicationRow,
-  reason: string
+  reason: string,
+  options?: { dmComponents?: ActionRowBuilder<MessageActionRowComponentBuilder>[] }
 ) {
   if (app.status === "rejected" || app.status === "approved" || app.status === "kicked") {
     await replyOrEdit(interaction, { content: "This application is already resolved." }).catch((err) => {
@@ -330,7 +333,7 @@ export async function runRejectAction(
   const guildName = interaction.guild?.name ?? "this server";
   let dmDelivered = false;
   if (user) {
-    const dmResult = await rejectFlow(user, { guildName, reason: trimmed });
+    const dmResult = await rejectFlow(user, { guildName, reason: trimmed, components: options?.dmComponents });
     dmDelivered = dmResult.dmDelivered;
     updateReviewActionMeta(tx.reviewActionId, dmResult);
   } else {

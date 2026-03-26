@@ -154,6 +154,9 @@ export type GuildConfig = {
   banner_sync_enabled?: number | null; // 1=enabled, 0=disabled (default: 1)
   // QOTD suggestion system (056_qotd migration)
   qotd_review_channel_id?: string | null;
+  qotd_role_id?: string | null;
+  // Pulse newsletter exclusion (059 migration)
+  pulse_excluded_category_ids_json?: string | null;
   // These fields are NOT optional. Ask me how I know.
   // (Hint: it involved a production outage and a missing COALESCE)
   image_search_url_template: string;
@@ -518,6 +521,29 @@ export function ensurePokeConfigColumns() {
   }
 }
 
+export function ensurePulseConfigColumns() {
+  if (ensuredMigrations.has("guild_config_pulse")) return;
+  try {
+    const exists = db
+      .prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='guild_config'`)
+      .get() as { name: string } | undefined;
+    if (!exists) return;
+    const cols = db.prepare(`PRAGMA table_info(guild_config)`).all() as Array<{ name: string }>;
+
+    if (!cols.some((col) => col.name === "pulse_excluded_category_ids_json")) {
+      logger.info(
+        { table: "guild_config", column: "pulse_excluded_category_ids_json" },
+        "[ensure] adding pulse_excluded_category_ids_json column"
+      );
+      db.prepare(`ALTER TABLE guild_config ADD COLUMN pulse_excluded_category_ids_json TEXT`).run();
+    }
+
+    ensuredMigrations.add("guild_config_pulse");
+  } catch (err) {
+    logger.error({ err }, "[ensure] failed to ensure pulse config columns");
+  }
+}
+
 function invalidateCache(guildId: string) {
   configCache.delete(guildId);
 }
@@ -628,6 +654,7 @@ export function upsertConfig(guildId: string, partial: Partial<Omit<GuildConfig,
       "circuit_breaker_threshold", "circuit_breaker_reset_ms",
       "avatar_scan_hard_threshold", "avatar_scan_soft_threshold", "avatar_scan_racy_threshold",
       "flag_rate_limit_ms", "flag_cooldown_ttl_ms", "nsfw_alert_role_id", "banner_sync_enabled",
+      "qotd_review_channel_id", "qotd_role_id", "pulse_excluded_category_ids_json",
     ]);
 
     const validKeys = keys.filter((k) => ALLOWED_CONFIG_COLUMNS.has(k as string));

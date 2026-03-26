@@ -326,4 +326,46 @@ export const data = new SlashCommandBuilder()
       .addSubcommand((sc) =>
         sc.setName("list").setDescription("List current poke configuration")
       )
+  )
+  .addSubcommandGroup((group) =>
+    group
+      .setName("invite")
+      .setDescription("Manage invite source labels for review cards")
+      .addSubcommand((sc) =>
+        sc
+          .setName("label")
+          .setDescription("Label an invite link with a source name (e.g. Disboard, TikTok)")
+          .addStringOption((o) => o.setName("link").setDescription("Invite code, link, or discord.gg URL").setRequired(true))
+          .addStringOption((o) => o.setName("name").setDescription("Source label (e.g. Disboard, TikTok, Reddit)").setRequired(true))
+      )
+      .addSubcommand((sc) =>
+        sc
+          .setName("unlabel")
+          .setDescription("Remove a label from an invite link")
+          .addStringOption((o) => o.setName("link").setDescription("Invite code, link, or discord.gg URL").setRequired(true))
+      )
+      .addSubcommand((sc) =>
+        sc.setName("list").setDescription("List all labeled invite links")
+      )
+  )
+  // GROUP 7: "pulse" - Newsletter stat exclusions
+  .addSubcommandGroup((group) =>
+    group
+      .setName("pulse")
+      .setDescription("Configure newsletter stat exclusions")
+      .addSubcommand((sc) =>
+        sc
+          .setName("exclude-category")
+          .setDescription("Exclude a category from newsletter stats")
+          .addChannelOption((o) => o.setName("category").setDescription("Category to exclude").setRequired(true))
+      )
+      .addSubcommand((sc) =>
+        sc
+          .setName("include-category")
+          .setDescription("Remove a category from the exclusion list")
+          .addChannelOption((o) => o.setName("category").setDescription("Category to re-include").setRequired(true))
+      )
+      .addSubcommand((sc) =>
+        sc.setName("list").setDescription("List excluded pulse categories")
+      )
   );

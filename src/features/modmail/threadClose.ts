@@ -278,10 +278,11 @@ export async function closeModmailThread(params: {
     // Notify applicant
     try {
       const user = await interaction.client.users.fetch(ticket.user_id);
-      await user.send({
-        content: `Your modmail thread for **${interaction.guild?.name ?? "the server"}** has been closed by staff.`,
-        allowedMentions: SAFE_ALLOWED_MENTIONS,
-      });
+      const closeEmbed = new EmbedBuilder()
+        .setColor(0x64748b)
+        .setTitle("Modmail Closed")
+        .setDescription(`Your modmail thread for **${interaction.guild?.name ?? "the server"}** has been closed by staff.`);
+      await user.send({ embeds: [closeEmbed] });
     } catch (err) {
       logger.warn(
         { err, ticketId: ticket.id, userId: ticket.user_id },

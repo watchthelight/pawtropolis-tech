@@ -404,10 +404,11 @@ export async function openPublicModmailThreadFor(params: {
 
     // Try to DM the applicant
     try {
-      await user.send({
-        content: `Hi, a moderator opened a modmail thread regarding your application to **${interaction.guild.name}**. You may provide answers to the questions in this DM. Any message sent will be shared with staff only and kept strictly confidential. Verification can continue once modmail has been closed by staff.`,
-        allowedMentions: SAFE_ALLOWED_MENTIONS,
-      });
+      const dmEmbed = new EmbedBuilder()
+        .setColor(0x3b82f6)
+        .setTitle("Modmail Opened")
+        .setDescription(`Hi, a moderator opened a modmail thread regarding your application to **${interaction.guild.name}**. You may provide answers to the questions in this DM. Any message sent will be shared with staff only and kept strictly confidential. Verification can continue once modmail has been closed by staff.`);
+      await user.send({ embeds: [dmEmbed] });
     } catch (err) {
       logger.warn({ err, userId, ticketId }, "[modmail] failed to DM applicant on open");
       await thread.send({

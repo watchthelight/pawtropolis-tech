@@ -17,7 +17,7 @@ import {
   EmbedBuilder,
 } from "discord.js";
 import { logger } from "../../lib/logger.js";
-import { shouldBypass, hasRole, ROLE_IDS, getConfig } from "../../lib/config.js";
+import { shouldBypass, hasRoleOrAbove, ROLE_IDS, getConfig } from "../../lib/config.js";
 import { shortCode } from "../../lib/ids.js";
 import { BTN_QOTD_RE } from "../../lib/modalPatterns.js";
 import {
@@ -37,7 +37,7 @@ import type { QotdSuggestionRow } from "./types.js";
 
 function isStaff(member: GuildMember | null, userId: string): boolean {
   if (shouldBypass(userId, member)) return true;
-  return hasRole(member, ROLE_IDS.GATEKEEPER);
+  return hasRoleOrAbove(member, ROLE_IDS.GATEKEEPER);
 }
 
 function requireStaff(interaction: ButtonInteraction | ModalSubmitInteraction): boolean {
@@ -249,9 +249,12 @@ export async function handleQotdSuggestModal(
           });
           const actionRow = buildQotdActionRow(code);
 
+          const qotdRoleId = config?.qotd_role_id;
           const msg = await channel.send({
+            content: qotdRoleId ? `<@&${qotdRoleId}> New QOTD suggestion` : undefined,
             embeds: [embed],
             components: [actionRow],
+            allowedMentions: { roles: qotdRoleId ? [qotdRoleId] : [] },
           });
 
           setReviewMessageId(id, msg.id);

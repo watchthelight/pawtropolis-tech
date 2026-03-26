@@ -115,6 +115,20 @@ import {
   executeView,
 } from "./get.js";
 
+// Invite Labels
+import {
+  executeInviteLabel,
+  executeInviteUnlabel,
+  executeInviteList,
+} from "./invite.js";
+
+// Pulse Newsletter
+import {
+  executePulseExcludeCategory,
+  executePulseIncludeCategory,
+  executePulseList,
+} from "./pulse.js";
+
 // Utilities
 import { executeIsitreal } from "./isitreal.js";
 import { executeToggleApis } from "./toggleapis.js";
@@ -312,6 +326,32 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
       break;
     case "poke:list":
       await executePokeList(ctx);
+      break;
+
+    // =========================================================================
+    // INVITE GROUP: Invite Source Labels
+    // =========================================================================
+    case "invite:label":
+      await executeInviteLabel(ctx);
+      break;
+    case "invite:unlabel":
+      await executeInviteUnlabel(ctx);
+      break;
+    case "invite:list":
+      await executeInviteList(ctx);
+      break;
+
+    // =========================================================================
+    // PULSE GROUP: Newsletter Exclusions
+    // =========================================================================
+    case "pulse:exclude-category":
+      await executePulseExcludeCategory(ctx);
+      break;
+    case "pulse:include-category":
+      await executePulseIncludeCategory(ctx);
+      break;
+    case "pulse:list":
+      await executePulseList(ctx);
       break;
 
     // =========================================================================

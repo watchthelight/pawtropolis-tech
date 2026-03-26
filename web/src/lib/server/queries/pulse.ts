@@ -155,8 +155,38 @@ export interface NewsletterStats {
 	voiceTrackingActive: boolean; // true if voice_session has any rows
 }
 
-function weekStats(guildId: string, from: number, to: number): WeekStats {
+/**
+ * Resolves excluded category IDs → channel IDs via channel_cache.
+ * Returns empty array if nothing configured (queries run unfiltered).
+ */
+function getExcludedChannelIds(guildId: string): string[] {
+	const row = db().prepare(
+		'SELECT pulse_excluded_category_ids_json FROM guild_config WHERE guild_id = ?'
+	).get(guildId) as { pulse_excluded_category_ids_json: string | null } | undefined;
+
+	if (!row?.pulse_excluded_category_ids_json) return [];
+
+	let categoryIds: string[];
+	try {
+		categoryIds = JSON.parse(row.pulse_excluded_category_ids_json);
+		if (!Array.isArray(categoryIds) || categoryIds.length === 0) return [];
+	} catch {
+		return [];
+	}
+
+	const placeholders = categoryIds.map(() => '?').join(',');
+	const channels = db().prepare(
+		`SELECT channel_id FROM channel_cache WHERE guild_id = ? AND parent_id IN (${placeholders})`
+	).all(guildId, ...categoryIds) as { channel_id: string }[];
+
+	return channels.map(c => c.channel_id);
+}
+
+function weekStats(guildId: string, from: number, to: number, excludedChannelIds: string[]): WeekStats {
 	const d = db();
+	const excludeClause = excludedChannelIds.length > 0
+		? `AND channel_id NOT IN (${excludedChannelIds.map(() => '?').join(',')})`
+		: '';
 
 	const newMembers = count(
 		'SELECT COUNT(*) as count FROM user_activity WHERE guild_id = ? AND joined_at >= ? AND joined_at < ?',
@@ -177,17 +207,18 @@ function weekStats(guildId: string, from: number, to: number): WeekStats {
 		guildId, from, to
 	);
 
-	const communicators = count(
-		'SELECT COUNT(DISTINCT user_id) as count FROM message_activity WHERE guild_id = ? AND created_at_s >= ? AND created_at_s < ?',
-		guildId, from, to
-	);
+	const communicators = (d.prepare(
+		`SELECT COUNT(DISTINCT user_id) as count FROM message_activity WHERE guild_id = ? AND created_at_s >= ? AND created_at_s < ? ${excludeClause}`
+	).get(guildId, from, to, ...excludedChannelIds) as { count: number }).count;
 
-	const totalMessages = count(
-		'SELECT COUNT(*) as count FROM message_activity WHERE guild_id = ? AND created_at_s >= ? AND created_at_s < ?',
-		guildId, from, to
-	);
+	const totalMessages = (d.prepare(
+		`SELECT COUNT(*) as count FROM message_activity WHERE guild_id = ? AND created_at_s >= ? AND created_at_s < ? ${excludeClause}`
+	).get(guildId, from, to, ...excludedChannelIds) as { count: number }).count;
 
 	// Voice minutes — includes still-in-voice sessions (counts up to `to` boundary)
+	const voiceExcludeClause = excludedChannelIds.length > 0
+		? `AND channel_id NOT IN (${excludedChannelIds.map(() => '?').join(',')})`
+		: '';
 	const voiceResult = d.prepare(
 		`SELECT COALESCE(SUM(
 			CASE
@@ -196,8 +227,8 @@ function weekStats(guildId: string, from: number, to: number): WeekStats {
 			END
 		) / 60, 0) as minutes
 		FROM voice_session
-		WHERE guild_id = ? AND joined_at_s >= ? AND joined_at_s < ?`
-	).get(to, guildId, from, to) as { minutes: number };
+		WHERE guild_id = ? AND joined_at_s >= ? AND joined_at_s < ? ${voiceExcludeClause}`
+	).get(to, guildId, from, to, ...excludedChannelIds) as { minutes: number };
 	const voiceMinutes = voiceResult.minutes;
 
 	return { newMembers, retentionPct, newCommunicators, communicators, totalMessages, voiceMinutes };
@@ -226,10 +257,11 @@ export function getNewsletterStats(guildId: string): NewsletterStats {
 	const prevWeekEnd = lastWeekStart;
 
 	const voiceRows = (db().prepare('SELECT COUNT(*) as count FROM voice_session WHERE guild_id = ?').get(guildId) as { count: number }).count;
+	const excludedChannelIds = getExcludedChannelIds(guildId);
 
 	return {
-		current: weekStats(guildId, lastWeekStart, lastWeekEnd),
-		previous: weekStats(guildId, prevWeekStart, prevWeekEnd),
+		current: weekStats(guildId, lastWeekStart, lastWeekEnd, excludedChannelIds),
+		previous: weekStats(guildId, prevWeekStart, prevWeekEnd, excludedChannelIds),
 		voiceTrackingActive: voiceRows > 0
 	};
 }
@@ -278,6 +310,10 @@ export interface TopVoiceChannel {
 export function getTopVoiceChannels(guildId: string): TopVoiceChannel[] {
 	const nowS = Math.floor(Date.now() / 1000);
 	const weekStart = nowS - 7 * 86400;
+	const excludedChannelIds = getExcludedChannelIds(guildId);
+	const excludeClause = excludedChannelIds.length > 0
+		? `AND vs.channel_id NOT IN (${excludedChannelIds.map(() => '?').join(',')})`
+		: '';
 
 	return db().prepare(`
 		SELECT vs.channel_id as channelId, cc.name as channelName,
@@ -285,8 +321,9 @@ export function getTopVoiceChannels(guildId: string): TopVoiceChannel[] {
 		FROM voice_session vs
 		LEFT JOIN channel_cache cc ON vs.guild_id = cc.guild_id AND vs.channel_id = cc.channel_id
 		WHERE vs.guild_id = ? AND vs.joined_at_s >= ? AND vs.joined_at_s < ?
+		${excludeClause}
 		GROUP BY vs.channel_id ORDER BY minutes DESC LIMIT 3
-	`).all(nowS, guildId, weekStart, nowS) as TopVoiceChannel[];
+	`).all(nowS, guildId, weekStart, nowS, ...excludedChannelIds) as TopVoiceChannel[];
 }
 
 // ─── Insights Engine ────────────────────────────────────────────────────────────

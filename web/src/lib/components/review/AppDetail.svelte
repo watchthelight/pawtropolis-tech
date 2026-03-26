@@ -147,7 +147,7 @@
 
 	// === Decision Actions ===
 
-	type DecisionAction = 'approve' | 'reject' | 'kick' | 'permreject';
+	type DecisionAction = 'approve' | 'reject' | 'wrong_password' | 'kick' | 'permreject';
 
 	let activeAction = $state<DecisionAction | null>(null);
 	let reasonText = $state('');
@@ -162,6 +162,10 @@
 		activeAction = action;
 		reasonText = '';
 		decisionError = null;
+		if (action === 'wrong_password') {
+			executeDecision('wrong_password');
+			return;
+		}
 		requestAnimationFrame(() => reasonInput?.focus());
 	}
 
@@ -224,7 +228,7 @@
 			}
 
 			setBotOnline();
-			const labels: Record<DecisionAction, string> = { approve: 'Approved', reject: 'Rejected', kick: 'Kicked', permreject: 'Permanently Rejected' };
+			const labels: Record<DecisionAction, string> = { approve: 'Approved', reject: 'Rejected', wrong_password: 'Rejected (Wrong Password)', kick: 'Kicked', permreject: 'Permanently Rejected' };
 			decisionDone = labels[action];
 			decisionError = null;
 			activeAction = null;
@@ -406,6 +410,7 @@
 					{decisionLoading && activeAction === 'approve' ? 'Approving...' : 'Approve'}
 				</button>
 				<button class="btn btn-reject" onclick={() => startDecision('reject')} disabled={decisionLoading || !botOnline}>Reject</button>
+				<button class="btn btn-reject" onclick={() => startDecision('wrong_password')} disabled={decisionLoading || !botOnline}>Wrong Password</button>
 				<button class="btn btn-kick" onclick={() => startDecision('kick')} disabled={decisionLoading || !botOnline}>Kick</button>
 				{#if canAdminUnclaim}
 					<button class="btn btn-permreject" onclick={() => startDecision('permreject')} disabled={decisionLoading || !botOnline}>Perm Reject</button>
