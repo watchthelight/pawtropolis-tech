@@ -1,5 +1,8 @@
 @import '@fontsource-variable/inter';
 @import 'tailwindcss';
+@import '$lib/styles/neumorphism.css';
+@import '$lib/styles/glassmorphism.css';
+@import '$lib/styles/skeuomorphism.css';
 
 /*
  * Pawtropolis Dashboard — Cozy Holdfast Design System

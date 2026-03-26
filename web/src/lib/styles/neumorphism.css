@@ -1,0 +1,119 @@
+/*
+ * Neumorphism theme — "Soft Machine"
+ *
+ * Depth through shadow alone. No borders, no outlines — every element
+ * appears softly extruded from or pressed into the surface.
+ * Dark-mode neumorphism with warm undertones.
+ */
+
+/* ── Custom property overrides ── */
+[data-style="neumorphism"] {
+	/* Surfaces — slightly lighter/warmer for neumorphic shadow visibility */
+	--bg: oklch(18% 0.006 var(--hue));
+	--surface: oklch(18% 0.006 var(--hue));
+	--surface-raised: oklch(20% 0.007 var(--hue));
+	--surface-overlay: oklch(22% 0.008 var(--hue));
+
+	/* Borders — remove all borders */
+	--border: transparent;
+	--border-holdfast: transparent;
+	--border-strong: transparent;
+
+	/* Shadows — neumorphic dual-shadow system */
+	--shadow-sm:
+		3px 3px 8px rgba(0, 0, 0, 0.4),
+		-3px -3px 8px rgba(255, 255, 255, 0.03);
+	--shadow-md:
+		6px 6px 14px rgba(0, 0, 0, 0.45),
+		-6px -6px 14px rgba(255, 255, 255, 0.035);
+	--shadow-lg:
+		8px 8px 18px rgba(0, 0, 0, 0.5),
+		-8px -8px 18px rgba(255, 255, 255, 0.04);
+
+	/* Accent — slightly more muted for neumorphic subtlety */
+	--accent: oklch(68% 0.14 var(--hue));
+	--accent-dim: oklch(38% 0.08 var(--hue));
+
+	/* Softer radii */
+	--radius-sm: 10px;
+	--radius-md: 16px;
+	--radius-lg: 20px;
+}
+
+/* ── Component-level overrides ── */
+
+/* Sidebar — borderless, flush with bg */
+[data-style="neumorphism"] .sidebar {
+	border-right: none;
+	box-shadow: 4px 0 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Nav items — pill buttons with raised shadow */
+[data-style="neumorphism"] .nav-item {
+	border-radius: 999px;
+	box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.35), -2px -2px 5px rgba(255, 255, 255, 0.02);
+}
+
+/* Active nav — pressed/inset */
+[data-style="neumorphism"] .nav-active {
+	box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.4), inset -3px -3px 6px rgba(255, 255, 255, 0.025) !important;
+}
+
+/* Cards — raised neumorphic */
+[data-style="neumorphism"] .card,
+[data-style="neumorphism"] .stat-card,
+[data-style="neumorphism"] .heatmap-card {
+	border: none;
+	box-shadow: var(--shadow-md);
+}
+
+/* Buttons — press on :active */
+[data-style="neumorphism"] button:active {
+	box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.4), inset -2px -2px 5px rgba(255, 255, 255, 0.025);
+}
+
+/* Chip selectors (week selector, tab bars) — inset track, raised active */
+[data-style="neumorphism"] .selector,
+[data-style="neumorphism"] .week-selector {
+	box-shadow: inset 2px 2px 6px rgba(0, 0, 0, 0.4), inset -2px -2px 6px rgba(255, 255, 255, 0.025);
+	border: none;
+	padding: 4px;
+	border-radius: 999px;
+}
+
+[data-style="neumorphism"] .chip.active {
+	box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.35), -2px -2px 5px rgba(255, 255, 255, 0.02);
+	background: var(--surface-raised);
+	border-color: transparent;
+}
+
+/* Heatmap cells — subtle raised squares */
+[data-style="neumorphism"] .hm-cell,
+[data-style="neumorphism"] .cell {
+	border-radius: 4px;
+	box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3), -1px -1px 3px rgba(255, 255, 255, 0.015);
+}
+
+/* Identity section — no border */
+[data-style="neumorphism"] .identity {
+	border-bottom: none;
+}
+
+/* Footer — no border */
+[data-style="neumorphism"] .footer {
+	border-top: none;
+}
+
+/* Review cards */
+[data-style="neumorphism"] .review-card {
+	border: none;
+	box-shadow: var(--shadow-sm);
+}
+
+/* Input fields / detail values — inset wells */
+[data-style="neumorphism"] input,
+[data-style="neumorphism"] textarea,
+[data-style="neumorphism"] select {
+	border: none;
+	box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.35), inset -2px -2px 5px rgba(255, 255, 255, 0.02);
+}
