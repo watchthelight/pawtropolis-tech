@@ -8,7 +8,7 @@
 
 import Fastify from "fastify";
 import type { Client, Guild } from "discord.js";
-import { EmbedBuilder } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from "discord.js";
 import { db } from "../db/db.js";
 import { logger } from "../lib/logger.js";
 import { getConfig } from "../lib/config.js";
@@ -60,6 +60,7 @@ type ReviewBody = {
 // ===== SSE Notifier =====
 
 import { notifyDashboard } from "./notifyDashboard.js";
+import { CONFIG_FIELD_RULES, validateConfigUpdate, normalizeConfigValue, hasMinTier as hasMinTierValidation } from "../lib/configValidation.js";
 
 // ===== Server =====
 
@@ -364,6 +365,62 @@ export async function startDashboardApi(client: Client): Promise<void> {
     notifyDashboard("review:rejected", { appId, reviewerId: userId, action: "reject", reason });
     notifyDashboard("stats:updated", { userId });
     return { success: true, data: { appId, action: "reject" } } satisfies ApiSuccess;
+  });
+
+  // POST /api/review/wrong_password
+  server.post<{ Body: ReviewBody }>("/api/review/wrong_password", async (request, reply) => {
+    const { userId, tier, appId } = request.body ?? {};
+    if (!userId || !tier || !appId) return reply.code(400).send({ success: false, error: "Missing userId, tier, or appId" } satisfies ApiError);
+    if (!hasMinTier(tier, "gk")) return reply.code(403).send({ success: false, error: "Insufficient permissions" } satisfies ApiError);
+
+    const app = loadApplication(appId);
+    if (!app) return reply.code(404).send({ success: false, error: "Application not found" } satisfies ApiError);
+
+    const claim = getClaim(appId);
+    if (claim && claim.reviewer_id !== userId) {
+      return reply.code(409).send({ success: false, error: "Application is claimed by another reviewer" } satisfies ApiError);
+    }
+
+    const rejectReason = "That is not the right password, which you can find by reading the rules carefully! It's hidden well on purpose. Please fill out a new application with the correct password.";
+    const txResult = rejectTx(appId, userId, rejectReason);
+    if (txResult.kind !== "changed") {
+      return reply.code(409).send({ success: false, error: "Application is not in a reviewable state" } satisfies ApiError);
+    }
+
+    const guild = getGuild();
+    if (guild) {
+      try {
+        const user = await client.users.fetch(app.user_id);
+        const tryAgainRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder()
+            .setCustomId("v1:start")
+            .setLabel("Try Again")
+            .setStyle(ButtonStyle.Success)
+        );
+        const flowResult = await rejectFlow(user, { guildName: guild.name, reason: rejectReason, components: [tryAgainRow] });
+        updateReviewActionMeta(txResult.reviewActionId, { dmDelivered: flowResult.dmDelivered });
+      } catch (err) {
+        logger.warn({ err, appId, userId: app.user_id }, "[dashboardApi] Failed to send wrong_password rejection DM");
+      }
+
+      const code = shortCode(appId);
+      logActionPretty(guild, { appId, appCode: code, actorId: userId, subjectId: app.user_id, action: "reject", reason: rejectReason }).catch((err) =>
+        logger.warn({ err, appId }, "[dashboardApi] failed to log wrong_password reject action"));
+
+      closeModmailForApplication(guild.id, app.user_id, code, { reason: "rejected", client, guild }).catch((err) =>
+        logger.warn({ err, appId }, "[dashboardApi] failed to auto-close modmail on wrong_password reject"));
+    }
+
+    const wpCard = await ensureReviewMessage(client, appId).catch((err) => {
+      logger.warn({ err, appId }, "[dashboardApi] failed to refresh review card after wrong_password reject");
+      return null;
+    });
+    postReviewChannelMessage(appId, "Application rejected (wrong password).", wpCard?.messageId);
+
+    cacheModerator(userId);
+    notifyDashboard("review:rejected", { appId, reviewerId: userId, action: "reject", reason: rejectReason });
+    notifyDashboard("stats:updated", { userId });
+    return { success: true, data: { appId, action: "wrong_password" } } satisfies ApiSuccess;
   });
 
   // POST /api/review/kick
@@ -1242,6 +1299,89 @@ export async function startDashboardApi(client: Client): Promise<void> {
       logger.warn({ err }, "[dashboardApi] Failed to fetch level role stats");
       return reply.code(500).send({ success: false, error: "Failed to fetch level role stats" } satisfies ApiError);
     }
+  });
+
+  // ===== Config Update =====
+
+  server.post<{ Body: Record<string, unknown> }>("/api/config/update", async (request, reply) => {
+    const { userId, tier, fields } = request.body ?? {};
+    if (!userId || !tier || !fields || typeof fields !== "object" || Object.keys(fields as object).length === 0)
+      return reply.code(400).send({ success: false, error: "Missing required fields (userId, tier, fields)" } satisfies ApiError);
+
+    // Floor check: admin+ minimum
+    if (!hasMinTier(tier as string, "admin"))
+      return reply.code(403).send({ success: false, error: "Insufficient permissions (admin+ required)" } satisfies ApiError);
+
+    const fieldEntries = fields as Record<string, unknown>;
+    const fieldKeys = Object.keys(fieldEntries);
+
+    // Per-field tier check
+    for (const key of fieldKeys) {
+      const rule = CONFIG_FIELD_RULES[key];
+      if (!rule) {
+        return reply.code(400).send({ success: false, error: `Unknown config field: ${key}` } satisfies ApiError);
+      }
+      if (!hasMinTierValidation(tier as string, rule.minTier)) {
+        return reply.code(403).send({
+          success: false,
+          error: `Insufficient permissions for field '${rule.label}' (requires ${rule.minTier}+)`,
+        } satisfies ApiError);
+      }
+    }
+
+    // Validate all field values
+    const validation = validateConfigUpdate(fieldEntries);
+    if (!validation.valid) {
+      const firstError = Object.values(validation.errors)[0];
+      return reply.code(400).send({ success: false, error: firstError } satisfies ApiError);
+    }
+
+    // Read current values for audit trail
+    const currentConfig = getConfig(GUILD_ID) as Record<string, unknown> | undefined;
+
+    // Normalize values before writing
+    const normalized: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(fieldEntries)) {
+      normalized[key] = normalizeConfigValue(key, value);
+    }
+
+    // Write to database
+    try {
+      const { upsertConfig } = await import("../lib/config.js");
+      upsertConfig(GUILD_ID, normalized);
+    } catch (err) {
+      logger.error({ err, fields: fieldKeys }, "[dashboardApi] Config update failed");
+      return reply.code(500).send({ success: false, error: "Failed to update config" } satisfies ApiError);
+    }
+
+    // Audit trail
+    try {
+      const insertAudit = db.prepare(`
+        INSERT INTO config_audit_log (guild_id, user_id, field_key, old_value, new_value, source)
+        VALUES (?, ?, ?, ?, ?, 'dashboard')
+      `);
+      const auditTx = db.transaction(() => {
+        for (const key of fieldKeys) {
+          const oldVal = currentConfig?.[key] ?? null;
+          const newVal = normalized[key] ?? null;
+          insertAudit.run(GUILD_ID, userId, key, oldVal == null ? null : String(oldVal), newVal == null ? null : String(newVal));
+        }
+      });
+      auditTx();
+    } catch (err) {
+      // Audit failure is non-fatal — log and continue
+      logger.warn({ err }, "[dashboardApi] Config audit log write failed (non-fatal)");
+    }
+
+    logger.info(
+      { evt: "config_updated_dashboard", userId, fields: fieldKeys },
+      `[dashboardApi] Config updated via dashboard: ${fieldKeys.join(", ")}`
+    );
+
+    await cacheModerator(userId as string);
+    notifyDashboard("config:updated", { fields: fieldKeys, updatedBy: userId });
+
+    return { success: true, data: { updatedFields: fieldKeys } } satisfies ApiSuccess;
   });
 
   // ===== System Health =====

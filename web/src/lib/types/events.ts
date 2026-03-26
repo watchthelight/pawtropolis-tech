@@ -44,7 +44,8 @@ export type SSEEventType =
 	| 'audit:scan_cancelled'
 	| 'audit:security_snapshot'
 	| 'audit:issue_acknowledged'
-	| 'audit:issue_unacknowledged';
+	| 'audit:issue_unacknowledged'
+	| 'config:updated';
 
 // ---------------------------------------------------------------------------
 // Typed payloads per event
@@ -170,6 +171,13 @@ export interface AuditIssueUnacknowledgedPayload {
 	issueKey: string;
 }
 
+// Config payloads
+
+export interface ConfigUpdatedPayload {
+	fields: string[];
+	updatedBy: string;
+}
+
 // ---------------------------------------------------------------------------
 // Event-to-payload type map (for type-safe consumption)
 // ---------------------------------------------------------------------------
@@ -198,6 +206,7 @@ export interface SSEEventMap {
 	'audit:security_snapshot': AuditSecuritySnapshotPayload;
 	'audit:issue_acknowledged': AuditIssueAcknowledgedPayload;
 	'audit:issue_unacknowledged': AuditIssueUnacknowledgedPayload;
+	'config:updated': ConfigUpdatedPayload;
 }
 
 // ---------------------------------------------------------------------------
@@ -218,6 +227,7 @@ export const EVENT_TIER_VISIBILITY: Record<string, DashboardTier> = {
 	'flag:': 'mod',
 	'pulse:': 'mod',
 	'audit:': 'admin',
+	'config:': 'admin',
 	'system:': 'owner'
 };
 
