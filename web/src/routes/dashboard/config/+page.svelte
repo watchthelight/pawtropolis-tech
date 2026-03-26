@@ -2,12 +2,17 @@
 	import PageHeader from '$lib/components/layout/PageHeader.svelte';
 	import EmptyState from '$lib/components/feedback/EmptyState.svelte';
 	import SpringReveal from '$lib/components/motion/SpringReveal.svelte';
-	import CopyableId from '$lib/components/data/CopyableId.svelte';
+	import EditableFieldRow from '$lib/components/config/EditableFieldRow.svelte';
+	import { CONFIG_FIELD_RULES, hasMinTier } from '$lib/shared/configValidation';
+	import { addToast } from '$lib/stores/toast.svelte';
+	import { subscribe, unsubscribe } from '$lib/stores/sse.svelte';
+	import { invalidateAll } from '$app/navigation';
 	import { slide } from 'svelte/transition';
-	import type { ConfigField } from '$lib/server/queries/config';
+	import type { SSEEvent } from '$lib/types/events';
 
 	let { data } = $props();
 	let sections = $derived(data.sections);
+	let userTier = $derived(data.userTier);
 
 	// Track which sections are collapsed
 	let collapsed = $state<Record<string, boolean>>({});
@@ -15,60 +20,54 @@
 		collapsed[title] = !collapsed[title];
 	}
 
-	function formatValue(field: ConfigField): string {
-		const { value, type } = field;
-		if (value == null || value === '') return '\u2014';
+	// Check if user can edit a specific field
+	function canEditField(key: string): boolean {
+		const rule = CONFIG_FIELD_RULES[key];
+		if (!rule) return false;
+		return hasMinTier(userTier, rule.minTier);
+	}
 
-		switch (type) {
-			case 'bool':
-				return value === 1 || value === true ? 'Enabled' : 'Disabled';
-			case 'ms': {
-				const ms = Number(value);
-				if (ms >= 60000) return `${(ms / 60000).toFixed(1)}min`;
-				if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`;
-				return `${ms}ms`;
-			}
-			case 'seconds':
-				return `${value}s`;
-			case 'minutes':
-				return `${value}min`;
-			case 'hours':
-				return `${value}h`;
-			case 'chars':
-				return `${value} chars`;
-			case 'percent': {
-				const n = Number(value);
-				return n <= 1 ? `${(n * 100).toFixed(0)}%` : `${n}%`;
-			}
-			case 'json': {
-				try {
-					const parsed = JSON.parse(String(value));
-					if (Array.isArray(parsed)) return parsed.length === 0 ? 'None' : parsed.join(', ');
-					return JSON.stringify(parsed, null, 2);
-				} catch {
-					return String(value);
-				}
-			}
-			case 'template':
-				return String(value).length > 80
-					? String(value).slice(0, 80) + '\u2026'
-					: String(value);
-			default:
-				return String(value);
+	// Check if user can edit ANY field in a section
+	function canEditSection(sectionTitle: string): boolean {
+		const section = sections.find((s) => s.title === sectionTitle);
+		if (!section) return false;
+		return section.fields.some((f) => canEditField(f.key));
+	}
+
+	// Save a single field
+	async function saveField(key: string, value: unknown): Promise<void> {
+		const res = await fetch('/api/config/update', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ fields: { [key]: value } })
+		});
+
+		const result = await res.json();
+
+		if (!result.success) {
+			addToast(result.error || 'Failed to save', 'error');
+			throw new Error(result.error || 'Save failed');
 		}
+
+		addToast(`${CONFIG_FIELD_RULES[key]?.label ?? key} updated`, 'success', 2000);
+		// Refresh data from server to get the normalized value back
+		invalidateAll();
 	}
 
-	function isSnowflake(value: unknown): boolean {
-		return typeof value === 'string' && /^\d{17,20}$/.test(value);
+	// SSE listener for config changes by other users
+	let invalidateTimer: ReturnType<typeof setTimeout> | undefined;
+	function onConfigUpdated(_event: SSEEvent) {
+		if (invalidateTimer) clearTimeout(invalidateTimer);
+		invalidateTimer = setTimeout(() => invalidateAll(), 200);
 	}
 
-	function isBoolField(field: ConfigField): boolean {
-		return field.type === 'bool';
-	}
-
-	function boolEnabled(field: ConfigField): boolean {
-		return field.value === 1 || field.value === true;
-	}
+	$effect(() => {
+		subscribe('config:updated', onConfigUpdated);
+		return () => {
+			unsubscribe('config:updated', onConfigUpdated);
+			if (invalidateTimer) clearTimeout(invalidateTimer);
+		};
+	});
 </script>
 
 <SpringReveal stagger={30}>
@@ -86,6 +85,13 @@
 					<button class="section-header" onclick={() => toggle(section.title)}>
 						<span class="section-title">{section.title}</span>
 						<span class="section-count">{section.fields.length}</span>
+						{#if !canEditSection(section.title)}
+							<span class="section-lock" title="Read-only for your role">
+								<svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+									<path d="M8 1a4 4 0 0 0-4 4v2H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1h-1V5a4 4 0 0 0-4-4zm-2 4a2 2 0 1 1 4 0v2H6V5z"/>
+								</svg>
+							</span>
+						{/if}
 						<span class="chevron" class:chevron-collapsed={collapsed[section.title]}>
 							<svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
 								<path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -96,27 +102,15 @@
 					{#if !collapsed[section.title]}
 						<div class="section-body" transition:slide={{ duration: 150 }}>
 							{#each section.fields as field (field.key)}
-								<div class="field-row">
-									<span class="field-label">{field.label}</span>
-									<span class="field-value">
-										{#if isBoolField(field)}
-											<span class="bool-indicator" class:bool-on={boolEnabled(field)} class:bool-off={!boolEnabled(field)}>
-												{boolEnabled(field) ? 'Enabled' : 'Disabled'}
-											</span>
-										{:else if (field.type === 'channel' || field.type === 'role') && isSnowflake(field.value)}
-											<CopyableId value={String(field.value)} />
-										{:else if field.type === 'roles' && field.value}
-											{#each String(field.value).split(',').map(s => s.trim()).filter(Boolean) as roleId, i}
-												{#if i > 0}<span class="separator">,</span>{/if}
-												<CopyableId value={roleId} />
-											{/each}
-										{:else}
-											<span class="value-text" class:value-null={field.value == null || field.value === ''}>
-												{formatValue(field)}
-											</span>
-										{/if}
-									</span>
-								</div>
+								<EditableFieldRow
+									fieldKey={field.key}
+									label={field.label}
+									value={field.value}
+									type={field.type}
+									rule={CONFIG_FIELD_RULES[field.key]}
+									canEdit={canEditField(field.key)}
+									onSave={saveField}
+								/>
 							{/each}
 						</div>
 					{/if}
@@ -176,6 +170,12 @@
 		font-variant-numeric: tabular-nums;
 	}
 
+	.section-lock {
+		color: var(--text-secondary);
+		opacity: 0.4;
+		display: flex;
+	}
+
 	.chevron {
 		margin-left: auto;
 		color: var(--text-secondary);
@@ -189,87 +189,5 @@
 
 	.section-body {
 		border-top: 1px solid var(--border);
-	}
-
-	.field-row {
-		display: flex;
-		align-items: baseline;
-		gap: 1rem;
-		padding: 0.5rem 1rem;
-		border-bottom: 1px solid var(--border);
-		font-size: 0.8rem;
-	}
-
-	.field-row:last-child {
-		border-bottom: none;
-	}
-
-	@media (hover: hover) {
-		.field-row:hover {
-			background: var(--surface-raised);
-		}
-	}
-
-	.field-label {
-		width: 12rem;
-		flex-shrink: 0;
-		color: var(--text-secondary);
-		font-size: 0.75rem;
-		font-weight: 500;
-	}
-
-	.field-value {
-		flex: 1;
-		min-width: 0;
-		color: var(--text-primary);
-		display: flex;
-		align-items: center;
-		gap: 0.25rem;
-		flex-wrap: wrap;
-		word-break: break-all;
-	}
-
-	.value-text {
-		font-variant-numeric: tabular-nums;
-	}
-
-	.value-null {
-		color: var(--text-secondary);
-		opacity: 0.5;
-	}
-
-	.separator {
-		color: var(--text-secondary);
-		margin: 0 0.125rem;
-	}
-
-	/* ─── Bool indicator ─── */
-	.bool-indicator {
-		font-size: 0.7rem;
-		font-weight: 600;
-		padding: 0.1rem 0.375rem;
-		border-radius: var(--radius-sm);
-	}
-
-	.bool-on {
-		background: oklch(25% 0.06 145);
-		color: var(--status-success);
-	}
-
-	.bool-off {
-		background: oklch(25% 0.04 0);
-		color: var(--text-secondary);
-	}
-
-	/* ─── Mobile ─── */
-	@media (max-width: 768px) {
-		.field-row {
-			flex-direction: column;
-			gap: 0.25rem;
-		}
-
-		.field-label {
-			width: auto;
-		}
 	}
 </style>

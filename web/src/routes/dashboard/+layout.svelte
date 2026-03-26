@@ -10,6 +10,7 @@
 	import Nav from '$lib/components/layout/Nav.svelte';
 	import ConnectionIndicator from '$lib/components/layout/ConnectionIndicator.svelte';
 	import Lightbox from '$lib/components/feedback/Lightbox.svelte';
+	import { getToasts, dismissToast } from '$lib/stores/toast.svelte';
 
 	let { data, children } = $props();
 	let user = $derived(data.user);
@@ -216,6 +217,17 @@
 
 <Lightbox />
 
+<!-- Toast notifications -->
+{#if getToasts().length > 0}
+	<div class="toast-container">
+		{#each getToasts() as toast (toast.id)}
+			<button class="toast toast-{toast.type}" onclick={() => dismissToast(toast.id)}>
+				{toast.message}
+			</button>
+		{/each}
+	</div>
+{/if}
+
 <style>
 	.layout-root {
 		display: flex;
@@ -380,5 +392,52 @@
 	@keyframes toast-out {
 		from { opacity: 1; transform: translateX(-50%) translateY(0); }
 		to { opacity: 0; transform: translateX(-50%) translateY(-0.5rem); }
+	}
+
+	/* ── Toast container (shared toast system) ── */
+	.toast-container {
+		position: fixed;
+		bottom: 1.5rem;
+		right: 1.5rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		z-index: 100;
+		pointer-events: none;
+	}
+
+	.toast {
+		pointer-events: auto;
+		padding: 0.6rem 1rem;
+		border-radius: var(--radius-md);
+		font-size: 0.8rem;
+		font-weight: 500;
+		border: none;
+		cursor: pointer;
+		box-shadow: 0 4px 16px oklch(0% 0 0 / 0.3);
+		animation: toast-slide-in 200ms ease-out;
+		text-align: left;
+		max-width: 20rem;
+	}
+
+	.toast-success {
+		background: oklch(30% 0.08 145);
+		color: oklch(85% 0.12 145);
+	}
+
+	.toast-error {
+		background: oklch(30% 0.08 25);
+		color: oklch(85% 0.12 25);
+	}
+
+	.toast-info {
+		background: var(--surface-raised);
+		color: var(--text-primary);
+		border: 1px solid var(--border);
+	}
+
+	@keyframes toast-slide-in {
+		from { opacity: 0; transform: translateY(0.5rem); }
+		to { opacity: 1; transform: translateY(0); }
 	}
 </style>

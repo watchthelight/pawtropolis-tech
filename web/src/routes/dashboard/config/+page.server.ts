@@ -10,5 +10,5 @@ export const load: PageServerLoad = async ({ locals }) => {
 	if (!process.env.GUILD_ID) throw new Error('GUILD_ID environment variable is required');
 
 	const sections = getConfigSections(process.env.GUILD_ID);
-	return { sections };
+	return { sections, userTier: locals.user.tier };
 };
