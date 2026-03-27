@@ -229,6 +229,17 @@ export async function initializeBannerSync(client: Client): Promise<void> {
 
       await syncBannerFromGuild(client, newGuild);
     }
+
+    // Refresh gate entry embed if name, icon, or banner changed
+    const gateRelevantChange =
+      oldGuild.name !== newGuild.name ||
+      oldGuild.icon !== newGuild.icon ||
+      oldGuild.banner !== newGuild.banner;
+
+    if (gateRelevantChange) {
+      const { refreshGateEntry } = await import("./gate.js");
+      await refreshGateEntry(client, newGuild.id);
+    }
   };
   client.on("guildUpdate", guildUpdateListener);
 

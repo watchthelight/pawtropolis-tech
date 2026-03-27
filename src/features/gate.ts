@@ -793,6 +793,41 @@ async function findExistingGateEntry(channel: GuildTextBasedChannel, botId: stri
   return null;
 }
 
+/**
+ * Lightweight gate entry refresh — usable from event handlers without a CmdCtx.
+ * Finds and edits the existing gate entry message in place.
+ */
+export async function refreshGateEntry(client: Client, guildId: string): Promise<void> {
+  const cfg = getConfig(guildId);
+  if (!cfg?.gate_channel_id) return;
+
+  let channel: GuildTextBasedChannel | null = null;
+  try {
+    const fetched = await client.channels.fetch(cfg.gate_channel_id);
+    if (fetched && fetched.isTextBased() && !fetched.isDMBased()) {
+      channel = fetched as GuildTextBasedChannel;
+    }
+  } catch { return; }
+  if (!channel) return;
+
+  const botId = client.user?.id ?? null;
+  const existing = await findExistingGateEntry(channel, botId);
+  if (!existing) return;
+
+  const payload = buildGateEntryPayload({ guild: channel.guild, config: cfg });
+  try {
+    await existing.edit({
+      embeds: payload.embeds,
+      components: payload.components,
+      files: payload.files,
+      attachments: [],
+    });
+    logger.info({ guildId, messageId: existing.id }, "[gate] Auto-refreshed gate entry embed");
+  } catch (err) {
+    logger.warn({ err, guildId, messageId: existing.id }, "[gate] Failed to auto-refresh gate entry");
+  }
+}
+
 function logPhase(ctx: CmdCtx, phase: string, extras: Record<string, unknown> = {}) {
   logger.info({
     evt: "gate_entry_step",

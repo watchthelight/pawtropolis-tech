@@ -574,6 +574,12 @@ async function executeSetQuestions(ctx: CommandContext<ChatInputCommandInteracti
       content: `✅ Updated: **${updated}**\n\n**Current questions:**\n${preview}`,
     });
   });
+
+  // Refresh gate entry embed so question count stays accurate
+  await withStep(ctx, "refresh_gate_entry", async () => {
+    const { refreshGateEntry } = await import("../../features/gate.js");
+    await refreshGateEntry(interaction.client, guildId);
+  });
 }
 
 async function executeWelcomeSet(ctx: CommandContext<ChatInputCommandInteraction>) {
