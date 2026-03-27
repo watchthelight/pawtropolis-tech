@@ -695,11 +695,8 @@ describe("movieNight", () => {
 
       await updateMovieTierRole(guild, "user-123");
 
-      expect(mockSend).toHaveBeenCalledWith(
-        expect.objectContaining({
-          content: expect.stringContaining("3rd"),
-        })
-      );
+      const embed = mockSend.mock.calls[0][0].embeds[0];
+      expect(embed.data.description).toContain("3rd");
     });
 
     it("shows progress to next tier in DM", async () => {
@@ -723,11 +720,8 @@ describe("movieNight", () => {
       await updateMovieTierRole(guild, "user-123");
 
       // Should show "5 more" movies needed for Tier 2
-      expect(mockSend).toHaveBeenCalledWith(
-        expect.objectContaining({
-          content: expect.stringContaining("5"),
-        })
-      );
+      const embed = mockSend.mock.calls[0][0].embeds[0];
+      expect(embed.data.description).toContain("5");
     });
 
     it("shows max tier message when at highest tier", async () => {
@@ -749,11 +743,8 @@ describe("movieNight", () => {
 
       await updateMovieTierRole(guild, "user-123");
 
-      expect(mockSend).toHaveBeenCalledWith(
-        expect.objectContaining({
-          content: expect.stringContaining("highest"),
-        })
-      );
+      const embed = mockSend.mock.calls[0][0].embeds[0];
+      expect(embed.data.description).toContain("highest");
     });
 
     it("logs action to audit channel", async () => {
