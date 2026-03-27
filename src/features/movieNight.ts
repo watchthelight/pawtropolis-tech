@@ -624,19 +624,23 @@ export function recoverPersistedSessions(): { events: number; sessions: number }
     let longestSession = row.longest_session_minutes;
 
     if (row.current_session_start) {
-      // Calculate time from last persist to now (crashed session recovery)
-      const lostSessionMs = now - row.last_persisted_at;
-      const lostMinutes = Math.floor(lostSessionMs / 60000);
-      totalMinutes += lostMinutes;
-      longestSession = Math.max(longestSession, lostMinutes);
+      // Credit the full duration of the in-progress session (from join time to now).
+      // accumulated_minutes only counts COMPLETED sessions (leave events), so an
+      // ongoing session has 0 accumulated. Using last_persisted_at was wrong —
+      // it only credited time since the last 5-min checkpoint, losing the rest.
+      const ongoingSessionMs = now - row.current_session_start;
+      const ongoingMinutes = Math.floor(ongoingSessionMs / 60000);
+      totalMinutes += ongoingMinutes;
+      longestSession = Math.max(longestSession, ongoingMinutes);
 
       logger.info({
         evt: "movie_session_recovered",
         guildId: row.guild_id,
         userId: row.user_id,
-        lostMinutes,
+        ongoingMinutes,
         totalMinutes,
-      }, `Recovered ${lostMinutes} lost minutes for user`);
+        sessionStartedAt: new Date(row.current_session_start).toISOString(),
+      }, `Recovered ${ongoingMinutes} minutes for ongoing session`);
     }
 
     movieSessions.set(key, {
