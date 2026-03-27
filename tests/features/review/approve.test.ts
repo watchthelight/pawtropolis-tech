@@ -425,11 +425,8 @@ describe("deliverApprovalDm", () => {
       const result = await deliverApprovalDm(member, "Test Guild");
 
       expect(result).toBe(true);
-      expect(member.send).toHaveBeenCalledWith(
-        expect.objectContaining({
-          content: expect.stringContaining("Test Guild"),
-        })
-      );
+      const embed = (member.send as ReturnType<typeof vi.fn>).mock.calls[0][0].embeds[0];
+      expect(embed.data.description).toContain("Test Guild");
     });
 
     it("includes guild name in message", async () => {
@@ -437,11 +434,8 @@ describe("deliverApprovalDm", () => {
 
       await deliverApprovalDm(member, "Awesome Server");
 
-      expect(member.send).toHaveBeenCalledWith(
-        expect.objectContaining({
-          content: expect.stringContaining("Awesome Server"),
-        })
-      );
+      const embed = (member.send as ReturnType<typeof vi.fn>).mock.calls[0][0].embeds[0];
+      expect(embed.data.description).toContain("Awesome Server");
     });
 
     it("includes reviewer note when provided", async () => {
@@ -449,11 +443,8 @@ describe("deliverApprovalDm", () => {
 
       await deliverApprovalDm(member, "Test Guild", "Great answers!");
 
-      expect(member.send).toHaveBeenCalledWith(
-        expect.objectContaining({
-          content: expect.stringContaining("Great answers!"),
-        })
-      );
+      const embed = (member.send as ReturnType<typeof vi.fn>).mock.calls[0][0].embeds[0];
+      expect(embed.data.description).toContain("Great answers!");
     });
 
     it("includes welcoming message", async () => {
@@ -461,11 +452,8 @@ describe("deliverApprovalDm", () => {
 
       await deliverApprovalDm(member, "Test Guild");
 
-      expect(member.send).toHaveBeenCalledWith(
-        expect.objectContaining({
-          content: expect.stringMatching(/welcome|approved/i),
-        })
-      );
+      const embed = (member.send as ReturnType<typeof vi.fn>).mock.calls[0][0].embeds[0];
+      expect(embed.data.description).toMatch(/welcome|approved/i);
     });
   });
 
@@ -504,8 +492,8 @@ describe("deliverApprovalDm", () => {
 
       expect(member.send).toHaveBeenCalled();
       // Should not include "Note from reviewer" section
-      const sentContent = (member.send as ReturnType<typeof vi.fn>).mock.calls[0][0].content;
-      expect(sentContent).not.toContain("Note from reviewer");
+      const embed = (member.send as ReturnType<typeof vi.fn>).mock.calls[0][0].embeds[0];
+      expect(embed.data.description).not.toContain("Note from reviewer");
     });
 
     it("handles empty string reason", async () => {
