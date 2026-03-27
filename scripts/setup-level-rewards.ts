@@ -14,6 +14,7 @@ if (!GUILD_ID) {
 
 // Level tiers (roles assigned by Amaribot)
 const LEVEL_TIERS = [
+  { level: 0, roleId: "1459895384007512311", name: "Fresh Fur ‹‹ LVL 0 ››" },
   { level: 1, roleId: "896070888712175687", name: "Newcomer Fur ‹‹ LVL 1 ››" },
   { level: 5, roleId: "896070888712175688", name: "Beginner Fur ‹‹ LVL 5 ››" },
   { level: 10, roleId: "896070888712175689", name: "Chatty Fur ‹‹ LVL 10 ››" },
