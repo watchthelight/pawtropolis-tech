@@ -787,13 +787,36 @@ export async function runVoteOutAction(
   const guildName = guild?.name ?? "this server";
   const rejectionReason = "Staff has decided to deny your application at this time. Thank you, and have a nice day.";
 
-  const tx = rejectTx(app.id, interaction.user.id, "Voted out by staff");
-  if (tx.kind === "already") {
+  // Mark application as rejected directly — don't use rejectTx() because it
+  // inserts a separate "reject" review_action row, which pollutes the action
+  // history. The vote_out entries ARE the audit trail.
+  const txResult = db.transaction(() => {
+    const row = db.prepare(`SELECT status FROM application WHERE id = ?`).get(app.id) as
+      | { status: string }
+      | undefined;
+    if (!row) throw new Error("Application not found");
+    if (row.status === "rejected") return { kind: "already" as const, status: row.status };
+    if (row.status === "approved" || row.status === "kicked") {
+      return { kind: "terminal" as const, status: row.status };
+    }
+    db.prepare(
+      `UPDATE application
+       SET status = 'rejected',
+           updated_at = datetime('now'),
+           resolved_at = datetime('now'),
+           resolver_id = ?,
+           resolution_reason = ?
+       WHERE id = ?`
+    ).run(interaction.user.id, "Voted out by staff", app.id);
+    return { kind: "changed" as const };
+  })();
+
+  if (txResult.kind === "already") {
     await replyOrEdit(interaction, { content: "Already rejected." }).catch(() => {});
     return;
   }
-  if (tx.kind === "terminal") {
-    await replyOrEdit(interaction, { content: `Already resolved (${tx.status}).` }).catch(() => {});
+  if (txResult.kind === "terminal") {
+    await replyOrEdit(interaction, { content: `Already resolved (${txResult.status}).` }).catch(() => {});
     return;
   }
 
@@ -804,7 +827,7 @@ export async function runVoteOutAction(
       appCode: code,
       actorId: interaction.user.id,
       subjectId: app.user_id,
-      action: "reject",
+      action: "vote_out",
       reason: "Voted out by staff",
     }).catch((err) => {
       logger.warn({ err, appId: app.id }, "[review] failed to log vote_out rejection");
@@ -831,14 +854,8 @@ export async function runVoteOutAction(
   if (user) {
     const dmResult = await rejectFlow(user, { guildName, reason: rejectionReason });
     dmDelivered = dmResult.dmDelivered;
-    if (tx.kind === "changed") {
-      updateReviewActionMeta(tx.reviewActionId, dmResult);
-    }
   } else {
     logger.warn({ userId: app.user_id }, "[review] failed to fetch user for vote out DM");
-    if (tx.kind === "changed") {
-      updateReviewActionMeta(tx.reviewActionId, { dmDelivered });
-    }
   }
 
   // Refresh review card (now terminal — buttons removed)
