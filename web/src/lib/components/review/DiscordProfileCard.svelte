@@ -27,12 +27,14 @@
 		userId,
 		avatarUrl = null,
 		applicantName = 'Unknown',
-		cachedProfile = null
+		cachedProfile = null,
+		onMemberStatus
 	}: {
 		userId: string;
 		avatarUrl?: string | null;
 		applicantName?: string;
 		cachedProfile?: { bannerUrl: string | null; accentColor: number | null; joinedAt: number | null; createdAt: number | null } | null;
+		onMemberStatus?: (inServer: boolean) => void;
 	} = $props();
 
 	let profile = $state<ProfileData | null>(null);
@@ -63,6 +65,7 @@
 			const result = await res.json();
 			if (!result.success) {
 				error = result.error ?? 'Failed to load';
+				onMemberStatus?.(false);
 			} else {
 				profile = {
 					bannerUrl: result.data.bannerUrl,
@@ -79,6 +82,7 @@
 					roles: result.data.roles
 				};
 				lastFetchedId = userId;
+				onMemberStatus?.(result.data.memberInServer ?? true);
 			}
 		} catch {
 			error = 'Failed to connect';

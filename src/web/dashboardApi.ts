@@ -617,6 +617,7 @@ export async function startDashboardApi(client: Client): Promise<void> {
           roles,
           status,
           customStatus,
+          memberInServer: member !== null,
         },
       } satisfies ApiSuccess;
     } catch (err) {

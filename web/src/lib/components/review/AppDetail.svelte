@@ -40,11 +40,16 @@
 	let showModmail = $state(false);
 	let openingModmail = $state(false);
 	let openModmailError = $state<string | null>(null);
+	let memberLeft = $state(false);
+	let lastAppId = $state(app.id);
 
-	// Reset modmail view when navigating to a different application
+	// Reset modmail view only when navigating to a DIFFERENT application
 	$effect(() => {
-		app.id; // track app identity
-		showModmail = false;
+		if (app.id !== lastAppId) {
+			showModmail = false;
+			memberLeft = false;
+			lastAppId = app.id;
+		}
 	});
 
 	async function handleOpenModmail() {
@@ -61,7 +66,8 @@
 			if (!result.success) {
 				openModmailError = result.error ?? 'Failed to open';
 			} else {
-				window.location.reload();
+				await invalidateAll();
+				showModmail = true;
 			}
 		} catch {
 			openModmailError = 'Failed to connect';
@@ -302,7 +308,7 @@
 	<div class="detail-body" bind:this={detailBody}>
 		<!-- Left/Top: Discord Profile Card -->
 		<div class="profile-col" class:profile-collapsed={isMobile && !profileExpanded}>
-			<DiscordProfileCard userId={app.userId} avatarUrl={app.avatarUrl} applicantName={app.applicantName} {cachedProfile} />
+			<DiscordProfileCard userId={app.userId} avatarUrl={app.avatarUrl} applicantName={app.applicantName} {cachedProfile} onMemberStatus={(inServer) => { memberLeft = !inServer; }} />
 			{#if isMobile}
 				<button class="profile-toggle" onclick={() => profileExpanded = !profileExpanded}>
 					{profileExpanded ? 'Hide profile' : 'Show full profile'}
@@ -354,7 +360,7 @@
 			<!-- Content area: answers or modmail -->
 			<div class="content-body">
 				{#if showModmail}
-					<ModmailViewer threads={modmail} targetUserId={app.userId} />
+					<ModmailViewer threads={modmail} targetUserId={app.userId} {memberLeft} />
 				{:else}
 					<div class="section-label">Image Scans</div>
 					<ScanPanel appId={app.id} scan={app.scan} scanScores={app.scanScores} riskScore={app.riskScore} />

@@ -19,6 +19,7 @@ export interface ModmailThreadSummary {
 	latestMessage: string | null;
 	latestDirection: 'to_user' | 'to_staff' | null;
 	createdAt: number | null;
+	closedAt: number | null;
 	messages: ModmailMessageItem[];
 }
 
@@ -26,6 +27,7 @@ interface ThreadRow {
 	id: number;
 	status: string;
 	created_at: string | null;
+	closed_at: string | null;
 	message_count: number;
 	latest_message: string | null;
 	latest_direction: string | null;
@@ -45,6 +47,7 @@ export function getModmailForApplication(userId: string, guildId: string): Modma
 			t.id,
 			t.status,
 			t.created_at,
+			t.closed_at,
 			COUNT(m.id) as message_count,
 			(SELECT content FROM modmail_message
 			 WHERE ticket_id = t.id ORDER BY created_at DESC LIMIT 1) as latest_message,
@@ -89,6 +92,7 @@ export function getModmailForApplication(userId: string, guildId: string): Modma
 		latestMessage: row.latest_message,
 		latestDirection: row.latest_direction as 'to_user' | 'to_staff' | null,
 		createdAt: normalizeTimestamp(row.created_at),
+		closedAt: normalizeTimestamp(row.closed_at),
 		messages: messagesByTicket.get(row.id) ?? []
 	}));
 }
