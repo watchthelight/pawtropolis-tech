@@ -677,11 +677,14 @@ type GateEntryContentOptions = {
 };
 
 function resolveGateEntryContent(options: GateEntryContentOptions): GateEntryContent {
-  const { guildName } = options;
+  const { guildName, config } = options;
+  const questionCount = config?.guild_id
+    ? getQuestionsShared(config.guild_id).length
+    : 5;
   return {
     title: `Welcome to ${guildName}`,
     description:
-      "Before you enjoy your stay, you must go through our verification system which you can start by clicking **Verify** and answering 5 simple questions.",
+      `Before you enjoy your stay, you must go through our verification system which you can start by clicking **Verify** and answering ${questionCount} simple question${questionCount === 1 ? "" : "s"}.`,
     buttonLabel: "Verify",
     bannerPath: "./assets/banner.webp",
     bannerName: "banner.webp",
@@ -694,20 +697,31 @@ export function buildGateEntryPayload(options: {
 }): GateEntryPayload {
   const { guild } = options;
   const content = resolveGateEntryContent({ guildName: guild.name, config: options.config });
-  const banner = new AttachmentBuilder(path.resolve(content.bannerPath)).setName(
-    content.bannerName
-  );
 
   const embed = new EmbedBuilder()
     .setTitle(content.title)
     .setDescription(content.description)
     .setColor(BRAND_COLOR)
-    .setImage(`attachment://${content.bannerName}`)
     .setFooter({ text: GATE_ENTRY_FOOTER });
 
+  // Use guild icon as author + thumbnail
   const iconUrl = typeof guild.iconURL === "function" ? guild.iconURL({ size: 128 }) : null;
   if (iconUrl) {
+    embed.setAuthor({ name: guild.name, iconURL: iconUrl });
     embed.setThumbnail(iconUrl);
+  }
+
+  // Use guild banner if available, otherwise fall back to local asset
+  const files: AttachmentBuilder[] = [];
+  const guildBanner = guild.bannerURL({ size: 1024 });
+  if (guildBanner) {
+    embed.setImage(guildBanner);
+  } else {
+    const banner = new AttachmentBuilder(path.resolve(content.bannerPath)).setName(
+      content.bannerName
+    );
+    embed.setImage(`attachment://${content.bannerName}`);
+    files.push(banner);
   }
 
   const components = [
@@ -719,7 +733,7 @@ export function buildGateEntryPayload(options: {
     ),
   ];
 
-  return { embeds: [embed], components, files: [banner] };
+  return { embeds: [embed], components, files };
 }
 
 /*
