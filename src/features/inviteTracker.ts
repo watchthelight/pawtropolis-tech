@@ -108,8 +108,8 @@ async function cacheGuildInvites(guild: Guild): Promise<void> {
     try {
       const vanity = await guild.fetchVanityData();
       vanityCache.set(guild.id, vanity.uses);
-    } catch {
-      // Vanity fetch requires MANAGE_GUILD — non-fatal
+    } catch (err) {
+      logger.warn({ err, guildId: guild.id, vanityCode: guild.vanityURLCode }, "[invite-tracker] Failed to cache vanity URL data (MANAGE_GUILD required)");
     }
   }
 }
@@ -180,12 +180,28 @@ export async function trackMemberInvite(member: GuildMember): Promise<void> {
           usedCode = member.guild.vanityURLCode;
         }
         vanityCache.set(guildId, vanity.uses);
-      } catch {
-        // Vanity fetch may fail — non-fatal
+      } catch (err) {
+        logger.warn({ err, guildId, vanityCode: member.guild.vanityURLCode }, "[invite-tracker] Failed to fetch vanity data");
       }
     }
   } catch (err) {
     logger.debug({ err, guildId, userId: member.id }, "[invite-tracker] Failed to track invite");
+  }
+
+  // Vanity / Discovery fallback: if no invite was detected through diffing,
+  // attribute to the vanity URL or Server Discovery. This covers:
+  //  - Race conditions where vanity uses count didn't appear to change
+  //  - fetchVanityData() failures (permissions, rate limits)
+  //  - Server Discovery joins (no invite code, guild is DISCOVERABLE)
+  //  - Simultaneous joins via vanity URL where only one gets diff-detected
+  if (!usedCode) {
+    if (member.guild.vanityURLCode) {
+      usedCode = member.guild.vanityURLCode;
+      logger.debug({ guildId, vanityCode: usedCode }, "[invite-tracker] Fallback: attributing to vanity URL");
+    } else if (member.guild.features.includes("DISCOVERABLE")) {
+      usedCode = "__discovery__";
+      logger.debug({ guildId }, "[invite-tracker] Fallback: attributing to Server Discovery");
+    }
   }
 
   // Race condition note: if two members join near-simultaneously, both calls diff against
