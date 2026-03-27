@@ -9,10 +9,12 @@
 
 	let {
 		threads,
-		targetUserId = ''
+		targetUserId = '',
+		memberLeft = false
 	}: {
 		threads: ModmailThreadSummary[];
 		targetUserId?: string;
+		memberLeft?: boolean;
 	} = $props();
 
 	let messageInput = $state('');
@@ -28,6 +30,16 @@
 	const openThread = $derived(threads.find(t => t.status === 'open'));
 	// Most recent closed thread (for reopen)
 	const recentClosedThread = $derived(threads.find(t => t.status === 'closed'));
+
+	// Ticket closed > 7 days ago — reopen not possible, must open new thread
+	const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+	const isStale = $derived(
+		recentClosedThread
+			? recentClosedThread.closedAt
+				? Date.now() - recentClosedThread.closedAt > SEVEN_DAYS_MS
+				: true // no closedAt on a closed ticket = treat as stale
+			: false
+	);
 
 	function formatTime(ms: number | null): string {
 		if (!ms) return '';
@@ -138,6 +150,32 @@
 		}
 	}
 
+	async function handleNewModmail() {
+		if (!targetUserId || actionLoading) return;
+		actionLoading = 'new';
+		actionError = null;
+
+		try {
+			const res = await fetch('/api/modmail/open', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ targetUserId })
+			});
+			const result = await res.json();
+			if (!result.success) {
+				actionError = result.error ?? 'Failed to open new thread';
+			} else {
+				setBotOnline();
+				invalidateAll();
+			}
+		} catch {
+			actionError = 'Failed to connect';
+			setBotOffline();
+		} finally {
+			actionLoading = null;
+		}
+	}
+
 	function handleKeydown(e: KeyboardEvent) {
 		if (e.key === 'Enter' && !e.shiftKey) {
 			e.preventDefault();
@@ -157,6 +195,13 @@
 </script>
 
 <div class="modmail-panel">
+	{#if memberLeft}
+		<div class="member-left-warning">
+			<span class="member-left-icon">&#9888;</span>
+			Member has left the server &mdash; messages cannot be delivered
+		</div>
+	{/if}
+
 	<!-- Thread actions bar -->
 	<div class="thread-actions">
 		{#if openThread}
@@ -166,9 +211,15 @@
 			</button>
 		{:else if recentClosedThread}
 			<span class="thread-status thread-status-closed">Closed</span>
-			<button class="action-btn" onclick={handleReopen} disabled={actionLoading !== null || !botOnline}>
+			<button class="action-btn" onclick={handleReopen} disabled={actionLoading !== null || !botOnline || isStale || memberLeft}>
 				{actionLoading === 'reopen' ? 'Reopening...' : !botOnline ? 'Bot offline' : 'Reopen'}
 			</button>
+			<button class="action-btn action-btn-new" onclick={handleNewModmail} disabled={actionLoading !== null || !botOnline || memberLeft}>
+				{actionLoading === 'new' ? 'Opening...' : !botOnline ? 'Bot offline' : 'New Modmail'}
+			</button>
+			{#if isStale}
+				<span class="stale-hint">Ticket closed more than 7 days ago &mdash; open a new thread instead</span>
+			{/if}
 		{/if}
 		{#if actionError}
 			<span class="action-error">{actionError}</span>
@@ -196,8 +247,8 @@
 	{/each}
 	<div bind:this={messagesEnd}></div>
 
-	<!-- Message input (only when open thread exists) -->
-	{#if openThread}
+	<!-- Message input (only when open thread exists and member is in server) -->
+	{#if openThread && !memberLeft}
 		<div class="send-bar">
 			<textarea
 				class="send-input"
@@ -229,6 +280,26 @@
 <style>
 	.modmail-panel {
 		padding-top: 0.25rem;
+	}
+
+	/* ── Member left warning ──────────────────────────────── */
+	.member-left-warning {
+		border: 1px solid var(--status-warning);
+		border-left: 4px solid var(--status-warning);
+		background: oklch(25% 0.04 85 / 0.3);
+		border-radius: var(--radius-sm);
+		padding: 0.4rem 0.6rem;
+		font-size: 0.7rem;
+		font-weight: 600;
+		color: var(--status-warning);
+		margin-bottom: 0.5rem;
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+	}
+
+	.member-left-icon {
+		font-size: 0.85rem;
 	}
 
 	/* ── Thread actions ────────────────────────────────────── */
@@ -292,6 +363,23 @@
 		background: oklch(0.45 0.2 25 / 0.15);
 		color: var(--status-danger);
 		border-color: var(--status-danger);
+	}
+
+	.action-btn-new {
+		color: var(--accent);
+		border-color: var(--accent);
+	}
+
+	.action-btn-new:hover:not(:disabled) {
+		background: var(--accent-dim);
+		color: var(--accent);
+		border-color: var(--accent);
+	}
+
+	.stale-hint {
+		font-size: 0.6rem;
+		color: var(--status-warning);
+		flex-basis: 100%;
 	}
 
 	.action-error {
