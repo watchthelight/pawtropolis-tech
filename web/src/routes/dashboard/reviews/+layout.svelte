@@ -25,15 +25,28 @@
 	}
 
 	// OS notification for new applications (only when tab is hidden)
-	function onReviewSubmitted(event: SSEEvent) {
+	async function onReviewSubmitted(event: SSEEvent) {
 		if (typeof document === 'undefined' || !document.hidden) return;
 		if (!('Notification' in window) || Notification.permission !== 'granted') return;
-		const name = (event.payload as ReviewSubmittedPayload).applicantName ?? 'Someone';
-		const n = new Notification('New Application', {
-			body: `${name} just submitted an application`,
-			icon: '/paw-logo.png'
-		});
-		n.onclick = () => { window.focus(); n.close(); };
+		const payload = event.payload as ReviewSubmittedPayload;
+		const name = payload.applicantName ?? 'Someone';
+		const appId = payload.appId;
+
+		const reg = await navigator.serviceWorker?.ready;
+		if (reg) {
+			reg.showNotification('New Application', {
+				body: `${name} just submitted an application`,
+				icon: '/paw-logo.png',
+				data: { appId },
+				actions: [{ action: 'claim', title: 'Claim' }]
+			} as NotificationOptions);
+		} else {
+			const n = new Notification('New Application', {
+				body: `${name} just submitted an application`,
+				icon: '/paw-logo.png'
+			});
+			n.onclick = () => { window.focus(); n.close(); };
+		}
 	}
 
 	subscribe('review:*', onReviewEvent);
