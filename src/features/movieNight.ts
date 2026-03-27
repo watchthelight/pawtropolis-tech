@@ -667,6 +667,62 @@ export function recoverPersistedSessions(): { events: number; sessions: number }
 }
 
 /**
+ * Reconcile recovered in-memory sessions against actual VC state.
+ * Call after recoverPersistedSessions() once the client is ready.
+ *
+ * - Users with active sessions who are NOT in VC → close session (stop phantom tracking)
+ * - Users in VC who do NOT have sessions → start session (begin tracking)
+ */
+export async function reconcileMovieVoiceSessions(guild: Guild): Promise<{ left: number; joined: number }> {
+  const event = activeEvents.get(guild.id);
+  if (!event) return { left: 0, joined: 0 };
+
+  let left = 0;
+  let joined = 0;
+
+  const channel = await guild.channels.fetch(event.channelId).catch(() => null);
+  if (!channel?.isVoiceBased()) return { left: 0, joined: 0 };
+
+  const voiceChannel = channel as VoiceBasedChannel;
+  const currentMembers = new Set(
+    [...voiceChannel.members.values()]
+      .filter(m => !m.user.bot)
+      .map(m => m.id)
+  );
+
+  // Close phantom sessions (user has active session but left VC during restart)
+  for (const [key, session] of movieSessions) {
+    const [sessionGuildId, userId] = key.split(":");
+    if (sessionGuildId !== guild.id) continue;
+    if (session.currentSessionStart && !currentMembers.has(userId)) {
+      handleMovieVoiceLeave(guild.id, userId);
+      left++;
+    }
+  }
+
+  // Start sessions for users in VC without active sessions
+  for (const memberId of currentMembers) {
+    const key = getSessionKey(guild.id, memberId);
+    const session = movieSessions.get(key);
+    if (!session || !session.currentSessionStart) {
+      handleMovieVoiceJoin(guild.id, memberId);
+      joined++;
+    }
+  }
+
+  if (left > 0 || joined > 0) {
+    logger.info({
+      evt: "movie_vc_reconciled",
+      guildId: guild.id,
+      phantomsClosed: left,
+      newSessionsStarted: joined,
+    }, `Reconciled movie VC: closed ${left} phantom, started ${joined} new`);
+  }
+
+  return { left, joined };
+}
+
+/**
  * Clear persisted session data for a guild.
  * Called after event finalization.
  */

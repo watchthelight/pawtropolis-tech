@@ -393,6 +393,26 @@ client.once(Events.ClientReady, async () => {
     logger.error({ err }, "[startup] Voice session seeding failed");
   }
 
+  // Reconcile recovered event sessions against actual VC state
+  // WHY: After recovery, sessions assume users are still in VC — verify against reality
+  try {
+    const { reconcileMovieVoiceSessions } = await import("./features/movieNight.js");
+    for (const [, guild] of client.guilds.cache) {
+      await reconcileMovieVoiceSessions(guild);
+    }
+  } catch (err) {
+    logger.error({ err }, "[startup] Movie VC reconciliation failed");
+  }
+
+  try {
+    const { reconcileGameVoiceSessions } = await import("./features/events/gameNight.js");
+    for (const [, guild] of client.guilds.cache) {
+      await reconcileGameVoiceSessions(guild);
+    }
+  } catch (err) {
+    logger.error({ err }, "[startup] Game VC reconciliation failed");
+  }
+
   // Sync channel names to channel_cache table for web dashboard
   try {
     const { syncAllChannels } = await import("./features/channelCacheSync.js");
