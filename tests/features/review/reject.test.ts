@@ -272,11 +272,8 @@ describe("rejectFlow", () => {
         reason: "Not a fit",
       });
 
-      expect(user.send).toHaveBeenCalledWith(
-        expect.objectContaining({
-          content: expect.stringContaining("Awesome Community"),
-        })
-      );
+      const embed = (user.send as ReturnType<typeof vi.fn>).mock.calls[0][0].embeds[0];
+      expect(embed.data.description).toContain("Awesome Community");
     });
 
     it("includes reason in message", async () => {
@@ -287,11 +284,8 @@ describe("rejectFlow", () => {
         reason: "Application was too short",
       });
 
-      expect(user.send).toHaveBeenCalledWith(
-        expect.objectContaining({
-          content: expect.stringContaining("Application was too short"),
-        })
-      );
+      const embed = (user.send as ReturnType<typeof vi.fn>).mock.calls[0][0].embeds[0];
+      expect(embed.data.description).toContain("Application was too short");
     });
 
     it("encourages reapplication for standard rejection", async () => {
@@ -303,11 +297,8 @@ describe("rejectFlow", () => {
         permanent: false,
       });
 
-      expect(user.send).toHaveBeenCalledWith(
-        expect.objectContaining({
-          content: expect.stringMatching(/new one|apply again|reapply/i),
-        })
-      );
+      const embed = (user.send as ReturnType<typeof vi.fn>).mock.calls[0][0].embeds[0];
+      expect(embed.data.description).toMatch(/new one|submit a new|reapply/i);
     });
   });
 
@@ -321,11 +312,8 @@ describe("rejectFlow", () => {
         permanent: true,
       });
 
-      expect(user.send).toHaveBeenCalledWith(
-        expect.objectContaining({
-          content: expect.stringMatching(/permanently/i),
-        })
-      );
+      const embed = (user.send as ReturnType<typeof vi.fn>).mock.calls[0][0].embeds[0];
+      expect(embed.data.description).toMatch(/permanently/i);
     });
 
     it("indicates user cannot reapply", async () => {
@@ -337,11 +325,8 @@ describe("rejectFlow", () => {
         permanent: true,
       });
 
-      expect(user.send).toHaveBeenCalledWith(
-        expect.objectContaining({
-          content: expect.stringMatching(/cannot apply|can't apply/i),
-        })
-      );
+      const embed = (user.send as ReturnType<typeof vi.fn>).mock.calls[0][0].embeds[0];
+      expect(embed.data.description).toMatch(/cannot apply|can't apply|cannot/i);
     });
   });
 
@@ -392,10 +377,9 @@ describe("rejectFlow", () => {
         reason: "Answers too brief",
       });
 
-      const sentContent = (user.send as ReturnType<typeof vi.fn>).mock.calls[0][0]
-        .content;
+      const embed = (user.send as ReturnType<typeof vi.fn>).mock.calls[0][0].embeds[0];
       // Should be professional/polite
-      expect(sentContent).toMatch(/thank|hello|hi/i);
+      expect(embed.data.description).toMatch(/thank|hello|hi/i);
     });
 
     it("permanent rejection message is final", async () => {
@@ -407,10 +391,9 @@ describe("rejectFlow", () => {
         permanent: true,
       });
 
-      const sentContent = (user.send as ReturnType<typeof vi.fn>).mock.calls[0][0]
-        .content;
+      const embed = (user.send as ReturnType<typeof vi.fn>).mock.calls[0][0].embeds[0];
       // Should indicate finality
-      expect(sentContent).toMatch(/permanently|final|cannot/i);
+      expect(embed.data.description).toMatch(/permanently|final|cannot/i);
     });
   });
 });
@@ -449,9 +432,8 @@ describe("rejection workflow integration", () => {
     });
     expect(flowResult.dmDelivered).toBe(true);
 
-    const sentContent = (user.send as ReturnType<typeof vi.fn>).mock.calls[0][0]
-      .content;
-    expect(sentContent).toMatch(/permanently/i);
+    const embed = (user.send as ReturnType<typeof vi.fn>).mock.calls[0][0].embeds[0];
+    expect(embed.data.description).toMatch(/permanently/i);
   });
 
   it("rejection with DM failure is non-blocking", async () => {
