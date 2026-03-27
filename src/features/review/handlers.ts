@@ -23,6 +23,7 @@ export {
   handleCopyUidButton,
   handlePingInUnverified,
   handleDeletePing,
+  handleVoteOutButton,
   // Modal handlers
   handleRejectModal,
   handleAcceptModal,
@@ -46,6 +47,7 @@ export {
   runRejectAction,
   runPermRejectAction,
   runKickAction,
+  runVoteOutAction,
   // Claim handlers (for internal use)
   handleClaimToggle,
   handleUnclaimAction,

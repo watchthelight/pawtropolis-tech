@@ -9,16 +9,19 @@
 
 import {
   GuildMember,
+  MessageFlags,
   type Guild,
   type MessageActionRowComponentBuilder,
   type ActionRowBuilder,
 } from "discord.js";
+import { db } from "../../../db/db.js";
 import { logger } from "../../../lib/logger.js";
 import { captureException } from "../../../lib/sentry.js";
 import { getConfig } from "../../../lib/config.js";
 import { replyOrEdit } from "../../../lib/cmdWrap.js";
 import { enrichEvent } from "../../../lib/reqctx.js";
 import { shortCode } from "../../../lib/ids.js";
+import { nowUtc } from "../../../lib/time.js";
 import { logActionPretty } from "../../../logging/pretty.js";
 import { closeModmailForApplication } from "../../modmail.js";
 import { SAFE_ALLOWED_MENTIONS } from "../../../lib/constants.js";
@@ -32,7 +35,7 @@ import type {
 } from "../types.js";
 
 import { getClaim, claimGuard } from "../claims.js";
-import { updateReviewActionMeta } from "../queries.js";
+import { updateReviewActionMeta, insertVoteOut, getVoteOutVoters } from "../queries.js";
 
 import {
   approveTx,
@@ -329,23 +332,9 @@ export async function runRejectAction(
     cacheUser(interaction.user, interaction.guild.id, member);
   }
 
-  const user = await interaction.client.users.fetch(app.user_id).catch(() => null);
-  const guildName = interaction.guild?.name ?? "this server";
-  let dmDelivered = false;
-  if (user) {
-    const dmResult = await rejectFlow(user, { guildName, reason: trimmed, components: options?.dmComponents });
-    dmDelivered = dmResult.dmDelivered;
-    updateReviewActionMeta(tx.reviewActionId, dmResult);
-  } else {
-    logger.warn({ userId: app.user_id }, "Failed to fetch user for rejection DM");
-    updateReviewActionMeta(tx.reviewActionId, { dmDelivered });
-  }
-
-  // Note: Claim preserved for review card display
-
-  // Auto-close modmail on rejection
   const guild = interaction.guild;
   const code = shortCode(app.id);
+  const guildName = guild?.name ?? "this server";
 
   // Log reject action
   if (guild) {
@@ -361,6 +350,8 @@ export async function runRejectAction(
     });
   }
 
+  // Auto-close modmail FIRST (before rejection DM) so the user sees the
+  // modmail closure context before getting the rejection notification
   if (guild) {
     try {
       await closeModmailForApplication(guild.id, app.user_id, code, {
@@ -373,6 +364,20 @@ export async function runRejectAction(
       logger.warn({ err, code }, "[review] failed to auto-close modmail on rejection");
     }
   }
+
+  // Now send rejection DM (arrives after modmail close DM)
+  const user = await interaction.client.users.fetch(app.user_id).catch(() => null);
+  let dmDelivered = false;
+  if (user) {
+    const dmResult = await rejectFlow(user, { guildName, reason: trimmed, components: options?.dmComponents });
+    dmDelivered = dmResult.dmDelivered;
+    updateReviewActionMeta(tx.reviewActionId, dmResult);
+  } else {
+    logger.warn({ userId: app.user_id }, "Failed to fetch user for rejection DM");
+    updateReviewActionMeta(tx.reviewActionId, { dmDelivered });
+  }
+
+  // Note: Claim preserved for review card display
 
   // Refresh review card after modmail close
   let reviewMessageId: string | undefined;
@@ -473,17 +478,9 @@ export async function runPermRejectAction(
     cacheUser(interaction.user, interaction.guild.id, member);
   }
 
-  const user = await interaction.client.users.fetch(app.user_id).catch(() => null);
-  const guildName = interaction.guild?.name ?? "this server";
-  let dmDelivered = false;
-  if (user) {
-    const dmResult = await rejectFlow(user, { guildName, reason: trimmed, permanent: true });
-    dmDelivered = dmResult.dmDelivered;
-    updateReviewActionMeta(tx.reviewActionId, dmResult);
-  } else {
-    logger.warn({ userId: app.user_id }, "Failed to fetch user for permanent rejection DM");
-    updateReviewActionMeta(tx.reviewActionId, { dmDelivered });
-  }
+  const guild = interaction.guild;
+  const code = shortCode(app.id);
+  const guildName = guild?.name ?? "this server";
 
   // Log permanent rejection
   logger.info(
@@ -491,16 +488,11 @@ export async function runPermRejectAction(
       moderatorId: interaction.user.id,
       userId: app.user_id,
       appId: app.id,
-      guildId: interaction.guild?.id,
+      guildId: guild?.id,
       reason: trimmed,
     },
     "[review] Permanent rejection applied"
   );
-
-  // Note: Claim preserved for review card display
-
-  const guild = interaction.guild;
-  const code = shortCode(app.id);
 
   // Log perm_reject action
   if (guild) {
@@ -516,7 +508,7 @@ export async function runPermRejectAction(
     });
   }
 
-  // Auto-close modmail on permanent rejection
+  // Auto-close modmail FIRST (before rejection DM)
   if (guild) {
     try {
       await closeModmailForApplication(guild.id, app.user_id, code, {
@@ -532,6 +524,20 @@ export async function runPermRejectAction(
       logger.warn({ err, code }, "[review] failed to auto-close modmail on permanent rejection");
     }
   }
+
+  // Now send rejection DM (arrives after modmail close DM)
+  const user = await interaction.client.users.fetch(app.user_id).catch(() => null);
+  let dmDelivered = false;
+  if (user) {
+    const dmResult = await rejectFlow(user, { guildName, reason: trimmed, permanent: true });
+    dmDelivered = dmResult.dmDelivered;
+    updateReviewActionMeta(tx.reviewActionId, dmResult);
+  } else {
+    logger.warn({ userId: app.user_id }, "Failed to fetch user for permanent rejection DM");
+    updateReviewActionMeta(tx.reviewActionId, { dmDelivered });
+  }
+
+  // Note: Claim preserved for review card display
 
   // Refresh review card after modmail close
   let reviewMessageId: string | undefined;
@@ -682,5 +688,186 @@ export async function runKickAction(
   }
 
   notifyDashboard("review:kicked", { appId: app.id, reviewerId: interaction.user.id, action: "kick" });
+  notifyDashboard("stats:updated", { userId: interaction.user.id });
+}
+
+// ===== Vote Out =====
+
+/**
+ * Format voter IDs into a mention list with Oxford comma.
+ * 1 voter: "<@X>"
+ * 2 voters: "<@X> and <@Y>"
+ * 3+ voters: "<@X>, <@Y>, and <@Z>"
+ */
+function formatVoterList(voterIds: string[]): string {
+  const mentions = voterIds.map((id) => `<@${id}>`);
+  if (mentions.length === 1) return mentions[0];
+  if (mentions.length === 2) return `${mentions[0]} and ${mentions[1]}`;
+  return `${mentions.slice(0, -1).join(", ")}, and ${mentions[mentions.length - 1]}`;
+}
+
+/**
+ * runVoteOutAction
+ * WHAT: Handles a single vote-out click from a moderator.
+ * WHY: Accumulates votes; triggers rejection when configurable threshold is met.
+ * DESIGN: No claim guard — any Gatekeeper can vote regardless of claim status.
+ */
+export async function runVoteOutAction(
+  interaction: ReviewActionInteraction,
+  app: ApplicationRow
+) {
+  // Terminal guard
+  if (app.status === "rejected" || app.status === "approved" || app.status === "kicked") {
+    await replyOrEdit(interaction, { content: "This application is already resolved." }).catch((err) => {
+      logger.debug({ err, appId: app.id, action: "vote_out" }, "[review] already-resolved reply failed");
+    });
+    return;
+  }
+
+  // Insert vote (idempotent — UNIQUE constraint prevents duplicates)
+  const isNew = insertVoteOut(app.id, interaction.user.id);
+  if (!isNew) {
+    await interaction
+      .followUp({ content: "You already voted on this application.", flags: MessageFlags.Ephemeral })
+      .catch((err) => {
+        logger.debug({ err, appId: app.id, action: "vote_out" }, "[review] already-voted reply failed");
+      });
+    return;
+  }
+
+  // Log vote action in review_action audit trail
+  try {
+    db.prepare(
+      `INSERT INTO review_action (app_id, moderator_id, action, created_at, reason, message_link, meta)
+       VALUES (?, ?, 'vote_out', ?, NULL, NULL, NULL)`
+    ).run(app.id, interaction.user.id, nowUtc());
+  } catch (err) {
+    logger.error({ err, appId: app.id }, "[review] failed to log vote_out action");
+  }
+
+  // Fetch current voters and threshold
+  const voters = getVoteOutVoters(app.id);
+  const cfg = getConfig(interaction.guildId!);
+  const threshold = cfg?.vote_out_threshold ?? 2;
+
+  // Track vote in wide event
+  enrichEvent((e) => {
+    e.setFeature("review", "vote_out");
+    e.addEntity({ type: "application", id: app.id, code: shortCode(app.id) });
+    e.addAttr("applicantId", app.user_id);
+    e.addAttr("voteCount", voters.length);
+    e.addAttr("threshold", threshold);
+  });
+
+  // Cache moderator identity for dashboard display
+  if (interaction.guild) {
+    const member = interaction.member instanceof GuildMember ? interaction.member : null;
+    cacheUser(interaction.user, interaction.guild.id, member);
+  }
+
+  // Threshold not yet met — refresh card and confirm vote
+  if (voters.length < threshold) {
+    try {
+      await ensureReviewMessage(interaction.client, app.id);
+    } catch (err) {
+      logger.warn({ err, appId: app.id }, "[review] failed to refresh card after vote_out");
+    }
+    await interaction
+      .followUp({ content: `Vote recorded (${voters.length}/${threshold}).`, flags: MessageFlags.Ephemeral })
+      .catch((err) => {
+        logger.debug({ err, appId: app.id, action: "vote_out" }, "[review] vote-recorded reply failed");
+      });
+    return;
+  }
+
+  // === Threshold met — execute rejection ===
+
+  const guild = interaction.guild;
+  const code = shortCode(app.id);
+  const guildName = guild?.name ?? "this server";
+  const rejectionReason = "Staff has decided to deny your application at this time. Thank you, and have a nice day.";
+
+  const tx = rejectTx(app.id, interaction.user.id, "Voted out by staff");
+  if (tx.kind === "already") {
+    await replyOrEdit(interaction, { content: "Already rejected." }).catch(() => {});
+    return;
+  }
+  if (tx.kind === "terminal") {
+    await replyOrEdit(interaction, { content: `Already resolved (${tx.status}).` }).catch(() => {});
+    return;
+  }
+
+  // Log action to logging channel
+  if (guild) {
+    await logActionPretty(guild, {
+      appId: app.id,
+      appCode: code,
+      actorId: interaction.user.id,
+      subjectId: app.user_id,
+      action: "reject",
+      reason: "Voted out by staff",
+    }).catch((err) => {
+      logger.warn({ err, appId: app.id }, "[review] failed to log vote_out rejection");
+    });
+  }
+
+  // Auto-close modmail FIRST (before rejection DM)
+  if (guild) {
+    try {
+      await closeModmailForApplication(guild.id, app.user_id, code, {
+        reason: "voted out",
+        client: interaction.client,
+        guild,
+      });
+      logger.info({ code, reason: "voted out" }, "[review] decision -> modmail auto-close");
+    } catch (err) {
+      logger.warn({ err, code }, "[review] failed to auto-close modmail on vote out");
+    }
+  }
+
+  // Send rejection DM
+  const user = await interaction.client.users.fetch(app.user_id).catch(() => null);
+  let dmDelivered = false;
+  if (user) {
+    const dmResult = await rejectFlow(user, { guildName, reason: rejectionReason });
+    dmDelivered = dmResult.dmDelivered;
+    if (tx.kind === "changed") {
+      updateReviewActionMeta(tx.reviewActionId, dmResult);
+    }
+  } else {
+    logger.warn({ userId: app.user_id }, "[review] failed to fetch user for vote out DM");
+    if (tx.kind === "changed") {
+      updateReviewActionMeta(tx.reviewActionId, { dmDelivered });
+    }
+  }
+
+  // Refresh review card (now terminal — buttons removed)
+  let reviewMessageId: string | undefined;
+  try {
+    const result = await ensureReviewMessage(interaction.client, app.id);
+    reviewMessageId = result.messageId;
+    logger.info({ code, appId: app.id }, "[review] card refreshed after vote out");
+  } catch (err) {
+    logger.warn({ err, appId: app.id }, "[review] failed to refresh card after vote out rejection");
+    captureException(err, { area: "voteout:ensureReviewMessage", appId: app.id });
+  }
+
+  // Post public reply: "X and Y voted <@user> out."
+  const voterList = formatVoterList(voters);
+  const publicContent = `${voterList} voted <@${app.user_id}> out.`;
+
+  if (interaction.channel && "send" in interaction.channel) {
+    try {
+      await interaction.channel.send({
+        content: publicContent,
+        allowedMentions: SAFE_ALLOWED_MENTIONS,
+        reply: reviewMessageId ? { messageReference: reviewMessageId } : undefined,
+      });
+    } catch (err) {
+      logger.warn({ err, appId: app.id }, "[review] failed to post public vote out message");
+    }
+  }
+
+  notifyDashboard("review:rejected", { appId: app.id, reviewerId: interaction.user.id, action: "vote_out" });
   notifyDashboard("stats:updated", { userId: interaction.user.id });
 }

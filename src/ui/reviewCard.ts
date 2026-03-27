@@ -156,9 +156,9 @@ export function googleReverseImageUrl(avatarUrl: string): string {
 export function buildActionRowsV2(
   app: ReviewCardApplication,
   claim: ReviewClaimRow | null,
-  options: { memberHasLeft?: boolean } = {}
+  options: { memberHasLeft?: boolean; voteOutCount?: number; voteOutThreshold?: number } = {}
 ): ActionRowBuilder<ButtonBuilder>[] {
-  const { memberHasLeft = false } = options;
+  const { memberHasLeft = false, voteOutCount = 0, voteOutThreshold = 2 } = options;
   const terminal = app.status === "approved" || app.status === "rejected" || app.status === "kicked";
   const idSuffix = `code${shortCode(app.id)}`;
   const rows: ActionRowBuilder<ButtonBuilder>[] = [];
@@ -209,11 +209,33 @@ export function buildActionRowsV2(
         .setLabel("Ping in Unverified")
         .setStyle(ButtonStyle.Secondary)
     );
-    rows.push(row1, row2);
+
+    // Show "Stale Modmail" rejection shortcut for applications older than 24 hours
+    const appAge = Date.now() - new Date(app.submitted_at ?? app.created_at).getTime();
+    if (appAge > 24 * 60 * 60 * 1000) {
+      row2.addComponents(
+        new ButtonBuilder()
+          .setCustomId(`review:stale_modmail:${idSuffix}`)
+          .setLabel("Stale Modmail")
+          .setStyle(ButtonStyle.Danger)
+      );
+    }
+
+    const row3 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`review:vote_out:${idSuffix}`)
+        .setLabel(`Vote Out (${voteOutCount}/${voteOutThreshold})`)
+        .setStyle(ButtonStyle.Danger)
+    );
+    rows.push(row1, row2, row3);
   } else if (!terminal) {
     rows.push(
       new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder().setCustomId(`review:claim:${idSuffix}`).setLabel("Claim Application").setStyle(ButtonStyle.Primary)
+        new ButtonBuilder().setCustomId(`review:claim:${idSuffix}`).setLabel("Claim Application").setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+          .setCustomId(`review:vote_out:${idSuffix}`)
+          .setLabel(`Vote Out (${voteOutCount}/${voteOutThreshold})`)
+          .setStyle(ButtonStyle.Danger)
       )
     );
   }
@@ -450,7 +472,9 @@ export function buildReviewEmbedV3(
   }
 
   // Join method — show who invited them and the link
-  if (inviteSource?.code) {
+  if (inviteSource?.code === "__discovery__") {
+    lines.push(`**Joined via:** Server Discovery`);
+  } else if (inviteSource?.code) {
     const link = `[discord.gg/${inviteSource.code}](https://discord.gg/${inviteSource.code})`;
     if (inviteSource.label && inviteSource.inviterId) {
       lines.push(`**Joined via:** ${inviteSource.label}: ${link} (created by <@${inviteSource.inviterId}>)`);

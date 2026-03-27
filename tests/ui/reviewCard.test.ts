@@ -193,11 +193,12 @@ describe("reviewCard", () => {
       created_at: new Date().toISOString(),
     };
 
-    it("returns claim button when no claim exists", () => {
+    it("returns claim button and vote out when no claim exists", () => {
       const rows = buildActionRowsV2(baseApp, null);
       expect(rows).toHaveLength(1);
-      const btn = rows[0].components[0] as { data: { custom_id: string; label: string } };
-      expect(btn.data.label).toBe("Claim Application");
+      const labels = rows[0].components.map((c) => (c as { data: { label: string } }).data.label);
+      expect(labels).toContain("Claim Application");
+      expect(labels).toContain("Vote Out (0/2)");
     });
 
     it("returns review buttons when claimed", () => {
@@ -208,7 +209,7 @@ describe("reviewCard", () => {
       };
 
       const rows = buildActionRowsV2(baseApp, claim);
-      expect(rows).toHaveLength(2);
+      expect(rows).toHaveLength(3);
 
       // First row: Accept, Reject, Perm Reject, Kick
       const row1Labels = rows[0].components.map((c) => (c as { data: { label: string } }).data.label);
@@ -222,6 +223,10 @@ describe("reviewCard", () => {
       expect(row2Labels).toContain("Modmail");
       expect(row2Labels).toContain("Unclaim");
       expect(row2Labels).toContain("Copy UID");
+
+      // Third row: Vote Out
+      const row3Labels = rows[2].components.map((c) => (c as { data: { label: string } }).data.label);
+      expect(row3Labels).toContain("Vote Out (0/2)");
     });
 
     it("returns no buttons for approved applications", () => {
@@ -254,6 +259,42 @@ describe("reviewCard", () => {
       const rows = buildActionRowsV2(baseApp, null);
       const btn = rows[0].components[0] as { data: { custom_id: string } };
       expect(btn.data.custom_id).toContain("APP123");
+    });
+
+    it("does not show Stale Modmail button for fresh applications", () => {
+      const claim = {
+        application_id: "app123",
+        reviewer_id: "reviewer789",
+        claimed_at: String(Date.now() / 1000),
+      };
+      const rows = buildActionRowsV2(baseApp, claim);
+      const row2Labels = rows[1].components.map((c) => (c as { data: { label: string } }).data.label);
+      expect(row2Labels).not.toContain("Stale Modmail");
+      expect(rows[1].components).toHaveLength(4);
+    });
+
+    it("shows Stale Modmail button for applications older than 24 hours", () => {
+      const staleApp = {
+        ...baseApp,
+        created_at: new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString(),
+        submitted_at: new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString(),
+      };
+      const claim = {
+        application_id: "app123",
+        reviewer_id: "reviewer789",
+        claimed_at: String(Date.now() / 1000),
+      };
+      const rows = buildActionRowsV2(staleApp, claim);
+      const row2Labels = rows[1].components.map((c) => (c as { data: { label: string } }).data.label);
+      expect(row2Labels).toContain("Stale Modmail");
+      expect(rows[1].components).toHaveLength(5);
+
+      // Verify it's a Danger button
+      const staleBtn = rows[1].components.find(
+        (c) => (c as { data: { label: string } }).data.label === "Stale Modmail"
+      ) as { data: { style: number; custom_id: string } };
+      expect(staleBtn.data.style).toBe(4); // ButtonStyle.Danger
+      expect(staleBtn.data.custom_id).toContain("review:stale_modmail:code");
     });
   });
 

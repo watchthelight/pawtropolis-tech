@@ -26,6 +26,7 @@ import {
   BTN_PERM_REJECT_RE,
   BTN_COPY_UID_RE,
   BTN_MODMAIL_RE,
+  BTN_VOTE_OUT_RE,
 } from "../../../lib/modalPatterns.js";
 import { nowUtc } from "../../../lib/time.js";
 import { autoDelete } from "../../../lib/autoDelete.js";
@@ -45,7 +46,7 @@ import {
   openUnclaimModal,
 } from "./helpers.js";
 
-import { runRejectAction, runKickAction } from "./actionRunners.js";
+import { runRejectAction, runKickAction, runVoteOutAction } from "./actionRunners.js";
 import { handleClaimToggle, handleUnclaimAction } from "./claimHandlers.js";
 
 // ===== Button Rate Limiting =====
@@ -113,6 +114,30 @@ export async function handleReviewButton(interaction: ButtonInteraction) {
         interaction,
         app,
         "That is not the right password, which you can find by reading the rules carefully! It's hidden well on purpose. Please fill out a new application with the correct password.",
+        { dmComponents: [tryAgainRow] }
+      );
+      return;
+    }
+
+    // stale_modmail: instant reject with preset reason (no modal)
+    if (action === "stale_modmail") {
+      if (!interaction.deferred && !interaction.replied) {
+        await interaction.deferUpdate().catch((err) => {
+          logger.debug({ err, action, code, interactionId: interaction.id }, "[review] deferUpdate failed");
+        });
+      }
+      const app = await resolveApplication(interaction, code);
+      if (!app) return;
+      const tryAgainRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId("v1:start")
+          .setLabel("Try Again")
+          .setStyle(ButtonStyle.Success)
+      );
+      await runRejectAction(
+        interaction,
+        app,
+        "User did not respond to modmail in < 24 hours. Please try again.",
         { dmComponents: [tryAgainRow] }
       );
       return;
@@ -600,5 +625,40 @@ export async function handleDeletePing(interaction: ButtonInteraction) {
       .catch((replyErr) => {
         logger.debug({ err: replyErr, messageId, guildId: interaction.guildId }, "[review] delete-ping error reply failed");
       });
+  }
+}
+
+/**
+ * handleVoteOutButton
+ * WHAT: Handles Vote Out button clicks on review cards.
+ * WHY: Accumulates votes from multiple mods; triggers rejection at threshold.
+ */
+export async function handleVoteOutButton(interaction: ButtonInteraction) {
+  const match = BTN_VOTE_OUT_RE.exec(interaction.customId);
+  if (!match) return;
+  if (!requireInteractionStaff(interaction)) return;
+
+  const code = match[1];
+
+  // Defer update to acknowledge button (no modal, no visible loading)
+  if (!interaction.deferred && !interaction.replied) {
+    await interaction.deferUpdate().catch((err) => {
+      logger.debug({ err, code, interactionId: interaction.id }, "[review] vote-out-button deferUpdate failed");
+    });
+  }
+
+  try {
+    const app = await resolveApplication(interaction, code);
+    if (!app) return;
+    await runVoteOutAction(interaction, app);
+  } catch (err) {
+    const traceId = ctx().traceId ?? newTraceId();
+    logger.error({ err, code, traceId }, "Vote out button handling failed");
+    captureException(err, { area: "handleVoteOutButton", code, traceId });
+    await replyOrEdit(interaction, {
+      content: `Failed to process vote out (trace: ${traceId}).`,
+    }).catch((replyErr) => {
+      logger.debug({ err: replyErr, code, traceId }, "[review] vote-out error-reply failed");
+    });
   }
 }

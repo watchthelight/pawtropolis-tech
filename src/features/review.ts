@@ -34,6 +34,7 @@ export const ALLOWED_ACTIONS = new Set<ReviewActionKind>([
   "perm_reject",
   "copy_uid",
   "claim",
+  "vote_out",
 ] as const);
 
 // ===== Re-exports from submodules =====
@@ -74,6 +75,9 @@ export {
   findPendingAppByUserId,
   updateReviewActionMeta,
   isClaimable,
+  getVoteOutCount,
+  getVoteOutVoters,
+  insertVoteOut,
 } from "./review/queries.js";
 
 // Re-export flows
@@ -102,6 +106,7 @@ export {
   handleCopyUidButton,
   handlePingInUnverified,
   handleDeletePing,
+  handleVoteOutButton,
 } from "./review/handlers.js";
 
 // Re-export card functions

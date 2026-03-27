@@ -13,6 +13,7 @@ export {
   handleCopyUidButton,
   handlePingInUnverified,
   handleDeletePing,
+  handleVoteOutButton,
 } from "./buttons.js";
 
 // Re-export modal handlers
@@ -45,6 +46,7 @@ export {
   runRejectAction,
   runPermRejectAction,
   runKickAction,
+  runVoteOutAction,
 } from "./actionRunners.js";
 
 // Re-export claim handlers for internal use

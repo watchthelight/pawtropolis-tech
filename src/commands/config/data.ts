@@ -253,6 +253,10 @@ export const data = new SlashCommandBuilder()
         sc.setName("game_threshold").setDescription("Set game night qualification percentage")
           .addIntegerOption((o) => o.setName("percentage").setDescription("Percentage of event duration required (10-90)").setRequired(true).setMinValue(10).setMaxValue(90))
       )
+      .addSubcommand((sc) =>
+        sc.setName("vote_out_threshold").setDescription("Set votes needed to reject via Vote Out (1-10)")
+          .addIntegerOption((o) => o.setName("votes").setDescription("Votes required (1-10)").setRequired(true).setMinValue(1).setMaxValue(10))
+      )
   )
   .addSubcommandGroup((group) =>
     group

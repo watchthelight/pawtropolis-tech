@@ -94,6 +94,7 @@ import {
   handleCopyUidButton,
   handlePingInUnverified,
   handleDeletePing,
+  handleVoteOutButton,
 } from "./features/review.js";
 import {
   handleModmailOpenButton,
@@ -122,6 +123,7 @@ import {
   BTN_MODMAIL_RE,
   BTN_PERM_REJECT_RE,
   BTN_COPY_UID_RE,
+  BTN_VOTE_OUT_RE,
   BTN_PING_UNVERIFIED_RE,
   BTN_DBRECOVER_RE,
   BTN_AUDIT_RE,
@@ -1525,6 +1527,23 @@ client.on("interactionCreate", wrapEvent("interactionCreate", async (interaction
               "route: copy UID"
             );
             await handleCopyUidButton(interaction);
+            succeeded = true;
+            return;
+          }
+
+          const voteOutMatch = customId.match(BTN_VOTE_OUT_RE);
+          if (voteOutMatch) {
+            logger.info(
+              {
+                evt: "ix_route_match",
+                kind: "button",
+                route: "review_vote_out",
+                code: voteOutMatch[1],
+                traceId,
+              },
+              "route: vote out"
+            );
+            await handleVoteOutButton(interaction);
             succeeded = true;
             return;
           }

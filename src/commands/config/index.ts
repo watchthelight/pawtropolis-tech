@@ -78,6 +78,7 @@ import {
   executeSetFlagRateLimit,
   executeSetNotifyConfig,
   executeSetAvatarScanAdvanced,
+  executeSetVoteOutThreshold,
 } from "./setAdvanced.js";
 
 // Artist Rotation
@@ -288,6 +289,9 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
       break;
     case "set-advanced:game_threshold":
       await executeSetGameThreshold(ctx);
+      break;
+    case "set-advanced:vote_out_threshold":
+      await executeSetVoteOutThreshold(ctx);
       break;
 
     // =========================================================================

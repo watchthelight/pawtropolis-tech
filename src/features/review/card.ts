@@ -878,8 +878,17 @@ export async function ensureReviewMessage(
     // Components built after message/channel resolution
     let components: ActionRowBuilder<ButtonBuilder>[] = [];
 
+    // Fetch vote out data for button display
+    const { getVoteOutCount } = await import("./queries.js");
+    const voteOutCount = getVoteOutCount(appId);
+    const voteOutThreshold = guildCfg?.vote_out_threshold ?? 2;
+
     // Build components - disable actions if member has left server
-    components = buildActionRows(app, claim, { memberHasLeft: member === null });
+    components = buildActionRows(app, claim, {
+      memberHasLeft: member === null,
+      voteOutCount,
+      voteOutThreshold,
+    });
 
     const nowIso = new Date().toISOString();
     let message: Message | null = null;

@@ -595,3 +595,31 @@ export async function executeSetAvatarScanAdvanced(ctx: CommandContext<ChatInput
     });
   });
 }
+
+export async function executeSetVoteOutThreshold(ctx: CommandContext<ChatInputCommandInteraction>) {
+  const { interaction } = ctx;
+
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
+
+  const votes = await withStep(ctx, "get_votes", async () => {
+    return interaction.options.getInteger("votes", true);
+  });
+
+  await withStep(ctx, "persist_config", async () => {
+    withSql(ctx, "INSERT/UPDATE guild_config vote_out_threshold", () =>
+      upsertConfig(interaction.guildId!, { vote_out_threshold: votes })
+    );
+    logger.info(
+      { evt: "config_set_vote_out_threshold", guildId: interaction.guildId, votes },
+      "[config] vote out threshold updated"
+    );
+  });
+
+  await withStep(ctx, "reply", async () => {
+    await replyOrEdit(interaction, {
+      content: `Vote Out threshold set to **${votes} vote${votes === 1 ? "" : "s"}**. Applications will be rejected when ${votes} moderator${votes === 1 ? "" : "s"} click${votes === 1 ? "s" : ""} Vote Out.`,
+    });
+  });
+}
