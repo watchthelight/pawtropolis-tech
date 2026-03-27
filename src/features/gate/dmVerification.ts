@@ -18,6 +18,7 @@ import {
   ButtonStyle,
   MessageFlags,
 } from "discord.js";
+import { randomUUID } from "node:crypto";
 import { db } from "../../db/db.js";
 import { logger } from "../../lib/logger.js";
 import { captureException } from "../../lib/sentry.js";
@@ -46,6 +47,7 @@ interface DmSession {
   guildId: string;
   userId: string;
   appId: string;
+  nonce: string;
   questions: GateQuestion[];
   answers: Map<number, string>;
   currentQuestionIndex: number;
@@ -103,10 +105,10 @@ function buildQuestionEmbed(question: GateQuestion, index: number, total: number
     .setFooter({ text: "Type your answer below" });
 }
 
-function buildCancelRow(): ActionRowBuilder<ButtonBuilder> {
+function buildCancelRow(nonce: string): ActionRowBuilder<ButtonBuilder> {
   return new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
-      .setCustomId("v1:dm:cancel")
+      .setCustomId(`v1:dm:cancel:${nonce}`)
       .setLabel("Cancel")
       .setStyle(ButtonStyle.Secondary)
       .setEmoji("❌")
@@ -133,15 +135,15 @@ function buildSummaryEmbed(session: DmSession): EmbedBuilder {
   return embed;
 }
 
-function buildSummaryRow(): ActionRowBuilder<ButtonBuilder> {
+function buildSummaryRow(nonce: string): ActionRowBuilder<ButtonBuilder> {
   return new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
-      .setCustomId("v1:dm:submit")
+      .setCustomId(`v1:dm:submit:${nonce}`)
       .setLabel("Submit Application")
       .setStyle(ButtonStyle.Success)
       .setEmoji("✅"),
     new ButtonBuilder()
-      .setCustomId("v1:dm:cancel")
+      .setCustomId(`v1:dm:cancel:${nonce}`)
       .setLabel("Cancel")
       .setStyle(ButtonStyle.Danger)
       .setEmoji("❌")
@@ -240,13 +242,14 @@ export async function startDmVerification(
   }
 
   // Try to DM the first question
+  const nonce = randomUUID().slice(0, 8);
   const firstQuestion = questions[startIndex];
   const embed = buildQuestionEmbed(firstQuestion, startIndex, questions.length);
 
   try {
     await interaction.user.send({
       embeds: [embed],
-      components: [buildCancelRow()],
+      components: [buildCancelRow(nonce)],
     });
   } catch (err: unknown) {
     // Discord error 50007 = "Cannot send messages to this user"
@@ -273,6 +276,7 @@ export async function startDmVerification(
     guildId,
     userId,
     appId,
+    nonce,
     questions,
     answers: existingAnswers,
     currentQuestionIndex: startIndex,
@@ -341,7 +345,7 @@ export async function handleDmAnswer(message: Message): Promise<void> {
 
     await message.channel.send({
       embeds: [embed],
-      components: [buildCancelRow()],
+      components: [buildCancelRow(session.nonce)],
     });
   } else {
     // All questions answered — show summary
@@ -350,7 +354,7 @@ export async function handleDmAnswer(message: Message): Promise<void> {
 
     await message.channel.send({
       embeds: [summaryEmbed],
-      components: [buildSummaryRow()],
+      components: [buildSummaryRow(session.nonce)],
     });
 
     logger.info(
@@ -374,7 +378,18 @@ export async function handleDmButton(interaction: ButtonInteraction): Promise<vo
     return;
   }
 
-  const action = interaction.customId.split(":")[2]; // v1:dm:submit or v1:dm:cancel
+  const parts = interaction.customId.split(":"); // v1:dm:action:nonce
+  const action = parts[2];
+  const nonce = parts[3];
+
+  // Reject stale buttons from old sessions
+  if (nonce && nonce !== session.nonce) {
+    await interaction.reply({
+      content: "This button is from an old session. Use the buttons on your latest question.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
 
   if (action === "cancel") {
     await handleCancel(interaction, session);
