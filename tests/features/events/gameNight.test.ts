@@ -616,8 +616,8 @@ describe("gameNight", () => {
 
       expect(result.sessions).toBe(1);
       const session = getCurrentGameSession("guild-123", "user-123");
-      // Should have accumulated lost time
-      expect(session?.totalMinutes).toBeGreaterThan(10);
+      // accumulated_minutes(10) + ongoing session from current_session_start(20 min ago) = ~30
+      expect(session?.totalMinutes).toBeGreaterThanOrEqual(29);
     });
 
     it("handles inactive sessions correctly", () => {

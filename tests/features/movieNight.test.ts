@@ -82,6 +82,7 @@ import {
   creditHistoricalAttendance,
   bumpAttendance,
   getMovieQualificationThreshold,
+  getCurrentMovieSession,
   _testing,
 } from "../../src/features/movieNight.js";
 
@@ -890,6 +891,9 @@ describe("movieNight", () => {
       const result = recoverPersistedSessions();
 
       expect(result.sessions).toBe(1);
+      const session = getCurrentMovieSession("guild-123", "user-123");
+      // accumulated_minutes(10) + ongoing session from current_session_start(20 min ago) = ~30
+      expect(session?.totalMinutes).toBeGreaterThanOrEqual(29);
     });
 
     it("handles inactive sessions correctly", () => {

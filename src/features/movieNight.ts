@@ -90,6 +90,13 @@ function getOrCreateSession(guildId: string, userId: string): MovieSession {
   return session;
 }
 
+/**
+ * Get current in-memory session for a user (for testing/debugging).
+ */
+export function getCurrentMovieSession(guildId: string, userId: string): MovieSession | null {
+  return movieSessions.get(getSessionKey(guildId, userId)) ?? null;
+}
+
 // ============================================================================
 // Movie Event Management
 // ============================================================================
