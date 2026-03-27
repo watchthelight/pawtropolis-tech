@@ -1,4 +1,5 @@
 import { formatHex, clampChroma } from 'culori';
+import { setPreferenceCookie } from './consent';
 
 export const FALLBACK_HUE = 250;
 
@@ -164,6 +165,9 @@ export function applyPalette(hue: number): void {
 	root.setProperty('--accent-hex', p.accentHex);
 	root.setProperty('--warm-hex', p.warmHex);
 	root.setProperty('--cool-hex', p.coolHex);
+
+	// Persist hue to cookie (if consent accepted)
+	setPreferenceCookie('paw-hue', rounded);
 }
 
 /**

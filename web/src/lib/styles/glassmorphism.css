@@ -7,156 +7,129 @@
  * Editorial, magazine-like clarity. Clean and airy.
  *
  * ALL selectors scoped under [data-style="glassmorphism"].
+ * Uses !important on component overrides to beat Svelte scoped styles.
  * Uses var(--hue) so the user's Discord accent color is respected.
  */
 
 /* ═══════════════════════════════════════════════════════════
-   CUSTOM PROPERTY OVERRIDES
+   CUSTOM PROPERTY OVERRIDES (cascade naturally)
    ═══════════════════════════════════════════════════════════ */
 
 [data-style="glassmorphism"] {
-	/* Surfaces — true dark, glass panels overlay this */
 	--bg: oklch(7% 0.002 var(--hue));
 	--surface: rgba(255, 255, 255, 0.045);
 	--surface-raised: rgba(255, 255, 255, 0.065);
 	--surface-overlay: rgba(255, 255, 255, 0.08);
 
-	/* Borders — thin frost edges */
 	--border: rgba(255, 255, 255, 0.06);
 	--border-holdfast: rgba(255, 255, 255, 0.08);
 	--border-strong: rgba(255, 255, 255, 0.12);
 
-	/* Shadows — minimal, mostly replaced by blur depth */
 	--shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
 	--shadow-md: 0 2px 8px rgba(0, 0, 0, 0.25);
 	--shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.3);
 
-	/* Interactive states */
 	--hover-bg: rgba(255, 255, 255, 0.06);
 	--active-bg: rgba(255, 255, 255, 0.08);
 	--selected-bg: rgba(255, 255, 255, 0.07);
-
-	/* Accent glow — subtler */
 	--accent-glow-bg: rgba(255, 255, 255, 0.04);
 
-	/* Terminal aesthetic — frosty tint */
 	--terminal-grid: rgba(255, 255, 255, 0.04);
 	--terminal-border: rgba(255, 255, 255, 0.08);
 }
 
 /* ═══════════════════════════════════════════════════════════
    BACKGROUND ATMOSPHERE
-   Subtle ambient light zones + noise texture
    ═══════════════════════════════════════════════════════════ */
 
 [data-style="glassmorphism"] body {
-	background-color: oklch(7% 0.002 var(--hue));
+	background-color: oklch(7% 0.002 var(--hue)) !important;
 }
 
-/* Ambient light zones — barely visible tinted zones, NOT a gradient */
 [data-style="glassmorphism"] body::before {
-	content: '';
-	position: fixed;
-	inset: 0;
-	z-index: 0;
-	pointer-events: none;
+	content: '' !important;
+	position: fixed !important;
+	inset: 0 !important;
+	z-index: 0 !important;
+	pointer-events: none !important;
 	background:
-		radial-gradient(
-			ellipse 60% 50% at 20% 80%,
-			oklch(72% 0.18 var(--hue) / 0.02) 0%,
-			transparent 70%
-		),
-		radial-gradient(
-			ellipse 40% 60% at 85% 20%,
-			oklch(65% 0.10 var(--hue-cool) / 0.02) 0%,
-			transparent 60%
-		);
+		radial-gradient(ellipse 60% 50% at 20% 80%, oklch(72% 0.18 var(--hue) / 0.02) 0%, transparent 70%),
+		radial-gradient(ellipse 40% 60% at 85% 20%, oklch(65% 0.10 var(--hue-cool) / 0.02) 0%, transparent 60%) !important;
 }
 
-/* Noise texture overlay for tactile depth */
 [data-style="glassmorphism"] body::after {
-	content: '';
-	position: fixed;
-	inset: 0;
-	z-index: 0;
-	opacity: 0.35;
-	pointer-events: none;
-	background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-	background-size: 256px 256px;
+	content: '' !important;
+	position: fixed !important;
+	inset: 0 !important;
+	z-index: 0 !important;
+	opacity: 0.35 !important;
+	pointer-events: none !important;
+	background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E") !important;
+	background-size: 256px 256px !important;
 }
 
 /* ═══════════════════════════════════════════════════════════
-   SIDEBAR — dense frosted glass (most opaque layer)
+   SIDEBAR — dense frosted glass
    ═══════════════════════════════════════════════════════════ */
 
 [data-style="glassmorphism"] .sidebar {
-	background: rgba(255, 255, 255, 0.055);
-	backdrop-filter: blur(32px) saturate(140%);
-	-webkit-backdrop-filter: blur(32px) saturate(140%);
-	border-right-color: rgba(255, 255, 255, 0.08);
+	background: rgba(255, 255, 255, 0.055) !important;
+	backdrop-filter: blur(32px) saturate(140%) !important;
+	-webkit-backdrop-filter: blur(32px) saturate(140%) !important;
+	border-right-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-/* Identity section */
 [data-style="glassmorphism"] .identity {
-	border-bottom-color: rgba(255, 255, 255, 0.06);
+	border-bottom-color: rgba(255, 255, 255, 0.06) !important;
 }
 
-/* Nav items — glass hover */
+[data-style="glassmorphism"] .nav-item {
+	border: 1px solid transparent !important;
+}
+
 [data-style="glassmorphism"] .nav-item:hover {
-	background: rgba(255, 255, 255, 0.04);
-	border: 1px solid rgba(255, 255, 255, 0.06);
+	background: rgba(255, 255, 255, 0.04) !important;
+	border-color: rgba(255, 255, 255, 0.06) !important;
 }
 
 [data-style="glassmorphism"] .nav-active {
-	background: rgba(255, 255, 255, 0.045);
-	border: 1px solid rgba(255, 255, 255, 0.1);
+	background: rgba(255, 255, 255, 0.045) !important;
+	border: 1px solid rgba(255, 255, 255, 0.1) !important;
+	box-shadow: none !important;
 }
 
-/* Footer */
 [data-style="glassmorphism"] .footer {
-	border-top-color: rgba(255, 255, 255, 0.06);
+	border-top-color: rgba(255, 255, 255, 0.06) !important;
 }
 
-/* Edge toggle (sidebar collapse) */
 [data-style="glassmorphism"] .edge-toggle {
-	background: rgba(255, 255, 255, 0.04);
-	backdrop-filter: blur(16px);
-	-webkit-backdrop-filter: blur(16px);
-	border-color: rgba(255, 255, 255, 0.08);
+	background: rgba(255, 255, 255, 0.04) !important;
+	backdrop-filter: blur(16px) !important;
+	-webkit-backdrop-filter: blur(16px) !important;
+	border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 [data-style="glassmorphism"] .edge-toggle:hover {
-	background: rgba(255, 255, 255, 0.07);
-	border-color: rgba(255, 255, 255, 0.12);
+	background: rgba(255, 255, 255, 0.07) !important;
+	border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════
-   CARDS — frosted panels (standard glass layer)
+   CARDS — frosted panels
    ═══════════════════════════════════════════════════════════ */
 
-[data-style="glassmorphism"] .card {
-	background: rgba(255, 255, 255, 0.045);
-	backdrop-filter: blur(24px) saturate(130%);
-	-webkit-backdrop-filter: blur(24px) saturate(130%);
-	border: 1px solid rgba(255, 255, 255, 0.08);
+[data-style="glassmorphism"] .card,
+[data-style="glassmorphism"] .data-card {
+	background: rgba(255, 255, 255, 0.045) !important;
+	backdrop-filter: blur(24px) saturate(130%) !important;
+	-webkit-backdrop-filter: blur(24px) saturate(130%) !important;
+	border: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
-[data-style="glassmorphism"] .card:hover {
-	background: rgba(255, 255, 255, 0.06);
-	border-color: rgba(255, 255, 255, 0.12);
-}
-
-/* Stat cards */
-[data-style="glassmorphism"] .stat-card {
-	background: rgba(255, 255, 255, 0.04);
-	backdrop-filter: blur(24px) saturate(130%);
-	-webkit-backdrop-filter: blur(24px) saturate(130%);
-	border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-[data-style="glassmorphism"] .stat-card:hover {
-	background: rgba(255, 255, 255, 0.06);
-	border-color: rgba(255, 255, 255, 0.12);
+[data-style="glassmorphism"] .card:hover,
+[data-style="glassmorphism"] .data-card:hover {
+	background: rgba(255, 255, 255, 0.06) !important;
+	border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -164,38 +137,50 @@
    ═══════════════════════════════════════════════════════════ */
 
 [data-style="glassmorphism"] .heatmap-card {
-	background: rgba(255, 255, 255, 0.04);
-	backdrop-filter: blur(24px) saturate(130%);
-	-webkit-backdrop-filter: blur(24px) saturate(130%);
-	border: 1px solid rgba(255, 255, 255, 0.08);
+	background: rgba(255, 255, 255, 0.04) !important;
+	backdrop-filter: blur(24px) saturate(130%) !important;
+	-webkit-backdrop-filter: blur(24px) saturate(130%) !important;
+	border: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════
-   CHIP SELECTORS — glass container
+   CHIPS — glass container
    ═══════════════════════════════════════════════════════════ */
 
-[data-style="glassmorphism"] .selector,
-[data-style="glassmorphism"] .week-selector {
-	background: rgba(255, 255, 255, 0.04);
-	backdrop-filter: blur(16px);
-	-webkit-backdrop-filter: blur(16px);
-	border: 1px solid rgba(255, 255, 255, 0.06);
+[data-style="glassmorphism"] .selector {
+	background: rgba(255, 255, 255, 0.04) !important;
+	backdrop-filter: blur(16px) !important;
+	-webkit-backdrop-filter: blur(16px) !important;
+	border: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+[data-style="glassmorphism"] .chip {
+	border-color: transparent !important;
 }
 
 [data-style="glassmorphism"] .chip.active {
-	background: rgba(255, 255, 255, 0.06);
-	border-color: rgba(255, 255, 255, 0.12);
-	box-shadow: none;
+	background: rgba(255, 255, 255, 0.06) !important;
+	border-color: rgba(255, 255, 255, 0.12) !important;
+	box-shadow: none !important;
 }
 
 /* ═══════════════════════════════════════════════════════════
-   REVIEW CARDS — accent left border on selected
+   REVIEW CARDS
    ═══════════════════════════════════════════════════════════ */
 
-[data-style="glassmorphism"] .review-card.selected,
-[data-style="glassmorphism"] .review-card[aria-selected="true"] {
-	border-left: 2px solid var(--accent);
-	background: rgba(255, 255, 255, 0.06);
+[data-style="glassmorphism"] .review-card {
+	border: 1px solid rgba(255, 255, 255, 0.06) !important;
+	background: rgba(255, 255, 255, 0.03) !important;
+}
+
+[data-style="glassmorphism"] .review-card:hover {
+	background: rgba(255, 255, 255, 0.05) !important;
+	border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-style="glassmorphism"] .review-card-selected {
+	border-left: 2px solid var(--accent) !important;
+	background: rgba(255, 255, 255, 0.06) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -203,17 +188,8 @@
    ═══════════════════════════════════════════════════════════ */
 
 [data-style="glassmorphism"] .tab-active {
-	background: rgba(255, 255, 255, 0.05);
-	box-shadow: none;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   BUTTONS — light glass
-   ═══════════════════════════════════════════════════════════ */
-
-[data-style="glassmorphism"] button {
-	backdrop-filter: blur(12px);
-	-webkit-backdrop-filter: blur(12px);
+	background: rgba(255, 255, 255, 0.05) !important;
+	box-shadow: none !important;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -221,20 +197,31 @@
    ═══════════════════════════════════════════════════════════ */
 
 [data-style="glassmorphism"] .mobile-header {
-	background: rgba(255, 255, 255, 0.04);
-	backdrop-filter: blur(24px);
-	-webkit-backdrop-filter: blur(24px);
-	border-bottom-color: rgba(255, 255, 255, 0.06);
+	background: rgba(255, 255, 255, 0.04) !important;
+	backdrop-filter: blur(24px) !important;
+	-webkit-backdrop-filter: blur(24px) !important;
+	border-bottom-color: rgba(255, 255, 255, 0.06) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════
-   SCROLLBAR — frosty
+   INSIGHT CARDS
+   ═══════════════════════════════════════════════════════════ */
+
+[data-style="glassmorphism"] .insight-card {
+	background: rgba(255, 255, 255, 0.035) !important;
+	backdrop-filter: blur(20px) saturate(120%) !important;
+	-webkit-backdrop-filter: blur(20px) saturate(120%) !important;
+	border: 1px solid rgba(255, 255, 255, 0.07) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SCROLLBAR
    ═══════════════════════════════════════════════════════════ */
 
 [data-style="glassmorphism"] ::-webkit-scrollbar-thumb {
-	background: rgba(255, 255, 255, 0.1);
+	background: rgba(255, 255, 255, 0.1) !important;
 }
 
 [data-style="glassmorphism"] ::-webkit-scrollbar-thumb:hover {
-	background: rgba(255, 255, 255, 0.18);
+	background: rgba(255, 255, 255, 0.18) !important;
 }

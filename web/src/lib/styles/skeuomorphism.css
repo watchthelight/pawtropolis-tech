@@ -6,50 +6,53 @@
  * brass fixtures, cream paper index cards, CRT thermal displays.
  *
  * ALL selectors scoped under [data-style="skeuomorphism"].
- * Brass/amber replaces the user's accent color throughout.
+ * Uses !important on component-level overrides to beat Svelte scoped styles.
  */
 
 /* ═══════════════════════════════════════════════════════════
-   CUSTOM PROPERTY OVERRIDES
+   CUSTOM PROPERTY OVERRIDES (cascade naturally — no !important needed)
    ═══════════════════════════════════════════════════════════ */
 
 [data-style="skeuomorphism"] {
 	/* ── Material palette ── */
-	--wood: oklch(20% 0.03 55);
-	--wood-grain: oklch(16% 0.025 55);
-	--leather: oklch(24% 0.04 50);
-	--steel: oklch(38% 0.008 240);
-	--steel-light: oklch(42% 0.008 240);
-	--brass: oklch(72% 0.12 85);
-	--brass-dim: oklch(55% 0.08 85);
-	--cream: oklch(95% 0.015 90);
-	--cream-dark: oklch(90% 0.02 85);
-	--ink: oklch(22% 0.02 55);
+	--wood: #2a1f14;
+	--wood-grain: #241a10;
+	--wood-light: #3d2e1e;
+	--leather: #3d2b1a;
+	--steel: #4a4e54;
+	--steel-light: #5a5e64;
+	--steel-dark: #3a3e42;
+	--brass: #b89c5c;
+	--brass-dim: #8a7444;
+	--cream: #f4efe6;
+	--ink: #2c2419;
+	--gauge-bg: #1a1a20;
 
 	/* ── Surface overrides — wood base ── */
-	--bg: oklch(16% 0.025 55);
-	--surface: oklch(38% 0.008 240);
-	--surface-raised: oklch(42% 0.01 240);
-	--surface-overlay: oklch(45% 0.01 240);
+	--bg: #2a1f14;
+	--surface: #4a4e54;
+	--surface-raised: #5a5e64;
+	--surface-overlay: #5a5e64;
 
 	/* ── Borders — physical edges ── */
-	--border: oklch(14% 0.02 55);
-	--border-holdfast: oklch(20% 0.03 50);
-	--border-strong: oklch(28% 0.03 55);
+	--border: #1a1208;
+	--border-holdfast: #352a1c;
+	--border-strong: #4a3a24;
 
-	/* ── Text — warm cream on dark surfaces ── */
-	--text-primary: oklch(93% 0.015 90);
-	--text-secondary: oklch(72% 0.02 85);
-	--text-tertiary: oklch(55% 0.02 55);
-	--text-muted: oklch(42% 0.015 55);
+	/* ── Text — warm cream ── */
+	--text-primary: #f4efe6;
+	--text-secondary: #c4b89c;
+	--text-tertiary: #8a7a5c;
+	--text-muted: #6a5a3c;
+	--text-on-accent: #1a1208;
 
 	/* ── Accent — brass/amber ── */
-	--accent: oklch(72% 0.12 85);
-	--accent-dim: oklch(50% 0.08 85);
-	--accent-soft: oklch(28% 0.05 85);
-	--accent-strong: oklch(78% 0.15 85);
-	--accent-muted: oklch(55% 0.06 85);
-	--accent-glow-bg: oklch(22% 0.04 85);
+	--accent: #b89c5c;
+	--accent-dim: #6a5a3a;
+	--accent-soft: #352a1c;
+	--accent-strong: #d4b46c;
+	--accent-muted: #8a7444;
+	--accent-glow-bg: #2a2218;
 
 	/* ── Shadows — physical, pronounced ── */
 	--shadow-sm:
@@ -65,265 +68,629 @@
 		inset 0 -2px 0 rgba(0, 0, 0, 0.3),
 		0 4px 12px rgba(0, 0, 0, 0.5);
 
-	/* ── Radii — tighter, more industrial ── */
+	/* ── Tighter radii — industrial ── */
 	--radius-sm: 4px;
 	--radius-md: 6px;
 	--radius-lg: 8px;
 
 	/* ── Interactive states ── */
-	--hover-bg: oklch(24% 0.04 50);
-	--active-bg: oklch(28% 0.04 55);
-	--selected-bg: oklch(26% 0.04 85);
+	--hover-bg: #352a1c;
+	--active-bg: #3d2e1e;
+	--selected-bg: #352a1c;
 
 	/* ── Terminal/instrument display ── */
 	--terminal-font: 'Courier New', 'Courier', monospace;
+	--terminal-border: #6a5a3a;
+	--terminal-grid: rgba(184, 156, 92, 0.08);
+
+	/* ── Status colors — LED style ── */
+	--status-success: #4caf50;
+	--status-warning: #d4a04a;
+	--status-danger: #e74c3c;
 }
 
 /* ═══════════════════════════════════════════════════════════
-   BODY & BACKGROUND — Walnut Wood Paneling
+   BODY — Walnut wood background with grain texture
    ═══════════════════════════════════════════════════════════ */
 
 [data-style="skeuomorphism"] body {
-	background-color: oklch(16% 0.025 55);
+	background-color: #2a1f14 !important;
 	background-image:
 		repeating-linear-gradient(
-			87deg, transparent, transparent 3px,
-			rgba(0, 0, 0, 0.05) 3px, rgba(0, 0, 0, 0.05) 4px
+			87deg,
+			transparent,
+			transparent 3px,
+			rgba(0, 0, 0, 0.06) 3px,
+			rgba(0, 0, 0, 0.06) 4px
 		),
 		repeating-linear-gradient(
-			92deg, transparent, transparent 7px,
-			rgba(0, 0, 0, 0.025) 7px, rgba(0, 0, 0, 0.025) 8px
-		);
+			92deg,
+			transparent,
+			transparent 7px,
+			rgba(0, 0, 0, 0.03) 7px,
+			rgba(0, 0, 0, 0.03) 8px
+		) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════
-   SIDEBAR — Dark Wood Panel with brass plates
+   SIDEBAR — Dark wood panel with vertical grain
    ═══════════════════════════════════════════════════════════ */
 
 [data-style="skeuomorphism"] .sidebar {
-	background-color: oklch(13% 0.02 55);
+	background-color: #241a10 !important;
 	background-image:
 		repeating-linear-gradient(
-			180deg, transparent, transparent 12px,
-			rgba(0, 0, 0, 0.04) 12px, rgba(0, 0, 0, 0.04) 13px
-		);
-	border-right: 3px solid oklch(10% 0.015 55);
+			180deg,
+			transparent,
+			transparent 12px,
+			rgba(0, 0, 0, 0.04) 12px,
+			rgba(0, 0, 0, 0.04) 13px
+		) !important;
+	border-right: 3px solid #1a1208 !important;
 	box-shadow:
 		inset -1px 0 0 rgba(255, 255, 255, 0.04),
-		2px 0 8px rgba(0, 0, 0, 0.4);
+		2px 0 8px rgba(0, 0, 0, 0.4) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════
-   NAV ITEMS — Brass Nameplates
-   ═══════════════════════════════════════════════════════════ */
-
-[data-style="skeuomorphism"] .nav-item {
-	border-radius: var(--radius-sm);
-	border: 1px solid transparent;
-	text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
-}
-
-[data-style="skeuomorphism"] .nav-active {
-	background: oklch(72% 0.12 85 / 0.1);
-	border: 1px solid oklch(72% 0.12 85 / 0.2);
-	color: var(--brass);
-	box-shadow:
-		inset 0 1px 0 rgba(255, 255, 255, 0.05),
-		0 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-[data-style="skeuomorphism"] .nav-active .nav-icon {
-	color: var(--brass);
-}
-
-/* Nav section labels — brass dim */
-[data-style="skeuomorphism"] .nav-label {
-	color: var(--brass-dim);
-	text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
-}
-
-/* ═══════════════════════════════════════════════════════════
-   IDENTITY — Leather Strip with dashed stitching
+   IDENTITY — Leather strip with stitching
    ═══════════════════════════════════════════════════════════ */
 
 [data-style="skeuomorphism"] .identity {
-	background-color: oklch(24% 0.04 50);
-	border-bottom: 2px dashed oklch(72% 0.12 85 / 0.15);
+	background-color: #3d2b1a !important;
+	border-bottom: 2px dashed rgba(184, 156, 92, 0.15) !important;
+	border-top: 2px dashed rgba(184, 156, 92, 0.15) !important;
 	box-shadow:
 		inset 0 1px 0 rgba(255, 255, 255, 0.05),
-		inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+		inset 0 -2px 0 rgba(0, 0, 0, 0.2),
+		0 3px 8px rgba(0, 0, 0, 0.3) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════
-   CARDS / STAT PANELS — Brushed Steel Instruments
+   NAV ITEMS — Brass nameplates
    ═══════════════════════════════════════════════════════════ */
 
-[data-style="skeuomorphism"] .card,
-[data-style="skeuomorphism"] .stat-card {
-	background-color: oklch(38% 0.008 240);
+[data-style="skeuomorphism"] .nav-item {
+	border-radius: 4px !important;
+	border: 1px solid transparent !important;
+	text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-style="skeuomorphism"] .nav-active {
+	background: rgba(184, 156, 92, 0.1) !important;
+	border: 1px solid rgba(184, 156, 92, 0.2) !important;
+	color: #b89c5c !important;
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.05),
+		0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-style="skeuomorphism"] .nav-active .nav-icon,
+[data-style="skeuomorphism"] .nav-icon-active {
+	color: #b89c5c !important;
+}
+
+[data-style="skeuomorphism"] .nav-divider {
+	background: rgba(184, 156, 92, 0.1) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FOOTER
+   ═══════════════════════════════════════════════════════════ */
+
+[data-style="skeuomorphism"] .footer {
+	border-top: 1px solid rgba(184, 156, 92, 0.1) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CARDS — Brushed steel instrument panels
+   ═══════════════════════════════════════════════════════════ */
+
+[data-style="skeuomorphism"] .card {
+	background-color: #4a4e54 !important;
 	background-image:
 		repeating-linear-gradient(
-			90deg, transparent, transparent 1px,
-			rgba(255, 255, 255, 0.008) 1px, rgba(255, 255, 255, 0.008) 2px
-		);
-	border: 1px solid rgba(0, 0, 0, 0.3);
-	box-shadow: var(--shadow-md);
-}
-
-/* Stat values — inset LED display wells */
-[data-style="skeuomorphism"] .stat-value,
-[data-style="skeuomorphism"] .text-value {
-	font-family: var(--terminal-font);
-	color: oklch(72% 0.12 85);
-	text-shadow: 0 0 4px oklch(72% 0.12 85 / 0.3);
-}
-
-/* ═══════════════════════════════════════════════════════════
-   HEATMAP — CRT Thermal Display
-   ═══════════════════════════════════════════════════════════ */
-
-[data-style="skeuomorphism"] .heatmap-card {
-	background: oklch(30% 0.006 240);
-	border: 1px solid rgba(0, 0, 0, 0.4);
-	box-shadow:
-		inset 0 1px 0 rgba(255, 255, 255, 0.06),
-		0 4px 12px rgba(0, 0, 0, 0.5);
-	position: relative;
-}
-
-/* CRT scanline overlay */
-[data-style="skeuomorphism"] .heatmap-card::after {
-	content: '';
-	position: absolute;
-	inset: 0;
-	pointer-events: none;
-	border-radius: inherit;
-	background: repeating-linear-gradient(
-		to bottom,
-		transparent, transparent 2px,
-		rgba(0, 0, 0, 0.04) 2px, rgba(0, 0, 0, 0.04) 4px
-	);
-	z-index: 1;
-}
-
-/* Heatmap cells — CRT green phosphor */
-[data-style="skeuomorphism"] .cell {
-	background-color: oklch(65% 0.15 145) !important;
-}
-
-/* Hour/day labels — monospace CRT font */
-[data-style="skeuomorphism"] .hour-label,
-[data-style="skeuomorphism"] .day-label,
-[data-style="skeuomorphism"] .hm-hour,
-[data-style="skeuomorphism"] .hm-day {
-	font-family: var(--terminal-font);
-	color: oklch(65% 0.15 145 / 0.5);
-}
-
-/* Axis note / legend — CRT style */
-[data-style="skeuomorphism"] .axis-note {
-	font-family: var(--terminal-font);
-	color: oklch(65% 0.15 145 / 0.35);
-	text-transform: uppercase;
-	letter-spacing: 0.1em;
-	font-size: 0.5rem;
-}
-
-[data-style="skeuomorphism"] .legend-label {
-	font-family: var(--terminal-font);
-	text-transform: uppercase;
-	color: oklch(65% 0.15 145 / 0.35);
-}
-
-[data-style="skeuomorphism"] .legend-gradient {
-	background: linear-gradient(to right,
-		oklch(65% 0.15 145 / 0.05) 0%,
-		oklch(65% 0.15 145) 100%
-	);
-}
-
-/* ═══════════════════════════════════════════════════════════
-   REVIEW CARDS — Cream Paper / Index Cards
-   ═══════════════════════════════════════════════════════════ */
-
-[data-style="skeuomorphism"] .review-card {
-	background: oklch(95% 0.015 90);
-	color: oklch(22% 0.02 55);
-	border: none;
-	box-shadow: 2px 3px 6px rgba(0, 0, 0, 0.3);
-	border-radius: 3px;
-}
-
-[data-style="skeuomorphism"] .review-card .review-name,
-[data-style="skeuomorphism"] .review-card .review-card-name {
-	color: oklch(22% 0.02 55);
-}
-
-[data-style="skeuomorphism"] .review-card .review-meta,
-[data-style="skeuomorphism"] .review-card .review-card-time {
-	color: oklch(42% 0.02 55);
-}
-
-/* Selected card — slightly rotated, lifted */
-[data-style="skeuomorphism"] .review-card.selected,
-[data-style="skeuomorphism"] .review-card[aria-selected="true"],
-[data-style="skeuomorphism"] .review-card-selected {
-	transform: rotate(-0.5deg) translateY(-2px);
-	box-shadow: 3px 5px 10px rgba(0, 0, 0, 0.35);
-}
-
-/* Status dots on review cards need to stay visible on cream */
-[data-style="skeuomorphism"] .review-card .status-dot {
-	box-shadow: 0 0 3px rgba(0, 0, 0, 0.15);
-}
-
-/* ═══════════════════════════════════════════════════════════
-   CHIP / TOGGLE SELECTORS — Steel Toggle Panel
-   ═══════════════════════════════════════════════════════════ */
-
-[data-style="skeuomorphism"] .selector,
-[data-style="skeuomorphism"] .week-selector {
-	background: oklch(30% 0.006 240);
-	border: 1px solid rgba(0, 0, 0, 0.3);
-	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
-}
-
-[data-style="skeuomorphism"] .chip {
-	font-family: var(--terminal-font);
-	color: oklch(93% 0.015 90 / 0.35);
-	border-color: transparent;
-}
-
-[data-style="skeuomorphism"] .chip.active {
-	background: oklch(38% 0.008 240);
-	color: var(--brass);
-	border-color: rgba(0, 0, 0, 0.3);
+			90deg,
+			transparent,
+			transparent 1px,
+			rgba(255, 255, 255, 0.012) 1px,
+			rgba(255, 255, 255, 0.012) 2px
+		) !important;
+	border: 1px solid rgba(0, 0, 0, 0.3) !important;
 	box-shadow:
 		inset 0 1px 0 rgba(255, 255, 255, 0.08),
-		0 1px 2px rgba(0, 0, 0, 0.3);
-	text-shadow: 0 0 4px oklch(72% 0.12 85 / 0.3);
+		inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+		0 3px 8px rgba(0, 0, 0, 0.5) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════
-   SECTION TITLES — Brass Embossed Labels
+   STAT VALUES — Amber LED displays on dark inset gauge wells
    ═══════════════════════════════════════════════════════════ */
 
 [data-style="skeuomorphism"] .card-label,
 [data-style="skeuomorphism"] .stat-label {
-	color: var(--brass);
-	text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+	color: #e8e0d4 !important;
+	text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4) !important;
+	letter-spacing: 0.16em !important;
+	font-size: 0.6rem !important;
+}
+
+/* StatNumber — inset dark gauge display well */
+[data-style="skeuomorphism"] .stat-reel-wrapper {
+	background: #1a1a20 !important;
+	border-radius: 6px !important;
+	padding: 8px 12px !important;
+	box-shadow:
+		inset 0 2px 6px rgba(0, 0, 0, 0.6),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.03) !important;
+	border: 1px solid rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-style="skeuomorphism"] .text-value {
+	font-family: 'Courier New', 'Courier', monospace !important;
+	color: #d4a04a !important;
+	text-shadow: 0 0 6px rgba(212, 160, 74, 0.3) !important;
+}
+
+[data-style="skeuomorphism"] .card-sub {
+	color: rgba(244, 239, 230, 0.4) !important;
+}
+
+/* Stat digits — amber LED */
+[data-style="skeuomorphism"] .stat-digit,
+[data-style="skeuomorphism"] .stat-separator {
+	color: #d4a04a !important;
+	text-shadow: 0 0 6px rgba(212, 160, 74, 0.3) !important;
+	font-family: 'Courier New', monospace !important;
+}
+
+/* Trend arrows — LED colors */
+[data-style="skeuomorphism"] .stat-trend-up {
+	color: #4caf50 !important;
+	text-shadow: 0 0 4px rgba(76, 175, 80, 0.4) !important;
+}
+
+[data-style="skeuomorphism"] .stat-trend-down {
+	color: #e74c3c !important;
+	text-shadow: 0 0 4px rgba(231, 76, 60, 0.4) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════
-   FOOTER & DIVIDERS
+   HIGHLIGHT-ACCENT CARD — Brass border instead of accent
    ═══════════════════════════════════════════════════════════ */
 
-[data-style="skeuomorphism"] .footer {
-	border-top: 1px solid oklch(72% 0.12 85 / 0.1);
+[data-style="skeuomorphism"] .card.highlight-accent {
+	border-color: rgba(184, 156, 92, 0.3) !important;
 }
 
-[data-style="skeuomorphism"] .nav-divider {
-	background: oklch(72% 0.12 85 / 0.1);
+/* ═══════════════════════════════════════════════════════════
+   HEATMAP — CRT thermal display with scanlines
+   ═══════════════════════════════════════════════════════════ */
+
+[data-style="skeuomorphism"] .heatmap-card {
+	background-color: #3a3e42 !important;
+	border: 1px solid rgba(0, 0, 0, 0.4) !important;
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.06),
+		0 4px 12px rgba(0, 0, 0, 0.5) !important;
+	position: relative !important;
+	overflow: hidden !important;
+}
+
+/* Scanline overlay */
+[data-style="skeuomorphism"] .heatmap-card::after {
+	content: '' !important;
+	position: absolute !important;
+	inset: 0 !important;
+	pointer-events: none !important;
+	border-radius: inherit !important;
+	background: repeating-linear-gradient(
+		to bottom,
+		transparent,
+		transparent 2px,
+		rgba(0, 0, 0, 0.05) 2px,
+		rgba(0, 0, 0, 0.05) 4px
+	) !important;
+	z-index: 1 !important;
+}
+
+/* CRT green phosphor cells */
+[data-style="skeuomorphism"] .cell {
+	background-color: #33cc66 !important;
+}
+
+/* Heatmap axis labels — monospace CRT */
+[data-style="skeuomorphism"] .hour-label {
+	font-family: 'Courier New', monospace !important;
+	color: rgba(51, 204, 102, 0.4) !important;
+}
+
+[data-style="skeuomorphism"] .day-label {
+	font-family: 'Courier New', monospace !important;
+	color: rgba(51, 204, 102, 0.5) !important;
+}
+
+[data-style="skeuomorphism"] .axis-note {
+	font-family: 'Courier New', monospace !important;
+	color: rgba(51, 204, 102, 0.35) !important;
+	text-transform: uppercase !important;
+	letter-spacing: 0.1em !important;
+}
+
+[data-style="skeuomorphism"] .legend-label {
+	font-family: 'Courier New', monospace !important;
+	color: rgba(51, 204, 102, 0.35) !important;
+	text-transform: uppercase !important;
+}
+
+[data-style="skeuomorphism"] .legend-gradient {
+	background: linear-gradient(to right,
+		rgba(51, 204, 102, 0.05) 0%,
+		#33cc66 100%
+	) !important;
+}
+
+/* Week title (multi-week view) */
+[data-style="skeuomorphism"] .week-title {
+	font-family: 'Courier New', monospace !important;
+	color: rgba(51, 204, 102, 0.5) !important;
+}
+
+/* Week divider */
+[data-style="skeuomorphism"] .week-divider {
+	border-top-color: rgba(51, 204, 102, 0.1) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CHIP / TOGGLE SELECTORS — Steel toggle panel
+   ═══════════════════════════════════════════════════════════ */
+
+[data-style="skeuomorphism"] .selector {
+	background: #3a3e42 !important;
+	border: 1px solid rgba(0, 0, 0, 0.3) !important;
+	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+	border-radius: 4px !important;
+}
+
+[data-style="skeuomorphism"] .chip {
+	font-family: 'Courier New', monospace !important;
+	color: rgba(244, 239, 230, 0.35) !important;
+	border-color: transparent !important;
+	border-radius: 3px !important;
+}
+
+[data-style="skeuomorphism"] .chip:hover {
+	color: rgba(244, 239, 230, 0.55) !important;
+}
+
+[data-style="skeuomorphism"] .chip.active {
+	background: #4a4e54 !important;
+	color: #b89c5c !important;
+	border-color: rgba(0, 0, 0, 0.3) !important;
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.08),
+		0 1px 2px rgba(0, 0, 0, 0.3) !important;
+	text-shadow: 0 0 4px rgba(184, 156, 92, 0.3) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   QUEUE — Cork board container
+   ═══════════════════════════════════════════════════════════ */
+
+[data-style="skeuomorphism"] .queue-wrapper {
+	background-color: #6b5638 !important;
+	background-image:
+		url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.1'/%3E%3C/svg%3E") !important;
+	background-size: 200px 200px !important;
+	border-radius: 6px !important;
+	border: 2px solid #4a3a24 !important;
+	box-shadow:
+		inset 0 2px 4px rgba(0, 0, 0, 0.3),
+		0 3px 8px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   REVIEW CARDS — Cream paper index cards with pushpins
+   ═══════════════════════════════════════════════════════════ */
+
+[data-style="skeuomorphism"] .review-card {
+	background: #faf6ee !important;
+	color: #1e1810 !important;
+	border: none !important;
+	border-radius: 3px !important;
+	box-shadow:
+		2px 3px 8px rgba(0, 0, 0, 0.35),
+		0 1px 0 #e8e0d0,
+		inset 0 0 0 1px rgba(0, 0, 0, 0.04) !important;
+	position: relative !important;
+	/* Ruled notebook lines — more visible */
+	background-image: repeating-linear-gradient(
+		to bottom,
+		transparent,
+		transparent 21px,
+		rgba(140, 160, 200, 0.12) 21px,
+		rgba(140, 160, 200, 0.12) 22px
+	) !important;
+	background-color: #faf6ee !important;
+	/* Slight rotation for pinned-to-board feel */
+	transform: rotate(-0.4deg) !important;
+	transition: transform 150ms ease, box-shadow 150ms ease !important;
+}
+
+/* Alternate rotations for variety */
+[data-style="skeuomorphism"] .review-card:nth-child(2n) {
+	transform: rotate(0.3deg) !important;
+}
+
+[data-style="skeuomorphism"] .review-card:nth-child(3n) {
+	transform: rotate(-0.7deg) !important;
+}
+
+[data-style="skeuomorphism"] .review-card:nth-child(4n) {
+	transform: rotate(0.5deg) !important;
+}
+
+/* Pushpin via ::before */
+[data-style="skeuomorphism"] .review-card::before {
+	content: '' !important;
+	position: absolute !important;
+	top: -5px !important;
+	left: 50% !important;
+	transform: translateX(-50%) !important;
+	width: 10px !important;
+	height: 10px !important;
+	border-radius: 50% !important;
+	background: #e74c3c !important;
+	box-shadow:
+		inset 0 -1px 2px rgba(0, 0, 0, 0.3),
+		0 2px 3px rgba(0, 0, 0, 0.4) !important;
+	border: 1px solid rgba(0, 0, 0, 0.2) !important;
+	z-index: 2 !important;
+}
+
+/* Different pin colors */
+[data-style="skeuomorphism"] .review-card:nth-child(2n)::before {
+	background: #b89c5c !important;
+}
+
+[data-style="skeuomorphism"] .review-card:nth-child(3n)::before {
+	background: #4caf50 !important;
+}
+
+[data-style="skeuomorphism"] .review-card:nth-child(4n)::before {
+	background: #5a7ec8 !important;
+}
+
+/* Hover — straighten and lift */
+[data-style="skeuomorphism"] .review-card:hover {
+	transform: rotate(0deg) translateY(-3px) !important;
+	box-shadow: 3px 5px 10px rgba(0, 0, 0, 0.35) !important;
+	background-color: #f8f4ec !important;
+}
+
+/* Card text — dark ink with high contrast */
+[data-style="skeuomorphism"] .review-card-name {
+	color: #1a1208 !important;
+	font-weight: 700 !important;
+}
+
+[data-style="skeuomorphism"] .review-card-time {
+	color: #5a4a30 !important;
+}
+
+[data-style="skeuomorphism"] .review-card-status {
+	color: #5a4a30 !important;
+}
+
+[data-style="skeuomorphism"] .review-card-claimed {
+	color: #6a5a3c !important;
+}
+
+/* Status dot on paper */
+[data-style="skeuomorphism"] .review-card .status-dot {
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Avatar on paper — photo-on-paper shadow */
+[data-style="skeuomorphism"] .review-card-avatar {
+	box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.08) !important;
+	border-radius: 4px !important;
+}
+
+[data-style="skeuomorphism"] .review-card-avatar-placeholder {
+	background: #e0d8c8 !important;
+	color: #6a5a3c !important;
+	border: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Selected card — more prominent, lifted, brass pin */
+[data-style="skeuomorphism"] .review-card-selected {
+	transform: rotate(0deg) translateY(-4px) !important;
+	box-shadow: 4px 6px 14px rgba(0, 0, 0, 0.4) !important;
+	border: none !important;
+	border-left: 3px solid #b89c5c !important;
+	background-color: #fefcf6 !important;
+}
+
+/* Hover — whiter paper, lifted */
+[data-style="skeuomorphism"] .review-card:hover {
+	transform: rotate(0deg) translateY(-3px) !important;
+	box-shadow: 3px 5px 12px rgba(0, 0, 0, 0.4) !important;
+	background-color: #fefcf6 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HISTORY CARDS (review history) — Aged paper
+   ═══════════════════════════════════════════════════════════ */
+
+[data-style="skeuomorphism"] .history-card {
+	background: #ece7dc !important;
+	color: #2c2419 !important;
+	border: none !important;
+	border-radius: 3px !important;
+	box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.25) !important;
+}
+
+[data-style="skeuomorphism"] .history-card:hover {
+	background: #f0ebe2 !important;
+	box-shadow: 2px 3px 6px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-style="skeuomorphism"] .history-card-name {
+	color: #2c2419 !important;
+}
+
+[data-style="skeuomorphism"] .history-card-meta {
+	color: #5a4e3a !important;
+}
+
+/* Queue glow overlay — hide on skeuomorphism (doesn't fit cork board) */
+[data-style="skeuomorphism"] .queue-glow {
+	display: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   APP DETAIL PANEL — Parchment document
+   The entire review detail area looks like an unfolded document.
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Detail panel — dark mode (steel instrument panel, readable) ── */
+[data-style="skeuomorphism"] .detail-panel {
+	background-color: #3a3e42 !important;
+	background-image:
+		repeating-linear-gradient(
+			90deg,
+			transparent,
+			transparent 1px,
+			rgba(255, 255, 255, 0.008) 1px,
+			rgba(255, 255, 255, 0.008) 2px
+		) !important;
+	border-radius: 6px !important;
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.06),
+		0 3px 10px rgba(0, 0, 0, 0.5) !important;
+	border: 1px solid rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Profile column — darker steel panel edge */
+[data-style="skeuomorphism"] .profile-col {
+	background: #34383c !important;
+	border-right: 1px solid rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Prior warning banner — dark with warm accent */
+[data-style="skeuomorphism"] .prior-warning {
+	background: #3a3020 !important;
+	border: 1px solid #5a4a2a !important;
+}
+
+[data-style="skeuomorphism"] .prior-warning-severe {
+	background: #3a2820 !important;
+	border-color: #6a3a2a !important;
+}
+
+/* Cards inside detail panel — dark inset gauge wells */
+[data-style="skeuomorphism"] .detail-panel .card,
+[data-style="skeuomorphism"] .app-detail .card {
+	background: #1a1a20 !important;
+	background-image: none !important;
+	border: 1px solid rgba(0, 0, 0, 0.4) !important;
+	box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Section labels inside detail — brass */
+[data-style="skeuomorphism"] .detail-panel .section-label,
+[data-style="skeuomorphism"] .app-detail .section-label {
+	color: #b89c5c !important;
+}
+
+[data-style="skeuomorphism"] .detail-panel .card-label,
+[data-style="skeuomorphism"] .app-detail .card-label {
+	color: #c4b89c !important;
+}
+
+/* Content header tabs */
+[data-style="skeuomorphism"] .tab-btn {
+	color: #c4b89c !important;
+	border: 1px solid rgba(0, 0, 0, 0.3) !important;
+	background: #34383c !important;
+}
+
+[data-style="skeuomorphism"] .tab-btn-active {
+	background: #4a4e54 !important;
+	color: #b89c5c !important;
+	border-color: rgba(0, 0, 0, 0.3) !important;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Action buttons */
+[data-style="skeuomorphism"] .detail-panel button {
+	border-radius: 4px !important;
+	box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Fieldset/legend borders — steel tone */
+[data-style="skeuomorphism"] .detail-panel fieldset {
+	border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-style="skeuomorphism"] .detail-panel legend {
+	color: #b89c5c !important;
+}
+
+/* Detail placeholder (no app selected) */
+[data-style="skeuomorphism"] .detail-placeholder {
+	background: #3a3e42 !important;
+}
+
+/* Mobile detail wrapper */
+[data-style="skeuomorphism"] .mobile-detail-wrapper {
+	background: #3a3e42 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SECTION TITLES — Brass embossed labels
+   ═══════════════════════════════════════════════════════════ */
+
+[data-style="skeuomorphism"] .section-heading,
+[data-style="skeuomorphism"] h2,
+[data-style="skeuomorphism"] h3 {
+	color: #b89c5c !important;
+	text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Section heading dot accent */
+[data-style="skeuomorphism"] .section-heading::before {
+	background: #b89c5c !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PAGE HEADER
+   ═══════════════════════════════════════════════════════════ */
+
+[data-style="skeuomorphism"] .page-title {
+	color: #f4efe6 !important;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-style="skeuomorphism"] .page-subtitle {
+	color: #8a7444 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TABS
+   ═══════════════════════════════════════════════════════════ */
+
+[data-style="skeuomorphism"] .tab {
+	color: rgba(244, 239, 230, 0.5) !important;
+}
+
+[data-style="skeuomorphism"] .tab-active {
+	background: #4a4e54 !important;
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.08),
+		0 1px 2px rgba(0, 0, 0, 0.3) !important;
+	color: #b89c5c !important;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -331,35 +698,39 @@
    ═══════════════════════════════════════════════════════════ */
 
 [data-style="skeuomorphism"] .mobile-header {
-	background-color: oklch(24% 0.04 50);
-	border-bottom: 2px dashed oklch(72% 0.12 85 / 0.15);
+	background-color: #3d2b1a !important;
+	border-bottom: 2px dashed rgba(184, 156, 92, 0.15) !important;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════
-   TAB BAR
-   ═══════════════════════════════════════════════════════════ */
-
-[data-style="skeuomorphism"] .tab-active {
-	background: oklch(38% 0.008 240);
-	box-shadow: var(--shadow-sm);
-	color: var(--brass);
-}
-
-/* ═══════════════════════════════════════════════════════════
-   EDGE TOGGLE (sidebar collapse button)
+   EDGE TOGGLE — Wood bead
    ═══════════════════════════════════════════════════════════ */
 
 [data-style="skeuomorphism"] .edge-toggle {
-	background: oklch(24% 0.04 50);
-	border-color: oklch(14% 0.02 55);
-	box-shadow:
-		inset 0 1px 0 rgba(255, 255, 255, 0.05),
-		0 2px 4px rgba(0, 0, 0, 0.4);
+	background: #3d2b1a !important;
+	border-color: #1a1208 !important;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
 }
 
-[data-style="skeuomorphism"] .edge-toggle:hover {
-	background: oklch(28% 0.04 55);
-	border-color: oklch(72% 0.12 85 / 0.2);
+/* ═══════════════════════════════════════════════════════════
+   INSIGHT CARDS — Steel panel variant
+   ═══════════════════════════════════════════════════════════ */
+
+[data-style="skeuomorphism"] .insight-card {
+	background-color: #4a4e54 !important;
+	background-image:
+		repeating-linear-gradient(
+			90deg,
+			transparent,
+			transparent 1px,
+			rgba(255, 255, 255, 0.01) 1px,
+			rgba(255, 255, 255, 0.01) 2px
+		) !important;
+	border: 1px solid rgba(0, 0, 0, 0.3) !important;
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.06),
+		0 2px 6px rgba(0, 0, 0, 0.4) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -367,9 +738,112 @@
    ═══════════════════════════════════════════════════════════ */
 
 [data-style="skeuomorphism"] ::-webkit-scrollbar-thumb {
-	background: oklch(30% 0.03 55);
+	background: #4a3a24 !important;
 }
 
 [data-style="skeuomorphism"] ::-webkit-scrollbar-thumb:hover {
-	background: oklch(40% 0.04 55);
+	background: #5a4a34 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   STAT NUMBER COMPONENT — Amber LED readout
+   ═══════════════════════════════════════════════════════════ */
+
+[data-style="skeuomorphism"] .stat-reel {
+	font-family: 'Courier New', monospace !important;
+}
+
+[data-style="skeuomorphism"] .stat-digit,
+[data-style="skeuomorphism"] .stat-separator {
+	color: #d4a04a !important;
+	text-shadow: 0 0 6px rgba(212, 160, 74, 0.3) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   STATUS DOTS — Physical LEDs
+   ═══════════════════════════════════════════════════════════ */
+
+[data-style="skeuomorphism"] .status-dot {
+	box-shadow: 0 0 4px currentColor !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DATA CARD COMPONENT
+   ═══════════════════════════════════════════════════════════ */
+
+[data-style="skeuomorphism"] .data-card {
+	background-color: #4a4e54 !important;
+	background-image:
+		repeating-linear-gradient(
+			90deg,
+			transparent,
+			transparent 1px,
+			rgba(255, 255, 255, 0.012) 1px,
+			rgba(255, 255, 255, 0.012) 2px
+		) !important;
+	border: 1px solid rgba(0, 0, 0, 0.3) !important;
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.07),
+		inset 0 -1px 0 rgba(0, 0, 0, 0.25),
+		0 3px 8px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   STYLE SWITCHER — Brass toggle bar
+   ═══════════════════════════════════════════════════════════ */
+
+[data-style="skeuomorphism"] .style-chip {
+	font-family: 'Courier New', monospace !important;
+	color: rgba(244, 239, 230, 0.35) !important;
+}
+
+[data-style="skeuomorphism"] .style-chip.active {
+	background: #4a4e54 !important;
+	color: #b89c5c !important;
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.08),
+		0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BADGE / TAG elements — Brass labels
+   ═══════════════════════════════════════════════════════════ */
+
+[data-style="skeuomorphism"] .badge,
+[data-style="skeuomorphism"] .nav-badge {
+	background: rgba(184, 156, 92, 0.12) !important;
+	color: #b89c5c !important;
+	border: 1px solid rgba(184, 156, 92, 0.2) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TREND INDICATORS
+   ═══════════════════════════════════════════════════════════ */
+
+[data-style="skeuomorphism"] .trend-up {
+	color: #4caf50 !important;
+	text-shadow: 0 0 4px rgba(76, 175, 80, 0.4) !important;
+}
+
+[data-style="skeuomorphism"] .trend-down {
+	color: #e74c3c !important;
+	text-shadow: 0 0 4px rgba(231, 76, 60, 0.4) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HOURLY ACTIVITY SPARKLINE — CRT style bars
+   ═══════════════════════════════════════════════════════════ */
+
+[data-style="skeuomorphism"] .sparkline-bar {
+	fill: #33cc66 !important;
+	opacity: 0.8 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ICONS — Brass tinted
+   ═══════════════════════════════════════════════════════════ */
+
+[data-style="skeuomorphism"] .card-icon-row svg,
+[data-style="skeuomorphism"] .stat-icon {
+	color: #b89c5c !important;
 }

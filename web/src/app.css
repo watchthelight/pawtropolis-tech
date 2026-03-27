@@ -1,8 +1,5 @@
 @import '@fontsource-variable/inter';
 @import 'tailwindcss';
-@import '$lib/styles/neumorphism.css';
-@import '$lib/styles/glassmorphism.css';
-@import '$lib/styles/skeuomorphism.css';
 
 /*
  * Pawtropolis Dashboard — Cozy Holdfast Design System
@@ -192,3 +189,8 @@ body.drawer-open {
 		animation-duration: 0s !important;
 	}
 }
+
+/* ── Design style themes (must come AFTER :root for cascade override) ── */
+@import '$lib/styles/neumorphism.css';
+@import '$lib/styles/glassmorphism.css';
+@import '$lib/styles/skeuomorphism.css';
