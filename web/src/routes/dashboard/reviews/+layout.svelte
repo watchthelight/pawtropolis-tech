@@ -32,7 +32,10 @@
 		const name = payload.applicantName ?? 'Someone';
 		const appId = payload.appId;
 
-		const reg = await navigator.serviceWorker?.ready;
+		const reg = await Promise.race([
+			navigator.serviceWorker?.ready,
+			new Promise<undefined>((r) => setTimeout(() => r(undefined), 2000))
+		]);
 		if (reg) {
 			reg.showNotification('New Application', {
 				body: `${name} just submitted an application`,

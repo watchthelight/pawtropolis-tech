@@ -1,6 +1,10 @@
 /// <reference lib="webworker" />
 declare const self: ServiceWorkerGlobalScope;
 
+// Take control immediately on install so notifications work on first page load
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
+
 self.addEventListener('notificationclick', (event) => {
 	const { appId } = event.notification.data ?? {};
 	event.notification.close();
