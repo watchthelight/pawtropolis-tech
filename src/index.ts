@@ -628,7 +628,29 @@ client.once(Events.ClientReady, async () => {
     logger.info({ signal }, "[shutdown] Graceful shutdown initiated");
 
     try {
-      // 0. Stop Dashboard API server
+      // 0. FIRST: Persist event sessions (most time-sensitive data)
+      // WHY: PM2 kill_timeout may expire before we finish — save sessions before anything else
+      try {
+        const { persistAllSessions, stopSessionPersistence } =
+          await import("./features/movieNight.js");
+        persistAllSessions();
+        stopSessionPersistence();
+        logger.debug("[shutdown] Movie sessions persisted");
+      } catch (err) {
+        logger.warn({ err }, "[shutdown] Movie session persist failed (non-fatal)");
+      }
+
+      try {
+        const { persistAllGameSessions, stopGameSessionPersistence } =
+          await import("./features/events/gameNight.js");
+        persistAllGameSessions();
+        stopGameSessionPersistence();
+        logger.debug("[shutdown] Game sessions persisted");
+      } catch (err) {
+        logger.warn({ err }, "[shutdown] Game session persist failed (non-fatal)");
+      }
+
+      // 0b. Stop Dashboard API server
       try {
         const { stopDashboardApi } = await import("./web/dashboardApi.js");
         await stopDashboardApi();
@@ -708,18 +730,7 @@ client.once(Events.ClientReady, async () => {
         logger.warn({ err }, "[shutdown] Stats rate limiter cleanup failed (non-fatal)");
       }
 
-      // 6. Persist movie sessions before shutdown
-      try {
-        const { persistAllSessions, stopSessionPersistence } =
-          await import("./features/movieNight.js");
-        persistAllSessions();
-        stopSessionPersistence();
-        logger.debug("[shutdown] Movie sessions persisted");
-      } catch (err) {
-        logger.warn({ err }, "[shutdown] Movie session persist failed (non-fatal)");
-      }
-
-      // 6b. Close all open voice sessions
+      // 6. Close all open voice sessions
       try {
         const { closeAllOpenSessions } = await import("./features/voiceSessionTracker.js");
         closeAllOpenSessions();
