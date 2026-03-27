@@ -38,9 +38,11 @@
 
 	subscribe('review:*', onReviewEvent);
 	subscribe('review:submitted', onReviewSubmitted);
+	subscribe('modmail:*', onReviewEvent);
 	onDestroy(() => {
 		unsubscribe('review:submitted', onReviewSubmitted);
 		unsubscribe('review:*', onReviewEvent);
+		unsubscribe('modmail:*', onReviewEvent);
 		if (invalidateTimer) clearTimeout(invalidateTimer);
 	});
 	let queue = $derived(data.queue);
@@ -64,7 +66,12 @@
 	let filteredItems = $derived.by(() => {
 		switch (activeTab) {
 			case 'unclaimed': return queue.filter(item => !item.claimedBy);
-			case 'mine': return queue.filter(item => item.claimedBy === userId);
+			case 'mine': return queue
+				.filter(item => item.claimedBy === userId)
+				.sort((a, b) => {
+					if (a.hasUnreadModmail !== b.hasUnreadModmail) return a.hasUnreadModmail ? -1 : 1;
+					return (b.submittedAt ?? 0) - (a.submittedAt ?? 0);
+				});
 			case 'all': return queue;
 			case 'history': return [];
 		}
@@ -255,6 +262,7 @@
 							claimedByName={item.claimedByName}
 							claimedByAvatar={item.claimedByAvatar}
 							riskScore={item.riskScore}
+							hasUnreadModmail={item.hasUnreadModmail}
 							selected={selectedAppId() === item.id}
 							onclick={() => goto(`/dashboard/reviews/${item.id}`)}
 						/>

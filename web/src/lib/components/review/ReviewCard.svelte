@@ -4,7 +4,7 @@
 	import { relativeTime } from '$lib/utils/time';
 	import { openLightbox } from '$lib/stores/lightbox.svelte';
 
-	let { applicantName, avatarUrl = null, status, submittedAt, claimedBy, claimedByName, claimedByAvatar = null, riskScore, selected = false, onclick }: {
+	let { applicantName, avatarUrl = null, status, submittedAt, claimedBy, claimedByName, claimedByAvatar = null, riskScore, hasUnreadModmail = false, selected = false, onclick }: {
 		applicantName: string;
 		avatarUrl?: string | null;
 		status: string;
@@ -13,6 +13,7 @@
 		claimedByName: string | null;
 		claimedByAvatar?: string | null;
 		riskScore: number;
+		hasUnreadModmail?: boolean;
 		selected?: boolean;
 		onclick?: () => void;
 	} = $props();
@@ -42,12 +43,17 @@
 	}}
 >
 	<div class="review-card-row">
-		{#if avatarUrl}
-			<!-- svelte-ignore a11y_no_static_element_interactions -->
-			<img src={avatarUrl} alt={applicantName} class="review-card-avatar clickable-avatar" onclick={(e) => { e.stopPropagation(); openLightbox(avatarUrl!); }} />
-		{:else}
-			<div class="review-card-avatar-placeholder">{applicantName.charAt(0).toUpperCase()}</div>
-		{/if}
+		<div class="avatar-wrapper">
+			{#if avatarUrl}
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<img src={avatarUrl} alt={applicantName} class="review-card-avatar clickable-avatar" onclick={(e) => { e.stopPropagation(); openLightbox(avatarUrl!); }} />
+			{:else}
+				<div class="review-card-avatar-placeholder">{applicantName.charAt(0).toUpperCase()}</div>
+			{/if}
+			{#if hasUnreadModmail}
+				<span class="modmail-dot" title="Unread modmail from applicant"></span>
+			{/if}
+		</div>
 		<div class="review-card-content">
 			<div class="review-card-top">
 				<span class="review-card-name">{applicantName}</span>
@@ -66,6 +72,12 @@
 						<img src={claimedByAvatar} alt="" class="claimer-avatar" />
 					{/if}
 					Claimed by {claimedByName ?? 'unknown'}
+				</div>
+			{/if}
+			{#if hasUnreadModmail}
+				<div class="modmail-label">
+					<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+					New modmail
 				</div>
 			{/if}
 		</div>
@@ -201,5 +213,40 @@
 		border-radius: 50%;
 		object-fit: cover;
 		flex-shrink: 0;
+	}
+
+	.avatar-wrapper {
+		position: relative;
+		flex-shrink: 0;
+	}
+
+	.modmail-dot {
+		position: absolute;
+		top: -2px;
+		right: -2px;
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		background: var(--status-info);
+		border: 2px solid var(--surface);
+		animation: modmail-pulse 2s ease-in-out infinite;
+	}
+
+	@keyframes modmail-pulse {
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0.5; }
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.modmail-dot { animation: none; }
+	}
+
+	.modmail-label {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		font-size: 0.65rem;
+		color: var(--status-info);
+		margin-top: 0.25rem;
 	}
 </style>

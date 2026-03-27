@@ -13,6 +13,7 @@ export interface ReviewQueueItem {
 	claimedByAvatar: string | null;
 	claimedAt: number | null;
 	riskScore: number;
+	hasUnreadModmail: boolean;
 }
 
 interface ReviewQueueRow {
@@ -27,6 +28,7 @@ interface ReviewQueueRow {
 	reviewer_avatar_url: string | null;
 	claimed_at: string | number | null;
 	risk_score: number;
+	has_unread_modmail: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -355,7 +357,15 @@ export function getReviewQueue(guildId: string): ReviewQueueItem[] {
 			COALESCE(ru.display_name, ru.global_name, ru.username) as reviewer_name,
 			ru.avatar_url as reviewer_avatar_url,
 			c.claimed_at,
-			COALESCE(s.final_pct, 0) as risk_score
+			COALESCE(s.final_pct, 0) as risk_score,
+			EXISTS (
+				SELECT 1 FROM modmail_ticket mt
+				INNER JOIN modmail_message mm ON mm.ticket_id = mt.id
+				WHERE mt.guild_id = a.guild_id AND mt.user_id = a.user_id
+					AND mt.status = 'open'
+					AND mm.id = (SELECT MAX(mm2.id) FROM modmail_message mm2 WHERE mm2.ticket_id = mt.id)
+					AND mm.direction = 'to_staff'
+			) as has_unread_modmail
 		FROM application a
 		LEFT JOIN user_cache u ON u.guild_id = a.guild_id AND u.user_id = a.user_id
 		LEFT JOIN review_claim c ON a.id = c.app_id
@@ -376,6 +386,7 @@ export function getReviewQueue(guildId: string): ReviewQueueItem[] {
 		claimedByName: row.reviewer_name ?? null,
 		claimedByAvatar: row.reviewer_avatar_url ?? null,
 		claimedAt: normalizeTimestamp(row.claimed_at),
-		riskScore: row.risk_score
+		riskScore: row.risk_score,
+		hasUnreadModmail: Boolean(row.has_unread_modmail)
 	}));
 }
