@@ -108,6 +108,23 @@ db.prepare(
 `
 ).run();
 
+// vote_out: tracks individual moderator votes for consensus rejection
+db.prepare(
+  `
+  CREATE TABLE IF NOT EXISTS vote_out (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    app_id TEXT NOT NULL,
+    voter_id TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(app_id, voter_id)
+  )
+`
+).run();
+
+db.prepare(
+  `CREATE INDEX IF NOT EXISTS idx_vote_out_app ON vote_out(app_id)`
+).run();
+
 // transcript: simple audit trail for messages/actions related to an application
 db.prepare(
   `

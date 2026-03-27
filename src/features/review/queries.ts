@@ -110,6 +110,49 @@ export function isClaimable(status: ApplicationStatus): boolean {
 // Index: idx_review_action_app_time (app_id, created_at DESC) makes this O(log n) + limit reads.
 // Default limit=4 keeps the card compact while showing recent activity.
 // Timing is logged for performance monitoring - if this gets slow, check index health.
+// ===== Vote Out Queries =====
+
+const getVoteOutCountStmt = db.prepare(
+  `SELECT COUNT(*) as count FROM vote_out WHERE app_id = ?`
+);
+
+const getVoteOutVotersStmt = db.prepare(
+  `SELECT voter_id FROM vote_out WHERE app_id = ? ORDER BY created_at ASC`
+);
+
+const insertVoteOutStmt = db.prepare(
+  `INSERT OR IGNORE INTO vote_out (app_id, voter_id, created_at) VALUES (?, ?, datetime('now'))`
+);
+
+/**
+ * WHAT: Get the current vote out count for an application.
+ * WHY: Display on button label ("Vote Out (1/2)").
+ */
+export function getVoteOutCount(appId: string): number {
+  const row = getVoteOutCountStmt.get(appId) as { count: number };
+  return row.count;
+}
+
+/**
+ * WHAT: Get ordered list of voter IDs for an application.
+ * WHY: Format the public reply ("X and Y voted <@user> out.").
+ */
+export function getVoteOutVoters(appId: string): string[] {
+  const rows = getVoteOutVotersStmt.all(appId) as Array<{ voter_id: string }>;
+  return rows.map((r) => r.voter_id);
+}
+
+/**
+ * WHAT: Insert a vote out vote (idempotent via UNIQUE constraint).
+ * WHY: Track individual mod votes. Returns false on duplicate click.
+ */
+export function insertVoteOut(appId: string, voterId: string): boolean {
+  const result = insertVoteOutStmt.run(appId, voterId);
+  return result.changes > 0;
+}
+
+// ===== Recent Actions =====
+
 export function getRecentActionsForApp(appId: string, limit = 4): RecentAction[] {
   const start = Date.now();
 

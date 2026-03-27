@@ -157,6 +157,8 @@ export type GuildConfig = {
   qotd_role_id?: string | null;
   // Pulse newsletter exclusion (059 migration)
   pulse_excluded_category_ids_json?: string | null;
+  // Vote Out threshold (061 migration)
+  vote_out_threshold?: number | null; // Votes needed to reject via Vote Out (default: 2)
   // These fields are NOT optional. Ask me how I know.
   // (Hint: it involved a production outage and a missing COALESCE)
   image_search_url_template: string;
@@ -655,6 +657,7 @@ export function upsertConfig(guildId: string, partial: Partial<Omit<GuildConfig,
       "avatar_scan_hard_threshold", "avatar_scan_soft_threshold", "avatar_scan_racy_threshold",
       "flag_rate_limit_ms", "flag_cooldown_ttl_ms", "nsfw_alert_role_id", "banner_sync_enabled",
       "qotd_review_channel_id", "qotd_role_id", "pulse_excluded_category_ids_json",
+      "vote_out_threshold",
     ]);
 
     const validKeys = keys.filter((k) => ALLOWED_CONFIG_COLUMNS.has(k as string));

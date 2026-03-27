@@ -46,7 +46,8 @@ export type ReviewActionKind =
   | "need_info"
   | "kick"
   | "copy_uid"
-  | "claim";
+  | "claim"
+  | "vote_out";
 
 export type ReviewActionSnapshot = {
   action: ReviewActionKind;

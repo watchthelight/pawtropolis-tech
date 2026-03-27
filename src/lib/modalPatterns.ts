@@ -32,7 +32,7 @@ export const MODAL_PAGE_RE = /^v1:modal:([^:]+):p(\d+)$/;
 // Review decision buttons. "accept" is a legacy alias for "approve" - kept for
 // backwards compat with old button embeds that might still exist in channels.
 // These buttons can live in channels for weeks, so backwards compat matters here.
-export const BTN_DECIDE_RE = /^(?:v1:decide|review):(approve|accept|reject|kick|claim|unclaim|wrong_password):code([0-9A-F]{6})$/;
+export const BTN_DECIDE_RE = /^(?:v1:decide|review):(approve|accept|reject|kick|claim|unclaim|wrong_password|stale_modmail):code([0-9A-F]{6})$/;
 
 // Modmail button - opens a DM thread with the applicant
 export const BTN_MODMAIL_RE = /^(?:v1:decide|review):modmail:code([0-9A-F]{6})$/;
@@ -46,6 +46,9 @@ export const BTN_COPY_UID_RE = /^(?:v1:decide|review):(?:copyuid|copy_uid):code(
 // Ping unverified user - sends a reminder. User ID required since code alone isn't enough
 // to identify the Discord user (code is from application ID, not user ID).
 export const BTN_PING_UNVERIFIED_RE = /^(?:v1:ping|review:ping_unverified):(?:code)?([0-9A-F]{6})?:?user(\d+)$/;
+
+// Vote Out button - cumulative multi-mod rejection vote (no claim required)
+export const BTN_VOTE_OUT_RE = /^(?:v1:decide|review):vote_out:code([0-9A-F]{6})$/;
 
 // Database recovery buttons - completely separate namespace (no v1: prefix).
 // The 8-char hex suffix is a nonce to prevent accidental re-clicks.
