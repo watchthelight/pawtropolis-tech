@@ -8,6 +8,7 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import {
+  AttachmentBuilder,
   Client,
   EmbedBuilder,
   PermissionFlagsBits,
@@ -32,7 +33,7 @@ import {
   getTicketById,
   closeTicket,
 } from "./tickets.js";
-import { flushTranscript } from "./transcript.js";
+import { flushTranscript, getTranscriptBuffer, formatTranscript } from "./transcript.js";
 import { OPEN_MODMAIL_THREADS, removeOpenThread } from "./threadState.js";
 
 // ===== Close Thread Helpers =====
@@ -493,7 +494,14 @@ export async function closeModmailForApplication(
       "[modmail] close:closing_message"
     );
 
-    // ===== PHASE B: Flush transcript to log channel =====
+    // ===== PHASE B: Capture user-facing transcript, then flush to log channel =====
+    // Grab the transcript BEFORE flushing (flush clears the buffer).
+    // The transcript already uses "STAFF" / "USER" labels — no moderator names.
+    const preFlushLines = getTranscriptBuffer(ticketId);
+    const userTranscriptText = preFlushLines && preFlushLines.length > 0
+      ? formatTranscript(preFlushLines)
+      : null;
+
     const { messageId: logMessageId, lineCount: transcriptLines } = await flushTranscript({
       client,
       ticketId,
@@ -560,7 +568,7 @@ export async function closeModmailForApplication(
 
     notifyDashboard("modmail:thread_closed", { ticketId, staffUserId: "system" });
 
-    // ===== Best-effort: DM applicant about closure =====
+    // ===== Best-effort: DM applicant about closure with transcript =====
     try {
       const user = await client.users.fetch(userId);
       const closeEmbed = new EmbedBuilder()
@@ -571,8 +579,23 @@ export async function closeModmailForApplication(
         .setColor(0x808080)
         .setTimestamp();
 
-      await user.send({ embeds: [closeEmbed], allowedMentions: SAFE_ALLOWED_MENTIONS });
-      logger.debug({ ticketId, userId }, "[modmail] close:dm_user ok");
+      // Attach transcript .txt if there was a conversation
+      const dmPayload: { embeds: EmbedBuilder[]; files?: AttachmentBuilder[]; allowedMentions: typeof SAFE_ALLOWED_MENTIONS } = {
+        embeds: [closeEmbed],
+        allowedMentions: SAFE_ALLOWED_MENTIONS,
+      };
+
+      if (userTranscriptText) {
+        closeEmbed.setFooter({ text: "A copy of your conversation is attached below." });
+        const transcriptFile = new AttachmentBuilder(
+          Buffer.from(userTranscriptText, "utf-8"),
+          { name: `modmail-conversation-${appCode}.txt` }
+        );
+        dmPayload.files = [transcriptFile];
+      }
+
+      await user.send(dmPayload);
+      logger.debug({ ticketId, userId, hasTranscript: !!userTranscriptText }, "[modmail] close:dm_user ok");
     } catch (err) {
       logger.debug({ err, ticketId, userId }, "[modmail] close:dm_user err (non-fatal)");
     }
