@@ -640,6 +640,15 @@ If someone is experiencing harassment or serious issues outside of our server, w
 - Reporting them to Discord Trust & Safety if it involves ToS violations (e.g., harassment, threats, stalking): https://dis.gd/report
 - Not bringing the drama into our channels — we want this space to remain calm, inclusive, and drama-free.
 
+### In Server Drama or Conflicts
+
+In many communities like this one, there will be disagreements or arguments that spark in general chatting areas. It is our responsibility to address and resolve these issues.
+
+**Step to take when enforcing these actions:**
+1. Advise both parties to end the discussion and or take to DM's
+2. If they do not listen, A 5 minute mute will be in place for both users (mute reason will explain to them to take a break)
+3. If they still do not listen, you may enforce a 20 Minute Mute to calm the conflict down again
+4. Any continuation after confrontation with moderation will follow the escalation and general moderation guides.
 ---
 
 ## Ticket Guide
