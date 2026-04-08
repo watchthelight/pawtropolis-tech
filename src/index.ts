@@ -507,6 +507,30 @@ client.once(Events.ClientReady, async () => {
     logger.error({ err }, "[startup] gate entry startup hook failed");
   }
 
+  // One-shot bulk migration of existing unverified members into per-user verify
+  // threads. Gated by RUN_THREAD_MIGRATION=1 env var so it only runs when staff
+  // explicitly opts in. Safe to leave the env var set across restarts (the
+  // migration is idempotent via verify_thread PK), but conventional usage is
+  // to set, restart, wait for completion, then unset.
+  if (process.env.RUN_THREAD_MIGRATION === "1") {
+    try {
+      const { runThreadMigrationForUnverified } = await import("./features/gate/threadGate.js");
+      // Run for the configured target guild only (or all guilds if no GUILD_ID set)
+      const targetGuildId = process.env.GUILD_ID;
+      for (const [, g] of client.guilds.cache) {
+        if (targetGuildId && g.id !== targetGuildId) continue;
+        try {
+          const result = await runThreadMigrationForUnverified(g);
+          logger.info({ guildId: g.id, ...result }, "[startup] thread migration result");
+        } catch (err) {
+          logger.error({ err, guildId: g.id }, "[startup] thread migration failed for guild");
+        }
+      }
+    } catch (err) {
+      logger.error({ err }, "[startup] thread migration startup hook failed");
+    }
+  }
+
   // Startup permission check: verify logging channel access
   // WHAT: Check if bot has permissions to post to configured logging channels
   // WHY: Warn early if logging will fail; allows admins to fix perms before actions occur

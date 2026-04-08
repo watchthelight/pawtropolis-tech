@@ -33,6 +33,7 @@ import {
   ChannelType,
   type BaseMessageOptions,
   type Client,
+  type Guild,
   type GuildMember,
   type TextChannel,
   type ThreadChannel,
@@ -400,4 +401,111 @@ export async function cleanupVerifyThreadForUser(
   db.prepare(
     `UPDATE verify_thread SET state = ?, resolved_at = unixepoch() WHERE guild_id = ? AND user_id = ?`
   ).run(reason, guildId, userId);
+}
+
+// ============================================================================
+// One-shot bulk migration of existing unverified members
+// ============================================================================
+
+/**
+ * Walks every non-bot member of the guild that does not yet have the
+ * `accepted_role_id`, and creates a per-user verify thread for each. Idempotent
+ * via the verify_thread PRIMARY KEY (existing rows are skipped).
+ *
+ * Intended to be called ONCE during the rollout of the per-user thread system,
+ * BEFORE staff manually deny @everyone View on the public lobby category. This
+ * ensures every existing unverified user already has a thread before they lose
+ * lobby access — they receive Discord's "added to a thread" notification and
+ * have a clear path to verification.
+ *
+ * Triggered from src/index.ts ClientReady when `RUN_THREAD_MIGRATION=1` is set
+ * in the environment. After successful completion, the env var should be unset
+ * so the migration doesn't re-run on every restart (it would be a no-op due to
+ * the verify_thread PK, but it's wasted work).
+ */
+export async function runThreadMigrationForUnverified(
+  guild: Guild
+): Promise<{ created: number; skipped: number; failed: number; total: number }> {
+  const guildId = guild.id;
+  const cfg = getConfig(guildId);
+
+  if (!cfg?.verify_thread_parent_id) {
+    logger.warn(
+      { guildId },
+      "[threadMigration] verify_thread_parent_id not configured, skipping"
+    );
+    return { created: 0, skipped: 0, failed: 0, total: 0 };
+  }
+  if (!cfg.accepted_role_id) {
+    logger.warn({ guildId }, "[threadMigration] accepted_role_id not configured, skipping");
+    return { created: 0, skipped: 0, failed: 0, total: 0 };
+  }
+
+  logger.info({ guildId }, "[threadMigration] starting bulk migration of unverified members");
+
+  // Fetch all guild members. Requires GUILD_MEMBERS privileged intent (already on).
+  let allMembers: ReturnType<typeof guild.members.fetch> extends Promise<infer T> ? T : never;
+  try {
+    allMembers = await guild.members.fetch();
+  } catch (err) {
+    logger.error({ err, guildId }, "[threadMigration] failed to fetch members");
+    return { created: 0, skipped: 0, failed: 0, total: 0 };
+  }
+
+  const acceptedRoleId = cfg.accepted_role_id;
+  const targets: GuildMember[] = [];
+  for (const m of allMembers.values()) {
+    if (m.user.bot) continue;
+    if (m.roles.cache.has(acceptedRoleId)) continue;
+    targets.push(m);
+  }
+
+  logger.info(
+    { guildId, total: targets.length, totalMembers: allMembers.size },
+    "[threadMigration] found unverified members to process"
+  );
+
+  let created = 0;
+  let skipped = 0;
+  let failed = 0;
+
+  for (const target of targets) {
+    try {
+      // Idempotency: skip if a thread row already exists
+      const existing = getVerifyThreadForUser(guildId, target.id);
+      if (existing) {
+        skipped++;
+      } else {
+        await handleMemberJoin(target);
+        created++;
+      }
+    } catch (err) {
+      failed++;
+      logger.warn(
+        { err, userId: target.id, guildId },
+        "[threadMigration] handleMemberJoin failed for user"
+      );
+    }
+
+    // Progress checkpoint every 10 users
+    const processed = created + skipped + failed;
+    if (processed % 10 === 0) {
+      logger.info(
+        { guildId, processed, total: targets.length, created, skipped, failed },
+        "[threadMigration] progress"
+      );
+    }
+
+    // Pace ~1/sec to stay well under Discord's per-channel thread-create rate
+    // limit (5 / 5s) and to give the bot's other event handlers time to run
+    if (processed < targets.length) {
+      await new Promise((res) => setTimeout(res, 1000));
+    }
+  }
+
+  logger.info(
+    { guildId, total: targets.length, created, skipped, failed },
+    "[threadMigration] complete"
+  );
+  return { created, skipped, failed, total: targets.length };
 }
