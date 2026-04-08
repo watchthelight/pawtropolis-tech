@@ -121,3 +121,11 @@ Follow the passes in IMPROVEMENT-PLAN.md exactly:
 - Do not refactor code that isn't listed in a finding.
 - Do not run `git push` or deploy.
 - Do not use explore agents or subagents — read everything directly.
+
+---
+
+## See Also
+
+- [Code Audit 2026 (parent)](../CODE-AUDIT-2026.md) — full audit summary and findings rollup
+- [Improvement Plan](IMPROVEMENT-PLAN.md) — pass-by-pass execution plan referenced by this prompt
+- Round reports: [1](round-1-foundation.md) · [2](round-2-gate-system.md) · [3](round-3-review-system.md) · [4](round-4-large-commands.md) · [5](round-5-feature-modules.md) · [6](round-6-shared-utilities.md) · [7](round-7-stores-schedulers-config.md) · [8](round-8-web-dashboard.md)

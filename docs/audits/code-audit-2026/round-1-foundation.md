@@ -205,3 +205,11 @@ Files: 5 | Total Lines: 4,977
 - F014 re-export removal would touch 50+ importing files — needs grep to verify scope
 - F016 column allowlist must stay in sync with GuildConfig type — check after any config column additions
 - F018 ensure helper refactor must not change migration behavior — test with existing DB
+
+---
+
+## See Also
+
+- [Code Audit 2026 (parent)](../CODE-AUDIT-2026.md) — full audit summary and findings rollup
+- [Round 2: Gate System](round-2-gate-system.md) — next round
+- [Improvement Plan](IMPROVEMENT-PLAN.md) — pass-by-pass execution plan for these findings

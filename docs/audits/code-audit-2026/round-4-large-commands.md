@@ -142,3 +142,12 @@ These are the "big" command files, each >600 lines. The code quality is generall
 - F041 split must preserve the handleAuditButton export used in index.ts
 - F045 typing must match how index.ts passes interactions to these handlers (check the regex match path)
 - F051 SSH config change should be tested by running `./deploy.sh --status` to verify connectivity still works
+
+---
+
+## See Also
+
+- [Code Audit 2026 (parent)](../CODE-AUDIT-2026.md) — full audit summary and findings rollup
+- [Round 3: Review System](round-3-review-system.md) — previous round
+- [Round 5: Feature Modules](round-5-feature-modules.md) — next round
+- [Improvement Plan](IMPROVEMENT-PLAN.md) — pass-by-pass execution plan for these findings

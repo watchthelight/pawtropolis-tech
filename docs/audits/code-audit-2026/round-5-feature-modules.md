@@ -123,3 +123,12 @@ Feature modules are the healthiest part of the codebase. Most have dedicated tes
 - F052 refactor touches dashboardBridge.ts and threadOpen.ts — the function signature change must be backwards-compatible or all callers updated
 - F053 removal is safe — the field never existed in the schema
 - F055 requires checking which Discord.js version is in use for available type guards
+
+---
+
+## See Also
+
+- [Code Audit 2026 (parent)](../CODE-AUDIT-2026.md) — full audit summary and findings rollup
+- [Round 4: Large Commands](round-4-large-commands.md) — previous round
+- [Round 6: Shared Utilities](round-6-shared-utilities.md) — next round
+- [Improvement Plan](IMPROVEMENT-PLAN.md) — pass-by-pass execution plan for these findings

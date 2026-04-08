@@ -103,3 +103,12 @@ The shared utilities are the **best-tested** part of the codebase with 35 test f
 ### Cross-Reference Warnings
 - F062 dead export removal: verify with `grep -r` that no dynamic imports or string references exist
 - F065 removal is safe — functions were always utility helpers, no external consumers
+
+---
+
+## See Also
+
+- [Code Audit 2026 (parent)](../CODE-AUDIT-2026.md) — full audit summary and findings rollup
+- [Round 5: Feature Modules](round-5-feature-modules.md) — previous round
+- [Round 7: Stores, Schedulers, Config](round-7-stores-schedulers-config.md) — next round
+- [Improvement Plan](IMPROVEMENT-PLAN.md) — pass-by-pass execution plan for these findings

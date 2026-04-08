@@ -137,3 +137,12 @@ The main security concern is **unencrypted session cookies** containing OAuth to
 - F072 cookie encryption must not break existing sessions — either version the cookie format or force re-login on deploy
 - F075 env validation should happen once at startup, not per-request
 - F079 client limit must account for users with multiple tabs (same userId, different clientIds)
+
+---
+
+## See Also
+
+- [Code Audit 2026 (parent)](../CODE-AUDIT-2026.md) — full audit summary and findings rollup
+- [Round 7: Stores, Schedulers, Config](round-7-stores-schedulers-config.md) — previous round
+- [Improvement Plan](IMPROVEMENT-PLAN.md) — pass-by-pass execution plan for these findings
+- [Architecture: System Overview](../../architecture/system-overview.md) — broader system context for the web dashboard reviewed here

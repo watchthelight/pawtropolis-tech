@@ -148,3 +148,12 @@ The review system is well-architected with clean separation into types, claims, 
 - F033 removal touches claims.ts, review/index.ts, and review.ts — grep all consumers before removing
 - F037 barrel consolidation may break import paths — grep for `from ".*review/index.js"` vs `from ".*review.js"`
 - F039 move requires updating all imports of `claimTx`/`unclaimTx` from `reviewActions.js` (used in handlers/claimHandlers.ts and index.ts)
+
+---
+
+## See Also
+
+- [Code Audit 2026 (parent)](../CODE-AUDIT-2026.md) — full audit summary and findings rollup
+- [Round 2: Gate System](round-2-gate-system.md) — previous round
+- [Round 4: Large Commands](round-4-large-commands.md) — next round
+- [Improvement Plan](IMPROVEMENT-PLAN.md) — pass-by-pass execution plan for these findings

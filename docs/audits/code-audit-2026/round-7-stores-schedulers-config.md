@@ -100,3 +100,12 @@ The only notable findings are:
 ### Cross-Reference Warnings
 - F066 scheduler refactor would touch all 7 scheduler files + index.ts startup/shutdown — high risk for a low-reward change
 - F067 is safe — SELECT 1 vs SELECT * has identical behavior for .get() existence checks
+
+---
+
+## See Also
+
+- [Code Audit 2026 (parent)](../CODE-AUDIT-2026.md) — full audit summary and findings rollup
+- [Round 6: Shared Utilities](round-6-shared-utilities.md) — previous round
+- [Round 8: Web Dashboard](round-8-web-dashboard.md) — next round
+- [Improvement Plan](IMPROVEMENT-PLAN.md) — pass-by-pass execution plan for these findings

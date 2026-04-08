@@ -125,3 +125,12 @@ The gate system is one of the most polished parts of the codebase. Code quality 
 - F024 refactor touches accept.ts, reject.ts, kick.ts, unclaim.ts, and shared.ts — all must be updated atomically
 - F029 is a one-character fix but verify no tooling depends on the `1;` prefix (unlikely)
 - F022 fix requires checking Discord.js APIMessageActionRowComponent type availability
+
+---
+
+## See Also
+
+- [Code Audit 2026 (parent)](../CODE-AUDIT-2026.md) — full audit summary and findings rollup
+- [Round 1: Foundation](round-1-foundation.md) — previous round
+- [Round 3: Review System](round-3-review-system.md) — next round
+- [Improvement Plan](IMPROVEMENT-PLAN.md) — pass-by-pass execution plan for these findings
