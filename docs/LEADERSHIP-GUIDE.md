@@ -2,7 +2,7 @@
 
 Server audits, data management, and operational oversight.
 
-**Prerequisite:** [Admin Guide](ADMIN-GUIDE.md) | **Other docs:** [Quick Reference](../MOD-QUICKREF.md) | [Bot Handbook](BOT-HANDBOOK.md)
+**Prerequisite:** [Admin Guide](ADMIN-GUIDE.md) | **Other docs:** [Quick Reference](MOD-QUICKREF.md) | [Bot Handbook](BOT-HANDBOOK.md)
 
 ---
 

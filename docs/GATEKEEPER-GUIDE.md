@@ -2,7 +2,7 @@
 
 You review applications and decide who gets into the server.
 
-**Other docs:** [Quick Reference](../MOD-QUICKREF.md) &#8226; [Bot Handbook](BOT-HANDBOOK.md) &#8226; [Staff Policies](MOD-HANDBOOK.md)
+**Other docs:** [Quick Reference](MOD-QUICKREF.md) &#8226; [Bot Handbook](BOT-HANDBOOK.md) &#8226; [Staff Policies](MOD-HANDBOOK.md)
 
 ---
 

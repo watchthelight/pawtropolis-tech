@@ -14,7 +14,7 @@
 | **Report an incident** | [Incident Reporting](#incident-reporting) |
 | **Learn about the art program** | [Server Artist Program](#server-artist-program) |
 | **Check what commands I can use** | [Permissions Matrix](PERMS-MATRIX.md) |
-| **Quick command lookup** | [Quick Reference](../MOD-QUICKREF.md) |
+| **Quick command lookup** | [Quick Reference](MOD-QUICKREF.md) |
 
 ---
 
@@ -1282,7 +1282,7 @@ Flagged users show warning badges on their applications, alerting reviewers to l
 
 ### Bot Documentation
 - **[BOT-HANDBOOK.md](BOT-HANDBOOK.md)** — Full technical documentation for all bot commands
-- **[MOD-QUICKREF.md](../MOD-QUICKREF.md)** — Quick reference for everyday tasks
+- **[MOD-QUICKREF.md](MOD-QUICKREF.md)** — Quick reference for everyday tasks
 - **[PERMS-MATRIX.md](PERMS-MATRIX.md)** — Complete permission reference
 
 ### Tier-Specific Guides

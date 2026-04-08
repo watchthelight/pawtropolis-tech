@@ -2,7 +2,7 @@
 
 You run server events and have more tools to keep things healthy.
 
-**Prerequisite:** [Gatekeeper Guide](GATEKEEPER-GUIDE.md) | **Other docs:** [Quick Reference](../MOD-QUICKREF.md) &#8226; [Bot Handbook](BOT-HANDBOOK.md)
+**Prerequisite:** [Gatekeeper Guide](GATEKEEPER-GUIDE.md) | **Other docs:** [Quick Reference](MOD-QUICKREF.md) &#8226; [Bot Handbook](BOT-HANDBOOK.md)
 
 ---
 
