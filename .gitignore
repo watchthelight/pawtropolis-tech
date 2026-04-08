@@ -21,6 +21,16 @@ secrets/
 **/*.pem
 **/*.p12
 CREDENTIALS.md
+credentials.md
+finances.md
+FINANCES.md
+
+# Local-only docs (personal notes, AI workspace, generated artifacts)
+CHANGELOG.md
+CLAUDE.md
+changelog-qotd.md
+_bmad-output/implementation-artifacts/
+.claude/commands/
 
 # Test fixtures with potential secrets
 tests/**/fixtures/**
