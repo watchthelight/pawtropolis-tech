@@ -1,6 +1,6 @@
 # Moderator Guide
 
-You run server events and have more tools to keep things healthy.
+Movie and game nights, the activity heatmap, and the bot's presence/skull-mode controls.
 
 **Prerequisite:** [Gatekeeper Guide](GATEKEEPER-GUIDE.md) | **Other docs:** [Quick Reference](MOD-QUICKREF.md) &#8226; [Bot Handbook](BOT-HANDBOOK.md)
 
@@ -114,23 +114,23 @@ Lower numbers = more skulls. Set to 1000 for rare skulls, 1 for constant skulls.
 
 ## Tips for This Level
 
-1. **Event timing matters** — Start tracking when the event begins, end when it finishes
-2. **Check activity before events** — Use `/stats activity` to pick good times
-3. **Bot status is visible to everyone** — Keep it appropriate
-4. **Skull mode is opt-in** — Make sure leadership wants it enabled before turning it on
+1. Start `/movie start` or `/event game start` exactly when the event actually starts. Late starts under-count people who joined on time.
+2. Check `/stats activity` before scheduling something new — picking a peak hour usually doubles attendance.
+3. Whatever you set the bot's status to is visible to every member, not just staff. Don't put inside jokes there.
+4. Skull mode is loud. Get a thumbs-up from leadership before turning it on, especially with low odds.
 
 ---
 
-## What's Coming Next
+## What Admin Adds
 
-When you advance to **Administrator**, you'll unlock:
+Administrators also have:
 
-- **Server Configuration** — Change bot settings with `/config`
-- **Role Automation** — Set up automatic role assignment
-- **Emergency Controls** — `/panic` to stop all automation instantly
-- **Advanced Stats** — Export and reset moderator statistics
+- Server configuration — `/config` for bot settings
+- Role automation — auto-assign roles based on Amaribot levels and event attendance
+- Emergency controls — `/panic` to halt all automation
+- Stats export and reset
 
-📖 [ADMIN-GUIDE.md →](ADMIN-GUIDE.md)
+See the [Admin Guide](ADMIN-GUIDE.md) for details.
 
 ---
 
