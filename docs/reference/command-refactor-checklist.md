@@ -260,3 +260,12 @@ After refactoring, verify:
 - Good examples: `health.ts`, `developer.ts`, `update.ts`
 - Infrastructure: `src/lib/cmdWrap.ts`
 - Permissions: `src/lib/config.ts`, `src/lib/roles.ts`
+
+---
+
+## See Also
+
+- [Command Patterns](command-patterns.md) — the patterns this checklist enforces, with rationale and examples
+- [Command Checklist](command-checklist.md) — quicker reference for ephemeral vs public reply choices
+- [Slash Commands Guide](../SLASH-COMMANDS.md) — registration and deployment of commands
+- [Slash Commands Reference](slash-commands.md) — the user-facing command list

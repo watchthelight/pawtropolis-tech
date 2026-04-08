@@ -4,6 +4,7 @@ Quick reference for common command patterns in Pawtropolis Tech.
 
 > **Related Docs:**
 > - [Slash Commands Guide](../SLASH-COMMANDS.md) - Full guide to the slash command system
+> - [Command Checklist](./command-checklist.md) - Ephemeral vs public reply patterns
 > - [Refactoring Checklist](./command-refactor-checklist.md) - Step-by-step checklist
 > - [Template](../../src/commands/_template.ts.example) - Annotated example command
 
