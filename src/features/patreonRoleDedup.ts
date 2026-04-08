@@ -53,9 +53,14 @@ export async function handlePatreonRoleDedup(
     return;
   }
 
+  // Re-fetch member from API to avoid stale cache (external Patreon bot may
+  // have modified roles since our last gateway event)
+  const fresh = await guild.members.fetch(member.id).catch(() => null);
+  if (!fresh) return;
+
   // Find all Patreon donor roles this member currently has
   const memberPatreonRoles = PATREON_TIERS.filter((tier) =>
-    member.roles.cache.has(tier.roleId)
+    fresh.roles.cache.has(tier.roleId)
   );
 
   // 0 or 1 = nothing to dedup
@@ -70,8 +75,8 @@ export async function handlePatreonRoleDedup(
   logger.info({
     evt: "patreon_role_dedup",
     guildId: guild.id,
-    userId: member.id,
-    username: member.user.username,
+    userId: fresh.id,
+    username: fresh.user.username,
     highest: highest.name,
     removing: lowerRoles.map((r) => r.name),
   }, `Deduplicating stacked Patreon roles — keeping ${highest.name}, removing ${lowerRoles.length} lower tier(s)`);
@@ -84,7 +89,7 @@ export async function handlePatreonRoleDedup(
     const lower = lowerRoles[i];
     const result = await removeRole(
       guild,
-      member.id,
+      fresh.id,
       lower.roleId,
       `patreon_dedup: member has higher tier ${highest.name}`,
       botId
@@ -102,7 +107,7 @@ export async function handlePatreonRoleDedup(
   if (removed.length > 0) {
     await logActionPretty(guild, {
       actorId: botId,
-      subjectId: member.id,
+      subjectId: fresh.id,
       action: "role_remove",
       reason: "Patreon tier dedup — removed stacked lower-tier donor roles",
       meta: {
@@ -111,36 +116,76 @@ export async function handlePatreonRoleDedup(
         removedCount: removed.length,
       },
     }).catch((err) => {
-      logger.warn({ err, guildId: guild.id, userId: member.id },
+      logger.warn({ err, guildId: guild.id, userId: fresh.id },
         "[patreonRoleDedup] Failed to log action");
     });
   }
 }
 
 /**
- * One-time startup sweep: find all members with stacked Patreon donor roles
- * and strip the lower tiers. Catches any stacking that happened before the
- * reactive guildMemberUpdate handler was deployed.
+ * Sweep all guilds for stacked Patreon donor roles and strip the lower tiers.
+ * Fetches members fresh from the API to avoid stale cache issues.
  */
-export async function sweepPatreonRoleStacks(client: Client): Promise<void> {
+async function sweepOnce(client: Client): Promise<number> {
   let totalFixed = 0;
 
   for (const [, guild] of client.guilds.cache) {
     if (isPanicMode(guild.id)) continue;
 
-    // Fetch all members who have at least one Patreon donor role
-    const members = guild.members.cache.filter((m) =>
-      PATREON_TIERS.some((t) => m.roles.cache.has(t.roleId))
-    );
+    // Track members we've already processed to avoid duplicate art reward checks
+    const processed = new Set<string>();
 
-    for (const [, member] of members) {
-      const memberTiers = PATREON_TIERS.filter((t) => member.roles.cache.has(t.roleId));
-      if (memberTiers.length <= 1) continue;
+    // Fetch members with any Patreon role from the API (not cache)
+    for (const tier of PATREON_TIERS) {
+      const role = guild.roles.cache.get(tier.roleId);
+      if (!role) continue;
 
-      await handlePatreonRoleDedup(member);
-      totalFixed++;
+      for (const [, member] of role.members) {
+        const memberTiers = PATREON_TIERS.filter((t) => member.roles.cache.has(t.roleId));
+
+        // Dedup stacked roles
+        if (memberTiers.length > 1) {
+          await handlePatreonRoleDedup(member);
+          totalFixed++;
+        }
+
+        // Also check art rewards for every Patreon member (handler has its own toggle/dedup)
+        if (!processed.has(member.id)) {
+          processed.add(member.id);
+          try {
+            const { handlePatreonArtRewards } = await import("./patreonArtRewards.js");
+            await handlePatreonArtRewards(member);
+          } catch (err) {
+            logger.warn({ err, userId: member.id, guildId: guild.id },
+              "[patreonRoleDedup] Failed to check art rewards in sweep");
+          }
+        }
+      }
     }
   }
 
+  return totalFixed;
+}
+
+/**
+ * One-time startup sweep: find all members with stacked Patreon donor roles
+ * and strip the lower tiers. Then start a periodic sweep to catch re-stacking
+ * from external Patreon integration bots.
+ */
+export async function sweepPatreonRoleStacks(client: Client): Promise<void> {
+  const totalFixed = await sweepOnce(client);
   logger.info({ totalFixed }, "[patreonRoleDedup] Startup sweep complete");
+
+  // Periodic sweep every 10 minutes to catch roles re-added by external Patreon bots
+  const SWEEP_INTERVAL_MS = 10 * 60 * 1000;
+  setInterval(async () => {
+    try {
+      const fixed = await sweepOnce(client);
+      if (fixed > 0) {
+        logger.info({ fixed }, "[patreonRoleDedup] Periodic sweep fixed stacked roles");
+      }
+    } catch (err) {
+      logger.error({ err }, "[patreonRoleDedup] Periodic sweep failed");
+    }
+  }, SWEEP_INTERVAL_MS);
 }

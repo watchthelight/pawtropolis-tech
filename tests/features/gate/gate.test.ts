@@ -118,6 +118,7 @@ describe("features/gate", () => {
         id: "guild123",
         name: "Test Guild",
         iconURL: vi.fn(() => "https://example.com/icon.png"),
+        bannerURL: vi.fn(() => null),
       };
 
       const result = buildGateEntryPayload({ guild: mockGuild as any });
@@ -131,6 +132,7 @@ describe("features/gate", () => {
         id: "guild123",
         name: "Test Guild",
         iconURL: vi.fn(() => null),
+        bannerURL: vi.fn(() => null),
       };
 
       const result = buildGateEntryPayload({ guild: mockGuild as any });
@@ -144,6 +146,7 @@ describe("features/gate", () => {
         id: "guild123",
         name: "Test Guild",
         iconURL: vi.fn(() => null),
+        bannerURL: vi.fn(() => null),
       };
 
       const result = buildGateEntryPayload({ guild: mockGuild as any });
@@ -156,6 +159,7 @@ describe("features/gate", () => {
         id: "guild123",
         name: "Test Guild",
         iconURL: vi.fn(() => "https://example.com/icon.png"),
+        bannerURL: vi.fn(() => null),
       };
 
       const result = buildGateEntryPayload({ guild: mockGuild as any });
@@ -169,6 +173,7 @@ describe("features/gate", () => {
         id: "guild123",
         name: "Test Guild",
         iconURL: vi.fn(() => null),
+        bannerURL: vi.fn(() => null),
       };
 
       const result = buildGateEntryPayload({ guild: mockGuild as any });

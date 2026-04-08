@@ -151,6 +151,19 @@ export function insertVoteOut(appId: string, voterId: string): boolean {
   return result.changes > 0;
 }
 
+const removeVoteOutStmt = db.prepare(
+  `DELETE FROM vote_out WHERE app_id = ? AND voter_id = ?`
+);
+
+/**
+ * WHAT: Remove a vote out vote.
+ * WHY: Allows mods to toggle their vote by clicking again.
+ */
+export function removeVoteOut(appId: string, voterId: string): boolean {
+  const result = removeVoteOutStmt.run(appId, voterId);
+  return result.changes > 0;
+}
+
 // ===== Recent Actions =====
 
 export function getRecentActionsForApp(appId: string, limit = 4): RecentAction[] {

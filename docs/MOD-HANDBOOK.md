@@ -59,7 +59,7 @@ Key features:
 - [Training Guide](#training-guide)
 
 **Key Systems**
-- [Commissions Verification](#commissions-verification) ← **NEW**
+- [Commissions Verification](#commissions-verification) -- **NEW**
 - [Moderation Protocols](#moderation-protocols)
 - [Incident Reporting](#incident-reporting)
 
@@ -276,7 +276,7 @@ Mutes: Muting can be an effective tool to halt users in their tracks from commit
 
 ## Incident Reporting
 
-**Purpose:** This section ensures all staff respond fairly, consistently, and with clear documentation. It protects users, holds staff accountable, and prevents miscommunication.
+This section covers how to respond to incidents fairly, document them clearly, and keep everyone accountable.
 
 ### Incident Types
 
@@ -412,7 +412,7 @@ Regardless of this tree, C-4 violations should be properly logged in ban-log.
 
 ## Community Rules
 
-This section summarizes the rules you are enforcing. Knowing these helps you make consistent moderation decisions.
+These are the rules you're enforcing. Know them so you can make consistent calls.
 
 ### Prohibited Topics
 
@@ -580,21 +580,21 @@ Cross banning is an act of banning someone from the community because of another
 
 #### Why We Don't Enforce It
 
-**We Moderate Based on Local Behavior:**
-- A user's past in another community does not determine their future here. Unless they violate rules here, we don't enforce action.
+**We moderate based on local behavior.**
+- A user's past in another community does not determine their future here. Unless they violate rules here, we don't take action.
 
-**Reputation ≠ Evidence:**
+**Reputation is not evidence.**
 
-Staff are often shown screenshots, ban logs, or hearsay reports from other servers. This could lead to:
+Staff are often shown screenshots, ban logs, or hearsay reports from other servers. These are:
 - Often lacking full context
-- Unverifiable by our moderation team relying on such evidence undermines fair and impartial moderation
+- Unverifiable -- relying on such evidence undermines fair and impartial moderation
 - Easy to fake, crop, or misrepresent
 
 Someone being banned elsewhere, or being disliked by others, is not a valid reason to punish them here. It invites bias, gossip-based moderation, and unfair treatment.
 
-**Ethical Concerns:**
+**Ethical concerns.**
 
-Moderation Actions based on behavior in other communities especially without verifiable, first hand evidence risks:
+Taking moderation action based on behavior in other communities, especially without verifiable first-hand evidence, risks:
 - Defamation or false accusations
 - Targeted harassment or witch hunting
 - Discriminatory or biased enforcement
@@ -609,20 +609,20 @@ We do not intervene in outside drama unless it begins to affect our community di
 
 #### Why We Don't Get Involved
 
-**We Can't Moderate the Entire Internet**
-- Our role is to keep this server safe and healthy — not to resolve every personal conflict or social fallout that happens online. We do not have the context, the involvement, or the authority to fairly handle off-server drama.
+**We can't moderate the entire internet.**
+- Our role is to keep this server safe — not to resolve every personal conflict that happens online. We don't have the context, involvement, or authority to fairly handle off-server drama.
 
-**It's Often One-Sided, Emotional, or Incomplete**
-- Reports often come from one person's perspective.
+**Reports are often one-sided or incomplete.**
+- Reports usually come from one person's perspective.
 - Evidence (like screenshots or messages) may be cropped, edited, or shared selectively.
-- Even when accurate, it may lack the full story or may be rooted in personal history that staff are unfamiliar with.
+- Even when accurate, it may lack the full story or be rooted in personal history that staff don't know about.
 
-**It Turns Moderation Into a Popularity Contest**
+**It turns moderation into a popularity contest.**
 - Taking action based on external drama encourages people to "win over" staff or weaponize moderation to silence others.
-- This creates a culture where the loudest voice or biggest group determines who gets punished — and that's not how we run things.
+- That leads to the loudest voice or biggest group determining who gets punished, and that's not how we run things.
 
-**It Burns Out Staff and Damages Trust**
-- Staff are volunteers and human. Getting pulled into emotionally charged situations from outside the community is mentally and emotionally draining. When moderation is seen as reactive to drama rather than focused on clear behavior, it erodes member confidence in fair enforcement.
+**It burns out staff and damages trust.**
+- Staff are volunteers. Getting pulled into emotionally charged situations from outside the community is draining. When moderation looks reactive to drama rather than focused on actual behavior, members lose confidence in fair enforcement.
 
 #### Limitations
 
@@ -714,11 +714,11 @@ Please be mindful, there are many scammers that try to verify. It's important th
 
 ## Commissions Verification
 
-How to verify artist applications. This is one of the most important things you'll do as staff.
+How to verify artist applications.
 
 > *Last updated: December 2025*
 
-Online art commissioning has grown a lot. But so has fraud — AI art, stolen work, and scammers who disappear after getting paid. This section gives you clear standards to protect both artists and clients.
+Fraud is common in art commissioning -- AI art, stolen work, and scammers who disappear after getting paid. This section covers verification standards that protect both artists and clients.
 
 ### Universal Principles
 
@@ -773,14 +773,14 @@ Online art commissioning has grown a lot. But so has fraud — AI art, stolen wo
 
 When reviewing artwork for AI indicators, look for these common artifacts:
 
-| Category | Common Artifacts to Look For | Why It's a Red Flag |
-|----------|------------------------------|---------------------|
-| **Anatomical Errors** | Extra/missing fingers/toes/digits, fused limbs, impossible joint bends, asymmetrical faces/eyes/ears, warped paws or muzzles | AI struggles with consistent anatomy in anthro/furry designs |
-| **Hands/Paws & Details** | Blobby or multi-fingered hands, unnatural claw placement, "melting" fingers | Persistent AI weakness despite improvements |
-| **Textures & Fur** | Overly smooth/shiny plastic-like skin, inconsistent fur direction/flow, blurry or repeating patterns | Lacks natural variation of hand-drawn/painted fur |
-| **Backgrounds & Composition** | Nonsensical elements (floating objects, physics violations like impossible shadows/lighting), mismatched perspectives | AI prioritizes subject over coherent scene |
-| **Stylistic Inconsistencies** | Sudden glossy/over-saturated look, unnatural color blending, symmetrical errors in asymmetric poses | Diffusion model hallmarks (e.g., excessive shine) |
-| **Other Tells** | Incoherent accessories (warped clothing/jewelry), weird reflections, or "dream-like" distortions | Logic gaps in complex interactions |
+| Category | Common Artifacts to Look For | Why It Matters |
+|----------|------------------------------|----------------|
+| **Anatomical Errors** | Extra/missing fingers/toes/digits, fused limbs, impossible joint bends, asymmetrical faces/eyes/ears, warped paws or muzzles | AI can't keep anatomy consistent, especially in anthro/furry designs |
+| **Hands/Paws & Details** | Blobby or multi-fingered hands, unnatural claw placement, "melting" fingers | Still one of AI's weakest areas even with newer models |
+| **Textures & Fur** | Overly smooth/shiny plastic-like skin, inconsistent fur direction/flow, blurry or repeating patterns | Hand-drawn fur has natural variation that AI doesn't replicate well |
+| **Backgrounds & Composition** | Nonsensical elements (floating objects, impossible shadows/lighting), mismatched perspectives | AI focuses on the subject and often generates incoherent backgrounds |
+| **Stylistic Inconsistencies** | Sudden glossy/over-saturated look, unnatural color blending, symmetrical errors in asymmetric poses | Excessive shine and over-saturation are common in diffusion model output |
+| **Other Tells** | Incoherent accessories (warped clothing/jewelry), weird reflections, or dream-like distortions | AI breaks down when rendering complex object interactions |
 
 ---
 
@@ -1145,7 +1145,7 @@ The `/audit nsfw` command scans member avatars using Google Vision API to detect
 
 **80%+ adult content** = Hard Evidence (flagged)
 
-This conservative threshold reduces false positives. The bot uses Google Vision's SafeSearch API which is effective at detecting explicit content in various art styles.
+The 80% threshold keeps false positives low. The bot uses Google Vision's SafeSearch API, which handles most art styles well.
 
 #### What to do with NSFW flagged avatars:
 
@@ -1207,9 +1207,9 @@ Each engine returns a percentage score. The bot averages them for an overall con
 
 For manual verification or when the bot command isn't available, use these websites:
 
-- **[Hive Moderation](https://hivemoderation.com/ai-generated-content-detection)** — Comprehensive AI content detection
+- **[Hive Moderation](https://hivemoderation.com/ai-generated-content-detection)** — AI content detection
 - **[Was It AI](https://wasitai.com/)** — Quick AI image checker
-- **[SightEngine](https://sightengine.com/detect-ai-generated-images)** — AI-generated image detection
+- **[SightEngine](https://sightengine.com/detect-ai-generated-images)** — AI image detection
 
 #### API cost considerations:
 

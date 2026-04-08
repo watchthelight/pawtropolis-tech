@@ -2,6 +2,9 @@ import type { Handle } from '@sveltejs/kit';
 import { getSession } from '$lib/server/session';
 import { getPreferences } from '$lib/server/preferences';
 
+// Side-effect: subscribe push sender to eventBus
+import '$lib/server/push/push-sender';
+
 export const handle: Handle = async ({ event, resolve }) => {
 	const session = getSession(event.cookies);
 

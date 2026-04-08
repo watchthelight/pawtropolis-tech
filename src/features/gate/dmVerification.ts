@@ -37,6 +37,8 @@ import {
   upsertAnswer,
   submitApplication,
   queueAvatarScan,
+  paginate,
+  buildModalForPage,
 } from "../gate.js";
 
 // ============================================================================
@@ -252,21 +254,26 @@ export async function startDmVerification(
       components: [buildCancelRow(nonce)],
     });
   } catch (err: unknown) {
-    // Discord error 50007 = "Cannot send messages to this user"
+    // DM failed — fall back to the old modal-based verification flow.
+    // Common codes: 50007 (DMs closed), 20026 (bot quarantined), 50278 (no mutual guilds)
     const code = (err as { code?: number })?.code;
-    if (code === 50007) {
-      await interaction.reply({
-        content:
-          "I couldn't send you a DM. Please enable **Allow direct messages from server members** " +
-          "in your Privacy Settings for this server, then try again.",
-        flags: MessageFlags.Ephemeral,
-      });
-    } else {
-      await interaction.reply({
-        content: "Something went wrong sending you a DM. Please try again.",
-        flags: MessageFlags.Ephemeral,
-      });
-      captureException(err);
+    logger.info(
+      { userId, guildId, errCode: code },
+      "[dmVerify] DM failed, falling back to modal verification"
+    );
+
+    try {
+      const pages = paginate(questions);
+      const modal = buildModalForPage(pages[0], existingAnswers, appId);
+      await interaction.showModal(modal);
+    } catch (modalErr) {
+      captureException(modalErr);
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({
+          content: "Something went wrong. Please try again.",
+          flags: MessageFlags.Ephemeral,
+        });
+      }
     }
     return;
   }

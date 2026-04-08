@@ -112,12 +112,12 @@ async function handleSuggest(ctx: CommandContext<ChatInputCommandInteraction>): 
         new ActionRowBuilder<TextInputBuilder>().addComponents(
           new TextInputBuilder()
             .setCustomId("question")
-            .setLabel("Your Question")
+            .setLabel("Your Question (4-5 sentences max)")
             .setStyle(TextInputStyle.Paragraph)
             .setRequired(true)
             .setMinLength(10)
             .setMaxLength(500)
-            .setPlaceholder("What would you ask the community?")
+            .setPlaceholder("Keep it short, creative, and thought-provoking! No NSFW/gore/substances.")
         )
       );
 

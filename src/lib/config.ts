@@ -159,6 +159,8 @@ export type GuildConfig = {
   pulse_excluded_category_ids_json?: string | null;
   // Vote Out threshold (061 migration)
   vote_out_threshold?: number | null; // Votes needed to reject via Vote Out (default: 2)
+  // Patreon art reward automation toggle (062 migration)
+  patreon_art_rewards_enabled?: string | null; // "true" = enabled, default off
   // These fields are NOT optional. Ask me how I know.
   // (Hint: it involved a production outage and a missing COALESCE)
   image_search_url_template: string;

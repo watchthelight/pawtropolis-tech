@@ -87,7 +87,7 @@ export async function handleReportResolveButton(interaction: ButtonInteraction):
     await interaction.reply({
       content: `Failed to open resolution modal (trace: ${traceId}).`,
       flags: MessageFlags.Ephemeral,
-    }).catch(() => {});
+    }).catch((err) => { logger.warn({ err }, "[report] modal-error reply failed"); });
   }
 }
 
@@ -195,6 +195,6 @@ export async function handleReportResolveModal(
 
     await interaction.editReply({
       content: `Failed to resolve report (trace: ${traceId}).`,
-    }).catch(() => {});
+    }).catch((err) => { logger.warn({ err }, "[report] resolve-error editReply failed"); });
   }
 }

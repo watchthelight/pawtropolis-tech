@@ -274,6 +274,21 @@ sync_db_remote_preferred() {
     echo "[sync] Backing up remote → ${REMOTE_BACKUP}"
     ssh "$REMOTE_ALIAS" "timeout 5 sqlite3 ${DB_REMOTE} 'PRAGMA wal_checkpoint(PASSIVE);' 2>/dev/null || true; cp ${DB_REMOTE} ${REMOTE_BACKUP}; [ -f ${DB_REMOTE}-wal ] && cp ${DB_REMOTE}-wal ${REMOTE_BACKUP}-wal || true; [ -f ${DB_REMOTE}-shm ] && cp ${DB_REMOTE}-shm ${REMOTE_BACKUP}-shm || true"
 
+    # Also back up push.db (web push notification subscriptions)
+    PUSH_DB_REMOTE="${REMOTE_PATH}/data/push.db"
+    ssh "$REMOTE_ALIAS" "[ -f ${PUSH_DB_REMOTE} ] && cp ${PUSH_DB_REMOTE} ${REMOTE_PATH}/data/backups/push-${R_TIMESTAMP}.remote.db || true"
+
+    # Validate backup integrity
+    echo "[sync] Validating backup integrity..."
+    ssh "$REMOTE_ALIAS" "sqlite3 ${REMOTE_BACKUP} 'PRAGMA integrity_check;' 2>/dev/null | head -1" | grep -q "ok" \
+        && echo "[sync] ✅ Backup integrity verified" \
+        || echo "[sync] ⚠️  Backup integrity check failed — backup may be corrupt"
+
+    # Rotate old backups: keep last 7 daily, delete older
+    echo "[sync] Rotating old backups (keeping last 7)..."
+    ssh "$REMOTE_ALIAS" "cd ${REMOTE_PATH}/data/backups && ls -1t data-*.remote.db 2>/dev/null | tail -n +8 | xargs -r rm -f; ls -1t push-*.remote.db 2>/dev/null | tail -n +8 | xargs -r rm -f" 2>/dev/null || true
+    ls -1t data/backups/data-*.local.db 2>/dev/null | tail -n +8 | xargs -r rm -f 2>/dev/null || true
+
     # Pull remote → local
     echo "[sync] Pulling remote database to local..."
 

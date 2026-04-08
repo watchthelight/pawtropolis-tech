@@ -125,13 +125,66 @@ export async function executeAccept(ctx: CommandContext<ChatInputCommandInteract
         findPendingAppByUserId(interaction.guildId!, uid)
       );
       if (!app) {
-        return { found: false as const, error: `No pending application found for user ID ${uid}.` };
+        // No application — allow manual accept (grant role directly, skip DB approval)
+        return { found: false as const, noApp: true as const, uid, error: "" };
       }
     }
     return { found: true as const, app: app! };
   });
 
   if (!lookupResult.found) {
+    // Manual accept: no application exists, just grant the verified role directly
+    if ("noApp" in lookupResult && lookupResult.noApp) {
+      await withStep(ctx, "manual_accept", async () => {
+        const cfg = withSql(ctx, "SELECT guild_config", () => getConfig(interaction.guildId!));
+        if (!cfg?.accepted_role_id) {
+          await replyOrEdit(interaction, { content: "No accepted role configured." });
+          return;
+        }
+        let member: GuildMember | null = null;
+        try {
+          member = await interaction.guild!.members.fetch(lookupResult.uid);
+        } catch {
+          await replyOrEdit(interaction, { content: `User ${lookupResult.uid} not found in server.` });
+          return;
+        }
+        const messages = [`Manual accept for <@${member.id}> (no application).`];
+        try {
+          if (!member.roles.cache.has(cfg.accepted_role_id)) {
+            await member.roles.add(cfg.accepted_role_id, `Manual accept by ${interaction.user.username}`);
+            messages.push(`Granted <@&${cfg.accepted_role_id}>.`);
+          } else {
+            messages.push("Already has verification role.");
+          }
+        } catch (err) {
+          messages.push(`Failed to grant role: ${(err as Error).message}`);
+        }
+        try {
+          await deliverApprovalDm(member, interaction.guild!.name);
+          messages.push("DM sent.");
+        } catch {
+          messages.push("DM failed (closed DMs?).");
+        }
+        try {
+          await postWelcomeCard({
+            guild: interaction.guild!,
+            user: member,
+            config: cfg,
+            memberCount: interaction.guild!.memberCount,
+          });
+        } catch {
+          // Non-critical
+        }
+        logger.info({
+          evt: "manual_accept",
+          guildId: interaction.guildId,
+          userId: lookupResult.uid,
+          moderatorId: interaction.user.id,
+        }, `Manual accept for ${lookupResult.uid} by ${interaction.user.username}`);
+        await replyOrEdit(interaction, { content: messages.join("\n") });
+      });
+      return;
+    }
     await replyOrEdit(interaction, { content: lookupResult.error });
     return;
   }

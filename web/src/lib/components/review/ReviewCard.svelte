@@ -4,7 +4,7 @@
 	import { relativeTime } from '$lib/utils/time';
 	import { openLightbox } from '$lib/stores/lightbox.svelte';
 
-	let { applicantName, avatarUrl = null, status, submittedAt, claimedBy, claimedByName, claimedByAvatar = null, riskScore, hasUnreadModmail = false, selected = false, onclick }: {
+	let { applicantName, avatarUrl = null, status, submittedAt, claimedBy, claimedByName, claimedByAvatar = null, riskScore, hasUnreadModmail = false, isStale = false, selected = false, onclick }: {
 		applicantName: string;
 		avatarUrl?: string | null;
 		status: string;
@@ -14,6 +14,7 @@
 		claimedByAvatar?: string | null;
 		riskScore: number;
 		hasUnreadModmail?: boolean;
+		isStale?: boolean;
 		selected?: boolean;
 		onclick?: () => void;
 	} = $props();
@@ -28,6 +29,7 @@
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <div
 	class="review-card"
+	class:review-card-stale={isStale}
 	class:review-card-selected={selected}
 	role="button"
 	tabindex="0"
@@ -78,6 +80,12 @@
 				<div class="modmail-label">
 					<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
 					New modmail
+				</div>
+			{/if}
+			{#if isStale}
+				<div class="stale-label">
+					<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+					Stale
 				</div>
 			{/if}
 		</div>
@@ -248,5 +256,47 @@
 		font-size: 0.65rem;
 		color: var(--status-info);
 		margin-top: 0.25rem;
+	}
+
+	.review-card-stale {
+		border-left: 3px solid var(--status-danger);
+		background: oklch(0.25 0.04 25 / 0.15);
+	}
+
+	.review-card-stale.review-card-selected {
+		background: oklch(0.3 0.05 25 / 0.2);
+	}
+
+	.stale-label {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		font-size: 0.65rem;
+		color: var(--status-danger);
+		margin-top: 0.25rem;
+	}
+
+	@media (max-width: 767px) {
+		.review-card {
+			padding: 1rem 1.125rem;
+		}
+		.review-card:active {
+			transform: scale(0.985);
+			transition: transform 80ms;
+		}
+		.review-card-row {
+			gap: 0.875rem;
+		}
+		.review-card-avatar,
+		.review-card-avatar-placeholder {
+			width: 52px;
+			height: 52px;
+		}
+		.review-card-name {
+			font-size: 0.9375rem;
+		}
+		.review-card-time {
+			font-size: 0.75rem;
+		}
 	}
 </style>

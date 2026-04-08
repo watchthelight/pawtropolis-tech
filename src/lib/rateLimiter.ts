@@ -20,6 +20,7 @@ const cooldowns = new Map<string, Map<string, number>>();
 // Cleanup interval to prevent unbounded memory growth
 const CLEANUP_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
 const MAX_COOLDOWN_AGE_MS = 2 * 60 * 60 * 1000; // 2 hours
+const MAX_SCOPE_ENTRIES = 10_000; // Hard cap per command — if exceeded, evict oldest
 
 /**
  * Check if a command is on cooldown for a given scope.
@@ -63,6 +64,16 @@ export function checkCooldown(
    * runs the command. The alternative (caller calls "recordUsage" after success)
    * would require trusting every caller to remember. They won't.
    */
+  // Hard cap: if a command's scope map exceeds MAX_SCOPE_ENTRIES, evict oldest entries
+  if (scopeCooldowns.size >= MAX_SCOPE_ENTRIES) {
+    let oldest = Infinity;
+    let oldestKey = "";
+    for (const [k, v] of scopeCooldowns) {
+      if (v < oldest) { oldest = v; oldestKey = k; }
+    }
+    if (oldestKey) scopeCooldowns.delete(oldestKey);
+  }
+
   scopeCooldowns.set(scopeId, now);
   cooldowns.set(commandName, scopeCooldowns);
 

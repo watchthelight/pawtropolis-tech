@@ -123,8 +123,19 @@ export async function initInviteCache(client: Client): Promise<void> {
 
 // ===== Tracking =====
 
+// Serialize invite tracking so simultaneous joins diff against an updated cache.
+// Without this, two concurrent guildMemberAdd handlers both compare against the
+// same stale cache, and a Discovery join can be mis-attributed to whichever
+// invite happened to gain a use from the other member.
+let trackingQueue: Promise<void> = Promise.resolve();
+
 /** Diff invites to find which one a new member used. Call from guildMemberAdd. */
 export async function trackMemberInvite(member: GuildMember): Promise<void> {
+  trackingQueue = trackingQueue.then(() => trackMemberInviteImpl(member)).catch((err) => { logger.warn({ err }, "[invite-tracker] trackMemberInvite failed"); });
+  return trackingQueue;
+}
+
+async function trackMemberInviteImpl(member: GuildMember): Promise<void> {
   const guildId = member.guild.id;
   let usedCode: string | null = null;
   let inviterId: string | null = null;
@@ -188,25 +199,19 @@ export async function trackMemberInvite(member: GuildMember): Promise<void> {
     logger.debug({ err, guildId, userId: member.id }, "[invite-tracker] Failed to track invite");
   }
 
-  // Vanity / Discovery fallback: if no invite was detected through diffing,
-  // attribute to the vanity URL or Server Discovery. This covers:
-  //  - Race conditions where vanity uses count didn't appear to change
-  //  - fetchVanityData() failures (permissions, rate limits)
-  //  - Server Discovery joins (no invite code, guild is DISCOVERABLE)
-  //  - Simultaneous joins via vanity URL where only one gets diff-detected
+  // Discovery / vanity fallback: if no invite was detected through diffing,
+  // check Server Discovery first (most common untracked source), then vanity URL.
+  // The serialized queue above means the diff-based check is reliable, so reaching
+  // here genuinely means no invite was used — prefer Discovery over blind vanity.
   if (!usedCode) {
-    if (member.guild.vanityURLCode) {
-      usedCode = member.guild.vanityURLCode;
-      logger.debug({ guildId, vanityCode: usedCode }, "[invite-tracker] Fallback: attributing to vanity URL");
-    } else if (member.guild.features.includes("DISCOVERABLE")) {
+    if (member.guild.features.includes("DISCOVERABLE")) {
       usedCode = "__discovery__";
       logger.debug({ guildId }, "[invite-tracker] Fallback: attributing to Server Discovery");
+    } else if (member.guild.vanityURLCode) {
+      usedCode = member.guild.vanityURLCode;
+      logger.debug({ guildId, vanityCode: usedCode }, "[invite-tracker] Fallback: attributing to vanity URL");
     }
   }
-
-  // Race condition note: if two members join near-simultaneously, both calls diff against
-  // the same old cache. One join may be mis-attributed. This is inherent to Discord's invite
-  // tracking approach and accepted as a known limitation.
   upsertStmt().run(guildId, member.id, usedCode, inviterId, Math.floor(Date.now() / 1000));
 }
 

@@ -30,17 +30,17 @@ Made a mistake with a permanent rejection? `/unblock target:@Username` lets them
 
 ## Checking Your Stats
 
-Curious how you're doing? Run `/stats user moderator:@YourName` to see your approval rate, response times, and activity breakdown. You can adjust the time range with `days:30` or whatever period you want.
+Run `/stats user moderator:@YourName` to see your approval rate, response times, and activity breakdown. You can adjust the time range with `days:30` or whatever period you want.
 
-To see how everyone's doing, `/stats leaderboard` shows rankings by review count. Great for friendly competition or seeing who's been most active.
+`/stats leaderboard` shows rankings by review count, so you can see who's been most active.
 
-For server-wide trends, `/stats approval-rate` shows the overall approve vs reject breakdown.
+For server-wide numbers, `/stats approval-rate` shows the overall approve vs reject breakdown.
 
 ## Server Activity
 
-Want to know when the server is busiest? `/stats activity` shows a heatmap of message activity by day and hour. You can look back up to 8 weeks with `weeks:8`.
+`/stats activity` shows a heatmap of message activity by day and hour. You can look back up to 8 weeks with `weeks:8`.
 
-To check if the bot is running smoothly, `/health` shows uptime and response latency.
+`/health` shows bot uptime and response latency.
 
 ## Events (Movie & Game Night)
 
@@ -61,7 +61,7 @@ Configured via `/roles add-game-tier`. Use `/roles list type:game_night` to see 
 
 ## Utility Commands
 
-Need to post something as the bot? `/send message:Your text here` does the trick. Add `embed:true` for a nicer format, or `reply_to:` with a message ID to reply to something specific.
+To post something as the bot, use `/send message:Your text here`. Add `embed:true` for a nicer format, or `reply_to:` with a message ID to reply to something specific.
 
 If someone seems suspicious, `/flag user:@Username reason:Alt account` flags them for other staff to see.
 
@@ -88,6 +88,6 @@ Server audits (leadership only):
 
 ## See Also
 
-**Main docs:** [Bot Handbook](BOT-HANDBOOK.md) &#8226; [Staff Policies](MOD-HANDBOOK.md) &#8226; [Permissions](PERMS-MATRIX.md)
+**Main docs:** [Bot Handbook](BOT-HANDBOOK.md) | [Staff Policies](MOD-HANDBOOK.md) | [Permissions](PERMS-MATRIX.md)
 
-**By role:** [Gatekeeper](GATEKEEPER-GUIDE.md) &#8226; [Moderator](MODERATOR-GUIDE.md) &#8226; [Admin](ADMIN-GUIDE.md) &#8226; [Leadership](LEADERSHIP-GUIDE.md)
+**By role:** [Gatekeeper](GATEKEEPER-GUIDE.md) | [Moderator](MODERATOR-GUIDE.md) | [Admin](ADMIN-GUIDE.md) | [Leadership](LEADERSHIP-GUIDE.md)

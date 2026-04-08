@@ -134,6 +134,14 @@ export const data = new SlashCommandBuilder()
         opt.setName("tier_name").setDescription("Tier name to remove").setRequired(true)
       )
   )
+  .addSubcommand((sub) =>
+    sub
+      .setName("patreon-grants")
+      .setDescription("Show a user's Patreon art ticket grant state")
+      .addUserOption((opt) =>
+        opt.setName("user").setDescription("User to inspect").setRequired(true)
+      )
+  )
   .setDMPermission(false);
 
 export async function execute(ctx: CommandContext<ChatInputCommandInteraction>): Promise<void> {
@@ -192,6 +200,9 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
       break;
     case "remove-game-tier":
       await handleRemoveGameTier(ctx);
+      break;
+    case "patreon-grants":
+      await handlePatreonGrants(ctx);
       break;
     default:
       await interaction.reply({
@@ -703,4 +714,34 @@ async function handleRemoveGameTier(ctx: CommandContext<ChatInputCommandInteract
       flags: MessageFlags.Ephemeral,
     });
   }
+}
+
+async function handlePatreonGrants(ctx: CommandContext<ChatInputCommandInteraction>): Promise<void> {
+  const { interaction } = ctx;
+  const user = interaction.options.getUser("user", true);
+  const guildId = interaction.guild!.id;
+
+  const { getArtGrantsForUser, getArtLogForUser } = await import("../features/patreonArtRewards.js");
+
+  const grants = getArtGrantsForUser(guildId, user.id);
+  const logs = getArtLogForUser(guildId, user.id, 5);
+
+  const grantLines = grants.length > 0
+    ? grants.map((g) => `• **${g.art_type}**: ${g.quantity_granted} granted`).join("\n")
+    : "_No grants recorded_";
+
+  const logLines = logs.length > 0
+    ? logs.map((l) => `• <t:${l.created_at_s}:R> ${l.quantity}x ${l.art_type} (${l.patreon_tier})`).join("\n")
+    : "_No log entries_";
+
+  const embed = new EmbedBuilder()
+    .setTitle(`Patreon Art Grants — ${user.username}`)
+    .addFields(
+      { name: "Current Grant State", value: grantLines },
+      { name: "Recent Log", value: logLines },
+    )
+    .setColor(0xF96854)
+    .setTimestamp();
+
+  await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }

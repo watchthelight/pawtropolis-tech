@@ -5,7 +5,7 @@
 	import { slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import { subscribe, unsubscribe } from '$lib/stores/sse.svelte';
-	import type { SSEEvent, ReviewSubmittedPayload } from '$lib/types/events';
+	import type { SSEEvent } from '$lib/types/events';
 	import { getIsMobile } from '$lib/stores/viewport.svelte';
 	// PageHeader removed — title is inline with tabs
 	import EmptyState from '$lib/components/feedback/EmptyState.svelte';
@@ -24,39 +24,9 @@
 		invalidateTimer = setTimeout(() => invalidateAll(), 150);
 	}
 
-	// OS notification for new applications (only when tab is hidden)
-	async function onReviewSubmitted(event: SSEEvent) {
-		if (typeof document === 'undefined' || !document.hidden) return;
-		if (!('Notification' in window) || Notification.permission !== 'granted') return;
-		const payload = event.payload as ReviewSubmittedPayload;
-		const name = payload.applicantName ?? 'Someone';
-		const appId = payload.appId;
-
-		const reg = await Promise.race([
-			navigator.serviceWorker?.ready,
-			new Promise<undefined>((r) => setTimeout(() => r(undefined), 2000))
-		]);
-		if (reg) {
-			reg.showNotification('New Application', {
-				body: `${name} just submitted an application`,
-				icon: '/paw-logo.png',
-				data: { appId },
-				actions: [{ action: 'claim', title: 'Claim' }]
-			} as NotificationOptions);
-		} else {
-			const n = new Notification('New Application', {
-				body: `${name} just submitted an application`,
-				icon: '/paw-logo.png'
-			});
-			n.onclick = () => { window.focus(); n.close(); };
-		}
-	}
-
 	subscribe('review:*', onReviewEvent);
-	subscribe('review:submitted', onReviewSubmitted);
 	subscribe('modmail:*', onReviewEvent);
 	onDestroy(() => {
-		unsubscribe('review:submitted', onReviewSubmitted);
 		unsubscribe('review:*', onReviewEvent);
 		unsubscribe('modmail:*', onReviewEvent);
 		if (invalidateTimer) clearTimeout(invalidateTimer);
@@ -79,19 +49,33 @@
 	const urlTab = $page.url.searchParams.get('tab');
 	let activeTab = $state<TabId>(urlTab && VALID_TABS.includes(urlTab as TabId) ? urlTab as TabId : 'unclaimed');
 
+	// Filters
+	let filterFlagged = $state(false);
+	let filterHasModmail = $state(false);
+	let filterStale = $state(false);
+
 	let filteredItems = $derived.by(() => {
+		let items: typeof queue;
 		switch (activeTab) {
-			case 'unclaimed': return queue.filter(item => !item.claimedBy);
-			case 'mine': return queue
+			case 'unclaimed': items = queue.filter(item => !item.claimedBy); break;
+			case 'mine': items = queue
 				.filter(item => item.claimedBy === userId)
 				.sort((a, b) => {
 					if (a.hasUnreadModmail !== b.hasUnreadModmail) return a.hasUnreadModmail ? -1 : 1;
 					return (b.submittedAt ?? 0) - (a.submittedAt ?? 0);
-				});
-			case 'all': return queue;
+				}); break;
+			case 'all': items = queue; break;
 			case 'history': return [];
 		}
+
+		if (filterFlagged) items = items.filter(i => (i.riskScore ?? 0) > 50);
+		if (filterHasModmail) items = items.filter(i => i.hasUnreadModmail);
+		if (filterStale) items = items.filter(i => isAppStale(i));
+
+		return items;
 	});
+
+	let hasActiveFilters = $derived(filterFlagged || filterHasModmail || filterStale);
 
 	let isHistoryTab = $derived(activeTab === 'history');
 
@@ -153,6 +137,14 @@
 		if (glowTarget) updateGlow();
 	}
 
+	const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+	function isAppStale(item: typeof queue[number]): boolean {
+		const now = Date.now();
+		if (item.submittedAt && now - item.submittedAt > TWENTY_FOUR_HOURS) return true;
+		if (item.modmailAwaitingSince && now - item.modmailAwaitingSince > TWENTY_FOUR_HOURS) return true;
+		return false;
+	}
+
 	let isMobile = $derived(getIsMobile());
 	let hasSelectedApp = $derived($page.url.pathname !== '/dashboard/reviews');
 </script>
@@ -168,6 +160,24 @@
 		</div>
 		<TabBar active={activeTab} counts={tabCounts} onchange={(tab) => activeTab = tab} />
 	</div>
+	{#if !isHistoryTab}
+		<div class="filter-bar">
+			<button class="filter-chip" class:active={filterFlagged} onclick={() => filterFlagged = !filterFlagged}>
+				Flagged
+			</button>
+			<button class="filter-chip" class:active={filterHasModmail} onclick={() => filterHasModmail = !filterHasModmail}>
+				Has Modmail
+			</button>
+			<button class="filter-chip" class:active={filterStale} onclick={() => filterStale = !filterStale}>
+				Stale (24h+)
+			</button>
+			{#if hasActiveFilters}
+				<button class="filter-chip clear" onclick={() => { filterFlagged = false; filterHasModmail = false; filterStale = false; }}>
+					Clear
+				</button>
+			{/if}
+		</div>
+	{/if}
 
 	{#if isHistoryTab}
 		{#if history.length === 0}
@@ -279,6 +289,7 @@
 							claimedByAvatar={item.claimedByAvatar}
 							riskScore={item.riskScore}
 							hasUnreadModmail={item.hasUnreadModmail}
+							isStale={isAppStale(item)}
 							selected={selectedAppId() === item.id}
 							onclick={() => goto(`/dashboard/reviews/${item.id}`)}
 						/>
@@ -343,6 +354,39 @@
 		padding-bottom: 0;
 		margin-bottom: 0;
 		border-bottom: none;
+	}
+
+	.filter-bar {
+		display: flex;
+		gap: 0.375rem;
+		flex-wrap: wrap;
+		margin-bottom: 0.75rem;
+	}
+
+	.filter-chip {
+		padding: 0.25rem 0.625rem;
+		border-radius: 999px;
+		border: 1px solid var(--border-subtle, rgba(255,255,255,0.1));
+		background: transparent;
+		color: var(--text-secondary, #aaa);
+		font-size: 0.75rem;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+
+	.filter-chip:hover {
+		border-color: var(--text-secondary);
+	}
+
+	.filter-chip.active {
+		background: var(--accent, oklch(0.7 0.15 280));
+		color: var(--text-on-accent, #fff);
+		border-color: transparent;
+	}
+
+	.filter-chip.clear {
+		color: var(--status-danger, #ef4444);
+		border-color: var(--status-danger, #ef4444);
 	}
 
 	.review-layout {
@@ -552,6 +596,26 @@
 
 		.queue-wrapper {
 			width: 100%;
+		}
+
+		.reviews-header {
+			flex-direction: column;
+			align-items: stretch;
+			gap: 0.5rem;
+			margin-bottom: 1rem;
+		}
+
+		.reviews-title {
+			font-size: 1.25rem;
+		}
+
+		.queue-list {
+			gap: 0.75rem;
+			padding: 0.25rem 0;
+		}
+
+		.mobile-detail-wrapper {
+			border-radius: var(--radius-lg);
 		}
 	}
 

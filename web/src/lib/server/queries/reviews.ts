@@ -14,6 +14,7 @@ export interface ReviewQueueItem {
 	claimedAt: number | null;
 	riskScore: number;
 	hasUnreadModmail: boolean;
+	modmailAwaitingSince: number | null;
 }
 
 interface ReviewQueueRow {
@@ -29,6 +30,7 @@ interface ReviewQueueRow {
 	claimed_at: string | number | null;
 	risk_score: number;
 	has_unread_modmail: number;
+	modmail_awaiting_since: string | number | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -365,14 +367,37 @@ export function getReviewQueue(guildId: string): ReviewQueueItem[] {
 					AND mt.status = 'open'
 					AND mm.id = (SELECT MAX(mm2.id) FROM modmail_message mm2 WHERE mm2.ticket_id = mt.id)
 					AND mm.direction = 'to_staff'
-			) as has_unread_modmail
+			) as has_unread_modmail,
+			(
+				SELECT mm.created_at FROM modmail_ticket mt
+				INNER JOIN modmail_message mm ON mm.ticket_id = mt.id
+				WHERE mt.guild_id = a.guild_id AND mt.user_id = a.user_id
+					AND mt.status = 'open'
+					AND mm.id = (SELECT MAX(mm2.id) FROM modmail_message mm2 WHERE mm2.ticket_id = mt.id)
+					AND mm.direction = 'to_user'
+			) as modmail_awaiting_since
 		FROM application a
 		LEFT JOIN user_cache u ON u.guild_id = a.guild_id AND u.user_id = a.user_id
 		LEFT JOIN review_claim c ON a.id = c.app_id
 		LEFT JOIN user_cache ru ON ru.guild_id = a.guild_id AND ru.user_id = c.reviewer_id
 		LEFT JOIN avatar_scan s ON a.id = s.application_id
 		WHERE a.guild_id = ? AND a.status IN ('submitted', 'needs_info')
-		ORDER BY a.submitted_at DESC
+		ORDER BY
+			-- Unclaimed before claimed (unclaimed need attention)
+			CASE WHEN c.reviewer_id IS NULL THEN 0 ELSE 1 END ASC,
+			-- Flagged/high-risk applications first (risk_score > 50%)
+			CASE WHEN COALESCE(s.final_pct, 0) > 50 THEN 0 ELSE 1 END ASC,
+			-- Unread modmail needs response
+			CASE WHEN EXISTS (
+				SELECT 1 FROM modmail_ticket mt2
+				INNER JOIN modmail_message mm3 ON mm3.ticket_id = mt2.id
+				WHERE mt2.guild_id = a.guild_id AND mt2.user_id = a.user_id
+					AND mt2.status = 'open'
+					AND mm3.id = (SELECT MAX(mm4.id) FROM modmail_message mm4 WHERE mm4.ticket_id = mt2.id)
+					AND mm3.direction = 'to_staff'
+			) THEN 0 ELSE 1 END ASC,
+			-- Oldest first within each priority group
+			a.submitted_at ASC
 	`).all(guildId) as ReviewQueueRow[];
 
 	return rows.map((row) => ({
@@ -387,6 +412,41 @@ export function getReviewQueue(guildId: string): ReviewQueueItem[] {
 		claimedByAvatar: row.reviewer_avatar_url ?? null,
 		claimedAt: normalizeTimestamp(row.claimed_at),
 		riskScore: row.risk_score,
-		hasUnreadModmail: Boolean(row.has_unread_modmail)
+		hasUnreadModmail: Boolean(row.has_unread_modmail),
+		modmailAwaitingSince: normalizeTimestamp(row.modmail_awaiting_since)
 	}));
+}
+
+// ---------------------------------------------------------------------------
+// Vote Out info
+// ---------------------------------------------------------------------------
+
+export interface VoteOutVoter {
+	id: string;
+	name: string;
+}
+
+export interface VoteOutInfo {
+	count: number;
+	threshold: number;
+	voters: VoteOutVoter[];
+}
+
+export function getVoteOutInfo(appId: string, guildId: string): VoteOutInfo {
+	const cfgRow = db().prepare(
+		'SELECT vote_out_threshold FROM guild_config WHERE guild_id = ?'
+	).get(guildId) as { vote_out_threshold: number | null } | undefined;
+	const threshold = cfgRow?.vote_out_threshold ?? 2;
+
+	const voters = db().prepare(`
+		SELECT
+			vo.voter_id as id,
+			COALESCE(u.display_name, u.global_name, u.username, 'User ' || substr(vo.voter_id, -6)) as name
+		FROM vote_out vo
+		LEFT JOIN user_cache u ON u.user_id = vo.voter_id AND u.guild_id = ?
+		WHERE vo.app_id = ?
+		ORDER BY vo.created_at ASC
+	`).all(guildId, appId) as VoteOutVoter[];
+
+	return { count: voters.length, threshold, voters };
 }

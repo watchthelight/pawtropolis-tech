@@ -45,7 +45,11 @@ export type SSEEventType =
 	| 'audit:security_snapshot'
 	| 'audit:issue_acknowledged'
 	| 'audit:issue_unacknowledged'
-	| 'config:updated';
+	| 'config:updated'
+	| 'modmail:message_received'
+	| 'review:stale'
+	| 'review:queue_alert'
+	| 'review:vote_out';
 
 // ---------------------------------------------------------------------------
 // Typed payloads per event
@@ -207,6 +211,35 @@ export interface SSEEventMap {
 	'audit:issue_acknowledged': AuditIssueAcknowledgedPayload;
 	'audit:issue_unacknowledged': AuditIssueUnacknowledgedPayload;
 	'config:updated': ConfigUpdatedPayload;
+	'modmail:message_received': ModmailMessageReceivedPayload;
+	'review:stale': ReviewStalePayload;
+	'review:queue_alert': ReviewQueueAlertPayload;
+	'review:vote_out': ReviewVoteOutPayload;
+}
+
+export interface ModmailMessageReceivedPayload {
+	ticketId: string;
+	userId: string;
+	preview: string;
+}
+
+export interface ReviewStalePayload {
+	appIds: string[];
+	count: number;
+	hoursOld: number;
+}
+
+export interface ReviewQueueAlertPayload {
+	pendingCount: number;
+	threshold: number;
+}
+
+export interface ReviewVoteOutPayload {
+	appId: string;
+	voterId: string;
+	voterName: string;
+	voteCount: number;
+	threshold: number;
 }
 
 // ---------------------------------------------------------------------------

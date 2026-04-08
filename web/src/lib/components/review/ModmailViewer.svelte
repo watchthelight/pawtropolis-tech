@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import { invalidateAll } from '$app/navigation';
 	import type { ModmailThreadSummary } from '$lib/server/queries/modmail';
 	import { subscribe, unsubscribe } from '$lib/stores/sse.svelte';
@@ -20,9 +20,18 @@
 	let messageInput = $state('');
 	let sending = $state(false);
 	let sendError = $state<string | null>(null);
+
+	// Quick response templates
+	const TEMPLATES = [
+		{ label: 'Needs More Info', text: 'Hi! We need a bit more information before we can proceed with your application. Could you please clarify the following?' },
+		{ label: 'Awaiting Response', text: 'Hi! Just following up on our previous message. Please respond when you get a chance so we can continue processing your application.' },
+		{ label: 'Application Approved', text: 'Great news! Your application has been approved. Welcome to the community!' },
+		{ label: 'Application Denied', text: 'Thank you for your interest, but we have decided not to approve your application at this time.' },
+	];
+	let showTemplates = $state(false);
 	let actionLoading = $state<string | null>(null);
 	let actionError = $state<string | null>(null);
-	let messagesEnd: HTMLElement | undefined = $state();
+	let panelEl: HTMLElement | undefined = $state();
 
 	let botOnline = $derived(getBotOnline());
 
@@ -53,13 +62,22 @@
 		return `(${status}${date ? ' · ' + date : ''})`;
 	}
 
+	/** Scroll the last thread-messages container to its bottom */
 	function scrollToBottom() {
 		requestAnimationFrame(() => {
-			messagesEnd?.scrollIntoView({ behavior: 'smooth' });
+			if (!panelEl) return;
+			const containers = panelEl.querySelectorAll('.thread-messages');
+			const last = containers[containers.length - 1] as HTMLElement | undefined;
+			if (last) last.scrollTop = last.scrollHeight;
 		});
 	}
 
-	onMount(() => scrollToBottom());
+	/** Svelte action: scroll a container to its bottom on mount */
+	function autoScrollEnd(node: HTMLElement) {
+		requestAnimationFrame(() => {
+			node.scrollTop = node.scrollHeight;
+		});
+	}
 
 	async function handleSend() {
 		if (!messageInput.trim() || !openThread || sending) return;
@@ -194,7 +212,7 @@
 	});
 </script>
 
-<div class="modmail-panel">
+<div class="modmail-panel" bind:this={panelEl}>
 	{#if memberLeft}
 		<div class="member-left-warning">
 			<span class="member-left-icon">&#9888;</span>
@@ -233,7 +251,7 @@
 		{/if}
 		<div class="thread-block">
 			<div class="thread-header">Thread <CopyableId value={String(thread.id)} label="#" /> {threadMeta(thread)}</div>
-			<div class="thread-messages">
+			<div class="thread-messages" use:autoScrollEnd>
 				{#each thread.messages as msg (msg.id)}
 					<div class="message" class:message-staff={msg.direction === 'to_user'} class:message-user={msg.direction === 'to_staff'}>
 						<div class="message-bubble">
@@ -245,11 +263,24 @@
 			</div>
 		</div>
 	{/each}
-	<div bind:this={messagesEnd}></div>
 
 	<!-- Message input (only when open thread exists and member is in server) -->
 	{#if openThread && !memberLeft}
 		<div class="send-bar">
+			{#if showTemplates}
+				<div class="template-dropdown">
+					{#each TEMPLATES as tmpl}
+						<button class="template-option" onclick={() => { messageInput = tmpl.text; showTemplates = false; }}>
+							{tmpl.label}
+						</button>
+					{/each}
+				</div>
+			{/if}
+			<div class="send-row">
+				<button class="template-btn" onclick={() => showTemplates = !showTemplates} title="Quick responses" aria-label="Quick responses">
+					<svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"/></svg>
+				</button>
+			</div>
 			<textarea
 				class="send-input"
 				placeholder={!botOnline ? 'Bot offline...' : 'Type a message...'}
@@ -465,12 +496,67 @@
 	/* ── Send bar ─────────────────────────────────────────── */
 	.send-bar {
 		display: flex;
+		flex-wrap: wrap;
 		align-items: flex-end;
 		gap: 0.5rem;
 		margin-top: 0.75rem;
 		padding-top: 0.5rem;
 		border-top: 1px solid var(--border-holdfast);
 		position: relative;
+	}
+
+	.send-row {
+		display: flex;
+		align-items: center;
+	}
+
+	.template-btn {
+		background: none;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-sm);
+		color: var(--text-secondary);
+		padding: 0.375rem;
+		cursor: pointer;
+		transition: all 0.15s ease;
+		display: flex;
+		align-items: center;
+	}
+
+	.template-btn:hover {
+		color: var(--accent);
+		border-color: var(--accent);
+	}
+
+	.template-dropdown {
+		position: absolute;
+		bottom: 100%;
+		left: 0;
+		right: 0;
+		background: var(--surface-raised);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		padding: 0.25rem;
+		margin-bottom: 0.375rem;
+		z-index: 10;
+		box-shadow: var(--shadow-md);
+	}
+
+	.template-option {
+		display: block;
+		width: 100%;
+		text-align: left;
+		padding: 0.5rem 0.75rem;
+		border: none;
+		background: none;
+		color: var(--text-primary);
+		font-size: 0.8rem;
+		cursor: pointer;
+		border-radius: var(--radius-sm);
+		transition: background 0.1s ease;
+	}
+
+	.template-option:hover {
+		background: var(--accent-dim);
 	}
 
 	.send-input {
@@ -552,15 +638,35 @@
 	@media (max-width: 767px) {
 		.send-input {
 			font-size: 16px; /* prevent iOS auto-zoom */
+			min-height: 48px;
+			padding: 0.625rem 0.875rem;
 		}
 		.thread-messages {
-			max-height: 300px;
+			max-height: 50vh;
+		}
+		.message {
+			max-width: 88%;
+		}
+		.message-bubble {
+			padding: 0.625rem 0.875rem;
+		}
+		.message-content {
+			font-size: 0.9375rem;
+			line-height: 1.5;
+		}
+		.send-bar {
+			gap: 0.625rem;
+			margin-top: 1rem;
 		}
 		.send-btn {
-			min-height: 44px;
-			min-width: 44px;
-			width: 44px;
-			height: 44px;
+			min-height: 48px;
+			min-width: 48px;
+			width: 48px;
+			height: 48px;
+		}
+		.action-btn {
+			min-height: 40px;
+			padding: 0.375rem 0.75rem;
 		}
 	}
 

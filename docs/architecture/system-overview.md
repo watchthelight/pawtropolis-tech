@@ -44,7 +44,7 @@
 
 ### Commands Layer (`src/commands/*.ts`)
 
-Parses slash commands, validates options, and dispatches to feature modules. Uses Discord.js command handlers with permission checks.
+Parses slash commands, validates options, and dispatches to feature modules. Permission checks run before handler execution.
 
 **Key Files**:
 
@@ -59,13 +59,11 @@ Parses slash commands, validates options, and dispatches to feature modules. Use
 
 Manages application submission, claim/unclaim, approve/reject workflows. Tracks review history in `review_action` table.
 
-**Core Responsibilities**:
-
-- Validate application fields (age, reason length)
-- Prevent duplicate claims (atomic DB transactions)
-- Generate review cards with interactive buttons
-- Send DM notifications to applicants
-- Persist review history with free-text reasons
+- Validates application fields (age, reason length)
+- Prevents duplicate claims via atomic DB transactions
+- Generates review cards with interactive buttons
+- Sends DM notifications to applicants
+- Persists review history with free-text reasons
 
 **State Machine**:
 
@@ -77,29 +75,25 @@ Manages application submission, claim/unclaim, approve/reject workflows. Tracks 
 
 ### Modmail Module (`src/features/modmail.ts`)
 
-Routes DMs ↔ threads; tracks conversations in `open_modmail` table. Creates persistent threads in designated modmail channel.
+Routes DMs to staff threads and back; tracks conversations in `open_modmail` table. Creates persistent threads in the designated modmail channel.
 
-**Core Responsibilities**:
-
-- Create thread on first DM from user
-- Mirror messages bidirectionally (user DM ↔ staff thread)
-- Close/reopen threads via command or auto-archive
-- Link modmail threads to applications (`related_app_id`)
+- Creates a thread on first DM from a user
+- Mirrors messages in both directions (user DM to staff thread and back)
+- Closes/reopens threads via command or auto-archive
+- Links modmail threads to applications (`related_app_id`)
 
 **Known Issue**: Permission 50013 errors when bot lacks `SendMessagesInThreads`.
 
 ### Logger Module (`src/features/logger.ts`)
 
-Generates "pretty cards" (rich embeds) for all moderator actions and posts to guild-configured logging channel.
+Generates "pretty cards" (rich embeds) for all moderator actions and posts them to the guild-configured logging channel.
 
-**Core Responsibilities**:
+- Fetches logging channel from DB (`configs.logging_channel_id`) with env fallback
+- Builds color-coded embeds (green/red/blue/yellow)
+- Falls back to console logging when the channel is unreachable
+- Action types: `claim`, `unclaim`, `accept`, `reject`, `kick`, `modmail_open`, `modmail_close`, `config_change`
 
-- Fetch logging channel from DB (`configs.logging_channel_id`) or env fallback
-- Build color-coded embeds (green/red/blue/yellow)
-- Handle fallback when channel unreachable (log to console)
-- Track action types: `claim`, `unclaim`, `accept`, `reject`, `kick`, `modmail_open`, `modmail_close`, `config_change`
-
-**Note**: Logging channel is configurable via `/config set logging` and stored in the database.
+Logging channel is configurable via `/config set logging` and stored in the database.
 
 ### Analytics Module (`src/commands/stats/`)
 
@@ -285,26 +279,26 @@ db.transaction(() => {
 
 ## Actionable Recommendations
 
-### Architecture Improvements
+### Architecture
 
-1. **Add retry logic** to Discord API calls (DM sends, embed posts) with exponential backoff.
-2. **Implement circuit breaker** for Sentry (disable after N consecutive 403s).
-3. **Centralize config access** in dedicated `ConfigManager` class (cache guild configs in memory).
+- Add retry logic to Discord API calls (DM sends, embed posts) with exponential backoff
+- Circuit breaker for Sentry -- disable after N consecutive 403s
+- Centralize config access in a `ConfigManager` class that caches guild configs in memory
 
-### Observability Enhancements
+### Observability
 
-1. **Structured logging**: Replace `console.log` with JSON logs (include `timestamp`, `level`, `action`, `userId`).
-2. **Health check endpoint**: HTTP server on port 3000 returning `/health` (uptime, DB stats, last event timestamp).
-3. **Trace all command invocations** with OpenTelemetry spans (measure latency, identify bottlenecks).
+- Replace `console.log` with structured JSON logs (include `timestamp`, `level`, `action`, `userId`)
+- HTTP health check endpoint on port 3000 returning `/health` (uptime, DB stats, last event timestamp)
+- OpenTelemetry spans on all command invocations to measure latency and find bottlenecks
 
-### Database Optimization
+### Database
 
-1. **Add indexes** on `review_action.claimed_by`, `action_log.timestamp`, `open_modmail.user_id`.
-2. **Vacuum DB weekly**: `sqlite3 data.db "VACUUM;"` to reclaim space.
-3. **Implement DB migrations framework** (track applied migrations in `schema_migrations` table).
+- Add indexes on `review_action.claimed_by`, `action_log.timestamp`, `open_modmail.user_id`
+- Weekly vacuum: `sqlite3 data.db "VACUUM;"` to reclaim space
+- DB migrations framework to track applied migrations in `schema_migrations` table
 
 ### Error Recovery
 
-1. **Graceful degradation**: If logging channel unreachable, queue cards in DB (`pending_logs` table) and retry on next boot.
-2. **Auto-retry modmail sends**: If thread creation fails (50013), log warning and notify admin channel.
-3. **Validate permissions on startup**: Check bot has required permissions in review/modmail/logging channels; exit if missing.
+- If logging channel is unreachable, queue cards in DB (`pending_logs` table) and retry on next boot
+- Auto-retry modmail thread creation on 50013 failure; log warning and notify admin channel
+- Validate bot permissions in review/modmail/logging channels at startup; exit if missing

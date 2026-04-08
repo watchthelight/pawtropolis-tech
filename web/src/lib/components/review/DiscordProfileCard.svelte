@@ -424,4 +424,57 @@
 		width: 0.85rem;
 		height: 0.85rem;
 	}
+
+	@media (max-width: 767px) {
+		.dc-banner {
+			height: 72px;
+		}
+		.dc-avatar {
+			width: 60px;
+			height: 60px;
+		}
+		.dc-avatar-row {
+			margin-top: -30px;
+		}
+		.dc-displayname {
+			font-size: 1.0625rem;
+		}
+		.dc-username {
+			font-size: 0.8125rem;
+		}
+		.dc-identity {
+			padding: 0.375rem 0.875rem 0;
+		}
+		.dc-section {
+			padding: 0 0.875rem;
+		}
+		.dc-divider {
+			margin: 0.625rem 0.875rem;
+		}
+		.dc-bio {
+			font-size: 0.8125rem;
+			line-height: 1.5;
+		}
+		.dc-date {
+			font-size: 0.75rem;
+			min-height: 28px;
+		}
+		.dc-role {
+			font-size: 0.65rem;
+			min-height: 28px;
+		}
+		.dc-section-label-toggle {
+			min-height: 36px;
+		}
+		.dc-footer {
+			padding: 0.5rem 0.875rem;
+		}
+		.dc-refresh {
+			min-width: 44px;
+			min-height: 44px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+	}
 </style>

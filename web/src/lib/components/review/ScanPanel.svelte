@@ -56,6 +56,10 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ appId })
 			});
+			const contentType = res.headers.get('content-type') ?? '';
+			if (!contentType.includes('application/json')) {
+				throw new Error(`Bot API returned non-JSON (HTTP ${res.status})`);
+			}
 			const data = await res.json();
 			if (!data.success) throw new Error(data.error || 'Scan failed');
 			await invalidateAll();
@@ -75,6 +79,10 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ appId })
 			});
+			const contentType = res.headers.get('content-type') ?? '';
+			if (!contentType.includes('application/json')) {
+				throw new Error(`Bot API returned non-JSON (HTTP ${res.status})`);
+			}
 			const data = await res.json();
 			if (!data.success) throw new Error(data.error || 'Scan failed');
 			await invalidateAll();
@@ -265,5 +273,26 @@
 
 	@keyframes spin {
 		to { transform: rotate(360deg); }
+	}
+
+	@media (max-width: 767px) {
+		.score-grid {
+			gap: 0.5rem;
+		}
+		.score-cell {
+			padding: 0.5rem 0.625rem;
+		}
+		.score-value {
+			font-size: 1.125rem;
+		}
+		.scan-btn {
+			min-height: 44px;
+			font-size: 0.7rem;
+			padding: 0.5rem 0.625rem;
+		}
+		.scan-alert {
+			padding: 0.5rem 0.75rem;
+			font-size: 0.7rem;
+		}
 	}
 </style>

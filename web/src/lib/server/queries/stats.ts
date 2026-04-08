@@ -539,3 +539,188 @@ export function getPersonalStatsTrend(
 		avgSubmitToClaim: timeTrend(current.avgSubmitToClaimS, prevSubmitToClaim, window)
 	};
 }
+
+// ---------------------------------------------------------------------------
+// Per-Mod Decision Breakdown
+// ---------------------------------------------------------------------------
+
+export interface ModBreakdown {
+	modId: string;
+	total: number;
+	approvals: number;
+	rejections: number;
+	kicks: number;
+	approvalRate: number;
+	avgDecisionTimeS: number | null;
+}
+
+export function getModBreakdowns(guildId: string, windowStartS: number): ModBreakdown[] {
+	const rows = db()
+		.prepare(
+			`SELECT
+				actor_id as mod_id,
+				COUNT(*) as total,
+				SUM(CASE WHEN action = 'approve' THEN 1 ELSE 0 END) as approvals,
+				SUM(CASE WHEN action IN ('reject', 'perm_reject') THEN 1 ELSE 0 END) as rejections,
+				SUM(CASE WHEN action = 'kick' THEN 1 ELSE 0 END) as kicks,
+				AVG(CASE
+					WHEN action IN ('approve', 'reject', 'perm_reject', 'kick') THEN
+						created_at_s - COALESCE(
+							(SELECT MIN(c2.created_at_s) FROM action_log c2
+							 WHERE c2.app_id = action_log.app_id AND c2.action = 'claim'),
+							created_at_s
+						)
+					ELSE NULL
+				END) as avg_decision_time_s
+			FROM action_log
+			WHERE guild_id = ?
+				AND action IN ('approve', 'reject', 'perm_reject', 'kick')
+				AND created_at_s >= ?
+			GROUP BY actor_id
+			ORDER BY total DESC
+			LIMIT 20`
+		)
+		.all(guildId, windowStartS) as Array<{
+		mod_id: string;
+		total: number;
+		approvals: number;
+		rejections: number;
+		kicks: number;
+		avg_decision_time_s: number | null;
+	}>;
+
+	return rows.map((r) => ({
+		modId: r.mod_id,
+		total: r.total,
+		approvals: r.approvals,
+		rejections: r.rejections,
+		kicks: r.kicks,
+		approvalRate: r.total > 0 ? Math.round((r.approvals / r.total) * 100) : 0,
+		avgDecisionTimeS: r.avg_decision_time_s ? Math.round(r.avg_decision_time_s) : null
+	}));
+}
+
+// ---------------------------------------------------------------------------
+// Time-to-Decision Percentiles
+// ---------------------------------------------------------------------------
+
+export interface DecisionPercentiles {
+	p50: number | null;
+	p75: number | null;
+	p95: number | null;
+	count: number;
+}
+
+export function getDecisionPercentiles(guildId: string, windowStartS: number): DecisionPercentiles {
+	const rows = db()
+		.prepare(
+			`SELECT d.decision_time_s
+			FROM (
+				SELECT
+					a.app_id,
+					a.created_at_s - COALESCE(
+						(SELECT MIN(c.created_at_s) FROM action_log c
+						 WHERE c.app_id = a.app_id AND c.action = 'claim'),
+						a.created_at_s
+					) as decision_time_s
+				FROM action_log a
+				WHERE a.guild_id = ?
+					AND a.action IN ('approve', 'reject', 'perm_reject', 'kick')
+					AND a.created_at_s >= ?
+			) d
+			WHERE d.decision_time_s > 0
+			ORDER BY d.decision_time_s ASC`
+		)
+		.all(guildId, windowStartS) as Array<{ decision_time_s: number }>;
+
+	const count = rows.length;
+	if (count === 0) return { p50: null, p75: null, p95: null, count: 0 };
+
+	const p = (pct: number) => rows[Math.min(Math.floor(count * pct), count - 1)].decision_time_s;
+
+	return {
+		p50: Math.round(p(0.5)),
+		p75: Math.round(p(0.75)),
+		p95: Math.round(p(0.95)),
+		count
+	};
+}
+
+// ---------------------------------------------------------------------------
+// Invite Source Analytics
+// ---------------------------------------------------------------------------
+
+export interface InviteSourceStat {
+	code: string;
+	label: string | null;
+	inviterId: string | null;
+	count: number;
+}
+
+export function getInviteSourceBreakdown(guildId: string, windowStartS: number): InviteSourceStat[] {
+	return db()
+		.prepare(
+			`SELECT
+				COALESCE(u.invite_code, 'unknown') as code,
+				il.label,
+				u.inviter_id,
+				COUNT(*) as count
+			FROM invite_usage u
+			LEFT JOIN invite_label il ON il.guild_id = u.guild_id AND il.invite_code = u.invite_code
+			WHERE u.guild_id = ? AND u.joined_at_s >= ?
+			GROUP BY u.invite_code
+			ORDER BY count DESC
+			LIMIT 20`
+		)
+		.all(guildId, windowStartS) as InviteSourceStat[];
+}
+
+// ---------------------------------------------------------------------------
+// Application Funnel Metrics
+// ---------------------------------------------------------------------------
+
+export interface FunnelMetrics {
+	drafts: number;
+	submitted: number;
+	approved: number;
+	rejected: number;
+	kicked: number;
+	permRejected: number;
+	reapplications: number;
+}
+
+export function getApplicationFunnel(guildId: string, windowStartS: number): FunnelMetrics {
+	const row = db()
+		.prepare(
+			`SELECT
+				SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) as drafts,
+				SUM(CASE WHEN status IN ('submitted', 'needs_info', 'approved', 'rejected', 'kicked', 'perm_rejected') THEN 1 ELSE 0 END) as submitted,
+				SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
+				SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected,
+				SUM(CASE WHEN status = 'kicked' THEN 1 ELSE 0 END) as kicked,
+				SUM(CASE WHEN status = 'perm_rejected' THEN 1 ELSE 0 END) as perm_rejected
+			FROM application
+			WHERE guild_id = ? AND created_at >= datetime(?, 'unixepoch')`
+		)
+		.get(guildId, windowStartS) as { drafts: number; submitted: number; approved: number; rejected: number; kicked: number; perm_rejected: number } | undefined;
+
+	const reapps = db()
+		.prepare(
+			`SELECT COUNT(DISTINCT user_id) as count
+			FROM application
+			WHERE guild_id = ? AND created_at >= datetime(?, 'unixepoch')
+			GROUP BY user_id
+			HAVING COUNT(*) > 1`
+		)
+		.all(guildId, windowStartS) as Array<{ count: number }>;
+
+	return {
+		drafts: row?.drafts ?? 0,
+		submitted: row?.submitted ?? 0,
+		approved: row?.approved ?? 0,
+		rejected: row?.rejected ?? 0,
+		kicked: row?.kicked ?? 0,
+		permRejected: row?.perm_rejected ?? 0,
+		reapplications: reapps.length
+	};
+}

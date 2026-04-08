@@ -11,6 +11,7 @@
 	import Nav from '$lib/components/layout/Nav.svelte';
 	import ConnectionIndicator from '$lib/components/layout/ConnectionIndicator.svelte';
 	import Lightbox from '$lib/components/feedback/Lightbox.svelte';
+	import MobileDesktopOnly from '$lib/components/feedback/MobileDesktopOnly.svelte';
 	import { getToasts, dismissToast } from '$lib/stores/toast.svelte';
 
 	let { data, children } = $props();
@@ -41,6 +42,16 @@
 	// Mobile drawer
 	let isMobile = $derived(getIsMobile());
 	let drawerOpen = $state(false);
+	let isReviewsRoute = $derived(
+		$page.url.pathname === '/dashboard/reviews' ||
+		$page.url.pathname.startsWith('/dashboard/reviews/')
+	);
+	let isHomeRoute = $derived($page.url.pathname === '/dashboard');
+	let isArtRoute = $derived(
+		$page.url.pathname === '/dashboard/art' ||
+		$page.url.pathname.startsWith('/dashboard/art/')
+	);
+	let showMobileGate = $derived(isMobile && !isReviewsRoute && !isHomeRoute && !(isArtRoute && isArtist));
 
 	afterNavigate(() => { drawerOpen = false; });
 
@@ -55,6 +66,7 @@
 		{ href: '/dashboard',          minTier: 'gk' },
 		{ href: '/dashboard/reviews',  minTier: 'gk' },
 		{ href: '/dashboard/stats',    minTier: 'gk' },
+		{ href: '/dashboard/modmail',  minTier: 'gk' },
 		{ href: '/dashboard/pulse',    minTier: 'mod' },
 		{ href: '/dashboard/flags',    minTier: 'sm' },
 		{ href: '/dashboard/heatmap',  minTier: 'sm' },
@@ -92,15 +104,19 @@
 		if (Math.abs(dx) < 100 || Math.abs(dy) > Math.abs(dx) * 0.47) return;
 
 		const currentPath = $page.url.pathname;
+		// On mobile, only swipe between home and reviews
+		const swipeTargets = isMobile
+			? visiblePages.filter(href => href === '/dashboard' || href === '/dashboard/reviews')
+			: visiblePages;
 		// Match current page to its base nav item
-		const currentIdx = visiblePages.findIndex(href =>
+		const currentIdx = swipeTargets.findIndex(href =>
 			href === currentPath || (href !== '/dashboard' && currentPath.startsWith(href + '/'))
 		);
 		if (currentIdx === -1) return;
 
 		const nextIdx = dx < 0 ? currentIdx + 1 : currentIdx - 1;
-		if (nextIdx >= 0 && nextIdx < visiblePages.length) {
-			goto(visiblePages[nextIdx]);
+		if (nextIdx >= 0 && nextIdx < swipeTargets.length) {
+			goto(swipeTargets[nextIdx]);
 		}
 	}
 
@@ -143,9 +159,43 @@
 			.catch(() => {});
 	}
 
-	onMount(() => {
+	onMount(async () => {
+		// Request notification permission, then subscribe to push
 		if ('Notification' in window && Notification.permission === 'default') {
-			Notification.requestPermission();
+			await Notification.requestPermission();
+		}
+
+		if (
+			'Notification' in window &&
+			Notification.permission === 'granted' &&
+			'PushManager' in window &&
+			data.vapidPublicKey
+		) {
+			try {
+				const reg = await navigator.serviceWorker.ready;
+				let sub = await reg.pushManager.getSubscription();
+
+				if (!sub) {
+					// Convert base64url VAPID key to Uint8Array
+					const raw = atob(data.vapidPublicKey.replace(/-/g, '+').replace(/_/g, '/'));
+					const key = new Uint8Array(raw.length);
+					for (let i = 0; i < raw.length; i++) key[i] = raw.charCodeAt(i);
+
+					sub = await reg.pushManager.subscribe({
+						userVisibleOnly: true,
+						applicationServerKey: key
+					});
+				}
+
+				// Send subscription to server (upsert)
+				await fetch('/api/push/subscribe', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ subscription: sub.toJSON() })
+				});
+			} catch (err) {
+				console.warn('[Push] Subscription failed:', err);
+			}
 		}
 	});
 
@@ -183,7 +233,7 @@
 		class:sidebar-mobile={isMobile}
 		class:sidebar-mobile-open={isMobile && drawerOpen}
 	>
-		<Nav {user} collapsed={!isMobile && sidebarCollapsed} />
+		<Nav {user} {isArtist} collapsed={!isMobile && sidebarCollapsed} mobileOnly={isMobile} />
 	</aside>
 
 	{#if isMobile && drawerOpen}
@@ -205,11 +255,15 @@
 
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<main
-		class="flex-1 p-6 max-md:p-4 max-md:pt-[calc(var(--mobile-header-h)+0.75rem)]"
+		class="flex-1 p-6 max-md:px-3 max-md:pb-3 max-md:pt-[calc(var(--mobile-header-h)+0.5rem)]"
 		ontouchstart={isMobile ? onTouchStart : undefined}
 		ontouchend={isMobile ? onTouchEnd : undefined}
 	>
-		{@render children()}
+		{#if showMobileGate}
+			<MobileDesktopOnly />
+		{:else}
+			{@render children()}
+		{/if}
 	</main>
 
 	{#if tierToast}

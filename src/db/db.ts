@@ -84,6 +84,23 @@ const originalPrepare = db.prepare.bind(db);
   return statement;
 };
 
+// Slow transaction diagnostics — logs any transaction taking over 100ms
+const SLOW_TX_THRESHOLD_MS = 100;
+const originalTransaction = db.transaction.bind(db);
+(db as any).transaction = function timedTransaction<T>(fn: (...args: any[]) => T) {
+  const wrapped = originalTransaction((...args: any[]) => {
+    const start = performance.now();
+    const result = fn(...args);
+    const elapsed = performance.now() - start;
+    if (elapsed > SLOW_TX_THRESHOLD_MS) {
+      logger.warn({ elapsedMs: Math.round(elapsed), fn: fn.name || "(anonymous)" },
+        "[db] Slow transaction detected");
+    }
+    return result;
+  });
+  return wrapped;
+};
+
 // Bootstrap schema (M6-M9)
 // review_card: tracks where the staff-facing review message lives
 db.prepare(

@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <strong>Production-ready Discord bot for community gating and moderation</strong>
+  <strong>Discord bot for community gating and moderation</strong>
 </p>
 
 <p align="center">
@@ -36,20 +36,17 @@
 ---
 
 > **Staff? Read these first:**
-> - **[BOT-HANDBOOK](docs/BOT-HANDBOOK.md)** — Every command, explained
-> - **[MOD-QUICKREF](docs/MOD-QUICKREF.md)** — Cheat sheet for daily mod work
-> - **[PERMS-MATRIX](docs/PERMS-MATRIX.md)** — Who can run what
+> - **[BOT-HANDBOOK](docs/BOT-HANDBOOK.md)** -- Every command, explained
+> - **[MOD-QUICKREF](docs/MOD-QUICKREF.md)** -- Cheat sheet for daily mod work
+> - **[PERMS-MATRIX](docs/PERMS-MATRIX.md)** -- Who can run what
 
 ---
 
 ## Overview
 
-Pawtropolis Tech is a server-owned verification system that modernizes community onboarding through structured application flows. It replaces manual DM-based screening with an elegant, permission-gated workflow that keeps staff accountable and applicants informed.
+Pawtropolis Tech is a server-owned verification system that handles community onboarding through structured application flows. It replaces manual DM-based screening with a permission-gated workflow so staff stay accountable and applicants stay informed.
 
-**Core Philosophy:**
-- Transparency over opacity
-- Auditability over trust
-- Minimal surface area over feature bloat
+Every review action is logged, every decision is attributable, and the bot stays out of the way when it has no work to do.
 
 ---
 
@@ -174,17 +171,13 @@ For full command reference, see [docs/BOT-HANDBOOK.md](docs/BOT-HANDBOOK.md).
 
 ## License
 
-Licensed under the **Attribution–No Wholesale Copying License (ANW-1.0)**.
+Licensed under the **Attribution-No Wholesale Copying License (ANW-1.0)**.
 
-You are free to use and modify the code for your own projects with proper attribution. You may not redistribute the entire project as-is or rebrand it as your own work.
+You can use and modify the code for your own projects with proper attribution. You cannot redistribute the entire project as-is or rebrand it as your own work.
 
 See [LICENSE](LICENSE) for full terms.
 
 ---
-
-<p align="center">
-  <strong>Built with care for communities that care about moderation.</strong>
-</p>
 
 <p align="center">
   <a href="https://github.com/watchthelight">watchthelight</a> &bull;

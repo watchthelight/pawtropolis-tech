@@ -9,6 +9,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 
 	return {
 		user: locals.user,
-		isArtist: (locals.user.roles ?? []).includes(ROLE_IDS.SERVER_ARTIST)
+		isArtist: (locals.user.roles ?? []).includes(ROLE_IDS.SERVER_ARTIST),
+		vapidPublicKey: process.env.VAPID_PUBLIC_KEY || null
 	};
 };

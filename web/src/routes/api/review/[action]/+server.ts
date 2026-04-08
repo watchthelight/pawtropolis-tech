@@ -3,7 +3,7 @@ import type { RequestHandler } from './$types';
 import { callBotApi } from '$lib/server/botApi';
 import { hasMinTier } from '$lib/server/roles';
 
-const VALID_ACTIONS = ['claim', 'unclaim', 'approve', 'reject', 'wrong_password', 'kick', 'permreject'] as const;
+const VALID_ACTIONS = ['claim', 'unclaim', 'approve', 'reject', 'wrong_password', 'stale_modmail', 'kick', 'permreject', 'vote_out'] as const;
 type ReviewAction = (typeof VALID_ACTIONS)[number];
 
 const REASON_REQUIRED: ReviewAction[] = ['kick', 'permreject'];

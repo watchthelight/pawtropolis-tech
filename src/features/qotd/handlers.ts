@@ -44,7 +44,7 @@ function requireStaff(interaction: ButtonInteraction | ModalSubmitInteraction): 
   if (!interaction.inGuild() || !interaction.guildId) {
     interaction
       .reply({ flags: MessageFlags.Ephemeral, content: "Guild only." })
-      .catch(() => {});
+      .catch((err) => { logger.warn({ err }, "[qotd] guild-only reply failed"); });
     return false;
   }
   const member = interaction.member as GuildMember | null;
@@ -54,7 +54,7 @@ function requireStaff(interaction: ButtonInteraction | ModalSubmitInteraction): 
         flags: MessageFlags.Ephemeral,
         content: "You do not have the Gatekeeper role required for this action.",
       })
-      .catch(() => {});
+      .catch((err) => { logger.warn({ err }, "[qotd] permission denied reply failed"); });
     return false;
   }
   return true;
@@ -122,7 +122,7 @@ export async function handleQotdButton(interaction: ButtonInteraction): Promise<
   if (!requireStaff(interaction)) return;
 
   if (!interaction.deferred && !interaction.replied) {
-    await interaction.deferUpdate().catch(() => {});
+    await interaction.deferUpdate().catch((err) => { logger.warn({ err }, "[qotd] approve deferUpdate failed"); });
   }
 
   const suggestion = getSuggestionByCode(interaction.guildId!, code);
@@ -285,7 +285,7 @@ export async function handleQotdRejectModal(
   if (!requireStaff(interaction)) return;
 
   if (!interaction.deferred && !interaction.replied) {
-    await interaction.deferUpdate().catch(() => {});
+    await interaction.deferUpdate().catch((err) => { logger.warn({ err }, "[qotd] reject deferUpdate failed"); });
   }
 
   const reason = interaction.fields.getTextInputValue("reason").trim();
@@ -296,7 +296,7 @@ export async function handleQotdRejectModal(
     await interaction.followUp({
       flags: MessageFlags.Ephemeral,
       content: "Suggestion not found.",
-    }).catch(() => {});
+    }).catch((err) => { logger.warn({ err }, "[qotd] suggestion-not-found followUp failed"); });
     return;
   }
 
@@ -304,7 +304,7 @@ export async function handleQotdRejectModal(
     await interaction.followUp({
       flags: MessageFlags.Ephemeral,
       content: "This suggestion has already been resolved.",
-    }).catch(() => {});
+    }).catch((err) => { logger.warn({ err }, "[qotd] already-resolved followUp failed"); });
     return;
   }
 
@@ -313,7 +313,7 @@ export async function handleQotdRejectModal(
     await interaction.followUp({
       flags: MessageFlags.Ephemeral,
       content: "Failed to reject — suggestion may have been resolved by someone else.",
-    }).catch(() => {});
+    }).catch((err) => { logger.warn({ err }, "[qotd] reject-failed followUp failed"); });
     return;
   }
 

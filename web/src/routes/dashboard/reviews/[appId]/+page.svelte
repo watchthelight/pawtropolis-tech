@@ -11,6 +11,7 @@
 	let canAdminUnclaim = $derived(data.canAdminUnclaim);
 	let cachedProfile = $derived(data.cachedProfile);
 	let priorDecisions = $derived(data.priorDecisions);
+	let voteOutInfo = $derived(data.voteOutInfo);
 
 	let isMobile = $derived(getIsMobile());
 
@@ -43,7 +44,7 @@
 {/if}
 
 <SpringReveal stagger={30}>
-	<AppDetail {app} {modmail} {sessionUserId} {canAdminUnclaim} {cachedProfile} {priorDecisions} />
+	<AppDetail {app} {modmail} {sessionUserId} {canAdminUnclaim} {cachedProfile} {priorDecisions} {voteOutInfo} />
 </SpringReveal>
 
 <style>
@@ -51,15 +52,17 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 0.5rem 0;
-		margin-bottom: 0.5rem;
+		padding: 0.625rem 0;
+		margin-bottom: 0.75rem;
+		border-bottom: 1px solid var(--border-holdfast);
 	}
 
 	.mobile-back-link {
 		display: flex;
 		align-items: center;
 		gap: 0.375rem;
-		font-size: 0.8rem;
+		font-size: 0.875rem;
+		font-weight: 500;
 		color: var(--accent);
 		text-decoration: none;
 		min-height: 44px;
@@ -79,8 +82,10 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 36px;
-		height: 36px;
+		width: 40px;
+		height: 40px;
+		min-height: 44px;
+		min-width: 44px;
 		border-radius: var(--radius-sm);
 		background: var(--surface-raised);
 		border: 1px solid var(--border-holdfast);

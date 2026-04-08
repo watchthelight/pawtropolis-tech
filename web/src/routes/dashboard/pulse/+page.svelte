@@ -16,6 +16,10 @@
 	let newsletterStats = $derived(data.newsletterStats);
 	let guildSnapshot = $derived(data.guildSnapshot);
 	let topVoiceChannels = $derived(data.topVoiceChannels);
+	let channelRanking = $derived(data.channelRanking ?? []);
+	let topChannels = $derived(channelRanking.slice(0, 10));
+	let bottomChannels = $derived(channelRanking.length > 10 ? channelRanking.slice(-10).reverse() : []);
+	let maxChannelMsgs = $derived(topChannels.length > 0 ? topChannels[0].messageCount : 1);
 	let levelRoleStats = $derived(data.levelRoleStats);
 	let maxRoleCount = $derived(levelRoleStats ? Math.max(...levelRoleStats.roles.map((r: { count: number }) => r.count), 1) : 1);
 	let pendingTrend = $derived<'up' | 'down' | undefined>(
@@ -217,6 +221,46 @@
 			<span class="card-sub">100+ msgs in last 14 days</span>
 		</a>
 	</div>
+
+	{#if topChannels.length > 0}
+		<h3 class="section-title">Channel Activity (7 days)</h3>
+		<div class="channel-ranking-grid">
+			<div class="card channel-rank-card">
+				<h4 class="rank-heading rank-hot">Most Active</h4>
+				<div class="rank-list">
+					{#each topChannels as ch, i}
+						<div class="rank-row">
+							<span class="rank-num">#{i + 1}</span>
+							<span class="rank-name">#{ch.channelName}</span>
+							<span class="rank-bar-wrap">
+								<span class="rank-bar rank-bar-hot" style:width="{Math.max((ch.messageCount / maxChannelMsgs) * 100, 4)}%"></span>
+							</span>
+							<span class="rank-count">{ch.messageCount.toLocaleString()}</span>
+							<span class="rank-users">{ch.uniqueUsers} users</span>
+						</div>
+					{/each}
+				</div>
+			</div>
+			{#if bottomChannels.length > 0}
+				<div class="card channel-rank-card">
+					<h4 class="rank-heading rank-cold">Least Active</h4>
+					<div class="rank-list">
+						{#each bottomChannels as ch, i}
+							<div class="rank-row">
+								<span class="rank-num">#{channelRanking.length - 9 + i}</span>
+								<span class="rank-name">#{ch.channelName}</span>
+								<span class="rank-bar-wrap">
+									<span class="rank-bar rank-bar-cold" style:width="{Math.max((ch.messageCount / maxChannelMsgs) * 100, 4)}%"></span>
+								</span>
+								<span class="rank-count">{ch.messageCount.toLocaleString()}</span>
+								<span class="rank-users">{ch.uniqueUsers} users</span>
+							</div>
+						{/each}
+					</div>
+				</div>
+			{/if}
+		</div>
+	{/if}
 
 	{#if levelRoleStats && levelRoleStats.roles.length > 0}
 		<h3 class="section-title">Level Roles</h3>
@@ -487,5 +531,88 @@
 		th.col-bar {
 			display: none;
 		}
+
+		.channel-ranking-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	/* Channel Activity Ranking */
+	.channel-ranking-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.75rem;
+		margin-bottom: 1.5rem;
+	}
+
+	.channel-rank-card {
+		padding: 1rem;
+	}
+
+	.rank-heading {
+		font-size: 0.8rem;
+		font-weight: 600;
+		letter-spacing: 0.03em;
+		margin-bottom: 0.75rem;
+	}
+
+	.rank-hot { color: var(--status-success, #22c55e); }
+	.rank-cold { color: var(--text-tertiary, #666); }
+
+	.rank-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.375rem;
+	}
+
+	.rank-row {
+		display: grid;
+		grid-template-columns: 1.5rem 1fr 4rem 2.5rem 3.5rem;
+		align-items: center;
+		gap: 0.375rem;
+		font-size: 0.75rem;
+	}
+
+	.rank-num {
+		color: var(--text-tertiary);
+		font-weight: 500;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.rank-name {
+		color: var(--text-primary);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.rank-bar-wrap {
+		height: 6px;
+		border-radius: 3px;
+		background: var(--surface-raised, rgba(255,255,255,0.05));
+		overflow: hidden;
+	}
+
+	.rank-bar {
+		display: block;
+		height: 100%;
+		border-radius: 3px;
+		transition: width 0.3s ease;
+	}
+
+	.rank-bar-hot { background: var(--status-success, #22c55e); }
+	.rank-bar-cold { background: var(--text-tertiary, #555); }
+
+	.rank-count {
+		text-align: right;
+		font-weight: 500;
+		color: var(--text-primary);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.rank-users {
+		text-align: right;
+		color: var(--text-tertiary);
+		font-size: 0.65rem;
 	}
 </style>

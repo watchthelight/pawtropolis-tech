@@ -10,9 +10,9 @@ You review applications and decide who gets into the server.
 
 ### The Gate System
 
-This is your bread and butter. When someone wants to join the server, they fill out an application. You review it and decide: accept, reject, or kick.
+When someone wants to join the server, they fill out an application. You review it and decide whether to accept, reject, or kick.
 
-**The flow:**
+**How it works:**
 1. Someone clicks Verify in the gate channel
 2. A review card appears in your staff channel
 3. You claim it (so others know you're handling it)
@@ -56,7 +56,7 @@ This is your bread and butter. When someone wants to join the server, they fill 
 
 ### Flagging Suspicious Users
 
-See something off? Flag them for other staff to notice.
+If something looks off about a user, flag them so other staff can see it.
 
 **Command:**
 - `/flag user:@Username reason:Why they're suspicious`
@@ -75,7 +75,7 @@ Flagged users get a warning indicator on their review card. Good reasons to flag
 
 ### AI Detection
 
-Someone submitted art that looks AI-generated? Check it.
+You can scan submitted art to check whether it's AI-generated.
 
 **Command:**
 - `/isitreal message:<message_id_or_link>` — Scans images for AI generation
@@ -92,7 +92,7 @@ The bot uses multiple detection services and shows confidence scores. Not perfec
 
 ### Checking Your Stats
 
-Curious how you're doing? The bot tracks your reviews.
+The bot tracks your review activity.
 
 **Commands:**
 - `/stats user moderator:@YourName` — Your personal stats
@@ -115,9 +115,9 @@ Stats include:
 - `/help` — Interactive help browser (search or browse by category)
 - `/health` — Check if the bot is running properly
 
-**Something broken?** Check the [Troubleshooting section](../BOT-HANDBOOK.md#troubleshooting) in the handbook.
+**If something's broken**, check the [Troubleshooting section](../BOT-HANDBOOK.md#troubleshooting) in the handbook.
 
-**Still stuck?** Ask in staff chat. Include:
+**If that doesn't help**, ask in staff chat. Include:
 - What you were trying to do
 - What happened instead
 - The application code (like `A1B2C3`) if relevant

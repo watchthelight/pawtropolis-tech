@@ -4,7 +4,7 @@
 
 ## Executive Summary
 
-**Pawtropolis Tech** (v5.1.1) is a production-grade Discord bot backend for the Pawtropolis server, built as a monolithic TypeScript application. It serves as a community gatekeeping, moderation, and engagement platform with sophisticated application review workflows, event tracking, artist coordination, and security auditing capabilities.
+**Pawtropolis Tech** (v5.1.1) is a Discord bot backend for the Pawtropolis server, built as a monolithic TypeScript application. It handles community gatekeeping, moderation, and engagement -- including application review workflows, event tracking, artist coordination, and security auditing.
 
 The bot is actively deployed on an Ubuntu EC2 instance (`34.193.75.138`) managed via PM2, with automated deployment via custom shell scripts and CI/CD through GitHub Actions.
 
@@ -50,10 +50,10 @@ The bot is actively deployed on an Ubuntu EC2 instance (`34.193.75.138`) managed
 ## Core Feature Areas
 
 ### 1. Application Gatekeeping
-Multi-page questionnaire modals for new member verification with draft recovery, reviewer dashboards, claim-based review workflow, and automated role assignment.
+Multi-page questionnaire modals for new member verification. Includes draft recovery, reviewer dashboards, claim-based review workflow, and automated role assignment.
 
 ### 2. Moderation System
-Modmail (DM-to-thread routing), moderator performance analytics, security audit snapshots, flagging system, and comprehensive action logging.
+Modmail (DM-to-thread routing), moderator performance analytics, security audit snapshots, flagging system, and full action logging.
 
 ### 3. Event Management
 Movie night and game night tracking with voice channel attendance monitoring, qualification thresholds, tier-based role rewards, and manual credit/adjustment support.
@@ -65,7 +65,7 @@ Queue-based artist assignment system with rotation tracking, job management, lea
 Google Cloud Vision integration for avatar NSFW detection, multiple AI content detection APIs (Hive, SightEngine, RapidAI, Optic), and configurable thresholds.
 
 ### 6. Analytics & Observability
-Activity heatmaps, moderator statistics, approval rate tracking, structured logging via Pino, and Sentry error/performance monitoring.
+Activity heatmaps, moderator statistics, approval rate tracking. Structured logging via Pino and Sentry error/performance monitoring.
 
 ### 7. Scheduled Background Tasks
 7 schedulers for event timeouts, security audits, byte multiplier expiration, disk space monitoring, stale application cleanup, moderator metrics, and health checks.

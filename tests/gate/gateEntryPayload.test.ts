@@ -15,6 +15,7 @@ describe("gate entry payload", () => {
     const guild = {
       name: "Neon City",
       iconURL: () => "https://cdn.discordapp.com/icons/neon-city/icon.png",
+      bannerURL: () => null,
     } as unknown as Guild;
 
     const payload = buildGateEntryPayload({ guild });

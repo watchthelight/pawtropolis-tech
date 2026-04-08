@@ -5,24 +5,52 @@ declare const self: ServiceWorkerGlobalScope;
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
 
+// ---------------------------------------------------------------------------
+// Web Push: receive server-sent push notifications
+// ---------------------------------------------------------------------------
+
+self.addEventListener('push', (event) => {
+	if (!event.data) return;
+
+	let payload: { title: string; body: string; icon?: string; data?: Record<string, unknown>; actions?: Array<{ action: string; title: string }> };
+	try {
+		payload = event.data.json();
+	} catch {
+		return;
+	}
+
+	event.waitUntil(
+		self.registration.showNotification(payload.title, {
+			body: payload.body,
+			icon: payload.icon || '/icons/icon-192.png',
+			badge: '/icons/icon-192.png',
+			data: payload.data,
+			actions: payload.actions
+		})
+	);
+});
+
+// ---------------------------------------------------------------------------
+// Notification click: navigate to the relevant dashboard page
+// ---------------------------------------------------------------------------
+
 self.addEventListener('notificationclick', (event) => {
-	const { appId } = event.notification.data ?? {};
+	const { url, appId } = event.notification.data ?? {};
 	event.notification.close();
 
-	if (!appId) return;
-
-	if (event.action === 'claim') {
+	// "Claim" action: POST to API then navigate
+	if (event.action === 'claim' && appId) {
 		event.waitUntil(
 			fetch('/api/review/claim', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ appId })
 			})
-				.then(() => focusOrOpen(`/dashboard/reviews/${appId}`))
-				.catch(() => focusOrOpen(`/dashboard/reviews/${appId}`))
+				.then(() => focusOrOpen(url || `/dashboard/reviews/${appId}`))
+				.catch(() => focusOrOpen(url || `/dashboard/reviews/${appId}`))
 		);
 	} else {
-		event.waitUntil(focusOrOpen(`/dashboard/reviews/${appId}`));
+		event.waitUntil(focusOrOpen(url || '/dashboard'));
 	}
 });
 

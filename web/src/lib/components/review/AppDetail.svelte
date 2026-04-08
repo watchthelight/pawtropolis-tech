@@ -8,7 +8,7 @@
 	import CopyableId from '$lib/components/data/CopyableId.svelte';
 	import ModmailViewer from '$lib/components/review/ModmailViewer.svelte';
 	import DiscordProfileCard from '$lib/components/review/DiscordProfileCard.svelte';
-	import type { CachedProfile } from '$lib/server/queries/reviews';
+	import type { CachedProfile, VoteOutInfo } from '$lib/server/queries/reviews';
 	import { setBotOffline, setBotOnline, getBotOnline } from '$lib/stores/bot-status.svelte';
 	import { getIsMobile } from '$lib/stores/viewport.svelte';
 	import { relativeTime } from '$lib/utils/time';
@@ -20,7 +20,8 @@
 		sessionUserId = null,
 		canAdminUnclaim = false,
 		cachedProfile = null,
-		priorDecisions = []
+		priorDecisions = [],
+		voteOutInfo = { count: 0, threshold: 2, voters: [] }
 	}: {
 		app: ApplicationDetail;
 		modmail?: ModmailThreadSummary[];
@@ -28,13 +29,14 @@
 		canAdminUnclaim?: boolean;
 		cachedProfile?: CachedProfile | null;
 		priorDecisions?: PriorDecision[];
+		voteOutInfo?: VoteOutInfo;
 	} = $props();
 
 	let claimLoading = $state(false);
 	let claimError = $state<string | null>(null);
 	let detailBody: HTMLElement;
 	let isMobile = $derived(getIsMobile());
-	let profileExpanded = $state(false);
+	let profileExpanded = $state(true);
 
 	// Flip state: 'answers' (front) or 'modmail' (back)
 	let showModmail = $state(false);
@@ -84,11 +86,57 @@
 
 	let botOnline = $derived(getBotOnline());
 	const REVIEWABLE_STATUSES = ['submitted', 'needs_info'];
+	const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+	let isStale = $derived(app.submittedAt != null && now - app.submittedAt > TWENTY_FOUR_HOURS);
 	let isReviewable = $derived(REVIEWABLE_STATUSES.includes(app.status));
 	let isClaimedByMe = $derived(isReviewable && app.claimedBy != null && app.claimedBy === sessionUserId);
 	let isClaimedByOther = $derived(isReviewable && app.claimedBy != null && app.claimedBy !== sessionUserId);
 	let isUnclaimed = $derived(isReviewable && app.claimedBy == null);
 	let isResolved = $derived(!isReviewable);
+
+	// === Vote Out ===
+
+	let hasVoted = $derived(voteOutInfo.voters.some(v => v.id === sessionUserId));
+	let voteOutLoading = $state(false);
+	let voteOutError = $state<string | null>(null);
+
+	async function handleVoteOut() {
+		if (voteOutLoading || hasVoted) return;
+		voteOutLoading = true;
+		voteOutError = null;
+		try {
+			const res = await fetch('/api/review/vote_out', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ appId: app.id })
+			});
+			const result = await res.json();
+			if (!result.success) {
+				voteOutError = result.error;
+				voteOutLoading = false;
+				return;
+			}
+			setBotOnline();
+			voteOutLoading = false;
+			if (result.data?.thresholdMet) {
+				decisionDone = 'Voted Out';
+				if (detailBody) {
+					gsap.to(detailBody, {
+						x: 80, opacity: 0, duration: 0.35, ease: 'power2.in',
+						onComplete: () => goto('/dashboard/reviews?tab=unclaimed')
+					});
+				} else {
+					setTimeout(() => goto('/dashboard/reviews?tab=unclaimed'), 400);
+				}
+			} else {
+				await invalidateAll();
+			}
+		} catch {
+			voteOutError = 'Failed to connect';
+			setBotOffline();
+			voteOutLoading = false;
+		}
+	}
 
 	function claimAgeColor(claimedAt: number | null): string {
 		if (!claimedAt) return 'var(--text-secondary)';
@@ -153,7 +201,7 @@
 
 	// === Decision Actions ===
 
-	type DecisionAction = 'approve' | 'reject' | 'wrong_password' | 'kick' | 'permreject';
+	type DecisionAction = 'approve' | 'reject' | 'wrong_password' | 'stale_modmail' | 'kick' | 'permreject';
 
 	let activeAction = $state<DecisionAction | null>(null);
 	let reasonText = $state('');
@@ -168,8 +216,8 @@
 		activeAction = action;
 		reasonText = '';
 		decisionError = null;
-		if (action === 'wrong_password') {
-			executeDecision('wrong_password');
+		if (action === 'wrong_password' || action === 'stale_modmail') {
+			executeDecision(action);
 			return;
 		}
 		requestAnimationFrame(() => reasonInput?.focus());
@@ -234,7 +282,7 @@
 			}
 
 			setBotOnline();
-			const labels: Record<DecisionAction, string> = { approve: 'Approved', reject: 'Rejected', wrong_password: 'Rejected (Wrong Password)', kick: 'Kicked', permreject: 'Permanently Rejected' };
+			const labels: Record<DecisionAction, string> = { approve: 'Approved', reject: 'Rejected', wrong_password: 'Rejected (Wrong Password)', stale_modmail: 'Rejected (Stale Modmail)', kick: 'Kicked', permreject: 'Permanently Rejected' };
 			decisionDone = labels[action];
 			decisionError = null;
 			activeAction = null;
@@ -380,8 +428,8 @@
 	<div class="action-bar">
 		{#if decisionDone}
 			<span class="decision-done">{decisionDone}</span>
-		{:else if claimError || decisionError}
-			<span class="claim-error">{claimError || decisionError}</span>
+		{:else if claimError || decisionError || voteOutError}
+			<span class="claim-error">{claimError || decisionError || voteOutError}</span>
 		{/if}
 
 		{#if decisionDone}
@@ -407,6 +455,9 @@
 			<button class="btn btn-claim" onclick={handleClaim} disabled={claimLoading || !botOnline}>
 				{claimLoading ? 'Claiming...' : !botOnline ? 'Bot offline' : 'Claim'}
 			</button>
+			<button class="btn btn-vote-out" onclick={handleVoteOut} disabled={voteOutLoading || hasVoted || !botOnline}>
+				{hasVoted ? 'Voted' : voteOutLoading ? 'Voting...' : `Vote Out (${voteOutInfo.count}/${voteOutInfo.threshold})`}
+			</button>
 		{:else if isClaimedByMe}
 			<button class="btn btn-unclaim" onclick={handleUnclaim} disabled={claimLoading || decisionLoading || !botOnline}>
 				{claimLoading ? 'Releasing...' : 'Unclaim'}
@@ -417,10 +468,16 @@
 				</button>
 				<button class="btn btn-reject" onclick={() => startDecision('reject')} disabled={decisionLoading || !botOnline}>Reject</button>
 				<button class="btn btn-reject" onclick={() => startDecision('wrong_password')} disabled={decisionLoading || !botOnline}>Wrong Password</button>
+				{#if isStale}
+					<button class="btn btn-stale-modmail" onclick={() => startDecision('stale_modmail')} disabled={decisionLoading || !botOnline}>Stale Modmail</button>
+				{/if}
 				<button class="btn btn-kick" onclick={() => startDecision('kick')} disabled={decisionLoading || !botOnline}>Kick</button>
 				{#if canAdminUnclaim}
 					<button class="btn btn-permreject" onclick={() => startDecision('permreject')} disabled={decisionLoading || !botOnline}>Perm Reject</button>
 				{/if}
+				<button class="btn btn-vote-out" onclick={handleVoteOut} disabled={voteOutLoading || hasVoted || !botOnline}>
+					{hasVoted ? 'Voted' : voteOutLoading ? 'Voting...' : `Vote Out (${voteOutInfo.count}/${voteOutInfo.threshold})`}
+				</button>
 			</div>
 		{:else if isResolved}
 			<span class="action-resolved">
@@ -439,11 +496,21 @@
 			<button class="btn btn-admin-unclaim" onclick={handleUnclaim} disabled={claimLoading || !botOnline}>
 				{claimLoading ? 'Releasing...' : !botOnline ? 'Bot offline' : 'Unclaim (Admin)'}
 			</button>
+			<button class="btn btn-vote-out" onclick={handleVoteOut} disabled={voteOutLoading || hasVoted || !botOnline}>
+				{hasVoted ? 'Voted' : voteOutLoading ? 'Voting...' : `Vote Out (${voteOutInfo.count}/${voteOutInfo.threshold})`}
+			</button>
 		{:else}
 			<span class="action-placeholder">
 				{#if app.claimedByAvatar}<img src={app.claimedByAvatar} alt="" class="claimer-avatar" />{/if}
 				Claimed by {app.claimedByName ?? 'unknown'}
 			</span>
+			<button class="btn btn-vote-out" onclick={handleVoteOut} disabled={voteOutLoading || hasVoted || !botOnline}>
+				{hasVoted ? 'Voted' : voteOutLoading ? 'Voting...' : `Vote Out (${voteOutInfo.count}/${voteOutInfo.threshold})`}
+			</button>
+		{/if}
+
+		{#if !isResolved && voteOutInfo.voters.length > 0}
+			<span class="vote-out-voters">{voteOutInfo.voters.map(v => v.name).join(', ')}</span>
 		{/if}
 	</div>
 </div>
@@ -624,7 +691,9 @@
 	.btn-approve { background: var(--status-success); color: var(--bg); }
 	.btn-reject { background: var(--status-warning); color: var(--bg); }
 	.btn-kick { background: var(--status-danger); color: var(--bg); }
+	.btn-stale-modmail { background: var(--status-danger); color: var(--bg); }
 	.btn-permreject { background: var(--bg); color: var(--status-danger); border: 2px solid var(--status-danger); font-weight: 700; }
+	.btn-vote-out { background: var(--bg); color: var(--status-danger); border: 2px solid var(--status-danger); }
 	.btn-cancel { background: var(--surface-raised); color: var(--text-secondary); border: 1px solid var(--border-holdfast); }
 	.btn-undo { background: var(--surface-raised); color: var(--status-danger); border: 1px solid var(--status-danger); }
 
@@ -648,6 +717,7 @@
 
 	.decision-done { font-size: 0.9rem; font-weight: 600; color: var(--status-success); }
 	.action-resolved { font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); opacity: 0.7; display: inline-flex; align-items: center; gap: 0.25rem; }
+	.vote-out-voters { font-size: 0.65rem; color: var(--text-secondary); opacity: 0.7; margin-left: auto; }
 
 	/* ── Mobile ── */
 	@media (max-width: 767px) {
@@ -657,6 +727,7 @@
 
 		.profile-col {
 			width: 100%;
+			padding: 0.75rem;
 			border-right: none;
 			border-bottom: 1px solid var(--border-holdfast);
 			overflow: hidden;
@@ -664,18 +735,21 @@
 		}
 
 		.profile-collapsed {
-			max-height: 80px;
+			max-height: 100px;
 		}
 
 		.profile-toggle {
-			display: block;
+			display: flex;
+			align-items: center;
+			justify-content: center;
 			width: 100%;
+			min-height: 44px;
 			padding: 0.4rem;
 			background: var(--surface-raised);
 			border: none;
 			border-top: 1px solid var(--border-holdfast);
 			color: var(--accent);
-			font-size: 0.7rem;
+			font-size: 0.75rem;
 			font-weight: 500;
 			cursor: pointer;
 			text-align: center;
@@ -684,17 +758,60 @@
 		.content-header {
 			flex-direction: column;
 			align-items: stretch;
-			gap: 0.5rem;
+			padding: 0.75rem 1rem;
+			gap: 0.625rem;
 		}
 
 		.content-meta {
 			flex-wrap: wrap;
+			font-size: 0.75rem;
+		}
+
+		.tab-btn {
+			min-height: 40px;
+			padding: 0.375rem 0.75rem;
+		}
+
+		.content-body {
+			padding: 1rem;
+		}
+
+		.section-label {
+			margin-bottom: 0.875rem;
+		}
+
+		.qa-block {
+			margin-bottom: 1.25rem;
+			padding-bottom: 1.25rem;
+			border-bottom: 1px solid oklch(25% 0.004 var(--hue) / 0.5);
+		}
+
+		.qa-block:last-child {
+			border-bottom: none;
+			margin-bottom: 0;
+			padding-bottom: 0;
+		}
+
+		.qa-question {
+			font-size: 0.8125rem;
+			margin-bottom: 0.375rem;
+		}
+
+		.qa-answer {
+			font-size: 1rem;
+			line-height: 1.6;
 		}
 
 		.action-bar {
+			position: sticky;
+			bottom: 0;
 			flex-wrap: wrap;
-			padding: var(--mobile-pad);
-			gap: 0.5rem;
+			padding: 1rem;
+			gap: 0.625rem;
+			background: var(--surface);
+			border-top: 1px solid var(--border-holdfast);
+			z-index: 5;
+			box-shadow: 0 -4px 16px oklch(0% 0 0 / 0.15);
 		}
 
 		.decision-buttons {
@@ -702,17 +819,36 @@
 			width: 100%;
 			display: grid;
 			grid-template-columns: 1fr 1fr;
-			gap: 0.5rem;
+			gap: 0.625rem;
 		}
 
 		.reason-input {
 			width: 100%;
 			flex: none;
+			min-height: 48px;
+			font-size: 16px;
+			padding: 0.75rem 1rem;
 		}
 
 		.btn {
-			min-height: 44px;
-			padding: 0.625rem 1rem;
+			min-height: 48px;
+			padding: 0.75rem 1rem;
+			font-size: 0.8125rem;
+		}
+
+		.btn-claim {
+			width: 100%;
+			min-height: 52px;
+			font-size: 0.9375rem;
+			border-radius: var(--radius-md);
+		}
+
+		.btn-unclaim {
+			width: 100%;
+		}
+
+		.btn-vote-out {
+			width: 100%;
 		}
 	}
 
@@ -722,7 +858,9 @@
 		.btn-approve:hover:not(:disabled) { filter: brightness(1.15); box-shadow: var(--shadow-md); }
 		.btn-reject:hover:not(:disabled) { filter: brightness(1.15); box-shadow: var(--shadow-md); }
 		.btn-kick:hover:not(:disabled) { filter: brightness(1.15); box-shadow: var(--shadow-md); }
+		.btn-stale-modmail:hover:not(:disabled) { filter: brightness(1.15); box-shadow: var(--shadow-md); }
 		.btn-permreject:hover:not(:disabled) { background: var(--status-danger); color: var(--bg); box-shadow: var(--shadow-md); }
+		.btn-vote-out:hover:not(:disabled) { background: var(--status-danger); color: var(--bg); box-shadow: var(--shadow-md); }
 		.btn-cancel:hover:not(:disabled) { color: var(--text-primary); }
 		.btn-undo:hover { background: var(--status-danger); color: var(--bg); }
 		.btn-admin-unclaim:hover:not(:disabled) { background: var(--status-warning); color: var(--bg); }

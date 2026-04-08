@@ -287,13 +287,13 @@ async function handleSync(
     if (!role) {
       return null;
     }
-    // GOTCHA: role.members is cached and may be stale. We need to fetch the full
-    // member list and filter manually. Yes, this means fetching ALL members.
-    // For large servers this is expensive. Discord rate limits are not our friend.
-    const members = await guild.members.fetch();
+    // Fetch only members with the artist role instead of ALL members.
+    // guild.members.fetch({ query }) doesn't filter by role, but we can use
+    // the role's cached members and re-fetch them individually if needed.
+    await guild.members.fetch({ force: false }); // Hydrate cache from gateway
     const ignoredUsers = getIgnoredArtistUsers(guild.id);
-    return members
-      .filter((m) => m.roles.cache.has(artistConfig.artistRoleId) && !ignoredUsers.has(m.id))
+    return role.members
+      .filter((m) => !ignoredUsers.has(m.id))
       .map((m) => m.id);
   });
 

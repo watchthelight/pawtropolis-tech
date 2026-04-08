@@ -326,6 +326,41 @@ export function getTopVoiceChannels(guildId: string): TopVoiceChannel[] {
 	`).all(nowS, guildId, weekStart, nowS, ...excludedChannelIds) as TopVoiceChannel[];
 }
 
+// ─── Channel Activity Ranking ──────────────────────────────────────────────────
+
+export interface ChannelActivityItem {
+	channelId: string;
+	channelName: string;
+	messageCount: number;
+	uniqueUsers: number;
+}
+
+/**
+ * Returns all text channels ranked by message count over the last N days.
+ * Respects pulse_excluded_category_ids_json. Caller slices top/bottom N.
+ */
+export function getChannelActivityRanking(guildId: string, days = 7): ChannelActivityItem[] {
+	const cutoff = Math.floor(Date.now() / 1000) - days * 86400;
+	const excludedChannelIds = getExcludedChannelIds(guildId);
+	const excludeClause = excludedChannelIds.length > 0
+		? `AND ma.channel_id NOT IN (${excludedChannelIds.map(() => '?').join(',')})`
+		: '';
+
+	return db().prepare(`
+		SELECT ma.channel_id as channelId,
+			COALESCE(cc.name, 'unknown-' || substr(ma.channel_id, -6)) as channelName,
+			COUNT(*) as messageCount,
+			COUNT(DISTINCT ma.user_id) as uniqueUsers
+		FROM message_activity ma
+		INNER JOIN channel_cache cc ON ma.guild_id = cc.guild_id AND ma.channel_id = cc.channel_id
+		WHERE ma.guild_id = ? AND ma.created_at_s >= ?
+			${excludeClause}
+			AND cc.type = 0
+		GROUP BY ma.channel_id
+		ORDER BY messageCount DESC
+	`).all(guildId, cutoff, ...excludedChannelIds) as ChannelActivityItem[];
+}
+
 // ─── Insights Engine ────────────────────────────────────────────────────────────
 
 export interface Insight {

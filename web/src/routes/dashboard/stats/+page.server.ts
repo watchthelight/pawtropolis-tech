@@ -6,6 +6,10 @@ import {
 	getActivityTimeline,
 	getResponseTrend,
 	getTeamStats,
+	getModBreakdowns,
+	getDecisionPercentiles,
+	getInviteSourceBreakdown,
+	getApplicationFunnel,
 	windowStartForWindow,
 	windowDaysForWindow,
 	type TimeWindow
@@ -35,6 +39,10 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const timeline = getActivityTimeline(userId, guildId, windowStartS);
 	const responseTrend = getResponseTrend(userId, guildId, windowStartS);
 	const team = getTeamStats(guildId, windowStartS);
+	const modBreakdowns = getModBreakdowns(guildId, windowStartS);
+	const decisionPercentiles = getDecisionPercentiles(guildId, windowStartS);
+	const inviteSources = getInviteSourceBreakdown(guildId, windowStartS);
+	const funnel = getApplicationFunnel(guildId, windowStartS);
 
-	return { personal, trend, timeline, responseTrend, team, window, windowDays: days, userId };
+	return { personal, trend, timeline, responseTrend, team, modBreakdowns, decisionPercentiles, inviteSources, funnel, window, windowDays: days, userId };
 };

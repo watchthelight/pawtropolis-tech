@@ -265,12 +265,9 @@ The "Community Apps" role (ID: 896070888749940774) had full Administrator permis
 - **2026-01-11 09:41 UTC**: Resolution confirmed
 
 ### Root Cause
-The "Community Apps" role, intended for bot users and applications, was granted full Administrator permission instead of specific required permissions. This is a common anti-pattern where Administrator is used as a quick fix for bot permission issues.
+The "Community Apps" role, intended for bot users and applications, was granted full Administrator permission instead of specific required permissions. This happens when Administrator is used as a quick fix for bot permission issues.
 
-Administrator permission is critical because it:
-- Bypasses ALL permission checks in Discord
-- Grants unrestricted server access to all role members
-- Cannot be limited by channel-level permission overwrites
+Administrator permission bypasses all permission checks in Discord, grants unrestricted server access to every member with the role, and cannot be limited by channel-level permission overwrites.
 
 ### Impact
 - **Security**: 26 accounts had full server control
@@ -287,10 +284,10 @@ Administrator permission is critical because it:
 - Consider adding real-time monitoring for dangerous permission grants
 
 ### Lessons Learned
-- Automated security audits work - caught misconfiguration before exploitation
-- Quick response (~1 minute) is critical for security incidents
+- The automated security audit caught this before it could be exploited
+- ~1 minute response time matters for security incidents
 - Bot permission issues should be solved with specific permissions, not Administrator
-- The "Community Apps" role should be reviewed to ensure all 26 members are legitimate bots
+- The "Community Apps" role should be reviewed to confirm all 26 members are legitimate bots
 
 ---
 

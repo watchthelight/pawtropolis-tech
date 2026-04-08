@@ -98,7 +98,7 @@ Update what the bot is doing/playing.
 
 ### Skull Mode
 
-Random skull reactions on messages. A fun server feature.
+Randomly reacts to messages with skull emoji, just for fun.
 
 **Commands:**
 - `/skullmode chance:N` — Set odds (1-1000) for skull reactions

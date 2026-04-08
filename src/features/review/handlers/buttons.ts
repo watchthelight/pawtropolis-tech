@@ -88,7 +88,7 @@ export async function handleReviewButton(interaction: ButtonInteraction) {
     logger.debug({ userId: interaction.user.id, action, code }, "[review] button click rate-limited");
     // Silently acknowledge to dismiss the loading state
     if (!interaction.deferred && !interaction.replied) {
-      await interaction.deferUpdate().catch(() => {});
+      await interaction.deferUpdate().catch((err) => { logger.warn({ err }, "[review] deferUpdate for rate-limited button click failed"); });
     }
     return;
   }

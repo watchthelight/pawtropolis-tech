@@ -46,9 +46,13 @@ for arg in "$@"; do
       DEPLOY_BOT=true
       shift
       ;;
+    --graceful)
+      GRACEFUL=true
+      shift
+      ;;
     *)
       echo "Unknown argument: $arg"
-      echo "Usage: $0 [--logs] [--restart] [--status] [--fast] [--web] [--bot]"
+      echo "Usage: $0 [--logs] [--restart] [--status] [--fast] [--web] [--bot] [--graceful]"
       exit 1
       ;;
   esac
@@ -287,16 +291,43 @@ npx dotenvx run -- tsx scripts/commands.ts --all || {
 }
 
 # Step 7: Restart PM2
-echo "Step 7/9: Restarting PM2 processes..."
-ssh ${REMOTE_USER}@${REMOTE_HOST} "cd ${REMOTE_PATH} && pm2 startOrRestart ecosystem.config.cjs"
+if [ "${GRACEFUL:-false}" = true ]; then
+  echo "Step 7/9: Graceful restart — sending SIGINT to drain active operations..."
+  ssh ${REMOTE_USER}@${REMOTE_HOST} "cd ${REMOTE_PATH} && pm2 sendSignal SIGINT pawtropolis && sleep 5 && pm2 startOrRestart ecosystem.config.cjs"
+else
+  echo "Step 7/9: Restarting PM2 processes..."
+  ssh ${REMOTE_USER}@${REMOTE_HOST} "cd ${REMOTE_PATH} && pm2 startOrRestart ecosystem.config.cjs"
+fi
 
 # Step 8: Post-deploy health check
-echo "Step 8/9: Waiting for process to stabilize..."
-sleep 3
-echo "Checking PM2 process status..."
-ssh ${REMOTE_USER}@${REMOTE_HOST} "pm2 show pawtropolis | grep -E 'status|restarts|uptime' && echo '---' && pm2 show pawtropolis-web | grep -E 'status|restarts|uptime'" || {
-  echo "WARNING: Could not verify process status. Check logs manually."
-}
+echo "Step 8/9: Verifying deployment..."
+HEALTH_RETRIES=5
+HEALTH_DELAY=3
+BOT_HEALTHY=false
+for i in $(seq 1 $HEALTH_RETRIES); do
+  sleep $HEALTH_DELAY
+  # Check PM2 status + verify bot actually connected to Discord (logged "Ready" event)
+  BOT_STATUS=$(ssh ${REMOTE_USER}@${REMOTE_HOST} "pm2 show pawtropolis 2>/dev/null | grep 'status' | head -1" 2>/dev/null || echo "unknown")
+  WEB_STATUS=$(ssh ${REMOTE_USER}@${REMOTE_HOST} "pm2 show pawtropolis-web 2>/dev/null | grep 'status' | head -1" 2>/dev/null || echo "unknown")
+  RESTARTS=$(ssh ${REMOTE_USER}@${REMOTE_HOST} "pm2 show pawtropolis 2>/dev/null | grep 'restarts' | head -1 | grep -oP '[0-9]+'" 2>/dev/null || echo "?")
+  READY=$(ssh ${REMOTE_USER}@${REMOTE_HOST} "pm2 logs pawtropolis --lines 30 --nostream 2>/dev/null | grep -c 'Bot ready\|client_ready\|Connected to Discord'" 2>/dev/null || echo "0")
+
+  echo "  Attempt $i/$HEALTH_RETRIES: bot=$BOT_STATUS | web=$WEB_STATUS | restarts=$RESTARTS | ready=$READY"
+
+  if echo "$BOT_STATUS" | grep -q "online" && echo "$WEB_STATUS" | grep -q "online" && [ "$READY" != "0" ]; then
+    BOT_HEALTHY=true
+    break
+  fi
+done
+
+if [ "$BOT_HEALTHY" = true ]; then
+  echo "✅ Both processes online and bot connected to Discord."
+else
+  echo "⚠️  Health check inconclusive after ${HEALTH_RETRIES} attempts."
+  echo "Recent bot logs:"
+  ssh ${REMOTE_USER}@${REMOTE_HOST} "pm2 logs pawtropolis --lines 15 --nostream 2>/dev/null" || true
+  echo "Check manually: ssh bash-ec2 'pm2 logs pawtropolis --lines 50'"
+fi
 
 # Step 9: Remote cleanup
 echo "Step 9/9: Cleaning up remote tarball..."

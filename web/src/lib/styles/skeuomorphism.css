@@ -19,9 +19,9 @@
 	--wood-grain: #241a10;
 	--wood-light: #3d2e1e;
 	--leather: #3d2b1a;
-	--steel: #4a4e54;
-	--steel-light: #5a5e64;
-	--steel-dark: #3a3e42;
+	--steel: #2a2d32;
+	--steel-light: #363a40;
+	--steel-dark: #1e2125;
 	--brass: #b89c5c;
 	--brass-dim: #8a7444;
 	--cream: #f4efe6;
@@ -30,9 +30,9 @@
 
 	/* ── Surface overrides — wood base ── */
 	--bg: #2a1f14;
-	--surface: #4a4e54;
-	--surface-raised: #5a5e64;
-	--surface-overlay: #5a5e64;
+	--surface: #2a2d32;
+	--surface-raised: #363a40;
+	--surface-overlay: #363a40;
 
 	/* ── Borders — physical edges ── */
 	--border: #1a1208;
@@ -187,7 +187,7 @@
    ═══════════════════════════════════════════════════════════ */
 
 [data-style="skeuomorphism"] .card {
-	background-color: #4a4e54 !important;
+	background-color: #2a2d32 !important;
 	background-image:
 		repeating-linear-gradient(
 			90deg,
@@ -268,7 +268,7 @@
    ═══════════════════════════════════════════════════════════ */
 
 [data-style="skeuomorphism"] .heatmap-card {
-	background-color: #3a3e42 !important;
+	background-color: #1e2125 !important;
 	border: 1px solid rgba(0, 0, 0, 0.4) !important;
 	box-shadow:
 		inset 0 1px 0 rgba(255, 255, 255, 0.06),
@@ -346,7 +346,7 @@
    ═══════════════════════════════════════════════════════════ */
 
 [data-style="skeuomorphism"] .selector {
-	background: #3a3e42 !important;
+	background: #1e2125 !important;
 	border: 1px solid rgba(0, 0, 0, 0.3) !important;
 	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4) !important;
 	border-radius: 4px !important;
@@ -364,7 +364,7 @@
 }
 
 [data-style="skeuomorphism"] .chip.active {
-	background: #4a4e54 !important;
+	background: #2a2d32 !important;
 	color: #b89c5c !important;
 	border-color: rgba(0, 0, 0, 0.3) !important;
 	box-shadow:
@@ -520,28 +520,120 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   HISTORY CARDS (review history) — Aged paper
+   HISTORY CARDS (review history) — Same cream paper as review cards
    ═══════════════════════════════════════════════════════════ */
 
 [data-style="skeuomorphism"] .history-card {
-	background: #ece7dc !important;
-	color: #2c2419 !important;
+	background: #faf6ee !important;
+	color: #1e1810 !important;
 	border: none !important;
 	border-radius: 3px !important;
-	box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.25) !important;
+	box-shadow:
+		2px 3px 8px rgba(0, 0, 0, 0.35),
+		0 1px 0 #e8e0d0,
+		inset 0 0 0 1px rgba(0, 0, 0, 0.04) !important;
+	position: relative !important;
+	background-image: repeating-linear-gradient(
+		to bottom,
+		transparent,
+		transparent 21px,
+		rgba(140, 160, 200, 0.12) 21px,
+		rgba(140, 160, 200, 0.12) 22px
+	) !important;
+	background-color: #faf6ee !important;
+	transform: rotate(-0.4deg) !important;
+	transition: transform 150ms ease, box-shadow 150ms ease !important;
+}
+
+[data-style="skeuomorphism"] .history-card:nth-child(2n) {
+	transform: rotate(0.3deg) !important;
+}
+
+[data-style="skeuomorphism"] .history-card:nth-child(3n) {
+	transform: rotate(-0.7deg) !important;
+}
+
+[data-style="skeuomorphism"] .history-card:nth-child(4n) {
+	transform: rotate(0.5deg) !important;
+}
+
+[data-style="skeuomorphism"] .history-card::before {
+	content: '' !important;
+	position: absolute !important;
+	top: -5px !important;
+	left: 50% !important;
+	transform: translateX(-50%) !important;
+	width: 10px !important;
+	height: 10px !important;
+	border-radius: 50% !important;
+	background: #e74c3c !important;
+	box-shadow:
+		inset 0 -1px 2px rgba(0, 0, 0, 0.3),
+		0 2px 3px rgba(0, 0, 0, 0.4) !important;
+	border: 1px solid rgba(0, 0, 0, 0.2) !important;
+	z-index: 2 !important;
+}
+
+[data-style="skeuomorphism"] .history-card:nth-child(2n)::before {
+	background: #b89c5c !important;
+}
+
+[data-style="skeuomorphism"] .history-card:nth-child(3n)::before {
+	background: #4caf50 !important;
+}
+
+[data-style="skeuomorphism"] .history-card:nth-child(4n)::before {
+	background: #5a7ec8 !important;
 }
 
 [data-style="skeuomorphism"] .history-card:hover {
-	background: #f0ebe2 !important;
-	box-shadow: 2px 3px 6px rgba(0, 0, 0, 0.3) !important;
+	transform: rotate(0deg) translateY(-3px) !important;
+	box-shadow: 3px 5px 12px rgba(0, 0, 0, 0.4) !important;
+	background-color: #fefcf6 !important;
 }
 
 [data-style="skeuomorphism"] .history-card-name {
-	color: #2c2419 !important;
+	color: #1a1208 !important;
+	font-weight: 700 !important;
 }
 
-[data-style="skeuomorphism"] .history-card-meta {
-	color: #5a4e3a !important;
+[data-style="skeuomorphism"] .history-card-time {
+	color: #5a4a30 !important;
+}
+
+[data-style="skeuomorphism"] .history-card-outcome {
+	color: #5a4a30 !important;
+}
+
+[data-style="skeuomorphism"] .history-card-resolver {
+	color: #6a5a3c !important;
+}
+
+[data-style="skeuomorphism"] .history-card-reason {
+	color: #7a6a4c !important;
+}
+
+[data-style="skeuomorphism"] .history-card .status-dot {
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+}
+
+[data-style="skeuomorphism"] .history-card-avatar {
+	box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.08) !important;
+	border-radius: 4px !important;
+}
+
+[data-style="skeuomorphism"] .history-card-avatar-ph {
+	background: #e0d8c8 !important;
+	color: #6a5a3c !important;
+	border: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-style="skeuomorphism"] .history-card-selected {
+	transform: rotate(0deg) translateY(-4px) !important;
+	box-shadow: 4px 6px 14px rgba(0, 0, 0, 0.4) !important;
+	border: none !important;
+	border-left: 3px solid #b89c5c !important;
+	background-color: #fefcf6 !important;
 }
 
 /* Queue glow overlay — hide on skeuomorphism (doesn't fit cork board) */
@@ -556,7 +648,7 @@
 
 /* ── Detail panel — dark mode (steel instrument panel, readable) ── */
 [data-style="skeuomorphism"] .detail-panel {
-	background-color: #3a3e42 !important;
+	background-color: #1e2125 !important;
 	background-image:
 		repeating-linear-gradient(
 			90deg,
@@ -574,7 +666,7 @@
 
 /* Profile column — darker steel panel edge */
 [data-style="skeuomorphism"] .profile-col {
-	background: #34383c !important;
+	background: #1a1d20 !important;
 	border-right: 1px solid rgba(0, 0, 0, 0.3) !important;
 }
 
@@ -613,11 +705,11 @@
 [data-style="skeuomorphism"] .tab-btn {
 	color: #c4b89c !important;
 	border: 1px solid rgba(0, 0, 0, 0.3) !important;
-	background: #34383c !important;
+	background: #1a1d20 !important;
 }
 
 [data-style="skeuomorphism"] .tab-btn-active {
-	background: #4a4e54 !important;
+	background: #2a2d32 !important;
 	color: #b89c5c !important;
 	border-color: rgba(0, 0, 0, 0.3) !important;
 	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
@@ -640,12 +732,12 @@
 
 /* Detail placeholder (no app selected) */
 [data-style="skeuomorphism"] .detail-placeholder {
-	background: #3a3e42 !important;
+	background: #1e2125 !important;
 }
 
 /* Mobile detail wrapper */
 [data-style="skeuomorphism"] .mobile-detail-wrapper {
-	background: #3a3e42 !important;
+	background: #1e2125 !important;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -686,7 +778,7 @@
 }
 
 [data-style="skeuomorphism"] .tab-active {
-	background: #4a4e54 !important;
+	background: #2a2d32 !important;
 	box-shadow:
 		inset 0 1px 0 rgba(255, 255, 255, 0.08),
 		0 1px 2px rgba(0, 0, 0, 0.3) !important;
@@ -718,7 +810,7 @@
    ═══════════════════════════════════════════════════════════ */
 
 [data-style="skeuomorphism"] .insight-card {
-	background-color: #4a4e54 !important;
+	background-color: #2a2d32 !important;
 	background-image:
 		repeating-linear-gradient(
 			90deg,
@@ -772,7 +864,7 @@
    ═══════════════════════════════════════════════════════════ */
 
 [data-style="skeuomorphism"] .data-card {
-	background-color: #4a4e54 !important;
+	background-color: #2a2d32 !important;
 	background-image:
 		repeating-linear-gradient(
 			90deg,
@@ -798,7 +890,7 @@
 }
 
 [data-style="skeuomorphism"] .style-chip.active {
-	background: #4a4e54 !important;
+	background: #2a2d32 !important;
 	color: #b89c5c !important;
 	box-shadow:
 		inset 0 1px 0 rgba(255, 255, 255, 0.08),

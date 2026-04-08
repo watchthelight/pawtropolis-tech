@@ -2,7 +2,7 @@
 
 You configure bot settings, manage role automation, and handle emergencies.
 
-**Prerequisite:** [Moderator Guide](MODERATOR-GUIDE.md) | **Other docs:** [Quick Reference](../MOD-QUICKREF.md) &#8226; [Bot Handbook](../BOT-HANDBOOK.md)
+**Prerequisite:** [Moderator Guide](MODERATOR-GUIDE.md) | **Other docs:** [Quick Reference](../MOD-QUICKREF.md) - [Bot Handbook](../BOT-HANDBOOK.md)
 
 > **Server Reference:** For complete role/channel/permission data, see [internal-info/](internal-info/) docs.
 
@@ -18,7 +18,7 @@ You still have all Moderator capabilities:
 - Bot presence updates
 - Skull mode
 
-📖 [Review Moderator Guide →](MODERATOR-GUIDE.md)
+[Review Moderator Guide](MODERATOR-GUIDE.md)
 
 ---
 
@@ -26,7 +26,7 @@ You still have all Moderator capabilities:
 
 ### Server Configuration
 
-You control how the bot behaves across your entire server.
+You control how the bot behaves across your server.
 
 **Command:**
 - `/config set <setting> <value>` — Change a bot setting
@@ -49,9 +49,9 @@ You control how the bot behaves across your entire server.
 | `review_roles` | How roles appear on review cards |
 | `qotd_review_channel_id` | Channel where QOTD suggestions are posted for staff review |
 
-📖 [Full documentation →](../BOT-HANDBOOK.md#config)
+[Full documentation](../BOT-HANDBOOK.md#config)
 
-📋 *Introduced in [v1.0.0](../CHANGELOG.md#100---2025-11-25)* | *Skull mode added in [v4.8.0](../CHANGELOG.md#480---2025-12-08)*
+*Introduced in [v1.0.0](../CHANGELOG.md#100---2025-11-25)* | *Skull mode added in [v4.8.0](../CHANGELOG.md#480---2025-12-08)*
 
 ---
 
@@ -74,32 +74,32 @@ Configure automatic role assignments based on Amaribot levels and event attendan
 - **Level Tiers** are the roles Amaribot assigns (like "Engaged Fur LVL 15")
 - **Level Rewards** are bonus roles you give at milestones (like "Event Ticket")
 
-📖 [Full documentation →](../BOT-HANDBOOK.md#roles)
+[Full documentation](../BOT-HANDBOOK.md#roles)
 
-📋 *Introduced in [v1.1.0](../CHANGELOG.md#110---2025-11-25)*
+*Introduced in [v1.1.0](../CHANGELOG.md#110---2025-11-25)*
 
 ---
 
 ### Emergency Controls
 
-When role automation goes wrong, you can stop everything immediately.
+If role automation starts misbehaving, you can halt it immediately.
 
 **Commands:**
-- `/panic on` — **STOP** all automatic role grants right now
+- `/panic on` — Stop all automatic role grants
 - `/panic off` — Resume normal operation
 - `/panic status` — Check if panic mode is currently on
 
-**When to hit the panic button:**
+**When to use panic mode:**
 - Roles going to wrong people
 - Duplicate roles being added
-- Any weird role behavior you don't understand
-- Before making configuration changes (just to be safe)
+- Any unexpected role behavior
+- Before making configuration changes, as a precaution
 
-**Important:** Panic mode survives bot restarts. It stays on until you turn it off.
+Panic mode survives bot restarts. It stays on until you explicitly turn it off.
 
-📖 [Full documentation →](../BOT-HANDBOOK.md#panic)
+[Full documentation](../BOT-HANDBOOK.md#panic)
 
-📋 *Introduced in [v1.1.1](../CHANGELOG.md#111---2025-11-25)*
+*Introduced in [v1.1.1](../CHANGELOG.md#111---2025-11-25)*
 
 ---
 
@@ -109,7 +109,7 @@ Export and manage moderator statistics for performance reviews.
 
 **Commands:**
 - `/stats export days:N` — Download stats as CSV for spreadsheet analysis
-- `/stats reset password:...` — Reset all metrics to start fresh (nuclear option)
+- `/stats reset password:...` — Reset all metrics to zero (requires password confirmation)
 
 **Export includes:**
 - Every action (accepts, rejects, kicks)
@@ -123,15 +123,15 @@ Export and manage moderator statistics for performance reviews.
 - Testing cleanup before going live
 - Fresh start for a new season
 
-📖 [Full documentation →](../BOT-HANDBOOK.md#modstats)
+[Full documentation](../BOT-HANDBOOK.md#modstats)
 
-📋 *Introduced in [v1.0.0](../CHANGELOG.md#100---2025-11-25)*
+*Introduced in [v1.0.0](../CHANGELOG.md#100---2025-11-25)*
 
 ---
 
 ### Review System Configuration
 
-Fine-tune how the review system notifies staff about new applications.
+Configure how the review system notifies staff about new applications.
 
 **Commands:**
 - `/review-set-notify-config` — Set up notifications for new forum posts
@@ -143,9 +143,9 @@ Fine-tune how the review system notifies staff about new applications.
 - `/review-get-notify-config` — View current notification settings
 - `/review-set-listopen-output mode:...` — Control if `/listopen` is public or ephemeral
 
-📖 [Full documentation →](../BOT-HANDBOOK.md#review-set-notify-config)
+[Full documentation](../BOT-HANDBOOK.md#review-set-notify-config)
 
-📋 *Introduced in [v1.0.0](../CHANGELOG.md#100---2025-11-25)*
+*Introduced in [v1.0.0](../CHANGELOG.md#100---2025-11-25)*
 
 ---
 
@@ -169,7 +169,7 @@ When you advance to **Leadership** (Community Manager and above), you'll unlock:
 - **Artist Rotation** — Full queue management with `/artistqueue`
 - **Moderation History** — `/stats history` for detailed performance reviews
 
-📖 [LEADERSHIP-GUIDE.md →](LEADERSHIP-GUIDE.md)
+[LEADERSHIP-GUIDE.md](LEADERSHIP-GUIDE.md)
 
 ---
 
@@ -177,4 +177,4 @@ When you advance to **Leadership** (Community Manager and above), you'll unlock:
 
 **Previous:** [Moderator Guide](MODERATOR-GUIDE.md) | **Next:** [Leadership Guide](LEADERSHIP-GUIDE.md)
 
-**Reference:** [Bot Handbook](../BOT-HANDBOOK.md) &#8226; [Staff Policies](MOD-HANDBOOK.md) &#8226; [Permissions](../PERMS-MATRIX.md)
+**Reference:** [Bot Handbook](../BOT-HANDBOOK.md) - [Staff Policies](MOD-HANDBOOK.md) - [Permissions](../PERMS-MATRIX.md)

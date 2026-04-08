@@ -6,10 +6,10 @@
 	import {
 		House, ClipboardCheck, BarChart3, Activity, Flag,
 		Grid3x3, Palette, Settings, ScrollText, Server,
-		MessageCircleQuestion
+		MessageCircleQuestion, Mail
 	} from 'lucide-svelte';
 
-	let { user, collapsed = false }: {
+	let { user, collapsed = false, mobileOnly = false, isArtist = false }: {
 		user: {
 			username: string;
 			globalName: string | null;
@@ -17,6 +17,8 @@
 			tier: string;
 		};
 		collapsed?: boolean;
+		mobileOnly?: boolean;
+		isArtist?: boolean;
 	} = $props();
 
 	// Inline tier check — $lib/server/roles.ts can't be imported client-side
@@ -43,7 +45,7 @@
 	};
 
 	const ICON_MAP: Record<string, typeof House> = {
-		Home: House, Reviews: ClipboardCheck, Stats: BarChart3, Pulse: Activity,
+		Home: House, Reviews: ClipboardCheck, Stats: BarChart3, Modmail: Mail, Pulse: Activity,
 		Flags: Flag, Heatmap: Grid3x3, Art: Palette, QOTD: MessageCircleQuestion,
 		Config: Settings, Audit: ScrollText, System: Server
 	};
@@ -52,6 +54,7 @@
 		{ label: 'Home',     href: '/dashboard',          minTier: 'gk',    group: 'ops' },
 		{ label: 'Reviews',  href: '/dashboard/reviews',  minTier: 'gk',    group: 'ops' },
 		{ label: 'Stats',    href: '/dashboard/stats',    minTier: 'gk',    group: 'ops' },
+		{ label: 'Modmail',  href: '/dashboard/modmail',  minTier: 'gk',    group: 'ops' },
 		{ label: 'Pulse',    href: '/dashboard/pulse',    minTier: 'mod',   group: 'ops' },
 		{ label: 'Flags',    href: '/dashboard/flags',    minTier: 'sm',    group: 'ops' },
 		{ label: 'Heatmap',  href: '/dashboard/heatmap',  minTier: 'sm',    group: 'ops' },
@@ -62,7 +65,13 @@
 		{ label: 'System',   href: '/dashboard/system',   minTier: 'owner', group: 'admin' },
 	] as const;
 
-	let visibleItems = $derived(NAV_ITEMS.filter(item => hasMinTier(user.tier, item.minTier)));
+	const MOBILE_HREFS = new Set(['/dashboard', '/dashboard/reviews', '/dashboard/art']);
+	let visibleItems = $derived(
+		NAV_ITEMS.filter(item =>
+			(hasMinTier(user.tier, item.minTier) || (item.href === '/dashboard/art' && isArtist)) &&
+			(!mobileOnly || MOBILE_HREFS.has(item.href))
+		)
+	);
 
 	function isActive(href: string): boolean {
 		const path = $page.url.pathname;
@@ -86,7 +95,7 @@
 					{user.globalName || user.username}
 				</p>
 				<p class="text-xs text-[var(--text-secondary)]">
-					{TIER_LABELS[user.tier] ?? user.tier}
+					{isArtist && user.tier === 'viewer' ? 'Server Artist' : (TIER_LABELS[user.tier] ?? user.tier)}
 				</p>
 			</div>
 		{/if}

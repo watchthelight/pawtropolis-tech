@@ -23,6 +23,8 @@ import { recordSchedulerRun } from "../lib/schedulerHealth.js";
 // is 30 min past the 24hr mark - acceptable for a "hey, this is old" alert.
 const STALE_CHECK_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes
 const STALE_THRESHOLD_HOURS = 24;
+const ESCALATION_48H_HOURS = 48;
+const ESCALATION_72H_HOURS = 72;
 // GOTCHA: 10 is also the field limit for Discord embeds looking sane.
 // More than 10 and you're basically scrolling through a spreadsheet.
 const MAX_APPS_PER_ALERT = 10;
@@ -39,8 +41,11 @@ type StaleApplication = {
   guild_id: string;
   review_channel_id: string | null;
   gatekeeper_role_id: string | null;
+  admin_role_id: string | null;
   card_channel_id: string | null;
   card_message_id: string | null;
+  hours_old: number;
+  escalation_level: number;
 };
 
 /**
@@ -49,19 +54,18 @@ type StaleApplication = {
  * RETURNS: Array of stale applications with guild config info
  */
 function getStaleApplications(): StaleApplication[] {
-  const cutoffSeconds = Math.floor(Date.now() / 1000) - (STALE_THRESHOLD_HOURS * 60 * 60);
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  const cutoff24h = nowSeconds - (STALE_THRESHOLD_HOURS * 60 * 60);
 
   /*
-   * Query for applications that:
-   * 1. Status is 'submitted' (pending)
-   * 2. Not currently claimed (no row in review_claim)
-   * 3. Submitted more than 24 hours ago
-   * 4. No alert has been sent yet (stale_alert_sent = 0)
+   * Query for unclaimed applications older than 24h.
+   * Escalation tiers:
+   *   0 → 24h: first alert (ping gatekeeper)
+   *   1 → 48h: second alert (ping gatekeeper again)
+   *   2 → 72h: escalate (ping admin/leadership)
    *
-   * PERFORMANCE: The LEFT JOINs here are necessary to check "not claimed" and
-   * "has review card". On a busy server with thousands of applications, this
-   * could be slow - but we only run it every 30 min and it's filtered to
-   * status='submitted' which is usually a small subset. Monitor if this becomes an issue.
+   * Uses COALESCE on stale_escalation_level (column may not exist on older DBs,
+   * falls back to stale_alert_sent for backwards compat).
    */
   const stmt = db.prepare(`
     SELECT
@@ -71,19 +75,29 @@ function getStaleApplications(): StaleApplication[] {
       a.guild_id,
       g.review_channel_id,
       g.gatekeeper_role_id,
+      g.admin_role_id,
       rc2.channel_id AS card_channel_id,
-      rc2.message_id AS card_message_id
+      rc2.message_id AS card_message_id,
+      CAST((? - strftime('%s', a.submitted_at)) / 3600 AS INTEGER) AS hours_old,
+      COALESCE(a.stale_alert_sent, 0) AS escalation_level
     FROM application a
     JOIN guild_config g ON g.guild_id = a.guild_id
     LEFT JOIN review_claim rc ON rc.app_id = a.id
     LEFT JOIN review_card rc2 ON rc2.app_id = a.id
     WHERE a.status = 'submitted'
       AND rc.app_id IS NULL
-      AND a.stale_alert_sent = 0
       AND a.submitted_at < datetime(?, 'unixepoch')
+      AND (
+        (a.stale_alert_sent = 0)
+        OR (a.stale_alert_sent = 1 AND a.submitted_at < datetime(?, 'unixepoch'))
+        OR (a.stale_alert_sent = 2 AND a.submitted_at < datetime(?, 'unixepoch'))
+      )
   `);
 
-  return stmt.all(cutoffSeconds) as StaleApplication[];
+  const cutoff48h = nowSeconds - (ESCALATION_48H_HOURS * 60 * 60);
+  const cutoff72h = nowSeconds - (ESCALATION_72H_HOURS * 60 * 60);
+
+  return stmt.all(nowSeconds, cutoff24h, cutoff48h, cutoff72h) as StaleApplication[];
 }
 
 /**
@@ -91,13 +105,13 @@ function getStaleApplications(): StaleApplication[] {
  * WHY: Prevent duplicate alerts for the same application.
  * @param appId - The application ID to mark
  */
-function markAlertSent(appId: string): void {
+function markAlertSent(appId: string, level: number): void {
   db.prepare(`
     UPDATE application
-    SET stale_alert_sent = 1,
+    SET stale_alert_sent = ?,
         stale_alert_sent_at = datetime('now')
     WHERE id = ?
-  `).run(appId);
+  `).run(level, appId);
 }
 
 /**
@@ -144,14 +158,18 @@ function getReviewCardLink(guildId: string, channelId: string | null, messageId:
  * @returns Formatted message string
  */
 function buildAlertMessage(
-  gatekeeperRoleId: string | null,
-  staleApps: StaleApplication[]
+  roleId: string | null,
+  staleApps: StaleApplication[],
+  isEscalation: boolean
 ): string {
-  const rolePrefix = gatekeeperRoleId ? `<@&${gatekeeperRoleId}>` : "@Gatekeeper";
+  const rolePrefix = roleId ? `<@&${roleId}>` : "@Gatekeeper";
+  const title = isEscalation
+    ? "**⚠️ ESCALATION: Application Pending 72+ Hours**"
+    : "**Application Pending 24+ Hours**";
 
   const appLines = staleApps.slice(0, MAX_APPS_PER_ALERT).map((app) => {
     const code = getAppCode(app.id);
-    const hours = getHoursSinceSubmission(app.submitted_at);
+    const hours = app.hours_old ?? getHoursSinceSubmission(app.submitted_at);
     const link = getReviewCardLink(app.guild_id, app.card_channel_id, app.card_message_id);
     const linkText = link ? ` • [View Card](${link})` : "";
     return `- #${code} from <@${app.user_id}> - Submitted ${hours} hours ago${linkText}`;
@@ -165,13 +183,13 @@ function buildAlertMessage(
   return [
     rolePrefix,
     "",
-    "**Application Pending 24+ Hours**",
+    title,
     "",
     "The following application(s) have been waiting for review:",
     "",
     ...appLines,
     "",
-    "Please claim and review these applications.",
+    isEscalation ? "**Immediate attention required.**" : "Please claim and review these applications.",
   ].join("\n");
 }
 
@@ -220,24 +238,44 @@ async function sendAlertForGuild(
       return;
     }
 
-    const message = buildAlertMessage(gatekeeperRoleId, staleApps);
+    // Split apps by escalation tier
+    const escalationApps = staleApps.filter((a) => a.hours_old >= ESCALATION_72H_HOURS && a.escalation_level < 3);
+    const normalApps = staleApps.filter((a) => !escalationApps.includes(a));
 
     // SECURITY: allowedMentions is critical here. The message contains
     // <@user_id> mentions for applicants, but we DON'T want to actually ping them.
-    // We only want to ping the gatekeeper role. Without this restriction,
+    // We only want to ping the gatekeeper/admin role. Without this restriction,
     // we'd be notifying users "hey, your application is still pending" which
     // could be confusing or anxiety-inducing.
-    await (channel as TextChannel).send({
-      content: message,
-      allowedMentions: {
-        roles: gatekeeperRoleId ? [gatekeeperRoleId] : [],
-        users: [] // Don't actually ping the applicants
-      }
-    });
 
-    // Mark all applications as alerted
-    for (const app of staleApps) {
-      markAlertSent(app.id);
+    if (normalApps.length > 0) {
+      const message = buildAlertMessage(gatekeeperRoleId, normalApps, false);
+      await (channel as TextChannel).send({
+        content: message,
+        allowedMentions: {
+          roles: gatekeeperRoleId ? [gatekeeperRoleId] : [],
+          users: []
+        }
+      });
+      for (const app of normalApps) {
+        markAlertSent(app.id, app.escalation_level + 1);
+      }
+    }
+
+    // 72h+ escalation: ping admin/leadership role
+    if (escalationApps.length > 0) {
+      const escalateRoleId = staleApps[0].admin_role_id ?? gatekeeperRoleId;
+      const message = buildAlertMessage(escalateRoleId, escalationApps, true);
+      await (channel as TextChannel).send({
+        content: message,
+        allowedMentions: {
+          roles: escalateRoleId ? [escalateRoleId] : [],
+          users: []
+        }
+      });
+      for (const app of escalationApps) {
+        markAlertSent(app.id, 3);
+      }
     }
 
     logger.info(

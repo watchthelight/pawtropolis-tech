@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { hasMinTier } from '$lib/server/roles';
-import { getPulseMetrics, getNewsletterStats, getInsights, getGuildSnapshot, getTopVoiceChannels, getLevelRoleStats } from '$lib/server/queries/pulse';
+import { getPulseMetrics, getNewsletterStats, getInsights, getGuildSnapshot, getTopVoiceChannels, getChannelActivityRanking, getLevelRoleStats } from '$lib/server/queries/pulse';
 import type { PageServerLoad } from './$types';
 
 export const config = { isr: false };
@@ -18,6 +18,7 @@ export const load: PageServerLoad = async ({ locals, setHeaders }) => {
 	const insights = getInsights(guildId);
 	const guildSnapshot = getGuildSnapshot(guildId);
 	const topVoiceChannels = getTopVoiceChannels(guildId);
+	const channelRanking = getChannelActivityRanking(guildId);
 	const levelRoleStats = await getLevelRoleStats(locals.user.id, locals.user.tier).catch(() => null);
-	return { metrics, newsletterStats, insights, guildSnapshot, topVoiceChannels, levelRoleStats };
+	return { metrics, newsletterStats, insights, guildSnapshot, topVoiceChannels, channelRanking, levelRoleStats };
 };

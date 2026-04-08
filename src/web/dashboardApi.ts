@@ -23,7 +23,7 @@ import { getRoleTiers } from "../features/roleAutomation.js";
 import { approveTx, approveFlow, deliverApprovalDm } from "../features/review/flows/approve.js";
 import { rejectTx, rejectFlow } from "../features/review/flows/reject.js";
 import { kickTx, kickFlow } from "../features/review/flows/kick.js";
-import { loadApplication } from "../features/review/queries.js";
+import { loadApplication, insertVoteOut, getVoteOutVoters } from "../features/review/queries.js";
 import { getClaim } from "../features/review/claims.js";
 import { updateReviewActionMeta } from "../features/review/queries.js";
 import { ensureReviewMessage } from "../features/review.js";
@@ -423,6 +423,62 @@ export async function startDashboardApi(client: Client): Promise<void> {
     return { success: true, data: { appId, action: "wrong_password" } } satisfies ApiSuccess;
   });
 
+  // POST /api/review/stale_modmail
+  server.post<{ Body: ReviewBody }>("/api/review/stale_modmail", async (request, reply) => {
+    const { userId, tier, appId } = request.body ?? {};
+    if (!userId || !tier || !appId) return reply.code(400).send({ success: false, error: "Missing userId, tier, or appId" } satisfies ApiError);
+    if (!hasMinTier(tier, "gk")) return reply.code(403).send({ success: false, error: "Insufficient permissions" } satisfies ApiError);
+
+    const app = loadApplication(appId);
+    if (!app) return reply.code(404).send({ success: false, error: "Application not found" } satisfies ApiError);
+
+    const claim = getClaim(appId);
+    if (claim && claim.reviewer_id !== userId) {
+      return reply.code(409).send({ success: false, error: "Application is claimed by another reviewer" } satisfies ApiError);
+    }
+
+    const rejectReason = "User did not respond to modmail in < 24 hours. Please try again.";
+    const txResult = rejectTx(appId, userId, rejectReason);
+    if (txResult.kind !== "changed") {
+      return reply.code(409).send({ success: false, error: "Application is not in a reviewable state" } satisfies ApiError);
+    }
+
+    const guild = getGuild();
+    if (guild) {
+      try {
+        const user = await client.users.fetch(app.user_id);
+        const tryAgainRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder()
+            .setCustomId("v1:start")
+            .setLabel("Try Again")
+            .setStyle(ButtonStyle.Success)
+        );
+        const flowResult = await rejectFlow(user, { guildName: guild.name, reason: rejectReason, components: [tryAgainRow] });
+        updateReviewActionMeta(txResult.reviewActionId, { dmDelivered: flowResult.dmDelivered });
+      } catch (err) {
+        logger.warn({ err, appId, userId: app.user_id }, "[dashboardApi] Failed to send stale_modmail rejection DM");
+      }
+
+      const code = shortCode(appId);
+      logActionPretty(guild, { appId, appCode: code, actorId: userId, subjectId: app.user_id, action: "reject", reason: rejectReason }).catch((err) =>
+        logger.warn({ err, appId }, "[dashboardApi] failed to log stale_modmail reject action"));
+
+      closeModmailForApplication(guild.id, app.user_id, code, { reason: "rejected", client, guild }).catch((err) =>
+        logger.warn({ err, appId }, "[dashboardApi] failed to auto-close modmail on stale_modmail reject"));
+    }
+
+    const staleCard = await ensureReviewMessage(client, appId).catch((err) => {
+      logger.warn({ err, appId }, "[dashboardApi] failed to refresh review card after stale_modmail reject");
+      return null;
+    });
+    postReviewChannelMessage(appId, "Application rejected (stale modmail).", staleCard?.messageId);
+
+    cacheModerator(userId);
+    notifyDashboard("review:rejected", { appId, reviewerId: userId, action: "reject", reason: rejectReason });
+    notifyDashboard("stats:updated", { userId });
+    return { success: true, data: { appId, action: "stale_modmail" } } satisfies ApiSuccess;
+  });
+
   // POST /api/review/kick
   server.post<{ Body: ReviewBody }>("/api/review/kick", async (request, reply) => {
     const { userId, tier, appId, reason } = request.body ?? {};
@@ -532,6 +588,121 @@ export async function startDashboardApi(client: Client): Promise<void> {
     notifyDashboard("review:permrejected", { appId, reviewerId: userId, action: "perm_reject", reason });
     notifyDashboard("stats:updated", { userId });
     return { success: true, data: { appId, action: "perm_reject" } } satisfies ApiSuccess;
+  });
+
+  // POST /api/review/vote_out
+  server.post<{ Body: ReviewBody }>("/api/review/vote_out", async (request, reply) => {
+    const { userId, tier, appId } = request.body ?? {};
+    if (!userId || !tier || !appId) return reply.code(400).send({ success: false, error: "Missing userId, tier, or appId" } satisfies ApiError);
+    if (!hasMinTier(tier, "gk")) return reply.code(403).send({ success: false, error: "Insufficient permissions" } satisfies ApiError);
+
+    const app = loadApplication(appId);
+    if (!app) return reply.code(404).send({ success: false, error: "Application not found" } satisfies ApiError);
+
+    // Terminal guard — no voting on resolved applications
+    if (app.status === "rejected" || app.status === "approved" || app.status === "kicked") {
+      return reply.code(409).send({ success: false, error: "Application is already resolved" } satisfies ApiError);
+    }
+
+    // NO claim guard — any GK can vote regardless of claim status
+
+    // Insert vote (idempotent via UNIQUE constraint)
+    const isNew = insertVoteOut(app.id, userId);
+    if (!isNew) {
+      return reply.code(409).send({ success: false, error: "You already voted on this application" } satisfies ApiError);
+    }
+
+    // Log vote action in review_action audit trail
+    try {
+      db.prepare(
+        `INSERT INTO review_action (app_id, moderator_id, action, created_at, reason, message_link, meta)
+         VALUES (?, ?, 'vote_out', ?, NULL, NULL, NULL)`
+      ).run(app.id, userId, nowUtc());
+    } catch (err) {
+      logger.error({ err, appId: app.id }, "[dashboardApi] failed to log vote_out action");
+    }
+
+    // Fetch current voters and threshold
+    const voters = getVoteOutVoters(app.id);
+    const cfg = getConfig(GUILD_ID);
+    const threshold = cfg?.vote_out_threshold ?? 2;
+
+    cacheModerator(userId);
+
+    // Threshold not met — refresh card and return vote status
+    if (voters.length < threshold) {
+      await ensureReviewMessage(client, appId).catch((err) => {
+        logger.warn({ err, appId }, "[dashboardApi] failed to refresh card after vote_out");
+      });
+      notifyDashboard("review:vote_out", { appId, reviewerId: userId, voteCount: voters.length, threshold });
+      return { success: true, data: { appId, action: "vote_out", voteCount: voters.length, threshold, thresholdMet: false } } satisfies ApiSuccess;
+    }
+
+    // === Threshold met — execute rejection ===
+    const rejectionReason = "Staff has decided to deny your application at this time. Thank you, and have a nice day.";
+
+    const txResult = db.transaction(() => {
+      const row = db.prepare(`SELECT status FROM application WHERE id = ?`).get(app.id) as { status: string } | undefined;
+      if (!row) throw new Error("Application not found");
+      if (row.status === "rejected") return { kind: "already" as const, status: row.status };
+      if (row.status === "approved" || row.status === "kicked") return { kind: "terminal" as const, status: row.status };
+      db.prepare(
+        `UPDATE application
+         SET status = 'rejected', updated_at = datetime('now'), resolved_at = datetime('now'),
+             resolver_id = ?, resolution_reason = ?
+         WHERE id = ?`
+      ).run(userId, "Voted out by staff", app.id);
+      return { kind: "changed" as const };
+    })();
+
+    if (txResult.kind === "already") {
+      return reply.code(409).send({ success: false, error: "Already rejected" } satisfies ApiError);
+    }
+    if (txResult.kind === "terminal") {
+      return reply.code(409).send({ success: false, error: `Already resolved (${txResult.status})` } satisfies ApiError);
+    }
+
+    // Discord side-effects
+    const guild = getGuild();
+    if (guild) {
+      const code = shortCode(appId);
+
+      // Log to logging channel
+      logActionPretty(guild, {
+        appId: app.id, appCode: code, actorId: userId,
+        subjectId: app.user_id, action: "vote_out", reason: "Voted out by staff",
+      }).catch((err) => logger.warn({ err, appId }, "[dashboardApi] failed to log vote_out rejection"));
+
+      // Auto-close modmail
+      closeModmailForApplication(guild.id, app.user_id, code, {
+        reason: "voted out", client, guild,
+      }).catch((err) => logger.warn({ err, appId }, "[dashboardApi] failed to auto-close modmail on vote out"));
+
+      // Send rejection DM
+      try {
+        const user = await client.users.fetch(app.user_id);
+        await rejectFlow(user, { guildName: guild.name, reason: rejectionReason });
+      } catch (err) {
+        logger.warn({ err, appId, userId: app.user_id }, "[dashboardApi] Failed to send vote out DM");
+      }
+    }
+
+    // Refresh review card + post public voter list
+    const cardResult = await ensureReviewMessage(client, appId).catch((err) => {
+      logger.warn({ err, appId }, "[dashboardApi] failed to refresh card after vote out rejection");
+      return null;
+    });
+
+    const mentions = voters.map((id) => `<@${id}>`);
+    let voterList: string;
+    if (mentions.length === 1) voterList = mentions[0];
+    else if (mentions.length === 2) voterList = `${mentions[0]} and ${mentions[1]}`;
+    else voterList = `${mentions.slice(0, -1).join(", ")}, and ${mentions[mentions.length - 1]}`;
+    postReviewChannelMessage(appId, `${voterList} voted <@${app.user_id}> out.`, cardResult?.messageId);
+
+    notifyDashboard("review:rejected", { appId, reviewerId: userId, action: "vote_out" });
+    notifyDashboard("stats:updated", { userId });
+    return { success: true, data: { appId, action: "vote_out", voteCount: voters.length, threshold, thresholdMet: true } } satisfies ApiSuccess;
   });
 
   // POST /api/users/resolve — batch resolve user identities for dashboard display
@@ -881,7 +1052,7 @@ export async function startDashboardApi(client: Client): Promise<void> {
     }
 
     notifyDashboard("art:queue_updated", { action: "add", userId: targetUserId });
-    postArtistChannelEmbed(new EmbedBuilder().setColor(0x5865f2).setDescription(`<@${targetUserId}> added to the artist queue at position ${position}.`)).catch(() => {});
+    postArtistChannelEmbed(new EmbedBuilder().setColor(0x5865f2).setDescription(`<@${targetUserId}> added to the artist queue at position ${position}.`)).catch((err) => { logger.warn({ err }, "[dashboardApi] post artist-added embed failed"); });
     return { success: true, data: { userId: targetUserId, position } } satisfies ApiSuccess;
   });
 
@@ -897,7 +1068,7 @@ export async function startDashboardApi(client: Client): Promise<void> {
     }
 
     notifyDashboard("art:queue_updated", { action: "remove", userId: targetUserId });
-    postArtistChannelEmbed(new EmbedBuilder().setColor(0xed4245).setDescription(`<@${targetUserId}> removed from the artist queue.`)).catch(() => {});
+    postArtistChannelEmbed(new EmbedBuilder().setColor(0xed4245).setDescription(`<@${targetUserId}> removed from the artist queue.`)).catch((err) => { logger.warn({ err }, "[dashboardApi] post artist-removed embed failed"); });
     return { success: true, data: { userId: targetUserId } } satisfies ApiSuccess;
   });
 
@@ -924,7 +1095,7 @@ export async function startDashboardApi(client: Client): Promise<void> {
     if (!ok) return reply.code(404).send({ success: false, error: "Artist not in queue" } satisfies ApiError);
 
     notifyDashboard("art:queue_updated", { action: "skip", userId: targetUserId, reason });
-    postArtistChannelEmbed(new EmbedBuilder().setColor(0xfee75c).setDescription(`<@${targetUserId}> has been skipped in the artist queue${reason ? `: ${reason}` : "."}`)).catch(() => {});
+    postArtistChannelEmbed(new EmbedBuilder().setColor(0xfee75c).setDescription(`<@${targetUserId}> has been skipped in the artist queue${reason ? `: ${reason}` : "."}`)).catch((err) => { logger.warn({ err }, "[dashboardApi] post artist-skipped embed failed"); });
     return { success: true, data: { userId: targetUserId } } satisfies ApiSuccess;
   });
 
@@ -938,7 +1109,7 @@ export async function startDashboardApi(client: Client): Promise<void> {
     if (!ok) return reply.code(404).send({ success: false, error: "Artist not in queue or not skipped" } satisfies ApiError);
 
     notifyDashboard("art:queue_updated", { action: "unskip", userId: targetUserId });
-    postArtistChannelEmbed(new EmbedBuilder().setColor(0x57f287).setDescription(`<@${targetUserId}> is back in the artist queue rotation.`)).catch(() => {});
+    postArtistChannelEmbed(new EmbedBuilder().setColor(0x57f287).setDescription(`<@${targetUserId}> is back in the artist queue rotation.`)).catch((err) => { logger.warn({ err }, "[dashboardApi] post artist-unskipped embed failed"); });
     return { success: true, data: { userId: targetUserId } } satisfies ApiSuccess;
   });
 
@@ -1001,7 +1172,7 @@ export async function startDashboardApi(client: Client): Promise<void> {
       new EmbedBuilder()
         .setColor(0x5865f2)
         .setDescription(`📋 New assignment: **${ticketType}** for <@${recipientId}> → assigned to <@${resolvedArtistId}> (job #${String(job.jobNumber).padStart(4, "0")})`)
-    ).catch(() => {});
+    ).catch((err) => { logger.warn({ err }, "[dashboardApi] post job-created embed failed"); });
 
     return { success: true, data: { jobId: job.id, jobNumber: job.jobNumber, artistJobNumber: job.artistJobNumber, artistId: resolvedArtistId } } satisfies ApiSuccess;
   });
@@ -1036,7 +1207,7 @@ export async function startDashboardApi(client: Client): Promise<void> {
       new EmbedBuilder()
         .setColor(statusColors[status as string] ?? 0x5865f2)
         .setDescription(`<@${job.artist_id}> updated job **#${String(job.job_number).padStart(4, "0")}** → ${status}`)
-    ).catch(() => {});
+    ).catch((err) => { logger.warn({ err }, "[dashboardApi] post job-status-update embed failed"); });
 
     return { success: true, data: { jobId, status } } satisfies ApiSuccess;
   });
@@ -1061,7 +1232,7 @@ export async function startDashboardApi(client: Client): Promise<void> {
       new EmbedBuilder()
         .setColor(0x57f287)
         .setDescription(`✅ <@${job.artist_id}> completed job **#${String(job.job_number).padStart(4, "0")}** for <@${job.recipient_id}> (${job.ticket_type})`)
-    ).catch(() => {});
+    ).catch((err) => { logger.warn({ err }, "[dashboardApi] post job-finished embed failed"); });
 
     return { success: true, data: { jobId } } satisfies ApiSuccess;
   });
@@ -1103,7 +1274,7 @@ export async function startDashboardApi(client: Client): Promise<void> {
       new EmbedBuilder()
         .setColor(0xed4245)
         .setDescription(`❌ Job **#${String(job.job_number).padStart(4, "0")}** cancelled${reason ? `: ${reason}` : "."}`)
-    ).catch(() => {});
+    ).catch((err) => { logger.warn({ err }, "[dashboardApi] post job-cancelled embed failed"); });
 
     return { success: true, data: { jobId } } satisfies ApiSuccess;
   });

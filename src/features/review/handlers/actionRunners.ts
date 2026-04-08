@@ -138,7 +138,7 @@ export async function runApproveAction(
       await interaction.channel.send({
         content: errorMsg,
         allowedMentions: SAFE_ALLOWED_MENTIONS,
-      }).catch(() => {});
+      }).catch((err) => { logger.warn({ err }, "[review] sending role-failure error message to channel failed"); });
     }
 
     updateReviewActionMeta(result.reviewActionId, { roleApplied, dmDelivered: false });
@@ -724,13 +724,28 @@ export async function runVoteOutAction(
     return;
   }
 
-  // Insert vote (idempotent — UNIQUE constraint prevents duplicates)
+  // Toggle vote: insert if new, remove if already voted
   const isNew = insertVoteOut(app.id, interaction.user.id);
   if (!isNew) {
+    // Already voted — retract the vote
+    const { removeVoteOut } = await import("../queries.js");
+    removeVoteOut(app.id, interaction.user.id);
+
+    const voters = getVoteOutVoters(app.id);
+    const cfg = getConfig(interaction.guildId!);
+    const threshold = cfg?.vote_out_threshold ?? 2;
+
+    // Refresh card to update vote count
+    try {
+      await ensureReviewMessage(interaction.client, app.id);
+    } catch (err) {
+      logger.warn({ err, appId: app.id }, "[review] failed to refresh card after vote retract");
+    }
+
     await interaction
-      .followUp({ content: "You already voted on this application.", flags: MessageFlags.Ephemeral })
+      .followUp({ content: `Vote retracted (${voters.length}/${threshold}).`, flags: MessageFlags.Ephemeral })
       .catch((err) => {
-        logger.debug({ err, appId: app.id, action: "vote_out" }, "[review] already-voted reply failed");
+        logger.debug({ err, appId: app.id, action: "vote_out" }, "[review] vote-retracted reply failed");
       });
     return;
   }
@@ -777,6 +792,7 @@ export async function runVoteOutAction(
       .catch((err) => {
         logger.debug({ err, appId: app.id, action: "vote_out" }, "[review] vote-recorded reply failed");
       });
+    notifyDashboard("review:vote_out", { appId: app.id, reviewerId: interaction.user.id, voteCount: voters.length, threshold });
     return;
   }
 
@@ -812,11 +828,11 @@ export async function runVoteOutAction(
   })();
 
   if (txResult.kind === "already") {
-    await replyOrEdit(interaction, { content: "Already rejected." }).catch(() => {});
+    await replyOrEdit(interaction, { content: "Already rejected." }).catch((err) => { logger.warn({ err }, "[review] reply for already-rejected failed"); });
     return;
   }
   if (txResult.kind === "terminal") {
-    await replyOrEdit(interaction, { content: `Already resolved (${txResult.status}).` }).catch(() => {});
+    await replyOrEdit(interaction, { content: `Already resolved (${txResult.status}).` }).catch((err) => { logger.warn({ err }, "[review] reply for already-resolved failed"); });
     return;
   }
 

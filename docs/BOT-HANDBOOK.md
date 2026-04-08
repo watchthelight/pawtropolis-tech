@@ -16,7 +16,7 @@ All bot commands and how to use them.
 | CM / CDL / Owner | [Leadership Guide](LEADERSHIP-GUIDE.md) |
 | Verifying Artists | [Commissions Verification](MOD-HANDBOOK.md#commissions-verification) |
 
-**Other docs:** [Staff Handbook](MOD-HANDBOOK.md) &#8226; [Quick Reference](MOD-QUICKREF.md) &#8226; [Permissions](PERMS-MATRIX.md)
+**Other docs:** [Staff Handbook](MOD-HANDBOOK.md) | [Quick Reference](MOD-QUICKREF.md) | [Permissions](PERMS-MATRIX.md)
 
 ---
 
@@ -42,7 +42,7 @@ The gate system is how new members join the server. When someone wants in, they 
 
 ### How Applications Work
 
-Here's the flow from start to finish:
+The flow from start to finish:
 
 1. **Someone applies** — They click the Verify button in the gate channel and answer the questions you've set up (up to 5 questions)
 2. **Bot creates a review** — An embed appears in the review channel showing their answers, how old their account is, when they joined, and a short code like `A1B2C3` for quick reference
@@ -95,7 +95,7 @@ The claim system prevents two mods from working on the same application at the s
 
 Claims are stored in the database and survive bot restarts. If you claimed an app yesterday and the bot restarted overnight, your claim is still there.
 
-**Why this matters:** Without claims, two mods could both click Accept at the same time. The applicant would get two welcome messages, or the database could get confused. Claims prevent that.
+Without claims, two mods could both click Accept at the same time. The applicant would get two welcome messages, or the database could end up in a bad state. Claims prevent that.
 
 **Workflow:**
 
@@ -335,7 +335,7 @@ Look up someone's entire application history — every app they've submitted, wh
 |--------|-----------|--------------|
 | `user` | **Yes** | Who to look up |
 
-This command is essential for reviewing repeat applicants. When someone applies for the second (or third, or tenth) time, you want to know:
+This command is how you review repeat applicants. When someone applies for the second (or third, or tenth) time, you want to know:
 - How many times have they applied before?
 - What happened to those previous applications?
 - Did they get rejected? Why?
@@ -423,7 +423,7 @@ These commands help you track how mods are doing, spot patterns, and keep an eye
 
 ### How the Stats System Works
 
-Every time a moderator takes an action on an application, the bot records it in a database table called the "action log." Think of it like a detailed diary of everything that happens with applications.
+Every time a moderator takes an action on an application, the bot records it in a database table called the "action log" -- a running record of everything that happens with applications.
 
 **What gets tracked:**
 - When someone submits an application
@@ -538,7 +538,7 @@ Leadership-only detailed mod action history with optional CSV export.
 
 > 📚 **Reference Section** — You don't need to memorize this. It explains how the bot detects unusual patterns. Most mods never need to touch this.
 
-The bot uses something called "z-score analysis" to flag unusual patterns. Don't worry — it sounds complicated but the idea is simple.
+The bot uses z-score analysis to flag unusual patterns. The idea is straightforward.
 
 **How it works:**
 1. The bot looks at a mod's daily action counts over time
@@ -569,7 +569,7 @@ graph TD
     F --> G
 ```
 
-**Important note:** This compares each mod to their own history, not to other mods. A consistently slow mod won't trigger alerts because slow is their normal. If you want to compare mods to each other, use the leaderboard.
+This compares each mod to their own history, not to other mods. A consistently slow mod won't trigger alerts because that's their baseline. To compare mods to each other, use the leaderboard.
 
 ---
 
@@ -786,19 +786,17 @@ Engine 4:  60%
 
 ### `/resetdata`
 
-> 📚 **Reference Section** — Nuclear option. You'll likely never use this. Here for completeness.
+> 📚 **Reference Section** — You'll likely never use this. Here for completeness.
 
 **Who can use it:** Manage Guild permission + Password
 
-This is the nuclear option for metrics. It resets all moderator statistics, leaderboards, and analytics to start fresh from the moment you run the command. Historical data in the action log is preserved, but all the calculated metrics start over from zero.
+Resets all moderator statistics, leaderboards, and analytics to start fresh from the moment you run the command. Historical data in the action log is preserved, but all calculated metrics start over from zero.
 
 | Option | Required? | What it does |
 |--------|-----------|--------------|
 | `password` | **Yes** | The reset password (same as gate reset password) |
 
-#### Why Would You Reset Metrics?
-
-There are several situations where starting fresh makes sense:
+#### When Resetting Makes Sense
 
 - **New moderation team** — If you've replaced most of your mod team, old stats aren't relevant anymore
 - **Policy changes** — If you changed your acceptance criteria significantly, old approval rates don't compare fairly
@@ -807,7 +805,7 @@ There are several situations where starting fresh makes sense:
 
 #### What Gets Reset
 
-When you run `/resetdata`, here's exactly what happens:
+When you run `/resetdata`:
 
 ```mermaid
 flowchart TD
@@ -836,14 +834,14 @@ flowchart TD
 
 #### How the Epoch System Works
 
-Rather than deleting historical data (which would be bad for auditing), the bot uses an "epoch" system. Think of the epoch as a "start counting from here" marker.
+Rather than deleting historical data (which would be bad for auditing), the bot uses an "epoch" system. The epoch is a "start counting from here" marker.
 
 When you reset metrics:
 1. The bot saves the current timestamp as your guild's "metrics epoch"
 2. All future metrics queries add a filter: "only count actions after the epoch"
 3. Historical data before the epoch is ignored in calculations but still exists
 
-This means if you ever need to see old data for legal or audit reasons, it's still in the database. The reset just tells the stats system to ignore it.
+If you ever need old data for legal or audit reasons, it's still in the database. The reset just tells the stats system to ignore it.
 
 #### Security Measures
 
@@ -869,7 +867,7 @@ Once you reset, give the system time to accumulate new data. Your leaderboards w
 ### `/sample`
 **Who can use it:** Staff (Reviewer role or Manage Guild)
 
-This command lets you preview what review cards look like without needing a real application. It's incredibly useful for training new moderators, testing UI changes, or just seeing how different application states appear.
+Preview what review cards look like without needing a real application. Useful for training new moderators, testing UI changes, or seeing how different application states appear.
 
 | Subcommand | What it does |
 |------------|--------------|
@@ -888,7 +886,7 @@ Create a preview of a review card with various options to customize what it show
 
 #### Why This Command Exists
 
-Training new moderators is hard when you can't show them what they'll actually see. With `/sample`, you can:
+Training new moderators is easier when you can show them what they'll actually see. With `/sample`, you can:
 
 - **Train new reviewers** — Show them exactly what a review card looks like before they see a real one
 - **Test different states** — See how accepted, rejected, and pending applications look different
@@ -963,11 +961,11 @@ Use this to verify the UI looks good even with verbose applicants.
 
 ## Artist Rotation
 
-A queue system that fairly distributes art commissions among Server Artists. When someone redeems an art reward, the next artist in line gets assigned. This ensures everyone gets a fair share of work and no one artist gets overwhelmed or left out.
+A queue system that fairly distributes art commissions among Server Artists. When someone redeems an art reward, the next artist in line gets assigned, so everyone gets a fair share of work and no one artist gets overwhelmed or left out.
 
 ### How the Queue Works
 
-The artist rotation is like a line at a store. When it's your turn, you help the next customer, then you go to the back of the line so everyone gets a turn.
+The artist rotation works as a round-robin queue. When it's your turn, you get the next assignment, then you go to the back of the line so everyone gets a turn.
 
 1. **Artists join the queue** — Anyone with the Server Artist role (<@&1201395606455562341>) is automatically added to the queue
 2. **Queue positions are assigned** — Artists are numbered from 1 (next up) to whatever the total count is. New artists go to the end
@@ -1336,7 +1334,7 @@ Track who shows up to movie nights and automatically give out tier roles based o
 
 #### How It Works
 
-Movie night tracking is all about watching the voice channel and counting how long people stay. Here's the step-by-step process:
+Movie night tracking watches the voice channel and counts how long people stay:
 
 1. **Start tracking** — When the movie begins, a staff member runs `/movie start` and picks the voice channel
 2. **Bot starts watching** — The bot listens for voice channel events (joins, leaves, moves)
@@ -1370,7 +1368,7 @@ flowchart TD
 
 #### How Time Tracking Works
 
-The bot uses something called "sessions" to track your time. A session is the period from when you join the voice channel until you leave. Here's what happens behind the scenes:
+The bot uses "sessions" to track your time. A session is the period from when you join the voice channel until you leave. Behind the scenes:
 
 **When you join the voice channel:**
 - Bot saves the current time as your "session start"
@@ -1584,7 +1582,7 @@ Set up automatic role assignments based on Amaribot levels and event attendance 
 
 ### How Role Automation Works
 
-The bot watches for specific triggers and then assigns roles automatically. Here's what happens behind the scenes:
+The bot watches for specific triggers and assigns roles automatically. Behind the scenes:
 
 ```mermaid
 flowchart TD
@@ -1745,13 +1743,13 @@ Set up how the bot behaves in your server. These settings control everything fro
 
 ### How Configuration Works
 
-The bot uses a layered system for settings. Think of it like this:
+The bot uses a layered system for settings:
 
 1. **Database settings** (highest priority) - what you set with `/config`
 2. **Environment variables** (fallback) - default settings for the whole bot
 3. **Built-in defaults** (last resort) - hardcoded safe values
 
-This means each server can customize settings, but if you haven't set something, the bot uses smart defaults.
+Each server can customize settings, but if you haven't set something, the bot falls back to defaults.
 
 ```mermaid
 graph TD
@@ -1768,7 +1766,7 @@ graph TD
 ### `/config`
 **Who can use it:** Administrator
 
-This is your control panel for server-wide bot behavior.
+Your control panel for server-wide bot behavior.
 
 ####Setting Configuration
 
@@ -1798,9 +1796,9 @@ This is your control panel for server-wide bot behavior.
 ### Understanding Each Setting
 
 #### Logging Channel
-This is where all moderator actions get recorded with nice looking embeds. Every time someone accepts an application, rejects someone, or uses modmail, it gets logged here.
+All moderator actions get recorded here with embeds. Every accept, reject, modmail conversation, and config change shows up in this channel.
 
-**Why you need it:** Keeps a permanent record of who did what and when. Great for accountability and reviewing decisions later.
+**Why you need it:** Keeps a permanent record of who did what and when, which helps with accountability and reviewing decisions later.
 
 **What gets logged:**
 - Application accepts, rejects, and kicks
@@ -1839,7 +1837,7 @@ The flags system watches for suspicious accounts. If someone joins your server a
 #### Dad Mode
 Pure fun. When someone says "I'm tired" or "I'm hungry", the bot might respond "Hi tired, I'm Dad!" The odds setting controls how often this happens.
 
-**Why it exists:** Community building. A little humor makes the server feel more welcoming.
+**Why it exists:** A little humor goes a long way for making the server feel welcoming.
 
 **Understanding odds:**
 - `chance:2` means 1 in 2 (50% of the time) - very annoying
@@ -1855,7 +1853,7 @@ Pure fun. When someone says "I'm tired" or "I'm hungry", the bot might respond "
 #### Skull Mode
 Chaotic fun. The bot will randomly react to messages with a skull emoji based on configurable odds.
 
-**Why it exists:** Adds unpredictable chaos and inside jokes to the server.
+**Why it exists:** Unpredictable chaos and inside jokes.
 
 **Two commands:**
 - `/config set skullmode enabled:true/false` - Turn skull mode on or off
@@ -1891,7 +1889,7 @@ Controls whether the Bot Dev role gets pinged when new applications arrive. Usef
 ```
 
 #### Mod Roles
-These roles have full access to all bot commands, regardless of Discord permissions. Think of it as your "bot admin" role.
+These roles have full access to all bot commands, regardless of Discord permissions. Essentially your "bot admin" role.
 
 **Why this matters:** You might have moderators who don't have Administrator permission in Discord, but you still want them to use all bot features.
 
@@ -1905,9 +1903,7 @@ These roles have full access to all bot commands, regardless of Discord permissi
 #### Review Roles Mode
 Controls how member roles appear on application review cards.
 
-**The problem:** Some servers have 50+ roles. Showing them all makes review cards huge and hard to read.
-
-**The solution:**
+Some servers have 50+ roles, and showing them all makes review cards huge and hard to read. Options:
 - `none` - Hide all roles completely
 - `level_only` - Show just the highest level role (like "Level 15")
 - `all` - Show every single role (default)
@@ -2108,7 +2104,7 @@ The bot processes avatar images differently based on format:
 
 Post an anonymous message as the bot. Good for announcements where you don't want to show who wrote it.
 
-**Important:** Every use of `/send` gets logged in the configured logging channel. This creates accountability while still allowing anonymous communication.
+**Important:** Every use of `/send` gets logged in the configured logging channel, so there's always a record of who sent what even though the message itself looks anonymous.
 
 | Option | Required? | What it does |
 |--------|-----------|--------------|

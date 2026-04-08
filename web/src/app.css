@@ -171,8 +171,13 @@ body.drawer-open {
 	overflow: hidden;
 }
 
-/* Prevent iOS auto-zoom on input focus */
+/* Prevent iOS auto-zoom on input focus + prevent horizontal scroll */
 @media (max-width: 767px) {
+	html,
+	body {
+		overflow-x: hidden;
+		-webkit-text-size-adjust: 100%;
+	}
 	input,
 	textarea,
 	select {

@@ -381,7 +381,7 @@ async function handleAdd(ctx: CommandContext<ChatInputCommandInteraction>): Prom
         minutes,
         eventDate: getActiveMovieEvent(guild.id)?.eventDate ?? "unknown",
       },
-    }).catch(() => {});
+    }).catch((err) => { logger.warn({ err }, "[event/movie] audit log for movie_manual_add failed"); });
   });
 
   await withStep(ctx, "reply", async () => {
@@ -450,7 +450,7 @@ async function handleCredit(ctx: CommandContext<ChatInputCommandInteraction>): P
       action: "movie_credit",
       reason: reason ?? `Credited ${minutes} minutes for ${dateStr}`,
       meta: { minutes, eventDate: dateStr },
-    }).catch(() => {});
+    }).catch((err) => { logger.warn({ err }, "[event/movie] audit log for movie_credit failed"); });
   });
 
   const newCount = getUserQualifiedMovieCount(guild.id, user.id);
@@ -520,7 +520,7 @@ async function handleBump(ctx: CommandContext<ChatInputCommandInteraction>): Pro
       action: "movie_bump",
       reason: reason ?? `Bump compensation for ${dateStr}`,
       meta: { eventDate: dateStr },
-    }).catch(() => {});
+    }).catch((err) => { logger.warn({ err }, "[event/movie] audit log for movie_bump failed"); });
   });
 
   const newCount = getUserQualifiedMovieCount(guild.id, user.id);

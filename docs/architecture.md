@@ -4,16 +4,16 @@
 
 ## Executive Summary
 
-Pawtropolis Tech is a production-grade Discord bot backend built as a monolithic TypeScript application. It uses an event-driven architecture centered on Discord.js v14, with SQLite for persistence, modular feature organization, and comprehensive observability via Sentry and Pino.
+Pawtropolis Tech is a Discord bot backend built as a monolithic TypeScript application. It uses an event-driven architecture centered on Discord.js v14, with SQLite for persistence, modular feature organization, and observability via Sentry and Pino.
 
 ## Technology Stack
 
 | Category | Technology | Version | Rationale |
 |----------|-----------|---------|-----------|
-| Language | TypeScript | 5.5 | Type safety, modern async, strict mode |
+| Language | TypeScript | 5.5 | Type safety, strict mode |
 | Runtime | Node.js | 20+ | ESM modules, stable LTS |
 | Framework | Discord.js | 14.16.3 | Official Discord API wrapper, slash commands, interactions |
-| Database | better-sqlite3 | 12.4.1 | Synchronous, deterministic, embedded (no external DB server) |
+| Database | better-sqlite3 | 12.4.1 | Synchronous, embedded (no external DB server) |
 | Web Server | Fastify | ^5.7.4 | Lightweight HTTP for dashboard/OAuth2 endpoints |
 | Image Processing | canvas, sharp | 3.2.0, 0.34.4 | Embed rendering, image optimization |
 | Error Tracking | @sentry/node | 10.20.0 | Production error monitoring + performance profiling |
@@ -115,7 +115,7 @@ migrations/               # 45 versioned migration files
 ```
 
 **Key Design Decisions:**
-- **Synchronous SQLite**: better-sqlite3 chosen for simplicity and determinism (no async race conditions)
+- **Synchronous SQLite**: better-sqlite3 chosen for simplicity (no async race conditions)
 - **WAL Mode**: Enables concurrent readers during writes
 - **Prepared Statements**: All queries parameterized via `db.prepare()` (SQL injection protected)
 - **No ORM**: Fine-grained control over queries, explicit over implicit
@@ -248,16 +248,16 @@ Global Exception Handlers (uncaughtException, unhandledRejection)
 
 | Decision | Rationale |
 |----------|-----------|
-| **Monolith over microservices** | Single bot process; no need for service mesh complexity |
-| **SQLite over PostgreSQL/MySQL** | Embedded, zero-config, deterministic; sufficient for single-server bot |
-| **Synchronous DB (better-sqlite3)** | No async race conditions; simpler error handling |
+| **Monolith over microservices** | Single bot process, service mesh would add complexity for no benefit |
+| **SQLite over PostgreSQL/MySQL** | Embedded, zero-config, sufficient for a single-server bot |
+| **Synchronous DB (better-sqlite3)** | No async race conditions, simpler error handling |
 | **Direct SQL over ORM** | Full control over queries; avoid ORM abstraction leaks |
 | **Modular features** | Self-contained modules prevent tangled dependencies |
 | **Event wrapping** | Consistent error handling across all interaction types |
-| **Fail-fast config** | Zod validation catches missing secrets at startup, not first use |
-| **Build-time metadata** | Git SHA and timestamps enable reproducible deployments |
+| **Fail-fast config** | Zod validation catches missing secrets at startup instead of at first use |
+| **Build-time metadata** | Git SHA and timestamps for traceable deployments |
 | **Per-guild configuration** | Database-driven config allows customization without code changes |
-| **Tarball deployment** | Simple, reliable; no container orchestration needed |
+| **Tarball deployment** | Simple and reliable, no container orchestration needed |
 
 ## Cross-References
 

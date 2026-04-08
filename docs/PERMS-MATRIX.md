@@ -14,7 +14,7 @@ Who can use what commands.
 
 ## Role Hierarchy
 
-Staff roles are organized in a strict hierarchy. Higher-ranked roles automatically have access to commands available to lower-ranked roles (when using "X+" notation).
+Roles follow a strict hierarchy. When a permission level says "X+", that means the listed role and every role above it.
 
 | Rank | Role | Role ID | Abbreviation |
 |:----:|------|---------|:------------:|
@@ -46,7 +46,7 @@ These roles bypass all permission checks and have full access to every command:
 
 ## Permission Types
 
-Commands use different permission systems:
+Three permission systems are in use:
 
 ### Role-Based Hierarchical ("X+")
 
@@ -64,7 +64,7 @@ Example: **"[GK]"** means only the Gatekeeper role can use the command.
 
 ### Discord Permission Based
 
-Some commands use Discord's built-in permission system (e.g., ManageMessages, ManageRoles) rather than role-based checks. These are indicated with the Discord permission name.
+Some commands check Discord's built-in permissions (ManageMessages, ManageRoles, etc.) instead of role hierarchy. These are labeled with the Discord permission name.
 
 ---
 
@@ -97,7 +97,7 @@ Commands restricted to the Gatekeeper role specifically. Higher roles do NOT aut
 | `/listopen` | View your currently claimed applications |
 | `/unblock` | Remove a permanent rejection from a user |
 
-**Why Gatekeeper only?** Application handling is a specialized role. Higher-ranked staff who don't handle applications shouldn't accidentally process them.
+These are locked to Gatekeeper specifically because higher-ranked staff who don't handle applications shouldn't accidentally process them.
 
 ---
 
@@ -217,7 +217,7 @@ Commands restricted to Server Dev role or Bot Owner user ID only:
 
 ### Discord Permission Based
 
-These commands use Discord's built-in permission system rather than role-based checks:
+These check Discord's built-in permissions instead of role hierarchy:
 
 | Command | Discord Permission | Description |
 |---------|-------------------|-------------|
@@ -289,7 +289,7 @@ QOTD suggestion review buttons require **Gatekeeper+ (GK+)**:
 
 ## Permission Denied Messages
 
-When a user lacks permission, they see an ephemeral embed with specific information:
+When a user lacks permission, they see an ephemeral embed showing what role they need:
 
 ### Example: Command requires hierarchy (SM+)
 
@@ -371,7 +371,7 @@ requireArtist(interaction, commandName, description)
 
 ### Bypass Logic
 
-The permission system always checks bypass conditions first:
+Bypass conditions are checked before anything else:
 
 1. **Bot Owner check** — If `userId === "697169405422862417"`, always pass
 2. **Server Dev check** — If member has role `1120074045883420753`, always pass

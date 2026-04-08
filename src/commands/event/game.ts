@@ -451,7 +451,7 @@ async function handleAdd(ctx: CommandContext<ChatInputCommandInteraction>): Prom
         minutes,
         eventDate: getActiveGameEvent(guild.id)?.eventDate ?? "unknown",
       },
-    }).catch(() => {});
+    }).catch((err) => { logger.warn({ err }, "[event/game] audit log for game_manual_add failed"); });
   });
 
   await withStep(ctx, "reply", async () => {
@@ -516,7 +516,7 @@ async function handleCredit(ctx: CommandContext<ChatInputCommandInteraction>): P
       action: "game_credit",
       reason: reason ?? `Credited ${minutes} minutes for ${dateStr}`,
       meta: { minutes, eventDate: dateStr },
-    }).catch(() => {});
+    }).catch((err) => { logger.warn({ err }, "[event/game] audit log for game_credit failed"); });
   });
 
   const newCount = getUserQualifiedGameCount(guild.id, user.id);
@@ -587,7 +587,7 @@ async function handleBump(ctx: CommandContext<ChatInputCommandInteraction>): Pro
       action: "game_bump",
       reason: reason ?? `Bump compensation for ${dateStr}`,
       meta: { eventDate: dateStr },
-    }).catch(() => {});
+    }).catch((err) => { logger.warn({ err }, "[event/game] audit log for game_bump failed"); });
   });
 
   const newCount = getUserQualifiedGameCount(guild.id, user.id);
