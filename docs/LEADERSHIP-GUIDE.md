@@ -1,6 +1,6 @@
 # Leadership Guide
 
-Server audits, data management, and operational oversight.
+Server-wide audits, data resets, branding, analytics, and the bot-owner-only controls.
 
 **Prerequisite:** [Admin Guide](ADMIN-GUIDE.md) | **Other docs:** [Quick Reference](MOD-QUICKREF.md) | [Bot Handbook](BOT-HANDBOOK.md)
 
@@ -24,7 +24,7 @@ See [Admin Guide](ADMIN-GUIDE.md) for details.
 
 ### Server Audits
 
-Bulk-scan members for suspicious accounts and inappropriate content.
+Sweep the whole member list for bot accounts and for avatars that violate the server's content rules.
 
 **Commands:**
 - `/audit members` — Scan all members for bot accounts using detection heuristics
@@ -81,7 +81,7 @@ Full docs: [BOT-HANDBOOK](BOT-HANDBOOK.md#backfill)
 
 ### Bot Branding
 
-Customize the bot's appearance across Discord.
+Update the bot's profile picture and the banners shown to applicants and new members.
 
 **Commands:**
 - `/update banner image:<attachment>` — Update profile, gate, and welcome banners
@@ -105,7 +105,7 @@ Full docs: [BOT-HANDBOOK](BOT-HANDBOOK.md#update)
 
 ### Artist Rotation
 
-Manage the art commission queue that fairly distributes work among Server Artists.
+Manage the rotation that hands out art commissions to Server Artists.
 
 **Commands:**
 - `/artistqueue list` — See current queue order and who's skipped
@@ -147,7 +147,7 @@ Full docs: [BOT-HANDBOOK](BOT-HANDBOOK.md#art)
 
 ### Moderation History
 
-Look up what any individual moderator has been doing.
+Look up what a specific moderator has been doing.
 
 **Commands:**
 - `/stats history moderator:@ModName days:N` — See everything a mod has done
@@ -171,7 +171,7 @@ Full docs: [BOT-HANDBOOK](BOT-HANDBOOK.md#modhistory)
 
 ### Visual Analytics
 
-Charts and CSV exports covering server activity over time.
+Charts and CSV exports of server activity over time.
 
 **Commands:**
 - `/stats approval-rate` — View server-wide approval/rejection rate analytics
@@ -193,12 +193,12 @@ Full docs: [BOT-HANDBOOK](BOT-HANDBOOK.md#analytics)
 
 ## Tips
 
-1. **Schedule regular audits** — Monthly `/audit members` catches bot accounts before they cause problems
-2. **Use NSFW flagged scope** — Save API costs by scanning flagged members first
-3. **Review modhistory monthly** — Catch burnout and performance issues early
-4. **Backfill before major decisions** — Make sure your activity data is complete
-5. **Document branding changes** — Keep original assets in case you need to revert
-6. **Monitor artist queue fairness** — Check `/artistqueue history` to ensure even distribution
+1. Run `/audit members` once a month — bot accounts accumulate over time and this is the cheapest way to catch them.
+2. After a member audit, run `/audit nsfw scope:Flagged members only`. The full scope hits the Vision API for every member and that gets expensive.
+3. Skim `/stats history` for each mod once a month. You're looking for burnout (response times creeping up) and for outliers (reject rates that don't match the rest of the team).
+4. Don't trust activity heatmaps you haven't backfilled. If the bot was offline for a while, run `/backfill` first.
+5. Keep the original PNG/WebP files when you change banners or the avatar — you'll want them if you need to revert.
+6. Check `/artistqueue history` periodically. If one artist is getting picked far more than the others, the rotation is broken.
 
 ---
 
