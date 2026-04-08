@@ -120,7 +120,6 @@ describe("/panic command", () => {
         expect(setPanicMode).toHaveBeenCalledWith("guild-123", true, "user-123");
         expect(interaction.reply).toHaveBeenCalledWith({
           content: expect.stringContaining("PANIC MODE ENABLED"),
-          ephemeral: false,
         });
       });
 
@@ -171,7 +170,6 @@ describe("/panic command", () => {
         expect(setPanicMode).toHaveBeenCalledWith("guild-123", false, "user-123");
         expect(interaction.reply).toHaveBeenCalledWith({
           content: expect.stringContaining("Panic mode disabled"),
-          ephemeral: false,
         });
       });
 

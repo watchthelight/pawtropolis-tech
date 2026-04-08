@@ -363,6 +363,7 @@ function formatStatus(status: JobStatus): string {
     lining: "🖊️",
     coloring: "🎨",
     done: "✅",
+    cancelled: "❌",
   };
   return `${statusEmoji[status]} ${status.charAt(0).toUpperCase() + status.slice(1)}`;
 }
@@ -398,7 +399,7 @@ async function handleJobs(
   if (!hasPermission) return;
 
   await withStep(ctx, "defer", async () => {
-    await interaction.deferReply({ ephemeral: false });
+    await interaction.deferReply();
   });
 
   const jobs = await withStep(ctx, "fetch_jobs", async () => {
@@ -763,7 +764,7 @@ async function handleLeaderboard(
   }
 
   await withStep(ctx, "defer", async () => {
-    await interaction.deferReply({ ephemeral: false });
+    await interaction.deferReply();
   });
 
   // Top 10 for both. Could be configurable but nobody's asked.
@@ -842,7 +843,7 @@ async function handleAll(
   if (!hasPermission) return;
 
   await withStep(ctx, "defer", async () => {
-    await interaction.deferReply({ ephemeral: false });
+    await interaction.deferReply();
   });
 
   const jobs = await withStep(ctx, "fetch_jobs", async () => {

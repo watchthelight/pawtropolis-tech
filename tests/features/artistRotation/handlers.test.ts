@@ -114,7 +114,6 @@ describe("artistRotation/handlers", () => {
 
         expect(mockReply).toHaveBeenCalledWith({
           content: "Invalid button.",
-          ephemeral: false,
         });
         expect(mockLogger.warn).toHaveBeenCalled();
       });
@@ -130,7 +129,6 @@ describe("artistRotation/handlers", () => {
 
         expect(mockReply).toHaveBeenCalledWith({
           content: "Invalid button.",
-          ephemeral: false,
         });
       });
 
@@ -145,7 +143,6 @@ describe("artistRotation/handlers", () => {
 
         expect(mockReply).toHaveBeenCalledWith({
           content: "Invalid button.",
-          ephemeral: false,
         });
       });
     });
@@ -181,7 +178,6 @@ describe("artistRotation/handlers", () => {
 
         expect(mockReply).toHaveBeenCalledWith({
           content: "This must be done in a server.",
-          ephemeral: false,
         });
       });
 

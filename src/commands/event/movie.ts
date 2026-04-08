@@ -212,7 +212,7 @@ async function handleAttendance(ctx: CommandContext<ChatInputCommandInteraction>
   const user = interaction.options.getUser("user");
 
   await withStep(ctx, "defer", async () => {
-    await interaction.deferReply({ ephemeral: false });
+    await interaction.deferReply();
   });
 
   if (!user) {

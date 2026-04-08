@@ -161,7 +161,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   // Public reply (ephemeral: false) because unblocking is a moderation action
   // that should be visible to the team. Deferring because DB + API calls follow.
   await withStep(ctx, "defer", async () => {
-    await interaction.deferReply({ ephemeral: false });
+    await interaction.deferReply();
   });
 
   try {

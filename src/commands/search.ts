@@ -198,7 +198,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   }
 
   await withStep(ctx, "defer", async () => {
-    await interaction.deferReply({ ephemeral: false });
+    await interaction.deferReply();
   });
 
   // Declare outside try block for error logging

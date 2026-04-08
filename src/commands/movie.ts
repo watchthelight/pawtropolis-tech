@@ -405,7 +405,7 @@ async function handleAttendance(ctx: CommandContext<ChatInputCommandInteraction>
   const user = interaction.options.getUser("user");
 
   await withStep(ctx, "defer", async () => {
-    await interaction.deferReply({ ephemeral: false });
+    await interaction.deferReply();
   });
 
   // If no user specified, show all attendees from the most recent event

@@ -192,7 +192,7 @@ describe("/unblock command", () => {
 
       await execute(ctx);
 
-      expect(interaction.deferReply).toHaveBeenCalledWith({ ephemeral: false });
+      expect(interaction.deferReply).toHaveBeenCalledWith();
       expect(interaction.editReply).toHaveBeenCalledWith({
         content: expect.stringContaining("has been unblocked"),
       });

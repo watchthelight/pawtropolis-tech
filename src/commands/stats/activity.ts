@@ -47,7 +47,7 @@ export async function handleActivity(
 
   const weeks = interaction.options.getInteger("weeks", false) || 1;
 
-  await interaction.deferReply({ ephemeral: false });
+  await interaction.deferReply();
 
   try {
     const data = await withStep(ctx, "fetch_activity", async () => {

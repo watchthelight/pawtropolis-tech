@@ -153,7 +153,7 @@ describe("stats/activity", () => {
 
       await handleActivity(ctx);
 
-      expect(interaction.deferReply).toHaveBeenCalledWith({ ephemeral: false });
+      expect(interaction.deferReply).toHaveBeenCalledWith();
     });
 
     it("calls fetchActivityData with correct parameters", async () => {

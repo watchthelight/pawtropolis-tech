@@ -149,7 +149,7 @@ describe("/listopen command", () => {
 
       await execute(ctx);
 
-      expect(interaction.deferReply).toHaveBeenCalledWith({ ephemeral: false });
+      expect(interaction.deferReply).toHaveBeenCalledWith();
     });
 
     it("allows access for users with bypass (bot owner)", async () => {

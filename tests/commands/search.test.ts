@@ -155,7 +155,7 @@ describe("/search command", () => {
 
       await execute(ctx);
 
-      expect(interaction.deferReply).toHaveBeenCalledWith({ ephemeral: false });
+      expect(interaction.deferReply).toHaveBeenCalledWith();
     });
 
     it("allows access for reviewers", async () => {

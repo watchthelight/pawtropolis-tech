@@ -120,7 +120,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   const { interaction } = ctx;
   const guild = interaction.guild;
   if (!guild) {
-    await interaction.reply({ content: "This command must be run in a server.", ephemeral: false });
+    await interaction.reply({ content: "This command must be run in a server." });
     return;
   }
 
@@ -153,7 +153,6 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   if (!targetMember) {
     await interaction.reply({
       content: `Could not find <@${targetUser.id}> in this server.`,
-      ephemeral: false,
     });
     return;
   }
@@ -204,7 +203,6 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   if (artistResult.error) {
     await interaction.reply({
       content: artistResult.error,
-      ephemeral: false,
     });
     return;
   }
@@ -295,7 +293,6 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
     await interaction.reply({
       embeds: [embed],
       components: [buttons],
-      ephemeral: false,
     });
 
     logger.info(

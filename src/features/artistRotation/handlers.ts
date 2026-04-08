@@ -69,7 +69,7 @@ export async function handleRedeemRewardButton(interaction: ButtonInteraction): 
     // Someone is either tampering with requests or we deployed a breaking change.
     // Either way, the user gets a cryptic error. Such is life.
     logger.warn({ customId: interaction.customId }, "[redeemreward] Invalid button customId");
-    await interaction.reply({ content: "Invalid button.", ephemeral: false });
+    await interaction.reply({ content: "Invalid button." });
     return;
   }
 
@@ -110,7 +110,7 @@ async function handleConfirm(
 ): Promise<void> {
   const guild = interaction.guild;
   if (!guild) {
-    await interaction.reply({ content: "This must be done in a server.", ephemeral: false });
+    await interaction.reply({ content: "This must be done in a server." });
     return;
   }
 

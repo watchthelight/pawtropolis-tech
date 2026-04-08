@@ -117,7 +117,6 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   await withStep(ctx, "reply", async () => {
     await interaction.reply({
       content: `🔄 Starting backfill for ${weeks} weeks${dryRun ? ' (DRY RUN)' : ''}...\n\nThis will take 15-20 minutes. You'll be pinged when complete.`,
-      ephemeral: false,
     });
   });
 
