@@ -289,7 +289,7 @@ function countDraftApplications(guildId: string): number {
  * @returns Object containing embed and array of app URLs for button generation
  */
 async function buildListEmbed(
-  interaction: ChatInputCommandInteraction,
+  interaction: ChatInputCommandInteraction | ButtonInteraction | StringSelectMenuInteraction,
   apps: OpenApplication[],
   page: number,
   totalCount: number,
@@ -538,7 +538,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
 
   // Always defer publicly (ephemeral toggle removed)
   await withStep(ctx, "defer", async () => {
-    await interaction.deferReply({ ephemeral: false });
+    await interaction.deferReply();
   });
 
   try {

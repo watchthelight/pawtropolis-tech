@@ -30,7 +30,7 @@ const PATREON_ROLE_IDS = new Set(PATREON_TIERS.map((t) => t.roleId));
 
 /** Returns true if the role ID is a Patreon donor tier role. */
 export function isPatreonDonorRole(roleId: string): boolean {
-  return PATREON_ROLE_IDS.has(roleId);
+  return (PATREON_ROLE_IDS as Set<string>).has(roleId);
 }
 
 /**

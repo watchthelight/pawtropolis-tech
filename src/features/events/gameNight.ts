@@ -16,7 +16,10 @@ import { EmbedBuilder, type Guild, type VoiceBasedChannel } from "discord.js";
 import { db } from "../../db/db.js";
 import { logger } from "../../lib/logger.js";
 import { getGameConfig } from "../../store/gameConfigStore.js";
-import { calculateGameSessionQualification, type GameQualificationResult } from "./gameQualification.js";
+import { calculateGameSessionQualification } from "./gameQualification.js";
+
+// gameQualification.ts doesn't export a named result type, so derive it from the function.
+type GameQualificationResult = ReturnType<typeof calculateGameSessionQualification>;
 import type { ActiveEvent, EventSession, EventType } from "./types.js";
 import { assignRole, getRoleTiers, removeRole, type RoleAssignmentResult } from "../roleAutomation.js";
 import { isPanicMode } from "../panicStore.js";

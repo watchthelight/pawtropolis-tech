@@ -15,6 +15,7 @@ import {
   type ButtonInteraction,
   type ChatInputCommandInteraction,
   type Guild,
+  type MessageContextMenuCommandInteraction,
 } from "discord.js";
 import { logger } from "./logger.js";
 import { ROLE_NAMES, getRolesAtOrAbove, getMinRoleDescription } from "./roles.js";
@@ -170,7 +171,7 @@ async function resolveRequirement(
  * });
  */
 export async function postPermissionDenied(
-  interaction: ChatInputCommandInteraction | ButtonInteraction,
+  interaction: ChatInputCommandInteraction | ButtonInteraction | MessageContextMenuCommandInteraction,
   options: PermissionDenialOptions
 ): Promise<void> {
   const { command, description, requirements } = options;

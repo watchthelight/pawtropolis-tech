@@ -175,7 +175,7 @@ async function handleList(
 ): Promise<void> {
   // Public reply. Let everyone see the queue order to reduce conspiracy theories.
   await withStep(ctx, "defer", async () => {
-    await interaction.deferReply({ ephemeral: false });
+    await interaction.deferReply();
   });
 
   const guildId = interaction.guildId;
@@ -276,7 +276,7 @@ async function handleSync(
   }
 
   await withStep(ctx, "defer", async () => {
-    await interaction.deferReply({ ephemeral: false });
+    await interaction.deferReply();
   });
 
   // Fetch all members with Server Artist role (using guild-specific config)
@@ -290,7 +290,7 @@ async function handleSync(
     // Fetch only members with the artist role instead of ALL members.
     // guild.members.fetch({ query }) doesn't filter by role, but we can use
     // the role's cached members and re-fetch them individually if needed.
-    await guild.members.fetch({ force: false }); // Hydrate cache from gateway
+    await guild.members.fetch(); // Hydrate cache from gateway
     const ignoredUsers = getIgnoredArtistUsers(guild.id);
     return role.members
       .filter((m) => !ignoredUsers.has(m.id))
@@ -399,7 +399,7 @@ async function handleMove(
       .setDescription(`<@${user.id}> moved from position **#${oldPosition}** to **#${newPosition}**`)
       .setColor(0x00cc00);
 
-    await interaction.reply({ embeds: [embed], ephemeral: false });
+    await interaction.reply({ embeds: [embed] });
   });
 }
 
@@ -466,7 +466,7 @@ async function handleSkip(
       )
       .setColor(0xffaa00);
 
-    await interaction.reply({ embeds: [embed], ephemeral: false });
+    await interaction.reply({ embeds: [embed] });
   });
 }
 
@@ -527,7 +527,7 @@ async function handleUnskip(
       .setDescription(`<@${user.id}> is back in rotation at position **#${artist.position}**.`)
       .setColor(0x00cc00);
 
-    await interaction.reply({ embeds: [embed], ephemeral: false });
+    await interaction.reply({ embeds: [embed] });
   });
 }
 
@@ -544,7 +544,7 @@ async function handleHistory(
   ctx: CommandContext
 ): Promise<void> {
   await withStep(ctx, "defer", async () => {
-    await interaction.deferReply({ ephemeral: false });
+    await interaction.deferReply();
   });
 
   const guildId = interaction.guildId;
@@ -622,7 +622,7 @@ async function handleSetup(
   ctx: CommandContext
 ): Promise<void> {
   await withStep(ctx, "defer", async () => {
-    await interaction.deferReply({ ephemeral: false });
+    await interaction.deferReply();
   });
 
   const guild = interaction.guild;

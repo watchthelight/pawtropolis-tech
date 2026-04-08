@@ -1220,7 +1220,7 @@ export async function ensureGateEntry(
     }
     const pinnedResponse = await channel.messages.fetchPins();
     // discord.js v14.16+ fetchPins() returns { items: Collection, hasMore: boolean }, not a bare Collection.
-    const pinnedItems = (pinnedResponse as { items?: { has: (id: string) => boolean } }).items;
+    const pinnedItems = (pinnedResponse as unknown as { items?: { has: (id: string) => boolean } }).items;
     const pinnedMatch = pinnedItems ? pinnedItems.has(message.id) : false;
     result.pinned = pinnedMatch;
     if (!pinnedMatch) {

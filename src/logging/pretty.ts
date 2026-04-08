@@ -77,7 +77,18 @@ export type ActionType =
   | "byte_multiplier_expired"
   | "byte_multiplier_replaced"
   | "flag_dismissed"
-  | "vote_out";
+  | "vote_out"
+  | "game_tier_granted"
+  | "game_tier_progress"
+  | "game_manual_add"
+  | "game_credit"
+  | "game_bump"
+  | "stats_history_view"
+  | "stats_history_export"
+  | "artist_queue_joined"
+  | "artist_queue_left"
+  | "gate_submit"
+  | "role_remove";
 
 /**
  * Parameters for logging an action
@@ -371,6 +382,61 @@ function getActionMeta(action: ActionType): ActionMeta {
       title: "Application Vote-Out",
       color: 0xed4245, // Red
       emoji: "🗳️",
+    },
+    game_tier_granted: {
+      title: "Game Tier Role Granted",
+      color: 0x57f287, // Green
+      emoji: "🎮",
+    },
+    game_tier_progress: {
+      title: "Game Tier Progress",
+      color: 0x5865f2, // Discord blurple
+      emoji: "🎮",
+    },
+    game_manual_add: {
+      title: "Game Attendance Added",
+      color: 0xfee75c, // Yellow
+      emoji: "🎮",
+    },
+    game_credit: {
+      title: "Game Attendance Credited",
+      color: 0xfee75c, // Yellow
+      emoji: "📝",
+    },
+    game_bump: {
+      title: "Game Attendance Bump",
+      color: 0x57f287, // Green
+      emoji: "⬆️",
+    },
+    stats_history_view: {
+      title: "Stats History Viewed",
+      color: 0x5865f2, // Discord blurple
+      emoji: "📊",
+    },
+    stats_history_export: {
+      title: "Stats History Exported",
+      color: 0xfaa61a, // Orange
+      emoji: "📥",
+    },
+    artist_queue_joined: {
+      title: "Joined Artist Queue",
+      color: 0x9b59b6, // Purple
+      emoji: "🎨",
+    },
+    artist_queue_left: {
+      title: "Left Artist Queue",
+      color: 0x99aab5, // Gray
+      emoji: "🎨",
+    },
+    gate_submit: {
+      title: "Application Submitted",
+      color: 0x5865f2, // Discord blurple
+      emoji: "📝",
+    },
+    role_remove: {
+      title: "Role Removed",
+      color: 0x99aab5, // Gray
+      emoji: "🗑️",
     },
   };
 

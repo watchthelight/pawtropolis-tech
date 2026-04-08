@@ -115,7 +115,7 @@ export async function testHive(apiKey: string): Promise<{ success: boolean; erro
       return { success: false, error: `HTTP ${response.status}` };
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as { status?: Array<{ response?: { output?: unknown } }> };
     // We don't care about the actual result, just that the response shape
     // looks right. If output exists, the API is working.
     if (data?.status?.[0]?.response?.output) {

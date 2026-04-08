@@ -443,7 +443,7 @@ export async function closeModmailForApplication(
   userId: string,
   appCode: string,
   options: {
-    reason: "approved" | "rejected" | "permanently rejected" | "kicked";
+    reason: "approved" | "rejected" | "permanently rejected" | "kicked" | "voted out";
     client: Client;
     guild: Guild;
   }

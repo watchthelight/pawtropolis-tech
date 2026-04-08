@@ -224,8 +224,8 @@ export async function postErrorCard(
   try {
     // Error cards are public (not ephemeral) so staff can see them if the user asks for help.
     // Trace IDs are safe to expose - they're just correlation IDs, not secrets.
-    // flags: 0 overrides the ephemeral default in replyOrEdit
-    await replyOrEdit(interaction, { embeds: [embed], flags: 0 });
+    // Public (no Ephemeral flag) so staff can see the error card if the user asks for help.
+    await replyOrEdit(interaction, { embeds: [embed] });
   } catch (err) {
     const code = (err as { code?: unknown })?.code;
     // 10062 = interaction already expired. This is expected in race conditions

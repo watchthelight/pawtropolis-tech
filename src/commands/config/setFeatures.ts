@@ -248,7 +248,7 @@ export async function executeSetAvatarScanToggle(ctx: CommandContext<ChatInputCo
 
   await withStep(ctx, "update_config", async () => {
     withSql(ctx, "INSERT/UPDATE guild_config avatar_scan_enabled", () =>
-      upsertConfig(interaction.guildId!, { avatar_scan_enabled: enabled })
+      upsertConfig(interaction.guildId!, { avatar_scan_enabled: enabled ? 1 : 0 })
     );
     logger.info(
       { evt: "config_set_avatar_scan_toggle", guildId: interaction.guildId, enabled },
@@ -275,7 +275,7 @@ export async function executeSetListopenOutput(ctx: CommandContext<ChatInputComm
 
   await withStep(ctx, "update_config", async () => {
     withSql(ctx, "INSERT/UPDATE guild_config listopen_public_output", () =>
-      upsertConfig(interaction.guildId!, { listopen_public_output: isPublic })
+      upsertConfig(interaction.guildId!, { listopen_public_output: isPublic ? 1 : 0 })
     );
     logger.info(
       { evt: "config_set_listopen_output", guildId: interaction.guildId, mode, isPublic },

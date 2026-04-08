@@ -11,6 +11,7 @@
 import {
   ButtonInteraction,
   MessageFlags,
+  type ModalSubmitInteraction,
 } from "discord.js";
 import { db } from "../../../db/db.js";
 import { logger } from "../../../lib/logger.js";
@@ -154,7 +155,7 @@ export async function handleClaimToggle(interaction: ButtonInteraction, app: App
  * WHAT: Handles unclaim button using atomic unclaimTx().
  * WHY: Releases claim so other moderators can review.
  */
-export async function handleUnclaimAction(interaction: ButtonInteraction, app: ApplicationRow) {
+export async function handleUnclaimAction(interaction: ButtonInteraction | ModalSubmitInteraction, app: ApplicationRow) {
   // Import atomic unclaim function
   const { unclaimTx, ClaimError: ClaimTxError } = await import("../../reviewActions.js");
 

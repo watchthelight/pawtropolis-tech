@@ -248,7 +248,8 @@ export async function handleIsitRealButton(interaction: ButtonInteraction) {
   if (customId === `${BUTTON_PREFIX}refresh`) {
     await interaction.deferUpdate();
     const services = await testAllConfigured();
-    const embed = buildStatusEmbed(services);
+    const hasDisabledServices = services.filter((s) => s.configured).length < 4;
+    const embed = buildStatusEmbed(services, hasDisabledServices);
     const rows = buildSetupButtons(services);
     await interaction.editReply({ embeds: [embed], components: rows });
     return;

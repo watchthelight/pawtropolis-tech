@@ -196,15 +196,15 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   if (deferEarly) {
     await withStep(ctx, "defer_early", async () => {
       const isEphemeral = subcommand === "unacknowledge";
-      await interaction.deferReply({ ephemeral: isEphemeral });
+      await interaction.deferReply(isEphemeral ? { flags: MessageFlags.Ephemeral } : undefined);
     });
   }
 
   // Check if user has an allowed role or is bot owner/server dev
   const permissionResult = await withStep(ctx, "permission_check", async () => {
     const member = await guild.members.fetch(user.id);
-    const hasAllowedRole = member.roles.cache.some((role) => ALLOWED_ROLES.includes(role.id));
-    const canBypass = shouldBypass(user.id);
+    const hasAllowedRole = member.roles.cache.some((role) => (ALLOWED_ROLES as readonly string[]).includes(role.id));
+    const canBypass = shouldBypass(user.id, member);
     return { member, hasAllowedRole, canBypass };
   });
 
@@ -1040,8 +1040,8 @@ export async function handleAuditButton(interaction: ButtonInteraction): Promise
   // Check permissions again - yes, we already checked in execute(), but buttons
   // can be clicked by anyone who sees the message. Re-checking is paranoid but correct.
   const member = await guild.members.fetch(user.id);
-  const hasAllowedRole = member.roles.cache.some((role) => ALLOWED_ROLES.includes(role.id));
-  const canBypass = shouldBypass(user.id);
+  const hasAllowedRole = member.roles.cache.some((role) => (ALLOWED_ROLES as readonly string[]).includes(role.id));
+  const canBypass = shouldBypass(user.id, member);
 
   if (!hasAllowedRole && !canBypass) {
     await postPermissionDenied(interaction, {

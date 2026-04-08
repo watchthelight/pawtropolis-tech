@@ -6,7 +6,7 @@
  * AUTH: X-Dashboard-Secret header validated on every request.
  */
 
-import Fastify from "fastify";
+import Fastify, { type FastifyInstance } from "fastify";
 import type { Client, Guild } from "discord.js";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from "discord.js";
 import { db } from "../db/db.js";
@@ -64,7 +64,7 @@ import { CONFIG_FIELD_RULES, validateConfigUpdate, normalizeConfigValue, hasMinT
 
 // ===== Server =====
 
-let server: ReturnType<typeof Fastify> | null = null;
+let server: FastifyInstance | null = null;
 
 const DASHBOARD_API_PORT = parseInt(process.env.DASHBOARD_API_PORT ?? "3003", 10);
 const DASHBOARD_API_SECRET = process.env.DASHBOARD_API_SECRET;
@@ -252,20 +252,37 @@ export async function startDashboardApi(client: Client): Promise<void> {
       if (cfg) {
         const flowResult = await approveFlow(guild, app.user_id, cfg);
 
-        // BLOCK: If role grant failed, skip DM and welcome so user doesn't think they're verified
+        // BLOCK: If role grant failed, skip DM and welcome so user doesn't think they're verified.
+        // Distinguish two cases:
+        //   (a) user already left the server (Discord 10007 Unknown Member) — common race
+        //       between application approval and the applicant leaving. Not actionable, log
+        //       at WARN level with a clear message instead of ERROR + "left in limbo".
+        //   (b) any other failure — actually broken, needs manual intervention. Log at ERROR.
         if (cfg.accepted_role_id && !flowResult.roleApplied) {
-          const errorReason = flowResult.roleError?.message ?? "Unknown error";
-          logger.error(
-            { appId, userId: app.user_id, roleError: errorReason },
-            "[dashboardApi] BLOCKED: Role grant failed after retries — user left in limbo"
-          );
+          const rawErr = flowResult.roleError as { code?: number; message?: string } | undefined;
+          const errCode = rawErr?.code;
+          const userLeft = errCode === 10007;
+          const errorReason =
+            rawErr?.message ?? (errCode ? `Discord error ${errCode}` : "Unknown error");
+
+          if (userLeft) {
+            logger.warn(
+              { appId, userId: app.user_id, errCode },
+              "[dashboardApi] role grant skipped — applicant left the server before approval completed"
+            );
+          } else {
+            logger.error(
+              { appId, userId: app.user_id, roleError: errorReason, errCode },
+              "[dashboardApi] role grant failed after retries — applicant may need a manual role grant"
+            );
+          }
           updateReviewActionMeta(txResult.reviewActionId, { roleApplied: false, dmDelivered: false });
           // Still return success (DB approved) but include the role error for the dashboard to show
           notifyDashboard("review:approved", { appId, reviewerId: userId, action: "approve" });
           notifyDashboard("stats:updated", { userId });
           return reply.code(207).send({
             success: true,
-            data: { appId, roleApplied: false, roleError: errorReason },
+            data: { appId, roleApplied: false, roleError: errorReason, userLeft },
           } satisfies ApiSuccess);
         }
 
@@ -978,7 +995,7 @@ export async function startDashboardApi(client: Client): Promise<void> {
     if (!guild) return reply.code(503).send({ success: false, error: "Bot not ready" } satisfies ApiError);
 
     const { getActiveSession, cancelSession } = await import("../store/auditSessionStore.js");
-    const active = getActiveSession(guild.id, auditType as string);
+    const active = getActiveSession(guild.id, auditType as "members" | "nsfw");
     if (!active)
       return reply.code(404).send({ success: false, error: `No active ${auditType} scan found` } satisfies ApiError);
 
@@ -994,6 +1011,9 @@ export async function startDashboardApi(client: Client): Promise<void> {
       return reply.code(400).send({ success: false, error: "Missing required fields" } satisfies ApiError);
     if (!hasMinTier(tier as string, "sa"))
       return reply.code(403).send({ success: false, error: "Insufficient permissions (sa+ required)" } satisfies ApiError);
+
+    const guild = getGuild();
+    if (!guild) return reply.code(503).send({ success: false, error: "Bot not ready" } satisfies ApiError);
 
     const { acknowledgeIssue } = await import("../store/acknowledgedSecurityStore.js");
     acknowledgeIssue({
@@ -1017,6 +1037,9 @@ export async function startDashboardApi(client: Client): Promise<void> {
       return reply.code(400).send({ success: false, error: "Missing required fields" } satisfies ApiError);
     if (!hasMinTier(tier as string, "sa"))
       return reply.code(403).send({ success: false, error: "Insufficient permissions (sa+ required)" } satisfies ApiError);
+
+    const guild = getGuild();
+    if (!guild) return reply.code(503).send({ success: false, error: "Bot not ready" } satisfies ApiError);
 
     const { unacknowledgeIssue } = await import("../store/acknowledgedSecurityStore.js");
     const removed = unacknowledgeIssue(guild.id, issueKey as string);

@@ -218,8 +218,9 @@ async function sendAlertForGuild(
     // Otherwise, every 30 minutes we'd log "No review_channel_id" for the same
     // apps forever. Once the channel is configured, new stale apps will alert.
     // Old ones are a lost cause - the mods need to manually find them.
+    // Mark at level 3 (max) so the row never re-enters the unalerted set.
     for (const app of staleApps) {
-      markAlertSent(app.id);
+      markAlertSent(app.id, 3);
     }
     return;
   }

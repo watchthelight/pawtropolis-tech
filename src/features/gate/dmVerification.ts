@@ -344,6 +344,10 @@ export async function handleDmAnswer(message: Message): Promise<void> {
   // Move to next question
   const nextIndex = session.currentQuestionIndex + 1;
 
+  // Type guard: DM channels always support send(), but the union type from message.channel
+  // includes PartialGroupDMChannel which doesn't. Narrow to a sendable channel.
+  if (!("send" in message.channel)) return;
+
   if (nextIndex < session.questions.length) {
     // Send next question
     session.currentQuestionIndex = nextIndex;

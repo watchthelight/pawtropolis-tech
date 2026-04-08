@@ -39,6 +39,7 @@ export async function artChannelPing(message: Message): Promise<void> {
   cooldowns.set(message.channelId, now);
 
   try {
+    if (!("send" in message.channel)) return;
     await message.channel.send({
       content: `<@&${roleId}>`,
       allowedMentions: { roles: [roleId], users: [], repliedUser: false },

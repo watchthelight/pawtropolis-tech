@@ -68,6 +68,9 @@ async function registerMetadata() {
 
   // API version "10" will probably be deprecated by the time you read this.
   // Check Discord's changelog if you're getting mysterious 404s.
+  if (!DISCORD_TOKEN) {
+    throw new Error("DISCORD_TOKEN env var is required");
+  }
   const rest = new REST({ version: "10" }).setToken(DISCORD_TOKEN);
 
   try {
