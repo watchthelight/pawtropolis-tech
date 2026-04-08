@@ -532,3 +532,13 @@ const modal = new ModalBuilder()
 - **Button patterns:** 15+
 - **Modal types:** 6
 - **Context menus:** 1
+
+---
+
+## See Also
+
+- [Command Patterns](reference/command-patterns.md) — `withStep`, `withSql`, permission helpers, subcommand routing rationale
+- [Command Checklist](reference/command-checklist.md) — ephemeral vs public reply patterns
+- [Command Refactor Checklist](reference/command-refactor-checklist.md) — full step-by-step for bringing old commands up to current standards
+- [Slash Commands Reference](reference/slash-commands.md) — the user-facing command list (this doc is the developer guide)
+- [Bot Handbook](BOT-HANDBOOK.md) — what each command actually does in Discord

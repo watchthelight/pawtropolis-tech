@@ -118,3 +118,13 @@ Bot writes live Discord gateway data to SQLite every 5 minutes so the web dashbo
 - Matches Discord Server Insights week boundaries
 - Communicators count may be higher than Discord's because Discord excludes users who opted out of analytics tracking
 - Query: `web/src/lib/server/queries/pulse.ts` → `getNewsletterStats()`
+
+---
+
+## See Also
+
+- [Architecture: System Overview](architecture/system-overview.md) — where these subsystems fit in the runtime topology
+- [Database Schema](reference/database-schema.md) — `voice_session`, `guild_snapshot`, `avatar_scan`, `ai_detection_toggles` table definitions
+- [Bot Handbook — `/isitreal`](BOT-HANDBOOK.md#isitreal) — user-facing AI detection command
+- [Slash Commands System](SLASH-COMMANDS.md) — how the `/isitreal` command and its config sub-commands are wired up
+- [Deployment Config](operations/deployment-config.md) — env vars and where to set them on the server
