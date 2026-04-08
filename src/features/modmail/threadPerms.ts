@@ -318,14 +318,19 @@ export async function ensureParentPermsForMods(parent: TextChannel | ForumChanne
     }
 
     // Also make sure the BOT itself can operate in threads under this parent.
-    const botId = guild.client.user?.id;
-    if (botId) {
+    // GOTCHA: permissionOverwrites.edit() with a bare Snowflake string tries to resolve
+    // it to a Role first, then a User. The bot's own user often isn't in the role/user
+    // cache at startup time, so resolution fails with "Supplied parameter is not a User
+    // nor a Role". Always pass the bot's GuildMember object directly to disambiguate.
+    const botMember =
+      guild.members.me ?? (await guild.members.fetchMe().catch(() => null));
+    if (botMember) {
       try {
-        const botPerms = parent.permissionsFor(botId);
+        const botPerms = parent.permissionsFor(botMember);
         const botHas = botPerms?.has(PermissionFlagsBits.SendMessagesInThreads) ?? false;
 
         if (!botHas) {
-          await parent.permissionOverwrites.edit(botId, {
+          await parent.permissionOverwrites.edit(botMember, {
             ViewChannel: true,
             ReadMessageHistory: true,
             SendMessages: true,
@@ -334,18 +339,18 @@ export async function ensureParentPermsForMods(parent: TextChannel | ForumChanne
             SendMessagesInThreads: true,
           });
           logger.debug(
-            { parentId: parent.id, botId },
+            { parentId: parent.id, botId: botMember.id },
             "[modmail] retrofit: granted thread perms to bot"
           );
         } else {
           logger.debug(
-            { parentId: parent.id, botId },
+            { parentId: parent.id, botId: botMember.id },
             "[modmail] retrofit: bot already has SendMessagesInThreads"
           );
         }
       } catch (err) {
         logger.warn(
-          { err, parentId: parent.id, botId },
+          { err, parentId: parent.id, botId: botMember.id },
           "[modmail] retrofit: failed to set bot perms"
         );
       }

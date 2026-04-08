@@ -447,14 +447,18 @@ describe("features/modmail/threadPerms", () => {
       mockGetConfig.mockReturnValue({ mod_role_ids: "role1" });
 
       const mockEdit = vi.fn().mockResolvedValue(undefined);
+      // The bot must be passed as a GuildMember object (not a Snowflake string) so that
+      // discord.js's PermissionOverwriteManager.edit can resolve it unambiguously.
+      const mockBotMember = { id: "bot-id" } as any;
       const mockParent = {
         id: "parent-123",
         guild: {
           id: "guild-123",
           client: { user: { id: "bot-id" } },
+          members: { me: mockBotMember, fetchMe: vi.fn().mockResolvedValue(mockBotMember) },
         },
-        permissionsFor: vi.fn().mockImplementation((id) => ({
-          has: vi.fn().mockReturnValue(id === "role1"),
+        permissionsFor: vi.fn().mockImplementation((target) => ({
+          has: vi.fn().mockReturnValue(typeof target === "string" ? target === "role1" : false),
         })),
         permissionOverwrites: {
           edit: mockEdit,
@@ -463,7 +467,7 @@ describe("features/modmail/threadPerms", () => {
 
       await ensureParentPermsForMods(mockParent);
 
-      expect(mockEdit).toHaveBeenCalledWith("bot-id", {
+      expect(mockEdit).toHaveBeenCalledWith(mockBotMember, {
         ViewChannel: true,
         ReadMessageHistory: true,
         SendMessages: true,
