@@ -85,7 +85,6 @@
 
 ### Root-Level Documentation
 - [README](../README.md) - Project introduction and quick start
-- [CLAUDE.md](../CLAUDE.md) - AI assistant project instructions
 - [CHANGELOG](../CHANGELOG.md) - Version history
 - [TODO](../TODO.md) - Task tracking
 
