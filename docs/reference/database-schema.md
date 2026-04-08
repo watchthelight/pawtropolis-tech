@@ -180,3 +180,14 @@ SELECT * FROM open_modmail WHERE status = 'open';
 ## Migration Notes
 
 The `logging_channel_id` column was added by migration 001 (`migrations/001_add_logging_channel_id.ts`).
+
+---
+
+## See Also
+
+- [Gate Review Flow](gate-review-flow.md) — how `review_action` and `action_log` get populated
+- [Modmail System](modmail-system.md) — `open_modmail` table usage
+- [Logging and ModStats](logging-and-modstats.md) — how the stats engine queries `action_log`
+- [Architecture: System Overview](../architecture/system-overview.md) — where the database fits in the overall design
+- [Deployment Config](../operations/deployment-config.md) — DB path, WAL mode, and backup setup
+

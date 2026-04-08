@@ -91,3 +91,11 @@ Run `npm run deploy:cmds`
 1. Check channel ID is correct
 2. Bot needs Send Messages + Embed Links in that channel
 3. Make sure it's a text channel
+
+---
+
+## See Also
+
+- [Bot Handbook — `/send`](../BOT-HANDBOOK.md) — user-facing command details
+- [Permissions Matrix](../PERMS-MATRIX.md) — who has Manage Messages by default
+- [Logging and ModStats](logging-and-modstats.md) — how `/send` actions get audit-logged

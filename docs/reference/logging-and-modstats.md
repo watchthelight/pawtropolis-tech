@@ -126,3 +126,12 @@ WHERE decided_at IS NOT NULL;
 - Pretty cards sometimes don't post (logging_channel_id missing)
 - Environment fallback doesn't work (LOGGING_CHANNEL not read)
 - Need to add SendMessages + EmbedLinks permissions check on startup
+
+---
+
+## See Also
+
+- [Bot Handbook — `/modstats`](../BOT-HANDBOOK.md#modstats) — user-facing command details
+- [Admin Guide](../ADMIN-GUIDE.md) — admin-tier stats export and reset commands
+- [Database Schema](database-schema.md) — full `action_log` table definition
+- [Gate Review Flow](gate-review-flow.md) — what populates the action log in the first place
