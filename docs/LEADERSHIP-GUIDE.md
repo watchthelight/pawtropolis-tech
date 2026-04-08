@@ -223,4 +223,4 @@ Full docs: [BOT-HANDBOOK](BOT-HANDBOOK.md#database)
 
 **Previous:** [Admin Guide](ADMIN-GUIDE.md) | [Moderator Guide](MODERATOR-GUIDE.md) | [Gatekeeper Guide](GATEKEEPER-GUIDE.md)
 
-**Reference:** [Bot Handbook](BOT-HANDBOOK.md) | [Staff Policies](MOD-HANDBOOK.md) | [Permissions](../PERMS-MATRIX.md)
+**Reference:** [Bot Handbook](BOT-HANDBOOK.md) | [Staff Policies](MOD-HANDBOOK.md) | [Permissions](PERMS-MATRIX.md)

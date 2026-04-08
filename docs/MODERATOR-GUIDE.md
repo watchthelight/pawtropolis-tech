@@ -138,4 +138,4 @@ When you advance to **Administrator**, you'll unlock:
 
 **Previous:** [Gatekeeper Guide](GATEKEEPER-GUIDE.md) | **Next:** [Admin Guide](ADMIN-GUIDE.md)
 
-**Reference:** [Bot Handbook](BOT-HANDBOOK.md) &#8226; [Staff Policies](MOD-HANDBOOK.md) &#8226; [Permissions](../PERMS-MATRIX.md)
+**Reference:** [Bot Handbook](BOT-HANDBOOK.md) &#8226; [Staff Policies](MOD-HANDBOOK.md) &#8226; [Permissions](PERMS-MATRIX.md)

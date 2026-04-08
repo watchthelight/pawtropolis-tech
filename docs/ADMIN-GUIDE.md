@@ -177,4 +177,4 @@ When you advance to **Leadership** (Community Manager and above), you'll unlock:
 
 **Previous:** [Moderator Guide](MODERATOR-GUIDE.md) | **Next:** [Leadership Guide](LEADERSHIP-GUIDE.md)
 
-**Reference:** [Bot Handbook](BOT-HANDBOOK.md) - [Staff Policies](MOD-HANDBOOK.md) - [Permissions](../PERMS-MATRIX.md)
+**Reference:** [Bot Handbook](BOT-HANDBOOK.md) - [Staff Policies](MOD-HANDBOOK.md) - [Permissions](PERMS-MATRIX.md)
