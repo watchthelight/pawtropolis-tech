@@ -300,6 +300,13 @@ commands.set(qotd.data.name, wrapCommand("qotd", qotd.execute));
 import * as verify from "./commands/verify.js";
 commands.set(verify.data.name, wrapCommand("verify", verify.execute));
 
+// Admin: one-shot migration to per-user verify threads
+import * as adminMigrateUnverified from "./commands/admin-migrate-unverified.js";
+commands.set(
+  adminMigrateUnverified.data.name,
+  wrapCommand("admin-migrate-unverified", adminMigrateUnverified.execute)
+);
+
 client.once(Events.ClientReady, async () => {
   // schema self-heal before anything else
   // sudo make it work
@@ -1060,6 +1067,20 @@ client.on("guildMemberAdd", wrapEvent("guildMemberAdd", async (member) => {
   } catch (err) {
     logger.debug({ err, userId: member.id }, "[guildMemberAdd] Invite tracking failed (non-fatal)");
   }
+
+  // Create per-user private verify thread (replaces public lobby — closes the
+  // scammer-discovery vector where unverified users could see each other in
+  // the lobby's member sidebar). Short-circuits if verify_thread_parent_id
+  // isn't configured for this guild.
+  try {
+    const { handleMemberJoin } = await import("./features/gate/threadGate.js");
+    await handleMemberJoin(member);
+  } catch (err) {
+    logger.error(
+      { err, userId: member.id, guildId: member.guild.id },
+      "[guildMemberAdd] verify thread creation failed"
+    );
+  }
 }));
 
 // REVIEW CARD: Refresh pending apps when user leaves server
@@ -1118,6 +1139,17 @@ client.on("guildMemberRemove", wrapEvent("guildMemberRemove", async (member) => 
         guildId,
       }, "[guildMemberRemove] failed to refresh review card");
     }
+  }
+
+  // Clean up per-user verify thread if the user had one open
+  try {
+    const { cleanupVerifyThreadForUser } = await import("./features/gate/threadGate.js");
+    await cleanupVerifyThreadForUser(client, guildId, userId, "left_server");
+  } catch (err) {
+    logger.warn(
+      { err, guildId, userId },
+      "[guildMemberRemove] verify thread cleanup failed"
+    );
   }
 }));
 
@@ -2337,6 +2369,23 @@ client.on("messageCreate", wrapEvent("messageCreate", async (message) => {
   // Ignore bot messages
   if (message.author.bot) return;
 
+  // Invalidate the rules cache if this message is in a configured
+  // unverified-rules channel — keeps the verify-thread rules replication
+  // synced with staff edits in real time. The 10-min TTL on the cache is a
+  // backstop, but explicit invalidation is faster.
+  if (message.guildId) {
+    try {
+      const { getCachedRulesChannelId, invalidateRulesCache } = await import(
+        "./features/gate/rulesCache.js"
+      );
+      if (getCachedRulesChannelId(message.guildId) === message.channelId) {
+        invalidateRulesCache(message.guildId);
+      }
+    } catch {
+      /* non-fatal */
+    }
+  }
+
   const traceId = newTraceId();
 
   try {
@@ -2412,12 +2461,35 @@ client.on("messageCreate", wrapEvent("messageCreate", async (message) => {
       }
     }
 
-    // Check if message is in a modmail thread
+    // Check if message is in a modmail thread or per-user verify thread
     if (message.channel.isThread() && message.guildId) {
+      // Modmail thread routing (existing)
       const ticket = getTicketByThread(message.channel.id);
       if (ticket && ticket.status === "open") {
         await routeThreadToDm(message, ticket, client);
         return;
+      }
+      // Per-user verify thread routing — if the message author is the same
+      // user this thread belongs to AND they have an active verification
+      // session, route the message to handleDmAnswer (which is channel-
+      // agnostic and uses message.channel.send() for follow-up questions).
+      try {
+        const { getVerifyThreadByThreadId } = await import("./features/gate/threadGate.js");
+        const verifyRow = getVerifyThreadByThreadId(message.channel.id);
+        if (verifyRow && verifyRow.user_id === message.author.id) {
+          const { hasActiveSession, handleDmAnswer } = await import(
+            "./features/gate/dmVerification.js"
+          );
+          if (hasActiveSession(message.author.id)) {
+            await handleDmAnswer(message);
+            return;
+          }
+        }
+      } catch (err) {
+        logger.debug(
+          { err, channelId: message.channel.id, userId: message.author.id },
+          "[messageCreate] verify thread routing failed (non-fatal)"
+        );
       }
     }
 
