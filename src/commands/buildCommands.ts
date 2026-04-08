@@ -58,6 +58,7 @@ import { data as reportData } from "./report.js";
 import { data as attendanceData } from "./attendance.js";
 import { data as qotdData } from "./qotd.js";
 import { data as verifyData } from "./verify.js";
+import { data as adminMigrateUnverifiedData } from "./admin-migrate-unverified.js";
 
 // Returns an array of command JSON objects for Discord's bulk command registration.
 // Discord has a limit of 100 slash commands per bot per guild, so we're fine here.
@@ -132,6 +133,9 @@ export function buildCommands() {
 
     // First responder / military verification
     verifyData.toJSON(),
+
+    // Admin: one-shot migration to per-user verify threads
+    adminMigrateUnverifiedData.toJSON(),
 
     /*
      * Context menu commands are registered alongside slash commands in Discord.js v14.
