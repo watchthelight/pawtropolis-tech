@@ -1,11 +1,26 @@
-import type { Handle } from '@sveltejs/kit';
+import type { Handle, HandleServerError } from '@sveltejs/kit';
+import { sequence } from '@sveltejs/kit/hooks';
+import * as Sentry from '@sentry/sveltekit';
+import { env } from '$env/dynamic/public';
 import { getSession } from '$lib/server/session';
 import { getPreferences } from '$lib/server/preferences';
 
 // Side-effect: subscribe push sender to eventBus
 import '$lib/server/push/push-sender';
 
-export const handle: Handle = async ({ event, resolve }) => {
+// Sentry server-side init runs once at module load (server startup).
+// Skipped silently if PUBLIC_SENTRY_DSN is unset, so dev/test environments
+// without a DSN configured don't error out.
+if (env.PUBLIC_SENTRY_DSN) {
+	Sentry.init({
+		dsn: env.PUBLIC_SENTRY_DSN,
+		tracesSampleRate: 0.1,
+		serverName: 'pawtropolis-web',
+		environment: process.env.NODE_ENV || 'production'
+	});
+}
+
+const appHandle: Handle = async ({ event, resolve }) => {
 	const session = getSession(event.cookies);
 
 	if (session) {
@@ -40,3 +55,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	});
 };
+
+// Compose Sentry's handle wrapper with the app handle. Order matters:
+// sentryHandle() must run first so it captures errors thrown by appHandle.
+export const handle: Handle = sequence(Sentry.sentryHandle(), appHandle);
+
+// Capture errors raised inside load functions and SSR rendering. Without this,
+// thrown errors reach the user's browser but never make it to Sentry.
+export const handleError: HandleServerError = Sentry.handleErrorWithSentry();
