@@ -128,23 +128,23 @@ Stats include:
 
 ## Common Mistakes to Avoid
 
-1. **Don't forget to claim** — Always claim before reviewing
-2. **Use ONE identifier** — Don't mix `app:`, `user:`, and `uid:` in the same command
-3. **`perm:true` is permanent** — Only use for obvious spam/bots/rule violations
-4. **Check the password** — Most rejections are just wrong passwords; they can try again
+1. Forgetting to claim. Always claim first — otherwise two people end up reviewing the same application.
+2. Mixing identifiers. Pick one of `app:`, `user:`, or `uid:` per command and stick with it.
+3. Treating `perm:true` like a regular reject. It's permanent and irreversible without `/unblock`. Save it for spam, bots, and clear rule violations.
+4. Skipping the password check. Most "rejects" are people who guessed the password wrong — they can just try again.
 
 ---
 
-## What's Coming Next
+## What Moderator Adds
 
-When you advance to **Moderator**, you'll unlock:
+Moderators also have:
 
-- **Events** — Run movie & game nights and track attendance
-- **Server Activity** — View activity heatmaps
-- **Bot Presence** — Update the bot's status and activity
-- **Fun Stuff** — Skull mode and other server features
+- Movie and game night attendance tracking
+- The server activity heatmap
+- Bot presence/status controls
+- Skull mode
 
-📖 [MODERATOR-GUIDE.md →](MODERATOR-GUIDE.md)
+See the [Moderator Guide](MODERATOR-GUIDE.md) for details.
 
 ---
 
