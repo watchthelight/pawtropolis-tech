@@ -161,6 +161,12 @@ export type GuildConfig = {
   vote_out_threshold?: number | null; // Votes needed to reject via Vote Out (default: 2)
   // Patreon art reward automation toggle (062 migration)
   patreon_art_rewards_enabled?: string | null; // "true" = enabled, default off
+  // Per-user verify thread infrastructure (066 migration)
+  // Hidden parent text channel where private verify threads are created. When NULL,
+  // the threadGate feature short-circuits and the bot's behavior is unchanged.
+  verify_thread_parent_id?: string | null;
+  // Source channel whose messages get replicated into each verify thread (rules display).
+  unverified_rules_channel_id?: string | null;
   // These fields are NOT optional. Ask me how I know.
   // (Hint: it involved a production outage and a missing COALESCE)
   image_search_url_template: string;
@@ -660,6 +666,7 @@ export function upsertConfig(guildId: string, partial: Partial<Omit<GuildConfig,
       "flag_rate_limit_ms", "flag_cooldown_ttl_ms", "nsfw_alert_role_id", "banner_sync_enabled",
       "qotd_review_channel_id", "qotd_role_id", "pulse_excluded_category_ids_json",
       "vote_out_threshold",
+      "verify_thread_parent_id", "unverified_rules_channel_id",
     ]);
 
     const validKeys = keys.filter((k) => ALLOWED_CONFIG_COLUMNS.has(k as string));
