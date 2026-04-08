@@ -2,7 +2,18 @@
 
 Started: 2026-03-05
 Status: **Complete — Passes 1-8 applied** — 79 findings across 8 rounds, 26 resolved
-Detailed reports: `docs/audits/code-audit-2026/round-*.md`
+
+**Detailed reports (one per round):**
+- [Round 1: Foundation](code-audit-2026/round-1-foundation.md)
+- [Round 2: Gate System](code-audit-2026/round-2-gate-system.md)
+- [Round 3: Review System](code-audit-2026/round-3-review-system.md)
+- [Round 4: Large Commands](code-audit-2026/round-4-large-commands.md)
+- [Round 5: Feature Modules](code-audit-2026/round-5-feature-modules.md)
+- [Round 6: Shared Utilities](code-audit-2026/round-6-shared-utilities.md)
+- [Round 7: Stores, Schedulers, Config](code-audit-2026/round-7-stores-schedulers-config.md)
+- [Round 8: Web Dashboard](code-audit-2026/round-8-web-dashboard.md)
+- [Improvement Plan](code-audit-2026/IMPROVEMENT-PLAN.md)
+- [Improvement Prompt](code-audit-2026/IMPROVEMENT-PROMPT.md)
 
 ## Known Issues Pre-Check (from Jan 2026 audit)
 
@@ -231,4 +242,13 @@ Minor commands (poke, skullmode, sample, test), simple listeners (dadMode, skull
 - Logging: F010 (bare catch), F034 (info->debug)
 - Minor: F047 (memberCount), F051 (SSH StrictHostChecking), F067 (SELECT 1)
 
-Full findings details in per-round reports: `docs/audits/code-audit-2026/round-{1..8}-*.md`
+Full findings details in the per-round reports linked at the top.
+
+---
+
+## See Also
+
+- [Audits Index](README.md) — all audit-related documentation
+- [Final Audit Report (Jan 2026)](AUDIT-FINAL-20260112.md) — the prior audit referenced by the K1-K5 pre-checks above
+- [Architecture: System Overview](../architecture/system-overview.md) — design context for the modules being audited
+- [Database Schema](../reference/database-schema.md) — schema referenced in many findings
