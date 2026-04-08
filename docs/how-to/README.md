@@ -9,5 +9,5 @@ Step-by-step guides for common tasks.
 
 ## Other Docs
 
-- [Reference Documentation](/docs/reference/) - Detailed feature info
-- [Troubleshooting](/docs/operations/troubleshooting.md) - Fix common problems
+- [Reference Documentation](../reference/README.md) - Detailed feature info
+- [Troubleshooting](../operations/troubleshooting.md) - Fix common problems

@@ -11,5 +11,5 @@ New to the project? Start with the Executive Summary.
 
 ## More Info
 
-- [System Architecture](/docs/architecture/system-overview.md) - How it works
-- [Main README](/README.md) - Setup and development
+- [System Architecture](../architecture/system-overview.md) - How it works
+- [Main README](../../README.md) - Setup and development
