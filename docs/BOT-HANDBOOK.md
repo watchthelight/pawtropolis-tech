@@ -1768,7 +1768,7 @@ graph TD
 
 Your control panel for server-wide bot behavior.
 
-####Setting Configuration
+#### Setting Configuration
 
 | Subcommand | What it does | Valid values |
 |------------|--------------|--------------|
