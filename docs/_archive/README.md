@@ -75,7 +75,7 @@ These documents may be useful for:
 
 For up-to-date documentation, see:
 
-- [Documentation Index](/docs/README.md) - Master navigation
-- [Architecture](/docs/architecture/) - System design
-- [Reference](/docs/reference/) - API and feature reference
-- [Operations](/docs/operations/) - Deployment and troubleshooting
+- [Documentation Index](../README.md) - Master navigation
+- [Architecture](../architecture/README.md) - System design
+- [Reference](../reference/README.md) - API and feature reference
+- [Operations](../operations/README.md) - Deployment and troubleshooting
