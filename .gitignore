@@ -26,7 +26,6 @@ finances.md
 FINANCES.md
 
 # Local-only docs (personal notes, AI workspace, generated artifacts)
-CHANGELOG.md
 CLAUDE.md
 changelog-qotd.md
 _bmad-output/implementation-artifacts/
@@ -72,6 +71,9 @@ _bmad-output/
 
 # Recovery files
 _recovery/
+
+# Security recon reports (may contain user IDs and channel structure — do not commit)
+_recon/
 
 # Private moderation case files
 docs/moderation/
