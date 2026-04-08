@@ -76,7 +76,8 @@ export type ActionType =
   | "byte_multiplier_applied"
   | "byte_multiplier_expired"
   | "byte_multiplier_replaced"
-  | "flag_dismissed";
+  | "flag_dismissed"
+  | "vote_out";
 
 /**
  * Parameters for logging an action
@@ -365,6 +366,11 @@ function getActionMeta(action: ActionType): ActionMeta {
       title: "Flag Dismissed",
       color: 0x99aab5, // Gray
       emoji: "🏳️",
+    },
+    vote_out: {
+      title: "Application Vote-Out",
+      color: 0xed4245, // Red
+      emoji: "🗳️",
     },
   };
 
