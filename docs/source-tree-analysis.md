@@ -477,3 +477,13 @@ pawtropolis-tech/
 | `src/scheduler/` | 7 background schedulers | Event timeouts, security audits, metrics, cleanup |
 | `src/store/` | 9 state stores | Feature flags, multipliers, security snapshots |
 | `migrations/` | 45 versioned schema changes | Incremental database evolution from v1 to current |
+
+---
+
+## See Also
+
+- [Architecture](./architecture.md) — design rationale and tech stack
+- [Project Overview](./project-overview.md) — high-level project summary
+- [Development Guide](./development-guide.md) — how to actually work in the tree
+- [Slash Commands System](./SLASH-COMMANDS.md) — how `src/commands/` is organized and registered
+- [Database Schema](./reference/database-schema.md) — what `migrations/` builds toward

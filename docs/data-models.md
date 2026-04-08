@@ -360,3 +360,7 @@ Staff assigns ticket → SELECT next from artist_queue
 - Detailed existing schema reference: [docs/reference/database-schema.md](./reference/database-schema.md)
 - Migration files: `migrations/001-045`
 - Database layer: `src/db/db.ts`, `src/db/ensure.ts`
+- System architecture context: [docs/architecture/system-overview.md](./architecture/system-overview.md)
+- Gate review flow that drives `review_action` and `action_log`: [docs/reference/gate-review-flow.md](./reference/gate-review-flow.md)
+- Modmail system that drives `open_modmail`: [docs/reference/modmail-system.md](./reference/modmail-system.md)
+- ModStats that read from `action_log`: [docs/reference/logging-and-modstats.md](./reference/logging-and-modstats.md)
