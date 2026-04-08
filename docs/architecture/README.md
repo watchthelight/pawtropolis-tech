@@ -12,6 +12,6 @@ These documents explain how the system is built, what components it uses, and wh
 
 ## See Also
 
-- [Database Schema](/docs/reference/database-schema.md) - Data model details
-- [Deployment Config](/docs/operations/deployment-config.md) - Runtime configuration
-- [Source Code README](/src/db/README.md) - Database layer implementation
+- [Database Schema](../reference/database-schema.md) - Data model details
+- [Deployment Config](../operations/deployment-config.md) - Runtime configuration
+- [Source Code README](../../src/db/README.md) - Database layer implementation

@@ -95,4 +95,4 @@ All core features are complete:
 
 ## Summary
 
-Pawtropolis Tech is a moderation bot with review, modmail, analytics, and event tracking. Actively maintained with regular security updates and feature additions. See the [CHANGELOG](../CHANGELOG.md) for recent updates.
+Pawtropolis Tech is a moderation bot with review, modmail, analytics, and event tracking. Actively maintained with regular security updates and feature additions. See the [CHANGELOG](../../CHANGELOG.md) for recent updates.

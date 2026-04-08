@@ -403,16 +403,16 @@ Bypass conditions are checked before anything else:
 ## See Also
 
 ### Tier-Specific Guides
-- [Gatekeeper Guide](docs/GATEKEEPER-GUIDE.md) — Gate system permissions
-- [Moderator Guide](docs/MODERATOR-GUIDE.md) — Event management permissions
-- [Admin Guide](docs/ADMIN-GUIDE.md) — Configuration permissions
-- [Leadership Guide](docs/LEADERSHIP-GUIDE.md) — Audit and management permissions
+- [Gatekeeper Guide](GATEKEEPER-GUIDE.md) — Gate system permissions
+- [Moderator Guide](MODERATOR-GUIDE.md) — Event management permissions
+- [Admin Guide](ADMIN-GUIDE.md) — Configuration permissions
+- [Leadership Guide](LEADERSHIP-GUIDE.md) — Audit and management permissions
 
 ### Reference Documentation
 - [BOT-HANDBOOK.md](BOT-HANDBOOK.md) — Complete command reference
-- [MOD-HANDBOOK.md](docs/MOD-HANDBOOK.md) — Staff policies and escalation
-- [ROLES.md](docs/ROLES.md) — Server role IDs
+- [MOD-HANDBOOK.md](MOD-HANDBOOK.md) — Staff policies and escalation
+- [ROLES.md](internal-info/ROLES.md) — Server role IDs
 
 ### Navigation
 - [Bot Handbook](BOT-HANDBOOK.md) — Start here for all docs
-- [CHANGELOG.md](CHANGELOG.md) — Version history
+- [CHANGELOG.md](../CHANGELOG.md) — Version history
