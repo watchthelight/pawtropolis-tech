@@ -193,4 +193,3 @@ The agent will ask you before proceeding. Common reasons:
 
 - [deployment-config.md](./deployment-config.md) - Environment setup
 - [troubleshooting.md](./troubleshooting.md) - Common problems
-- [.claude/agents/deploy-changes.md](../../.claude/agents/deploy-changes.md) - Agent configuration
