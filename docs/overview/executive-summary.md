@@ -2,9 +2,9 @@
 
 ## What Is This?
 
-Pawtropolis Tech is a Discord bot that helps moderators manage a community. It handles join applications, modmail tickets, audit logs, and analytics.
+Pawtropolis Tech is the moderation bot for the Pawtropolis Discord server. It runs the join-application review flow, handles modmail tickets, writes audit logs to a staff channel, and tracks per-moderator stats.
 
-**Who uses it**: Moderators, admins, and community managers.
+**Who uses it:** moderators, admins, and community managers.
 
 ## Features
 
@@ -14,7 +14,7 @@ Moderators can claim, approve, or reject join applications. The bot prevents dup
 
 ### 2. Modmail
 
-Member DMs turn into private staff threads. Staff can reply, and messages go back and forth. Threads can be closed and reopened. Everything saves to the database.
+Member DMs become private staff threads. Replies route back to the user, the thread can be closed and reopened, and the full transcript persists in the database.
 
 ### 3. Audit Logs
 
@@ -93,6 +93,6 @@ All core features are complete:
    - Card appears in logging channel: "Accepted by @Moderator"
    - User gets member role (if accepted)
 
-## Summary
+## Recent Activity
 
-Pawtropolis Tech is a moderation bot with review, modmail, analytics, and event tracking. Actively maintained with regular security updates and feature additions. See the [CHANGELOG](../../CHANGELOG.md) for recent updates.
+See the [CHANGELOG](../../CHANGELOG.md) for what's shipped and what's in flight.
