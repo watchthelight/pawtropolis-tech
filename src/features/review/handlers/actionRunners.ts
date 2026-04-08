@@ -176,6 +176,21 @@ export async function runApproveAction(
     dmDelivered = await deliverApprovalDm(approvedMember, guild.name, reason);
   }
 
+  // Verify thread cleanup — post welcome inside the thread, then schedule
+  // deletion 60s later. Best-effort, no-op if the user doesn't have a thread.
+  try {
+    const { cleanupVerifyThreadForUser } = await import("../../gate/threadGate.js");
+    await cleanupVerifyThreadForUser(
+      interaction.client,
+      guild.id,
+      app.user_id,
+      "approved",
+      `✅ Welcome to **${guild.name}**! You've been verified — server channels are now visible. This thread will close shortly.`
+    );
+  } catch (err) {
+    logger.warn({ err, appId: app.id }, "[approve] verify thread cleanup failed (non-fatal)");
+  }
+
   let welcomeNote: string | null = null;
   let roleNote: string | null = null;
   if (cfg && approvedMember && (cfg.accepted_role_id ? roleApplied : true)) {
@@ -377,6 +392,23 @@ export async function runRejectAction(
     updateReviewActionMeta(tx.reviewActionId, { dmDelivered });
   }
 
+  // Verify thread cleanup — post the rejection reason inside the thread, then
+  // archive (24h auto-archive, no delete) so the user can re-read it later.
+  if (guild) {
+    try {
+      const { cleanupVerifyThreadForUser } = await import("../../gate/threadGate.js");
+      await cleanupVerifyThreadForUser(
+        interaction.client,
+        guild.id,
+        app.user_id,
+        "rejected",
+        `❌ Your application was not approved.\n\n**Reason:** ${trimmed}\n\nYou can submit a new one anytime.`
+      );
+    } catch (err) {
+      logger.warn({ err, appId: app.id }, "[reject] verify thread cleanup failed (non-fatal)");
+    }
+  }
+
   // Note: Claim preserved for review card display
 
   // Refresh review card after modmail close
@@ -537,6 +569,24 @@ export async function runPermRejectAction(
     updateReviewActionMeta(tx.reviewActionId, { dmDelivered });
   }
 
+  // Verify thread cleanup — post the perm-reject reason inside the thread,
+  // then archive (24h auto-archive). The user is permanently rejected so the
+  // thread is more of an audit trail than a re-read surface.
+  if (guild) {
+    try {
+      const { cleanupVerifyThreadForUser } = await import("../../gate/threadGate.js");
+      await cleanupVerifyThreadForUser(
+        interaction.client,
+        guild.id,
+        app.user_id,
+        "permanently_rejected",
+        `⛔ Your application was permanently rejected and you cannot reapply.\n\n**Reason:** ${trimmed}`
+      );
+    } catch (err) {
+      logger.warn({ err, appId: app.id }, "[perm_reject] verify thread cleanup failed (non-fatal)");
+    }
+  }
+
   // Note: Claim preserved for review card display
 
   // Refresh review card after modmail close
@@ -632,6 +682,16 @@ export async function runKickAction(
 
   const flow = await kickFlow(guild, app.user_id, reason ?? undefined);
   updateReviewActionMeta(tx.reviewActionId, flow);
+
+  // Verify thread cleanup — kick removes the user from the guild, so the
+  // thread should be deleted immediately. (guildMemberRemove will also try
+  // to clean up; this call ensures we don't race the auto-archive.)
+  try {
+    const { cleanupVerifyThreadForUser } = await import("../../gate/threadGate.js");
+    await cleanupVerifyThreadForUser(interaction.client, guild.id, app.user_id, "kicked");
+  } catch (err) {
+    logger.warn({ err, appId: app.id }, "[kick] verify thread cleanup failed (non-fatal)");
+  }
 
   // Note: Claim preserved for review card display
 
@@ -872,6 +932,22 @@ export async function runVoteOutAction(
     dmDelivered = dmResult.dmDelivered;
   } else {
     logger.warn({ userId: app.user_id }, "[review] failed to fetch user for vote out DM");
+  }
+
+  // Verify thread cleanup — vote-out is a rejection, post in thread + archive 24h
+  if (guild) {
+    try {
+      const { cleanupVerifyThreadForUser } = await import("../../gate/threadGate.js");
+      await cleanupVerifyThreadForUser(
+        interaction.client,
+        guild.id,
+        app.user_id,
+        "rejected",
+        `❌ Your application was rejected by staff vote.\n\n**Reason:** ${rejectionReason}\n\nYou can submit a new one anytime.`
+      );
+    } catch (err) {
+      logger.warn({ err, appId: app.id }, "[vote_out] verify thread cleanup failed (non-fatal)");
+    }
   }
 
   // Refresh review card (now terminal — buttons removed)
