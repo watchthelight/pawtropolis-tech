@@ -296,6 +296,10 @@ commands.set(attendance.data.name, wrapCommand("attendance", attendance.execute)
 import * as qotd from "./commands/qotd.js";
 commands.set(qotd.data.name, wrapCommand("qotd", qotd.execute));
 
+// First responder / military verification
+import * as verify from "./commands/verify.js";
+commands.set(verify.data.name, wrapCommand("verify", verify.execute));
+
 client.once(Events.ClientReady, async () => {
   // schema self-heal before anything else
   // sudo make it work
@@ -458,6 +462,42 @@ client.once(Events.ClientReady, async () => {
     await retrofitAllGuildsOnStartup(client);
   } catch (err) {
     logger.error({ err }, "[startup] modmail retrofit failed");
+  }
+
+  // Refresh review cards after bot identity change
+  // WHAT: Re-posts all pending review cards so buttons work with the current bot application
+  // WHY: Discord ties button interactions to the application that posted the message
+  // WHEN: Only does work when there are review_card mappings pointing to old messages
+  try {
+    const { refreshAllPendingReviewCards } = await import("./features/review/card.js");
+    const result = await refreshAllPendingReviewCards(client);
+    if (result.refreshed > 0 || result.failed > 0) {
+      logger.info(result, "[startup] review card refresh complete");
+    }
+  } catch (err) {
+    logger.error({ err }, "[startup] review card refresh failed");
+  }
+
+  // Re-post gate entry panels after bot identity change
+  // WHAT: For each guild, deletes any foreign-bot gate panels and posts/edits the current bot's
+  // WHY: Pinned gate panels owned by the OLD bot have a Verify button Discord won't route to us;
+  //      applicants would click and get nothing. Idempotent — no-ops if current bot already owns one.
+  try {
+    const { ensureGateEntryStartup } = await import("./features/gate.js");
+    for (const [guildId] of client.guilds.cache) {
+      try {
+        const result = await ensureGateEntryStartup(client, guildId);
+        if (result.deletedForeign > 0 || result.posted) {
+          logger.info({ guildId, ...result }, "[startup] gate entry panel refreshed");
+        }
+      } catch (err) {
+        logger.error({ err, guildId }, "[startup] gate entry refresh failed for guild");
+      }
+      // Pacing between guilds to avoid hammering the API
+      await new Promise((r) => setTimeout(r, 250));
+    }
+  } catch (err) {
+    logger.error({ err }, "[startup] gate entry startup hook failed");
   }
 
   // Startup permission check: verify logging channel access
@@ -1150,6 +1190,18 @@ client.on("guildMemberUpdate", wrapEvent("guildMemberUpdate", async (oldMember, 
         userId: newMember.id,
         guildId: newMember.guild.id,
       }, "[guildMemberUpdate] Failed to dedup Patreon donor roles");
+    }
+
+    // Grant art ticket rewards for the user's (now-deduped) Patreon tier
+    try {
+      const { handlePatreonArtRewards } = await import("./features/patreonArtRewards.js");
+      await handlePatreonArtRewards(newMember);
+    } catch (err) {
+      logger.error({
+        err,
+        userId: newMember.id,
+        guildId: newMember.guild.id,
+      }, "[guildMemberUpdate] Failed to grant Patreon art rewards");
     }
   }
 
@@ -2305,6 +2357,14 @@ client.on("messageCreate", wrapEvent("messageCreate", async (message) => {
           { err, messageId: message.id, guildId: message.guildId },
           "[message_activity] failed to log message"
         );
+      }
+
+      // Art channel auto-ping: ping the relevant art role when someone posts
+      try {
+        const { artChannelPing } = await import("./events/artChannelPing.js");
+        await artChannelPing(message);
+      } catch (err) {
+        logger.debug({ err, messageId: message.id }, "[artChannelPing] failed");
       }
     }
 

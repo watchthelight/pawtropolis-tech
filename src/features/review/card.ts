@@ -981,3 +981,95 @@ export async function ensureReviewMessage(
     return {};
   }
 }
+
+/**
+ * refreshAllPendingReviewCards
+ * WHAT: Re-posts all pending/submitted review cards with fresh buttons IF AND ONLY IF
+ *       the current cards are owned by a different bot (i.e. just after a bot identity swap).
+ * WHY: After a bot application swap, old messages belong to the old app —
+ *       Discord won't route button clicks to the new app. Deleting the
+ *       review_card mapping forces ensureReviewMessage to create a new message.
+ * WHEN: Called on every startup. The probe-then-skip check makes it a no-op on
+ *       normal restarts; only does work when bot identity actually changed.
+ *
+ * EARLY-SKIP: We probe the most-recently-updated review_card by fetching its current
+ * Discord message and comparing the author to the running bot's ID. If the probe message
+ * is owned by the current bot, all the others are too (they were all created in the same
+ * batch refresh). We skip the entire refresh in that case to avoid noisy "card reposted"
+ * activity on every boring restart.
+ */
+export async function refreshAllPendingReviewCards(
+  client: Client
+): Promise<{ refreshed: number; failed: number }> {
+  const rows = db
+    .prepare(
+      `SELECT rc.app_id, rc.channel_id, rc.message_id
+       FROM review_card rc
+       JOIN application a ON a.id = rc.app_id
+       WHERE a.status IN ('submitted', 'needs_info')
+       ORDER BY rc.updated_at DESC`
+    )
+    .all() as Array<{ app_id: string; channel_id: string; message_id: string }>;
+
+  if (rows.length === 0) return { refreshed: 0, failed: 0 };
+
+  // Probe-then-skip: only refresh if the current bot doesn't already own these cards.
+  const botId = client.user?.id;
+  if (botId) {
+    const probe = rows[0];
+    try {
+      const channel = await client.channels.fetch(probe.channel_id);
+      if (channel && channel.isTextBased() && !channel.isDMBased()) {
+        const probeMessage = await (channel as GuildTextBasedChannel).messages.fetch(probe.message_id);
+        if (probeMessage.author?.id === botId) {
+          logger.info(
+            { count: rows.length, probeAppId: probe.app_id, botId },
+            "[startup] review cards owned by current bot, skipping refresh"
+          );
+          return { refreshed: 0, failed: 0 };
+        }
+        logger.info(
+          {
+            probeAppId: probe.app_id,
+            probeAuthorId: probeMessage.author?.id ?? null,
+            botId,
+            count: rows.length,
+          },
+          "[startup] review card author differs from current bot, refreshing all"
+        );
+      }
+    } catch (err) {
+      // Probe failed (message deleted, no perms, channel gone, rate limited, etc.).
+      // Be conservative: SKIP the refresh. Lazy regeneration via ensureReviewMessage on
+      // the next user interaction (claim, approve, reject) will fix any stale card.
+      // Without this guard, every restart would needlessly delete-and-repost every card.
+      logger.warn(
+        { err, probeAppId: probe.app_id },
+        "[startup] could not probe review card author, skipping refresh (lazy regen will handle)"
+      );
+      return { refreshed: 0, failed: 0 };
+    }
+  }
+
+  logger.info({ count: rows.length }, "[startup] refreshing pending review cards");
+
+  let refreshed = 0;
+  let failed = 0;
+
+  for (const row of rows) {
+    // Delete old mapping so ensureReviewMessage creates a fresh message
+    db.prepare("DELETE FROM review_card WHERE app_id = ?").run(row.app_id);
+    try {
+      await ensureReviewMessage(client, row.app_id);
+      refreshed++;
+      logger.debug({ appId: row.app_id }, "[startup] review card refreshed");
+    } catch (err) {
+      failed++;
+      logger.error({ err, appId: row.app_id }, "[startup] review card refresh failed");
+    }
+    // Rate limit: 1 per second to avoid Discord API limits
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+
+  return { refreshed, failed };
+}

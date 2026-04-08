@@ -57,6 +57,7 @@ import { data as skullmodeData } from "./skullmode.js";
 import { data as reportData } from "./report.js";
 import { data as attendanceData } from "./attendance.js";
 import { data as qotdData } from "./qotd.js";
+import { data as verifyData } from "./verify.js";
 
 // Returns an array of command JSON objects for Discord's bulk command registration.
 // Discord has a limit of 100 slash commands per bot per guild, so we're fine here.
@@ -128,6 +129,9 @@ export function buildCommands() {
 
     // QOTD suggestion system
     qotdData.toJSON(),
+
+    // First responder / military verification
+    verifyData.toJSON(),
 
     /*
      * Context menu commands are registered alongside slash commands in Discord.js v14.

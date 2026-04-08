@@ -136,7 +136,7 @@ function getQuestions(guildId: string): GateQuestion[] {
  * EDGE CASE: If a guild has 0 questions configured, this returns an empty array.
  * Callers must handle that - don't just blindly access pages[0].
  */
-function paginate(questions: GateQuestion[], pageSize = 5): QuestionPage[] {
+export function paginate(questions: GateQuestion[], pageSize = 5): QuestionPage[] {
   if (pageSize <= 0) throw new Error("pageSize must be positive");
   const pages: QuestionPage[] = [];
   for (let i = 0; i < questions.length; i += pageSize) {
@@ -151,7 +151,7 @@ function paginate(questions: GateQuestion[], pageSize = 5): QuestionPage[] {
  * The modal submit handler parses this to find the app and page.
  * If you change this format, update handleGateModalSubmit's regex too.
  */
-function buildModalForPage(
+export function buildModalForPage(
   page: QuestionPage,
   draftAnswersMap: Map<number, string>,
   appId: string
@@ -776,10 +776,14 @@ function isGateEntryCandidate(message: Message, botId: string | null) {
  * Returns null if no gate entry found - caller will create a new one.
  */
 async function findExistingGateEntry(channel: GuildTextBasedChannel, botId: string | null) {
+  // discord.js v14.16+ fetchPins() returns { items: Collection, hasMore: boolean }, not a bare Collection.
   const pinned = await channel.messages.fetchPins().catch(() => null);
   if (pinned) {
-    for (const pinnedMessage of pinned.values()) {
-      if (isGateEntryCandidate(pinnedMessage, botId)) return pinnedMessage;
+    const pinnedItems = (pinned as { items?: { values: () => Iterable<Message> } }).items;
+    if (pinnedItems) {
+      for (const pinnedMessage of pinnedItems.values()) {
+        if (isGateEntryCandidate(pinnedMessage, botId)) return pinnedMessage;
+      }
     }
   }
 
@@ -791,6 +795,170 @@ async function findExistingGateEntry(channel: GuildTextBasedChannel, botId: stri
   }
 
   return null;
+}
+
+/**
+ * ensureGateEntryStartup
+ * WHAT: Startup-friendly variant that handles bot-identity changes (new Discord application).
+ * WHY: After a bot application swap, the existing pinned gate panel is owned by the old bot.
+ *      Discord won't route the Verify button click to the new bot, so applicants get nothing.
+ *      refreshGateEntry filters by current botId and silently no-ops; ensureGateEntry needs a
+ *      CmdCtx. This function bridges the gap: scans the gate channel for any gate-shaped
+ *      message regardless of author, deletes foreign-bot ones, then ensures the current bot
+ *      has its own pinned panel.
+ * IDEMPOTENT: safe to call on every startup. Edits in place if current bot already owns one.
+ */
+export async function ensureGateEntryStartup(
+  client: Client,
+  guildId: string
+): Promise<{ deletedForeign: number; posted: boolean; edited: boolean; reason?: string }> {
+  const result: { deletedForeign: number; posted: boolean; edited: boolean; reason?: string } = {
+    deletedForeign: 0,
+    posted: false,
+    edited: false,
+  };
+
+  const cfg = getConfig(guildId);
+  if (!cfg?.gate_channel_id) {
+    result.reason = "gate channel not configured";
+    return result;
+  }
+
+  let channel: GuildTextBasedChannel | null = null;
+  try {
+    const fetched = await client.channels.fetch(cfg.gate_channel_id);
+    if (fetched && fetched.isTextBased() && !fetched.isDMBased()) {
+      channel = fetched as GuildTextBasedChannel;
+    }
+  } catch (err) {
+    logger.warn({ err, guildId, channelId: cfg.gate_channel_id }, "[gate-startup] Failed to fetch gate channel");
+    result.reason = "channel fetch failed";
+    return result;
+  }
+  if (!channel) {
+    result.reason = "channel unavailable";
+    return result;
+  }
+
+  const botId = client.user?.id ?? null;
+  if (!botId) {
+    result.reason = "bot user not ready";
+    return result;
+  }
+
+  const me =
+    channel.guild.members.me ??
+    (await channel.guild.members.fetch(botId).catch(() => null));
+  if (!me) {
+    result.reason = "bot member missing in guild";
+    return result;
+  }
+
+  const perms = channel.permissionsFor(me);
+  if (!perms?.has(PermissionsBitField.Flags.ViewChannel)) {
+    result.reason = "missing ViewChannel";
+    return result;
+  }
+  const hasSend = perms.has(PermissionsBitField.Flags.SendMessages);
+  const hasManage = perms.has(PermissionsBitField.Flags.ManageMessages);
+
+  // Scan pinned + recent for ANY gate-entry-shaped message regardless of author.
+  // NOTE: discord.js v14.16+ fetchPins() returns { items: Collection, hasMore: boolean }
+  // (not a bare Collection). Access via .items.values().
+  const pinned = await channel.messages.fetchPins().catch(() => null);
+  const recent = await channel.messages.fetch({ limit: 50 }).catch(() => null);
+  const candidates = new Map<string, Message>();
+  if (pinned) {
+    const pinnedCollection = (pinned as { items?: { values: () => Iterable<Message> } }).items;
+    if (pinnedCollection) {
+      for (const m of pinnedCollection.values()) candidates.set(m.id, m);
+    }
+  }
+  if (recent) for (const m of recent.values()) candidates.set(m.id, m);
+
+  let currentBotMessage: Message | null = null;
+  for (const m of candidates.values()) {
+    // Defensive: messageHasStartButton/messageHasGateFooter call .some() on m.components
+    // and m.embeds, both of which can be undefined for system messages, partial messages,
+    // or messages of types we don't care about. Skip those before the candidate test.
+    if (!Array.isArray(m.components) || !Array.isArray(m.embeds)) continue;
+    if (!messageHasStartButton(m) || !messageHasGateFooter(m)) continue;
+    if (m.author?.id === botId) {
+      // Keep the most recent current-bot message; if multiple, edit one and delete the rest
+      if (!currentBotMessage || m.createdTimestamp > currentBotMessage.createdTimestamp) {
+        if (currentBotMessage && hasManage) {
+          await currentBotMessage.delete().catch(() => {});
+        }
+        currentBotMessage = m;
+      } else if (hasManage) {
+        await m.delete().catch(() => {});
+      }
+    } else {
+      // Foreign-bot gate panel — delete it (requires ManageMessages, which the bot needs anyway)
+      try {
+        await m.delete();
+        result.deletedForeign++;
+        logger.info(
+          { guildId, messageId: m.id, foreignAuthorId: m.author?.id },
+          "[gate-startup] deleted foreign-bot gate panel"
+        );
+      } catch (err) {
+        logger.warn(
+          { err, guildId, messageId: m.id, foreignAuthorId: m.author?.id },
+          "[gate-startup] failed to delete foreign gate panel (need ManageMessages)"
+        );
+      }
+    }
+  }
+
+  if (!hasSend) {
+    result.reason = "missing SendMessages";
+    return result;
+  }
+
+  const payload = buildGateEntryPayload({ guild: channel.guild, config: cfg });
+
+  // Edit current bot's existing message in place if present, else send fresh
+  if (currentBotMessage) {
+    try {
+      await currentBotMessage.edit({
+        embeds: payload.embeds,
+        components: payload.components,
+        files: payload.files,
+        attachments: [],
+      });
+      result.edited = true;
+    } catch (err) {
+      const code = (err as { code?: unknown }).code;
+      if (code === 10008) {
+        // Message vanished between fetch and edit; fall through to fresh send
+        currentBotMessage = null;
+      } else {
+        logger.warn({ err, guildId, messageId: currentBotMessage.id }, "[gate-startup] edit failed; will repost");
+        currentBotMessage = null;
+      }
+    }
+  }
+
+  if (!currentBotMessage) {
+    try {
+      const sent = await channel.send(payload);
+      result.posted = true;
+      if (hasManage) {
+        try {
+          await sent.pin();
+        } catch (err) {
+          logger.warn({ err, guildId, messageId: sent.id }, "[gate-startup] failed to pin new gate panel");
+        }
+      }
+    } catch (err) {
+      logger.error({ err, guildId, channelId: channel.id }, "[gate-startup] failed to post fresh gate panel");
+      result.reason = "post failed";
+      return result;
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -1050,8 +1218,10 @@ export async function ensureGateEntry(
     if (!message.pinned) {
       await message.pin();
     }
-    const pinnedMessages = await channel.messages.fetchPins();
-    const pinnedMatch = pinnedMessages.has(message.id);
+    const pinnedResponse = await channel.messages.fetchPins();
+    // discord.js v14.16+ fetchPins() returns { items: Collection, hasMore: boolean }, not a bare Collection.
+    const pinnedItems = (pinnedResponse as { items?: { has: (id: string) => boolean } }).items;
+    const pinnedMatch = pinnedItems ? pinnedItems.has(message.id) : false;
     result.pinned = pinnedMatch;
     if (!pinnedMatch) {
       result.reason = "pin verification failed";
@@ -1092,9 +1262,41 @@ export async function handleStartButton(interaction: ButtonInteraction) {
       return;
     }
 
-    // Delegate to DM-based verification flow
-    const { startDmVerification } = await import("./gate/dmVerification.js");
-    await startDmVerification(interaction, interaction.guildId, interaction.user.id);
+    const guildId = interaction.guildId;
+    const userId = interaction.user.id;
+    const requestedPage = parsePage(interaction.customId);
+
+    // Page 0 (initial verify click): try DM flow, which falls back to modal on failure
+    if (requestedPage === 0) {
+      const { startDmVerification } = await import("./gate/dmVerification.js");
+      await startDmVerification(interaction, guildId, userId);
+      return;
+    }
+
+    // Page navigation (Next/Back buttons from modal flow): show the modal directly
+    if (isPanicMode(guildId)) {
+      await interaction.reply({
+        content: "Applications are temporarily paused. Please try again later.",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+
+    const questions = getQuestions(guildId);
+    const pages = paginate(questions);
+    if (requestedPage >= pages.length) {
+      await interaction.reply({
+        content: "This page is out of date. Press Start to begin again.",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+
+    const draft = getOrCreateDraft(db, guildId, userId);
+    const draftData = getDraft(db, draft.application_id);
+    const answersMap = draftData ? toAnswerMap(draftData.responses) : new Map<number, string>();
+    const modal = buildModalForPage(pages[requestedPage], answersMap, draft.application_id);
+    await interaction.showModal(modal);
   } catch (err) {
     captureException(err, {
       guildId: interaction.guildId ?? "unknown",
