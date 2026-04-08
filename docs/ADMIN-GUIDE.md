@@ -2,7 +2,7 @@
 
 You configure bot settings, manage role automation, and handle emergencies.
 
-**Prerequisite:** [Moderator Guide](MODERATOR-GUIDE.md) | **Other docs:** [Quick Reference](../MOD-QUICKREF.md) - [Bot Handbook](../BOT-HANDBOOK.md)
+**Prerequisite:** [Moderator Guide](MODERATOR-GUIDE.md) | **Other docs:** [Quick Reference](../MOD-QUICKREF.md) - [Bot Handbook](BOT-HANDBOOK.md)
 
 > **Server Reference:** For complete role/channel/permission data, see [internal-info/](internal-info/) docs.
 
@@ -49,7 +49,7 @@ You control how the bot behaves across your server.
 | `review_roles` | How roles appear on review cards |
 | `qotd_review_channel_id` | Channel where QOTD suggestions are posted for staff review |
 
-[Full documentation](../BOT-HANDBOOK.md#config)
+[Full documentation](BOT-HANDBOOK.md#config)
 
 *Introduced in [v1.0.0](../CHANGELOG.md#100---2025-11-25)* | *Skull mode added in [v4.8.0](../CHANGELOG.md#480---2025-12-08)*
 
@@ -74,7 +74,7 @@ Configure automatic role assignments based on Amaribot levels and event attendan
 - **Level Tiers** are the roles Amaribot assigns (like "Engaged Fur LVL 15")
 - **Level Rewards** are bonus roles you give at milestones (like "Event Ticket")
 
-[Full documentation](../BOT-HANDBOOK.md#roles)
+[Full documentation](BOT-HANDBOOK.md#roles)
 
 *Introduced in [v1.1.0](../CHANGELOG.md#110---2025-11-25)*
 
@@ -97,7 +97,7 @@ If role automation starts misbehaving, you can halt it immediately.
 
 Panic mode survives bot restarts. It stays on until you explicitly turn it off.
 
-[Full documentation](../BOT-HANDBOOK.md#panic)
+[Full documentation](BOT-HANDBOOK.md#panic)
 
 *Introduced in [v1.1.1](../CHANGELOG.md#111---2025-11-25)*
 
@@ -123,7 +123,7 @@ Export and manage moderator statistics for performance reviews.
 - Testing cleanup before going live
 - Fresh start for a new season
 
-[Full documentation](../BOT-HANDBOOK.md#modstats)
+[Full documentation](BOT-HANDBOOK.md#modstats)
 
 *Introduced in [v1.0.0](../CHANGELOG.md#100---2025-11-25)*
 
@@ -143,7 +143,7 @@ Configure how the review system notifies staff about new applications.
 - `/review-get-notify-config` — View current notification settings
 - `/review-set-listopen-output mode:...` — Control if `/listopen` is public or ephemeral
 
-[Full documentation](../BOT-HANDBOOK.md#review-set-notify-config)
+[Full documentation](BOT-HANDBOOK.md#review-set-notify-config)
 
 *Introduced in [v1.0.0](../CHANGELOG.md#100---2025-11-25)*
 
@@ -177,4 +177,4 @@ When you advance to **Leadership** (Community Manager and above), you'll unlock:
 
 **Previous:** [Moderator Guide](MODERATOR-GUIDE.md) | **Next:** [Leadership Guide](LEADERSHIP-GUIDE.md)
 
-**Reference:** [Bot Handbook](../BOT-HANDBOOK.md) - [Staff Policies](MOD-HANDBOOK.md) - [Permissions](../PERMS-MATRIX.md)
+**Reference:** [Bot Handbook](BOT-HANDBOOK.md) - [Staff Policies](MOD-HANDBOOK.md) - [Permissions](../PERMS-MATRIX.md)

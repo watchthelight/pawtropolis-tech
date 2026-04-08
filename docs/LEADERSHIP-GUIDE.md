@@ -2,7 +2,7 @@
 
 Server audits, data management, and operational oversight.
 
-**Prerequisite:** [Admin Guide](ADMIN-GUIDE.md) | **Other docs:** [Quick Reference](../MOD-QUICKREF.md) | [Bot Handbook](../BOT-HANDBOOK.md)
+**Prerequisite:** [Admin Guide](ADMIN-GUIDE.md) | **Other docs:** [Quick Reference](../MOD-QUICKREF.md) | [Bot Handbook](BOT-HANDBOOK.md)
 
 ---
 
@@ -48,7 +48,7 @@ Accounts scoring 4+ points get flagged automatically.
 
 **Tip:** Run `/audit members` first, then `/audit nsfw scope:Flagged members only` to save API costs.
 
-Full docs: [BOT-HANDBOOK](../BOT-HANDBOOK.md#audit)
+Full docs: [BOT-HANDBOOK](BOT-HANDBOOK.md#audit)
 
 *Introduced in [v1.0.0](../CHANGELOG.md#100---2025-11-25)* | *Members/NSFW split in [v4.4.0](../CHANGELOG.md#440---2025-12-03)*
 
@@ -73,7 +73,7 @@ Rebuild activity data and manage server metrics.
 - After bot downtime
 - After gaining access to new channels
 
-Full docs: [BOT-HANDBOOK](../BOT-HANDBOOK.md#backfill)
+Full docs: [BOT-HANDBOOK](BOT-HANDBOOK.md#backfill)
 
 *Introduced in [v1.0.0](../CHANGELOG.md#100---2025-11-25)* | *Backfill cooldown added in [v4.5.0](../CHANGELOG.md#450---2025-12-02)*
 
@@ -97,7 +97,7 @@ Customize the bot's appearance across Discord.
 - GIF files preserve animation
 - Other formats are cropped to square, resized to 1024x1024
 
-Full docs: [BOT-HANDBOOK](../BOT-HANDBOOK.md#update)
+Full docs: [BOT-HANDBOOK](BOT-HANDBOOK.md#update)
 
 *Introduced in [v1.0.0](../CHANGELOG.md#100---2025-11-25)*
 
@@ -122,7 +122,7 @@ Manage the art commission queue that fairly distributes work among Server Artist
 
 **Art types:** headshot, halfbody, fullbody, emoji
 
-Full docs: [BOT-HANDBOOK](../BOT-HANDBOOK.md#artistqueue)
+Full docs: [BOT-HANDBOOK](BOT-HANDBOOK.md#artistqueue)
 
 *Introduced in [v1.0.0](../CHANGELOG.md#100---2025-11-25)* | *Sync cooldown added in [Unreleased](../CHANGELOG.md#unreleased)*
 
@@ -139,7 +139,7 @@ Track artwork from assignment to completion.
 
 **Job Statuses:** Assigned > Sketching > Lining > Coloring > Done
 
-Full docs: [BOT-HANDBOOK](../BOT-HANDBOOK.md#art)
+Full docs: [BOT-HANDBOOK](BOT-HANDBOOK.md#art)
 
 *Introduced in [v4.0.0](../CHANGELOG.md#400---2025-12-01)*
 
@@ -163,7 +163,7 @@ Look up what any individual moderator has been doing.
 
 **CSV export includes:** Action type, timestamp, user ID, reason, response time, application ID. Links expire after 24 hours.
 
-Full docs: [BOT-HANDBOOK](../BOT-HANDBOOK.md#modhistory)
+Full docs: [BOT-HANDBOOK](BOT-HANDBOOK.md#modhistory)
 
 *Introduced in [v1.0.0](../CHANGELOG.md#100---2025-11-25)*
 
@@ -185,7 +185,7 @@ Charts and CSV exports covering server activity over time.
 - Busiest days and times
 - Whether activity is going up or down
 
-Full docs: [BOT-HANDBOOK](../BOT-HANDBOOK.md#analytics)
+Full docs: [BOT-HANDBOOK](BOT-HANDBOOK.md#analytics)
 
 *Introduced in [v1.0.0](../CHANGELOG.md#100---2025-11-25)*
 
@@ -213,7 +213,7 @@ These commands are restricted to Bot Owner and Server Dev only:
 **Multi-Channel Communication:**
 - `/poke user:@Username` — Ping someone across every channel in a category
 
-Full docs: [BOT-HANDBOOK](../BOT-HANDBOOK.md#database)
+Full docs: [BOT-HANDBOOK](BOT-HANDBOOK.md#database)
 
 *Introduced in [v1.0.0](../CHANGELOG.md#100---2025-11-25)*
 
@@ -223,4 +223,4 @@ Full docs: [BOT-HANDBOOK](../BOT-HANDBOOK.md#database)
 
 **Previous:** [Admin Guide](ADMIN-GUIDE.md) | [Moderator Guide](MODERATOR-GUIDE.md) | [Gatekeeper Guide](GATEKEEPER-GUIDE.md)
 
-**Reference:** [Bot Handbook](../BOT-HANDBOOK.md) | [Staff Policies](MOD-HANDBOOK.md) | [Permissions](../PERMS-MATRIX.md)
+**Reference:** [Bot Handbook](BOT-HANDBOOK.md) | [Staff Policies](MOD-HANDBOOK.md) | [Permissions](../PERMS-MATRIX.md)

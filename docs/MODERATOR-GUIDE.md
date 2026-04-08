@@ -2,7 +2,7 @@
 
 You run server events and have more tools to keep things healthy.
 
-**Prerequisite:** [Gatekeeper Guide](GATEKEEPER-GUIDE.md) | **Other docs:** [Quick Reference](../MOD-QUICKREF.md) &#8226; [Bot Handbook](../BOT-HANDBOOK.md)
+**Prerequisite:** [Gatekeeper Guide](GATEKEEPER-GUIDE.md) | **Other docs:** [Quick Reference](../MOD-QUICKREF.md) &#8226; [Bot Handbook](BOT-HANDBOOK.md)
 
 ---
 
@@ -70,7 +70,7 @@ The heatmap shows message activity by day and hour. Useful for:
 - Understanding quiet periods
 - Spotting unusual activity patterns
 
-📖 [Full documentation →](../BOT-HANDBOOK.md#activity)
+📖 [Full documentation →](BOT-HANDBOOK.md#activity)
 
 📋 *Introduced in [v1.0.0](../CHANGELOG.md#100---2025-11-25)*
 
@@ -90,7 +90,7 @@ Update what the bot is doing/playing.
 - `Listening` — "Listening to [text]"
 - `Competing` — "Competing in [text]"
 
-📖 [Full documentation →](../BOT-HANDBOOK.md#update)
+📖 [Full documentation →](BOT-HANDBOOK.md#update)
 
 📋 *Introduced in [v1.0.0](../CHANGELOG.md#100---2025-11-25)* | *Status clear added in [v4.8.0](../CHANGELOG.md#480---2025-12-08)*
 
@@ -106,7 +106,7 @@ Randomly reacts to messages with skull emoji, just for fun.
 
 Lower numbers = more skulls. Set to 1000 for rare skulls, 1 for constant skulls.
 
-📖 [Full documentation →](../BOT-HANDBOOK.md#skull-mode)
+📖 [Full documentation →](BOT-HANDBOOK.md#skull-mode)
 
 📋 *Introduced in [v4.8.0](../CHANGELOG.md#480---2025-12-08)*
 
@@ -138,4 +138,4 @@ When you advance to **Administrator**, you'll unlock:
 
 **Previous:** [Gatekeeper Guide](GATEKEEPER-GUIDE.md) | **Next:** [Admin Guide](ADMIN-GUIDE.md)
 
-**Reference:** [Bot Handbook](../BOT-HANDBOOK.md) &#8226; [Staff Policies](MOD-HANDBOOK.md) &#8226; [Permissions](../PERMS-MATRIX.md)
+**Reference:** [Bot Handbook](BOT-HANDBOOK.md) &#8226; [Staff Policies](MOD-HANDBOOK.md) &#8226; [Permissions](../PERMS-MATRIX.md)

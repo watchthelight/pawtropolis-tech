@@ -2,7 +2,7 @@
 
 You review applications and decide who gets into the server.
 
-**Other docs:** [Quick Reference](../MOD-QUICKREF.md) &#8226; [Bot Handbook](../BOT-HANDBOOK.md) &#8226; [Staff Policies](MOD-HANDBOOK.md)
+**Other docs:** [Quick Reference](../MOD-QUICKREF.md) &#8226; [Bot Handbook](BOT-HANDBOOK.md) &#8226; [Staff Policies](MOD-HANDBOOK.md)
 
 ---
 
@@ -32,7 +32,7 @@ When someone wants to join the server, they fill out an application. You review 
 - `user:@Username` — Mention or pick from list
 - `uid:123456789` — Discord ID (for users who left)
 
-📖 [Full documentation →](../BOT-HANDBOOK.md#gate-system-application-review)
+📖 [Full documentation →](BOT-HANDBOOK.md#gate-system-application-review)
 
 📋 *Introduced in [v1.0.0](../CHANGELOG.md#100---2025-11-25)*
 
@@ -50,7 +50,7 @@ When someone wants to join the server, they fill out an application. You review 
 
 **Pro tip:** If buttons aren't working, use the slash commands instead. They do the same thing.
 
-📖 [Full documentation →](../BOT-HANDBOOK.md#what-the-claim-system-does)
+📖 [Full documentation →](BOT-HANDBOOK.md#what-the-claim-system-does)
 
 ---
 
@@ -67,7 +67,7 @@ Flagged users get a warning indicator on their review card. Good reasons to flag
 - Failed password multiple times
 - Username matches known problem users
 
-📖 [Full documentation →](../BOT-HANDBOOK.md#flag)
+📖 [Full documentation →](BOT-HANDBOOK.md#flag)
 
 📋 *Introduced in [v1.0.0](../CHANGELOG.md#100---2025-11-25)* | *Updated in [v4.8.0](../CHANGELOG.md#unreleased) (15s cooldown)*
 
@@ -84,7 +84,7 @@ You can scan submitted art to check whether it's AI-generated.
 
 The bot uses multiple detection services and shows confidence scores. Not perfect, but helps catch obvious AI art.
 
-📖 [Full documentation →](../BOT-HANDBOOK.md#isitreal)
+📖 [Full documentation →](BOT-HANDBOOK.md#isitreal)
 
 📋 *Introduced in [v4.6.0](../CHANGELOG.md#460---2025-12-03)* | *Context menu added in [v4.8.0](../CHANGELOG.md#480---2025-12-08)*
 
@@ -103,7 +103,7 @@ Stats include:
 - Average response time
 - Activity breakdown by day
 
-📖 [Full documentation →](../BOT-HANDBOOK.md#modstats)
+📖 [Full documentation →](BOT-HANDBOOK.md#modstats)
 
 📋 *Introduced in [v1.0.0](../CHANGELOG.md#100---2025-11-25)*
 
@@ -115,14 +115,14 @@ Stats include:
 - `/help` — Interactive help browser (search or browse by category)
 - `/health` — Check if the bot is running properly
 
-**If something's broken**, check the [Troubleshooting section](../BOT-HANDBOOK.md#troubleshooting) in the handbook.
+**If something's broken**, check the [Troubleshooting section](BOT-HANDBOOK.md#troubleshooting) in the handbook.
 
 **If that doesn't help**, ask in staff chat. Include:
 - What you were trying to do
 - What happened instead
 - The application code (like `A1B2C3`) if relevant
 
-📖 [Full documentation →](../BOT-HANDBOOK.md#help)
+📖 [Full documentation →](BOT-HANDBOOK.md#help)
 
 ---
 
@@ -152,4 +152,4 @@ When you advance to **Moderator**, you'll unlock:
 
 **Next:** [Moderator Guide](MODERATOR-GUIDE.md)
 
-**Reference:** [Bot Handbook](../BOT-HANDBOOK.md) &#8226; [Staff Policies](MOD-HANDBOOK.md) &#8226; [Permissions](../PERMS-MATRIX.md)
+**Reference:** [Bot Handbook](BOT-HANDBOOK.md) &#8226; [Staff Policies](MOD-HANDBOOK.md) &#8226; [Permissions](../PERMS-MATRIX.md)

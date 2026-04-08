@@ -9,7 +9,7 @@
 | I need to... | Go here |
 |--------------|---------|
 | **Verify an artist application** | [Commissions Verification](#commissions-verification) |
-| **Use bot commands** | [Bot Handbook](../BOT-HANDBOOK.md) |
+| **Use bot commands** | [Bot Handbook](BOT-HANDBOOK.md) |
 | **Handle a moderation issue** | [Moderation Protocols](#moderation-protocols) |
 | **Report an incident** | [Incident Reporting](#incident-reporting) |
 | **Learn about the art program** | [Server Artist Program](#server-artist-program) |
@@ -1281,7 +1281,7 @@ Flagged users show warning badges on their applications, alerting reviewers to l
 ## See Also
 
 ### Bot Documentation
-- **[BOT-HANDBOOK.md](../BOT-HANDBOOK.md)** — Full technical documentation for all bot commands
+- **[BOT-HANDBOOK.md](BOT-HANDBOOK.md)** — Full technical documentation for all bot commands
 - **[MOD-QUICKREF.md](../MOD-QUICKREF.md)** — Quick reference for everyday tasks
 - **[PERMS-MATRIX.md](../PERMS-MATRIX.md)** — Complete permission reference
 
@@ -1292,5 +1292,5 @@ Flagged users show warning badges on their applications, alerting reviewers to l
 - **[LEADERSHIP-GUIDE.md](LEADERSHIP-GUIDE.md)** — For CM, CDL, and Server Owner
 
 ### Navigation
-- **[Bot Handbook](../BOT-HANDBOOK.md)** — Start here for all docs
+- **[Bot Handbook](BOT-HANDBOOK.md)** — Start here for all docs
 - **[CHANGELOG.md](../CHANGELOG.md)** — Version history and recent changes

@@ -141,5 +141,5 @@ Review cards show modmail status:
 ## Related Docs
 
 - [Modmail System Reference](../reference/modmail-system.md) - Technical details
-- [BOT-HANDBOOK.md](../../BOT-HANDBOOK.md) - All commands
+- [BOT-HANDBOOK.md](../BOT-HANDBOOK.md) - All commands
 - [Troubleshooting](../operations/troubleshooting.md) - Fix problems
