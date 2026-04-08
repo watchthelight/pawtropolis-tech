@@ -4,7 +4,7 @@ Talk with applicants privately through Discord threads.
 
 ## What It Does
 
-Modmail lets staff message applicants without using personal DMs. Messages go through a private thread that only staff can see.
+Modmail lets you message an applicant without involving your personal DMs. Conversations happen in a private thread inside the review channel — only staff can see the thread, and the bot relays messages back and forth between the thread and the applicant's DMs.
 
 Key features:
 - Private threads in the review channel
@@ -34,13 +34,13 @@ Key features:
 
 ### Send Messages
 
-**You write in thread → Applicant gets DM:**
+**You write in thread -> applicant gets DM:**
 - Any message you send in the thread goes to the applicant
 - Shows as: "From Staff (YourName): message"
 - Includes first attachment if you add one
 - If DM fails, you'll see a warning in the thread
 
-**Applicant writes DM → You see in thread:**
+**Applicant writes DM -> you see it in the thread:**
 - Applicant's DM appears in the thread
 - Shows as: "Applicant (@user): message"
 - Includes first attachment if they add one
