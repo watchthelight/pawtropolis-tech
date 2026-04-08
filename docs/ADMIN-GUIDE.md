@@ -1,6 +1,6 @@
 # Administrator Guide
 
-You configure bot settings, manage role automation, and handle emergencies.
+Bot configuration, automated role assignment, and the kill-switches you reach for when something goes sideways.
 
 **Prerequisite:** [Moderator Guide](MODERATOR-GUIDE.md) | **Other docs:** [Quick Reference](MOD-QUICKREF.md) - [Bot Handbook](BOT-HANDBOOK.md)
 
@@ -26,7 +26,7 @@ You still have all Moderator capabilities:
 
 ### Server Configuration
 
-You control how the bot behaves across your server.
+Change what the bot does, where it logs, and which roles can use which features.
 
 **Command:**
 - `/config set <setting> <value>` — Change a bot setting
@@ -82,7 +82,7 @@ Configure automatic role assignments based on Amaribot levels and event attendan
 
 ### Emergency Controls
 
-If role automation starts misbehaving, you can halt it immediately.
+If role automation goes wrong, you can stop it cold.
 
 **Commands:**
 - `/panic on` — Stop all automatic role grants
@@ -151,25 +151,25 @@ Configure how the review system notifies staff about new applications.
 
 ## Tips for This Level
 
-1. **Test config changes carefully** — One wrong setting can break the workflow for your whole team
-2. **Document your role mappings** — Keep notes on why each level tier and reward exists
-3. **Use panic mode proactively** — Turn it on before making changes, not after things break
-4. **Review exports regularly** — Monthly stats reviews help catch burnout early
-5. **Check `/config view` periodically** — Make sure settings haven't drifted
+1. Test config changes on a quiet day. One wrong setting can stall the whole team's workflow.
+2. Keep a private note explaining why each level tier and reward exists. Six months from now nobody will remember.
+3. Turn on `/panic on` before you change role automation, not after something breaks. It's much easier to undo nothing than to undo wrong role grants.
+4. Skim `/stats export` once a month. Sustained slowdowns in response time usually mean burnout, not laziness.
+5. Run `/config view` every so often to check settings haven't drifted from what you remember.
 
 ---
 
-## What's Coming Next
+## What Leadership Adds
 
-When you advance to **Leadership** (Community Manager and above), you'll unlock:
+Community Managers and above also have:
 
-- **Server Audits** — `/audit members` and `/audit nsfw` to scan for bots and inappropriate content
-- **Data Management** — `/backfill` to rebuild activity data, `/resetdata` for metrics
-- **Bot Branding** — `/update banner` and `/update avatar` to customize the bot
-- **Artist Rotation** — Full queue management with `/artistqueue`
-- **Moderation History** — `/stats history` for detailed performance reviews
+- Server-wide audits — `/audit members` and `/audit nsfw`
+- Data management — `/backfill` to rebuild activity history, `/resetdata` to clear metrics
+- Bot branding — `/update banner` and `/update avatar`
+- Artist rotation — full queue control with `/artistqueue`
+- Per-moderator history — `/stats history`
 
-[LEADERSHIP-GUIDE.md](LEADERSHIP-GUIDE.md)
+See the [Leadership Guide](LEADERSHIP-GUIDE.md) for the details.
 
 ---
 
