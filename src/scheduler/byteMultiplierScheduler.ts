@@ -141,14 +141,12 @@ async function processExpiredMultiplier(
     "[byteMultiplier] Removed expired multiplier role"
   );
 
-  // Log to audit trail
-  // NOTE: Using "role_grant" action type with negative context since we don't have
-  // a dedicated "byte_multiplier_expired" type yet. The action type can be updated
-  // once it's added to pretty.ts.
+  // Log to audit trail using the dedicated action type so the card renders as
+  // a gray "XP Multiplier Expired" instead of a red "Role Grant Blocked".
   await logActionPretty(guild, {
     actorId: client.user?.id ?? "system",
     subjectId: entry.user_id,
-    action: "role_grant_blocked", // Will update to "byte_multiplier_expired" once added
+    action: "byte_multiplier_expired",
     reason: `${entry.multiplier_name} expired (${entry.token_rarity} byte token)`,
     meta: {
       multiplierName: entry.multiplier_name,
