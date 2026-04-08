@@ -334,3 +334,13 @@ Additionally, two idle instances were discovered:
 - Regularly audit AWS instances for right-sizing opportunities
 - Monitor for idle/orphaned resources
 - Implement guild allowlisting for single-server bots
+
+---
+
+## See Also
+
+- [Operations: Troubleshooting](operations/troubleshooting.md) — runbook for the disk-full and SSH-failure scenarios from INC-003 and the memory-pressure scenarios from INC-004
+- [Operations: Deployment Config](operations/deployment-config.md) — current EC2 instance type, EBS volume, and resource sizing
+- [Audits Index](audits/README.md) — security and code audits, including the `/audit security` command that caught INC-002
+- [Code Audit 2026](audits/CODE-AUDIT-2026.md) — current findings backlog including F072 (session token encryption) and other security work
+- [Architecture: System Overview](architecture/system-overview.md) — runtime topology that constrains incident response
