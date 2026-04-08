@@ -302,3 +302,14 @@ db.transaction(() => {
 - If logging channel is unreachable, queue cards in DB (`pending_logs` table) and retry on next boot
 - Auto-retry modmail thread creation on 50013 failure; log warning and notify admin channel
 - Validate bot permissions in review/modmail/logging channels at startup; exit if missing
+
+---
+
+## See Also
+
+- [Database Schema](../reference/database-schema.md) — full table definitions for `configs`, `review_action`, `action_log`, `open_modmail`
+- [Gate Review Flow](../reference/gate-review-flow.md) — step-by-step state machine for the application lifecycle shown above
+- [Modmail System](../reference/modmail-system.md) — feature-level details on the modmail routing diagram
+- [Logging and ModStats](../reference/logging-and-modstats.md) — what the analytics module reads and how stats are computed
+- [Deployment Config](../operations/deployment-config.md) — how the runtime is configured and deployed
+- [Troubleshooting](../operations/troubleshooting.md) — incident response for the failure modes called out in the Known Issues blocks above
