@@ -37,3 +37,10 @@ Features that were considered but rejected. Documented here to avoid re-proposin
 | Feature | Description | Rejection Reason |
 |---------|-------------|------------------|
 | Message count milestones | DM users at 100, 5000, 10000 messages | Removed after implementation |
+
+---
+
+## See Also
+
+- [Think About Later](THINK_ABOUT_LATER.md) — features that are deferred but not rejected
+- [Bot Handbook](../BOT-HANDBOOK.md) — current feature set
