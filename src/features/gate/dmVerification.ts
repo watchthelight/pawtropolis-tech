@@ -55,6 +55,14 @@ interface DmSession {
   currentQuestionIndex: number;
   startedAt: number;
   phase: "questioning" | "summary";
+  /**
+   * When set, the verification flow runs in this thread channel ID instead of
+   * the user's DM. The thread is a per-user private verify thread (see
+   * src/features/gate/threadGate.ts). Non-DM session messages still use
+   * `message.channel.send()` (already channel-agnostic), so this field only
+   * influences the FIRST question delivery and the acknowledgement reply text.
+   */
+  targetChannelId?: string;
 }
 
 const activeSessions = new Map<string, DmSession>();
@@ -243,24 +251,58 @@ export async function startDmVerification(
     startIndex = firstUnanswered >= 0 ? firstUnanswered : 0;
   }
 
-  // Try to DM the first question
+  // Detect thread context. When the Verify button is clicked inside a private
+  // verify thread (the new threadGate.ts entry point), send the first question
+  // to the thread instead of the user's DM. This avoids any DM at all and
+  // satisfies Discord Developer Policy Rule 5 (no unsolicited DMs) — the user
+  // explicitly clicked the button to start the flow.
+  const targetThread = interaction.channel?.isThread() ? interaction.channel : null;
+
+  // Try to send the first question
   const nonce = randomUUID().slice(0, 8);
   const firstQuestion = questions[startIndex];
   const embed = buildQuestionEmbed(firstQuestion, startIndex, questions.length);
 
   try {
-    await interaction.user.send({
-      embeds: [embed],
-      components: [buildCancelRow(nonce)],
-    });
+    if (targetThread) {
+      await targetThread.send({
+        embeds: [embed],
+        components: [buildCancelRow(nonce)],
+      });
+    } else {
+      await interaction.user.send({
+        embeds: [embed],
+        components: [buildCancelRow(nonce)],
+      });
+    }
   } catch (err: unknown) {
-    // DM failed — fall back to the old modal-based verification flow.
-    // Common codes: 50007 (DMs closed), 20026 (bot quarantined), 50278 (no mutual guilds)
+    // Thread send failures are unexpected (we own the thread). DM failures are
+    // common: 50007 (DMs closed), 20026 (bot quarantined), 50278 (no mutual guilds)
+    // For DM mode, fall back to the modal-based verification flow.
     const code = (err as { code?: number })?.code;
     logger.info(
-      { userId, guildId, errCode: code },
-      "[dmVerify] DM failed, falling back to modal verification"
+      { userId, guildId, errCode: code, thread: Boolean(targetThread) },
+      "[dmVerify] first-question send failed"
     );
+
+    if (targetThread) {
+      // Thread send failure — try the ephemeral modal as a last-resort fallback.
+      // The user can still complete verification, but in modal pages instead of inline.
+      try {
+        const pages = paginate(questions);
+        const modal = buildModalForPage(pages[0], existingAnswers, appId);
+        await interaction.showModal(modal);
+      } catch (modalErr) {
+        captureException(modalErr);
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.reply({
+            content: "Something went wrong starting verification. Please contact staff.",
+            flags: MessageFlags.Ephemeral,
+          });
+        }
+      }
+      return;
+    }
 
     try {
       const pages = paginate(questions);
@@ -278,7 +320,7 @@ export async function startDmVerification(
     return;
   }
 
-  // DM succeeded — create session
+  // First question delivered — create session
   const session: DmSession = {
     guildId,
     userId,
@@ -289,18 +331,28 @@ export async function startDmVerification(
     currentQuestionIndex: startIndex,
     startedAt: Date.now(),
     phase: "questioning",
+    targetChannelId: targetThread?.id,
   };
   activeSessions.set(existingKey, session);
 
-  // Acknowledge in gate channel
+  // Acknowledge — wording depends on whether we sent to thread or DM
   await interaction.reply({
-    content: "Check your DMs! I've sent you the verification questions.",
+    content: targetThread
+      ? "Verification started — please answer the questions above."
+      : "Check your DMs! I've sent you the verification questions.",
     flags: MessageFlags.Ephemeral,
   });
 
   logger.info(
-    { guildId, userId, appId, questionCount: questions.length, startIndex },
-    "[dmVerify] DM verification started"
+    {
+      guildId,
+      userId,
+      appId,
+      questionCount: questions.length,
+      startIndex,
+      targetChannelId: session.targetChannelId,
+    },
+    "[dmVerify] verification started"
   );
 }
 
