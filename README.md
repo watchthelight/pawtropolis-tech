@@ -17,6 +17,10 @@
   <a href="https://github.com/watchthelight/pawtropolis-tech/actions/workflows/ci.yml">
     <img src="https://github.com/watchthelight/pawtropolis-tech/actions/workflows/ci.yml/badge.svg" alt="CI">
   </a>
+  <!-- Live Scheduler Health (Healthchecks.io) -->
+  <a href="https://status.pawtropolis.tech">
+    <img src="https://healthchecks.io/badge/792dd9df-1b80-4555-9efd-7e5f3cb5b88a/oUZDhyJL.svg" alt="Schedulers">
+  </a>
   <!-- Dynamic Badges from Gist -->
   <img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/watchthelight/0866e5418ac20ee43515b318ddcdc324/raw/badge-coverage.json" alt="Coverage">
   <img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/watchthelight/0866e5418ac20ee43515b318ddcdc324/raw/badge-tests.json" alt="Tests">
