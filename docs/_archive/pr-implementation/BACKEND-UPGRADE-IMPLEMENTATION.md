@@ -259,3 +259,7 @@ Create the following test files:
 - Rate limiting is per-server (in-memory), not per-user
 - SSE connections should be cleaned up to avoid memory leaks
 - Consider adding metrics for cache hit rates and API latency
+
+---
+
+> **Archived doc.** Historical PR implementation notes. See the [_archive index](../README.md), the [current docs](../../README.md), or [Architecture: System Overview](../../architecture/system-overview.md) for current architecture.

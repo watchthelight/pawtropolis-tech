@@ -442,3 +442,7 @@ For each removal:
 4. **Phase 4:** Remove unused store/feature functions
 5. **Phase 5:** Directory cleanup (util/ → utils/)
 6. **Phase 6:** Console.log cleanup (lowest priority)
+
+---
+
+> **Archived doc.** Implemented in v4.5.0. See the [_archive index](../README.md) for context, [current docs](../../README.md) for what replaced it, or [Code Audit 2026](../../audits/CODE-AUDIT-2026.md) for the current dead-code findings.

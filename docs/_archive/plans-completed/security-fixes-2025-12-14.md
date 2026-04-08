@@ -361,3 +361,7 @@ export function markForwarded(messageId: string) {
 4. Deploy to production
 5. Monitor logs for issues
 
+---
+
+> **Archived doc.** Plan was implemented Dec 2025. See the [_archive index](../README.md) for context, the [current docs](../../README.md), or [Code Audit 2026](../../audits/CODE-AUDIT-2026.md) for the current security backlog.
+

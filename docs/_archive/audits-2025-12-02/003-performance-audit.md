@@ -412,3 +412,7 @@ logger.debug({ durationMs: performance.now() - start }, 'Operation completed');
   - Modstats: 3-5 seconds → 300-500ms
   - NSFW Audit: 100+ seconds → 10-15 seconds
   - General queries: 30-50% faster
+
+---
+
+> **Archived doc.** Implemented in v4.5.0. See the [_archive index](../README.md) for context, [current docs](../../README.md) for what replaced it, or [Code Audit 2026](../../audits/CODE-AUDIT-2026.md) for the current performance work.

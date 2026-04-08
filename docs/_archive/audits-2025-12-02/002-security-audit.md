@@ -366,3 +366,7 @@ After each fix:
 - **Lines changed:** ~300
 - **Risk level:** Low (fixes are targeted, well-scoped)
 - **Testing required:** Manual security testing for each fix
+
+---
+
+> **Archived doc.** Implemented in v4.5.0. See the [_archive index](../README.md) for context, [current docs](../../README.md) for what replaced it, or [Code Audit 2026](../../audits/CODE-AUDIT-2026.md) for the current security findings.

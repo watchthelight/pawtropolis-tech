@@ -35,3 +35,7 @@ Upgrades `/modstats` into a full analytics system tracking moderator performance
 - `src/features/review.ts`
 - `src/analytics/modPerformance.ts`
 - `src/server/routes/metrics.ts`
+
+---
+
+> **Archived doc.** Historical PR implementation notes. See the [_archive index](../README.md), the [current docs](../../README.md), or [Logging and ModStats](../../reference/logging-and-modstats.md) for current performance metrics.

@@ -485,3 +485,7 @@ Update `/etc/apache2/sites-available/pawtropolis-le-ssl.conf`:
 - ✅ Semantic HTML throughout
 - ✅ Skip links for keyboard navigation
 - ✅ Proper heading hierarchy
+
+---
+
+> **Archived doc.** Historical PR implementation notes. See the [_archive index](../README.md), the [current docs](../../README.md), or [Architecture: System Overview](../../architecture/system-overview.md) for the current public site.

@@ -36,3 +36,7 @@ Includes automated alerts for unclaimed apps and export options.
 - `src/analytics/queueAnalytics.ts`
 - `src/commands/queuehealth.ts`
 - `src/server/routes/queue.ts`
+
+---
+
+> **Archived doc.** Historical PR implementation notes. See the [_archive index](../README.md), the [current docs](../../README.md), or [Logging and ModStats](../../reference/logging-and-modstats.md) for current monitoring.

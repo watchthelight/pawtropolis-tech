@@ -593,3 +593,7 @@ After each change:
   - Test each migration on copy of production data
   - Deploy during low-traffic period
   - Keep backup before each migration
+
+---
+
+> **Archived doc.** Implemented in v4.5.0. See the [_archive index](../README.md) for context, [current docs](../../README.md) for what replaced it, or the [Database Schema reference](../../reference/database-schema.md) for the current schema.

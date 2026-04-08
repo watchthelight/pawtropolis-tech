@@ -499,3 +499,7 @@ pm2 restart pawtropolis
 **Deployment Complete:** 2025-11-13 01:21 UTC
 **Status:** ✅ Production-Ready
 **Testing:** Manual validation recommended with authenticated session
+
+---
+
+> **Archived doc.** Historical deployment record from Nov 2025. See the [_archive index](../README.md) for context or the [current docs](../../README.md) for what replaced it.

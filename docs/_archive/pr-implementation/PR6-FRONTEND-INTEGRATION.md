@@ -398,3 +398,7 @@ BREAKING CHANGE: None (backward compatible, progressive enhancement)
 **Tests**: All 184 backend tests passing
 **Build**: Successful (no errors)
 **Dependencies**: No new frontend dependencies added
+
+---
+
+> **Archived doc.** Historical PR implementation notes. See the [_archive index](../README.md), the [current docs](../../README.md), or [Architecture: System Overview](../../architecture/system-overview.md) for the current dashboard.

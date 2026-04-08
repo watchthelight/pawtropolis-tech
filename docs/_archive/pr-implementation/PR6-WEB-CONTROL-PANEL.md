@@ -309,3 +309,7 @@ PR6 **replaces** the old HTTP dashboard server (`src/server/dashboard.ts`) with 
 - [Discord OAuth2 Guide](https://discord.com/developers/docs/topics/oauth2)
 - [FastifySession Plugin](https://github.com/fastify/fastify-session)
 - [Security Best Practices](https://fastify.dev/docs/latest/Guides/Recommendations/)
+
+---
+
+> **Archived doc.** Historical PR implementation notes. See the [_archive index](../README.md), the [current docs](../../README.md), or [Architecture: System Overview](../../architecture/system-overview.md) for the current dashboard.

@@ -596,3 +596,7 @@ After each fix:
 | LOW | Direct interaction calls | Use replyOrEdit() |
 | LOW | Missing defers | Audit and add |
 | LOW | Broad catch blocks | Use error classification |
+
+---
+
+> **Archived doc.** Implemented in v4.5.0. See the [_archive index](../README.md) for context, [current docs](../../README.md) for what replaced it, or [Troubleshooting](../../operations/troubleshooting.md) for current error response procedures.

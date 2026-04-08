@@ -190,3 +190,7 @@ API error messages could contain sensitive information (API keys, internal URLs,
 2. Update CHANGELOG.md
 3. Run build to verify no TypeScript errors
 4. Deploy to production
+
+---
+
+> **Archived doc.** Plan was implemented Dec 2025. See the [_archive index](../README.md), the [current docs](../../README.md), or [Code Audit 2026](../../audits/CODE-AUDIT-2026.md) for the current security backlog.

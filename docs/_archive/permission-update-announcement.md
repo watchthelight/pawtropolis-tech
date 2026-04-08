@@ -84,3 +84,7 @@ Gatekeeper is now its own thing — higher roles don't automatically get applica
 Full permission matrix is now in `PERMS-MATRIX.md` with all role IDs and command mappings.
 
 Let me know if any of these permission levels need adjusting!
+
+---
+
+> **Archived doc.** See the [_archive index](README.md) for context, or the [current docs](../README.md) for what replaced it. The current permissions matrix is at [PERMS-MATRIX.md](../PERMS-MATRIX.md).

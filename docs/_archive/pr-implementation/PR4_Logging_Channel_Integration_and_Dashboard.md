@@ -37,3 +37,7 @@ Also includes the foundation for a web dashboard JSON feed (`/logs/dashboard.jso
 - `src/db/ensure.ts`
 - `src/commands/config.ts`
 - `src/server/routes/dashboard.ts`
+
+---
+
+> **Archived doc.** Historical PR implementation notes. See the [_archive index](../README.md), the [current docs](../../README.md), or [Logging and ModStats](../../reference/logging-and-modstats.md) for current logging behavior.

@@ -285,3 +285,7 @@ For questions or issues related to this fix:
 **Document Version:** 1.0
 **Author:** Claude (AI Assistant)
 **Date:** 2025-11-25
+
+---
+
+> **Archived doc.** Historical fix record from Nov 2025. See the [_archive index](../README.md) for context, the [current docs](../../README.md), or the [Modmail System reference](../../reference/modmail-system.md) for current behavior.

@@ -147,3 +147,7 @@ These endpoints must be working:
 - GET /api/metrics/latency?guild_id=X&window=7d&bucket=1h
 - GET /api/logs?guild_id=X&limit=100
 - GET /api/metrics?guild_id=X&limit=100
+
+---
+
+> **Archived doc.** Historical PR implementation notes. See the [_archive index](../README.md), the [current docs](../../README.md), or [API Contracts](../../api-contracts.md) for the current API surface.

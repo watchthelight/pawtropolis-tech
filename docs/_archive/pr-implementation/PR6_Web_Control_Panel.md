@@ -35,3 +35,7 @@ Implements a Fastify-based web panel for guild admins to visualize logs, view mo
 - `src/templates/config.html`
 - `src/templates/logs.html`
 - `src/templates/mods.html`
+
+---
+
+> **Archived doc.** Historical PR implementation notes. See the [_archive index](../README.md), the [current docs](../../README.md), or [Architecture: System Overview](../../architecture/system-overview.md) for the current dashboard.
