@@ -145,6 +145,28 @@ export const data = new SlashCommandBuilder()
       .addStringOption((o) => o.setName("q4").setDescription("Question 4").setRequired(false).setMaxLength(500))
       .addStringOption((o) => o.setName("q5").setDescription("Question 5").setRequired(false).setMaxLength(500))
   )
+  .addSubcommand((sc) =>
+    sc
+      .setName("set-verify-thread-parent")
+      .setDescription("Set the hidden parent text channel for per-user verify threads")
+      .addChannelOption((o) =>
+        o
+          .setName("channel")
+          .setDescription("Hidden text channel where private verify threads will be created")
+          .setRequired(true)
+      )
+  )
+  .addSubcommand((sc) =>
+    sc
+      .setName("set-unverified-rules")
+      .setDescription("Set the source channel whose messages get replicated into verify threads")
+      .addChannelOption((o) =>
+        o
+          .setName("channel")
+          .setDescription("Channel containing the rules text shown to unverified users")
+          .setRequired(true)
+      )
+  )
   .setDefaultMemberPermissions(PermissionFlagsBits.SendMessages);
 
 async function executeSetup(ctx: CommandContext<ChatInputCommandInteraction>) {
@@ -688,6 +710,50 @@ async function executeWelcomeChannels(ctx: CommandContext<ChatInputCommandIntera
   });
 }
 
+async function executeSetVerifyThreadParent(ctx: CommandContext<ChatInputCommandInteraction>) {
+  const { interaction } = ctx;
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
+  const channel = interaction.options.getChannel("channel", true);
+  await withStep(ctx, "persist_config", async () => {
+    withSql(ctx, "INSERT/UPDATE guild_config verify_thread_parent_id", () =>
+      upsertConfig(interaction.guildId!, { verify_thread_parent_id: channel.id })
+    );
+    logger.info(
+      { evt: "config_set_verify_thread_parent", guildId: interaction.guildId, channelId: channel.id },
+      "[gate] verify thread parent updated"
+    );
+  });
+  await withStep(ctx, "reply", async () => {
+    await replyOrEdit(interaction, {
+      content: `Verify thread parent set to <#${channel.id}>. New joiners will now have private verify threads created here.`,
+    });
+  });
+}
+
+async function executeSetUnverifiedRules(ctx: CommandContext<ChatInputCommandInteraction>) {
+  const { interaction } = ctx;
+  await withStep(ctx, "defer", async () => {
+    await ensureDeferred(interaction);
+  });
+  const channel = interaction.options.getChannel("channel", true);
+  await withStep(ctx, "persist_config", async () => {
+    withSql(ctx, "INSERT/UPDATE guild_config unverified_rules_channel_id", () =>
+      upsertConfig(interaction.guildId!, { unverified_rules_channel_id: channel.id })
+    );
+    logger.info(
+      { evt: "config_set_unverified_rules", guildId: interaction.guildId, channelId: channel.id },
+      "[gate] unverified rules channel updated"
+    );
+  });
+  await withStep(ctx, "reply", async () => {
+    await replyOrEdit(interaction, {
+      content: `Unverified rules source set to <#${channel.id}>. Messages from this channel will be replicated into each new joiner's verify thread.`,
+    });
+  });
+}
+
 async function executeWelcomeRole(ctx: CommandContext<ChatInputCommandInteraction>) {
   const { interaction } = ctx;
 
@@ -751,6 +817,12 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
           break;
         case "set-questions":
           await executeSetQuestions(ctx);
+          break;
+        case "set-verify-thread-parent":
+          await executeSetVerifyThreadParent(ctx);
+          break;
+        case "set-unverified-rules":
+          await executeSetUnverifiedRules(ctx);
           break;
       }
       return;
