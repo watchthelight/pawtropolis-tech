@@ -75,10 +75,8 @@ You should see thousands of messages spread across multiple days.
 
 ## Use the Heatmap
 
-Run this command in Discord:
+Run this in Discord and you'll get the heatmap for the period you just backfilled:
 
 ```
 /activity weeks:8
 ```
-
-You'll see a colorful activity heatmap!
