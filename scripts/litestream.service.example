@@ -1,0 +1,58 @@
+# Litestream systemd unit for Pawtropolis Tech
+#
+# Runs Litestream as a long-lived background service on bash-ec2, tailing
+# data/data.db's WAL and uploading frames to Cloudflare R2 every 10s.
+#
+# Install (Phase 1.2 deploy):
+#   sudo cp scripts/litestream.service.example /etc/systemd/system/litestream.service
+#   sudo nano /etc/litestream.env  # see template below
+#   sudo chmod 600 /etc/litestream.env
+#   sudo chown root:root /etc/litestream.env
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now litestream
+#   sudo journalctl -fu litestream
+#
+# /etc/litestream.env contents (chmod 600, owned by root — NEVER commit):
+#   LITESTREAM_R2_ACCOUNT_ID=ed2844069cd3031d20c974bcd472fa0f
+#   LITESTREAM_ACCESS_KEY_ID=<from CREDENTIALS.md>
+#   LITESTREAM_SECRET_ACCESS_KEY=<from CREDENTIALS.md>
+#
+# Plan reference: Phase 1.2 of ~/.claude/plans/logical-squishing-dragon.md
+
+[Unit]
+Description=Litestream — continuous SQLite backup to Cloudflare R2
+Documentation=https://litestream.io/
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/bin/litestream replicate -config /etc/litestream.yml
+Restart=always
+RestartSec=5
+TimeoutStopSec=30
+
+# Pull R2 credentials from a separate root-owned env file (mode 0600).
+# Keeps secrets out of the unit file and out of journalctl output.
+EnvironmentFile=/etc/litestream.env
+
+# Sandboxing — Litestream only needs to read the SQLite WAL and write to R2.
+# No need for full system access.
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=read-only
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+PrivateTmp=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+# Allow read access to the bot's data directory specifically.
+# (ProtectHome=read-only already permits read; this is belt-and-suspenders.)
+ReadOnlyPaths=/home/ubuntu/pawtropolis-tech/data
+
+[Install]
+WantedBy=multi-user.target
