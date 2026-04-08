@@ -4,13 +4,13 @@
 
 ### Server Unresponsive (Disk Full)
 
-**Symptoms**:
+**Symptoms:**
 - SSH connection times out
 - Bot is offline
-- Ping to server fails (100% packet loss)
-- Disk Space Critical alert was posted before outage
+- Ping fails (100% packet loss)
+- A "Disk Space Critical" alert hit the channel right before the outage
 
-**Root Cause**: When disk usage exceeds ~95%, Linux cannot create new processes or write logs, causing SSH to fail.
+**Root cause:** Once disk usage gets above ~95%, Linux can't fork new processes or write logs. SSH dies along with everything else.
 
 **Recovery Steps**:
 
@@ -78,13 +78,12 @@ See [INC-003](../INCIDENTS.md#inc-003-critical-disk-space-outage---2026-01-19) f
 SqliteError: no such column: configs.logging_channel_id
 ```
 
-**When this happens**:
+**When you'll see it:**
 
 - Running `/config set logging`
-- Bot tries to read logging channel from database
-- Any query using `configs.logging_channel_id`
+- Any code path that reads `configs.logging_channel_id`
 
-**Cause**: Database migration not run yet.
+**Cause:** the migration that adds the column hasn't been run.
 
 **Fix**:
 
@@ -132,12 +131,11 @@ Error: Legacy SQL detected: ALTER TABLE review_action RENAME TO review_action_ol
 better-sqlite3 blocks this to prevent data loss.
 ```
 
-**When this happens**:
+**When you'll see it:**
 
-- Running a migration that renames a table
-- Trying to rename columns
+- A migration tries to `RENAME` a table or column
 
-**Cause**: better-sqlite3 blocks table renames for safety.
+**Cause:** better-sqlite3 refuses raw renames to prevent data loss. The right pattern is create-new, copy, swap.
 
 **Fix**:
 
@@ -182,18 +180,16 @@ systemctl start pawtropolis
 [Sentry] Failed to send event: 403 Forbidden
 ```
 
-**When this happens**:
+**When you'll see it:**
 
-- Bot starts up
-- Errors get logged
-- Performance tracking runs
+- Bot startup, every time an error is captured, or when performance traces flush
 
-**Possible causes**:
+**Possible causes:**
 
-- Wrong DSN (project, org, or key)
-- DSN expired or disabled
-- No permission to the project
-- Rate limited (rare)
+- Wrong DSN (project, org, or key is off by one character)
+- DSN was disabled or rotated
+- The bot's auth token isn't allowed on the project
+- Rate-limited (rare)
 
 **Check the DSN**:
 
