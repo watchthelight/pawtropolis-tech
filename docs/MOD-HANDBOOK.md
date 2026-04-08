@@ -108,68 +108,66 @@ Key features:
 
 ## Conduct & Expectations
 
-As a staff member of the community, you are held at higher expectations. This includes you being a role model towards other community members. You should be helpful and friendly to community members. It's what makes users want to come back.
+You're held to a higher standard than regular members because the rest of the community takes its cues from how you act. Be helpful, be friendly, and don't take the role for granted.
 
 **Key principles:**
 
-- First impressions is important. How you act is how the community will see you.
-- Representing the server professionally and respectfully at all times.
-- Remaining neutral in conflicts; avoid arguing with members in public.
-- Not misusing power or permissions for personal gain or vendettas.
-- Following server rules yourselves—staff are held to a higher standard.
-- Being transparent in your actions; always leave a log and reasoning.
-- Respecting team hierarchy and trust the chain of command.
+- First impressions matter. How you act is how the community sees you.
+- Represent the server professionally and respectfully.
+- Stay neutral in conflicts. Don't argue with members in public.
+- Don't use your permissions for personal gain or vendettas.
+- Follow the server rules yourself — you're held to a higher standard, not a lower one.
+- Be transparent. Always leave a log and a reason.
+- Respect the chain of command.
 
 ### Professionalism
 
-Remain composed and diplomatic, especially during disputes or heated conversations. Emotional outbursts or reactive behavior can escalate situations.
+Stay composed during heated conversations. Emotional reactions escalate situations that could have ended quietly.
 
-Exercise discretion when handling sensitive issues. Discussions involving bans, reports, or member disputes should remain internal.
+Use discretion with sensitive topics. Bans, reports, and member disputes stay in staff channels.
 
 ### Attitude & Demeanor
 
-Avoid superiority complexes. Treat every member, regardless of their status, with equal respect and fairness.
-
-Lead by example. Your tone, interactions, and presence set the culture of the community. If you expect respect, you must model it first.
+Treat every member the same regardless of how long they've been around or how popular they are. Lead by example — your tone sets the tone for everyone watching.
 
 ### Responsiveness & Engagement
 
-Respond to mod pings and server needs in a timely manner. If unavailable, mark your status appropriately or communicate with the team.
+Respond to mod pings reasonably quickly. If you can't be available, set your status or tell the team.
 
-Stay involved in daily activity. Even small contributions like greeting users or cleaning up spam help maintain engagement.
+Stay involved in everyday activity. Greeting people, cleaning up spam, answering questions in general — that's most of the job.
 
-Track progress transparently. For tasks, reports, or events, mark them complete using designated tools like Trello boards, bot logs, or dedicated staff channels.
+Track tasks where the team can see them: Trello, bot logs, or the dedicated staff channels. Don't just remember things in your head.
 
 ### Accountability
 
-Acknowledge your mistakes proactively. If an error in judgment occurs, document it and notify senior staff.
+If you make a bad call, say so and tell senior staff. We'd rather hear about it from you than discover it later.
 
-Always log moderation actions. This includes reasons, evidence, and context—especially in kicks, bans, and warns.
+Log every moderation action with the reason, evidence, and context. That goes double for kicks, bans, and warns.
 
-Seek help when uncertain. Do not guess your way through critical decisions that could affect the community.
+Ask for help when you're not sure. Guessing on a decision that affects another member is how we end up reversing actions later.
 
 ### Team Collaboration
 
-Present a unified front. Avoid public disagreements with other staff members. If you believe a teammate is in the wrong, take it to the staff areas where they should be discussed and handled.
+Present a unified front to members. If you disagree with another staff member's call, take it up with them in staff channels, not in front of users.
 
-Practice respectful internal dialogue. Feedback, disagreement, or corrections should be constructive and private.
+Keep feedback between staff members private and constructive.
 
-Use team communication tools responsibly. Keep clutter and casual chatter out of moderation channels.
+Don't clutter moderation channels with casual chatter. They exist for tracking actions, not for hanging out.
 
 ### Prohibited Conduct
 
-- Never abuse permissions. This includes editing roles, deleting messages, or muting members without proper justification.
-- Avoid favoritism. Friends and frequent users must be held to the same standards as all others.
-- Do not share staff discussions. Screenshots, summaries, or leaks of internal conversations are grounds for immediate removal.
-- Venting about users or staff in public chats is prohibited. Maintain professionalism across all areas of interaction.
+- Don't abuse permissions. That means no role edits, message deletions, or mutes without a reason you can defend.
+- No favoritism. Friends and regulars get held to the same rules as everyone else.
+- Don't share staff discussions. Screenshots, summaries, and leaks of internal conversations are grounds for immediate removal.
+- Don't vent about users or other staff in public channels. Keep that for DMs or staff chat.
 
 ### Transparency
 
-Record decisions with accuracy and clarity. Reports should include time stamps, usernames, and the nature of the issue.
+Log decisions accurately. Reports should include the time, the user, and what actually happened.
 
-Separate emotion from fact. When logging, avoid inserting personal feelings, assumptions, or opinions.
+Keep emotion out of the log. Stick to facts — your feelings about the user belong somewhere else.
 
-Keep decision-making observable. Whenever possible, explain actions taken in mod channels to keep the team aligned.
+Explain your actions in mod channels when you can. It keeps the team aligned and gives anyone reviewing the case the context they need.
 
 ---
 
@@ -506,13 +504,13 @@ Verified Artists may post commission ads in the commissions channel with these l
 
 ### Purpose
 
-Training gets our new staff ready to keep our Discord community fun and safe. It's about learning how to use our tools, handle new member applications, and make sure everyone's following the rules. We want you to feel confident jumping into your role!
+Training gets new staff up to speed on the tools, the application process, and the rules they'll be enforcing. The goal is for you to feel confident the first time you have to actually do something on your own.
 
 ### How it works
 
-**Trainers:** Only Senior Moderators (Sr. Mod) or higher-ups can lead training. They will be the ones who will provide you with enough knowledge to do your role efficiently.
+**Trainers:** Only Senior Moderators or higher run training. They'll teach you what you need to do your role.
 
-**Their Job:** During your training, your trainer will teach you how to utilize staff materials and how the community works.
+**Their job:** Walk you through the staff materials and how the community actually works day-to-day.
 
 ### Training Structure
 
@@ -572,7 +570,7 @@ For questions or concerns about training, reach out to a Senior Moderator or hig
 
 ### Vision
 
-Our #1 goal is to keep users safe in our community. Our community is not a court room, and goes without saying more and more situation have arisen where staff are asked to take action based on allegations, drama, or bans that occurred in other communities or an other platforms. We understand the concern for safety of our community members, it is coherent to give users fair chances here.
+Our top priority is keeping members safe here. We aren't a courtroom, and lately staff are being asked more and more to act on allegations, drama, or bans that happened somewhere else. We get the safety concern, but everyone gets a fair shake here based on what they actually do here.
 
 ### Cross Banning Policy
 
@@ -653,23 +651,21 @@ In many communities like this one, there will be disagreements or arguments that
 
 ## Ticket Guide
 
-Welcome to the ticket guide. Tickets is a great way for users to utilize private conversations with staff for different variants of support. This section will explain how our tickets work and handled.
+Tickets are how members get private support from staff. This section covers how to handle them.
 
 ### Rules for Handling Tickets
 
-As much as we love our staff helping users out in tickets, please be mindful that we have rules to how they are handled:
+**One staff member per ticket.**
+Don't pile on. If you need a second opinion, get it in staff chat first, then bring the answer back into the ticket. Multiple staff in a single ticket creates confusion and crossed wires.
 
-**Limit to 1 member of staff in each ticket**
-- Each ticket should be handled with one team member at a time. You may request another team member to assist but after consulting outside the ticket for assistance. It can cause confusion and layering between multiple staff handling a ticket at once.
+**Don't consult inside the ticket.**
+Staff-to-staff discussion happens in staff channels, not in front of the user. It looks unprofessional and clutters the thread.
 
-**Prevent consulting inside the ticket**
-- Refrain from discussions between team members in the ticket. It's unprofessional and can clog the tickets.
+**Resolve the ticket before closing it.**
+Make sure the user actually got what they came for. Ask "Anything else I can help with?" before you close it.
 
-**Make sure that the user gets the support they need**
-- It's important that a user has their ticket handled in a timely manner. It also comes with respect with the user. Make sure their needs are met, and to close the ticket. Before closing the ticket, you may ask "Is there anything else I may assist with?"
-
-**Transcript your tickets**
-- It is required that all tickets are logged appropriately. You can do this by clicking the transcript button after the ticket is closed. Once the ticket it saved, you may delete the ticket.
+**Save a transcript before deleting.**
+Click the transcript button after the ticket closes. Once it's saved you can delete the ticket itself.
 
 ### Ticket Types
 
