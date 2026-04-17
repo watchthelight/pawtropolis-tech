@@ -20,8 +20,8 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import Database from "better-sqlite3";
-import { readdirSync, copyFileSync, existsSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { readdirSync, copyFileSync, existsSync, statSync, unlinkSync } from "node:fs";
+import { join, dirname, basename } from "node:path";
 import { fileURLToPath, pathToFileURL } from "url";
 import dotenv from "dotenv";
 
@@ -141,6 +141,39 @@ function createBackup(): void {
   console.log(`📦 Creating backup: ${backupPath}`);
   copyFileSync(dbPath, backupPath);
   console.log(`✅ Backup created successfully\n`);
+
+  pruneBackups();
+}
+
+/**
+ * Prune old migration backups, keeping only the N most recent.
+ * Without this, backups accumulate until the disk fills — exactly what happened 2026-04-17.
+ */
+function pruneBackups(): void {
+  const retention = Number(process.env.MIGRATION_BACKUP_RETENTION ?? 5);
+  if (!Number.isFinite(retention) || retention < 1) return;
+
+  const dbDir = dirname(dbPath);
+  const dbBase = basename(dbPath);
+  const prefix = `${dbBase}.backup-`;
+
+  const backups = readdirSync(dbDir)
+    .filter((f) => f.startsWith(prefix))
+    .map((f) => ({ file: f, path: join(dbDir, f), mtime: statSync(join(dbDir, f)).mtimeMs }))
+    .sort((a, b) => b.mtime - a.mtime);
+
+  const toDelete = backups.slice(retention);
+  if (toDelete.length === 0) return;
+
+  console.log(`🧹 Pruning ${toDelete.length} old backup(s), keeping ${retention} newest`);
+  for (const b of toDelete) {
+    try {
+      unlinkSync(b.path);
+      console.log(`   removed ${b.file}`);
+    } catch (err) {
+      console.warn(`   failed to remove ${b.file}: ${err}`);
+    }
+  }
 }
 
 /**
