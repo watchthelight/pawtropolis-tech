@@ -36,6 +36,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 		}
 
 		// Detect dashboard tier from roles
+		console.log(`[auth] user=${user.id} roles=${JSON.stringify(member.roles)}`);
 		const tier = detectTier(member.roles, user.id);
 		if (tier === 'none') {
 			error(403, 'You do not have a staff role in Pawtropolis. Access denied.');
