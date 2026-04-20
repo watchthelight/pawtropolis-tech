@@ -65,6 +65,8 @@ Key features:
 
 **Reference**
 - [Community Rules](#community-rules)
+  - [Roleplay & Spam](#roleplay--spam)
+  - [User Safety](#user-safety)
 - [Cross Banning & Drama](#cross-banning--drama)
 - [Ticket Guide](#ticket-guide)
 - [Server Artist Program](#server-artist-program)
@@ -424,6 +426,7 @@ The following topics are **not allowed** in public channels. Staff can determine
 - Graphic Content / Imagery of Weapons (guns, knives, etc.)
 - Homophobia / Transphobia / Racism / Sexism
 - Begging for Nitro or Free Art
+- Discussing your own disciplinary actions in public chats (sparks unwanted drama)
 
 **Action:** Messages related to such topics will be deleted and punishment issued if needed. Violation results in mute/warn punishments and as severe as ban/reports.
 
@@ -459,6 +462,8 @@ This is a 100% SFW Community. To comply with Discord's Terms and keep teens safe
 **Not Allowed:**
 - Discussion of 18+ topics
 - Any NSFW content
+- Suggestive content, even when posted in `<#1446602187655610461>`
+- Streaming gambling in voice channels
 
 **Action:** Discussion of 18+ topics is an **automatic 3-strike penalty**.
 
@@ -497,6 +502,68 @@ Verified Artists may post commission ads in the commissions channel with these l
 2. Warning
 3. Warning
 4. Removal of Verified Artist role
+
+### Roleplay & Spam
+
+**Roleplay in any form is prohibited.** This is a safety call. There are minors in the community, and roleplay opens the door to interactions we can't moderate.
+
+**Action:** Falls under the punishment matrix. Repeated participation escalates quickly.
+
+#### Passive-RP
+
+Stylized speech, action text, or expressive messages count as roleplay. Examples:
+
+- `*waves tail hi*`
+- `*nuzzles*`
+- Any message framed as an in-character action rather than direct speech
+
+Greeting people with non-standard communication (meowing, emoticon-texting) is fine. The line is "performed action vs. talking."
+
+#### Spam & Content Flooding
+
+When the whole channel starts saying the same thing back-to-back, it stops being a conversation and starts being noise. We don't censor, but we do redirect.
+
+**What counts:**
+
+- Repeated low-effort messages from the same group with no actual conversation between them
+- Brainrot or media that doesn't add anything to the channel it's posted in
+
+**Where it goes instead:** `<#1393507326865969152>` exists for content that doesn't fit elsewhere. Send people there when you redirect them.
+
+**Action:** Remove the message and leave a short reminder. No warn the first time unless they ignore the redirect.
+
+### User Safety
+
+There are a lot of minors in the community. The rules in this section exist to keep members from exposing themselves to risk.
+
+#### Direct Selfies
+
+**Direct selfies are prohibited.** Cosplay photos are fine as long as the user's face isn't identifiable.
+
+- Any photo where the member can be identified by their face is not allowed
+- Cosplay with a mask, head turned, or otherwise face-obscured is fine
+
+**Action:** Remove the photo and DM the user with the rule. Repeat offenses go through L-1 escalation.
+
+#### Profile Descriptors
+
+We can ask members to change profile elements that aren't appropriate for a 13+ space:
+
+- Display name
+- Profile picture or banner
+- Server tag
+- Bio (if it's blatant enough to warrant it)
+
+**Action:** Modmail the user with a clear ask. If they refuse or stall, mute until they comply.
+
+#### Member Self-Protection
+
+When members come to staff worried about DMs or links, the standard advice:
+
+- Be cautious of unsolicited DMs and friend requests from people they don't know
+- Don't click untrusted links. Phishing is common and can compromise their account
+- Don't post content that publicly identifies them (location, school, workplace, face)
+- What gets said online doesn't go away, and it shapes how others see them
 
 ---
 
