@@ -33,6 +33,9 @@
 ### Architecture
 - [System Overview](./architecture/system-overview.md) - Detailed system architecture, components, design decisions
 
+### Member Guides
+- [Member Rewards](./MEMBER-REWARDS.md) - Level rewards, weekly newsletter winners, credit system, Byte tokens, movie-night tiers, shop/economy
+
 ### Staff Guides
 - [Bot Handbook](./BOT-HANDBOOK.md) - Comprehensive command reference for all staff roles (2,687 lines)
 - [Mod Handbook](./MOD-HANDBOOK.md) - Staff policies, moderation rules, verification procedures (1,287 lines)
