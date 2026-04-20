@@ -1,17 +1,17 @@
-# Server Channels — Pawtropolis™ | Furry • LGBTQ+
+# Server Channels — Pawtropolis | Furry • LGBTQ+
 
-**Generated:** 2026-01-21T15:28:07.592Z
+**Generated:** 2026-04-20T15:02:43.249Z
 **Guild ID:** 896070888594759740
-**Total Channels:** 225
+**Total Channels:** 243
 
 ## Summary
 
 | Type | Count |
 |------|-------|
-| Categories | 30 |
-| Text Channels | 152 |
-| Voice Channels | 23 |
-| Forum Channels | 15 |
+| Categories | 27 |
+| Text Channels | 171 |
+| Voice Channels | 24 |
+| Forum Channels | 16 |
 | Threads | 0 |
 | Other | 5 |
 
@@ -25,13 +25,26 @@
 
 | Channel | Type | ID | NSFW | Slowmode |
 |---------|------|----|------|----------|
-| ticket-0881 | Text | `1449845274791903316` | No | 0s |
 | support-0910 | Text | `1457361751099310295` | No | 0s |
-| support-0914 | Text | `1459270517595967660` | No | 0s |
-| support-0920 | Text | `1461415277957746801` | No | 0s |
-| support-0921 | Text | `1461429006065864727` | No | 0s |
-| world-bug-0005 | Text | `1462316373504954390` | No | 0s |
-| support-0925 | Text | `1462462531997008067` | No | 0s |
+| support-0982 | Text | `1479318437036560475` | No | 0s |
+| support-1011 | Text | `1482107640149573742` | No | 0s |
+| support-1023 | Text | `1483962406597038231` | No | 0s |
+| support-1028 | Text | `1484370602830594219` | No | 0s |
+| support-1051 | Text | `1488982919551647754` | No | 0s |
+| support-1052 | Text | `1488996370391105558` | No | 0s |
+| support-1055 | Text | `1489139113511878759` | No | 0s |
+| support-1057 | Text | `1489563334264094751` | No | 0s |
+| support-1061 | Text | `1490092865433374881` | No | 0s |
+| stickerwall-0012 | Text | `1490159901740372088` | No | 0s |
+| support-1064 | Text | `1490742869336522883` | No | 0s |
+| user-0512 | Text | `1494080440598921328` | No | 0s |
+| support-1084 | Text | `1494090176417239050` | No | 0s |
+| staff-0023 | Text | `1494090454340341865` | No | 0s |
+| support-1085 | Text | `1494411997541040228` | No | 0s |
+| user-0514 | Text | `1494875183234809926` | No | 0s |
+| user-0515 | Text | `1494927802057887925` | No | 0s |
+| support-1090 | Text | `1495105319599079444` | No | 0s |
+| support-1091 | Text | `1495239686732644563` | No | 0s |
 
 ### - discord.gg/floof -
 
@@ -40,10 +53,10 @@
 | Channel | Type | ID | NSFW | Slowmode |
 |---------|------|----|------|----------|
 | 「⭐」gallery | Forum | `1130445124413956147` | No | 0s |
-| 「🌐」Citizens: 5925 | Voice | `1459654647659630828` | No | 0s |
+| 「🌐」Citizens: 6701 | Voice | `1459654647659630828` | No | 0s |
 | 「💎」boosts | Text | `896070888779317256` | No | 0s |
 | 「🔊」In VC: 0 | Voice | `1459655147654480084` | No | 0s |
-| 「🏆」Jan Goal: 6000 | Voice | `1438646719892951070` | No | 0s |
+| 「🏆」April Goal: 7k! | Voice | `1438646719892951070` | No | 0s |
 
 ### [1] Board
 
@@ -55,7 +68,7 @@
 | 「🔍」server-info | Forum | `1356430757475913972` | No | 0s |
 | 「🎀」roles | Text | `1404710287084359710` | No | 0s |
 | 「🐈」mascot | Text | `1243578531183853621` | No | 0s |
-| 「⭐」starboard | Text | `1420407097476124733` | No | 0s |
+| 「⭐」hall-of-fame | Text | `1420407097476124733` | No | 0s |
 
 ### [2] Announcements
 
@@ -64,11 +77,11 @@
 | Channel | Type | ID | NSFW | Slowmode |
 |---------|------|----|------|----------|
 | 「📰」news | Announcement | `896197065720332328` | No | 0s |
-| 「📰」world-updates | Announcement | `1438540553867362304` | No | 0s |
+| 「📰」vrcworld-updates | Announcement | `1438540553867362304` | No | 0s |
 | 「✨」vrc-dev-share | Text | `1409506904740204605` | No | 0s |
 | 「🎂」happy-birthday | Announcement | `1424039052503683115` | No | 0s |
-| 「🎈」events | Announcement | `1231135837970890833` | No | 0s |
-| 「🎈」giveaways | Announcement | `1384456699888406679` | No | 0s |
+| 「📆」events | Announcement | `1231135837970890833` | No | 0s |
+| 「📆」giveaways | Announcement | `1384456699888406679` | No | 0s |
 
 ### [3] City Hall
 
@@ -90,15 +103,16 @@
 
 | Channel | Type | ID | NSFW | Slowmode |
 |---------|------|----|------|----------|
-| 「🎆」general-chat | Text | `896070889462976608` | No | 0s |
+| 「💭」main-chat | Text | `896070889462976608` | No | 0s |
 | 「🔈」General Hangout | Voice | `1386123363323482192` | No | 0s |
 | 「🔈」Gaming Lounge | Voice | `1136781312385105920` | No | 0s |
-| 「✨」known-chat | Text | `1437291915979522078` | No | 0s |
+| 「⭐」known-chat | Text | `1488258803928404069` | No | 0s |
+| 「🗣️」yapping-space | Text | `1393507326865969152` | No | 0s |
+| 「🎞️」Theater | Voice | `1484547787503702277` | No | 0s |
 | 「☁️」chill-chat | Text | `1437278644455342230` | No | 2s |
-| 「🍿」Theater 1 | Voice | `1444069062136303688` | No | 0s |
 | 「😂」memes | Text | `896070889462976610` | No | 0s |
 | 「📷」media | Text | `1121191510642274354` | No | 0s |
-| 「❤️」bump-us | Text | `896070889198731286` | No | 0s |
+| 「💕」bump-us | Forum | `1486499975247433738` | No | 0s |
 | 「🧰」bot-stuff | Text | `896070890457018384` | No | 0s |
 
 ### [5] Interests
@@ -111,11 +125,13 @@
 | 「🎮」gaming | Text | `1196698619689062430` | No | 0s |
 | 「🔉」Smol VC 1 | Voice | `896070890738040865` | No | 0s |
 | 「📸」photography | Text | `1429072978661867590` | No | 0s |
-| 「🔉」Smol VC 2 | Voice | `1136781568682234026` | No | 0s |
-| 「💪」fitness | Text | `1438963459592032276` | No | 0s |
 | 「🎭」cosplay | Text | `1121191130634133584` | No | 0s |
+| 「🔉」Smol VC 2 | Voice | `1136781568682234026` | No | 0s |
 | 「💤」AFK | Voice | `1393881660256161864` | No | 0s |
 | 「🏎️」automotive | Text | `1395676922272288818` | No | 0s |
+| 「⚙️」technology | Text | `1478733040996847697` | No | 0s |
+| 「⚜️」thin-line | Text | `1488877242976309429` | No | 0s |
+| 「🃏」card-collection | Text | `1488258543432765543` | No | 0s |
 
 ### [6] Creative Corner
 
@@ -124,11 +140,12 @@
 | Channel | Type | ID | NSFW | Slowmode |
 |---------|------|----|------|----------|
 | 「🎨」Artist Studio | Voice | `1316362343176867931` | No | 0s |
+| 「🖌️」art-rules | Text | `1491447539533352990` | No | 0s |
 | 「✍️」writing | Text | `1446602187655610461` | No | 0s |
 | 「🎨」artwork | Text | `1400344550094012447` | No | 0s |
 | 「🎨」art-trades | Text | `1400346017437712444` | No | 0s |
-| 「🎨」art-advice | Text | `1441516524954451999` | No | 0s |
 | 「🎨」looking-for-comms | Text | `1400345890933444628` | No | 0s |
+| 「🎨」art-advice | Text | `1441516524954451999` | No | 0s |
 
 ### [7] Verified Creative Corner
 
@@ -140,12 +157,11 @@
 | 「🌟」artist-starboard | Text | `1434727170227572796` | No | 0s |
 | 「✅」verify-artist | Text | `896070890188603442` | No | 0s |
 | 「⭐」server-artist | Text | `1131332813585661982` | No | 0s |
-| 「🖌️」verified-artwork | Text | `1400348338972528763` | No | 0s |
-| 「🖌️」verified-art-trades | Text | `1400348553943056396` | No | 0s |
-| 「🖌️」art-commissions | Text | `1400346864947302461` | No | 0s |
-| 「🖌️」adopts | Text | `1400348382798807060` | No | 0s |
-| 「🖌️」verified-ych | Text | `1400348438385660017` | No | 0s |
-| 「🖌️」festive-artwork | Text | `1444074122513612980` | No | 0s |
+| 「🖌️」verified-artwork | Text | `1400348338972528763` | No | 600s |
+| 「🖌️」verified-art-trades | Text | `1400348553943056396` | No | 600s |
+| 「🖌️」art-commissions | Text | `1400346864947302461` | No | 600s |
+| 「🖌️」adopts | Text | `1400348382798807060` | No | 600s |
+| 「🖌️」verified-ych | Text | `1400348438385660017` | No | 600s |
 
 ### [8] Alt Creative Corner
 
@@ -158,7 +174,7 @@
 | 「🎹」music | Text | `896070889798508599` | No | 0s |
 | 「🎹」music-promotion | Text | `1450224387063025899` | No | 0s |
 | 「🕹️」vrchat | Text | `1393493112365780992` | No | 0s |
-| 「🐴」3d-modeling | Text | `1450227604152914131` | No | 0s |
+| 「🐴」3d-modeling-promo | Text | `1450227604152914131` | No | 0s |
 
 ### [9] Engagement
 
@@ -168,10 +184,8 @@
 |---------|------|----|------|----------|
 | 「❓」qotd | Text | `896070889198731288` | No | 0s |
 | 「🔢」counting | Text | `896958848009637929` | No | 0s |
-| 「⚰️」death-reason | Text | `1212355159712206908` | No | 0s |
 | 「🔨」ban-reason | Text | `1212356091103416370` | No | 0s |
-| 「🗣️」yapping-space | Text | `1393507326865969152` | No | 0s |
-| 「🗳️」polls | Text | `1437295827134447768` | No | 600s |
+| 「🗓️」wordle | Text | `1479901993462927441` | No | 0s |
 
 ### [10] Connections
 
@@ -192,7 +206,6 @@
 |---------|------|----|------|----------|
 | 「💎」vip-colors | Text | `896070891174260763` | No | 0s |
 | 「💎」Lounge | Voice | `896070891174260764` | No | 0s |
-| 「👑」Werewolf's Den | Voice | `1234323389892788284` | No | 0s |
 | 「💎」supporter-colors | Text | `1385430941475930182` | No | 0s |
 | 「💎」plink-lounge | Text | `896070891174260762` | No | 0s |
 
@@ -203,17 +216,22 @@
 | Channel | Type | ID | NSFW | Slowmode |
 |---------|------|----|------|----------|
 | 「🪐」Golden Forum | Voice | `1413408929215418368` | No | 0s |
-| 「🌙」werewolf-den | Text | `1429182366944985168` | No | 0s |
 | 「🪐」entropys-place | Text | `1413411529122119770` | No | 0s |
-| 「🫘」bean-central | Voice | `1415728663751557161` | No | 0s |
-| 「🐉」bash-airspace | Text | `1427294324462194778` | No | 0s |
-| 「⛰️」The Stray Mutt's Den | Voice | `1433188930316144731` | No | 0s |
 | 「🐄」teas-barnyard | Text | `1431367579573948456` | No | 0s |
-| 「🐄」Moooo-ing Meadows | Voice | `1436139444003536906` | No | 0s |
+| 「⛰️」The Stray Mutt's Den | Voice | `1433188930316144731` | No | 0s |
 | 「🛸」ash-spaceship | Text | `1432530307826843748` | No | 0s |
-| 「🍌」Tenzi's Tower | Voice | `1459273916257271920` | No | 0s |
+| 「🐄」Moooo-ing Meadows | Voice | `1436139444003536906` | No | 0s |
 | 「💎」birbos-bizarre-adventures | Text | `1433189199351120055` | No | 0s |
-| 「🐾」shadowfangs-corner | Text | `1456358548429869116` | No | 0s |
+| 「🍌」Tenzi's Tower | Voice | `1459273916257271920` | No | 0s |
+| 「🌙」Werewolf's Den | Voice | `1469999354986369036` | No | 0s |
+| 「🍓」marsh’s-meadow⭐ | Text | `1484370816941428877` | No | 0s |
+| 「🍓」Marsh’s Meadow⭐ | Voice | `1484372027426082877` | No | 0s |
+| 「🍁」only-leafs | Text | `1487469568828899369` | No | 0s |
+| 「🍁」Gambler's Den | Voice | `1487470319919693915` | No | 0s |
+| 「🌹」-𝓡𝓸𝓶𝓪𝓲𝓻𝓮𝓼-𝓟𝓪𝓻𝓵𝓸𝓾𝓻-𝓢𝓾𝓲𝓽𝓮-🌹 | Text | `1487975996190756964` | No | 0s |
+| 「🐾」the-dawg-house | Text | `1492437919435063357` | No | 0s |
+| 「🐾」Howling Moon | Voice | `1492438135844503694` | No | 0s |
+| 「💭」evil-main-chat | Text | `1492489111196532846` | No | 0s |
 
 ### [13] Unverified Area
 
@@ -225,9 +243,10 @@
 | 「🛬」user-join | Text | `896070889005781033` | No | 0s |
 | 「🛫」user-left | Text | `896070891744682066` | No | 0s |
 | 「🔑」modmail﹒logs | Text | `1169361527065808936` | No | 0s |
+| 「🔑」discord-news | Text | `904072321432698891` | No | 0s |
 | 「📜」unverified-rules | Text | `1150525497982337134` | No | 0s |
-| 「🗯️」waiting | Text | `1425834142330912790` | No | 0s |
 | 「❓」verify | Text | `896070891539169311` | No | 0s |
+| 「🗯️」waiting | Text | `1494906744063656106` | No | 0s |
 
 ### [14] Staff Info
 
@@ -235,12 +254,13 @@
 
 | Channel | Type | ID | NSFW | Slowmode |
 |---------|------|----|------|----------|
-| 「🔑」staff-news | Text | `896070891539169317` | Yes | 0s |
-| 「🔑」discord-news | Text | `904072321432698891` | Yes | 0s |
-| 「🔑」handbook | Text | `1383953381269438504` | Yes | 0s |
-| 「🔑」projects | Forum | `1415282624552894636` | No | 0s |
-| 「🔑」appeals | Text | `932485736366759977` | Yes | 0s |
-| 「🔑」ban-summaries | Text | `1383333916596899894` | Yes | 0s |
+| 「🔑」staff-news | Text | `896070891539169317` | No | 0s |
+| 「🔑」calendar | Text | `1492111202879406171` | No | 0s |
+| 「🔑」appeals | Text | `932485736366759977` | No | 0s |
+| 「🔑」verify-blacklist | Text | `1468347731100700835` | No | 0s |
+| 「🔑」ideas | Forum | `1415282624552894636` | No | 0s |
+| 「🔑」handbook | Text | `1383953381269438504` | No | 0s |
+| 「🔑」ban-summaries | Text | `1383333916596899894` | No | 0s |
 
 ### [15] Staff Room
 
@@ -248,12 +268,12 @@
 
 | Channel | Type | ID | NSFW | Slowmode |
 |---------|------|----|------|----------|
-| 「🔑」Staff | Voice | `896070890738040863` | Yes | 0s |
-| 「🔐」main-discussion | Text | `896070891539169319` | Yes | 0s |
-| 「🔐」junk-drawer | Text | `896070891744682065` | Yes | 0s |
-| 「🔐」mod-actions | Text | `1383341031176802384` | Yes | 0s |
+| 「🔑」Staff | Voice | `896070890738040863` | No | 0s |
+| 「🔐」main-discussion | Text | `896070891539169319` | No | 0s |
+| 「🔐」junk-drawer | Text | `896070891744682065` | No | 0s |
+| 「🔐」mod-actions | Text | `1383341031176802384` | No | 0s |
+| 「🔐」qotd-review | Text | `1486268526585974875` | No | 0s |
 | 「🔐」change-log | Text | `1396310337548189878` | No | 0s |
-| 「🔐」development | Text | `1429947536793145374` | No | 0s |
 
 ### [15] Leadership Hub
 
@@ -262,13 +282,13 @@
 | Channel | Type | ID | NSFW | Slowmode |
 |---------|------|----|------|----------|
 | 「🔑」Lead VC | Voice | `1393462083366162536` | No | 0s |
-| 「🔐」senior-chat | Text | `1393473086933962763` | Yes | 0s |
-| 「🔐」leadership-chat | Text | `1393461908656361566` | Yes | 0s |
-| 「🔑」Senior VC | Voice | `1393464031762710589` | No | 0s |
-| 「🔐」training-logging | Text | `1393461970144985159` | No | 0s |
+| 「🔐」senior-chat | Text | `1492111532472139796` | No | 0s |
+| 「🔐」leadership-chat | Text | `1393461908656361566` | No | 0s |
 | 「🔑」Management VC | Voice | `1404699664674062357` | No | 0s |
+| 「🔐」development | Text | `1429947536793145374` | No | 0s |
+| 「🔐」owner-room | Text | `1243711994675200070` | No | 0s |
+| 「🔐」training-logging | Text | `1393461970144985159` | No | 0s |
 | 「🔐」to-do-list | Text | `1442716501168885810` | No | 0s |
-| 「🔐」owner-room | Text | `1243711994675200070` | Yes | 0s |
 
 ### [16] Application Answers
 
@@ -361,6 +381,8 @@
 |---------|------|----|------|----------|
 | 「⚡」showcase | Forum | `1422527156491255830` | No | 0s |
 | 「📂」ai-log-testing | Text | `1393890141642297445` | No | 0s |
+| 「⚰️」death-reason | Text | `1212355159712206908` | No | 0s |
+| 「🗳️」polls | Text | `1437295827134447768` | No | 600s |
 | 「📌」out-of-order | Text | `1231126864823586876` | No | 0s |
 | 「🎀」meme-that | Forum | `1279836782912868507` | No | 0s |
 | 🍨﹕dept-info | Forum | `1157464571506864148` | No | 0s |
@@ -395,31 +417,9 @@
 | trick-or-treat | Text | `1419228962885861497` | No | 0s |
 | serverwide-event | Text | `1419229095115620433` | No | 0s |
 
-### ...
-
-**Category ID:** `1291074465467207702`
-
-| Channel | Type | ID | NSFW | Slowmode |
-|---------|------|----|------|----------|
-
-### Application tickets
-
-**Category ID:** `1332533464339189810`
-
-| Channel | Type | ID | NSFW | Slowmode |
-|---------|------|----|------|----------|
-
 ### Moderation Team ticket
 
-**Category ID:** `1385220298579640340`
-
-| Channel | Type | ID | NSFW | Slowmode |
-|---------|------|----|------|----------|
-| wwerew0lf-2 | Text | `1385220301985415332` | No | 0s |
-
-### Community Helper ticket
-
-**Category ID:** `1387006078260084756`
+**Category ID:** `1490975276933320797`
 
 | Channel | Type | ID | NSFW | Slowmode |
 |---------|------|----|------|----------|
@@ -428,8 +428,6 @@
 
 ## Permission Overwrites by Channel
 
-> **Note:** Channels marked "Inherits from category" have no explicit overwrites and use their parent category's permissions.
-
 ### #Tickets
 
 **ID:** `1103734436291412099` | **Type:** Category
@@ -437,9 +435,9 @@
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Server Dev | role | ViewChannel | - |
-| Ticket Tool#4843 | member | ManageRoles, ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory | - |
+| Community Staff | role | ViewChannel | - |
 | Administrator | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
+| Ticket Tool#4843 | member | ManageRoles, ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, AddReactions |
 | Senior Administrator | role | ViewChannel | - |
 
@@ -503,19 +501,19 @@
 | Veteran Fur ‹‹ LVL 60 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | [Patreon] Council Member | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | [Patreon] City Worker | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| Noble Fur ‹‹ LVL 50 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| Eternal Fur ‹‹ LVL 100+ ›› | role | Stream | - |
 | [Patreon] Legendary Fiona | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| Eternal Fur ‹‹ LVL 100+ ›› | role | Stream | - |
+| Noble Fur ‹‹ LVL 50 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | Legendary Fur ‹‹ LVL 80 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | Chatty Fur ‹‹ LVL 10 ›› | role | EmbedLinks, AttachFiles | - |
 | Active Fur ‹‹ LVL 20 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | Mythic Fur ‹‹ LVL 90 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | [Patreon] Mayor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| [Patreon] City Benefactor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| [Patreon] Horsetropy Governor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | Known Fur ‹‹ LVL 30 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| Beginner Fur ‹‹ LVL 5 ›› | role | EmbedLinks, AttachFiles | - |
-| Newcomer Fur ‹‹ LVL 1 ›› | role | AttachFiles | - |
 | Experienced Fur ‹‹ LVL 40 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Newcomer Fur ‹‹ LVL 1 ›› | role | AttachFiles | - |
+| Beginner Fur ‹‹ LVL 5 ›› | role | EmbedLinks, AttachFiles | - |
 | Elite Fur ‹‹ LVL 70 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | @everyone | role | - | CreatePublicThreads, CreatePrivateThreads |
 | [Patreon] Citizen | role | EmbedLinks, AttachFiles, Connect, Stream | - |
@@ -528,12 +526,6 @@
 |--------|------|-------|------|
 | Verified 2D Artist | role | EmbedLinks, AttachFiles | - |
 | @everyone | role | - | CreatePublicThreads, CreatePrivateThreads |
-
-### #[7] Verified Creative Corner
-
-**ID:** `1400346492321009816` | **Type:** Category
-
-*No permission overwrites (uses server defaults)*
 
 ### #[8] Alt Creative Corner
 
@@ -551,7 +543,6 @@
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Apps | role | ManageMessages, ViewChannel, EmbedLinks, AttachFiles | - |
-| Fibo#6503 | member | MentionEveryone | - |
 | @everyone | role | - | CreatePublicThreads, CreatePrivateThreads, EmbedLinks, AttachFiles |
 
 ### #[10] Connections
@@ -574,15 +565,9 @@
 | Community Member | role | - | ViewChannel |
 | Donator | role | ViewChannel | - |
 | Booster Fur | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
 | VIP Fur | role | ViewChannel | - |
+| Community Staff | role | ViewChannel | - |
 | @everyone | role | - | ManageMessages, SendMessages, CreatePublicThreads, CreatePrivateThreads |
-
-### #[12] Custom Channels
-
-**ID:** `1432302478723911781` | **Type:** Category
-
-*No permission overwrites (uses server defaults)*
 
 ### #[13] Unverified Area
 
@@ -590,10 +575,10 @@
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
-| Community Member | role | - | ViewChannel |
 | Gatekeeper | role | ViewChannel, SendMessages, ReadMessageHistory | - |
+| Community Member | role | - | ViewChannel |
 | Administrator | role | ViewChannel | - |
-| Moderation Team | role | ReadMessageHistory | ViewChannel, SendMessages |
+| Community Staff | role | ReadMessageHistory | ViewChannel, SendMessages |
 | @everyone | role | ViewChannel, SendMessages | ManageRoles, ManageChannels |
 
 ### #[14] Staff Info
@@ -603,10 +588,10 @@
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Staff on Break | role | ViewChannel | - |
-| Community Member | role | - | ViewChannel |
 | Gatekeeper | role | ViewChannel | - |
+| Community Member | role | - | ViewChannel |
 | Administrator | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
+| Community Staff | role | ViewChannel | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, AddReactions |
 
 ### #[15] Staff Room
@@ -615,12 +600,12 @@
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
-| Staff on Break | role | ViewChannel | SendMessages, SendMessagesInThreads, CreatePublicThreads, CreatePrivateThreads |
-| Community Member | role | - | ViewChannel |
-| Gatekeeper | role | ViewChannel | - |
-| Administrator | role | ViewChannel, SendMessages | - |
 | Server Dev | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
+| Community Member | role | - | ViewChannel |
+| Staff on Break | role | ViewChannel | SendMessages, SendMessagesInThreads, CreatePublicThreads, CreatePrivateThreads |
+| Administrator | role | ViewChannel, SendMessages | - |
+| Gatekeeper | role | ViewChannel | - |
+| Community Staff | role | ViewChannel | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, Connect |
 
 ### #[15] Leadership Hub
@@ -677,7 +662,7 @@
 |--------|------|-------|------|
 | Administrator | role | ManageMessages, ViewChannel | - |
 | Community Development Lead | role | ManageMessages, ViewChannel | - |
-| Moderation Team | role | ManageMessages, ViewChannel | - |
+| Community Staff | role | ManageMessages, ViewChannel | - |
 | @everyone | role | SendMessages, SendMessagesInThreads | ManageRoles, ManageChannels, ManageMessages, ViewChannel |
 | Community Ambassador | role | ViewChannel, EmbedLinks, AttachFiles | ManageMessages |
 
@@ -689,7 +674,7 @@
 |--------|------|-------|------|
 | Community Member | role | - | ViewChannel, SendMessages, AddReactions |
 | Administrator | role | ViewChannel | ManageMessages, SendMessages, AddReactions |
-| Moderation Team | role | ViewChannel | ManageMessages, SendMessages, AddReactions |
+| Community Staff | role | ViewChannel | ManageMessages, SendMessages, AddReactions |
 | @everyone | role | - | ManageRoles, ManageChannels, ViewChannel, SendMessages, AddReactions |
 | Sapphire#8184 | member | ManageWebhooks, ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles | - |
 
@@ -700,7 +685,7 @@
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Apps | role | ManageChannels, ManageMessages, ViewChannel, SendMessages, EmbedLinks, AttachFiles | - |
-| Moderation Team | role | ViewChannel | - |
+| Community Staff | role | ViewChannel | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ViewChannel |
 
 ### #Not in use Channels
@@ -720,155 +705,279 @@
 | Administrator | role | ViewChannel, Connect | - |
 | @everyone | role | - | ViewChannel, Connect |
 
-### #...
-
-**ID:** `1291074465467207702` | **Type:** Category
-
-| Target | Type | Allow | Deny |
-|--------|------|-------|------|
-| Community Apps | role | ManageChannels, ManageMessages, ViewChannel, SendMessages, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis | - |
-| Moderation Team | role | ViewChannel, SendMessages | - |
-| @everyone | role | - | ViewChannel |
-| Community Ambassador | role | ViewChannel, SendMessages | - |
-
-### #Application tickets
-
-**ID:** `1332533464339189810` | **Type:** Category
-
-| Target | Type | Allow | Deny |
-|--------|------|-------|------|
-| @everyone | role | - | ViewChannel, SendMessages, ReadMessageHistory |
-
 ### #Moderation Team ticket
 
-**ID:** `1385220298579640340` | **Type:** Category
+**ID:** `1490975276933320797` | **Type:** Category
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | @everyone | role | - | ViewChannel, SendMessages, ReadMessageHistory |
-
-### #Community Helper ticket
-
-**ID:** `1387006078260084756` | **Type:** Category
-
-| Target | Type | Allow | Deny |
-|--------|------|-------|------|
-| @everyone | role | - | ViewChannel, SendMessages, ReadMessageHistory |
-
-### #ticket-0881
-
-**ID:** `1449845274791903316` | **Type:** Text | **Category:** Tickets
-
-| Target | Type | Allow | Deny |
-|--------|------|-------|------|
-| Moderation Team | role | ViewChannel, SendMessages | - |
-| universeofastargirl | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | - |
-| entropyprotogen | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | - |
-| Ticket Tool#4843 | member | ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | - |
-| @everyone | role | - | ViewChannel |
-| Community Ambassador | role | ViewChannel, SendMessages | - |
 
 ### #support-0910
 
-**ID:** `1457361751099310295` | **Type:** Text | **Category:** Tickets
+**ID:** `1457361751099310295` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Ticket Tool#4843 | member | ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | - |
 | theodrum._ | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
 | entropyprotogen | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | - |
-| Moderation Team | role | ViewChannel, SendMessages | - |
+| Community Staff | role | ViewChannel, SendMessages | - |
 | @everyone | role | - | ViewChannel |
 | Community Ambassador | role | ViewChannel, SendMessages | - |
 
-### #support-0914
+### #support-0982
 
-**ID:** `1459270517595967660` | **Type:** Text | **Category:** Tickets
-
-| Target | Type | Allow | Deny |
-|--------|------|-------|------|
-| tenzesdek | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
-| theodrum._ | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
-| Community Apps | role | ViewChannel, SendMessages | - |
-| Ticket Tool#4843 | member | ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | - |
-| Moderation Team | role | ViewChannel, SendMessages | - |
-| @everyone | role | - | ViewChannel |
-| Community Ambassador | role | ViewChannel, SendMessages | - |
-
-### #support-0920
-
-**ID:** `1461415277957746801` | **Type:** Text | **Category:** Tickets
+**ID:** `1479318437036560475` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
-| Server Artist | role | ViewChannel, SendMessages | - |
+| newtbytes | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
+| Community Staff | role | ViewChannel, SendMessages | - |
 | teataum | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
-| Community Apps | role | ViewChannel, SendMessages | - |
 | Ticket Tool#4843 | member | ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | - |
-| meow_prime | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
-| Moderation Team | role | ViewChannel, SendMessages | - |
 | @everyone | role | - | ViewChannel |
 | Community Ambassador | role | ViewChannel, SendMessages | - |
 
-### #support-0921
+### #support-1011
 
-**ID:** `1461429006065864727` | **Type:** Text | **Category:** Tickets
+**ID:** `1482107640149573742` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
-| Server Artist | role | ViewChannel, SendMessages | - |
-| universeofastargirl | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
-| Community Apps | role | ViewChannel, SendMessages | - |
+| teataum | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
+| tenzesdek | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
 | Ticket Tool#4843 | member | ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | - |
-| itstherealstraymutt | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
-| Moderation Team | role | ViewChannel, SendMessages | - |
+| Community Staff | role | ViewChannel, SendMessages | - |
 | @everyone | role | - | ViewChannel |
 | Community Ambassador | role | ViewChannel, SendMessages | - |
 
-### #world-bug-0005
+### #support-1023
 
-**ID:** `1462316373504954390` | **Type:** Text | **Category:** Tickets
+**ID:** `1483962406597038231` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
-| ash_thefurry11037 | member | ViewChannel, SendMessages | ManageMessages |
-| Community Manager | role | ViewChannel, SendMessages | - |
-| Administrator | role | ViewChannel, SendMessages | - |
-| Senior Administrator | role | ViewChannel, SendMessages | - |
-| @everyone | role | - | ViewChannel |
+| Community Staff | role | ViewChannel, SendMessages | - |
 | Ticket Tool#4843 | member | ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | - |
+| daun | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
+| astellarkitty | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
+| @everyone | role | - | ViewChannel |
+| Community Ambassador | role | ViewChannel, SendMessages | - |
 
-### #support-0925
+### #support-1028
 
-**ID:** `1462462531997008067` | **Type:** Text | **Category:** Tickets
+**ID:** `1484370602830594219` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
+| same.old.shell | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
+| Ticket Tool#4843 | member | ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | - |
+| melodysparks1 | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
+| warrenfrazier | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
+| Community Staff | role | ViewChannel, SendMessages | - |
+| @everyone | role | - | ViewChannel |
+| Community Ambassador | role | ViewChannel, SendMessages | - |
+
+### #support-1051
+
+**ID:** `1488982919551647754` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| astellarkitty | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
+| Ticket Tool#4843 | member | ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | - |
+| Community Staff | role | ViewChannel, SendMessages | - |
+| @everyone | role | - | ViewChannel |
+| Community Ambassador | role | ViewChannel, SendMessages | - |
+
+### #support-1052
+
+**ID:** `1488996370391105558` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| Ticket Tool#4843 | member | ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | - |
+| same.old.shell | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
+| watchthelight | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
+| Community Staff | role | ViewChannel, SendMessages | - |
+| @everyone | role | - | ViewChannel |
+| Community Ambassador | role | ViewChannel, SendMessages | - |
+
+### #support-1055
+
+**ID:** `1489139113511878759` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| astellarkitty | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
+| Ticket Tool#4843 | member | ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | - |
+| vega_valk | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
+| Community Staff | role | ViewChannel, SendMessages | - |
+| @everyone | role | - | ViewChannel |
+| Community Ambassador | role | ViewChannel, SendMessages | - |
+
+### #support-1057
+
+**ID:** `1489563334264094751` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| Community Staff | role | ViewChannel, SendMessages | - |
+| Ticket Tool#4843 | member | ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | - |
 | achify | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
-| Community Apps | role | ViewChannel, SendMessages | - |
-| Ticket Tool#4843 | member | ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | - |
-| kasthekasztan | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
-| Moderation Team | role | ViewChannel, SendMessages | - |
+| teataum | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
 | @everyone | role | - | ViewChannel |
 | Community Ambassador | role | ViewChannel, SendMessages | - |
+
+### #support-1061
+
+**ID:** `1490092865433374881` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| Ticket Tool#4843 | member | ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | - |
+| warrenfrazier | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
+| theodrum._ | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
+| Community Staff | role | ViewChannel, SendMessages | - |
+| @everyone | role | - | ViewChannel |
+| Community Ambassador | role | ViewChannel, SendMessages | - |
+
+### #stickerwall-0012
+
+**ID:** `1490159901740372088` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| ash_thefurry11037 | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles | - |
+| Ticket Tool#4843 | member | ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | - |
+| @everyone | role | - | ViewChannel |
+
+### #support-1064
+
+**ID:** `1490742869336522883` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| Community Staff | role | ViewChannel, SendMessages | - |
+| same.old.shell | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
+| Ticket Tool#4843 | member | ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | - |
+| auxkiso | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
+| astellarkitty | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
+| @everyone | role | - | ViewChannel |
+| Community Ambassador | role | ViewChannel, SendMessages | - |
+
+### #user-0512
+
+**ID:** `1494080440598921328` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| dirtonious_baggie | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles | ManageMessages |
+| Community Staff | role | ViewChannel, SendMessages | - |
+| @everyone | role | - | ViewChannel |
+| Ticket Tool#4843 | member | ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | - |
+
+### #support-1084
+
+**ID:** `1494090176417239050` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| Community Staff | role | ViewChannel, SendMessages | - |
+| blooperag | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
+| Ticket Tool#4843 | member | ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | - |
+| @everyone | role | - | ViewChannel |
+| Community Ambassador | role | ViewChannel, SendMessages | - |
+
+### #staff-0023
+
+**ID:** `1494090454340341865` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| zackieecute | member | ViewChannel, SendMessages, AttachFiles, AddReactions | ManageMessages |
+| wwerew0lf | member | ViewChannel, SendMessages, AttachFiles, AddReactions | ManageMessages |
+| Community Founder | role | ViewChannel, SendMessages | - |
+| Ticket Tool#4843 | member | ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | - |
+| @everyone | role | - | ViewChannel |
+
+### #support-1085
+
+**ID:** `1494411997541040228` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| mrcrackfish | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
+| Community Staff | role | ViewChannel, SendMessages | - |
+| Ticket Tool#4843 | member | ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | - |
+| @everyone | role | - | ViewChannel |
+| Community Ambassador | role | ViewChannel, SendMessages | - |
+
+### #user-0514
+
+**ID:** `1494875183234809926` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| Ticket Tool#4843 | member | ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | - |
+| Community Staff | role | ViewChannel, SendMessages | - |
+| @everyone | role | - | ViewChannel |
+| rosa._ | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles | ManageMessages |
+
+### #user-0515
+
+**ID:** `1494927802057887925` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| Ticket Tool#4843 | member | ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | - |
+| @everyone | role | - | ViewChannel |
+| Community Staff | role | ViewChannel, SendMessages | - |
+
+### #support-1090
+
+**ID:** `1495105319599079444` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| @everyone | role | - | ViewChannel |
+| Community Staff | role | ViewChannel, SendMessages | - |
+| Ticket Tool#4843 | member | ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | - |
+| teataum | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
+| emperor.meiji | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
+| Community Ambassador | role | ViewChannel, SendMessages | - |
+
+### #support-1091
+
+**ID:** `1495239686732644563` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| @everyone | role | - | ViewChannel |
+| Community Ambassador | role | ViewChannel, SendMessages | - |
+| Ticket Tool#4843 | member | ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | - |
+| Community Staff | role | ViewChannel, SendMessages | - |
+| melodysparks1 | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
+| god.slaying.slugcat | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | ManageMessages |
 
 ### #「💎」vip-colors
 
-**ID:** `896070891174260763` | **Type:** Text | **Category:** [11] [Booster💎] [ Patreon👑]
+**ID:** `896070891174260763` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
-| HAPPY BIRTHDAY! | role | ViewChannel | - |
+| VIP Fur | role | ViewChannel | - |
 | Community Member | role | - | ViewChannel |
+| HAPPY BIRTHDAY! | role | ViewChannel | - |
 | Donator | role | ViewChannel | - |
 | Booster Fur | role | ViewChannel | - |
-| VIP Fur | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | ManageMessages |
+| Community Staff | role | ViewChannel | ManageMessages |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
 
 ### #「💎」Lounge
 
-**ID:** `896070891174260764` | **Type:** Voice | **Category:** [11] [Booster💎] [ Patreon👑]
+**ID:** `896070891174260764` | **Type:** Voice
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -876,118 +985,81 @@
 | Donator | role | ViewChannel | - |
 | Booster Fur | role | ViewChannel | - |
 | VIP Fur | role | ViewChannel | - |
-| Moderation Team | role | ManageMessages, ViewChannel | - |
+| Community Staff | role | ManageMessages, ViewChannel | - |
 | Server Dev | role | ViewChannel | - |
 | Administrator | role | ViewChannel | - |
 | @everyone | role | SendMessages | ManageMessages |
 
-### #「👑」Werewolf's Den
-
-**ID:** `1234323389892788284` | **Type:** Voice | **Category:** [11] [Booster💎] [ Patreon👑]
-
-| Target | Type | Allow | Deny |
-|--------|------|-------|------|
-| Community Member | role | ViewChannel, SendMessages, ReadMessageHistory, Connect, Speak, Stream | - |
-| Donator | role | ViewChannel | - |
-| Booster Fur | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel, Connect, Speak | - |
-| Server Dev | role | ViewChannel | - |
-| VIP Fur | role | ViewChannel | - |
-| Administrator | role | ViewChannel | - |
-| @everyone | role | SendMessages | - |
-
 ### #「💎」supporter-colors
 
-**ID:** `1385430941475930182` | **Type:** Text | **Category:** [11] [Booster💎] [ Patreon👑]
+**ID:** `1385430941475930182` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | - | ViewChannel |
 | Donator | role | ViewChannel | - |
 | Booster Fur | role | - | ViewChannel |
-| Moderation Team | role | ViewChannel | ManageMessages |
+| Community Staff | role | ViewChannel | ManageMessages |
 | VIP Fur | role | - | ViewChannel |
 | Administrator | role | ViewChannel | ManageMessages |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, SendMessages |
 
 ### #「💎」plink-lounge
 
-**ID:** `896070891174260762` | **Type:** Text | **Category:** [11] [Booster💎] [ Patreon👑]
+**ID:** `896070891174260762` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | - | ViewChannel |
 | Donator | role | ViewChannel | - |
 | Booster Fur | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
 | VIP Fur | role | ViewChannel | - |
+| Community Staff | role | ViewChannel | - |
 | Administrator | role | ViewChannel | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages |
 
 ### #「❓」qotd
 
-**ID:** `896070889198731288` | **Type:** Text | **Category:** [9] Engagement
+**ID:** `896070889198731288` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Apps | role | ManageMessages, ViewChannel, EmbedLinks, AttachFiles | - |
-| Fibo#6503 | member | MentionEveryone | ViewChannel |
-| @everyone | role | - | CreatePublicThreads, CreatePrivateThreads, EmbedLinks, AttachFiles |
+| @everyone | role | SendMessagesInThreads | SendMessages, CreatePublicThreads, CreatePrivateThreads, EmbedLinks, AttachFiles |
+| Questionnaire | role | SendMessages, SendMessagesInThreads, CreatePublicThreads | - |
+| QOTD Bot#8598 | member | - | SendMessages |
+| Community Staff | role | SendMessages, SendMessagesInThreads, CreatePublicThreads | - |
 
 ### #「🔢」counting
 
-**ID:** `896958848009637929` | **Type:** Text | **Category:** [9] Engagement
+**ID:** `896958848009637929` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Apps | role | ManageMessages, ViewChannel, EmbedLinks, AttachFiles | - |
-| Fibo#6503 | member | MentionEveryone | - |
-| @everyone | role | - | CreatePublicThreads, CreatePrivateThreads, EmbedLinks, AttachFiles |
-
-### #「⚰️」death-reason
-
-**ID:** `1212355159712206908` | **Type:** Text | **Category:** [9] Engagement
-
-| Target | Type | Allow | Deny |
-|--------|------|-------|------|
-| Community Apps | role | ManageMessages, ViewChannel, EmbedLinks, AttachFiles | - |
-| Fibo#6503 | member | MentionEveryone | - |
 | @everyone | role | - | CreatePublicThreads, CreatePrivateThreads, EmbedLinks, AttachFiles |
 
 ### #「🔨」ban-reason
 
-**ID:** `1212356091103416370` | **Type:** Text | **Category:** [9] Engagement
+**ID:** `1212356091103416370` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Apps | role | ManageMessages, ViewChannel, EmbedLinks, AttachFiles | - |
-| Fibo#6503 | member | MentionEveryone | - |
 | @everyone | role | - | CreatePublicThreads, CreatePrivateThreads, EmbedLinks, AttachFiles |
 
-### #「🗣️」yapping-space
+### #「🗓️」wordle
 
-**ID:** `1393507326865969152` | **Type:** Text | **Category:** [9] Engagement
+**ID:** `1479901993462927441` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Apps | role | ManageMessages, ViewChannel, EmbedLinks, AttachFiles | - |
-| Fibo#6503 | member | MentionEveryone | - |
 | @everyone | role | - | CreatePublicThreads, CreatePrivateThreads, EmbedLinks, AttachFiles |
-
-### #「🗳️」polls
-
-**ID:** `1437295827134447768` | **Type:** Text | **Category:** [9] Engagement
-
-| Target | Type | Allow | Deny |
-|--------|------|-------|------|
-| Community Apps | role | ManageMessages, ViewChannel, EmbedLinks, AttachFiles | - |
-| Fibo#6503 | member | MentionEveryone | - |
-| @everyone | role | - | CreatePublicThreads, CreatePrivateThreads, EmbedLinks, AttachFiles |
-| Sapphire#8184 | member | ManageRoles, ManageChannels | - |
 
 ### #「🎉」events-info
 
-**ID:** `1243817312448938056` | **Type:** Forum | **Category:** Events Team
+**ID:** `1243817312448938056` | **Type:** Forum
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -998,103 +1070,103 @@
 
 ### #「🎉」events-chat
 
-**ID:** `1243817120815513620` | **Type:** Text | **Category:** Events Team
+**ID:** `1243817120815513620` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Event Host | role | ViewChannel | - |
-| Administrator | role | ViewChannel | - |
 | Events Manager | role | ManageMessages, MentionEveryone, ViewChannel | - |
+| Administrator | role | ViewChannel | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, CreatePublicThreads, CreatePrivateThreads |
 
 ### #「🎉」event-posts
 
-**ID:** `1393883898584371261` | **Type:** Text | **Category:** Events Team
+**ID:** `1393883898584371261` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Event Host | role | ViewChannel | - |
 | Events Manager | role | ManageMessages, MentionEveryone, ViewChannel | - |
 | Administrator | role | ViewChannel | - |
-| @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads |
 | Sapphire#8184 | member | ManageWebhooks, ViewChannel, SendMessages, EmbedLinks, AttachFiles | - |
+| @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads |
 
 ### #「🎉」user-signup
 
-**ID:** `1393884139358519410` | **Type:** Text | **Category:** Events Team
+**ID:** `1393884139358519410` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Event Host | role | ViewChannel | - |
-| Events Manager | role | ViewChannel | - |
 | Administrator | role | ViewChannel | - |
+| Events Manager | role | ViewChannel | - |
 | Sapphire#8184 | member | ManageWebhooks, ViewChannel, SendMessages, EmbedLinks, AttachFiles | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads |
 
 ### #「🛟」policy
 
-**ID:** `1243820061920198697` | **Type:** Text | **Category:** Community Ambassador Team
+**ID:** `1243820061920198697` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Administrator | role | ViewChannel | - |
 | Community Development Lead | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
+| Community Staff | role | ViewChannel | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
 | Community Ambassador | role | ViewChannel | - |
 
 ### #「🛟」discussion
 
-**ID:** `1243819992042967050` | **Type:** Text | **Category:** Community Ambassador Team
+**ID:** `1243819992042967050` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Administrator | role | ManageMessages, ViewChannel | - |
 | Community Development Lead | role | ManageMessages, ViewChannel | - |
-| Moderation Team | role | ManageMessages, ViewChannel | - |
+| Community Staff | role | ManageMessages, ViewChannel | - |
 | @everyone | role | SendMessages | ManageRoles, ManageChannels, ManageMessages, ViewChannel, CreatePublicThreads, CreatePrivateThreads |
 | Community Ambassador | role | MentionEveryone, ViewChannel | ManageMessages |
 
 ### #「🛟」reports
 
-**ID:** `1243820273610915880` | **Type:** Forum | **Category:** Community Ambassador Team
+**ID:** `1243820273610915880` | **Type:** Forum
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
-| Pawtropolis Tech#2205 | member | ViewChannel, SendMessages, SendMessagesInThreads | - |
 | Administrator | role | ManageMessages, ViewChannel, ReadMessageHistory | ManageRoles, ManageChannels |
 | Community Development Lead | role | ManageMessages, ViewChannel, SendMessages, SendMessagesInThreads, ReadMessageHistory | - |
-| Moderation Team | role | ManageMessages, ViewChannel, ReadMessageHistory | - |
+| Community Staff | role | ManageMessages, ViewChannel, ReadMessageHistory | - |
 | @everyone | role | SendMessages, SendMessagesInThreads, CreatePublicThreads, CreatePrivateThreads | ManageRoles, ManageChannels, ManageMessages, ViewChannel, ReadMessageHistory |
 | Community Ambassador | role | - | ViewChannel |
 
 ### #「🛟」training-logging
 
-**ID:** `1462135264775377119` | **Type:** Text | **Category:** Community Ambassador Team
+**ID:** `1462135264775377119` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Administrator | role | ManageMessages, ViewChannel | - |
 | Community Development Lead | role | ManageMessages, ViewChannel | - |
-| Moderation Team | role | ManageMessages, ViewChannel | - |
+| Community Staff | role | ManageMessages, ViewChannel | - |
 | @everyone | role | SendMessages, SendMessagesInThreads | ManageRoles, ManageChannels, ManageMessages, ViewChannel |
 | Community Ambassador | role | EmbedLinks, AttachFiles | ManageMessages, ViewChannel |
 
 ### #「📋」mod-apps
 
-**ID:** `1344676564549242941` | **Type:** Text | **Category:** [16] Application Answers
+**ID:** `1344676564549242941` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Appy#0756 | member | MentionEveryone, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads | - |
 | Senior Moderator | role | ViewChannel | - |
 | Administrator | role | ViewChannel, Connect | - |
+| Community Apps | role | ManageChannels, ViewChannel, SendMessages, SendMessagesInThreads, CreatePublicThreads, CreatePrivateThreads | - |
 | Dyno#3861 | member | ViewChannel, SendMessages, SendMessagesInThreads | - |
 | @everyone | role | SendMessagesInThreads | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, Connect |
 
 ### #「📋」events-apps
 
-**ID:** `1344676746393554954` | **Type:** Text | **Category:** [16] Application Answers
+**ID:** `1344676746393554954` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1106,7 +1178,7 @@
 
 ### #「📋」helper-apps
 
-**ID:** `1344676795026243585` | **Type:** Text | **Category:** [16] Application Answers
+**ID:** `1344676795026243585` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1118,7 +1190,7 @@
 
 ### #「📋」vrc-apps
 
-**ID:** `1344676869194125413` | **Type:** Text | **Category:** [16] Application Answers
+**ID:** `1344676869194125413` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1131,7 +1203,7 @@
 
 ### #「📋」media-apps
 
-**ID:** `1397580420668854302` | **Type:** Text | **Category:** [16] Application Answers
+**ID:** `1397580420668854302` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1143,7 +1215,7 @@
 
 ### #「📋」artists-apps
 
-**ID:** `1404518996945932318` | **Type:** Text | **Category:** [16] Application Answers
+**ID:** `1404518996945932318` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1156,7 +1228,7 @@
 
 ### #「📅」posts
 
-**ID:** `1357780305330704505` | **Type:** Text | **Category:** VRC Group Team
+**ID:** `1357780305330704505` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1167,7 +1239,7 @@
 
 ### #「📅」scheduling
 
-**ID:** `1357780240142827642` | **Type:** Text | **Category:** VRC Group Team
+**ID:** `1357780240142827642` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1178,7 +1250,7 @@
 
 ### #「🔮」policy
 
-**ID:** `1357776074209235054` | **Type:** Text | **Category:** VRC Group Team
+**ID:** `1357776074209235054` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1189,7 +1261,7 @@
 
 ### #「🔮」chat-room
 
-**ID:** `1357779585185611793` | **Type:** Text | **Category:** VRC Group Team
+**ID:** `1357779585185611793` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1200,7 +1272,7 @@
 
 ### #「📁」evidence
 
-**ID:** `1358263226856378500` | **Type:** Text | **Category:** VRC Group Team
+**ID:** `1358263226856378500` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1209,19 +1281,9 @@
 | VRC Group Team | role | ViewChannel | - |
 | @everyone | role | SendMessages, SendMessagesInThreads | ManageRoles, ManageChannels, ManageMessages, ViewChannel, CreatePublicThreads, CreatePrivateThreads |
 
-### #wwerew0lf-2
-
-**ID:** `1385220301985415332` | **Type:** Text | **Category:** Moderation Team ticket
-
-| Target | Type | Allow | Deny |
-|--------|------|-------|------|
-| wwerew0lf | member | ViewChannel, SendMessages, AttachFiles, ReadMessageHistory | - |
-| @everyone | role | - | ViewChannel, SendMessages, ReadMessageHistory |
-| _xxhiroxx_ | member | ViewChannel, SendMessages, AttachFiles, ReadMessageHistory | - |
-
 ### #「🔑」Lead VC
 
-**ID:** `1393462083366162536` | **Type:** Voice | **Category:** [15] Leadership Hub
+**ID:** `1393462083366162536` | **Type:** Voice
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1233,44 +1295,68 @@
 
 ### #「🔐」senior-chat
 
-**ID:** `1393473086933962763` | **Type:** Text | **Category:** [15] Leadership Hub
-
-| Target | Type | Allow | Deny |
-|--------|------|-------|------|
-| Community Member | role | - | ViewChannel |
-| Senior Moderator | role | ViewChannel | ManageMessages |
-| Administrator | role | ManageMessages, ViewChannel | - |
-| Community Apps | role | ManageMessages, ViewChannel, SendMessages, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis | - |
-| @everyone | role | SendMessages | ManageRoles, ManageChannels, ManageMessages, ViewChannel |
-
-### #「🔐」leadership-chat
-
-**ID:** `1393461908656361566` | **Type:** Text | **Category:** [15] Leadership Hub
+**ID:** `1492111532472139796` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | - | ViewChannel |
 | Administrator | role | ViewChannel | - |
 | Community Development Lead | role | ViewChannel | - |
+| Senior Administrator | role | ViewChannel, SendMessages | - |
 | VRC Group Lead | role | ViewChannel | - |
+| Senior Moderator | role | ViewChannel, SendMessages | - |
 | @everyone | role | SendMessages | ManageRoles, ManageChannels, ManageMessages, ViewChannel |
 
-### #「🔑」Senior VC
+### #「🔐」leadership-chat
 
-**ID:** `1393464031762710589` | **Type:** Voice | **Category:** [15] Leadership Hub
+**ID:** `1393461908656361566` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | - | ViewChannel |
-| Senior Moderator | role | ViewChannel, MuteMembers, DeafenMembers, MoveMembers | - |
-| Administrator | role | ViewChannel, MuteMembers, DeafenMembers, MoveMembers, PrioritySpeaker | - |
-| Community Development Lead | role | ViewChannel, Connect, Speak, Stream, MuteMembers, DeafenMembers, MoveMembers, PrioritySpeaker | - |
-| Community Apps | role | ManageRoles, ManageChannels, ManageMessages, ManageWebhooks, MentionEveryone, ViewChannel, SendMessages, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, ReadMessageHistory, Connect, Speak, Stream, MuteMembers, DeafenMembers, MoveMembers, UseVAD, PrioritySpeaker | - |
-| @everyone | role | Connect, Speak, Stream | ManageRoles, ManageChannels, ViewChannel, MuteMembers, DeafenMembers, MoveMembers, PrioritySpeaker |
+| Community Apps | role | ViewChannel, SendMessages | - |
+| Community Development Lead | role | ViewChannel | - |
+| Senior Administrator | role | ViewChannel | - |
+| Administrator | role | ViewChannel | - |
+| VRC Group Lead | role | ViewChannel | - |
+| Community Manager | role | ViewChannel | - |
+| @everyone | role | SendMessages | ManageRoles, ManageChannels, ManageMessages, ViewChannel |
+
+### #「🔑」Management VC
+
+**ID:** `1404699664674062357` | **Type:** Voice
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| Community Member | role | - | ViewChannel |
+| @everyone | role | - | ViewChannel |
+
+### #「🔐」development
+
+**ID:** `1429947536793145374` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| Server Dev | role | ManageRoles, ManageChannels, ManageMessages, ManageWebhooks, MentionEveryone, ViewChannel, SendMessages, SendMessagesInThreads, CreatePublicThreads, CreatePrivateThreads, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory | - |
+| Community Member | role | - | ViewChannel |
+| Gatekeeper | role | ViewChannel | - |
+| Administrator | role | ManageMessages, ViewChannel | - |
+| Community Staff | role | ViewChannel | - |
+| @everyone | role | SendMessages | ManageRoles, ManageChannels, ManageMessages, ViewChannel, Connect |
+
+### #「🔐」owner-room
+
+**ID:** `1243711994675200070` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| Community Member | role | - | ViewChannel |
+| Community Apps | role | ViewChannel, SendMessages | - |
+| @everyone | role | - | ViewChannel |
 
 ### #「🔐」training-logging
 
-**ID:** `1393461970144985159` | **Type:** Text | **Category:** [15] Leadership Hub
+**ID:** `1393461970144985159` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1279,18 +1365,9 @@
 | Administrator | role | ViewChannel | - |
 | @everyone | role | SendMessages, SendMessagesInThreads, CreatePublicThreads | ManageRoles, ManageChannels, ManageMessages, ViewChannel |
 
-### #「🔑」Management VC
-
-**ID:** `1404699664674062357` | **Type:** Voice | **Category:** [15] Leadership Hub
-
-| Target | Type | Allow | Deny |
-|--------|------|-------|------|
-| Community Member | role | - | ViewChannel |
-| @everyone | role | - | ViewChannel |
-
 ### #「🔐」to-do-list
 
-**ID:** `1442716501168885810` | **Type:** Text | **Category:** [15] Leadership Hub
+**ID:** `1442716501168885810` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1298,19 +1375,9 @@
 | Community Apps | role | - | ViewChannel, SendMessages |
 | @everyone | role | - | ViewChannel |
 
-### #「🔐」owner-room
-
-**ID:** `1243711994675200070` | **Type:** Text | **Category:** [15] Leadership Hub
-
-| Target | Type | Allow | Deny |
-|--------|------|-------|------|
-| Community Member | role | - | ViewChannel |
-| Community Apps | role | ViewChannel, SendMessages | - |
-| @everyone | role | - | ViewChannel |
-
 ### #「📌」faq
 
-**ID:** `1413160155658326089` | **Type:** Forum | **Category:** [3] City Hall
+**ID:** `1413160155658326089` | **Type:** Forum
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1321,7 +1388,7 @@
 
 ### #「📌」support-us
 
-**ID:** `1414967840523423844` | **Type:** Forum | **Category:** [3] City Hall
+**ID:** `1414967840523423844` | **Type:** Forum
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1332,7 +1399,7 @@
 
 ### #「📥」apply
 
-**ID:** `896070889005781041` | **Type:** Text | **Category:** [3] City Hall
+**ID:** `896070889005781041` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1342,7 +1409,7 @@
 
 ### #「📥」tickets
 
-**ID:** `1103728856294236160` | **Type:** Text | **Category:** [3] City Hall
+**ID:** `1103728856294236160` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1352,45 +1419,44 @@
 
 ### #「💡」proposals
 
-**ID:** `1397834014521561099` | **Type:** Forum | **Category:** [3] City Hall
+**ID:** `1397834014521561099` | **Type:** Forum
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | SendMessagesInThreads, AttachFiles, AddReactions, UseExternalEmojis, ReadMessageHistory | SendMessages |
-| Moderation Team | role | SendMessages | - |
+| Community Staff | role | SendMessages | - |
 | @everyone | role | - | ManageRoles, ManageChannels |
 | Community Ambassador | role | SendMessages | - |
 
 ### #「💡」member-feedback
 
-**ID:** `1193455312326377592` | **Type:** Forum | **Category:** [3] City Hall
+**ID:** `1193455312326377592` | **Type:** Forum
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Server Dev | role | ViewChannel | - |
 | Community Member | role | SendMessages, SendMessagesInThreads, AttachFiles, ReadMessageHistory | - |
 | @everyone | role | - | ManageRoles, ManageChannels |
-| Pawtropolis Tech#2205 | member | MentionEveryone | - |
 
 ### #「🗳️」community-polls
 
-**ID:** `1262310868897628222` | **Type:** Text | **Category:** [3] City Hall
+**ID:** `1262310868897628222` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
-| Community Member | role | AddReactions | SendMessages |
+| Community Member | role | SendMessagesInThreads, AddReactions | SendMessages |
 | Administrator | role | SendMessages | - |
 | Senior Administrator | role | SendMessages | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, SendMessagesInThreads, CreatePublicThreads, AddReactions |
 
 ### #「🎨」Artist Studio 2
 
-**ID:** `1388694838253326436` | **Type:** Voice | **Category:** [7] Verified Creative Corner
+**ID:** `1388694838253326436` | **Type:** Voice
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
-| Verified 2D Artist | role | ViewChannel, Connect, Speak, Stream | - |
 | Community Member | role | Connect, Speak | Stream |
+| Verified 2D Artist | role | ViewChannel, Connect, Speak, Stream | - |
 | Community Apps | role | ViewChannel, Connect, Speak | - |
 | Chatty Fur ‹‹ LVL 10 ›› | role | EmbedLinks, AttachFiles | - |
 | Noble Fur ‹‹ LVL 50 ›› | role | EmbedLinks, AttachFiles | - |
@@ -1400,7 +1466,7 @@
 
 ### #「🌟」artist-starboard
 
-**ID:** `1434727170227572796` | **Type:** Text | **Category:** [7] Verified Creative Corner
+**ID:** `1434727170227572796` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1410,7 +1476,7 @@
 
 ### #「✅」verify-artist
 
-**ID:** `896070890188603442` | **Type:** Text | **Category:** [7] Verified Creative Corner
+**ID:** `896070890188603442` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1418,7 +1484,7 @@
 
 ### #「⭐」server-artist
 
-**ID:** `1131332813585661982` | **Type:** Text | **Category:** [7] Verified Creative Corner
+**ID:** `1131332813585661982` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1429,13 +1495,13 @@
 | Senior Administrator | role | ViewChannel | - |
 | Moderator | role | ViewChannel | - |
 | Junior Moderator | role | ViewChannel, ReadMessageHistory | - |
-| Moderation Team | role | ViewChannel | - |
+| Community Staff | role | ViewChannel | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ViewChannel |
 | Community Ambassador | role | ViewChannel, SendMessages, ReadMessageHistory | - |
 
 ### #「🖌️」verified-artwork
 
-**ID:** `1400348338972528763` | **Type:** Text | **Category:** [7] Verified Creative Corner
+**ID:** `1400348338972528763` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1443,11 +1509,11 @@
 | Community Member | role | AddReactions, UseExternalEmojis, ReadMessageHistory | SendMessages |
 | OG Verified 2D Artist | role | ViewChannel, SendMessages, EmbedLinks, AttachFiles | - |
 | @everyone | role | EmbedLinks, AttachFiles | - |
-| Moderation Team | role | ManageMessages, ViewChannel, SendMessages | - |
+| Community Staff | role | ManageMessages, ViewChannel, SendMessages | - |
 
 ### #「🖌️」verified-art-trades
 
-**ID:** `1400348553943056396` | **Type:** Text | **Category:** [7] Verified Creative Corner
+**ID:** `1400348553943056396` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1455,13 +1521,13 @@
 | Verified 2D Artist | role | ViewChannel, SendMessages, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis | MentionEveryone |
 | Community Apps | role | ViewChannel | - |
 | [ The Pawtropolis Community ] | role | - | ViewChannel |
-| OG Verified 2D Artist | role | EmbedLinks, AttachFiles | - |
+| Community Staff | role | ManageMessages, ViewChannel, SendMessages | - |
 | @everyone | role | EmbedLinks, AttachFiles | - |
-| Moderation Team | role | ManageMessages, ViewChannel, SendMessages | - |
+| OG Verified 2D Artist | role | EmbedLinks, AttachFiles | - |
 
 ### #「🖌️」art-commissions
 
-**ID:** `1400346864947302461` | **Type:** Text | **Category:** [7] Verified Creative Corner
+**ID:** `1400346864947302461` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1471,53 +1537,39 @@
 | [ The Pawtropolis Community ] | role | - | ViewChannel |
 | OG Verified 2D Artist | role | EmbedLinks, AttachFiles | - |
 | @everyone | role | EmbedLinks, AttachFiles | - |
-| Moderation Team | role | ManageMessages, ViewChannel, SendMessages | - |
+| Community Staff | role | ManageMessages, ViewChannel, SendMessages | - |
 
 ### #「🖌️」adopts
 
-**ID:** `1400348382798807060` | **Type:** Text | **Category:** [7] Verified Creative Corner
+**ID:** `1400348382798807060` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
-| Verified 2D Artist | role | ViewChannel, SendMessages, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis | MentionEveryone |
 | Community Member | role | ViewChannel, AddReactions, UseExternalEmojis, ReadMessageHistory | SendMessages, CreatePublicThreads, CreatePrivateThreads |
+| Verified 2D Artist | role | ViewChannel, SendMessages, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis | MentionEveryone |
 | Community Apps | role | ViewChannel | - |
 | [ The Pawtropolis Community ] | role | - | ViewChannel |
-| OG Verified 2D Artist | role | ViewChannel, SendMessages, EmbedLinks, AttachFiles | - |
+| Community Staff | role | ManageMessages, ViewChannel, SendMessages | - |
 | @everyone | role | EmbedLinks, AttachFiles | - |
-| Moderation Team | role | ManageMessages, ViewChannel, SendMessages | - |
+| OG Verified 2D Artist | role | ViewChannel, SendMessages, EmbedLinks, AttachFiles | - |
 
 ### #「🖌️」verified-ych
 
-**ID:** `1400348438385660017` | **Type:** Text | **Category:** [7] Verified Creative Corner
+**ID:** `1400348438385660017` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
-| Verified 2D Artist | role | ViewChannel, SendMessages, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis | MentionEveryone |
 | Community Member | role | ViewChannel, AddReactions, UseExternalEmojis, ReadMessageHistory | SendMessages, CreatePublicThreads, CreatePrivateThreads |
-| Community Apps | role | ViewChannel | - |
-| [ The Pawtropolis Community ] | role | - | ViewChannel |
-| OG Verified 2D Artist | role | SendMessages, EmbedLinks, AttachFiles | - |
-| @everyone | role | EmbedLinks, AttachFiles | - |
-| Moderation Team | role | ManageMessages, SendMessages | - |
-
-### #「🖌️」festive-artwork
-
-**ID:** `1444074122513612980` | **Type:** Text | **Category:** [7] Verified Creative Corner
-
-| Target | Type | Allow | Deny |
-|--------|------|-------|------|
-| Community Member | role | ViewChannel, SendMessages, AddReactions, UseExternalEmojis, ReadMessageHistory | CreatePublicThreads, CreatePrivateThreads |
 | Verified 2D Artist | role | ViewChannel, SendMessages, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis | MentionEveryone |
 | Community Apps | role | ViewChannel | - |
 | [ The Pawtropolis Community ] | role | - | ViewChannel |
 | OG Verified 2D Artist | role | SendMessages, EmbedLinks, AttachFiles | - |
 | @everyone | role | EmbedLinks, AttachFiles | - |
-| Moderation Team | role | ManageMessages, SendMessages | - |
+| Community Staff | role | ManageMessages, SendMessages | - |
 
 ### #「🍬」october-showcase
 
-**ID:** `1419233745927540808` | **Type:** Forum | **Category:** October 2025!
+**ID:** `1419233745927540808` | **Type:** Forum
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1526,17 +1578,16 @@
 
 ### #art-event
 
-**ID:** `1418863341245431829` | **Type:** Text | **Category:** October 2025!
+**ID:** `1418863341245431829` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Administrator | role | ViewChannel, Connect | - |
-| teataum | member | MentionEveryone, ViewChannel, SendMessages, SendMessagesInThreads, CreatePublicThreads, CreatePrivateThreads, EmbedLinks, AttachFiles | - |
 | @everyone | role | - | ViewChannel, Connect |
 
 ### #pumpkin-carving
 
-**ID:** `1418863417082773555` | **Type:** Text | **Category:** October 2025!
+**ID:** `1418863417082773555` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1545,7 +1596,7 @@
 
 ### #trick-or-treat
 
-**ID:** `1419228962885861497` | **Type:** Text | **Category:** October 2025!
+**ID:** `1419228962885861497` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1554,114 +1605,38 @@
 
 ### #serverwide-event
 
-**ID:** `1419229095115620433` | **Type:** Text | **Category:** October 2025!
+**ID:** `1419229095115620433` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Administrator | role | ViewChannel, Connect | - |
 | @everyone | role | - | ViewChannel, Connect |
 
-### #「🪐」Golden Forum
-
-**ID:** `1413408929215418368` | **Type:** Voice | **Category:** [12] Custom Channels
-
-*Inherits from category — no explicit overwrites*
-
-### #「🌙」werewolf-den
-
-**ID:** `1429182366944985168` | **Type:** Text | **Category:** [12] Custom Channels
-
-| Target | Type | Allow | Deny |
-|--------|------|-------|------|
-| Community Member | role | EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory | - |
-| Community Apps | role | ViewChannel, SendMessages, EmbedLinks, AttachFiles | - |
-| entropyprotogen | member | ViewChannel | - |
-| Community Manager | role | ManageRoles, ManageChannels, SendMessages, SendMessagesInThreads, CreatePublicThreads, CreatePrivateThreads | - |
-| kasthekasztan | member | ViewChannel | - |
-| stuffypaw | member | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
-| Server Dev | role | ViewChannel | - |
-| newtbytes | member | ViewChannel | - |
-| blueberrythecheesecake3eevee | member | ViewChannel | - |
-| dusty_9933 | member | ViewChannel | - |
-| watchthelight | member | ViewChannel | - |
-| birbostreams | member | ViewChannel | - |
-| laskiasfpt2 | member | ViewChannel | - |
-
-### #「🪐」entropys-place
-
-**ID:** `1413411529122119770` | **Type:** Text | **Category:** [12] Custom Channels
-
-*Inherits from category — no explicit overwrites*
-
-### #「🫘」bean-central
-
-**ID:** `1415728663751557161` | **Type:** Voice | **Category:** [12] Custom Channels
-
-| Target | Type | Allow | Deny |
-|--------|------|-------|------|
-| Fresh Fur ‹‹ LVL 0 ›› | role | - | ViewChannel |
-| thefox07 | member | ManageMessages, ViewChannel, MuteMembers, DeafenMembers, PrioritySpeaker | - |
-| Active Fur ‹‹ LVL 20 ›› | role | - | ViewChannel |
-| Beginner Fur ‹‹ LVL 5 ›› | role | - | ViewChannel |
-| Experienced Fur ‹‹ LVL 40 ›› | role | - | ViewChannel |
-| Engaged Fur ‹‹ LVL 15 ›› | role | - | ViewChannel |
-| Chatty Fur ‹‹ LVL 10 ›› | role | - | ViewChannel |
-| Donator | role | ViewChannel | - |
-| Booster Fur | role | ViewChannel | - |
-| VIP Fur | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel, Connect | - |
-| Known Fur ‹‹ LVL 30 ›› | role | - | ViewChannel |
-| Newcomer Fur ‹‹ LVL 1 ›› | role | - | ViewChannel |
-
-### #「🐉」bash-airspace
-
-**ID:** `1427294324462194778` | **Type:** Text | **Category:** [12] Custom Channels
-
-| Target | Type | Allow | Deny |
-|--------|------|-------|------|
-| Engaged Fur ‹‹ LVL 15 ›› | role | - | ViewChannel |
-| Green | role | ViewChannel | - |
-| Fresh Fur ‹‹ LVL 0 ›› | role | - | ViewChannel |
-| Chatty Fur ‹‹ LVL 10 ›› | role | - | ViewChannel |
-| hattoris_katana_59227 | member | ViewChannel | - |
-| Newcomer Fur ‹‹ LVL 1 ›› | role | - | ViewChannel |
-| watchthelight | member | ManageMessages, ViewChannel, SendMessages, SendMessagesInThreads, CreatePublicThreads, CreatePrivateThreads, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory | - |
-| Beginner Fur ‹‹ LVL 5 ›› | role | - | ViewChannel |
-
-### #「⛰️」The Stray Mutt's Den
-
-**ID:** `1433188930316144731` | **Type:** Voice | **Category:** [12] Custom Channels
-
-| Target | Type | Allow | Deny |
-|--------|------|-------|------|
-| itstherealstraymutt | member | MuteMembers, DeafenMembers, PrioritySpeaker | - |
-
 ### #「🐄」teas-barnyard
 
-**ID:** `1431367579573948456` | **Type:** Text | **Category:** [12] Custom Channels
+**ID:** `1431367579573948456` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | newtbytes | member | EmbedLinks, AttachFiles | - |
 | Community Member | role | ViewChannel | Connect |
 | Server Dev | role | ViewChannel | - |
-| birbostreams | member | EmbedLinks, AttachFiles | - |
 | entropyprotogen | member | EmbedLinks, AttachFiles | - |
 | kasthekasztan | member | EmbedLinks, AttachFiles | - |
-| watchthelight | member | EmbedLinks, AttachFiles | - |
-| teataum | member | ManageMessages, ViewChannel, SendMessages, SendMessagesInThreads, CreatePublicThreads, CreatePrivateThreads, AttachFiles | - |
-| Moderation Team | role | ViewChannel, SendMessages, EmbedLinks, AttachFiles | - |
+| Community Staff | role | ViewChannel, SendMessages, EmbedLinks, AttachFiles | - |
+| birbostreams | member | EmbedLinks, AttachFiles | - |
 
-### #「🐄」Moooo-ing Meadows
+### #「⛰️」The Stray Mutt's Den
 
-**ID:** `1436139444003536906` | **Type:** Voice | **Category:** [12] Custom Channels
+**ID:** `1433188930316144731` | **Type:** Voice
 
-*Inherits from category — no explicit overwrites*
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| itstherealstraymutt | member | MuteMembers, DeafenMembers, PrioritySpeaker | - |
 
 ### #「🛸」ash-spaceship
 
-**ID:** `1432530307826843748` | **Type:** Text | **Category:** [12] Custom Channels
+**ID:** `1432530307826843748` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1673,63 +1648,60 @@
 | Noble Fur ‹‹ LVL 50 ›› | role | EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory | - |
 | Legendary Fur ‹‹ LVL 80 ›› | role | EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory | - |
 | Active Fur ‹‹ LVL 20 ›› | role | EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory | - |
-| Moderation Team | role | ManageMessages, ViewChannel, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory | - |
+| Community Staff | role | ManageMessages, ViewChannel, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory | - |
 | Mythic Fur ‹‹ LVL 90 ›› | role | EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory | - |
 | Community Ambassador | role | ManageMessages, ViewChannel, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory | - |
 | Server Dev | role | ViewChannel | - |
 | Known Fur ‹‹ LVL 30 ›› | role | EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory | - |
-| Experienced Fur ‹‹ LVL 40 ›› | role | EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory | - |
-| Newcomer Fur ‹‹ LVL 1 ›› | role | EmbedLinks, AttachFiles | - |
 | Beginner Fur ‹‹ LVL 5 ›› | role | EmbedLinks, AttachFiles | - |
+| Newcomer Fur ‹‹ LVL 1 ›› | role | EmbedLinks, AttachFiles | - |
+| Experienced Fur ‹‹ LVL 40 ›› | role | EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory | - |
 | Elite Fur ‹‹ LVL 70 ›› | role | EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory | - |
-
-### #「🍌」Tenzi's Tower
-
-**ID:** `1459273916257271920` | **Type:** Voice | **Category:** [12] Custom Channels
-
-*Inherits from category — no explicit overwrites*
 
 ### #「💎」birbos-bizarre-adventures
 
-**ID:** `1433189199351120055` | **Type:** Text | **Category:** [12] Custom Channels
+**ID:** `1433189199351120055` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | birbostreams | member | ManageMessages | - |
 
-### #「🐾」shadowfangs-corner
+### #「🍁」Gambler's Den
 
-**ID:** `1456358548429869116` | **Type:** Text | **Category:** [12] Custom Channels
+**ID:** `1487470319919693915` | **Type:** Voice
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
-| Fresh Fur ‹‹ LVL 0 ›› | role | - | ViewChannel |
-| thefox07 | member | ManageMessages | - |
-| Active Fur ‹‹ LVL 20 ›› | role | - | ViewChannel |
-| Beginner Fur ‹‹ LVL 5 ›› | role | - | ViewChannel |
-| Experienced Fur ‹‹ LVL 40 ›› | role | - | ViewChannel |
-| @everyone | role | - | ManageRoles, ManageChannels |
-| Engaged Fur ‹‹ LVL 15 ›› | role | - | ViewChannel |
-| Donator | role | ViewChannel | - |
-| Chatty Fur ‹‹ LVL 10 ›› | role | - | ViewChannel |
-| Booster Fur | role | ViewChannel | - |
-| VIP Fur | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
-| Known Fur ‹‹ LVL 30 ›› | role | - | ViewChannel |
-| Newcomer Fur ‹‹ LVL 1 ›› | role | - | ViewChannel |
+| universeofastargirl | member | ViewChannel, Connect | - |
+| entropyprotogen | member | ViewChannel, Connect | - |
+| Community Ambassador | role | ViewChannel, Connect | - |
+| vega_valk | member | ViewChannel, Connect | - |
+| warrenfrazier | member | ViewChannel, Connect | - |
+| astellarkitty | member | ViewChannel, Connect | - |
+| @everyone | role | - | ViewChannel, Connect |
+| Staff on Break | role | ViewChannel, Connect | - |
+| daun | member | ViewChannel, Connect | - |
+| meow_prime | member | ViewChannel, Connect | - |
+| melodysparks1 | member | ViewChannel, Connect | - |
+| 8_bitwizard | member | ViewChannel, Connect | - |
+| Pro Gambler | role | ViewChannel, Connect | - |
+| cassiopeiawishverse | member | ViewChannel, Connect | - |
+| badrobotyt | member | ViewChannel, Connect | - |
+| gavlenn | member | ViewChannel, Connect | - |
+| watchthelight | member | ViewChannel, Connect | - |
 
 ### #「📰」news
 
-**ID:** `896197065720332328` | **Type:** Announcement | **Category:** [2] Announcements
+**ID:** `896197065720332328` | **Type:** Announcement
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | SendMessagesInThreads, EmbedLinks, AttachFiles, AddReactions, ReadMessageHistory | SendMessages, CreatePublicThreads |
 | @everyone | role | AddReactions | ManageRoles, ManageChannels, ManageMessages, SendMessages, CreatePublicThreads, CreatePrivateThreads |
 
-### #「📰」world-updates
+### #「📰」vrcworld-updates
 
-**ID:** `1438540553867362304` | **Type:** Announcement | **Category:** [2] Announcements
+**ID:** `1438540553867362304` | **Type:** Announcement
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1739,7 +1711,7 @@
 
 ### #「✨」vrc-dev-share
 
-**ID:** `1409506904740204605` | **Type:** Text | **Category:** [2] Announcements
+**ID:** `1409506904740204605` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1750,15 +1722,15 @@
 | Community Development Lead | role | ViewChannel | - |
 | Chatty Fur ‹‹ LVL 10 ›› | role | - | ViewChannel |
 | Eternal Fur ‹‹ LVL 100+ ›› | role | ViewChannel, SendMessages, EmbedLinks, AttachFiles | - |
-| Community Member | role | AddReactions, UseExternalEmojis, ReadMessageHistory | ViewChannel, SendMessages, SendMessagesInThreads, CreatePublicThreads, EmbedLinks, AttachFiles |
-| Noble Fur ‹‹ LVL 50 ›› | role | ViewChannel, SendMessages | - |
-| Legendary Fur ‹‹ LVL 80 ›› | role | ViewChannel, SendMessages, EmbedLinks, AttachFiles | - |
 | Fresh Fur ‹‹ LVL 0 ›› | role | - | ViewChannel |
-| Active Fur ‹‹ LVL 20 ›› | role | - | ViewChannel |
-| Booster Fur | role | ViewChannel, SendMessages, EmbedLinks, AttachFiles, AddReactions, ReadMessageHistory | - |
-| Moderation Team | role | ViewChannel, SendMessages | - |
-| Mythic Fur ‹‹ LVL 90 ›› | role | ViewChannel, SendMessages, EmbedLinks, AttachFiles | - |
 | Donator | role | ViewChannel, SendMessages, EmbedLinks, AttachFiles, AddReactions, ReadMessageHistory | - |
+| Legendary Fur ‹‹ LVL 80 ›› | role | ViewChannel, SendMessages, EmbedLinks, AttachFiles | - |
+| Noble Fur ‹‹ LVL 50 ›› | role | ViewChannel, SendMessages | - |
+| Booster Fur | role | ViewChannel, SendMessages, EmbedLinks, AttachFiles, AddReactions, ReadMessageHistory | - |
+| Active Fur ‹‹ LVL 20 ›› | role | - | ViewChannel |
+| Community Staff | role | ViewChannel, SendMessages | - |
+| Mythic Fur ‹‹ LVL 90 ›› | role | ViewChannel, SendMessages, EmbedLinks, AttachFiles | - |
+| Community Member | role | AddReactions, UseExternalEmojis, ReadMessageHistory | ViewChannel, SendMessages, SendMessagesInThreads, CreatePublicThreads, EmbedLinks, AttachFiles |
 | Server Dev | role | ViewChannel | - |
 | Administrator | role | ViewChannel, Connect, Speak, Stream, MuteMembers, DeafenMembers, MoveMembers, UseVAD, PrioritySpeaker | - |
 | Known Fur ‹‹ LVL 30 ›› | role | - | ViewChannel |
@@ -1771,7 +1743,7 @@
 
 ### #「🎂」happy-birthday
 
-**ID:** `1424039052503683115` | **Type:** Announcement | **Category:** [2] Announcements
+**ID:** `1424039052503683115` | **Type:** Announcement
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1780,16 +1752,17 @@
 | Community Development Lead | role | SendMessages | - |
 | Senior Administrator | role | ManageMessages, SendMessages | - |
 | Community Apps | role | ViewChannel | - |
-| Moderation Team | role | SendMessages | - |
+| Community Staff | role | ViewChannel, SendMessages | - |
 | @everyone | role | AddReactions | ManageRoles, ManageChannels, ManageMessages, SendMessages, CreatePublicThreads, CreatePrivateThreads |
 
-### #「🎈」events
+### #「📆」events
 
-**ID:** `1231135837970890833` | **Type:** Announcement | **Category:** [2] Announcements
+**ID:** `1231135837970890833` | **Type:** Announcement
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Event Host | role | SendMessages | - |
+| Community Member | role | SendMessagesInThreads, AttachFiles | SendMessages, CreatePublicThreads |
 | Administrator | role | SendMessages | - |
 | VRC Group Lead | role | SendMessages | - |
 | Senior Administrator | role | SendMessages | - |
@@ -1798,40 +1771,41 @@
 | VRC Group Team | role | SendMessages | - |
 | @everyone | role | AddReactions | ManageRoles, ManageChannels, ManageMessages, SendMessages, CreatePrivateThreads |
 
-### #「🎈」giveaways
+### #「📆」giveaways
 
-**ID:** `1384456699888406679` | **Type:** Announcement | **Category:** [2] Announcements
+**ID:** `1384456699888406679` | **Type:** Announcement
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | ViewChannel | SendMessages |
+| GiveawayBot | role | ViewChannel, SendMessages, EmbedLinks, AttachFiles | - |
 | Community Apps | role | ViewChannel, SendMessages | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
 
 ### #「📂」archived-logs
 
-**ID:** `1104638828435755079` | **Type:** Text | **Category:** Ticket Logs
+**ID:** `1104638828435755079` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Administrator | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
+| Community Staff | role | ViewChannel | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
 
 ### #「📂」support-log
 
-**ID:** `1420410151978139659` | **Type:** Text | **Category:** Ticket Logs
+**ID:** `1420410151978139659` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Administrator | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
+| Community Staff | role | ViewChannel | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
 | Ticket Tool#4843 | member | ManageRoles, ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory | - |
 
 ### #「📂」staff-log
 
-**ID:** `1420410228905738332` | **Type:** Text | **Category:** Ticket Logs
+**ID:** `1420410228905738332` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1840,75 +1814,75 @@
 
 ### #「📂」2d-artist-log
 
-**ID:** `1420410266432307264` | **Type:** Text | **Category:** Ticket Logs
+**ID:** `1420410266432307264` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Administrator | role | ViewChannel | - |
 | Ticket Tool#4843 | member | ManageRoles, ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
-| Moderation Team | role | ViewChannel | - |
+| Community Staff | role | ViewChannel | - |
 
 ### #「📂」user-log
 
-**ID:** `1420410194650988634` | **Type:** Text | **Category:** Ticket Logs
+**ID:** `1420410194650988634` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Administrator | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
+| Community Staff | role | ViewChannel | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
 | Ticket Tool#4843 | member | ManageRoles, ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory | - |
 
 ### #「📂」fursuit-log
 
-**ID:** `1450440905700933742` | **Type:** Text | **Category:** Ticket Logs
+**ID:** `1450440905700933742` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Administrator | role | ViewChannel | - |
 | Ticket Tool#4843 | member | ManageRoles, ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
-| Moderation Team | role | ViewChannel | - |
+| Community Staff | role | ViewChannel | - |
 
 ### #「📂」music-logs
 
-**ID:** `1450440982406369421` | **Type:** Text | **Category:** Ticket Logs
+**ID:** `1450440982406369421` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Administrator | role | ViewChannel | - |
 | Ticket Tool#4843 | member | ManageRoles, ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
-| Moderation Team | role | ViewChannel | - |
+| Community Staff | role | ViewChannel | - |
 
 ### #「📂」3d-artist-logs
 
-**ID:** `1450441027159851210` | **Type:** Text | **Category:** Ticket Logs
+**ID:** `1450441027159851210` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Administrator | role | ViewChannel | - |
-| Ticket Tool#4843 | member | ManageRoles, ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory | - |
+| Community Staff | role | ViewChannel | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
-| Moderation Team | role | ViewChannel | - |
+| Ticket Tool#4843 | member | ManageRoles, ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory | - |
 
 ### #「📂」world-bug-logs
 
-**ID:** `1450441339455148126` | **Type:** Text | **Category:** Ticket Logs
+**ID:** `1450441339455148126` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
-| Ticket Tool#4843 | member | ManageRoles, ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory | - |
+| Community Staff | role | ViewChannel | - |
 | Administrator | role | ViewChannel | - |
 | VRC Group Lead | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
-| @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
 | VRC Group Team | role | ViewChannel | - |
+| @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
+| Ticket Tool#4843 | member | ManageRoles, ManageChannels, ManageMessages, MentionEveryone, ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory | - |
 
 ### #「🧶」fursuit-sharing
 
-**ID:** `1437288371197055048` | **Type:** Text | **Category:** [8] Alt Creative Corner
+**ID:** `1437288371197055048` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1918,7 +1892,7 @@
 
 ### #「🧶」fursuit-marketplace
 
-**ID:** `1450226720970899618` | **Type:** Forum | **Category:** [8] Alt Creative Corner
+**ID:** `1450226720970899618` | **Type:** Forum
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1927,23 +1901,23 @@
 
 ### #「🎹」music
 
-**ID:** `896070889798508599` | **Type:** Text | **Category:** [8] Alt Creative Corner
+**ID:** `896070889798508599` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Engaged Fur ‹‹ LVL 15 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | Veteran Fur ‹‹ LVL 60 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| [Patreon] City Worker | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | [Patreon] Council Member | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| Chatty Fur ‹‹ LVL 10 ›› | role | EmbedLinks, AttachFiles | - |
-| Eternal Fur ‹‹ LVL 100+ ›› | role | Stream | - |
+| [Patreon] City Worker | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | Noble Fur ‹‹ LVL 50 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| Legendary Fur ‹‹ LVL 80 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | [Patreon] Legendary Fiona | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| Eternal Fur ‹‹ LVL 100+ ›› | role | Stream | - |
+| Legendary Fur ‹‹ LVL 80 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Chatty Fur ‹‹ LVL 10 ›› | role | EmbedLinks, AttachFiles | - |
 | Mythic Fur ‹‹ LVL 90 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| [Patreon] Mayor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | Active Fur ‹‹ LVL 20 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| [Patreon] City Benefactor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| [Patreon] Mayor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| [Patreon] Horsetropy Governor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | Known Fur ‹‹ LVL 30 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | Experienced Fur ‹‹ LVL 40 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | Newcomer Fur ‹‹ LVL 1 ›› | role | AttachFiles | - |
@@ -1954,7 +1928,7 @@
 
 ### #「🎹」music-promotion
 
-**ID:** `1450224387063025899` | **Type:** Text | **Category:** [8] Alt Creative Corner
+**ID:** `1450224387063025899` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -1964,34 +1938,34 @@
 
 ### #「🕹️」vrchat
 
-**ID:** `1393493112365780992` | **Type:** Text | **Category:** [8] Alt Creative Corner
+**ID:** `1393493112365780992` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Engaged Fur ‹‹ LVL 15 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | Veteran Fur ‹‹ LVL 60 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| [Patreon] City Worker | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | [Patreon] Council Member | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| Chatty Fur ‹‹ LVL 10 ›› | role | EmbedLinks, AttachFiles | - |
-| Eternal Fur ‹‹ LVL 100+ ›› | role | Stream | - |
-| Noble Fur ‹‹ LVL 50 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| Legendary Fur ‹‹ LVL 80 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| [Patreon] City Worker | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | [Patreon] Legendary Fiona | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| [Patreon] Mayor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| Noble Fur ‹‹ LVL 50 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Chatty Fur ‹‹ LVL 10 ›› | role | EmbedLinks, AttachFiles | - |
+| Legendary Fur ‹‹ LVL 80 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Eternal Fur ‹‹ LVL 100+ ›› | role | Stream | - |
 | Active Fur ‹‹ LVL 20 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | Mythic Fur ‹‹ LVL 90 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| [Patreon] City Benefactor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| [Patreon] Mayor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| [Patreon] Horsetropy Governor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | Known Fur ‹‹ LVL 30 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| Experienced Fur ‹‹ LVL 40 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| Newcomer Fur ‹‹ LVL 1 ›› | role | AttachFiles | - |
 | Beginner Fur ‹‹ LVL 5 ›› | role | EmbedLinks, AttachFiles | - |
+| Newcomer Fur ‹‹ LVL 1 ›› | role | AttachFiles | - |
+| [Patreon] Citizen | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | Elite Fur ‹‹ LVL 70 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | @everyone | role | - | ManageRoles, ManageChannels, CreatePublicThreads, CreatePrivateThreads |
-| [Patreon] Citizen | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| Experienced Fur ‹‹ LVL 40 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 
-### #「🐴」3d-modeling
+### #「🐴」3d-modeling-promo
 
-**ID:** `1450227604152914131` | **Type:** Text | **Category:** [8] Alt Creative Corner
+**ID:** `1450227604152914131` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2001,17 +1975,17 @@
 
 ### #「⭐」gallery
 
-**ID:** `1130445124413956147` | **Type:** Forum | **Category:** - discord.gg/floof -
+**ID:** `1130445124413956147` | **Type:** Forum
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Server Artist | role | ViewChannel, SendMessagesInThreads, EmbedLinks, AttachFiles | - |
-| Moderation Team | role | ViewChannel, SendMessagesInThreads, AttachFiles | - |
+| Community Staff | role | ViewChannel, SendMessagesInThreads, AttachFiles | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, SendMessages, SendMessagesInThreads, AddReactions, Connect |
 
-### #「🌐」Citizens: 5925
+### #「🌐」Citizens: 6701
 
-**ID:** `1459654647659630828` | **Type:** Voice | **Category:** - discord.gg/floof -
+**ID:** `1459654647659630828` | **Type:** Voice
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2020,30 +1994,30 @@
 
 ### #「💎」boosts
 
-**ID:** `896070888779317256` | **Type:** Text | **Category:** - discord.gg/floof -
+**ID:** `896070888779317256` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | ViewChannel, AddReactions | - |
-| Community Apps | role | ViewChannel, SendMessages | - |
 | Administrator | role | SendMessages | - |
+| Community Apps | role | ViewChannel, SendMessages | - |
 | Senior Administrator | role | SendMessages | - |
-| Moderation Team | role | SendMessages | - |
+| Community Staff | role | SendMessages | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, SendMessages, SendMessagesInThreads, Connect |
 | Community Ambassador | role | SendMessages | - |
 
 ### #「🔊」In VC: 0
 
-**ID:** `1459655147654480084` | **Type:** Voice | **Category:** - discord.gg/floof -
+**ID:** `1459655147654480084` | **Type:** Voice
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Statbot#3472 | member | ManageChannels, ViewChannel, Connect | - |
 | @everyone | role | - | SendMessages, Connect |
 
-### #「🏆」Jan Goal: 6000
+### #「🏆」April Goal: 7k!
 
-**ID:** `1438646719892951070` | **Type:** Voice | **Category:** - discord.gg/floof -
+**ID:** `1438646719892951070` | **Type:** Voice
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2052,7 +2026,7 @@
 
 ### #「📜」rules
 
-**ID:** `896070889005781038` | **Type:** Text | **Category:** [1] Board
+**ID:** `896070889005781038` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2060,7 +2034,7 @@
 
 ### #「🔍」server-info
 
-**ID:** `1356430757475913972` | **Type:** Forum | **Category:** [1] Board
+**ID:** `1356430757475913972` | **Type:** Forum
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2068,7 +2042,7 @@
 
 ### #「🎀」roles
 
-**ID:** `1404710287084359710` | **Type:** Text | **Category:** [1] Board
+**ID:** `1404710287084359710` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2076,23 +2050,23 @@
 
 ### #「🐈」mascot
 
-**ID:** `1243578531183853621` | **Type:** Text | **Category:** [1] Board
+**ID:** `1243578531183853621` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ManageWebhooks, SendMessages, SendMessagesInThreads, CreatePublicThreads, CreatePrivateThreads |
 
-### #「⭐」starboard
+### #「⭐」hall-of-fame
 
-**ID:** `1420407097476124733` | **Type:** Text | **Category:** [1] Board
+**ID:** `1420407097476124733` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ManageWebhooks, SendMessages, SendMessagesInThreads, CreatePublicThreads, CreatePrivateThreads |
 
-### #「🎆」general-chat
+### #「💭」main-chat
 
-**ID:** `896070889462976608` | **Type:** Text | **Category:** [4] Main
+**ID:** `896070889462976608` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2102,20 +2076,19 @@
 | Mythic Fur ‹‹ LVL 90 ›› | role | EmbedLinks, AttachFiles, UseExternalEmojis, UseExternalStickers | - |
 | Community Ambassador | role | EmbedLinks, AttachFiles | - |
 | Server Dev | role | ViewChannel | - |
-| Pawtropolis Tech#2205 | member | MentionEveryone | - |
 | Experienced Fur ‹‹ LVL 40 ›› | role | EmbedLinks, AttachFiles, UseExternalEmojis, UseExternalStickers | - |
 | Dyno#3861 | member | ManageMessages | - |
 | @everyone | role | - | CreatePublicThreads, CreatePrivateThreads, EmbedLinks, AttachFiles |
 | Engaged Fur ‹‹ LVL 15 ›› | role | AttachFiles, UseExternalEmojis, UseExternalStickers | - |
 | Veteran Fur ‹‹ LVL 60 ›› | role | EmbedLinks, AttachFiles, UseExternalEmojis, UseExternalStickers | - |
-| Donator | role | EmbedLinks, AttachFiles | - |
 | Eternal Fur ‹‹ LVL 100+ ›› | role | EmbedLinks, AttachFiles, UseExternalEmojis, UseExternalStickers | - |
 | Mimu#5713 | member | ManageMessages | - |
+| Donator | role | EmbedLinks, AttachFiles | - |
 | Legendary Fur ‹‹ LVL 80 ›› | role | EmbedLinks, AttachFiles, UseExternalEmojis, UseExternalStickers | - |
-| Booster Fur | role | EmbedLinks, AttachFiles | - |
-| VIP Fur | role | EmbedLinks, AttachFiles | - |
-| Moderation Team | role | EmbedLinks, AttachFiles | - |
 | Staff Emeritus | role | EmbedLinks, AttachFiles | - |
+| VIP Fur | role | EmbedLinks, AttachFiles | - |
+| Community Staff | role | EmbedLinks, AttachFiles | - |
+| Booster Fur | role | EmbedLinks, AttachFiles | - |
 | Fur Voter [ 2x EXP ] | role | EmbedLinks, AttachFiles | - |
 | Sapphire#8184 | member | ManageMessages | - |
 | Known Fur ‹‹ LVL 30 ›› | role | EmbedLinks, AttachFiles, UseExternalEmojis, UseExternalStickers | - |
@@ -2123,57 +2096,93 @@
 
 ### #「🔈」General Hangout
 
-**ID:** `1386123363323482192` | **Type:** Voice | **Category:** [4] Main
+**ID:** `1386123363323482192` | **Type:** Voice
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
+| Fresh Fur ‹‹ LVL 0 ›› | role | - | ViewChannel |
 | Server Dev | role | ViewChannel | - |
 
-### #「🔈」Gaming Lounge
+### #「⭐」known-chat
 
-**ID:** `1136781312385105920` | **Type:** Voice | **Category:** [4] Main
-
-*Inherits from category — no explicit overwrites*
-
-### #「✨」known-chat
-
-**ID:** `1437291915979522078` | **Type:** Text | **Category:** [4] Main
+**ID:** `1488258803928404069` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
-| Engaged Fur ‹‹ LVL 15 ›› | role | - | ViewChannel |
+| Server Artist | role | ViewChannel | - |
+| Community Apps | role | EmbedLinks, AttachFiles | ManageMessages |
 | Fresh Fur ‹‹ LVL 0 ›› | role | - | ViewChannel |
-| Donator | role | ViewChannel | - |
+| Noble Fur ‹‹ LVL 50 ›› | role | EmbedLinks, AttachFiles, UseExternalEmojis, UseExternalStickers | - |
+| Active Fur ‹‹ LVL 20 ›› | role | EmbedLinks, AttachFiles, UseExternalEmojis, UseExternalStickers | ViewChannel |
+| Mythic Fur ‹‹ LVL 90 ›› | role | EmbedLinks, AttachFiles, UseExternalEmojis, UseExternalStickers | - |
+| Community Ambassador | role | ViewChannel, EmbedLinks, AttachFiles | - |
+| Server Dev | role | ViewChannel | - |
+| Experienced Fur ‹‹ LVL 40 ›› | role | EmbedLinks, AttachFiles, UseExternalEmojis, UseExternalStickers | - |
+| Beginner Fur ‹‹ LVL 5 ›› | role | - | ViewChannel |
+| Dyno#3861 | member | ManageMessages | - |
+| @everyone | role | - | CreatePublicThreads, CreatePrivateThreads, EmbedLinks, AttachFiles |
+| Engaged Fur ‹‹ LVL 15 ›› | role | AttachFiles, UseExternalEmojis, UseExternalStickers | ViewChannel |
+| Veteran Fur ‹‹ LVL 60 ›› | role | EmbedLinks, AttachFiles, UseExternalEmojis, UseExternalStickers | - |
+| Donator | role | EmbedLinks, AttachFiles | - |
 | Mimu#5713 | member | ManageMessages | - |
 | Chatty Fur ‹‹ LVL 10 ›› | role | - | ViewChannel |
-| Staff Emeritus | role | ViewChannel | - |
-| VIP Fur | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
-| Community Ambassador | role | ViewChannel | - |
-| Booster Fur | role | ViewChannel | - |
-| Active Fur ‹‹ LVL 20 ›› | role | - | ViewChannel |
-| Beginner Fur ‹‹ LVL 5 ›› | role | - | ViewChannel |
+| Eternal Fur ‹‹ LVL 100+ ›› | role | EmbedLinks, AttachFiles, UseExternalEmojis, UseExternalStickers | - |
+| Legendary Fur ‹‹ LVL 80 ›› | role | EmbedLinks, AttachFiles, UseExternalEmojis, UseExternalStickers | - |
+| Staff Emeritus | role | EmbedLinks, AttachFiles | - |
+| VIP Fur | role | EmbedLinks, AttachFiles | - |
+| Community Staff | role | ViewChannel, EmbedLinks, AttachFiles | - |
+| Booster Fur | role | EmbedLinks, AttachFiles | - |
+| Fur Voter [ 2x EXP ] | role | EmbedLinks, AttachFiles | - |
+| Sapphire#8184 | member | ManageMessages | - |
+| Known Fur ‹‹ LVL 30 ›› | role | EmbedLinks, AttachFiles, UseExternalEmojis, UseExternalStickers | - |
 | Newcomer Fur ‹‹ LVL 1 ›› | role | - | ViewChannel |
+| Elite Fur ‹‹ LVL 70 ›› | role | EmbedLinks, AttachFiles, UseExternalEmojis, UseExternalStickers | - |
+
+### #「🗣️」yapping-space
+
+**ID:** `1393507326865969152` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| Engaged Fur ‹‹ LVL 15 ›› | role | - | EmbedLinks, AttachFiles |
+| Veteran Fur ‹‹ LVL 60 ›› | role | EmbedLinks, AttachFiles | - |
+| Fresh Fur ‹‹ LVL 0 ›› | role | - | EmbedLinks, AttachFiles |
+| Eternal Fur ‹‹ LVL 100+ ›› | role | EmbedLinks, AttachFiles | - |
+| Chatty Fur ‹‹ LVL 10 ›› | role | - | EmbedLinks, AttachFiles |
+| Noble Fur ‹‹ LVL 50 ›› | role | EmbedLinks, AttachFiles | - |
+| Legendary Fur ‹‹ LVL 80 ›› | role | EmbedLinks, AttachFiles | - |
+| Mythic Fur ‹‹ LVL 90 ›› | role | EmbedLinks, AttachFiles | - |
+| Server Dev | role | ViewChannel | - |
+| Active Fur ‹‹ LVL 20 ›› | role | EmbedLinks, AttachFiles | - |
+| Known Fur ‹‹ LVL 30 ›› | role | EmbedLinks, AttachFiles | - |
+| Experienced Fur ‹‹ LVL 40 ›› | role | EmbedLinks, AttachFiles | - |
+| Newcomer Fur ‹‹ LVL 1 ›› | role | - | EmbedLinks, AttachFiles |
+| Beginner Fur ‹‹ LVL 5 ›› | role | - | EmbedLinks, AttachFiles |
+| Elite Fur ‹‹ LVL 70 ›› | role | EmbedLinks, AttachFiles | - |
 | @everyone | role | - | CreatePublicThreads, CreatePrivateThreads |
+
+### #「🎞️」Theater
+
+**ID:** `1484547787503702277` | **Type:** Voice
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| Community Member | role | ViewChannel, SendMessages, Connect, Speak | - |
+| Fresh Fur ‹‹ LVL 0 ›› | role | - | ViewChannel |
+| Server Dev | role | ViewChannel | - |
 
 ### #「☁️」chill-chat
 
-**ID:** `1437278644455342230` | **Type:** Text | **Category:** [4] Main
+**ID:** `1437278644455342230` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Mimu#5713 | member | ManageMessages, EmbedLinks, AttachFiles | - |
 | @everyone | role | - | EmbedLinks, AttachFiles |
 
-### #「🍿」Theater 1
-
-**ID:** `1444069062136303688` | **Type:** Voice | **Category:** [4] Main
-
-*Inherits from category — no explicit overwrites*
-
 ### #「😂」memes
 
-**ID:** `896070889462976610` | **Type:** Text | **Category:** [4] Main
+**ID:** `896070889462976610` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2182,26 +2191,27 @@
 
 ### #「📷」media
 
-**ID:** `1121191510642274354` | **Type:** Text | **Category:** [4] Main
+**ID:** `1121191510642274354` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Apps | role | ManageMessages, ViewChannel, SendMessages, EmbedLinks | - |
 | @everyone | role | - | CreatePublicThreads, CreatePrivateThreads |
 
-### #「❤️」bump-us
+### #「💕」bump-us
 
-**ID:** `896070889198731286` | **Type:** Text | **Category:** [4] Main
+**ID:** `1486499975247433738` | **Type:** Forum
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
-| Community Member | role | - | EmbedLinks, AttachFiles |
-| Community Apps | role | ManageMessages, ViewChannel, SendMessages, EmbedLinks, AttachFiles | - |
-| @everyone | role | - | CreatePublicThreads, CreatePrivateThreads, EmbedLinks, AttachFiles |
+| Server Dev | role | ViewChannel | - |
+| Community Member | role | SendMessagesInThreads, ReadMessageHistory | SendMessages, AttachFiles |
+| Community Apps | role | ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles | - |
+| @everyone | role | - | ManageRoles, ManageChannels |
 
 ### #「🧰」bot-stuff
 
-**ID:** `896070890457018384` | **Type:** Text | **Category:** [4] Main
+**ID:** `896070890457018384` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2209,7 +2219,7 @@
 
 ### #「🎨」Artist Studio
 
-**ID:** `1316362343176867931` | **Type:** Voice | **Category:** [6] Creative Corner
+**ID:** `1316362343176867931` | **Type:** Voice
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2217,9 +2227,20 @@
 | @everyone | role | - | CreatePublicThreads, CreatePrivateThreads |
 | Verified 2D Artist | role | EmbedLinks, AttachFiles | - |
 
+### #「🖌️」art-rules
+
+**ID:** `1491447539533352990` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| Community Member | role | - | SendMessages, AddReactions |
+| Community Apps | role | ManageMessages, ViewChannel, SendMessages, EmbedLinks | - |
+| Server Dev | role | ViewChannel | - |
+| Verified 2D Artist | role | EmbedLinks, AttachFiles | - |
+
 ### #「✍️」writing
 
-**ID:** `1446602187655610461` | **Type:** Text | **Category:** [6] Creative Corner
+**ID:** `1446602187655610461` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2230,7 +2251,7 @@
 
 ### #「🎨」artwork
 
-**ID:** `1400344550094012447` | **Type:** Text | **Category:** [6] Creative Corner
+**ID:** `1400344550094012447` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2240,17 +2261,7 @@
 
 ### #「🎨」art-trades
 
-**ID:** `1400346017437712444` | **Type:** Text | **Category:** [6] Creative Corner
-
-| Target | Type | Allow | Deny |
-|--------|------|-------|------|
-| Server Dev | role | ViewChannel | - |
-| @everyone | role | - | CreatePublicThreads, CreatePrivateThreads |
-| Verified 2D Artist | role | EmbedLinks, AttachFiles | - |
-
-### #「🎨」art-advice
-
-**ID:** `1441516524954451999` | **Type:** Text | **Category:** [6] Creative Corner
+**ID:** `1400346017437712444` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2260,7 +2271,7 @@
 
 ### #「🎨」looking-for-comms
 
-**ID:** `1400345890933444628` | **Type:** Text | **Category:** [6] Creative Corner
+**ID:** `1400345890933444628` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2273,8 +2284,8 @@
 | Beginner Fur ‹‹ LVL 5 ›› | role | AttachFiles, ReadMessageHistory | - |
 | @everyone | role | - | SendMessages, CreatePublicThreads, CreatePrivateThreads |
 | Engaged Fur ‹‹ LVL 15 ›› | role | ReadMessageHistory | - |
-| Verified 2D Artist | role | EmbedLinks, AttachFiles, ReadMessageHistory | - |
 | Veteran Fur ‹‹ LVL 60 ›› | role | ReadMessageHistory | - |
+| Verified 2D Artist | role | EmbedLinks, AttachFiles, ReadMessageHistory | - |
 | Chatty Fur ‹‹ LVL 10 ›› | role | ReadMessageHistory | - |
 | Eternal Fur ‹‹ LVL 100+ ›› | role | ReadMessageHistory | - |
 | Legendary Fur ‹‹ LVL 80 ›› | role | ReadMessageHistory | - |
@@ -2282,9 +2293,19 @@
 | Newcomer Fur ‹‹ LVL 1 ›› | role | - | ReadMessageHistory |
 | Elite Fur ‹‹ LVL 70 ›› | role | ReadMessageHistory | - |
 
+### #「🎨」art-advice
+
+**ID:** `1441516524954451999` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| Server Dev | role | ViewChannel | - |
+| @everyone | role | - | CreatePublicThreads, CreatePrivateThreads |
+| Verified 2D Artist | role | EmbedLinks, AttachFiles | - |
+
 ### #「🌐」affiliate-info
 
-**ID:** `896070890188603447` | **Type:** Text | **Category:** [10] Connections
+**ID:** `896070890188603447` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2296,32 +2317,32 @@
 
 ### #「🌐」affiliates
 
-**ID:** `896070890188603448` | **Type:** Text | **Category:** [10] Connections
+**ID:** `896070890188603448` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | ViewChannel | - |
-| Community Apps | role | ViewChannel | - |
-| Community Development Lead | role | ViewChannel | - |
 | Administrator | role | ViewChannel | - |
+| Community Development Lead | role | ViewChannel | - |
+| Community Apps | role | ViewChannel | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ViewChannel, SendMessages |
 
 ### #「🌐」affiliate-chat
 
-**ID:** `896070890188603450` | **Type:** Text | **Category:** [10] Connections
+**ID:** `896070890188603450` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Server Partner | role | ViewChannel, SendMessages | - |
 | Community Member | role | ReadMessageHistory | ViewChannel, SendMessages |
-| Community Apps | role | ViewChannel | - |
-| Community Development Lead | role | ViewChannel | - |
 | Administrator | role | ViewChannel | - |
+| Community Development Lead | role | ViewChannel | - |
+| Community Apps | role | ViewChannel | - |
 | @everyone | role | SendMessages | ManageRoles, ManageChannels, ViewChannel |
 
 ### #「📰」affiliate-news
 
-**ID:** `1204876249122476102` | **Type:** Text | **Category:** [10] Connections
+**ID:** `1204876249122476102` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2329,11 +2350,11 @@
 | Administrator | role | ManageMessages, MentionEveryone, ViewChannel | - |
 | Community Development Lead | role | ViewChannel | - |
 | Community Apps | role | ViewChannel | - |
-| @everyone | role | - | ManageRoles, ManageChannels, ViewChannel, SendMessages |
+| @everyone | role | - | ManageRoles, ManageChannels, ViewChannel, SendMessages, SendMessagesInThreads, CreatePublicThreads, CreatePrivateThreads |
 
 ### #「🔑」answers
 
-**ID:** `896070891539169310` | **Type:** Text | **Category:** [13] Unverified Area
+**ID:** `896070891539169310` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2341,17 +2362,16 @@
 | Community Member | role | - | ViewChannel |
 | Gatekeeper | role | ViewChannel, SendMessagesInThreads | - |
 | Community Apps | role | - | ManageMessages, ViewChannel |
-| Dyno#3861 | member | ViewChannel | - |
 | Moderator | role | SendMessagesInThreads | - |
 | Junior Moderator | role | SendMessagesInThreads | - |
 | Senior Moderator | role | SendMessagesInThreads | - |
-| Moderation Team | role | SendMessages, SendMessagesInThreads | ManageMessages |
-| Pawtropolis Tech#2205 | member | ManageRoles, ManageChannels, ManageMessages, ManageWebhooks, MentionEveryone, ViewChannel, SendMessages, SendMessagesInThreads, CreatePublicThreads, CreatePrivateThreads, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory | - |
+| Community Staff | role | SendMessages, SendMessagesInThreads | ManageMessages |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, CreatePublicThreads, CreatePrivateThreads |
+| Dyno#3861 | member | ViewChannel | - |
 
 ### #「🛬」user-join
 
-**ID:** `896070889005781033` | **Type:** Text | **Category:** [13] Unverified Area
+**ID:** `896070889005781033` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2359,38 +2379,63 @@
 | Community Member | role | - | ViewChannel, SendMessages |
 | Community Apps | role | ViewChannel, SendMessages | - |
 | Administrator | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
+| Community Staff | role | ViewChannel | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
 
 ### #「🛫」user-left
 
-**ID:** `896070891744682066` | **Type:** Text | **Category:** [13] Unverified Area
+**ID:** `896070891744682066` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
-| Community Member | role | - | ViewChannel |
 | Gatekeeper | role | ViewChannel | - |
-| Administrator | role | ViewChannel | ManageMessages |
+| Community Member | role | - | ViewChannel |
 | Community Apps | role | ManageMessages, ViewChannel, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory | - |
-| Moderation Team | role | ViewChannel | ManageMessages |
+| Administrator | role | ViewChannel | ManageMessages |
+| Community Staff | role | ViewChannel | ManageMessages |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions, Connect |
 
 ### #「🔑」modmail﹒logs
 
-**ID:** `1169361527065808936` | **Type:** Text | **Category:** [13] Unverified Area
+**ID:** `1169361527065808936` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
-| Community Member | role | - | ViewChannel |
 | Gatekeeper | role | ViewChannel | - |
-| Community Apps | role | ViewChannel, SendMessages | - |
+| Community Member | role | - | ViewChannel |
 | Administrator | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
+| Community Apps | role | ViewChannel, SendMessages | - |
+| Community Staff | role | ViewChannel | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions, Connect |
+
+### #「🔑」discord-news
+
+**ID:** `904072321432698891` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| Server Dev | role | ViewChannel | - |
+| Gatekeeper | role | ViewChannel | - |
+| Community Member | role | - | ViewChannel |
+| Administrator | role | ViewChannel | - |
+| Staff on Break | role | ViewChannel | - |
+| Community Staff | role | ViewChannel | - |
+| @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, SendMessagesInThreads, CreatePublicThreads, CreatePrivateThreads, AddReactions |
 
 ### #「📜」unverified-rules
 
-**ID:** `1150525497982337134` | **Type:** Text | **Category:** [13] Unverified Area
+**ID:** `1150525497982337134` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| Server Dev | role | ViewChannel, SendMessages | - |
+| Community Member | role | - | ViewChannel |
+| Gatekeeper | role | ViewChannel | - |
+| @everyone | role | ViewChannel | ManageRoles, ManageChannels, ManageMessages, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions, UseExternalEmojis |
+
+### #「❓」verify
+
+**ID:** `896070891539169311` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2401,161 +2446,133 @@
 
 ### #「🗯️」waiting
 
-**ID:** `1425834142330912790` | **Type:** Text | **Category:** [13] Unverified Area
+**ID:** `1494906744063656106` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | SendMessages, ReadMessageHistory | ViewChannel |
 | Gatekeeper | role | ViewChannel | - |
 | Administrator | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
-| Pawtropolis Tech#2205 | member | ManageMessages, ViewChannel, SendMessages | - |
+| Community Staff | role | ViewChannel | - |
 | @everyone | role | ViewChannel, SendMessages | ManageRoles, ManageChannels, CreatePublicThreads, CreatePrivateThreads, ReadMessageHistory |
-
-### #「❓」verify
-
-**ID:** `896070891539169311` | **Type:** Text | **Category:** [13] Unverified Area
-
-| Target | Type | Allow | Deny |
-|--------|------|-------|------|
-| Server Dev | role | ViewChannel, SendMessages | - |
-| Community Member | role | - | ViewChannel |
-| Gatekeeper | role | ViewChannel | - |
-| @everyone | role | ViewChannel | ManageRoles, ManageChannels, ManageMessages, SendMessages, CreatePublicThreads, CreatePrivateThreads |
 
 ### #「🔑」Staff
 
-**ID:** `896070890738040863` | **Type:** Voice | **Category:** [15] Staff Room
+**ID:** `896070890738040863` | **Type:** Voice
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | - | ViewChannel |
 | Senior Moderator | role | ManageMessages, MuteMembers, DeafenMembers, MoveMembers, PrioritySpeaker | - |
 | Administrator | role | ManageMessages, ViewChannel, MuteMembers, DeafenMembers, MoveMembers, PrioritySpeaker | - |
-| Moderation Team | role | ViewChannel | - |
+| Community Staff | role | ViewChannel | - |
 | @everyone | role | Connect, Speak, Stream | ManageRoles, ManageChannels, ManageMessages, ViewChannel, MuteMembers, DeafenMembers, MoveMembers, PrioritySpeaker |
 
 ### #「🔐」main-discussion
 
-**ID:** `896070891539169319` | **Type:** Text | **Category:** [15] Staff Room
+**ID:** `896070891539169319` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Server Dev | role | ViewChannel | - |
 | Community Member | role | - | ViewChannel |
-| Administrator | role | ManageMessages, ViewChannel | - |
 | Community Apps | role | ViewChannel, SendMessages | - |
+| Administrator | role | ManageMessages, ViewChannel | - |
 | Junior Moderator | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
+| Community Staff | role | ViewChannel | - |
 | @everyone | role | SendMessages, EmbedLinks, AttachFiles, AddReactions | ManageRoles, ManageChannels, ManageMessages, ViewChannel |
 
 ### #「🔐」junk-drawer
 
-**ID:** `896070891744682065` | **Type:** Text | **Category:** [15] Staff Room
+**ID:** `896070891744682065` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | - | ViewChannel |
-| Community Apps | role | ViewChannel | ManageRoles, ManageChannels |
 | Administrator | role | ManageMessages, ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
+| Community Apps | role | ViewChannel | ManageRoles, ManageChannels |
+| Community Staff | role | ViewChannel | - |
 | @everyone | role | SendMessages, EmbedLinks, AttachFiles, AddReactions | ManageRoles, ManageChannels, ManageMessages, ViewChannel |
 
 ### #「🔐」mod-actions
 
-**ID:** `1383341031176802384` | **Type:** Text | **Category:** [15] Staff Room
+**ID:** `1383341031176802384` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | - | ViewChannel |
 | Administrator | role | ManageMessages, ViewChannel | - |
-| Moderation Team | role | ViewChannel | ManageMessages |
+| Community Staff | role | ViewChannel | ManageMessages |
 | @everyone | role | SendMessages, EmbedLinks, AttachFiles, AddReactions | ManageRoles, ManageChannels, ManageMessages, ViewChannel |
+
+### #「🔐」qotd-review
+
+**ID:** `1486268526585974875` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| Server Dev | role | ViewChannel | - |
+| Gatekeeper | role | ViewChannel | - |
+| Community Member | role | - | ViewChannel |
+| Administrator | role | ViewChannel, SendMessages | - |
+| Staff on Break | role | ViewChannel | SendMessages, SendMessagesInThreads, CreatePublicThreads, CreatePrivateThreads |
+| Community Staff | role | ViewChannel | - |
+| @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, Connect |
 
 ### #「🔐」change-log
 
-**ID:** `1396310337548189878` | **Type:** Text | **Category:** [15] Staff Room
+**ID:** `1396310337548189878` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | - | ViewChannel |
 | Administrator | role | ViewChannel, SendMessages | - |
-| Moderation Team | role | ViewChannel | - |
+| Community Staff | role | ViewChannel | - |
 | @everyone | role | EmbedLinks, AttachFiles, AddReactions | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages |
-
-### #「🔐」development
-
-**ID:** `1429947536793145374` | **Type:** Text | **Category:** [15] Staff Room
-
-| Target | Type | Allow | Deny |
-|--------|------|-------|------|
-| Server Dev | role | ViewChannel | - |
-| Community Member | role | - | ViewChannel |
-| Gatekeeper | role | ViewChannel | - |
-| Administrator | role | ManageMessages, ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
-| Pawtropolis Tech#2205 | member | ViewChannel, SendMessages, EmbedLinks, AttachFiles, UseExternalEmojis, UseExternalStickers | - |
-| @everyone | role | SendMessages | ManageRoles, ManageChannels, ManageMessages, ViewChannel, Connect |
 
 ### #「🔑」staff-news
 
-**ID:** `896070891539169317` | **Type:** Text | **Category:** [14] Staff Info
+**ID:** `896070891539169317` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
-| Server Dev | role | ViewChannel | - |
-| Community Member | role | - | ViewChannel |
 | Staff on Break | role | ViewChannel | - |
-| Administrator | role | ViewChannel | - |
+| Community Member | role | - | ViewChannel |
 | Gatekeeper | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
+| Administrator | role | ViewChannel | - |
+| Server Dev | role | ViewChannel | - |
+| Community Apps | role | ViewChannel, SendMessages, SendMessagesInThreads, CreatePublicThreads, CreatePrivateThreads | - |
+| Community Staff | role | ViewChannel | - |
 | @everyone | role | AddReactions | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads |
 
-### #「🔑」discord-news
+### #「🔑」calendar
 
-**ID:** `904072321432698891` | **Type:** Text | **Category:** [14] Staff Info
+**ID:** `1492111202879406171` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Server Dev | role | ViewChannel | - |
 | Gatekeeper | role | ViewChannel | - |
-| Community Member | role | - | ViewChannel |
-| Administrator | role | ViewChannel | - |
 | Staff on Break | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
-| @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, SendMessagesInThreads, CreatePublicThreads, CreatePrivateThreads, AddReactions |
-
-### #「🔑」handbook
-
-**ID:** `1383953381269438504` | **Type:** Text | **Category:** [14] Staff Info
-
-| Target | Type | Allow | Deny |
-|--------|------|-------|------|
-| Staff on Break | role | ViewChannel | - |
-| Community Member | role | - | ViewChannel |
-| Gatekeeper | role | ViewChannel | - |
 | Administrator | role | ViewChannel | - |
-| Server Dev | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
-| @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
-
-### #「🔑」projects
-
-**ID:** `1415282624552894636` | **Type:** Forum | **Category:** [14] Staff Info
-
-| Target | Type | Allow | Deny |
-|--------|------|-------|------|
-| Server Dev | role | ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles | - |
-| Gatekeeper | role | ViewChannel | ManageMessages |
 | Community Member | role | - | ViewChannel |
-| Administrator | role | ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles | ManageMessages |
-| Staff on Break | role | ViewChannel | SendMessages, SendMessagesInThreads |
-| Moderation Team | role | ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles | ManageMessages |
-| @everyone | role | - | ManageRoles, ManageChannels, ViewChannel, SendMessages, AddReactions |
+| Community Staff | role | ViewChannel | - |
+| @everyone | role | AddReactions | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads |
 
 ### #「🔑」appeals
 
-**ID:** `932485736366759977` | **Type:** Text | **Category:** [14] Staff Info
+**ID:** `932485736366759977` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| Community Member | role | - | ViewChannel |
+| Administrator | role | ViewChannel | ManageMessages |
+| Dyno#3861 | member | ManageWebhooks, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, EmbedLinks, AttachFiles | ManageMessages |
+| @everyone | role | SendMessages, SendMessagesInThreads | ManageRoles, ManageChannels, ManageMessages, ViewChannel, CreatePublicThreads, CreatePrivateThreads, AddReactions |
+
+### #「🔑」verify-blacklist
+
+**ID:** `1468347731100700835` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2563,22 +2580,51 @@
 | Administrator | role | ViewChannel | ManageMessages |
 | Dyno#3861 | member | ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, EmbedLinks, AttachFiles | ManageMessages |
 | @everyone | role | SendMessages, SendMessagesInThreads | ManageRoles, ManageChannels, ManageMessages, ViewChannel, CreatePublicThreads, CreatePrivateThreads, AddReactions |
+| Community Staff | role | ViewChannel, SendMessages | - |
+
+### #「🔑」ideas
+
+**ID:** `1415282624552894636` | **Type:** Forum
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| Server Dev | role | ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles | - |
+| Gatekeeper | role | ViewChannel | ManageMessages |
+| Staff on Break | role | ViewChannel | SendMessages, SendMessagesInThreads |
+| Administrator | role | ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles | ManageMessages |
+| Community Member | role | - | ViewChannel |
+| Community Staff | role | ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles | ManageMessages |
+| @everyone | role | - | ManageRoles, ManageChannels, ViewChannel, SendMessages, AddReactions |
+
+### #「🔑」handbook
+
+**ID:** `1383953381269438504` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| Staff on Break | role | ViewChannel | - |
+| Gatekeeper | role | ViewChannel | - |
+| Server Dev | role | ViewChannel | - |
+| Administrator | role | ViewChannel | - |
+| Community Member | role | - | ViewChannel |
+| Community Staff | role | ViewChannel | - |
+| @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
 
 ### #「🔑」ban-summaries
 
-**ID:** `1383333916596899894` | **Type:** Text | **Category:** [14] Staff Info
+**ID:** `1383333916596899894` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Server Dev | role | ViewChannel | - |
 | Community Member | role | - | ViewChannel |
 | Administrator | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | ManageMessages |
+| Community Staff | role | ViewChannel | ManageMessages |
 | @everyone | role | SendMessages, SendMessagesInThreads, CreatePublicThreads | ManageRoles, ManageChannels, ManageMessages, ViewChannel, CreatePrivateThreads, Connect |
 
 ### #「🎧」Music
 
-**ID:** `1160297307674247319` | **Type:** Voice | **Category:** [5] Interests
+**ID:** `1160297307674247319` | **Type:** Voice
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2586,26 +2632,26 @@
 | Veteran Fur ‹‹ LVL 60 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | [Patreon] Council Member | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | [Patreon] City Worker | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| Chatty Fur ‹‹ LVL 10 ›› | role | EmbedLinks, AttachFiles | - |
 | Noble Fur ‹‹ LVL 50 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Eternal Fur ‹‹ LVL 100+ ›› | role | Stream | - |
 | [Patreon] Legendary Fiona | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | Legendary Fur ‹‹ LVL 80 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| Eternal Fur ‹‹ LVL 100+ ›› | role | Stream | - |
+| Chatty Fur ‹‹ LVL 10 ›› | role | EmbedLinks, AttachFiles | - |
 | Active Fur ‹‹ LVL 20 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | [Patreon] Mayor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | Mythic Fur ‹‹ LVL 90 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| [Patreon] City Benefactor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| [Patreon] Horsetropy Governor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | Known Fur ‹‹ LVL 30 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| Beginner Fur ‹‹ LVL 5 ›› | role | EmbedLinks, AttachFiles | - |
+| Experienced Fur ‹‹ LVL 40 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | Newcomer Fur ‹‹ LVL 1 ›› | role | AttachFiles | - |
 | [Patreon] Citizen | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | Elite Fur ‹‹ LVL 70 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | @everyone | role | - | CreatePublicThreads, CreatePrivateThreads |
-| Experienced Fur ‹‹ LVL 40 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Beginner Fur ‹‹ LVL 5 ›› | role | EmbedLinks, AttachFiles | - |
 
 ### #「🎮」gaming
 
-**ID:** `1196698619689062430` | **Type:** Text | **Category:** [5] Interests
+**ID:** `1196698619689062430` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2613,54 +2659,54 @@
 | Veteran Fur ‹‹ LVL 60 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | [Patreon] City Worker | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | [Patreon] Council Member | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| Chatty Fur ‹‹ LVL 10 ›› | role | EmbedLinks, AttachFiles | - |
-| Noble Fur ‹‹ LVL 50 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| [Patreon] Legendary Fiona | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| Legendary Fur ‹‹ LVL 80 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | Eternal Fur ‹‹ LVL 100+ ›› | role | Stream | - |
+| [Patreon] Legendary Fiona | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| Chatty Fur ‹‹ LVL 10 ›› | role | EmbedLinks, AttachFiles | - |
+| Legendary Fur ‹‹ LVL 80 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Noble Fur ‹‹ LVL 50 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | Active Fur ‹‹ LVL 20 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | Mythic Fur ‹‹ LVL 90 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | [Patreon] Mayor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| [Patreon] City Benefactor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| Known Fur ‹‹ LVL 30 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| Beginner Fur ‹‹ LVL 5 ›› | role | EmbedLinks, AttachFiles | - |
-| Newcomer Fur ‹‹ LVL 1 ›› | role | AttachFiles | - |
+| [Patreon] Horsetropy Governor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| [Patreon] Citizen | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | Experienced Fur ‹‹ LVL 40 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Newcomer Fur ‹‹ LVL 1 ›› | role | AttachFiles | - |
+| Beginner Fur ‹‹ LVL 5 ›› | role | EmbedLinks, AttachFiles | - |
 | Elite Fur ‹‹ LVL 70 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | @everyone | role | - | CreatePublicThreads, CreatePrivateThreads |
-| [Patreon] Citizen | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| Known Fur ‹‹ LVL 30 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 
 ### #「🔉」Smol VC 1
 
-**ID:** `896070890738040865` | **Type:** Voice | **Category:** [5] Interests
+**ID:** `896070890738040865` | **Type:** Voice
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Engaged Fur ‹‹ LVL 15 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | Veteran Fur ‹‹ LVL 60 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| [Patreon] City Worker | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| [Patreon] Council Member | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | Community Apps | role | ViewChannel | - |
-| [Patreon] Legendary Fiona | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| Noble Fur ‹‹ LVL 50 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | Chatty Fur ‹‹ LVL 10 ›› | role | EmbedLinks, AttachFiles | - |
-| Legendary Fur ‹‹ LVL 80 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | Eternal Fur ‹‹ LVL 100+ ›› | role | Stream | - |
+| [Patreon] Legendary Fiona | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| Legendary Fur ‹‹ LVL 80 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Noble Fur ‹‹ LVL 50 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | Active Fur ‹‹ LVL 20 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | Mythic Fur ‹‹ LVL 90 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | [Patreon] Mayor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| [Patreon] Council Member | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| [Patreon] City Benefactor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| [Patreon] City Worker | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| [Patreon] Horsetropy Governor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | Known Fur ‹‹ LVL 30 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| Beginner Fur ‹‹ LVL 5 ›› | role | EmbedLinks, AttachFiles | - |
+| Experienced Fur ‹‹ LVL 40 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | Newcomer Fur ‹‹ LVL 1 ›› | role | AttachFiles | - |
-| [Patreon] Citizen | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| Beginner Fur ‹‹ LVL 5 ›› | role | EmbedLinks, AttachFiles | - |
 | Elite Fur ‹‹ LVL 70 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | @everyone | role | - | CreatePublicThreads, CreatePrivateThreads |
-| Experienced Fur ‹‹ LVL 40 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| [Patreon] Citizen | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 
 ### #「📸」photography
 
-**ID:** `1429072978661867590` | **Type:** Text | **Category:** [5] Interests
+**ID:** `1429072978661867590` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2668,81 +2714,26 @@
 | Veteran Fur ‹‹ LVL 60 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | [Patreon] Council Member | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | [Patreon] City Worker | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| Chatty Fur ‹‹ LVL 10 ›› | role | EmbedLinks, AttachFiles | - |
 | Noble Fur ‹‹ LVL 50 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| [Patreon] Legendary Fiona | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| Legendary Fur ‹‹ LVL 80 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Chatty Fur ‹‹ LVL 10 ›› | role | EmbedLinks, AttachFiles | - |
 | Eternal Fur ‹‹ LVL 100+ ›› | role | Stream | - |
+| Legendary Fur ‹‹ LVL 80 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| [Patreon] Legendary Fiona | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | Active Fur ‹‹ LVL 20 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | [Patreon] Mayor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | Mythic Fur ‹‹ LVL 90 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| [Patreon] City Benefactor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| [Patreon] Citizen | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| Beginner Fur ‹‹ LVL 5 ›› | role | EmbedLinks, AttachFiles | - |
-| Newcomer Fur ‹‹ LVL 1 ›› | role | AttachFiles | - |
-| Experienced Fur ‹‹ LVL 40 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| Elite Fur ‹‹ LVL 70 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| @everyone | role | - | CreatePublicThreads, CreatePrivateThreads |
-| Known Fur ‹‹ LVL 30 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-
-### #「🔉」Smol VC 2
-
-**ID:** `1136781568682234026` | **Type:** Voice | **Category:** [5] Interests
-
-| Target | Type | Allow | Deny |
-|--------|------|-------|------|
-| Engaged Fur ‹‹ LVL 15 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| Veteran Fur ‹‹ LVL 60 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| [Patreon] Council Member | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| [Patreon] City Worker | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| [Patreon] Legendary Fiona | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| Noble Fur ‹‹ LVL 50 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| Eternal Fur ‹‹ LVL 100+ ›› | role | Stream | - |
-| Legendary Fur ‹‹ LVL 80 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| Chatty Fur ‹‹ LVL 10 ›› | role | EmbedLinks, AttachFiles | - |
-| Active Fur ‹‹ LVL 20 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| Mythic Fur ‹‹ LVL 90 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| Community Apps | role | ViewChannel | - |
-| [Patreon] Mayor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| [Patreon] City Benefactor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| [Patreon] Horsetropy Governor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | [Patreon] Citizen | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | Experienced Fur ‹‹ LVL 40 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | Newcomer Fur ‹‹ LVL 1 ›› | role | AttachFiles | - |
-| Beginner Fur ‹‹ LVL 5 ›› | role | EmbedLinks, AttachFiles | - |
+| Known Fur ‹‹ LVL 30 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | Elite Fur ‹‹ LVL 70 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | @everyone | role | - | CreatePublicThreads, CreatePrivateThreads |
-| Known Fur ‹‹ LVL 30 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-
-### #「💪」fitness
-
-**ID:** `1438963459592032276` | **Type:** Text | **Category:** [5] Interests
-
-| Target | Type | Allow | Deny |
-|--------|------|-------|------|
-| Engaged Fur ‹‹ LVL 15 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| Veteran Fur ‹‹ LVL 60 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| [Patreon] Council Member | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| [Patreon] City Worker | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| Eternal Fur ‹‹ LVL 100+ ›› | role | Stream | - |
-| Chatty Fur ‹‹ LVL 10 ›› | role | EmbedLinks, AttachFiles | - |
-| [Patreon] Legendary Fiona | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| Legendary Fur ‹‹ LVL 80 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| Noble Fur ‹‹ LVL 50 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| Active Fur ‹‹ LVL 20 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| Mythic Fur ‹‹ LVL 90 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| [Patreon] Mayor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| [Patreon] City Benefactor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| [Patreon] Citizen | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | Beginner Fur ‹‹ LVL 5 ›› | role | EmbedLinks, AttachFiles | - |
-| Newcomer Fur ‹‹ LVL 1 ›› | role | AttachFiles | - |
-| Experienced Fur ‹‹ LVL 40 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| Elite Fur ‹‹ LVL 70 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| @everyone | role | - | CreatePublicThreads, CreatePrivateThreads |
-| Known Fur ‹‹ LVL 30 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 
 ### #「🎭」cosplay
 
-**ID:** `1121191130634133584` | **Type:** Text | **Category:** [5] Interests
+**ID:** `1121191130634133584` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2750,26 +2741,82 @@
 | Veteran Fur ‹‹ LVL 60 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | [Patreon] City Worker | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | [Patreon] Council Member | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| Noble Fur ‹‹ LVL 50 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| Eternal Fur ‹‹ LVL 100+ ›› | role | Stream | - |
 | [Patreon] Legendary Fiona | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| Legendary Fur ‹‹ LVL 80 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Noble Fur ‹‹ LVL 50 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | Chatty Fur ‹‹ LVL 10 ›› | role | EmbedLinks, AttachFiles | - |
+| Eternal Fur ‹‹ LVL 100+ ›› | role | Stream | - |
+| Legendary Fur ‹‹ LVL 80 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | Active Fur ‹‹ LVL 20 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| [Patreon] Mayor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | Mythic Fur ‹‹ LVL 90 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| [Patreon] City Benefactor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| [Patreon] Citizen | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| Beginner Fur ‹‹ LVL 5 ›› | role | EmbedLinks, AttachFiles | - |
-| Newcomer Fur ‹‹ LVL 1 ›› | role | AttachFiles | - |
+| [Patreon] Mayor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| [Patreon] Horsetropy Governor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | Known Fur ‹‹ LVL 30 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Experienced Fur ‹‹ LVL 40 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Newcomer Fur ‹‹ LVL 1 ›› | role | AttachFiles | - |
+| [Patreon] Citizen | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | Elite Fur ‹‹ LVL 70 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | @everyone | role | - | CreatePublicThreads, CreatePrivateThreads |
+| Beginner Fur ‹‹ LVL 5 ›› | role | EmbedLinks, AttachFiles | - |
+
+### #「🔉」Smol VC 2
+
+**ID:** `1136781568682234026` | **Type:** Voice
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| [Patreon] City Worker | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| Community Apps | role | ViewChannel | - |
+| [Patreon] Legendary Fiona | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| Noble Fur ‹‹ LVL 50 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Active Fur ‹‹ LVL 20 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Mythic Fur ‹‹ LVL 90 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| [Patreon] Horsetropy Governor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| [Patreon] Citizen | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | Experienced Fur ‹‹ LVL 40 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Beginner Fur ‹‹ LVL 5 ›› | role | EmbedLinks, AttachFiles | - |
+| @everyone | role | - | CreatePublicThreads, CreatePrivateThreads |
+| Engaged Fur ‹‹ LVL 15 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Veteran Fur ‹‹ LVL 60 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| [Patreon] Council Member | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| Eternal Fur ‹‹ LVL 100+ ›› | role | Stream | - |
+| Chatty Fur ‹‹ LVL 10 ›› | role | EmbedLinks, AttachFiles | - |
+| Legendary Fur ‹‹ LVL 80 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Musico#2915 | member | ViewChannel, SendMessages, EmbedLinks, Connect, Speak | - |
+| [Patreon] Mayor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| Known Fur ‹‹ LVL 30 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Newcomer Fur ‹‹ LVL 1 ›› | role | AttachFiles | - |
+| Elite Fur ‹‹ LVL 70 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 
 ### #「💤」AFK
 
-**ID:** `1393881660256161864` | **Type:** Voice | **Category:** [5] Interests
+**ID:** `1393881660256161864` | **Type:** Voice
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| Engaged Fur ‹‹ LVL 15 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Veteran Fur ‹‹ LVL 60 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| [Patreon] Council Member | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| [Patreon] City Worker | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| Eternal Fur ‹‹ LVL 100+ ›› | role | Stream | - |
+| Chatty Fur ‹‹ LVL 10 ›› | role | EmbedLinks, AttachFiles | - |
+| Noble Fur ‹‹ LVL 50 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Legendary Fur ‹‹ LVL 80 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| [Patreon] Legendary Fiona | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| Active Fur ‹‹ LVL 20 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Mythic Fur ‹‹ LVL 90 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| [Patreon] Mayor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| [Patreon] Horsetropy Governor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| [Patreon] Citizen | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| Beginner Fur ‹‹ LVL 5 ›› | role | EmbedLinks, AttachFiles | - |
+| Newcomer Fur ‹‹ LVL 1 ›› | role | AttachFiles | - |
+| Known Fur ‹‹ LVL 30 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Elite Fur ‹‹ LVL 70 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| @everyone | role | - | CreatePublicThreads, CreatePrivateThreads |
+| Experienced Fur ‹‹ LVL 40 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+
+### #「🏎️」automotive
+
+**ID:** `1395676922272288818` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2777,26 +2824,80 @@
 | Veteran Fur ‹‹ LVL 60 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | [Patreon] City Worker | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | [Patreon] Council Member | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| Chatty Fur ‹‹ LVL 10 ›› | role | EmbedLinks, AttachFiles | - |
+| Noble Fur ‹‹ LVL 50 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | [Patreon] Legendary Fiona | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | Eternal Fur ‹‹ LVL 100+ ›› | role | Stream | - |
-| Chatty Fur ‹‹ LVL 10 ›› | role | EmbedLinks, AttachFiles | - |
 | Legendary Fur ‹‹ LVL 80 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| [Patreon] Mayor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| Active Fur ‹‹ LVL 20 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Mythic Fur ‹‹ LVL 90 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| [Patreon] Horsetropy Governor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| Known Fur ‹‹ LVL 30 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Experienced Fur ‹‹ LVL 40 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Newcomer Fur ‹‹ LVL 1 ›› | role | AttachFiles | - |
+| Beginner Fur ‹‹ LVL 5 ›› | role | EmbedLinks, AttachFiles | - |
+| Elite Fur ‹‹ LVL 70 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| @everyone | role | - | CreatePublicThreads, CreatePrivateThreads |
+| [Patreon] Citizen | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+
+### #「⚙️」technology
+
+**ID:** `1478733040996847697` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| Engaged Fur ‹‹ LVL 15 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Veteran Fur ‹‹ LVL 60 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| [Patreon] Council Member | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| [Patreon] City Worker | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| [Patreon] Legendary Fiona | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | Noble Fur ‹‹ LVL 50 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Chatty Fur ‹‹ LVL 10 ›› | role | EmbedLinks, AttachFiles | - |
+| Eternal Fur ‹‹ LVL 100+ ›› | role | Stream | - |
+| Legendary Fur ‹‹ LVL 80 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Mythic Fur ‹‹ LVL 90 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Active Fur ‹‹ LVL 20 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| [Patreon] Mayor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| [Patreon] Horsetropy Governor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| [Patreon] Citizen | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| Experienced Fur ‹‹ LVL 40 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Newcomer Fur ‹‹ LVL 1 ›› | role | AttachFiles | - |
+| Beginner Fur ‹‹ LVL 5 ›› | role | EmbedLinks, AttachFiles | - |
+| Elite Fur ‹‹ LVL 70 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| @everyone | role | - | CreatePublicThreads, CreatePrivateThreads |
+| Known Fur ‹‹ LVL 30 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+
+### #「⚜️」thin-line
+
+**ID:** `1488877242976309429` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| Engaged Fur ‹‹ LVL 15 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Veteran Fur ‹‹ LVL 60 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| [Patreon] City Worker | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| [Patreon] Council Member | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| Chatty Fur ‹‹ LVL 10 ›› | role | EmbedLinks, AttachFiles | - |
+| Eternal Fur ‹‹ LVL 100+ ›› | role | Stream | - |
+| Noble Fur ‹‹ LVL 50 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| [Patreon] Legendary Fiona | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| Legendary Fur ‹‹ LVL 80 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | Active Fur ‹‹ LVL 20 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | Mythic Fur ‹‹ LVL 90 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | [Patreon] Mayor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| [Patreon] City Benefactor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| [Patreon] Citizen | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| [Patreon] Horsetropy Governor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| Known Fur ‹‹ LVL 30 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | Beginner Fur ‹‹ LVL 5 ›› | role | EmbedLinks, AttachFiles | - |
 | Newcomer Fur ‹‹ LVL 1 ›› | role | AttachFiles | - |
 | Experienced Fur ‹‹ LVL 40 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | Elite Fur ‹‹ LVL 70 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | @everyone | role | - | CreatePublicThreads, CreatePrivateThreads |
-| Known Fur ‹‹ LVL 30 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| [Patreon] Citizen | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 
-### #「🏎️」automotive
+### #「🃏」card-collection
 
-**ID:** `1395676922272288818` | **Type:** Text | **Category:** [5] Interests
+**ID:** `1488258543432765543` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2804,15 +2905,15 @@
 | Veteran Fur ‹‹ LVL 60 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | [Patreon] Council Member | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | [Patreon] City Worker | role | EmbedLinks, AttachFiles, Connect, Stream | - |
-| Chatty Fur ‹‹ LVL 10 ›› | role | EmbedLinks, AttachFiles | - |
-| Noble Fur ‹‹ LVL 50 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| Eternal Fur ‹‹ LVL 100+ ›› | role | Stream | - |
-| Legendary Fur ‹‹ LVL 80 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | [Patreon] Legendary Fiona | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| Noble Fur ‹‹ LVL 50 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Chatty Fur ‹‹ LVL 10 ›› | role | EmbedLinks, AttachFiles | - |
+| Legendary Fur ‹‹ LVL 80 ›› | role | EmbedLinks, AttachFiles, Stream | - |
+| Eternal Fur ‹‹ LVL 100+ ›› | role | Stream | - |
 | Active Fur ‹‹ LVL 20 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| [Patreon] Mayor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | Mythic Fur ‹‹ LVL 90 ›› | role | EmbedLinks, AttachFiles, Stream | - |
-| [Patreon] City Benefactor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| [Patreon] Mayor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
+| [Patreon] Horsetropy Governor | role | EmbedLinks, AttachFiles, Connect, Stream | - |
 | Known Fur ‹‹ LVL 30 ›› | role | EmbedLinks, AttachFiles, Stream | - |
 | Beginner Fur ‹‹ LVL 5 ›› | role | EmbedLinks, AttachFiles | - |
 | Newcomer Fur ‹‹ LVL 1 ›› | role | AttachFiles | - |
@@ -2823,142 +2924,143 @@
 
 ### #「📂」message﹒logs
 
-**ID:** `1169353637064089682` | **Type:** Text | **Category:** ✦ . 　⁺ 　 . Logs . 　⁺ 　 . ✦
+**ID:** `1169353637064089682` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | - | ViewChannel, SendMessages, AddReactions |
 | Administrator | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
-| @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
+| Community Staff | role | ViewChannel | - |
 | Sapphire#8184 | member | ManageWebhooks, ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles | - |
+| @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
 
 ### #「📂」server﹒logs
 
-**ID:** `1169353962898596002` | **Type:** Text | **Category:** ✦ . 　⁺ 　 . Logs . 　⁺ 　 . ✦
+**ID:** `1169353962898596002` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | - | ViewChannel, SendMessages, AddReactions |
 | Administrator | role | ViewChannel | SendMessages |
-| Moderation Team | role | ViewChannel | SendMessages |
+| Community Staff | role | ViewChannel | SendMessages |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
 | Sapphire#8184 | member | ManageWebhooks, ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles | - |
 
 ### #「📂」vc﹒logs
 
-**ID:** `1169354577972310107` | **Type:** Text | **Category:** ✦ . 　⁺ 　 . Logs . 　⁺ 　 . ✦
+**ID:** `1169354577972310107` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | - | ViewChannel, SendMessages, AddReactions |
 | Administrator | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
+| Community Staff | role | ViewChannel | - |
 | Sapphire#8184 | member | ManageWebhooks, ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
 
 ### #「📂」admin-logs
 
-**ID:** `1206700904640942101` | **Type:** Text | **Category:** ✦ . 　⁺ 　 . Logs . 　⁺ 　 . ✦
+**ID:** `1206700904640942101` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | - | ViewChannel, SendMessages, AddReactions |
 | Administrator | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
-| Sapphire#8184 | member | ManageWebhooks, ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles | - |
+| Community Staff | role | ViewChannel | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
+| Sapphire#8184 | member | ManageWebhooks, ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles | - |
 
 ### #「📂」invite﹒logs
 
-**ID:** `1025540787464839238` | **Type:** Text | **Category:** ✦ . 　⁺ 　 . Logs . 　⁺ 　 . ✦
+**ID:** `1025540787464839238` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Gatekeeper | role | ViewChannel | - |
-| Community Member | role | - | ViewChannel |
-| Administrator | role | ViewChannel | - |
-| Community Apps | role | - | ViewChannel |
 | InviteLogger#5780 | member | ViewChannel, SendMessages | - |
-| Moderation Team | role | ViewChannel | - |
-| @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
+| Community Apps | role | SendMessages, SendMessagesInThreads | ViewChannel |
+| Administrator | role | ViewChannel | - |
+| Community Member | role | - | ViewChannel, SendMessages |
+| Sapphire#8184 | member | ManageWebhooks, ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles | - |
+| Community Staff | role | ViewChannel | - |
+| @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, CreatePublicThreads, CreatePrivateThreads, AddReactions |
 
 ### #「📂」user﹒logs
 
-**ID:** `1206705819165397083` | **Type:** Text | **Category:** ✦ . 　⁺ 　 . Logs . 　⁺ 　 . ✦
+**ID:** `1206705819165397083` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | - | ViewChannel, SendMessages, AddReactions |
 | Administrator | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
-| @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
+| Community Staff | role | ViewChannel | - |
 | Sapphire#8184 | member | ManageWebhooks, ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles | - |
+| @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
 
 ### #「📂」moderation﹒logs
 
-**ID:** `904072636814995526` | **Type:** Text | **Category:** ✦ . 　⁺ 　 . Logs . 　⁺ 　 . ✦
+**ID:** `904072636814995526` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | - | ViewChannel, SendMessages, AddReactions |
 | Administrator | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
-| Sapphire#8184 | member | ManageWebhooks, ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles | - |
+| Community Staff | role | ViewChannel | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
+| Sapphire#8184 | member | ManageWebhooks, ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles | - |
 
 ### #「📂」ban﹒logs
 
-**ID:** `1393882684303872031` | **Type:** Text | **Category:** ✦ . 　⁺ 　 . Logs . 　⁺ 　 . ✦
+**ID:** `1393882684303872031` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
-| Dyno#3861 | member | ViewChannel, SendMessages | - |
+| Community Staff | role | ViewChannel | - |
 | Community Member | role | - | ViewChannel, SendMessages, AddReactions |
 | Administrator | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
+| Dyno#3861 | member | ViewChannel, SendMessages | - |
 | Sapphire#8184 | member | ManageWebhooks, ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
 
 ### #「📂」kick﹒logs
 
-**ID:** `1393882724485300244` | **Type:** Text | **Category:** ✦ . 　⁺ 　 . Logs . 　⁺ 　 . ✦
+**ID:** `1393882724485300244` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | - | ViewChannel, SendMessages, AddReactions |
 | Administrator | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
+| Community Staff | role | ViewChannel | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
 | Sapphire#8184 | member | ManageWebhooks, ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles | - |
 
 ### #「📂」warn﹒logs
 
-**ID:** `1393882751442096321` | **Type:** Text | **Category:** ✦ . 　⁺ 　 . Logs . 　⁺ 　 . ✦
+**ID:** `1393882751442096321` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | - | ViewChannel, SendMessages, AddReactions |
 | Administrator | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
-| @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
+| Community Staff | role | ViewChannel | - |
 | Sapphire#8184 | member | ManageWebhooks, ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles | - |
+| @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
 
 ### #「📂」automod﹒logs
 
-**ID:** `1393882794886828093` | **Type:** Text | **Category:** ✦ . 　⁺ 　 . Logs . 　⁺ 　 . ✦
+**ID:** `1393882794886828093` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | - | ViewChannel, SendMessages, AddReactions |
 | Administrator | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
-| Sapphire#8184 | member | ManageWebhooks, ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles | - |
+| Community Staff | role | ViewChannel | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
+| Sapphire#8184 | member | ManageWebhooks, ViewChannel, SendMessages, SendMessagesInThreads, EmbedLinks, AttachFiles | - |
 
 ### #「📂」tech﹒logs
 
-**ID:** `1430015254053654599` | **Type:** Text | **Category:** ✦ . 　⁺ 　 . Logs . 　⁺ 　 . ✦
+**ID:** `1430015254053654599` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2966,13 +3068,12 @@
 | Gatekeeper | role | ViewChannel | - |
 | Community Member | role | - | ViewChannel, SendMessages, AddReactions |
 | Administrator | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
+| Community Staff | role | ViewChannel | - |
 | @everyone | role | - | ManageRoles, ManageChannels, ManageMessages, ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads, AddReactions |
-| Pawtropolis Tech#2205 | member | ViewChannel, SendMessages | - |
 
 ### #「📂」staff﹒logs
 
-**ID:** `1436698571884990608` | **Type:** Text | **Category:** ✦ . 　⁺ 　 . Logs . 　⁺ 　 . ✦
+**ID:** `1436698571884990608` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -2982,79 +3083,95 @@
 
 ### #「⚡」showcase
 
-**ID:** `1422527156491255830` | **Type:** Forum | **Category:** Not in use Channels
+**ID:** `1422527156491255830` | **Type:** Forum
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | EmbedLinks, AttachFiles | SendMessages |
-| Moderation Team | role | ManageMessages, ViewChannel, EmbedLinks, AttachFiles | - |
+| Community Staff | role | ManageMessages, ViewChannel, EmbedLinks, AttachFiles | - |
 | @everyone | role | - | ViewChannel |
 
 ### #「📂」ai-log-testing
 
-**ID:** `1393890141642297445` | **Type:** Text | **Category:** Not in use Channels
+**ID:** `1393890141642297445` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Gatekeeper | role | ViewChannel | - |
 | Community Member | role | - | ViewChannel |
-| Administrator | role | ViewChannel | - |
 | Community Apps | role | ViewChannel, SendMessages | - |
+| Administrator | role | ViewChannel | - |
 | Moderator | role | ManageChannels, ViewChannel, Connect | - |
 | Community Founder | role | ViewChannel | - |
-| Moderation Team | role | ViewChannel | - |
+| Community Staff | role | ViewChannel | - |
 | @everyone | role | - | ViewChannel, SendMessages, Connect |
+
+### #「⚰️」death-reason
+
+**ID:** `1212355159712206908` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| @everyone | role | - | ViewChannel |
+
+### #「🗳️」polls
+
+**ID:** `1437295827134447768` | **Type:** Text
+
+| Target | Type | Allow | Deny |
+|--------|------|-------|------|
+| @everyone | role | - | ViewChannel |
 
 ### #「📌」out-of-order
 
-**ID:** `1231126864823586876` | **Type:** Text | **Category:** Not in use Channels
+**ID:** `1231126864823586876` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | - | ViewChannel, SendMessages, CreatePublicThreads, CreatePrivateThreads |
-| Administrator | role | ManageRoles, ManageChannels, ManageMessages, ManageWebhooks, MentionEveryone, ViewChannel, SendMessages, SendMessagesInThreads, CreatePublicThreads, CreatePrivateThreads, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory, Connect, Speak, Stream, MuteMembers, DeafenMembers, MoveMembers, UseVAD, PrioritySpeaker | - |
-| [ The Pawtropolis Community ] | role | - | ViewChannel |
-| Moderation Team | role | ViewChannel | SendMessages |
-| @everyone | role | - | ViewChannel, SendMessages |
 | Community Apps | role | ViewChannel, SendMessages | - |
+| [ The Pawtropolis Community ] | role | - | ViewChannel |
+| Community Staff | role | ViewChannel | SendMessages |
+| @everyone | role | - | ViewChannel, SendMessages |
+| Administrator | role | ManageRoles, ManageChannels, ManageMessages, ManageWebhooks, MentionEveryone, ViewChannel, SendMessages, SendMessagesInThreads, CreatePublicThreads, CreatePrivateThreads, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory, Connect, Speak, Stream, MuteMembers, DeafenMembers, MoveMembers, UseVAD, PrioritySpeaker | - |
 
 ### #「🎀」meme-that
 
-**ID:** `1279836782912868507` | **Type:** Forum | **Category:** Not in use Channels
+**ID:** `1279836782912868507` | **Type:** Forum
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | SendMessagesInThreads, EmbedLinks, AttachFiles | ViewChannel, SendMessages |
-| Community Apps | role | ViewChannel, SendMessages | - |
 | Administrator | role | ManageRoles, ManageChannels, ViewChannel, SendMessages | - |
+| Community Apps | role | ViewChannel, SendMessages | - |
 | @everyone | role | - | ViewChannel |
 
 ### #🍨﹕dept-info
 
-**ID:** `1157464571506864148` | **Type:** Forum | **Category:** Not in use Channels
+**ID:** `1157464571506864148` | **Type:** Forum
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | - | ViewChannel |
-| Moderation Team | role | ViewChannel, AddReactions, UseExternalEmojis, ReadMessageHistory | SendMessages, SendMessagesInThreads |
+| Community Staff | role | ViewChannel, AddReactions, UseExternalEmojis, ReadMessageHistory | SendMessages, SendMessagesInThreads |
 | @everyone | role | - | ViewChannel |
 
 ### #🌊﹕req-refs
 
-**ID:** `1147013787216531506` | **Type:** Text | **Category:** Not in use Channels
+**ID:** `1147013787216531506` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | ⠀⠀⠀⠀⠀‎⠀⠀⠀⠀ Community ⠀⠀⠀⠀⠀‎⠀⠀⠀⠀ | role | - | ViewChannel |
 | Community Member | role | EmbedLinks, AttachFiles | ViewChannel, SendMessages |
-| Administrator | role | ManageRoles, ManageChannels, ManageMessages, ManageWebhooks, MentionEveryone, ViewChannel, SendMessages, SendMessagesInThreads, CreatePublicThreads, CreatePrivateThreads, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory, Connect, Speak, Stream, MuteMembers, DeafenMembers, MoveMembers, UseVAD, PrioritySpeaker | - |
 | Community Apps | role | ViewChannel, SendMessages | - |
-| Moderation Team | role | - | ViewChannel, SendMessages |
+| Administrator | role | ManageRoles, ManageChannels, ManageMessages, ManageWebhooks, MentionEveryone, ViewChannel, SendMessages, SendMessagesInThreads, CreatePublicThreads, CreatePrivateThreads, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers, ReadMessageHistory, Connect, Speak, Stream, MuteMembers, DeafenMembers, MoveMembers, UseVAD, PrioritySpeaker | - |
+| Community Staff | role | - | ViewChannel, SendMessages |
 | @everyone | role | - | ViewChannel, SendMessages |
 
 ### #「🎉」movie-points
 
-**ID:** `1388691650255261726` | **Type:** Text | **Category:** Not in use Channels
+**ID:** `1388691650255261726` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -3062,7 +3179,7 @@
 
 ### #🎄﹕submit
 
-**ID:** `1177127669113036870` | **Type:** Text | **Category:** Not in use Channels
+**ID:** `1177127669113036870` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -3071,7 +3188,7 @@
 
 ### #📡﹕policy
 
-**ID:** `1106197714653421668` | **Type:** Text | **Category:** Not in use Channels
+**ID:** `1106197714653421668` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -3080,7 +3197,7 @@
 
 ### #🧸﹕self-care-club
 
-**ID:** `1158429558744297563` | **Type:** Text | **Category:** Not in use Channels
+**ID:** `1158429558744297563` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -3089,7 +3206,7 @@
 
 ### #「🧶」fursuit-corner
 
-**ID:** `1356427363293991083` | **Type:** Forum | **Category:** Not in use Channels
+**ID:** `1356427363293991083` | **Type:** Forum
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -3098,17 +3215,17 @@
 
 ### #🎅﹕art-event
 
-**ID:** `1177138063726624849` | **Type:** Text | **Category:** Not in use Channels
+**ID:** `1177138063726624849` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | - | ViewChannel, SendMessages, AddReactions, UseExternalEmojis |
-| Moderation Team | role | ViewChannel, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers | SendMessages |
+| Community Staff | role | ViewChannel, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers | SendMessages |
 | @everyone | role | - | ViewChannel |
 
 ### #🎁﹕submit
 
-**ID:** `1177119515847426109` | **Type:** Text | **Category:** Not in use Channels
+**ID:** `1177119515847426109` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -3117,17 +3234,17 @@
 
 ### #🎄﹕art-prompts
 
-**ID:** `1177126624316117053` | **Type:** Text | **Category:** Not in use Channels
+**ID:** `1177126624316117053` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Community Member | role | - | ViewChannel, SendMessages, AddReactions, UseExternalEmojis |
-| Moderation Team | role | ViewChannel | - |
+| Community Staff | role | ViewChannel | - |
 | @everyone | role | - | ViewChannel |
 
 ### #☕﹕staff・expectations
 
-**ID:** `932167646982578197` | **Type:** Text | **Category:** Not in use Channels
+**ID:** `932167646982578197` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -3138,7 +3255,7 @@
 
 ### #🥐﹕ia-chat
 
-**ID:** `1104636202004516884` | **Type:** Text | **Category:** Not in use Channels
+**ID:** `1104636202004516884` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -3148,7 +3265,7 @@
 
 ### #🥐﹕ia-policy
 
-**ID:** `1104640045178171454` | **Type:** Text | **Category:** Not in use Channels
+**ID:** `1104640045178171454` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -3158,7 +3275,7 @@
 
 ### #🗃﹕staff・interview・doc
 
-**ID:** `896070891744682071` | **Type:** Text | **Category:** Not in use Channels
+**ID:** `896070891744682071` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -3167,7 +3284,7 @@
 
 ### #💡﹕event-ideas
 
-**ID:** `943963728032976896` | **Type:** Text | **Category:** Not in use Channels
+**ID:** `943963728032976896` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -3175,7 +3292,7 @@
 
 ### #💡﹕staff-ideas
 
-**ID:** `943963643249315850` | **Type:** Text | **Category:** Not in use Channels
+**ID:** `943963643249315850` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -3184,7 +3301,7 @@
 
 ### #📌﹕staff・bump
 
-**ID:** `942248828634034246` | **Type:** Text | **Category:** Not in use Channels
+**ID:** `942248828634034246` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -3192,7 +3309,7 @@
 
 ### #🧧﹕ugly・sweater
 
-**ID:** `1048462485692350504` | **Type:** Text | **Category:** Not in use Channels
+**ID:** `1048462485692350504` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
@@ -3200,13 +3317,13 @@
 
 ### #「🎁」secret-santa
 
-**ID:** `1177112406841901066` | **Type:** Text | **Category:** Not in use Channels
+**ID:** `1177112406841901066` | **Type:** Text
 
 | Target | Type | Allow | Deny |
 |--------|------|-------|------|
 | Server Dev | role | ViewChannel | - |
 | Community Member | role | - | ViewChannel, SendMessages, AddReactions, UseExternalEmojis |
-| Moderation Team | role | ViewChannel, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers | SendMessages |
+| Community Staff | role | ViewChannel, EmbedLinks, AttachFiles, AddReactions, UseExternalEmojis, UseExternalStickers | SendMessages |
 | @everyone | role | - | ViewChannel |
 
 ---
@@ -3215,24 +3332,34 @@
 
 | Channel | Type | ID | Category |
 |---------|------|----|----------|
-| ticket-0881 | Text | `1449845274791903316` | Tickets |
 | support-0910 | Text | `1457361751099310295` | Tickets |
-| support-0914 | Text | `1459270517595967660` | Tickets |
-| support-0920 | Text | `1461415277957746801` | Tickets |
-| support-0921 | Text | `1461429006065864727` | Tickets |
-| world-bug-0005 | Text | `1462316373504954390` | Tickets |
-| support-0925 | Text | `1462462531997008067` | Tickets |
+| support-0982 | Text | `1479318437036560475` | Tickets |
+| support-1011 | Text | `1482107640149573742` | Tickets |
+| support-1023 | Text | `1483962406597038231` | Tickets |
+| support-1028 | Text | `1484370602830594219` | Tickets |
+| support-1051 | Text | `1488982919551647754` | Tickets |
+| support-1052 | Text | `1488996370391105558` | Tickets |
+| support-1055 | Text | `1489139113511878759` | Tickets |
+| support-1057 | Text | `1489563334264094751` | Tickets |
+| support-1061 | Text | `1490092865433374881` | Tickets |
+| stickerwall-0012 | Text | `1490159901740372088` | Tickets |
+| support-1064 | Text | `1490742869336522883` | Tickets |
+| user-0512 | Text | `1494080440598921328` | Tickets |
+| support-1084 | Text | `1494090176417239050` | Tickets |
+| staff-0023 | Text | `1494090454340341865` | Tickets |
+| support-1085 | Text | `1494411997541040228` | Tickets |
+| user-0514 | Text | `1494875183234809926` | Tickets |
+| user-0515 | Text | `1494927802057887925` | Tickets |
+| support-1090 | Text | `1495105319599079444` | Tickets |
+| support-1091 | Text | `1495239686732644563` | Tickets |
 | 「💎」vip-colors | Text | `896070891174260763` | [11] [Booster💎] [ Patreon👑] |
 | 「💎」Lounge | Voice | `896070891174260764` | [11] [Booster💎] [ Patreon👑] |
-| 「👑」Werewolf's Den | Voice | `1234323389892788284` | [11] [Booster💎] [ Patreon👑] |
 | 「💎」supporter-colors | Text | `1385430941475930182` | [11] [Booster💎] [ Patreon👑] |
 | 「💎」plink-lounge | Text | `896070891174260762` | [11] [Booster💎] [ Patreon👑] |
 | 「❓」qotd | Text | `896070889198731288` | [9] Engagement |
 | 「🔢」counting | Text | `896958848009637929` | [9] Engagement |
-| 「⚰️」death-reason | Text | `1212355159712206908` | [9] Engagement |
 | 「🔨」ban-reason | Text | `1212356091103416370` | [9] Engagement |
-| 「🗣️」yapping-space | Text | `1393507326865969152` | [9] Engagement |
-| 「🗳️」polls | Text | `1437295827134447768` | [9] Engagement |
+| 「🗓️」wordle | Text | `1479901993462927441` | [9] Engagement |
 | 「🎉」events-info | Forum | `1243817312448938056` | Events Team |
 | 「🎉」events-chat | Text | `1243817120815513620` | Events Team |
 | 「🎉」event-posts | Text | `1393883898584371261` | Events Team |
@@ -3252,15 +3379,14 @@
 | 「🔮」policy | Text | `1357776074209235054` | VRC Group Team |
 | 「🔮」chat-room | Text | `1357779585185611793` | VRC Group Team |
 | 「📁」evidence | Text | `1358263226856378500` | VRC Group Team |
-| wwerew0lf-2 | Text | `1385220301985415332` | Moderation Team ticket |
 | 「🔑」Lead VC | Voice | `1393462083366162536` | [15] Leadership Hub |
-| 「🔐」senior-chat | Text | `1393473086933962763` | [15] Leadership Hub |
+| 「🔐」senior-chat | Text | `1492111532472139796` | [15] Leadership Hub |
 | 「🔐」leadership-chat | Text | `1393461908656361566` | [15] Leadership Hub |
-| 「🔑」Senior VC | Voice | `1393464031762710589` | [15] Leadership Hub |
-| 「🔐」training-logging | Text | `1393461970144985159` | [15] Leadership Hub |
 | 「🔑」Management VC | Voice | `1404699664674062357` | [15] Leadership Hub |
-| 「🔐」to-do-list | Text | `1442716501168885810` | [15] Leadership Hub |
+| 「🔐」development | Text | `1429947536793145374` | [15] Leadership Hub |
 | 「🔐」owner-room | Text | `1243711994675200070` | [15] Leadership Hub |
+| 「🔐」training-logging | Text | `1393461970144985159` | [15] Leadership Hub |
+| 「🔐」to-do-list | Text | `1442716501168885810` | [15] Leadership Hub |
 | 「📌」faq | Forum | `1413160155658326089` | [3] City Hall |
 | 「📌」support-us | Forum | `1414967840523423844` | [3] City Hall |
 | 「📥」apply | Text | `896070889005781041` | [3] City Hall |
@@ -3277,30 +3403,34 @@
 | 「🖌️」art-commissions | Text | `1400346864947302461` | [7] Verified Creative Corner |
 | 「🖌️」adopts | Text | `1400348382798807060` | [7] Verified Creative Corner |
 | 「🖌️」verified-ych | Text | `1400348438385660017` | [7] Verified Creative Corner |
-| 「🖌️」festive-artwork | Text | `1444074122513612980` | [7] Verified Creative Corner |
 | 「🍬」october-showcase | Forum | `1419233745927540808` | October 2025! |
 | art-event | Text | `1418863341245431829` | October 2025! |
 | pumpkin-carving | Text | `1418863417082773555` | October 2025! |
 | trick-or-treat | Text | `1419228962885861497` | October 2025! |
 | serverwide-event | Text | `1419229095115620433` | October 2025! |
 | 「🪐」Golden Forum | Voice | `1413408929215418368` | [12] Custom Channels |
-| 「🌙」werewolf-den | Text | `1429182366944985168` | [12] Custom Channels |
 | 「🪐」entropys-place | Text | `1413411529122119770` | [12] Custom Channels |
-| 「🫘」bean-central | Voice | `1415728663751557161` | [12] Custom Channels |
-| 「🐉」bash-airspace | Text | `1427294324462194778` | [12] Custom Channels |
-| 「⛰️」The Stray Mutt's Den | Voice | `1433188930316144731` | [12] Custom Channels |
 | 「🐄」teas-barnyard | Text | `1431367579573948456` | [12] Custom Channels |
-| 「🐄」Moooo-ing Meadows | Voice | `1436139444003536906` | [12] Custom Channels |
+| 「⛰️」The Stray Mutt's Den | Voice | `1433188930316144731` | [12] Custom Channels |
 | 「🛸」ash-spaceship | Text | `1432530307826843748` | [12] Custom Channels |
-| 「🍌」Tenzi's Tower | Voice | `1459273916257271920` | [12] Custom Channels |
+| 「🐄」Moooo-ing Meadows | Voice | `1436139444003536906` | [12] Custom Channels |
 | 「💎」birbos-bizarre-adventures | Text | `1433189199351120055` | [12] Custom Channels |
-| 「🐾」shadowfangs-corner | Text | `1456358548429869116` | [12] Custom Channels |
+| 「🍌」Tenzi's Tower | Voice | `1459273916257271920` | [12] Custom Channels |
+| 「🌙」Werewolf's Den | Voice | `1469999354986369036` | [12] Custom Channels |
+| 「🍓」marsh’s-meadow⭐ | Text | `1484370816941428877` | [12] Custom Channels |
+| 「🍓」Marsh’s Meadow⭐ | Voice | `1484372027426082877` | [12] Custom Channels |
+| 「🍁」only-leafs | Text | `1487469568828899369` | [12] Custom Channels |
+| 「🍁」Gambler's Den | Voice | `1487470319919693915` | [12] Custom Channels |
+| 「🌹」-𝓡𝓸𝓶𝓪𝓲𝓻𝓮𝓼-𝓟𝓪𝓻𝓵𝓸𝓾𝓻-𝓢𝓾𝓲𝓽𝓮-🌹 | Text | `1487975996190756964` | [12] Custom Channels |
+| 「🐾」the-dawg-house | Text | `1492437919435063357` | [12] Custom Channels |
+| 「🐾」Howling Moon | Voice | `1492438135844503694` | [12] Custom Channels |
+| 「💭」evil-main-chat | Text | `1492489111196532846` | [12] Custom Channels |
 | 「📰」news | Announcement | `896197065720332328` | [2] Announcements |
-| 「📰」world-updates | Announcement | `1438540553867362304` | [2] Announcements |
+| 「📰」vrcworld-updates | Announcement | `1438540553867362304` | [2] Announcements |
 | 「✨」vrc-dev-share | Text | `1409506904740204605` | [2] Announcements |
 | 「🎂」happy-birthday | Announcement | `1424039052503683115` | [2] Announcements |
-| 「🎈」events | Announcement | `1231135837970890833` | [2] Announcements |
-| 「🎈」giveaways | Announcement | `1384456699888406679` | [2] Announcements |
+| 「📆」events | Announcement | `1231135837970890833` | [2] Announcements |
+| 「📆」giveaways | Announcement | `1384456699888406679` | [2] Announcements |
 | 「📂」archived-logs | Text | `1104638828435755079` | Ticket Logs |
 | 「📂」support-log | Text | `1420410151978139659` | Ticket Logs |
 | 「📂」staff-log | Text | `1420410228905738332` | Ticket Logs |
@@ -3315,33 +3445,35 @@
 | 「🎹」music | Text | `896070889798508599` | [8] Alt Creative Corner |
 | 「🎹」music-promotion | Text | `1450224387063025899` | [8] Alt Creative Corner |
 | 「🕹️」vrchat | Text | `1393493112365780992` | [8] Alt Creative Corner |
-| 「🐴」3d-modeling | Text | `1450227604152914131` | [8] Alt Creative Corner |
+| 「🐴」3d-modeling-promo | Text | `1450227604152914131` | [8] Alt Creative Corner |
 | 「⭐」gallery | Forum | `1130445124413956147` | - discord.gg/floof - |
-| 「🌐」Citizens: 5925 | Voice | `1459654647659630828` | - discord.gg/floof - |
+| 「🌐」Citizens: 6701 | Voice | `1459654647659630828` | - discord.gg/floof - |
 | 「💎」boosts | Text | `896070888779317256` | - discord.gg/floof - |
 | 「🔊」In VC: 0 | Voice | `1459655147654480084` | - discord.gg/floof - |
-| 「🏆」Jan Goal: 6000 | Voice | `1438646719892951070` | - discord.gg/floof - |
+| 「🏆」April Goal: 7k! | Voice | `1438646719892951070` | - discord.gg/floof - |
 | 「📜」rules | Text | `896070889005781038` | [1] Board |
 | 「🔍」server-info | Forum | `1356430757475913972` | [1] Board |
 | 「🎀」roles | Text | `1404710287084359710` | [1] Board |
 | 「🐈」mascot | Text | `1243578531183853621` | [1] Board |
-| 「⭐」starboard | Text | `1420407097476124733` | [1] Board |
-| 「🎆」general-chat | Text | `896070889462976608` | [4] Main |
+| 「⭐」hall-of-fame | Text | `1420407097476124733` | [1] Board |
+| 「💭」main-chat | Text | `896070889462976608` | [4] Main |
 | 「🔈」General Hangout | Voice | `1386123363323482192` | [4] Main |
 | 「🔈」Gaming Lounge | Voice | `1136781312385105920` | [4] Main |
-| 「✨」known-chat | Text | `1437291915979522078` | [4] Main |
+| 「⭐」known-chat | Text | `1488258803928404069` | [4] Main |
+| 「🗣️」yapping-space | Text | `1393507326865969152` | [4] Main |
+| 「🎞️」Theater | Voice | `1484547787503702277` | [4] Main |
 | 「☁️」chill-chat | Text | `1437278644455342230` | [4] Main |
-| 「🍿」Theater 1 | Voice | `1444069062136303688` | [4] Main |
 | 「😂」memes | Text | `896070889462976610` | [4] Main |
 | 「📷」media | Text | `1121191510642274354` | [4] Main |
-| 「❤️」bump-us | Text | `896070889198731286` | [4] Main |
+| 「💕」bump-us | Forum | `1486499975247433738` | [4] Main |
 | 「🧰」bot-stuff | Text | `896070890457018384` | [4] Main |
 | 「🎨」Artist Studio | Voice | `1316362343176867931` | [6] Creative Corner |
+| 「🖌️」art-rules | Text | `1491447539533352990` | [6] Creative Corner |
 | 「✍️」writing | Text | `1446602187655610461` | [6] Creative Corner |
 | 「🎨」artwork | Text | `1400344550094012447` | [6] Creative Corner |
 | 「🎨」art-trades | Text | `1400346017437712444` | [6] Creative Corner |
-| 「🎨」art-advice | Text | `1441516524954451999` | [6] Creative Corner |
 | 「🎨」looking-for-comms | Text | `1400345890933444628` | [6] Creative Corner |
+| 「🎨」art-advice | Text | `1441516524954451999` | [6] Creative Corner |
 | 「🌐」affiliate-info | Text | `896070890188603447` | [10] Connections |
 | 「🌐」affiliates | Text | `896070890188603448` | [10] Connections |
 | 「🌐」affiliate-chat | Text | `896070890188603450` | [10] Connections |
@@ -3350,30 +3482,34 @@
 | 「🛬」user-join | Text | `896070889005781033` | [13] Unverified Area |
 | 「🛫」user-left | Text | `896070891744682066` | [13] Unverified Area |
 | 「🔑」modmail﹒logs | Text | `1169361527065808936` | [13] Unverified Area |
+| 「🔑」discord-news | Text | `904072321432698891` | [13] Unverified Area |
 | 「📜」unverified-rules | Text | `1150525497982337134` | [13] Unverified Area |
-| 「🗯️」waiting | Text | `1425834142330912790` | [13] Unverified Area |
 | 「❓」verify | Text | `896070891539169311` | [13] Unverified Area |
+| 「🗯️」waiting | Text | `1494906744063656106` | [13] Unverified Area |
 | 「🔑」Staff | Voice | `896070890738040863` | [15] Staff Room |
 | 「🔐」main-discussion | Text | `896070891539169319` | [15] Staff Room |
 | 「🔐」junk-drawer | Text | `896070891744682065` | [15] Staff Room |
 | 「🔐」mod-actions | Text | `1383341031176802384` | [15] Staff Room |
+| 「🔐」qotd-review | Text | `1486268526585974875` | [15] Staff Room |
 | 「🔐」change-log | Text | `1396310337548189878` | [15] Staff Room |
-| 「🔐」development | Text | `1429947536793145374` | [15] Staff Room |
 | 「🔑」staff-news | Text | `896070891539169317` | [14] Staff Info |
-| 「🔑」discord-news | Text | `904072321432698891` | [14] Staff Info |
-| 「🔑」handbook | Text | `1383953381269438504` | [14] Staff Info |
-| 「🔑」projects | Forum | `1415282624552894636` | [14] Staff Info |
+| 「🔑」calendar | Text | `1492111202879406171` | [14] Staff Info |
 | 「🔑」appeals | Text | `932485736366759977` | [14] Staff Info |
+| 「🔑」verify-blacklist | Text | `1468347731100700835` | [14] Staff Info |
+| 「🔑」ideas | Forum | `1415282624552894636` | [14] Staff Info |
+| 「🔑」handbook | Text | `1383953381269438504` | [14] Staff Info |
 | 「🔑」ban-summaries | Text | `1383333916596899894` | [14] Staff Info |
 | 「🎧」Music | Voice | `1160297307674247319` | [5] Interests |
 | 「🎮」gaming | Text | `1196698619689062430` | [5] Interests |
 | 「🔉」Smol VC 1 | Voice | `896070890738040865` | [5] Interests |
 | 「📸」photography | Text | `1429072978661867590` | [5] Interests |
-| 「🔉」Smol VC 2 | Voice | `1136781568682234026` | [5] Interests |
-| 「💪」fitness | Text | `1438963459592032276` | [5] Interests |
 | 「🎭」cosplay | Text | `1121191130634133584` | [5] Interests |
+| 「🔉」Smol VC 2 | Voice | `1136781568682234026` | [5] Interests |
 | 「💤」AFK | Voice | `1393881660256161864` | [5] Interests |
 | 「🏎️」automotive | Text | `1395676922272288818` | [5] Interests |
+| 「⚙️」technology | Text | `1478733040996847697` | [5] Interests |
+| 「⚜️」thin-line | Text | `1488877242976309429` | [5] Interests |
+| 「🃏」card-collection | Text | `1488258543432765543` | [5] Interests |
 | 「📂」message﹒logs | Text | `1169353637064089682` | ✦ . 　⁺ 　 . Logs . 　⁺ 　 . ✦ |
 | 「📂」server﹒logs | Text | `1169353962898596002` | ✦ . 　⁺ 　 . Logs . 　⁺ 　 . ✦ |
 | 「📂」vc﹒logs | Text | `1169354577972310107` | ✦ . 　⁺ 　 . Logs . 　⁺ 　 . ✦ |
@@ -3389,6 +3525,8 @@
 | 「📂」staff﹒logs | Text | `1436698571884990608` | ✦ . 　⁺ 　 . Logs . 　⁺ 　 . ✦ |
 | 「⚡」showcase | Forum | `1422527156491255830` | Not in use Channels |
 | 「📂」ai-log-testing | Text | `1393890141642297445` | Not in use Channels |
+| 「⚰️」death-reason | Text | `1212355159712206908` | Not in use Channels |
+| 「🗳️」polls | Text | `1437295827134447768` | Not in use Channels |
 | 「📌」out-of-order | Text | `1231126864823586876` | Not in use Channels |
 | 「🎀」meme-that | Forum | `1279836782912868507` | Not in use Channels |
 | 🍨﹕dept-info | Forum | `1157464571506864148` | Not in use Channels |
