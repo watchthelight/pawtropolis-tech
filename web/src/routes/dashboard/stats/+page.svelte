@@ -17,7 +17,7 @@
 	let { data } = $props();
 	let personal = $derived(data.personal);
 	let trend = $derived(data.trend);
-	let showTrend = $derived(data.window !== 'all');
+	let showTrend = $derived(!(data.spec.kind === 'preset' && data.spec.preset === 'all'));
 	let hasData = $derived(personal.total > 0);
 	let team = $derived(data.team);
 	let hasTeamData = $derived(team.reviewers.length > 0);
@@ -89,13 +89,13 @@
 					Team
 				</button>
 			</div>
-			<TimeWindowSelector value={data.window} />
+			<TimeWindowSelector value={data.spec} />
 		</div>
 	</div>
 
 	{#if activeTab === 'mine'}
 		{#if hasData}
-			{#key data.window}
+			{#key data.windowLabel}
 				<div class="stats-grid">
 					<!-- Stat cards row -->
 					<a href="/dashboard/reviews" class="card clickable" title="View review queue">
@@ -196,9 +196,7 @@
 				</div>
 			{/key}
 
-			<p class="window-label">
-				{data.window === 'all' ? 'All time' : `Last ${data.window.replace('d', ' days')}`}
-			</p>
+			<p class="window-label">{data.windowLabel}</p>
 		{:else}
 			<EmptyState
 				message="Not enough data yet"
@@ -207,7 +205,7 @@
 		{/if}
 	{:else}
 		{#if hasTeamData}
-			{#key data.window}
+			{#key data.windowLabel}
 				<!-- Summary cards -->
 				<div class="team-summary">
 					<div class="card">
@@ -249,9 +247,7 @@
 				</div>
 			{/key}
 
-			<p class="window-label">
-				{data.window === 'all' ? 'All time' : `Last ${data.window.replace('d', ' days')}`}
-			</p>
+			<p class="window-label">{data.windowLabel}</p>
 		{:else}
 			<EmptyState
 				message="No team activity"

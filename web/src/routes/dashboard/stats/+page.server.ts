@@ -9,14 +9,10 @@ import {
 	getModBreakdowns,
 	getDecisionPercentiles,
 	getInviteSourceBreakdown,
-	getApplicationFunnel,
-	windowStartForWindow,
-	windowDaysForWindow,
-	type TimeWindow
+	getApplicationFunnel
 } from '$lib/server/queries/stats';
+import { parseTimeWindowSpec, resolveRange, formatWindowLabel } from '$lib/shared/timeWindow';
 import type { PageServerLoad } from './$types';
-
-const VALID_WINDOWS: TimeWindow[] = ['7d', '30d', '90d', 'all'];
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	if (!locals.user || !hasMinTier(locals.user.tier, 'gk')) {
@@ -24,25 +20,35 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	}
 	if (!process.env.GUILD_ID) throw new Error('GUILD_ID environment variable is required');
 
-	const rawWindow = url.searchParams.get('window') ?? 'all';
-	const window: TimeWindow = VALID_WINDOWS.includes(rawWindow as TimeWindow)
-		? (rawWindow as TimeWindow)
-		: 'all';
-
 	const guildId = process.env.GUILD_ID;
 	const userId = locals.user.id;
-	const windowStartS = windowStartForWindow(window);
-	const days = windowDaysForWindow(window);
 
-	const personal = getPersonalStats(userId, guildId, days);
-	const trend = getPersonalStatsTrend(userId, guildId, window);
-	const timeline = getActivityTimeline(userId, guildId, windowStartS);
-	const responseTrend = getResponseTrend(userId, guildId, windowStartS);
-	const team = getTeamStats(guildId, windowStartS);
-	const modBreakdowns = getModBreakdowns(guildId, windowStartS);
-	const decisionPercentiles = getDecisionPercentiles(guildId, windowStartS);
-	const inviteSources = getInviteSourceBreakdown(guildId, windowStartS);
-	const funnel = getApplicationFunnel(guildId, windowStartS);
+	const spec = parseTimeWindowSpec(url.searchParams, 'all');
+	const range = resolveRange(spec);
 
-	return { personal, trend, timeline, responseTrend, team, modBreakdowns, decisionPercentiles, inviteSources, funnel, window, windowDays: days, userId };
+	const personal = getPersonalStats(userId, guildId, range);
+	const trend = getPersonalStatsTrend(userId, guildId, range);
+	const timeline = getActivityTimeline(userId, guildId, range);
+	const responseTrend = getResponseTrend(userId, guildId, range);
+	const team = getTeamStats(guildId, range);
+	const modBreakdowns = getModBreakdowns(guildId, range);
+	const decisionPercentiles = getDecisionPercentiles(guildId, range);
+	const inviteSources = getInviteSourceBreakdown(guildId, range);
+	const funnel = getApplicationFunnel(guildId, range);
+
+	return {
+		personal,
+		trend,
+		timeline,
+		responseTrend,
+		team,
+		modBreakdowns,
+		decisionPercentiles,
+		inviteSources,
+		funnel,
+		spec,
+		windowLabel: formatWindowLabel(spec),
+		windowDays: range.days,
+		userId
+	};
 };
