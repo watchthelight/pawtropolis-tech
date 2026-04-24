@@ -1,5 +1,6 @@
 import { db } from '$lib/server/db';
 import { callBotApi } from '$lib/server/botApi';
+import type { ResolvedRange } from '$lib/shared/timeWindow';
 
 export interface PulseMetrics {
 	pendingApps: number;
@@ -307,9 +308,10 @@ export interface TopVoiceChannel {
 	minutes: number;
 }
 
-export function getTopVoiceChannels(guildId: string): TopVoiceChannel[] {
+export function getTopVoiceChannels(guildId: string, range?: ResolvedRange): TopVoiceChannel[] {
 	const nowS = Math.floor(Date.now() / 1000);
-	const weekStart = nowS - 7 * 86400;
+	const startS = range?.startS ?? nowS - 7 * 86400;
+	const endS = range?.endS ?? nowS;
 	const excludedChannelIds = getExcludedChannelIds(guildId);
 	const excludeClause = excludedChannelIds.length > 0
 		? `AND vs.channel_id NOT IN (${excludedChannelIds.map(() => '?').join(',')})`
@@ -320,10 +322,11 @@ export function getTopVoiceChannels(guildId: string): TopVoiceChannel[] {
 			SUM(CASE WHEN vs.left_at_s IS NOT NULL THEN vs.left_at_s - vs.joined_at_s ELSE ? - vs.joined_at_s END) / 60 as minutes
 		FROM voice_session vs
 		LEFT JOIN channel_cache cc ON vs.guild_id = cc.guild_id AND vs.channel_id = cc.channel_id
-		WHERE vs.guild_id = ? AND vs.joined_at_s >= ? AND vs.joined_at_s < ?
+		WHERE vs.guild_id = ?
+			AND (? = 0 OR vs.joined_at_s >= ?) AND vs.joined_at_s < ?
 		${excludeClause}
 		GROUP BY vs.channel_id ORDER BY minutes DESC LIMIT 3
-	`).all(nowS, guildId, weekStart, nowS, ...excludedChannelIds) as TopVoiceChannel[];
+	`).all(endS, guildId, startS, startS, endS, ...excludedChannelIds) as TopVoiceChannel[];
 }
 
 // ─── Channel Activity Ranking ──────────────────────────────────────────────────
@@ -336,11 +339,17 @@ export interface ChannelActivityItem {
 }
 
 /**
- * Returns all text channels ranked by message count over the last N days.
+ * Returns all text channels ranked by message count over the given range.
  * Respects pulse_excluded_category_ids_json. Caller slices top/bottom N.
+ * If `range` is omitted, falls back to the last 7 days.
  */
-export function getChannelActivityRanking(guildId: string, days = 7): ChannelActivityItem[] {
-	const cutoff = Math.floor(Date.now() / 1000) - days * 86400;
+export function getChannelActivityRanking(
+	guildId: string,
+	range?: ResolvedRange
+): ChannelActivityItem[] {
+	const nowS = Math.floor(Date.now() / 1000);
+	const startS = range?.startS ?? nowS - 7 * 86400;
+	const endS = range?.endS ?? nowS;
 	const excludedChannelIds = getExcludedChannelIds(guildId);
 	const excludeClause = excludedChannelIds.length > 0
 		? `AND ma.channel_id NOT IN (${excludedChannelIds.map(() => '?').join(',')})`
@@ -353,12 +362,113 @@ export function getChannelActivityRanking(guildId: string, days = 7): ChannelAct
 			COUNT(DISTINCT ma.user_id) as uniqueUsers
 		FROM message_activity ma
 		INNER JOIN channel_cache cc ON ma.guild_id = cc.guild_id AND ma.channel_id = cc.channel_id
-		WHERE ma.guild_id = ? AND ma.created_at_s >= ?
+		WHERE ma.guild_id = ?
+			AND (? = 0 OR ma.created_at_s >= ?) AND ma.created_at_s < ?
 			${excludeClause}
 			AND cc.type = 0
 		GROUP BY ma.channel_id
 		ORDER BY messageCount DESC
-	`).all(guildId, cutoff, ...excludedChannelIds) as ChannelActivityItem[];
+	`).all(guildId, startS, startS, endS, ...excludedChannelIds) as ChannelActivityItem[];
+}
+
+// ─── Range-scoped Engagement Stats ────────────────────────────────────────────
+
+export interface EngagementWindow {
+	messages: number;
+	communicators: number;
+	voiceMinutes: number;
+	newMembers: number;
+	membersLeft: number;
+	retentionPct: number;
+	messagesPrev: number | null;
+	communicatorsPrev: number | null;
+	voiceMinutesPrev: number | null;
+	newMembersPrev: number | null;
+}
+
+function engagementBucket(guildId: string, fromS: number, toS: number, excluded: string[]) {
+	const d = db();
+	const excludeClause = excluded.length > 0
+		? `AND channel_id NOT IN (${excluded.map(() => '?').join(',')})`
+		: '';
+
+	const messages = (d.prepare(
+		`SELECT COUNT(*) as count FROM message_activity
+		 WHERE guild_id = ? AND created_at_s >= ? AND created_at_s < ? ${excludeClause}`
+	).get(guildId, fromS, toS, ...excluded) as { count: number }).count;
+
+	const communicators = (d.prepare(
+		`SELECT COUNT(DISTINCT user_id) as count FROM message_activity
+		 WHERE guild_id = ? AND created_at_s >= ? AND created_at_s < ? ${excludeClause}`
+	).get(guildId, fromS, toS, ...excluded) as { count: number }).count;
+
+	const voiceExcludeClause = excluded.length > 0
+		? `AND channel_id NOT IN (${excluded.map(() => '?').join(',')})`
+		: '';
+	const voiceResult = d.prepare(
+		`SELECT COALESCE(SUM(
+			CASE
+				WHEN left_at_s IS NOT NULL AND left_at_s < ? THEN left_at_s - joined_at_s
+				WHEN left_at_s IS NOT NULL THEN ? - joined_at_s
+				ELSE ? - joined_at_s
+			END
+		) / 60, 0) as minutes
+		FROM voice_session
+		WHERE guild_id = ? AND joined_at_s >= ? AND joined_at_s < ? ${voiceExcludeClause}`
+	).get(toS, toS, toS, guildId, fromS, toS, ...excluded) as { minutes: number };
+
+	const newMembers = (d.prepare(
+		`SELECT COUNT(*) as count FROM user_activity
+		 WHERE guild_id = ? AND joined_at >= ? AND joined_at < ?`
+	).get(guildId, fromS, toS) as { count: number }).count;
+
+	const membersLeft = (d.prepare(
+		`SELECT COUNT(*) as count FROM user_activity
+		 WHERE guild_id = ? AND left_at >= ? AND left_at < ?`
+	).get(guildId, fromS, toS) as { count: number }).count;
+
+	const retention = d.prepare(
+		`SELECT COUNT(CASE WHEN first_message_at IS NOT NULL THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0) as pct
+		 FROM user_activity
+		 WHERE guild_id = ? AND joined_at >= ? AND joined_at < ?`
+	).get(guildId, fromS, toS) as { pct: number | null };
+
+	return {
+		messages,
+		communicators,
+		voiceMinutes: voiceResult.minutes,
+		newMembers,
+		membersLeft,
+		retentionPct: retention.pct ?? 0
+	};
+}
+
+/**
+ * Engagement stats for an arbitrary ResolvedRange. Includes a prior-period
+ * comparison when the range has a resolvable prevStartS.
+ */
+export function getEngagementWindow(guildId: string, range: ResolvedRange): EngagementWindow {
+	const excluded = getExcludedChannelIds(guildId);
+	// startS=0 means "all time" — every row with created_at_s >= 0 qualifies.
+	const current = engagementBucket(guildId, range.startS, range.endS, excluded);
+
+	let prev: ReturnType<typeof engagementBucket> | null = null;
+	if (range.prevStartS != null) {
+		prev = engagementBucket(guildId, range.prevStartS, range.startS, excluded);
+	}
+
+	return {
+		messages: current.messages,
+		communicators: current.communicators,
+		voiceMinutes: current.voiceMinutes,
+		newMembers: current.newMembers,
+		membersLeft: current.membersLeft,
+		retentionPct: current.retentionPct,
+		messagesPrev: prev?.messages ?? null,
+		communicatorsPrev: prev?.communicators ?? null,
+		voiceMinutesPrev: prev?.voiceMinutes ?? null,
+		newMembersPrev: prev?.newMembers ?? null
+	};
 }
 
 // ─── Insights Engine ────────────────────────────────────────────────────────────
