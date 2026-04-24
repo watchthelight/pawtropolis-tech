@@ -1,17 +1,15 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
 	import PageHeader from '$lib/components/layout/PageHeader.svelte';
 	import StatNumber from '$lib/components/data/StatNumber.svelte';
 	import EmptyState from '$lib/components/feedback/EmptyState.svelte';
 	import HeatmapGrid from '$lib/components/charts/HeatmapGrid.svelte';
+	import TimeWindowSelector from '$lib/components/charts/TimeWindowSelector.svelte';
 	import SpringReveal from '$lib/components/motion/SpringReveal.svelte';
 	import { BarChart3, Clock, TrendingUp, Calendar } from 'lucide-svelte';
 
 	let { data } = $props();
 	let heatmap = $derived(data.heatmap);
 	let trends = $derived(heatmap.trends);
-	let weeks = $derived(data.weeks as 1 | 2 | 4 | 8);
 	let hasData = $derived(trends.totalMessages > 0);
 	let growthTrend = $derived<'up' | 'down' | undefined>(
 		trends.weekOverWeekGrowth == null
@@ -22,23 +20,8 @@
 					? 'down'
 					: undefined
 	);
-	let rangeLabel = $derived(weeks === 1 ? 'this week' : `past ${weeks} weeks`);
+	let rangeLabel = $derived(data.windowLabel);
 	let multiWeek = $derived(heatmap.weeks.length > 1);
-
-	type WeekCount = 1 | 2 | 4 | 8;
-	const weekOptions: { id: WeekCount; label: string }[] = [
-		{ id: 1, label: '1W' },
-		{ id: 2, label: '2W' },
-		{ id: 4, label: '4W' },
-		{ id: 8, label: '8W' }
-	];
-
-	function selectWeeks(w: WeekCount) {
-		if (w === weeks) return;
-		const params = new URLSearchParams($page.url.searchParams);
-		params.set('weeks', String(w));
-		goto(`?${params.toString()}`, { keepFocus: true });
-	}
 
 	const weekTitleFmt = new Intl.DateTimeFormat('en-US', {
 		month: 'short',
@@ -60,19 +43,7 @@
 <SpringReveal stagger={30}>
 	<div class="header">
 		<PageHeader title="Heatmap" subtitle="Server activity patterns" />
-		<div class="selector" role="radiogroup" aria-label="Week range">
-			{#each weekOptions as w}
-				<button
-					role="radio"
-					aria-checked={weeks === w.id}
-					class="chip"
-					class:active={weeks === w.id}
-					onclick={() => selectWeeks(w.id)}
-				>
-					{w.label}
-				</button>
-			{/each}
-		</div>
+		<TimeWindowSelector value={data.spec} />
 	</div>
 
 	{#if hasData}
@@ -141,41 +112,6 @@
 		align-items: flex-start;
 		justify-content: space-between;
 		gap: 1rem;
-	}
-
-	.selector {
-		display: flex;
-		gap: 4px;
-		flex-shrink: 0;
-	}
-
-	.chip {
-		font-size: 0.7rem;
-		font-weight: 600;
-		letter-spacing: 0.12em;
-		padding: 6px 14px;
-		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: transparent;
-		color: var(--text-secondary);
-		cursor: pointer;
-		transition: all 150ms ease;
-	}
-
-	@media (hover: hover) {
-		.chip:hover {
-			color: var(--text-primary);
-			border-color: var(--terminal-border);
-		}
-	}
-
-	.chip.active {
-		color: var(--text-primary);
-		background: oklch(72% 0.18 var(--hue) / 0.12);
-		border-color: var(--terminal-border);
-		box-shadow:
-			0 0 8px oklch(72% 0.18 var(--hue) / 0.25),
-			inset 0 0 6px oklch(72% 0.18 var(--hue) / 0.08);
 	}
 
 	.stats-grid {
@@ -247,12 +183,6 @@
 	@media (max-width: 768px) {
 		.stats-grid {
 			grid-template-columns: repeat(2, 1fr);
-		}
-
-		.chip {
-			min-height: 44px;
-			display: flex;
-			align-items: center;
 		}
 	}
 

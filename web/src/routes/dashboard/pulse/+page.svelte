@@ -6,6 +6,7 @@
 	import SpringReveal from '$lib/components/motion/SpringReveal.svelte';
 	import InsightsPanel from '$lib/components/pulse/InsightsPanel.svelte';
 	import NewsletterStatsCard from '$lib/components/pulse/NewsletterStatsCard.svelte';
+	import TimeWindowSelector from '$lib/components/charts/TimeWindowSelector.svelte';
 	import { subscribe, unsubscribe, onReconnect, offReconnect } from '$lib/stores/sse.svelte';
 	import { ClipboardList, Mail, Flag, CheckCircle, Users, UserCheck, Bot, Zap, MessageSquare, Wifi, Mic, Award } from 'lucide-svelte';
 	import { relativeTime } from '$lib/utils/time';
@@ -22,6 +23,24 @@
 	let maxChannelMsgs = $derived(topChannels.length > 0 ? topChannels[0].messageCount : 1);
 	let levelRoleStats = $derived(data.levelRoleStats);
 	let maxRoleCount = $derived(levelRoleStats ? Math.max(...levelRoleStats.roles.map((r: { count: number }) => r.count), 1) : 1);
+	let engagement = $derived(data.engagement);
+	let windowLabel = $derived(data.windowLabel);
+
+	function pctDelta(cur: number, prev: number | null): 'up' | 'down' | undefined {
+		if (prev == null || prev === 0) return undefined;
+		const diff = (cur - prev) / prev;
+		if (diff > 0.05) return 'up';
+		if (diff < -0.05) return 'down';
+		return undefined;
+	}
+	function formatDeltaLabel(cur: number, prev: number | null): string {
+		if (prev == null) return '';
+		if (prev === 0 && cur === 0) return '';
+		if (prev === 0) return 'new activity';
+		const diff = ((cur - prev) / prev) * 100;
+		const sign = diff >= 0 ? '+' : '';
+		return `${sign}${diff.toFixed(0)}% vs prev`;
+	}
 	let pendingTrend = $derived<'up' | 'down' | undefined>(
 		metrics.submittedToday === 0 && metrics.decisionsToday === 0
 			? undefined
@@ -75,7 +94,10 @@
 </script>
 
 <SpringReveal stagger={30}>
-	<PageHeader title="Pulse" subtitle="Server overview at a glance" />
+	<div class="pulse-header">
+		<PageHeader title="Pulse" subtitle="Server overview at a glance" />
+		<TimeWindowSelector value={data.spec} />
+	</div>
 
 	<div class="pulse-grid">
 		<a href="/dashboard/reviews" class="card clickable" class:card-accent={metrics.pendingApps > 0}>
@@ -144,6 +166,54 @@
 
 	<h3 class="section-title">Insights</h3>
 	<InsightsPanel {insights} />
+
+	<h3 class="section-title">Engagement ({windowLabel})</h3>
+	<div class="pulse-grid">
+		<div class="card">
+			<div class="card-icon-row">
+				<MessageSquare size={16} color="var(--text-tertiary)" />
+			</div>
+			<span class="card-label">Messages</span>
+			<StatNumber value={engagement.messages} label="" trend={pctDelta(engagement.messages, engagement.messagesPrev)} />
+			<span class="card-sub">{formatDeltaLabel(engagement.messages, engagement.messagesPrev) || 'messages in window'}</span>
+		</div>
+
+		<div class="card">
+			<div class="card-icon-row">
+				<UserCheck size={16} color="var(--text-tertiary)" />
+			</div>
+			<span class="card-label">Communicators</span>
+			<StatNumber value={engagement.communicators} label="" trend={pctDelta(engagement.communicators, engagement.communicatorsPrev)} />
+			<span class="card-sub">{formatDeltaLabel(engagement.communicators, engagement.communicatorsPrev) || 'distinct senders'}</span>
+		</div>
+
+		<div class="card">
+			<div class="card-icon-row">
+				<Mic size={16} color="var(--text-tertiary)" />
+			</div>
+			<span class="card-label">Voice Minutes</span>
+			<StatNumber value={engagement.voiceMinutes} label="" trend={pctDelta(engagement.voiceMinutes, engagement.voiceMinutesPrev)} />
+			<span class="card-sub">{formatDeltaLabel(engagement.voiceMinutes, engagement.voiceMinutesPrev) || 'voice activity'}</span>
+		</div>
+
+		<div class="card">
+			<div class="card-icon-row">
+				<Users size={16} color="var(--text-tertiary)" />
+			</div>
+			<span class="card-label">New Members</span>
+			<StatNumber value={engagement.newMembers} label="" trend={pctDelta(engagement.newMembers, engagement.newMembersPrev)} />
+			<span class="card-sub">{engagement.membersLeft > 0 ? `${engagement.membersLeft} left` : 'joins in window'}</span>
+		</div>
+
+		<div class="card">
+			<div class="card-icon-row">
+				<Zap size={16} color="var(--text-tertiary)" />
+			</div>
+			<span class="card-label">Retention</span>
+			<StatNumber value={Math.round(engagement.retentionPct)} label="%" />
+			<span class="card-sub">new members who sent a message</span>
+		</div>
+	</div>
 
 	<h3 class="section-title">Membership</h3>
 	<div class="pulse-grid">
@@ -223,7 +293,7 @@
 	</div>
 
 	{#if topChannels.length > 0}
-		<h3 class="section-title">Channel Activity (7 days)</h3>
+		<h3 class="section-title">Channel Activity ({windowLabel})</h3>
 		<div class="channel-ranking-grid">
 			<div class="card channel-rank-card">
 				<h4 class="rank-heading rank-hot">Most Active</h4>
@@ -306,6 +376,15 @@
 </SpringReveal>
 
 <style>
+	.pulse-header {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 1rem;
+		flex-wrap: wrap;
+		margin-bottom: 0.5rem;
+	}
+
 	.pulse-grid {
 		display: grid;
 		grid-template-columns: repeat(4, 1fr);

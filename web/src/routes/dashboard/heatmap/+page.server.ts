@@ -1,10 +1,8 @@
 import { error } from '@sveltejs/kit';
 import { hasMinTier } from '$lib/server/roles';
-import { getHeatmapData } from '$lib/server/queries/heatmap';
+import { getHeatmapDataForRange } from '$lib/server/queries/heatmap';
+import { parseTimeWindowSpec, resolveRange, formatWindowLabel } from '$lib/shared/timeWindow';
 import type { PageServerLoad } from './$types';
-
-const VALID_WEEKS = [1, 2, 4, 8] as const;
-type WeekCount = (typeof VALID_WEEKS)[number];
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	if (!locals.user || !hasMinTier(locals.user.tier, 'sm')) {
@@ -12,11 +10,10 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	}
 	if (!process.env.GUILD_ID) throw new Error('GUILD_ID required');
 
-	const rawWeeks = Number(url.searchParams.get('weeks')) || 1;
-	const weeks: WeekCount = VALID_WEEKS.includes(rawWeeks as WeekCount)
-		? (rawWeeks as WeekCount)
-		: 1;
+	// Heatmap default is 7d — multi-week presets map naturally onto ranges.
+	const spec = parseTimeWindowSpec(url.searchParams, '7d');
+	const range = resolveRange(spec);
 
-	const heatmap = getHeatmapData(process.env.GUILD_ID, weeks);
-	return { heatmap, weeks };
+	const heatmap = getHeatmapDataForRange(process.env.GUILD_ID, range);
+	return { heatmap, spec, windowLabel: formatWindowLabel(spec) };
 };
