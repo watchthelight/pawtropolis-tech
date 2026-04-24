@@ -99,6 +99,7 @@
 			class="popover"
 			role="dialog"
 			aria-label="Custom time range"
+			tabindex="-1"
 			onkeydown={(e) => {
 				if (e.key === 'Escape') closeCustom();
 				if (e.key === 'Enter') applyCustom();
