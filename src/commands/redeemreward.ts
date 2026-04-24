@@ -47,7 +47,8 @@ import {
 export const data = new SlashCommandBuilder()
   .setName("redeemreward")
   .setDescription("Assign an art reward to a user from the artist rotation queue")
-  .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles)
+  // Visibility is intentionally unrestricted so Community Ambassadors (custom role)
+  // can see the command. The execute() handler enforces Ambassador-or-ManageRoles.
   .addUserOption((opt) =>
     opt
       .setName("user")
