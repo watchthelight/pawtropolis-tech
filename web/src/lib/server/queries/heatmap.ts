@@ -1,4 +1,5 @@
 import { db } from '$lib/server/db';
+import type { ResolvedRange } from '$lib/shared/timeWindow';
 
 // KEEP IN SYNC with tests/web/heatmap.test.ts (mirrored for vitest)
 // If you change these interfaces or calculation logic, update the test mirror too.
@@ -32,6 +33,9 @@ export interface HeatmapData {
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
+/** Cap to keep the rendered grid sensible (and protect against abusive ranges). */
+const MAX_WEEKS = 26;
+
 function formatHour(hour: number): string {
 	if (hour === 0) return '12am';
 	if (hour < 12) return `${hour}am`;
@@ -39,11 +43,6 @@ function formatHour(hour: number): string {
 	return `${hour - 12}pm`;
 }
 
-/**
- * Calculate trends from heatmap week data.
- * Ported from src/lib/activityHeatmap.ts calculateTrends() — must produce
- * identical results so Discord command and dashboard show consistent data.
- */
 function calculateTrends(weeks: HeatmapWeekData[]): HeatmapTrends {
 	const hourlyTotals = new Array(24).fill(0);
 	const dayTotals = new Array(7).fill(0);
@@ -60,7 +59,6 @@ function calculateTrends(weeks: HeatmapWeekData[]): HeatmapTrends {
 		}
 	}
 
-	// Busiest hours: 3-hour sliding window
 	const windowSize = 3;
 	let maxSum = 0;
 	let maxStart = 0;
@@ -74,10 +72,9 @@ function calculateTrends(weeks: HeatmapWeekData[]): HeatmapTrends {
 		if (sum < minSum) { minSum = sum; minStart = i; }
 	}
 
-	const busiestHours = `${formatHour(maxStart)}\u2013${formatHour(maxStart + windowSize - 1)} UTC`;
-	const leastActiveHours = `${formatHour(minStart)}\u2013${formatHour(minStart + windowSize - 1)} UTC`;
+	const busiestHours = `${formatHour(maxStart)}–${formatHour(maxStart + windowSize - 1)} UTC`;
+	const leastActiveHours = `${formatHour(minStart)}–${formatHour(minStart + windowSize - 1)} UTC`;
 
-	// Peak and quietest days
 	const maxDayValue = Math.max(...dayTotals);
 	const minDayValue = Math.min(...dayTotals);
 	const peakDays = dayTotals
@@ -88,9 +85,8 @@ function calculateTrends(weeks: HeatmapWeekData[]): HeatmapTrends {
 		.filter(Boolean) as string[];
 
 	const totalHours = weeks.length * 7 * 24;
-	const avgMessagesPerHour = Math.round((totalMessages / totalHours) * 10) / 10;
+	const avgMessagesPerHour = totalHours === 0 ? 0 : Math.round((totalMessages / totalHours) * 10) / 10;
 
-	// Week-over-week growth: (newest - oldest) / oldest * 100
 	let weekOverWeekGrowth: number | null = null;
 	if (weeks.length >= 2) {
 		const newestTotal = weeks[0].grid.flat().reduce((a, b) => a + b, 0);
@@ -112,69 +108,94 @@ function calculateTrends(weeks: HeatmapWeekData[]): HeatmapTrends {
 }
 
 /**
- * Fetch heatmap data from message_activity table.
- * Mirrors src/lib/activityHeatmap.ts fetchActivityData() but uses web-side db.
- *
- * Queries by created_at_s range (uses idx_message_activity_guild_time index)
- * and aggregates into 7x24 grid in JS using UTC day/hour derivation.
+ * Build one 7-day heatmap week starting at weekStart (unix seconds).
+ * weekEnd is weekStart + 7 days. Day-0 of the grid is the Monday of weekStart.
  */
-export function getHeatmapData(guildId: string, weeks: number = 1): HeatmapData {
-	if (weeks < 1 || weeks > 8) weeks = 1;
+function buildWeek(guildId: string, weekStartS: number, weekEndS: number): HeatmapWeekData {
+	const rows = db()
+		.prepare(
+			`SELECT created_at_s FROM message_activity
+			 WHERE guild_id = ? AND created_at_s >= ? AND created_at_s < ?`
+		)
+		.all(guildId, weekStartS, weekEndS) as { created_at_s: number }[];
 
-	const now = new Date();
+	const grid: number[][] = Array.from({ length: 7 }, () => new Array(24).fill(0));
+	const dates: string[] = [];
+
+	// Anchor to ISO Monday of weekStartS so the grid stays Mon-Sun even for custom ranges.
+	const weekStartDate = new Date(weekStartS * 1000);
+	const mondayOfWeek = new Date(weekStartDate);
+	const daysSinceMonday = (mondayOfWeek.getUTCDay() + 6) % 7;
+	mondayOfWeek.setUTCDate(mondayOfWeek.getUTCDate() - daysSinceMonday);
+
+	for (let i = 0; i < 7; i++) {
+		const date = new Date(mondayOfWeek);
+		date.setUTCDate(mondayOfWeek.getUTCDate() + i);
+		dates.push(date.toISOString());
+	}
+
+	for (const row of rows) {
+		const date = new Date(row.created_at_s * 1000);
+		const dayOfWeek = date.getUTCDay();
+		const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+		const hour = date.getUTCHours();
+		grid[dayIndex][hour] += 1;
+	}
+
+	return {
+		grid,
+		startDate: dates[0],
+		endDate: dates[6],
+		dates
+	};
+}
+
+/**
+ * Heatmap over a ResolvedRange. Slices the range into 7-day chunks ending at endS
+ * and walking backwards. Capped at MAX_WEEKS. 'all' ranges (startS=0) fall back to
+ * the last 8 weeks.
+ */
+export function getHeatmapDataForRange(guildId: string, range: ResolvedRange): HeatmapData {
+	const endS = range.endS;
+	let startS = range.startS;
+
+	// "All time" is unbounded — show a rolling 8 weeks so the grid remains useful.
+	if (startS === 0) {
+		startS = endS - 8 * 7 * 86400;
+	}
+
+	const spanS = Math.max(endS - startS, 7 * 86400);
+	let weeksCount = Math.ceil(spanS / (7 * 86400));
+	if (weeksCount > MAX_WEEKS) weeksCount = MAX_WEEKS;
+	if (weeksCount < 1) weeksCount = 1;
+
 	const weeksData: HeatmapWeekData[] = [];
-
-	for (let weekOffset = 0; weekOffset < weeks; weekOffset++) {
-		const weekEnd = new Date(now);
-		weekEnd.setUTCDate(now.getUTCDate() - weekOffset * 7);
-
-		const weekStart = new Date(weekEnd);
-		weekStart.setUTCDate(weekEnd.getUTCDate() - 7);
-
-		const startTimestamp = Math.floor(weekStart.getTime() / 1000);
-		const endTimestamp = Math.floor(weekEnd.getTime() / 1000);
-
-		const rows = db()
-			.prepare(
-				`SELECT created_at_s FROM message_activity
-				 WHERE guild_id = ? AND created_at_s >= ? AND created_at_s < ?`
-			)
-			.all(guildId, startTimestamp, endTimestamp) as { created_at_s: number }[];
-
-		// Initialize 7x24 grid (Mon-Sun x 0-23 hours)
-		const grid: number[][] = Array.from({ length: 7 }, () => new Array(24).fill(0));
-		const dates: string[] = [];
-
-		// Calculate ISO week dates (Monday first)
-		const mondayOfWeek = new Date(weekStart);
-		const daysSinceMonday = (mondayOfWeek.getUTCDay() + 6) % 7;
-		mondayOfWeek.setUTCDate(mondayOfWeek.getUTCDate() - daysSinceMonday);
-
-		for (let i = 0; i < 7; i++) {
-			const date = new Date(mondayOfWeek);
-			date.setUTCDate(mondayOfWeek.getUTCDate() + i);
-			dates.push(date.toISOString());
-		}
-
-		// Aggregate by day index (Mon=0, Sun=6) and UTC hour
-		for (const row of rows) {
-			const date = new Date(row.created_at_s * 1000);
-			const dayOfWeek = date.getUTCDay();
-			const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-			const hour = date.getUTCHours();
-			grid[dayIndex][hour] += 1;
-		}
-
-		weeksData.push({
-			grid,
-			startDate: dates[0],
-			endDate: dates[6],
-			dates
-		});
+	for (let offset = 0; offset < weeksCount; offset++) {
+		const weekEndS = endS - offset * 7 * 86400;
+		const weekStartS = weekEndS - 7 * 86400;
+		weeksData.push(buildWeek(guildId, weekStartS, weekEndS));
 	}
 
 	const maxValue = Math.max(...weeksData.flatMap((w) => w.grid.flat()), 1);
 	const trends = calculateTrends(weeksData);
 
 	return { weeks: weeksData, maxValue, trends };
+}
+
+/**
+ * Legacy weeks-count API — kept for any callers (tests, scripts) that still
+ * pass a raw number. New code should construct a ResolvedRange and call
+ * getHeatmapDataForRange directly.
+ */
+export function getHeatmapData(guildId: string, weeks: number = 1): HeatmapData {
+	if (weeks < 1 || weeks > 8) weeks = 1;
+	const endS = Math.floor(Date.now() / 1000);
+	const startS = endS - weeks * 7 * 86400;
+	return getHeatmapDataForRange(guildId, {
+		startS,
+		endS,
+		days: weeks * 7,
+		prevStartS: null,
+		spec: { kind: 'preset', preset: weeks === 7 ? '7d' : weeks === 30 ? '30d' : weeks === 90 ? '90d' : 'all' }
+	});
 }
