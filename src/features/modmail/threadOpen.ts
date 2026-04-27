@@ -186,8 +186,13 @@ export async function openPublicModmailThreadFor(params: {
       };
     }
 
-    // Check precise bot permissions for thread creation
-    const me = interaction.guild.members.me;
+    // Check precise bot permissions for thread creation.
+    // Fall back to fetchMe() because guild.members.me can be null when the
+    // bot's GuildMember hasn't been cached yet (e.g., after a process restart
+    // or app-identity swap before GUILD_MEMBERS chunking completes).
+    const me =
+      interaction.guild.members.me ??
+      (await interaction.guild.members.fetchMe().catch(() => null));
     if (!me) {
       return { success: false, message: "Bot member not found in guild." };
     }

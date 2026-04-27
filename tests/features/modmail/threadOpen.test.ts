@@ -321,7 +321,10 @@ describe("features/modmail/threadOpen", () => {
 
         const interaction = {
           guildId: "guild123",
-          guild: { id: "guild123", members: { me: null } },
+          guild: {
+            id: "guild123",
+            members: { me: null, fetchMe: vi.fn().mockResolvedValue(null) },
+          },
           member: { id: "user456" },
           channel: {
             type: ChannelType.GuildText,
