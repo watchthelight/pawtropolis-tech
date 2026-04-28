@@ -14,6 +14,7 @@ export const ROLE_IDS = {
 	JUNIOR_MOD: '896070888762535966',
 	GATEKEEPER: '896070888762535969',
 	MOD_TEAM: '987662057069482024',
+	COMMUNITY_AMBASSADOR: '896070888762535967',
 	SERVER_DEV: '1120074045883420753',
 	SERVER_ARTIST: '896070888749940770'
 } as const;
@@ -68,6 +69,7 @@ export function detectTier(roleIds: string[], userId: string): DashboardTier {
 	if (roleIds.includes(ROLE_IDS.JUNIOR_MOD)) return 'jm';
 	if (roleIds.includes(ROLE_IDS.GATEKEEPER)) return 'gk';
 	if (roleIds.includes(ROLE_IDS.MOD_TEAM)) return 'viewer';
+	if (roleIds.includes(ROLE_IDS.COMMUNITY_AMBASSADOR)) return 'viewer';
 	if (roleIds.includes(ROLE_IDS.SERVER_ARTIST)) return 'viewer';
 
 	return 'none';

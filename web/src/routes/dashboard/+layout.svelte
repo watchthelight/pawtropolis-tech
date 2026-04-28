@@ -67,6 +67,7 @@
 		{ href: '/dashboard/reviews',  minTier: 'gk' },
 		{ href: '/dashboard/stats',    minTier: 'gk' },
 		{ href: '/dashboard/modmail',  minTier: 'gk' },
+		{ href: '/dashboard/tickets',  minTier: 'viewer' },
 		{ href: '/dashboard/pulse',    minTier: 'mod' },
 		{ href: '/dashboard/flags',    minTier: 'sm' },
 		{ href: '/dashboard/heatmap',  minTier: 'sm' },
