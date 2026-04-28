@@ -24,6 +24,7 @@ import {
 } from "discord.js";
 import { db } from "../../db/db.js";
 import { logger } from "../../lib/logger.js";
+import { enqueuePending } from "./attachments.js";
 import type { Ticket, TicketRow } from "./types.js";
 
 const findTicketByChannelStmt = db.prepare(
@@ -165,12 +166,13 @@ export function captureMessage(msg: Message | PartialMessage): void {
     );
   }
 
-  // Attachment metadata: insert rows with local_path=NULL. The mirror
-  // downloader (P6b) fills local_path / sha256 asynchronously.
+  // Attachment metadata: insert rows with local_path=NULL, then enqueue for
+  // background mirror. Discord CDN URLs expire ~24h so we hash + write to disk
+  // and serve via dashboard proxy later.
   if (msg.attachments && msg.attachments.size > 0) {
     for (const [, att] of msg.attachments) {
       try {
-        insertAttachmentStmt.run({
+        const result = insertAttachmentStmt.run({
           id: att.id,
           message_id: msg.id,
           ticket_id: ticket.id,
@@ -179,6 +181,15 @@ export function captureMessage(msg: Message | PartialMessage): void {
           size_bytes: att.size,
           original_url: att.url,
         });
+        if (result.changes > 0) {
+          enqueuePending({
+            id: att.id,
+            ticketId: ticket.id,
+            filename: att.name ?? "unknown",
+            size: att.size,
+            url: att.url,
+          });
+        }
       } catch (err) {
         logger.warn(
           { err, ticketId: ticket.id, attachmentId: att.id },

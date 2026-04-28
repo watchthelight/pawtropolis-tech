@@ -1008,6 +1008,14 @@ client.once(Events.ClientReady, async () => {
   } catch (err) {
     logger.error({ err }, "[cmdsync] FAILED – see above; bot still starting");
   }
+
+  // Re-enqueue any ticket attachments that were pending mirror at last shutdown.
+  try {
+    const { backfillPendingFromDb } = await import("./features/tickets/attachments.js");
+    backfillPendingFromDb();
+  } catch (err) {
+    logger.warn({ err }, "[tickets] failed to backfill pending attachments at startup");
+  }
 });
 
 client.on("guildCreate", wrapEvent("guildCreate", async (guild) => {
