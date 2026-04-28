@@ -1,0 +1,47 @@
+/**
+ * Pawtropolis Tech -- src/features/tickets/counters.ts
+ * WHAT: Atomically allocates the next ticket number for a given counter key.
+ * WHY: Every new ticket needs a unique, monotonically-increasing number per
+ *      type. Two button clicks landing on the same SQLite connection at the
+ *      same time must NOT both get the same number. The transaction here
+ *      guarantees mutual exclusion under WAL mode.
+ *
+ * Pattern mirrors src/features/artistRotation/queue.ts:374 (db.transaction).
+ */
+// SPDX-License-Identifier: LicenseRef-ANW-1.0
+
+import { db } from "../../db/db.js";
+
+const incrementStmt = db.prepare(
+  `UPDATE ticket_counter
+     SET current_value = current_value + 1,
+         updated_at    = unixepoch()
+   WHERE key = ?
+   RETURNING current_value`
+);
+
+/**
+ * Allocate and return the next number for the given counter key. Throws if the
+ * counter row doesn't exist (which would indicate a missed migration seed).
+ */
+export function allocateNextNumber(counterKey: string): number {
+  return db.transaction(() => {
+    const row = incrementStmt.get(counterKey) as { current_value: number } | undefined;
+    if (!row) {
+      throw new Error(
+        `[tickets/counters] no counter row for key '${counterKey}' — was migration 067 applied?`
+      );
+    }
+    return row.current_value;
+  })();
+}
+
+/**
+ * Read the current counter value without incrementing. Useful for display.
+ */
+export function peekCurrentValue(counterKey: string): number | null {
+  const row = db
+    .prepare(`SELECT current_value FROM ticket_counter WHERE key = ?`)
+    .get(counterKey) as { current_value: number } | undefined;
+  return row ? row.current_value : null;
+}
