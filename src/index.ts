@@ -1358,6 +1358,21 @@ client.on("channelDelete", wrapEvent("channelDelete", async (channel) => {
   removeChannel(channel);
 }));
 
+// Ticket transcript capture — mirror messages in tickets channels + staff threads
+import { captureMessage, markMessageDeleted } from "./features/tickets/transcript.js";
+
+client.on("messageCreate", wrapEvent("messageCreate.tickets", async (msg) => {
+  captureMessage(msg);
+}));
+
+client.on("messageUpdate", wrapEvent("messageUpdate.tickets", async (_old, newMsg) => {
+  captureMessage(newMsg);
+}));
+
+client.on("messageDelete", wrapEvent("messageDelete.tickets", async (msg) => {
+  markMessageDeleted(msg);
+}));
+
 // Invite tracking: detect which invite each new member used
 import { handleInviteCreate, handleInviteDelete } from "./features/inviteTracker.js";
 
