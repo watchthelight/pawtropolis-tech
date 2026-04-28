@@ -87,6 +87,7 @@ export interface Ticket {
   number: number;
   channelId: string;
   staffThreadId: string | null;
+  greetingMessageId: string | null;
   guildId: string;
   openerUserId: string;
   claimedByUserId: string | null;
@@ -107,6 +108,7 @@ export interface TicketRow {
   number: number;
   channel_id: string;
   staff_thread_id: string | null;
+  greeting_message_id: string | null;
   guild_id: string;
   opener_user_id: string;
   claimed_by_user_id: string | null;

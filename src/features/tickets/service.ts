@@ -11,11 +11,16 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import { randomUUID } from "node:crypto";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import {
   ChannelType,
+  PermissionFlagsBits,
   ThreadAutoArchiveDuration,
+  EmbedBuilder,
   type Guild,
   type TextChannel,
+  type ThreadChannel,
 } from "discord.js";
 import { db } from "../../db/db.js";
 import { logger } from "../../lib/logger.js";
@@ -27,18 +32,19 @@ import {
   buildGreetingActionRow,
   buildGreetingEmbed,
   formatChannelName,
+  resolveMemberIdentity,
 } from "./rendering.js";
-import type { Ticket, TicketRow } from "./types.js";
+import type { Ticket, TicketEventType, TicketRow } from "./types.js";
 
 const insertTicketStmt = db.prepare(
   `INSERT INTO ticket (
-     id, type_key, number, channel_id, staff_thread_id, guild_id,
-     opener_user_id, claimed_by_user_id, status, close_reason,
+     id, type_key, number, channel_id, staff_thread_id, greeting_message_id,
+     guild_id, opener_user_id, claimed_by_user_id, status, close_reason,
      closed_by_user_id, archive_path, legacy_source,
      opened_at, claimed_at, closed_at
    ) VALUES (
-     @id, @type_key, @number, @channel_id, @staff_thread_id, @guild_id,
-     @opener_user_id, NULL, 'open', NULL, NULL, NULL, NULL,
+     @id, @type_key, @number, @channel_id, @staff_thread_id, NULL,
+     @guild_id, @opener_user_id, NULL, 'open', NULL, NULL, NULL, NULL,
      @opened_at, NULL, NULL
    )`
 );
@@ -49,6 +55,29 @@ const insertEventStmt = db.prepare(
 );
 
 const setStaffThreadStmt = db.prepare(`UPDATE ticket SET staff_thread_id = ? WHERE id = ?`);
+const setGreetingMessageStmt = db.prepare(
+  `UPDATE ticket SET greeting_message_id = ? WHERE id = ?`
+);
+const setClaimedStmt = db.prepare(
+  `UPDATE ticket SET claimed_by_user_id = ?, claimed_at = unixepoch() WHERE id = ?`
+);
+const setUnclaimedStmt = db.prepare(
+  `UPDATE ticket SET claimed_by_user_id = NULL, claimed_at = NULL WHERE id = ?`
+);
+const setClosedStmt = db.prepare(
+  `UPDATE ticket SET status = 'closed', close_reason = ?, closed_by_user_id = ?,
+                     closed_at = unixepoch(), archive_path = ?
+   WHERE id = ?`
+);
+
+function emitEvent(
+  ticketId: string,
+  type: TicketEventType,
+  actorUserId: string | null,
+  payload?: Record<string, unknown>
+): void {
+  insertEventStmt.run(ticketId, type, actorUserId, payload ? JSON.stringify(payload) : null);
+}
 
 function rowToTicket(row: TicketRow): Ticket {
   return {
@@ -57,6 +86,7 @@ function rowToTicket(row: TicketRow): Ticket {
     number: row.number,
     channelId: row.channel_id,
     staffThreadId: row.staff_thread_id,
+    greetingMessageId: row.greeting_message_id,
     guildId: row.guild_id,
     openerUserId: row.opener_user_id,
     claimedByUserId: row.claimed_by_user_id,
@@ -141,12 +171,11 @@ export class TicketService {
       opened_at: openedAt,
     });
 
-    insertEventStmt.run(
-      ticketId,
-      "opened",
-      openerUserId,
-      JSON.stringify({ typeKey: type.key, number, channelId: channel.id })
-    );
+    emitEvent(ticketId, "opened", openerUserId, {
+      typeKey: type.key,
+      number,
+      channelId: channel.id,
+    });
 
     // Post greeting message: opener mention + role mentions on plain content,
     // type body in embed below, claim/close action row.
@@ -159,7 +188,7 @@ export class TicketService {
     });
     const actionRow = buildGreetingActionRow(ticketId, false);
 
-    await channel.send({
+    const greeting = await channel.send({
       content: pingMentions,
       embeds: [embed],
       components: [actionRow],
@@ -168,6 +197,7 @@ export class TicketService {
         roles: type.pingRoleIds,
       },
     });
+    setGreetingMessageStmt.run(greeting.id, ticketId);
 
     // Spawn staff-only private thread if the type wants one.
     // GOTCHA: message.startThread() can only create public threads. For a
@@ -249,5 +279,395 @@ export class TicketService {
       .prepare(`SELECT * FROM ticket WHERE id = ?`)
       .get(ticketId) as TicketRow | undefined;
     return row ? rowToTicket(row) : null;
+  }
+
+  /**
+   * Mark the ticket claimed by the actor; update DB, emit event, and edit the
+   * greeting embed in place — append a "Claimed by" field, swap Claim → Unclaim.
+   * If the greeting message can't be found, the DB state still updates and we
+   * post a small follow-up message instead.
+   */
+  static async claim(ticketId: string, claimerUserId: string, guild: Guild): Promise<void> {
+    const ticket = TicketService.findById(ticketId);
+    if (!ticket) throw new Error(`[tickets/service] ticket ${ticketId} not found`);
+    if (ticket.status === "closed") {
+      throw new Error(`[tickets/service] cannot claim a closed ticket`);
+    }
+    if (ticket.claimedByUserId === claimerUserId) {
+      // Idempotent: already held — no-op.
+      return;
+    }
+
+    setClaimedStmt.run(claimerUserId, ticketId);
+    emitEvent(ticketId, "claimed", claimerUserId, {
+      previousClaimer: ticket.claimedByUserId,
+    });
+
+    await TicketService.refreshGreetingMessage(ticket, guild, claimerUserId);
+  }
+
+  /** Drop the claim. Used when a staff member needs to hand off without closing. */
+  static async unclaim(ticketId: string, actorUserId: string, guild: Guild): Promise<void> {
+    const ticket = TicketService.findById(ticketId);
+    if (!ticket) throw new Error(`[tickets/service] ticket ${ticketId} not found`);
+    if (ticket.status === "closed") {
+      throw new Error(`[tickets/service] cannot unclaim a closed ticket`);
+    }
+    if (ticket.claimedByUserId === null) {
+      return;
+    }
+    const previousClaimer = ticket.claimedByUserId;
+    setUnclaimedStmt.run(ticketId);
+    emitEvent(ticketId, "unclaimed", actorUserId, { previousClaimer });
+    await TicketService.refreshGreetingMessage(ticket, guild, null);
+  }
+
+  /**
+   * Re-render the greeting embed with current claim state and edit the existing
+   * message. Best-effort — failures log + return without throwing so the caller's
+   * state-mutation is not undone.
+   */
+  private static async refreshGreetingMessage(
+    ticket: Ticket,
+    guild: Guild,
+    claimerUserId: string | null
+  ): Promise<void> {
+    if (!ticket.greetingMessageId) return;
+    try {
+      const channel = (await guild.channels.fetch(ticket.channelId)) as TextChannel | null;
+      if (!channel || channel.type !== ChannelType.GuildText) return;
+      const message = await channel.messages.fetch(ticket.greetingMessageId);
+      const type = getTicketType(ticket.typeKey);
+      if (!type) return;
+      const embed = buildGreetingEmbed({
+        type,
+        ticketId: ticket.id,
+        ticketNumber: ticket.number,
+        openedAt: new Date(ticket.openedAt * 1000),
+        claimedByUserId: claimerUserId,
+      });
+      const actionRow = buildGreetingActionRow(ticket.id, claimerUserId !== null);
+      await message.edit({ embeds: [embed], components: [actionRow] });
+    } catch (err) {
+      logger.warn(
+        { err, ticketId: ticket.id },
+        "[tickets/service] failed to refresh greeting message — DB state still updated"
+      );
+    }
+  }
+
+  /**
+   * Close the ticket: update DB, revoke opener SendMessages, lock + archive
+   * staff thread, prepend `closed-` to channel name, render archive JSON, post
+   * a final "Closed" embed.
+   */
+  static async close(
+    ticketId: string,
+    opts: { closedByUserId: string; reason: string; guild: Guild }
+  ): Promise<void> {
+    const { closedByUserId, reason, guild } = opts;
+    const ticket = TicketService.findById(ticketId);
+    if (!ticket) throw new Error(`[tickets/service] ticket ${ticketId} not found`);
+    if (ticket.status === "closed") {
+      // Idempotent: already closed.
+      return;
+    }
+
+    const archivePath = await TicketService.writeArchive(ticket);
+    setClosedStmt.run(reason, closedByUserId, archivePath, ticketId);
+    emitEvent(ticketId, "closed", closedByUserId, { reason, archivePath });
+
+    let channel: TextChannel | null = null;
+    try {
+      channel = (await guild.channels.fetch(ticket.channelId)) as TextChannel | null;
+    } catch (err) {
+      logger.warn({ err, ticketId }, "[tickets/service] could not fetch channel during close");
+    }
+
+    // Revoke opener SendMessages so the channel becomes read-only for them.
+    if (channel) {
+      try {
+        await channel.permissionOverwrites.edit(ticket.openerUserId, {
+          SendMessages: false,
+        });
+      } catch (err) {
+        logger.warn(
+          { err, ticketId, openerUserId: ticket.openerUserId },
+          "[tickets/service] failed to revoke opener SendMessages on close"
+        );
+      }
+    }
+
+    // Lock + archive the staff thread.
+    if (ticket.staffThreadId) {
+      try {
+        const thread = (await guild.channels.fetch(ticket.staffThreadId)) as ThreadChannel | null;
+        if (thread && thread.isThread()) {
+          await thread.setLocked(true).catch(() => {});
+          await thread.setArchived(true).catch(() => {});
+        }
+      } catch (err) {
+        logger.warn(
+          { err, ticketId, staffThreadId: ticket.staffThreadId },
+          "[tickets/service] failed to lock/archive staff thread"
+        );
+      }
+    }
+
+    // Rename channel to `closed-<original-truncated>`. Total <= 100 chars.
+    if (channel) {
+      const newName = `closed-${channel.name}`.slice(0, 100);
+      try {
+        if (channel.name !== newName) await channel.setName(newName);
+      } catch (err) {
+        logger.warn(
+          { err, ticketId, oldName: channel.name },
+          "[tickets/service] failed to rename channel on close"
+        );
+      }
+
+      // Final embed in channel so latecomers see closure context.
+      try {
+        const finalEmbed = new EmbedBuilder()
+          .setTitle("Ticket closed")
+          .setColor(0x4f545c)
+          .setDescription(`Closed by <@${closedByUserId}>`)
+          .addFields({ name: "Reason", value: reason.slice(0, 1024) || "(no reason given)" });
+        await channel.send({ embeds: [finalEmbed], allowedMentions: { parse: [] } });
+      } catch (err) {
+        logger.warn({ err, ticketId }, "[tickets/service] failed to post final close embed");
+      }
+    }
+
+    emitEvent(ticketId, "archived", null, { archivePath });
+    logger.info(
+      { ticketId, closedByUserId, archivePath },
+      "[tickets/service] ticket closed"
+    );
+  }
+
+  /**
+   * Snapshot the ticket + transcript + events to a JSON file under
+   * data/ticket-archives/. Returns the relative path stored on the ticket row.
+   * Transcript rows may be empty until P6 listeners ship — that's expected and
+   * the archive still records meta + events.
+   */
+  private static async writeArchive(ticket: Ticket): Promise<string> {
+    const archiveDir = join(process.cwd(), "data", "ticket-archives");
+    mkdirSync(archiveDir, { recursive: true });
+    const filename = `${ticket.id}.json`;
+    const fullPath = join(archiveDir, filename);
+
+    const messages = db
+      .prepare(`SELECT * FROM ticket_message WHERE ticket_id = ? ORDER BY created_at`)
+      .all(ticket.id);
+    const events = db
+      .prepare(`SELECT * FROM ticket_event WHERE ticket_id = ? ORDER BY created_at`)
+      .all(ticket.id);
+    const attachments = db
+      .prepare(`SELECT * FROM ticket_attachment WHERE ticket_id = ? ORDER BY created_at`)
+      .all(ticket.id);
+
+    const payload = {
+      schema_version: 1,
+      ticket,
+      messages,
+      events,
+      attachments,
+      archived_at: Math.floor(Date.now() / 1000),
+    };
+    writeFileSync(fullPath, JSON.stringify(payload, null, 2), "utf8");
+    return `ticket-archives/${filename}`;
+  }
+
+  /**
+   * Resolve the artist currently working a given ticket. Primary source: the
+   * latest non-completed art_job row linked via ticket_id. Fallback: the latest
+   * artist_assignment_log row scoped to the ticket's channel_id (covers tickets
+   * created before art_job.ticket_id was wired). Returns null if no signal.
+   */
+  static getCurrentArtistId(ticketId: string): string | null {
+    const ticket = TicketService.findById(ticketId);
+    if (!ticket) return null;
+
+    const fromJob = db
+      .prepare(
+        `SELECT artist_id FROM art_job
+         WHERE ticket_id = ?
+           AND status NOT IN ('done', 'cancelled', 'reassigned')
+         ORDER BY assigned_at DESC LIMIT 1`
+      )
+      .get(ticketId) as { artist_id: string } | undefined;
+    if (fromJob) return fromJob.artist_id;
+
+    const fromLog = db
+      .prepare(
+        `SELECT artist_id FROM artist_assignment_log
+         WHERE channel_id = ?
+         ORDER BY assigned_at DESC LIMIT 1`
+      )
+      .get(ticket.channelId) as { artist_id: string } | undefined;
+    return fromLog?.artist_id ?? null;
+  }
+
+  /**
+   * Rename the ticket's channel to reflect the current artist. For art-redeem
+   * tickets, transforms `art-NNNN` → `art-NNNN-<artistnick>`. For other types
+   * with a `{artist?}` token, same. Idempotent: no-op when name already matches.
+   */
+  static async renameForArtist(
+    ticketId: string,
+    artistUserId: string | null,
+    guild: Guild
+  ): Promise<void> {
+    const ticket = TicketService.findById(ticketId);
+    if (!ticket) throw new Error(`[tickets/service] ticket ${ticketId} not found`);
+    const type = getTicketType(ticket.typeKey);
+    if (!type) return;
+    if (!type.channelNameTemplate.includes("{artist?}")) return; // type doesn't carry artist in name
+
+    let identity: string | null = null;
+    if (artistUserId) {
+      try {
+        const member = await guild.members.fetch(artistUserId);
+        identity = resolveMemberIdentity(member);
+      } catch (err) {
+        logger.warn(
+          { err, artistUserId, ticketId },
+          "[tickets/service] could not resolve artist member for rename"
+        );
+      }
+    }
+
+    const desired = formatChannelName(type.channelNameTemplate, ticket.number, identity);
+    let channel: TextChannel | null = null;
+    try {
+      channel = (await guild.channels.fetch(ticket.channelId)) as TextChannel | null;
+    } catch (err) {
+      logger.warn({ err, ticketId }, "[tickets/service] could not fetch channel for rename");
+      return;
+    }
+    if (!channel || channel.type !== ChannelType.GuildText) return;
+    if (channel.name === desired) return;
+
+    const previous = channel.name;
+    try {
+      await channel.setName(desired);
+      emitEvent(ticketId, "renamed", null, { from: previous, to: desired });
+      logger.info(
+        { ticketId, from: previous, to: desired },
+        "[tickets/service] channel renamed"
+      );
+    } catch (err) {
+      logger.warn(
+        { err, ticketId, desired },
+        "[tickets/service] failed to setName (likely Discord rate limit)"
+      );
+    }
+  }
+
+  /**
+   * Manually swap the artist on an art-style ticket. Revokes the prior artist's
+   * permission overwrite, grants the new one, closes the prior open art_job
+   * row (status='reassigned' with notes), inserts a new art_job, renames the
+   * channel, and emits a `reassigned` event. Does NOT touch the queue
+   * rotation — manual reassignment is a corrective action, not a rotational one.
+   */
+  static async reassignArtist(
+    ticketId: string,
+    opts: {
+      fromArtistId: string | null;
+      toArtistId: string;
+      actorUserId: string;
+      guild: Guild;
+    }
+  ): Promise<void> {
+    const { fromArtistId, toArtistId, actorUserId, guild } = opts;
+    if (fromArtistId === toArtistId) {
+      throw new Error("[tickets/service] cannot reassign to the same artist");
+    }
+
+    const ticket = TicketService.findById(ticketId);
+    if (!ticket) throw new Error(`[tickets/service] ticket ${ticketId} not found`);
+    if (ticket.status === "closed") {
+      throw new Error(`[tickets/service] cannot reassign a closed ticket`);
+    }
+    if (ticket.legacySource !== null) {
+      throw new Error(
+        `[tickets/service] cannot reassign on legacy ticket (legacy_source=${ticket.legacySource})`
+      );
+    }
+
+    let channel: TextChannel | null = null;
+    try {
+      channel = (await guild.channels.fetch(ticket.channelId)) as TextChannel | null;
+    } catch {
+      // fall through; perms can't be set without channel
+    }
+
+    if (channel) {
+      // Revoke prior artist
+      if (fromArtistId) {
+        try {
+          await channel.permissionOverwrites.delete(
+            fromArtistId,
+            `Reassigned away by ${actorUserId}`
+          );
+        } catch (err) {
+          logger.warn(
+            { err, ticketId, fromArtistId },
+            "[tickets/service] failed to remove old artist overwrite"
+          );
+        }
+      }
+      // Grant new artist
+      try {
+        await channel.permissionOverwrites.edit(toArtistId, {
+          ViewChannel: true,
+          SendMessages: true,
+          EmbedLinks: true,
+          AttachFiles: true,
+          ReadMessageHistory: true,
+        });
+      } catch (err) {
+        logger.warn(
+          { err, ticketId, toArtistId },
+          "[tickets/service] failed to grant new artist overwrite"
+        );
+      }
+    }
+
+    // Close prior art_job rows for this ticket, mark reassigned, drop a note.
+    db.prepare(
+      `UPDATE art_job
+         SET status = 'cancelled',
+             updated_at = datetime('now'),
+             notes = COALESCE(notes || ' | ', '') || ?
+       WHERE ticket_id = ? AND status NOT IN ('done', 'cancelled', 'reassigned')`
+    ).run(`Reassigned by ${actorUserId} at ${new Date().toISOString()}`, ticketId);
+
+    // Note: insertion of the new art_job row is the responsibility of /assignticket
+    // since it knows the ticket_type/recipient. service.ts only tracks Discord state.
+
+    emitEvent(ticketId, "reassigned", actorUserId, {
+      fromArtistId,
+      toArtistId,
+    });
+
+    await TicketService.renameForArtist(ticketId, toArtistId, guild);
+
+    if (channel) {
+      const embed = new EmbedBuilder()
+        .setTitle("Artist reassigned")
+        .setColor(0xfeb800)
+        .setDescription(
+          `${fromArtistId ? `From <@${fromArtistId}> ` : ""}to <@${toArtistId}>\nReassigned by <@${actorUserId}>`
+        );
+      try {
+        await channel.send({ embeds: [embed], allowedMentions: { parse: [] } });
+      } catch (err) {
+        logger.warn({ err, ticketId }, "[tickets/service] failed to post reassign embed");
+      }
+    }
   }
 }
