@@ -35,8 +35,8 @@ const getMaxArtistJobNumberStmt = db.prepare(
 );
 
 const insertJobStmt = db.prepare(
-  `INSERT INTO art_job (guild_id, job_number, artist_id, artist_job_number, recipient_id, ticket_type, assignment_log_id)
-   VALUES (?, ?, ?, ?, ?, ?, ?)`
+  `INSERT INTO art_job (guild_id, job_number, artist_id, artist_job_number, recipient_id, ticket_type, assignment_log_id, ticket_id)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
 );
 
 const getJobByIdStmt = db.prepare(`SELECT * FROM art_job WHERE id = ?`);
@@ -127,7 +127,8 @@ const createJobTransaction = db.transaction((options: CreateJobOptions) => {
     artistJobNumber,
     options.recipientId,
     options.ticketType,
-    options.assignmentLogId ?? null
+    options.assignmentLogId ?? null,
+    options.ticketId ?? null
   );
 
   return {

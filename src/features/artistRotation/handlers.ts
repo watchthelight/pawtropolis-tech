@@ -23,6 +23,7 @@ import {
   processAssignment,
 } from "./index.js";
 import { createJob } from "../artJobs/index.js";
+import { TicketService } from "../tickets/service.js";
 
 /*
  * Parse redeemreward button customId
@@ -144,23 +145,72 @@ async function handleConfirm(
   }
 
   /*
-   * Step 2: Send $add command to add artist to ticket (Ticket Tool bot)
+   * Step 2: Add the artist to the ticket channel.
    *
-   * WHY a raw message instead of an API call? Ticket Tool is a third-party bot.
-   * We're puppeting commands like it's 2019. It works. Don't touch it.
+   * Two paths:
+   *   a) New first-party tickets (migration 067+): the channel has a tracked
+   *      `ticket` row with legacy_source IS NULL. Grant ViewChannel +
+   *      SendMessages directly via permission overwrite, then rename the
+   *      channel to include the artist's identity (art-NNNN-<artist>). No
+   *      Ticket Tool puppeting required.
+   *   b) Legacy Ticket Tool channels (the 26 inherited at cutover): no `ticket`
+   *      row, OR legacy_source='ticket_tool'. Fall back to sending the
+   *      `$add <@artistId>` text command to Ticket Tool — same as before.
+   *
+   * The branch keeps the legacy path alive until those tickets bleed off
+   * naturally; no migration of in-flight conversations.
    */
   const channel = interaction.channel as TextChannel | null;
+  let ticketIdForJob: string | null = null;
   if (channel && "send" in channel) {
-    try {
-      await channel.send(`$add <@${data.artistId}>`);
-      results.push(`<@${data.artistId}> added to ticket`);
-    } catch (err) {
-      logger.warn({ err, artistId: data.artistId }, "[redeemreward] Failed to send $add command");
-      results.push(`Failed to send $add command`);
-      success = false;
+    const ticket = TicketService.findByChannelId(channel.id);
+
+    if (ticket && ticket.legacySource === null) {
+      // Path A: first-party ticket. Grant perms directly, no $add.
+      ticketIdForJob = ticket.id;
+      try {
+        const artistMember = await guild.members.fetch(data.artistId);
+        await channel.permissionOverwrites.edit(artistMember, {
+          ViewChannel: true,
+          SendMessages: true,
+          EmbedLinks: true,
+          AttachFiles: true,
+          ReadMessageHistory: true,
+        });
+        results.push(`<@${data.artistId}> granted ticket access`);
+      } catch (err) {
+        logger.warn(
+          { err, artistId: data.artistId, ticketId: ticket.id },
+          "[redeemreward] direct grant failed on first-party ticket"
+        );
+        results.push(`Failed to grant artist access`);
+        success = false;
+      }
+
+      // Rename channel for art-redeem types to include the artist identity.
+      if (ticket.typeKey === "art-redeem") {
+        try {
+          await TicketService.renameForArtist(ticket.id, data.artistId, guild);
+        } catch (err) {
+          logger.warn({ err, ticketId: ticket.id }, "[redeemreward] rename after assign failed");
+        }
+      }
+    } else {
+      // Path B: legacy Ticket Tool channel. Keep puppeting until it closes.
+      try {
+        await channel.send(`$add <@${data.artistId}>`);
+        results.push(`<@${data.artistId}> added to ticket`);
+      } catch (err) {
+        logger.warn(
+          { err, artistId: data.artistId },
+          "[redeemreward] Failed to send $add command"
+        );
+        results.push(`Failed to send $add command`);
+        success = false;
+      }
     }
   } else {
-    results.push(`Could not send $add command (not a text channel)`);
+    results.push(`Could not add artist (not a text channel)`);
     success = false;
   }
 
@@ -210,6 +260,7 @@ async function handleConfirm(
     artistId: data.artistId,
     recipientId: data.recipientId,
     ticketType: data.artType,
+    ticketId: ticketIdForJob,
   });
   results.push(`Job #${String(job.jobNumber).padStart(4, "0")} created`);
 

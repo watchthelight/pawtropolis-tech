@@ -54,6 +54,9 @@ export interface CreateJobOptions {
   // Optional link to the audit trail. Technically optional but you should
   // always pass it unless you're doing weird manual job creation.
   assignmentLogId?: number;
+  // Optional FK to the first-party ticket row (migration 067). NULL for jobs
+  // assigned in legacy Ticket Tool channels that don't have a tracked ticket.
+  ticketId?: string | null;
 }
 
 /** Result from creating a job */
