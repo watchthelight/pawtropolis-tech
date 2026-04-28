@@ -8,14 +8,21 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import {
+  ActionRowBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
   MessageFlags,
   type ButtonInteraction,
   type GuildMember,
+  type ModalSubmitInteraction,
 } from "discord.js";
 import { logger } from "../../lib/logger.js";
 import { COMMUNITY_AMBASSADOR_ROLE_ID, MOD_TEAM_ROLE_ID } from "./config.js";
 import { TicketService } from "./service.js";
 import { getTicketType } from "./registry.js";
+
+export const CLOSE_MODAL_ID_PREFIX = "tk:closemod:";
 
 /** True if the actor holds Community Ambassador OR Mod Team. */
 function actorIsStaff(member: GuildMember | null): boolean {
@@ -41,6 +48,8 @@ export async function handleTicketButton(interaction: ButtonInteraction): Promis
       return handleClaimButton(interaction, rest.join(":"));
     case "unclaim":
       return handleUnclaimButton(interaction, rest.join(":"));
+    case "close":
+      return handleCloseButton(interaction, rest.join(":"));
     default:
       logger.warn(
         { customId },
@@ -111,6 +120,86 @@ async function handleUnclaimButton(
     logger.warn({ err, ticketId }, "[tickets/handlers] unclaim failed");
     await interaction.editReply({
       content: `Failed to unclaim: ${err instanceof Error ? err.message : "unknown"}`,
+    });
+  }
+}
+
+async function handleCloseButton(
+  interaction: ButtonInteraction,
+  ticketId: string
+): Promise<void> {
+  if (!interaction.guild || !interaction.member) {
+    await interaction.reply({
+      content: "Run inside a guild.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+  const member = interaction.member as GuildMember;
+  if (!actorIsStaff(member)) {
+    await interaction.reply({
+      content: "Only Community Ambassadors or Mod Team can close tickets.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  // Show reason-collection modal. Must NOT defer before showModal.
+  const modal = new ModalBuilder()
+    .setCustomId(`${CLOSE_MODAL_ID_PREFIX}${ticketId}`)
+    .setTitle("Close ticket")
+    .addComponents(
+      new ActionRowBuilder<TextInputBuilder>().addComponents(
+        new TextInputBuilder()
+          .setCustomId("reason")
+          .setLabel("Reason for closing")
+          .setStyle(TextInputStyle.Paragraph)
+          .setRequired(true)
+          .setMinLength(1)
+          .setMaxLength(500)
+          .setPlaceholder("Resolved / abandoned / duplicate / etc. — visible in transcript.")
+      )
+    );
+  await interaction.showModal(modal);
+}
+
+/**
+ * Modal-submit handler for tk:closemod:<ticketId>. Reads the reason field and
+ * delegates to TicketService.close.
+ */
+export async function handleCloseModal(interaction: ModalSubmitInteraction): Promise<void> {
+  if (!interaction.customId.startsWith(CLOSE_MODAL_ID_PREFIX)) return;
+  if (!interaction.guild || !interaction.member) {
+    await interaction.reply({
+      content: "Run inside a guild.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+  const member = interaction.member as GuildMember;
+  if (!actorIsStaff(member)) {
+    await interaction.reply({
+      content: "Only Community Ambassadors or Mod Team can close tickets.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  const ticketId = interaction.customId.slice(CLOSE_MODAL_ID_PREFIX.length);
+  const reason = interaction.fields.getTextInputValue("reason").trim();
+
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  try {
+    await TicketService.close(ticketId, {
+      closedByUserId: interaction.user.id,
+      reason,
+      guild: interaction.guild,
+    });
+    await interaction.editReply({ content: "Ticket closed." });
+  } catch (err) {
+    logger.error({ err, ticketId }, "[tickets/handlers] close failed");
+    await interaction.editReply({
+      content: `Failed to close: ${err instanceof Error ? err.message : "unknown"}`,
     });
   }
 }

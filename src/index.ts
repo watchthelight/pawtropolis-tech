@@ -307,12 +307,14 @@ commands.set(
   wrapCommand("admin-migrate-unverified", adminMigrateUnverified.execute)
 );
 
-// First-party ticket system — panel posting (admin)
+// First-party ticket system — panel posting (admin) + close-from-channel slash
 import * as postticketpanel from "./commands/postticketpanel.js";
+import * as closeticket from "./commands/closeticket.js";
 commands.set(
   postticketpanel.data.name,
   wrapCommand("postticketpanel", postticketpanel.execute)
 );
+commands.set(closeticket.data.name, wrapCommand("closeticket", closeticket.execute));
 
 client.once(Events.ClientReady, async () => {
   // schema self-heal before anything else
@@ -2052,6 +2054,24 @@ client.on("interactionCreate", wrapEvent("interactionCreate", async (interaction
           // Modal routing is where things get spicy. Modals can come from buttons OR
           // from showModal() calls, so the customId has to encode enough state to know
           // what to do. The identifyModalRoute() helper parses these - don't roll your own.
+
+          // First-party ticket close modal
+          if (customId.startsWith("tk:closemod:")) {
+            logger.info(
+              {
+                evt: "ix_route_match",
+                kind: "modal",
+                route: "ticket_close",
+                id: customId,
+                traceId,
+              },
+              "route: ticket close modal"
+            );
+            const { handleCloseModal } = await import("./features/tickets/handlers.js");
+            await handleCloseModal(interaction);
+            succeeded = true;
+            return;
+          }
 
           // Help search modal
           if (customId === "help:modal:search") {
