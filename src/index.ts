@@ -307,14 +307,16 @@ commands.set(
   wrapCommand("admin-migrate-unverified", adminMigrateUnverified.execute)
 );
 
-// First-party ticket system — panel posting (admin) + close-from-channel slash
+// First-party ticket system — panel posting (admin), close, manual reassign
 import * as postticketpanel from "./commands/postticketpanel.js";
 import * as closeticket from "./commands/closeticket.js";
+import * as assignticket from "./commands/assignticket.js";
 commands.set(
   postticketpanel.data.name,
   wrapCommand("postticketpanel", postticketpanel.execute)
 );
 commands.set(closeticket.data.name, wrapCommand("closeticket", closeticket.execute));
+commands.set(assignticket.data.name, wrapCommand("assignticket", assignticket.execute));
 
 client.once(Events.ClientReady, async () => {
   // schema self-heal before anything else

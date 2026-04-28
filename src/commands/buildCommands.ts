@@ -61,6 +61,7 @@ import { data as verifyData } from "./verify.js";
 import { data as adminMigrateUnverifiedData } from "./admin-migrate-unverified.js";
 import { data as postticketpanelData } from "./postticketpanel.js";
 import { data as closeticketData } from "./closeticket.js";
+import { data as assignticketData } from "./assignticket.js";
 
 // Returns an array of command JSON objects for Discord's bulk command registration.
 // Discord has a limit of 100 slash commands per bot per guild, so we're fine here.
@@ -139,9 +140,10 @@ export function buildCommands() {
     // Admin: one-shot migration to per-user verify threads
     adminMigrateUnverifiedData.toJSON(),
 
-    // First-party ticket system — panel posting + close-from-channel slash
+    // First-party ticket system — panel posting, close, manual reassign
     postticketpanelData.toJSON(),
     closeticketData.toJSON(),
+    assignticketData.toJSON(),
 
     /*
      * Context menu commands are registered alongside slash commands in Discord.js v14.

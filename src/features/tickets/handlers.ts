@@ -50,6 +50,14 @@ export async function handleTicketButton(interaction: ButtonInteraction): Promis
       return handleUnclaimButton(interaction, rest.join(":"));
     case "close":
       return handleCloseButton(interaction, rest.join(":"));
+    case "asncf": {
+      const { handleAssignConfirm } = await import("../../commands/assignticket.js");
+      return handleAssignConfirm(interaction);
+    }
+    case "asncx": {
+      const { handleAssignCancel } = await import("../../commands/assignticket.js");
+      return handleAssignCancel(interaction);
+    }
     default:
       logger.warn(
         { customId },
