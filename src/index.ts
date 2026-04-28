@@ -307,6 +307,13 @@ commands.set(
   wrapCommand("admin-migrate-unverified", adminMigrateUnverified.execute)
 );
 
+// First-party ticket system — panel posting (admin)
+import * as postticketpanel from "./commands/postticketpanel.js";
+commands.set(
+  postticketpanel.data.name,
+  wrapCommand("postticketpanel", postticketpanel.execute)
+);
+
 client.once(Events.ClientReady, async () => {
   // schema self-heal before anything else
   // sudo make it work
@@ -1880,6 +1887,24 @@ client.on("interactionCreate", wrapEvent("interactionCreate", async (interaction
             );
             const { handleToggleApiButton } = await import("./commands/config/toggleapis.js");
             await handleToggleApiButton(interaction);
+            succeeded = true;
+            return;
+          }
+
+          // First-party ticket system buttons (panel open / claim / close)
+          if (customId.startsWith("tk:")) {
+            logger.info(
+              {
+                evt: "ix_route_match",
+                kind: "button",
+                route: "tickets",
+                id: customId,
+                traceId,
+              },
+              "route: tickets"
+            );
+            const { handleTicketButton } = await import("./features/tickets/handlers.js");
+            await handleTicketButton(interaction);
             succeeded = true;
             return;
           }
