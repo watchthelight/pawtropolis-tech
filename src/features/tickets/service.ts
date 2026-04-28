@@ -24,6 +24,7 @@ import {
 } from "discord.js";
 import { db } from "../../db/db.js";
 import { logger } from "../../lib/logger.js";
+import { notifyDashboard } from "../../web/notifyDashboard.js";
 import { getTicketsCategoryId } from "./config.js";
 import { allocateNextNumber } from "./counters.js";
 import { buildTicketOverwrites } from "./permissions.js";
@@ -70,6 +71,25 @@ const setClosedStmt = db.prepare(
    WHERE id = ?`
 );
 
+/**
+ * Maps an internal ticket_event type to the SSE event name surfaced to the
+ * dashboard. Some internal events (artist-assigned, type-set) use a hyphen for
+ * the row's event_type but underscore for SSE; we keep the SSE names aligned
+ * with the SSEEventType union in web/src/lib/types/events.ts.
+ */
+const SSE_NAME_BY_EVENT: Record<string, string> = {
+  opened: "ticket:opened",
+  claimed: "ticket:claimed",
+  unclaimed: "ticket:unclaimed",
+  closed: "ticket:closed",
+  reassigned: "ticket:reassigned",
+  renamed: "ticket:renamed",
+  "type-set": "ticket:type_set",
+  "artist-assigned": "ticket:artist_assigned",
+  // 'archived' is internal-only: the dashboard derives archive state from
+  // ticket.archive_path rather than a separate SSE event.
+};
+
 function emitEvent(
   ticketId: string,
   type: TicketEventType,
@@ -77,6 +97,20 @@ function emitEvent(
   payload?: Record<string, unknown>
 ): void {
   insertEventStmt.run(ticketId, type, actorUserId, payload ? JSON.stringify(payload) : null);
+
+  // Fire-and-forget SSE push for live dashboard updates. Always include the
+  // ticket's typeKey so subscribers can apply tier-specific filters.
+  const sseName = SSE_NAME_BY_EVENT[type];
+  if (sseName) {
+    const ticketRow = db
+      .prepare(`SELECT type_key FROM ticket WHERE id = ?`)
+      .get(ticketId) as { type_key: string } | undefined;
+    notifyDashboard(sseName, {
+      ticketId,
+      typeKey: ticketRow?.type_key ?? null,
+      ...(payload ?? {}),
+    });
+  }
 }
 
 function rowToTicket(row: TicketRow): Ticket {

@@ -49,7 +49,15 @@ export type SSEEventType =
 	| 'modmail:message_received'
 	| 'review:stale'
 	| 'review:queue_alert'
-	| 'review:vote_out';
+	| 'review:vote_out'
+	| 'ticket:opened'
+	| 'ticket:claimed'
+	| 'ticket:unclaimed'
+	| 'ticket:closed'
+	| 'ticket:reassigned'
+	| 'ticket:renamed'
+	| 'ticket:type_set'
+	| 'ticket:artist_assigned';
 
 // ---------------------------------------------------------------------------
 // Typed payloads per event
@@ -182,6 +190,62 @@ export interface ConfigUpdatedPayload {
 	updatedBy: string;
 }
 
+// Ticket payloads — minimal by design. Privacy-sensitive types (report-user,
+// report-staff) keep payloads to non-revealing fields so SSE leakage to a
+// viewer-tier client doesn't disclose reporter info; the dashboard does the
+// heavier tier check at query/render time.
+
+export interface TicketOpenedPayload {
+	ticketId: string;
+	typeKey: string;
+	number: number;
+	channelId: string;
+}
+
+export interface TicketClaimedPayload {
+	ticketId: string;
+	typeKey: string;
+	claimerUserId: string;
+}
+
+export interface TicketUnclaimedPayload {
+	ticketId: string;
+	typeKey: string;
+}
+
+export interface TicketClosedPayload {
+	ticketId: string;
+	typeKey: string;
+	closedByUserId: string;
+}
+
+export interface TicketReassignedPayload {
+	ticketId: string;
+	typeKey: string;
+	fromArtistId: string | null;
+	toArtistId: string;
+}
+
+export interface TicketRenamedPayload {
+	ticketId: string;
+	typeKey: string;
+	from: string;
+	to: string;
+}
+
+export interface TicketTypeSetPayload {
+	ticketId: string;
+	typeKey: string;
+	artType: string;
+}
+
+export interface TicketArtistAssignedPayload {
+	ticketId: string;
+	typeKey: string;
+	artistUserId: string;
+	artType: string;
+}
+
 // ---------------------------------------------------------------------------
 // Event-to-payload type map (for type-safe consumption)
 // ---------------------------------------------------------------------------
@@ -215,6 +279,14 @@ export interface SSEEventMap {
 	'review:stale': ReviewStalePayload;
 	'review:queue_alert': ReviewQueueAlertPayload;
 	'review:vote_out': ReviewVoteOutPayload;
+	'ticket:opened': TicketOpenedPayload;
+	'ticket:claimed': TicketClaimedPayload;
+	'ticket:unclaimed': TicketUnclaimedPayload;
+	'ticket:closed': TicketClosedPayload;
+	'ticket:reassigned': TicketReassignedPayload;
+	'ticket:renamed': TicketRenamedPayload;
+	'ticket:type_set': TicketTypeSetPayload;
+	'ticket:artist_assigned': TicketArtistAssignedPayload;
 }
 
 export interface ModmailMessageReceivedPayload {
@@ -261,7 +333,11 @@ export const EVENT_TIER_VISIBILITY: Record<string, DashboardTier> = {
 	'pulse:': 'mod',
 	'audit:': 'admin',
 	'config:': 'admin',
-	'system:': 'owner'
+	'system:': 'owner',
+	// Ticket events visible to all staff. Reports are tier-restricted at the
+	// page/query level on the dashboard, not here — payloads are intentionally
+	// minimal so SSE leakage doesn't expose reporter info.
+	'ticket:': 'viewer'
 };
 
 /**
