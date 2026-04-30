@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "purpose": "Low-effort tokens used by scripts/score-quality.mjs to flag throwaway one-word messages.",
+    "rule": "If a message's normalized tokens are ALL contained in this list (and word count <= 3), apply the low-effort penalty. Editable; re-run score-quality.mjs after changes."
+  },
+  "tokens": [
+    "goober", "silly", "short", "sus", "based", "cringe", "mid", "slay",
+    "lol", "lmao", "lmfao", "rofl", "lel", "kek",
+    "bruh", "bro", "dude", "man", "buddy",
+    "k", "ok", "okay", "kk", "okayy",
+    "nice", "cool", "neat", "sweet", "dope", "fire",
+    "this", "same", "ratio", "facts", "real", "true", "fr", "frfr", "lowkey", "highkey",
+    "w", "l", "ws", "ls",
+    "ay", "ayy", "ayyy", "yo", "oof", "rip", "f",
+    "gg", "gn", "gm", "ty", "tyy", "thx", "thanks", "np", "yw", "ily", "ilyy",
+    "idk", "idc", "imo", "imho", "tbh",
+    "omg", "wtf", "wth", "wym", "wdym",
+    "yes", "no", "yeah", "nah", "yep", "nope", "yup",
+    "bet", "fax", "cap", "nocap",
+    "?", "??", "???", "!", "!!", "!!!", ".", "..", "...", "huh", "hm", "hmm", "hmmm"
+  ]
+}
