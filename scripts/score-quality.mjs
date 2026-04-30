@@ -135,10 +135,15 @@ const insertMany = db.transaction((rows) => {
 });
 
 const BATCH = 5000;
-let buf = [];
 let total = 0;
 
-for (const row of selectStmt.iterate()) {
+// Load to array first; better-sqlite3 forbids nested statements on an open
+// iterator, and `insertMany` is itself a prepared transaction.
+const allRows = selectStmt.all();
+console.log(`[load] ${allRows.length} rows to score`);
+
+let buf = [];
+for (const row of allRows) {
   const out = score(row.content, row.attachments, row.embeds);
   buf.push({ id: row.id, created_at_s: row.created_at_s, score: out.score, features: out.features });
   if (buf.length >= BATCH) {
