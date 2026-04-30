@@ -11,8 +11,16 @@
 import Database from 'better-sqlite3';
 
 const DB_PATH = 'data/data.db';
-const PER_STRATUM = 50;
 const SEED = 42; // determinism: re-runs pick the same sample
+
+// CLI: --target N    fill each stratum up to N rows (default 50)
+//      --per-stratum N  alias of --target
+const args = process.argv.slice(2);
+function argN(name, dflt) {
+  const i = args.indexOf(name);
+  return i >= 0 ? parseInt(args[i + 1], 10) : dflt;
+}
+const TARGET = argN('--target', argN('--per-stratum', 50));
 
 const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');
@@ -27,16 +35,13 @@ db.exec(`
 `);
 
 const existing = db.prepare(`SELECT COUNT(*) c FROM general_messages_gold`).get().c;
-if (existing > 0) {
-  console.log(`[skip] gold set already populated (${existing} rows). Delete first to resample.`);
-  process.exit(0);
-}
+console.log(`[gold] existing rows: ${existing}, target per stratum: ${TARGET}`);
 
-console.log('[query] computing strata + sampling...');
+console.log('[query] computing strata + sampling (top-up to target)...');
 
-// SQLite RANDOM() is deterministic given a seed, but better-sqlite3 doesn't
-// expose seeding directly. Workaround: select a deterministic order via abs(id-seed)
-// hashing won't be perfectly uniform but is reproducible across runs.
+// Deterministic order via id-suffix hash + seed. Pre-existing rows keep their
+// place because their ids occupy the same ranks; we just extend the cut from
+// previous-target to TARGET on each re-run.
 const sql = `
   WITH eligible AS (
     SELECT
@@ -69,18 +74,19 @@ const sql = `
            ) AS rn
     FROM eligible
   )
-  SELECT id, lb, sb FROM ranked WHERE rn <= ${PER_STRATUM}
+  SELECT id, lb, sb FROM ranked WHERE rn <= ${TARGET}
 `;
 
 const picks = db.prepare(sql).all();
-console.log(`[picked] ${picks.length} rows across ${new Set(picks.map(p => p.lb*10+p.sb)).size} strata`);
+const newPicks = picks.filter((p) => !db.prepare(`SELECT 1 FROM general_messages_gold WHERE id = ?`).get(p.id));
+console.log(`[picked] target=${picks.length}  already-gold=${picks.length - newPicks.length}  new=${newPicks.length}`);
 
-const insert = db.prepare(`INSERT INTO general_messages_gold (id, stratum_len, stratum_score, selected_at_s) VALUES (?, ?, ?, ?)`);
+const insert = db.prepare(`INSERT OR IGNORE INTO general_messages_gold (id, stratum_len, stratum_score, selected_at_s) VALUES (?, ?, ?, ?)`);
 const now = Math.floor(Date.now() / 1000);
 const insertMany = db.transaction((rows) => {
   for (const r of rows) insert.run(r.id, r.lb, r.sb, now);
 });
-insertMany(picks);
+insertMany(newPicks);
 
 // Stratum coverage report
 const cov = db.prepare(`
