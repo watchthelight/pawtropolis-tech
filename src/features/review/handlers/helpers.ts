@@ -128,6 +128,45 @@ export async function resolveApplication(
 // ===== Modal Opening Functions =====
 
 /**
+ * safeShowModal
+ * WHAT: Shows a modal with up-front state checks + structured failure logging.
+ * WHY: showModal must be the FIRST response on an interaction (Discord rule)
+ *      and the token only lives 3s. Calling it after an upstream ack or after
+ *      the token aged out yields a confusing 10062 ("Unknown interaction").
+ *      This helper makes both failure modes explicit instead of silently
+ *      swallowing them.
+ */
+async function safeShowModal(
+  interaction: ButtonInteraction,
+  modal: ModalBuilder,
+  ctx: { appId: string; action: string }
+): Promise<boolean> {
+  if (interaction.replied || interaction.deferred) {
+    logger.warn(
+      { ...ctx, replied: interaction.replied, deferred: interaction.deferred, interactionId: interaction.id },
+      "[review] cannot show modal — interaction already acked upstream"
+    );
+    return false;
+  }
+  const ageMs = Date.now() - interaction.createdTimestamp;
+  if (ageMs > 2500) {
+    logger.warn({ ...ctx, ageMs, interactionId: interaction.id }, "[review] modal: interaction near token-expiry, skipping showModal");
+    return false;
+  }
+  try {
+    await interaction.showModal(modal);
+    return true;
+  } catch (err) {
+    const code = (err as { code?: number })?.code;
+    logger.warn(
+      { ...ctx, err, code, ageMs: Date.now() - interaction.createdTimestamp, replied: interaction.replied, deferred: interaction.deferred, interactionId: interaction.id },
+      "[review] showModal failed"
+    );
+    return false;
+  }
+}
+
+/**
  * openRejectModal
  * WHAT: Shows the rejection modal with reason input.
  * WHY: Allows moderators to provide rejection reason before finalizing.
@@ -161,9 +200,7 @@ export async function openRejectModal(interaction: ButtonInteraction, app: Appli
     return;
   }
 
-  await interaction.showModal(modal).catch((err) => {
-    logger.warn({ err, appId: app.id }, "Failed to show reject modal");
-  });
+  await safeShowModal(interaction, modal, { appId: app.id, action: "reject" });
 }
 
 /**
@@ -201,9 +238,7 @@ export async function openAcceptModal(interaction: ButtonInteraction, app: Appli
   const row = new ActionRowBuilder<TextInputBuilder>().addComponents(reasonInput);
   modal.addComponents(row);
 
-  await interaction.showModal(modal).catch((err) => {
-    logger.warn({ err, appId: app.id }, "Failed to show accept modal");
-  });
+  await safeShowModal(interaction, modal, { appId: app.id, action: "accept" });
 }
 
 /**
@@ -237,9 +272,7 @@ export async function openPermRejectModal(interaction: ButtonInteraction, app: A
   const modalRow = new ActionRowBuilder<TextInputBuilder>().addComponents(input);
   modal.addComponents(modalRow);
 
-  await interaction.showModal(modal).catch((err) => {
-    logger.warn({ err, appId: app.id }, "[review] failed to show permanent reject modal");
-  });
+  await safeShowModal(interaction, modal, { appId: app.id, action: "perm_reject" });
 }
 
 /**
@@ -278,9 +311,7 @@ export async function openKickModal(interaction: ButtonInteraction, app: Applica
   const row = new ActionRowBuilder<TextInputBuilder>().addComponents(reasonInput);
   modal.addComponents(row);
 
-  await interaction.showModal(modal).catch((err) => {
-    logger.warn({ err, appId: app.id }, "[review] failed to show kick modal");
-  });
+  await safeShowModal(interaction, modal, { appId: app.id, action: "kick" });
 }
 
 /**
@@ -326,7 +357,5 @@ export async function openUnclaimModal(interaction: ButtonInteraction, app: Appl
   const row = new ActionRowBuilder<TextInputBuilder>().addComponents(confirmInput);
   modal.addComponents(row);
 
-  await interaction.showModal(modal).catch((err) => {
-    logger.warn({ err, appId: app.id }, "[review] failed to show unclaim modal");
-  });
+  await safeShowModal(interaction, modal, { appId: app.id, action: "unclaim" });
 }
