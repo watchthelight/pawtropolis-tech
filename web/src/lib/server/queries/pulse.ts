@@ -34,12 +34,27 @@ function fmt(n: number): string {
  * Server-wide pulse metrics for the M+ dashboard.
  * Aggregates pending apps, open modmail, NSFW flags, and today's decision count.
  */
-export function getPulseMetrics(guildId: string): PulseMetrics {
-	// Compute UTC midnight once — used by decisionsToday (epoch seconds) and submittedToday (ISO text)
-	const now = new Date();
-	const midnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-	const todayMidnightS = Math.floor(midnight.getTime() / 1000);
-	const todayMidnightISO = midnight.toISOString().slice(0, 19).replace('T', ' ');
+/**
+ * getPulseMetrics — window-aware. All time-bound counts now scope to the
+ * provided range (or "today" if range is omitted, for backwards compat).
+ *
+ * Field names retain their historical "Today"/"7d" naming for API stability,
+ * but the values are window-relative:
+ *   - decisionsToday    → decisions inside the window
+ *   - submittedToday    → applications submitted inside the window
+ *   - messagesToday     → messages inside the window
+ *   - messagesAvg7d     → messages-per-day mean across the window
+ *   - hourlyDistribution → 24-bucket histogram of the most recent 24h IN window
+ *   - activeRealUsers   → users with ≥ activeUserMsgThreshold(window) messages
+ *
+ * Counts that are state-of-now (pendingApps, modmail, flags, member totals)
+ * stay range-independent.
+ */
+export function getPulseMetrics(guildId: string, range?: ResolvedRange): PulseMetrics {
+	const nowS = Math.floor(Date.now() / 1000);
+	const startS = range?.startS ?? (nowS - (nowS % 86400)); // default = today midnight
+	const endS = range?.endS ?? nowS;
+	const windowDays = Math.max(1, Math.round((endS - startS) / 86400));
 
 	const pendingApps = count(
 		"SELECT COUNT(*) as count FROM application WHERE guild_id = ? AND status IN ('submitted', 'needs_info')",
@@ -69,41 +84,47 @@ export function getPulseMetrics(guildId: string): PulseMetrics {
 	const decisionsToday = count(
 		`SELECT COUNT(*) as count FROM action_log
 		 WHERE guild_id = ? AND action IN ('approve', 'reject', 'perm_reject', 'kick')
-		 AND created_at_s >= ?`,
+		 AND created_at_s >= ? AND created_at_s < ?`,
 		guildId,
-		todayMidnightS
+		startS,
+		endS
 	);
 
+	// application.created_at is ISO text (e.g. "2026-04-30 12:34:56"); convert window epoch → ISO
+	const startISO = new Date(startS * 1000).toISOString().slice(0, 19).replace('T', ' ');
+	const endISO = new Date(endS * 1000).toISOString().slice(0, 19).replace('T', ' ');
 	const submittedToday = count(
-		'SELECT COUNT(*) as count FROM application WHERE guild_id = ? AND created_at >= ?',
+		'SELECT COUNT(*) as count FROM application WHERE guild_id = ? AND created_at >= ? AND created_at < ?',
 		guildId,
-		todayMidnightISO
+		startISO,
+		endISO
 	);
 
-	// Hourly message distribution for today — uses (guild_id, hour_bucket) index
+	// Hourly distribution: last 24h leading up to endS, bucketed by hour
+	const hourlyStartS = endS - 24 * 3600;
 	const hourlyRows = db().prepare(
 		`SELECT hour_bucket, COUNT(*) as count
 		 FROM message_activity
 		 WHERE guild_id = ? AND hour_bucket >= ? AND hour_bucket < ?
 		 GROUP BY hour_bucket
 		 ORDER BY hour_bucket`
-	).all(guildId, todayMidnightS, todayMidnightS + 24 * 3600) as { hour_bucket: number; count: number }[];
+	).all(guildId, hourlyStartS, endS) as { hour_bucket: number; count: number }[];
 
 	const hourlyDistribution = new Array(24).fill(0);
 	for (const row of hourlyRows) {
-		hourlyDistribution[(row.hour_bucket - todayMidnightS) / 3600] = row.count;
+		const idx = Math.floor((row.hour_bucket - hourlyStartS) / 3600);
+		if (idx >= 0 && idx < 24) hourlyDistribution[idx] = row.count;
 	}
-	const messagesToday = hourlyDistribution.reduce((a, b) => a + b, 0);
 
-	// 7-day average: total messages / distinct days with data (max 7 days lookback)
-	const sevenDaysAgoS = todayMidnightS - 7 * 86400;
-	const weekStats = db().prepare(
+	// Total messages in window + per-day mean
+	const winStats = db().prepare(
 		`SELECT COUNT(*) as total, COUNT(DISTINCT(created_at_s / 86400)) as days
 		 FROM message_activity WHERE guild_id = ? AND created_at_s >= ? AND created_at_s < ?`
-	).get(guildId, sevenDaysAgoS, todayMidnightS) as { total: number; days: number };
-	const messagesAvg7d = weekStats.days > 0 ? Math.round(weekStats.total / weekStats.days) : 0;
+	).get(guildId, startS, endS) as { total: number; days: number };
+	const messagesToday = winStats.total;
+	const messagesAvg7d = winStats.days > 0 ? Math.round(winStats.total / winStats.days) : 0;
 
-	// Member counts
+	// Member counts (range-independent)
 	const allTimeMembers = count(
 		'SELECT COUNT(*) as count FROM user_activity WHERE guild_id = ?',
 		guildId
@@ -114,7 +135,6 @@ export function getPulseMetrics(guildId: string): PulseMetrics {
 	);
 	const totalMembers = allTimeMembers - membersLeft;
 
-	// Estimated bots: current members with no first_message_at.
 	const estimatedBots = count(
 		'SELECT COUNT(*) as count FROM user_activity WHERE guild_id = ? AND first_message_at IS NULL AND left_at IS NULL',
 		guildId
@@ -122,18 +142,20 @@ export function getPulseMetrics(guildId: string): PulseMetrics {
 
 	const estimatedRealUsers = Math.max(0, totalMembers - estimatedBots);
 
-	// Active real users: 100+ messages in the past 14 days.
-	// Uses the (guild_id, created_at_s) index for the WHERE filter.
-	const fourteenDaysAgoS = Math.floor(Date.now() / 1000) - 14 * 86400;
+	// Active real users: ≥ N messages within window. Threshold scales with window length
+	// (~7 msgs/day baseline so a 7d window keeps the historical 100/2wk feel).
+	const activeUserThreshold = Math.max(10, Math.round(7 * windowDays));
 	const activeRealUsers = count(
 		`SELECT COUNT(*) as count FROM (
 			SELECT user_id FROM message_activity
-			WHERE guild_id = ? AND created_at_s >= ?
+			WHERE guild_id = ? AND created_at_s >= ? AND created_at_s < ?
 			GROUP BY user_id
-			HAVING COUNT(*) >= 100
+			HAVING COUNT(*) >= ?
 		)`,
 		guildId,
-		fourteenDaysAgoS
+		startS,
+		endS,
+		activeUserThreshold
 	);
 
 	return { pendingApps, openModmail, latestModmailAt, activeFlags, behavioralFlags, decisionsToday, submittedToday, messagesToday, messagesAvg7d, hourlyDistribution, totalMembers, allTimeMembers, membersLeft, estimatedBots, estimatedRealUsers, activeRealUsers };
@@ -236,33 +258,40 @@ function weekStats(guildId: string, from: number, to: number, excludedChannelIds
 }
 
 /**
- * Newsletter shows the LAST COMPLETED week (Mon-Sun) vs the week before that.
- * "Current" = last full Mon 00:00 UTC → Sun 23:59 UTC.
- * "Previous" = the week before that.
- * This matches Discord Server Insights and ensures the newsletter always reports a full week.
+ * Newsletter stats — current = window, previous = same-length period
+ * immediately preceding it. With no range supplied, falls back to the legacy
+ * "last completed Mon-Sun week vs the week before".
  */
-export function getNewsletterStats(guildId: string): NewsletterStats {
-	const now = new Date();
-	const utcDay = now.getUTCDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-	const daysSinceMonday = utcDay === 0 ? 6 : utcDay - 1;
-	const thisMonday = new Date(Date.UTC(
-		now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - daysSinceMonday
-	));
-	const thisMondayS = Math.floor(thisMonday.getTime() / 1000);
+export function getNewsletterStats(guildId: string, range?: ResolvedRange): NewsletterStats {
+	let curStart: number, curEnd: number, prevStart: number, prevEnd: number;
 
-	// Last completed week: previous Monday → this Monday
-	const lastWeekStart = thisMondayS - 7 * 86400;
-	const lastWeekEnd = thisMondayS;
-	// Week before that
-	const prevWeekStart = thisMondayS - 14 * 86400;
-	const prevWeekEnd = lastWeekStart;
+	if (range) {
+		curStart = range.startS;
+		curEnd = range.endS;
+		const len = curEnd - curStart;
+		// Prefer the explicit prevStartS the resolver computed; otherwise mirror the window.
+		prevEnd = curStart;
+		prevStart = range.prevStartS ?? curStart - len;
+	} else {
+		const now = new Date();
+		const utcDay = now.getUTCDay();
+		const daysSinceMonday = utcDay === 0 ? 6 : utcDay - 1;
+		const thisMonday = new Date(Date.UTC(
+			now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - daysSinceMonday
+		));
+		const thisMondayS = Math.floor(thisMonday.getTime() / 1000);
+		curStart = thisMondayS - 7 * 86400;
+		curEnd = thisMondayS;
+		prevStart = thisMondayS - 14 * 86400;
+		prevEnd = curStart;
+	}
 
 	const voiceRows = (db().prepare('SELECT COUNT(*) as count FROM voice_session WHERE guild_id = ?').get(guildId) as { count: number }).count;
 	const excludedChannelIds = getExcludedChannelIds(guildId);
 
 	return {
-		current: weekStats(guildId, lastWeekStart, lastWeekEnd, excludedChannelIds),
-		previous: weekStats(guildId, prevWeekStart, prevWeekEnd, excludedChannelIds),
+		current: weekStats(guildId, curStart, curEnd, excludedChannelIds),
+		previous: weekStats(guildId, prevStart, prevEnd, excludedChannelIds),
 		voiceTrackingActive: voiceRows > 0
 	};
 }
@@ -484,13 +513,29 @@ export interface Insight {
 	suggestion?: string;
 }
 
-type InsightDetector = (guildId: string, nowS: number) => Insight | null;
+type InsightDetector = (guildId: string, ctx: InsightCtx) => Insight | null;
+
+interface InsightCtx {
+	/** End of the current window (semantically "now"). */
+	nowS: number;
+	/** Start of the current window. */
+	startS: number;
+	/** Length of the current window in seconds. */
+	winLen: number;
+	/** Round-figure number of days the window spans. */
+	winDays: number;
+	/** Human label for the current window ("this 7d", "this 30d", etc.). */
+	winLabel: string;
+	/** Equal-length window immediately prior. */
+	prevStartS: number;
+	prevEndS: number;
+}
 
 // ── Growth & Retention ──
 
-function detectJoinVelocity(guildId: string, nowS: number): Insight | null {
-	const weekStart = nowS - 7 * 86400;
-	const fourWeeksAgo = nowS - 28 * 86400;
+function detectJoinVelocity(guildId: string, ctx: InsightCtx): Insight | null {
+	const { nowS, startS: weekStart, winLen, winLabel } = ctx;
+	const fourWeeksAgo = nowS - 4 * winLen;
 
 	const thisWeek = count(
 		'SELECT COUNT(*) as count FROM user_activity WHERE guild_id = ? AND joined_at >= ? AND joined_at < ?',
@@ -512,17 +557,16 @@ function detectJoinVelocity(guildId: string, nowS: number): Insight | null {
 		severity: Math.abs(pctDiff) > 60 ? 'warning' : 'info',
 		title: spike ? 'Join velocity spike' : 'Join velocity drop',
 		body: spike
-			? `${thisWeek} joins this week — ${Math.round(pctDiff)}% above the 4-week average of ${Math.round(fourWeekAvg)}.`
-			: `Only ${thisWeek} joins this week — ${Math.round(Math.abs(pctDiff))}% below the 4-week average of ${Math.round(fourWeekAvg)}.`,
+			? `${thisWeek} joins ${winLabel} — ${Math.round(pctDiff)}% above the 4×window average of ${Math.round(fourWeekAvg)}.`
+			: `Only ${thisWeek} joins ${winLabel} — ${Math.round(Math.abs(pctDiff))}% below the 4×window average of ${Math.round(fourWeekAvg)}.`,
 		metric: fmt(thisWeek),
 		trend: spike ? 'up' : 'down',
 		suggestion: spike ? 'Check if a raid or external promotion is driving the spike.' : 'Consider outreach or community events to boost visibility.'
 	};
 }
 
-function detectRetentionCliff(guildId: string, nowS: number): Insight | null {
-	const weekStart = nowS - 7 * 86400;
-	const prevStart = nowS - 14 * 86400;
+function detectRetentionCliff(guildId: string, ctx: InsightCtx): Insight | null {
+	const { nowS, startS: weekStart, prevStartS: prevStart } = ctx;
 	const d = db();
 
 	const currentRet = d.prepare(
@@ -545,7 +589,7 @@ function detectRetentionCliff(guildId: string, nowS: number): Insight | null {
 			severity: cur < 10 ? 'critical' : 'warning',
 			title: 'New member retention dropping',
 			body: cur < 20
-				? `Only ${cur.toFixed(1)}% of new members this week sent a message — below the 20% threshold.`
+				? `Only ${cur.toFixed(1)}% of new members ${ctx.winLabel} sent a message — below the 20% threshold.`
 				: `Retention fell ${(prev - cur).toFixed(1)} percentage points from ${prev.toFixed(1)}% to ${cur.toFixed(1)}%.`,
 			metric: `${cur.toFixed(1)}%`,
 			trend: 'down',
@@ -555,9 +599,9 @@ function detectRetentionCliff(guildId: string, nowS: number): Insight | null {
 	return null;
 }
 
-function detectLeaveSpike(guildId: string, nowS: number): Insight | null {
-	const weekStart = nowS - 7 * 86400;
-	const fourWeeksAgo = nowS - 28 * 86400;
+function detectLeaveSpike(guildId: string, ctx: InsightCtx): Insight | null {
+	const { nowS, startS: weekStart, winLen, winLabel } = ctx;
+	const fourWeeksAgo = nowS - 4 * winLen;
 
 	// Guard: need at least 2 weeks of leave data to compare meaningfully
 	const priorWeeks = count(
@@ -582,15 +626,15 @@ function detectLeaveSpike(guildId: string, nowS: number): Insight | null {
 		category: 'growth',
 		severity: 'critical',
 		title: 'Member departure surge',
-		body: `${thisWeek} members left this week — ${(thisWeek / fourWeekAvg).toFixed(1)}x the 4-week average of ${Math.round(fourWeekAvg)}.`,
+		body: `${thisWeek} members left ${winLabel} — ${(thisWeek / fourWeekAvg).toFixed(1)}x the 4×window average of ${Math.round(fourWeekAvg)}.`,
 		metric: fmt(thisWeek),
 		trend: 'up',
 		suggestion: 'Investigate recent events — server changes, conflicts, or moderation actions that may be driving departures.'
 	};
 }
 
-function detectGhostRatio(guildId: string, nowS: number): Insight | null {
-	const thirtyDaysAgo = nowS - 30 * 86400;
+function detectGhostRatio(guildId: string, ctx: InsightCtx): Insight | null {
+	const { startS: thirtyDaysAgo, winDays, winLabel } = ctx;
 
 	const total = count(
 		'SELECT COUNT(*) as count FROM user_activity WHERE guild_id = ? AND joined_at >= ?',
@@ -611,7 +655,7 @@ function detectGhostRatio(guildId: string, nowS: number): Insight | null {
 		category: 'retention',
 		severity: pct > 90 ? 'critical' : 'warning',
 		title: 'High ghost member ratio',
-		body: `${pct.toFixed(1)}% of members who joined in the last 30 days (${ghosts}/${total}) never sent a message.`,
+		body: `${pct.toFixed(1)}% of members who joined in the last ${winDays} day${winDays === 1 ? '' : 's'} (${ghosts}/${total}) never sent a message.`,
 		metric: `${pct.toFixed(1)}%`,
 		trend: 'up',
 		suggestion: 'Consider a welcome ping, starter prompts, or a guided intro channel to break the ice.'
@@ -620,7 +664,8 @@ function detectGhostRatio(guildId: string, nowS: number): Insight | null {
 
 // ── Engagement ──
 
-function detectMessageAnomaly(guildId: string, nowS: number): Insight | null {
+function detectMessageAnomaly(guildId: string, ctx: InsightCtx): Insight | null {
+	const { nowS } = ctx;
 	const d = db();
 	const nowDate = new Date(nowS * 1000);
 	const currentHour = nowDate.getUTCHours();
@@ -667,8 +712,8 @@ function detectMessageAnomaly(guildId: string, nowS: number): Insight | null {
 	};
 }
 
-function detectChannelConcentration(guildId: string, nowS: number): Insight | null {
-	const weekStart = nowS - 7 * 86400;
+function detectChannelConcentration(guildId: string, ctx: InsightCtx): Insight | null {
+	const { startS: weekStart, winLabel } = ctx;
 	const d = db();
 
 	const top = d.prepare(
@@ -688,21 +733,22 @@ function detectChannelConcentration(guildId: string, nowS: number): Insight | nu
 		category: 'engagement',
 		severity: top.pct > 80 ? 'warning' : 'info',
 		title: 'Conversation concentrated in one channel',
-		body: `${top.pct.toFixed(1)}% of this week's messages (${fmt(top.cnt)}) are in ${channelLabel}.`,
+		body: `${top.pct.toFixed(1)}% of ${winLabel}'s messages (${fmt(top.cnt)}) are in ${channelLabel}.`,
 		metric: `${top.pct.toFixed(1)}%`,
 		trend: 'flat',
 		suggestion: 'Consider whether this is healthy engagement or spam. Diversifying conversation across channels improves resilience.'
 	};
 }
 
-function detectCommunicatorRatioDecline(guildId: string, nowS: number): Insight | null {
+function detectCommunicatorRatioDecline(guildId: string, ctx: InsightCtx): Insight | null {
+	const { nowS, winLen } = ctx;
 	const d = db();
 	const ratios: number[] = [];
 
-	// Get communicator ratio for each of the last 4 weeks
+	// Get communicator ratio for each of the last 4 windows
 	for (let w = 0; w < 4; w++) {
-		const wEnd = nowS - w * 7 * 86400;
-		const wStart = wEnd - 7 * 86400;
+		const wEnd = nowS - w * winLen;
+		const wStart = wEnd - winLen;
 
 		const communicators = count(
 			'SELECT COUNT(DISTINCT user_id) as count FROM message_activity WHERE guild_id = ? AND created_at_s >= ? AND created_at_s < ?',
@@ -732,16 +778,15 @@ function detectCommunicatorRatioDecline(guildId: string, nowS: number): Insight 
 		category: 'engagement',
 		severity: 'warning',
 		title: 'Engagement density declining',
-		body: `The ratio of active communicators to total members has decreased for ${ratios.length} consecutive weeks. Currently ${currentPct}%.`,
+		body: `The ratio of active communicators to total members has decreased for ${ratios.length} consecutive windows. Currently ${currentPct}%.`,
 		metric: `${currentPct}%`,
 		trend: 'down',
 		suggestion: 'Server activity is becoming more passive. Consider engagement events, topic prompts, or reducing lurker friction.'
 	};
 }
 
-function detectVoiceTrend(guildId: string, nowS: number): Insight | null {
-	const weekStart = nowS - 7 * 86400;
-	const prevStart = nowS - 14 * 86400;
+function detectVoiceTrend(guildId: string, ctx: InsightCtx): Insight | null {
+	const { nowS, startS: weekStart, prevStartS: prevStart, winLabel } = ctx;
 	const d = db();
 
 	// Total voice minutes this week vs last (include still-in-voice sessions)
@@ -771,7 +816,7 @@ function detectVoiceTrend(guildId: string, nowS: number): Insight | null {
 			category: 'engagement',
 			severity: 'info',
 			title: 'Voice engagement is shallow',
-			body: `Only ${voiceUsersThisWeek} user${voiceUsersThisWeek === 1 ? '' : 's'} used voice this week (${((voiceUsersThisWeek / communicatorsThisWeek) * 100).toFixed(1)}% of communicators) but logged ${fmt(thisWeek)} minutes.`,
+			body: `Only ${voiceUsersThisWeek} user${voiceUsersThisWeek === 1 ? '' : 's'} used voice ${winLabel} (${((voiceUsersThisWeek / communicatorsThisWeek) * 100).toFixed(1)}% of communicators) but logged ${fmt(thisWeek)} minutes.`,
 			metric: `${voiceUsersThisWeek} users`,
 			trend: 'flat',
 			suggestion: 'A small group is camping voice channels. Consider voice events or activities to broaden participation.'
@@ -790,7 +835,7 @@ function detectVoiceTrend(guildId: string, nowS: number): Insight | null {
 				category: 'engagement',
 				severity: 'warning',
 				title: 'Voice activity dropping',
-				body: `${fmt(thisWeek)} voice minutes this week — down ${Math.abs(pctChange).toFixed(0)}% from last week's ${fmt(prevWeek)}.`,
+				body: `${fmt(thisWeek)} voice minutes ${winLabel} — down ${Math.abs(pctChange).toFixed(0)}% from prior period's ${fmt(prevWeek)}.`,
 				metric: `${fmt(thisWeek)} min`,
 				trend: 'down',
 				suggestion: 'Consider hosting a voice event, game night, or movie night to re-engage the community.'
@@ -803,7 +848,7 @@ function detectVoiceTrend(guildId: string, nowS: number): Insight | null {
 				category: 'engagement',
 				severity: 'info',
 				title: 'Voice activity surging',
-				body: `${fmt(thisWeek)} voice minutes this week — up ${pctChange.toFixed(0)}% from last week's ${fmt(prevWeek)}.`,
+				body: `${fmt(thisWeek)} voice minutes ${winLabel} — up ${pctChange.toFixed(0)}% from prior period's ${fmt(prevWeek)}.`,
 				metric: `${fmt(thisWeek)} min`,
 				trend: 'up'
 			};
@@ -815,8 +860,8 @@ function detectVoiceTrend(guildId: string, nowS: number): Insight | null {
 
 // ── Moderation ──
 
-function detectAppBacklog(guildId: string, nowS: number): Insight | null {
-	const weekStart = nowS - 7 * 86400;
+function detectAppBacklog(guildId: string, ctx: InsightCtx): Insight | null {
+	const { startS: weekStart, winDays } = ctx;
 
 	const pending = count(
 		"SELECT COUNT(*) as count FROM application WHERE guild_id = ? AND status IN ('submitted', 'needs_info')",
@@ -831,7 +876,7 @@ function detectAppBacklog(guildId: string, nowS: number): Insight | null {
 		guildId, weekStart
 	);
 
-	const dailyRate = reviewsThisWeek / 7;
+	const dailyRate = reviewsThisWeek / Math.max(1, winDays);
 	if (dailyRate === 0 && pending === 0) return null;
 	if (dailyRate > 0 && pending <= dailyRate * 2) return null;
 
@@ -841,7 +886,7 @@ function detectAppBacklog(guildId: string, nowS: number): Insight | null {
 		severity: pending > dailyRate * 5 || (dailyRate === 0 && pending > 0) ? 'critical' : 'warning',
 		title: 'Application backlog growing',
 		body: dailyRate === 0
-			? `${pending} applications pending with no reviews in the past week.`
+			? `${pending} applications pending with no reviews in the past ${winDays} day${winDays === 1 ? '' : 's'}.`
 			: `${pending} applications pending — review rate is ${dailyRate.toFixed(1)}/day, which would take ${Math.ceil(pending / dailyRate)} days to clear.`,
 		metric: fmt(pending),
 		trend: 'up',
@@ -849,8 +894,8 @@ function detectAppBacklog(guildId: string, nowS: number): Insight | null {
 	};
 }
 
-function detectModWorkloadImbalance(guildId: string, nowS: number): Insight | null {
-	const weekStart = nowS - 7 * 86400;
+function detectModWorkloadImbalance(guildId: string, ctx: InsightCtx): Insight | null {
+	const { startS: weekStart, winLabel } = ctx;
 	const d = db();
 
 	const rows = d.prepare(
@@ -873,16 +918,16 @@ function detectModWorkloadImbalance(guildId: string, nowS: number): Insight | nu
 		category: 'moderation',
 		severity: topMod.pct > 60 ? 'warning' : 'info',
 		title: 'Moderator workload imbalance',
-		body: `One moderator handled ${topMod.pct.toFixed(1)}% of all reviews this week (${topMod.reviews} of ${rows.reduce((a, b) => a + b.reviews, 0)}).`,
+		body: `One moderator handled ${topMod.pct.toFixed(1)}% of all reviews ${winLabel} (${topMod.reviews} of ${rows.reduce((a, b) => a + b.reviews, 0)}).`,
 		metric: `${topMod.pct.toFixed(1)}%`,
 		trend: 'flat',
 		suggestion: 'Consider distributing reviews more evenly to prevent burnout.'
 	};
 }
 
-function detectRejectionRateShift(guildId: string, nowS: number): Insight | null {
-	const weekStart = nowS - 7 * 86400;
-	const fourWeeksAgo = nowS - 28 * 86400;
+function detectRejectionRateShift(guildId: string, ctx: InsightCtx): Insight | null {
+	const { nowS, startS: weekStart, winLen, winLabel } = ctx;
+	const fourWeeksAgo = nowS - 4 * winLen;
 	const d = db();
 
 	const thisWeek = d.prepare(
@@ -921,7 +966,7 @@ function detectRejectionRateShift(guildId: string, nowS: number): Insight | null
 		category: 'moderation',
 		severity: Math.abs(diff) > 30 ? 'warning' : 'info',
 		title: higher ? 'Rejection rate up' : 'Rejection rate down',
-		body: `Rejection rate this week is ${thisRate.toFixed(1)}% vs ${fourRate.toFixed(1)}% average — a ${Math.abs(diff).toFixed(1)}pp ${higher ? 'increase' : 'decrease'}.`,
+		body: `Rejection rate ${winLabel} is ${thisRate.toFixed(1)}% vs ${fourRate.toFixed(1)}% prior-window average — a ${Math.abs(diff).toFixed(1)}pp ${higher ? 'increase' : 'decrease'}.`,
 		metric: `${thisRate.toFixed(1)}%`,
 		trend: higher ? 'up' : 'down',
 		suggestion: higher
@@ -930,9 +975,8 @@ function detectRejectionRateShift(guildId: string, nowS: number): Insight | null
 	};
 }
 
-function detectModmailResponseTime(guildId: string, nowS: number): Insight | null {
-	const weekStart = nowS - 7 * 86400;
-	const prevStart = nowS - 14 * 86400;
+function detectModmailResponseTime(guildId: string, ctx: InsightCtx): Insight | null {
+	const { nowS, startS: weekStart, prevStartS: prevStart } = ctx;
 	const d = db();
 
 	// Average time to first staff reply (direction='to_user') for tickets this week vs last
@@ -959,7 +1003,7 @@ function detectModmailResponseTime(guildId: string, nowS: number): Insight | nul
 		category: 'moderation',
 		severity: pctChange > 100 ? 'warning' : 'info',
 		title: 'Modmail response time increasing',
-		body: `Average first reply is ${hours}h — ${pctChange.toFixed(0)}% slower than last week.`,
+		body: `Average first reply is ${hours}h — ${pctChange.toFixed(0)}% slower than the prior period.`,
 		metric: `${hours}h`,
 		trend: 'up',
 		suggestion: 'Assign modmail duty shifts or set up notifications so tickets get faster first responses.'
@@ -968,9 +1012,8 @@ function detectModmailResponseTime(guildId: string, nowS: number): Insight | nul
 
 // ── Risk ──
 
-function detectNsfwFlagSurge(guildId: string, nowS: number): Insight | null {
-	const weekStart = nowS - 7 * 86400;
-	const prevStart = nowS - 14 * 86400;
+function detectNsfwFlagSurge(guildId: string, ctx: InsightCtx): Insight | null {
+	const { nowS, startS: weekStart, prevStartS: prevStart, winLabel } = ctx;
 
 	// nsfw_flags.flagged_at is ISO text — use strftime to compare
 	const thisWeek = count(
@@ -989,15 +1032,15 @@ function detectNsfwFlagSurge(guildId: string, nowS: number): Insight | null {
 		category: 'risk',
 		severity: 'critical',
 		title: 'NSFW flag surge',
-		body: `${thisWeek} avatar flags this week — ${(thisWeek / prevWeek).toFixed(1)}x last week's ${prevWeek}.`,
+		body: `${thisWeek} avatar flags ${winLabel} — ${(thisWeek / prevWeek).toFixed(1)}x the prior period's ${prevWeek}.`,
 		metric: fmt(thisWeek),
 		trend: 'up',
 		suggestion: 'Check for coordinated bad actors or a raid. Review the flags queue immediately.'
 	};
 }
 
-function detectBehavioralFlagCluster(guildId: string, nowS: number): Insight | null {
-	const weekStart = nowS - 7 * 86400;
+function detectBehavioralFlagCluster(guildId: string, ctx: InsightCtx): Insight | null {
+	const { nowS, startS: weekStart } = ctx;
 	const d = db();
 
 	// user_activity.flagged_at is INTEGER (unix seconds)
@@ -1027,8 +1070,8 @@ function detectBehavioralFlagCluster(guildId: string, nowS: number): Insight | n
 	};
 }
 
-function detectRapidJoinLeave(guildId: string, nowS: number): Insight | null {
-	const weekStart = nowS - 7 * 86400;
+function detectRapidJoinLeave(guildId: string, ctx: InsightCtx): Insight | null {
+	const { nowS, startS: weekStart } = ctx;
 
 	const rapidLeaves = count(
 		`SELECT COUNT(*) as count FROM user_activity
@@ -1062,8 +1105,8 @@ function detectRapidJoinLeave(guildId: string, nowS: number): Insight | null {
 
 // ── API-Enriched Insights ──
 
-function detectGrowthSource(guildId: string, nowS: number): Insight | null {
-	const weekStart = nowS - 7 * 86400;
+function detectGrowthSource(guildId: string, ctx: InsightCtx): Insight | null {
+	const { startS: weekStart, winLabel } = ctx;
 	const d = db();
 
 	const totalJoins = count(
@@ -1087,7 +1130,7 @@ function detectGrowthSource(guildId: string, nowS: number): Insight | null {
 		category: 'growth',
 		severity: top.pct > 75 ? 'warning' : 'info',
 		title: 'Single invite driving most growth',
-		body: `Invite \`${top.invite_code}\` accounts for ${top.pct.toFixed(1)}% of this week's joins (${top.cnt}/${totalJoins}).`,
+		body: `Invite \`${top.invite_code}\` accounts for ${top.pct.toFixed(1)}% of ${winLabel}'s joins (${top.cnt}/${totalJoins}).`,
 		metric: `${top.pct.toFixed(1)}%`,
 		trend: 'flat',
 		suggestion: top.pct > 75
@@ -1096,10 +1139,9 @@ function detectGrowthSource(guildId: string, nowS: number): Insight | null {
 	};
 }
 
-function detectBoostHealth(guildId: string, _nowS: number): Insight | null {
+function detectBoostHealth(guildId: string, ctx: InsightCtx): Insight | null {
 	const d = db();
-	const today = new Date().toISOString().slice(0, 10);
-	const sevenDaysAgo = new Date(Date.now() - 7 * 86400 * 1000).toISOString().slice(0, 10);
+	const sevenDaysAgo = new Date(ctx.startS * 1000).toISOString().slice(0, 10);
 
 	const current = d.prepare('SELECT boost_count, boost_tier FROM guild_snapshot WHERE guild_id = ?')
 		.get(guildId) as { boost_count: number; boost_tier: number } | undefined;
@@ -1136,7 +1178,7 @@ function detectBoostHealth(guildId: string, _nowS: number): Insight | null {
 				category: 'growth',
 				severity: 'info',
 				title: 'Boost count declining',
-				body: `Lost ${drop} boosts this week (${prev.boost_count} → ${current.boost_count}).`,
+				body: `Lost ${drop} boosts ${ctx.winLabel} (${prev.boost_count} → ${current.boost_count}).`,
 				metric: `${current.boost_count} boosts`,
 				trend: 'down'
 			};
@@ -1146,9 +1188,9 @@ function detectBoostHealth(guildId: string, _nowS: number): Insight | null {
 	return null;
 }
 
-function detectOnlineRatio(guildId: string, _nowS: number): Insight | null {
+function detectOnlineRatio(guildId: string, ctx: InsightCtx): Insight | null {
 	const d = db();
-	const sevenDaysAgo = new Date(Date.now() - 7 * 86400 * 1000).toISOString().slice(0, 10);
+	const sevenDaysAgo = new Date(ctx.startS * 1000).toISOString().slice(0, 10);
 
 	const current = d.prepare('SELECT member_count, online_count FROM guild_snapshot WHERE guild_id = ?')
 		.get(guildId) as { member_count: number; online_count: number | null } | undefined;
@@ -1172,7 +1214,7 @@ function detectOnlineRatio(guildId: string, _nowS: number): Insight | null {
 			category: 'engagement',
 			severity: pctDiff < -40 ? 'warning' : 'info',
 			title: 'Online ratio dropping',
-			body: `${(currentRatio * 100).toFixed(1)}% of members are online — ${Math.abs(pctDiff).toFixed(0)}% below the 7-day average.`,
+			body: `${(currentRatio * 100).toFixed(1)}% of members are online — ${Math.abs(pctDiff).toFixed(0)}% below the ${ctx.winDays}-day average.`,
 			metric: `${(currentRatio * 100).toFixed(1)}%`,
 			trend: 'down',
 			suggestion: 'Fewer members are coming online. This may indicate declining interest or a seasonal pattern.'
@@ -1205,13 +1247,20 @@ const detectors: InsightDetector[] = [
 	detectOnlineRatio
 ];
 
-export function getInsights(guildId: string): Insight[] {
-	const nowS = Math.floor(Date.now() / 1000);
+export function getInsights(guildId: string, range?: ResolvedRange): Insight[] {
+	const nowS = range?.endS ?? Math.floor(Date.now() / 1000);
+	const startS = range?.startS ?? nowS - 7 * 86400;
+	const winLen = Math.max(86400, nowS - startS);
+	const winDays = Math.max(1, Math.round(winLen / 86400));
+	const winLabel = winDays === 1 ? 'today' : winDays === 7 ? 'this 7d' : `this ${winDays}d`;
+	const prevStartS = range?.prevStartS ?? startS - winLen;
+	const ctx: InsightCtx = { nowS, startS, winLen, winDays, winLabel, prevStartS, prevEndS: startS };
+
 	const insights: Insight[] = [];
 
 	for (const detect of detectors) {
 		try {
-			const insight = detect(guildId, nowS);
+			const insight = detect(guildId, ctx);
 			if (insight) insights.push(insight);
 		} catch (err) {
 			// Individual detector failures shouldn't crash the whole insights panel

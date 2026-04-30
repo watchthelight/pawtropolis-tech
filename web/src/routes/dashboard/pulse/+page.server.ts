@@ -27,9 +27,9 @@ export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
 	const spec = parseTimeWindowSpec(url.searchParams, '7d');
 	const range = resolveRange(spec);
 
-	const metrics = getPulseMetrics(guildId);
-	const newsletterStats = getNewsletterStats(guildId);
-	const insights = getInsights(guildId);
+	const metrics = getPulseMetrics(guildId, range);
+	const newsletterStats = getNewsletterStats(guildId, range);
+	const insights = getInsights(guildId, range);
 	const guildSnapshot = getGuildSnapshot(guildId);
 	const topVoiceChannels = getTopVoiceChannels(guildId, range);
 	const channelRanking = getChannelActivityRanking(guildId, range);
