@@ -216,6 +216,18 @@ const authors = [...authorAgg.values()]
 
 const bottom10 = authors.slice(0, 10);
 const top10 = authors.slice(-10).reverse();
+
+// Composite: count × quality. effort × log10(msgs) — diminishing returns on
+// volume so a 30k-msg poster doesn't auto-win, but volume still pays.
+// Workhorses sort by quality-volume; drains sort by anti-quality-volume so
+// authors pulling community signal *down* the most surface (high msgs *and*
+// low effort), not just barely-qualifying low-effort posters.
+for (const a of authors) {
+  a.composite = +(a.mean_effort * Math.log10(a.msgs)).toFixed(4);
+  a.drag = +((1 - a.mean_effort) * Math.log10(a.msgs)).toFixed(4);
+}
+const workhorses = [...authors].sort((a, b) => b.composite - a.composite).slice(0, 10);
+const drains = [...authors].sort((a, b) => b.drag - a.drag).slice(0, 10);
 console.log(`[authors] ${authors.length} qualifying (≥${MIN_MSGS_FOR_LEADERBOARD} msgs)`);
 
 if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
@@ -224,7 +236,7 @@ writeFileSync(`${OUT_DIR}/chat-quality-overlay.json`, JSON.stringify({
   metric_keys: METRIC_KEYS,
   ranges,
   weeks,
-  leaderboards: { min_msgs: MIN_MSGS_FOR_LEADERBOARD, top10, bottom10 },
+  leaderboards: { min_msgs: MIN_MSGS_FOR_LEADERBOARD, top10, bottom10, workhorses, drains },
 }, null, 2));
 console.log(`[wrote] ${OUT_DIR}/chat-quality-overlay.json — ${weeks.length} weeks × ${METRIC_KEYS.length} metrics`);
 
@@ -332,12 +344,21 @@ const html = `<!doctype html>
     </tbody>
   </table>
 
-  <h1 style="margin-top:24px;">Top 10 lowest mean effort</h1>
-  <div class="meta">same threshold, ranked from lowest mean effort</div>
+  <h1 style="margin-top:32px;">Top 10 workhorses — volume × quality</h1>
+  <div class="meta">composite = mean_effort × log<sub>10</sub>(msgs). Rewards both high effort AND high volume; logs the volume so a 30k-msg poster doesn't auto-win.</div>
   <table class="leaderboard">
-    <thead><tr><th>#</th><th>Author</th><th>Messages</th><th>Mean effort</th><th>Mean resonance</th><th>Avg length</th><th>Sample</th></tr></thead>
-    <tbody>${bottom10.map((a, i) => `
-      <tr><td>${i + 1}</td><td><b>${(a.display || a.id).replace(/</g, '&lt;')}</b>${a.username && a.username !== a.display ? ` <span class="uname">@${a.username}</span>` : ''}${!a.in_guild ? ' <span class="badge">left</span>' : ''}</td><td>${a.msgs.toLocaleString()}</td><td><b>${a.mean_effort.toFixed(3)}</b></td><td>${a.mean_resonance.toFixed(3)}</td><td>${a.median_length.toFixed(1)}</td><td class="sample">${(a.sample || '—').replace(/</g, '&lt;')}</td></tr>`).join('')}
+    <thead><tr><th>#</th><th>Author</th><th>Messages</th><th>Mean effort</th><th>Composite</th><th>Avg length</th><th>Sample</th></tr></thead>
+    <tbody>${workhorses.map((a, i) => `
+      <tr><td>${i + 1}</td><td><b>${(a.display || a.id).replace(/</g, '&lt;')}</b>${a.username && a.username !== a.display ? ` <span class="uname">@${a.username}</span>` : ''}${!a.in_guild ? ' <span class="badge">left</span>' : ''}</td><td>${a.msgs.toLocaleString()}</td><td>${a.mean_effort.toFixed(3)}</td><td><b>${a.composite.toFixed(3)}</b></td><td>${a.median_length.toFixed(1)}</td><td class="sample">${(a.sample || '—').replace(/</g, '&lt;')}</td></tr>`).join('')}
+    </tbody>
+  </table>
+
+  <h1 style="margin-top:32px;">Top 10 lowest effort — many messages, consistently low</h1>
+  <div class="meta">drag = (1 − mean_effort) × log<sub>10</sub>(msgs). Authors with both high volume AND low effort across them — biggest pull on community signal. Not "barely-qualifying low-effort" — this needs persistent volume to rank.</div>
+  <table class="leaderboard">
+    <thead><tr><th>#</th><th>Author</th><th>Messages</th><th>Mean effort</th><th>Drag</th><th>Avg length</th><th>Sample</th></tr></thead>
+    <tbody>${drains.map((a, i) => `
+      <tr><td>${i + 1}</td><td><b>${(a.display || a.id).replace(/</g, '&lt;')}</b>${a.username && a.username !== a.display ? ` <span class="uname">@${a.username}</span>` : ''}${!a.in_guild ? ' <span class="badge">left</span>' : ''}</td><td>${a.msgs.toLocaleString()}</td><td>${a.mean_effort.toFixed(3)}</td><td><b>${a.drag.toFixed(3)}</b></td><td>${a.median_length.toFixed(1)}</td><td class="sample">${(a.sample || '—').replace(/</g, '&lt;')}</td></tr>`).join('')}
     </tbody>
   </table>
 </div>
