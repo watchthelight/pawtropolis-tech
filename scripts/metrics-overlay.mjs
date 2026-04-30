@@ -186,16 +186,32 @@ for (const r of rows) {
   if (!a.sample && r.content && r.content.length > 20 && r.content.length < 140) a.sample = r.content;
 }
 
+// pull resolved usernames; tolerate missing rows
+let userNames = new Map();
+try {
+  const u = db.prepare(`SELECT id, display, username, in_guild FROM user_names`).all();
+  userNames = new Map(u.map((r) => [r.id, r]));
+  console.log(`[names] ${userNames.size} authors resolved`);
+} catch {
+  console.log('[names] user_names table not present — run scripts/resolve-authors.mjs to populate');
+}
+
 const authors = [...authorAgg.values()]
   .filter((a) => a.n >= MIN_MSGS_FOR_LEADERBOARD)
-  .map((a) => ({
-    id: a.id,
-    msgs: a.n,
-    mean_effort: +(a.sumEffort / a.n).toFixed(4),
-    mean_resonance: +(a.sumResonance / a.n).toFixed(4),
-    median_length: +(a.sumLen / a.n).toFixed(1),
-    sample: (a.sample || '').replace(/\s+/g, ' ').slice(0, 90),
-  }))
+  .map((a) => {
+    const u = userNames.get(a.id);
+    return {
+      id: a.id,
+      display: u?.display ?? a.id,
+      username: u?.username ?? null,
+      in_guild: u?.in_guild ?? 0,
+      msgs: a.n,
+      mean_effort: +(a.sumEffort / a.n).toFixed(4),
+      mean_resonance: +(a.sumResonance / a.n).toFixed(4),
+      median_length: +(a.sumLen / a.n).toFixed(1),
+      sample: (a.sample || '').replace(/\s+/g, ' ').slice(0, 90),
+    };
+  })
   .sort((a, b) => a.mean_effort - b.mean_effort);
 
 const bottom10 = authors.slice(0, 10);
@@ -270,6 +286,16 @@ const html = `<!doctype html>
   table.leaderboard td code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);font-size:11px;}
   table.leaderboard td.sample{color:#c8ccd2;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;max-width:480px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   table.leaderboard td:first-child{color:var(--muted);font-variant-numeric:tabular-nums;width:32px;}
+  .uname{color:var(--muted);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;margin-left:4px;}
+  .badge{display:inline-block;font-size:10px;color:var(--muted);border:1px solid var(--grid);padding:1px 5px;border-radius:8px;margin-left:6px;text-transform:uppercase;letter-spacing:.04em;}
+  .controls{display:flex;gap:18px;align-items:center;margin:0 0 12px;font-size:12px;color:var(--muted);flex-wrap:wrap;}
+  .controls label{display:inline-flex;align-items:center;gap:8px;cursor:pointer;}
+  .controls input[type=range]{width:240px;accent-color:var(--effort, #f0b86e);}
+  .controls .group{display:inline-flex;background:#1a1d24;border:1px solid var(--grid);border-radius:6px;padding:2px;}
+  .controls .group button{background:transparent;border:0;color:var(--muted);padding:4px 10px;border-radius:4px;cursor:pointer;font-size:12px;}
+  .controls .group button.active{background:#2a2f3a;color:var(--fg);}
+  .controls .group button:hover:not(.active){color:var(--fg);}
+  .zero-line{stroke:#3a4150;stroke-dasharray:3 4;stroke-width:1;}
 </style>
 </head>
 <body>
@@ -282,6 +308,16 @@ const html = `<!doctype html>
     tooltip shows raw values &middot;
     click legend to toggle a line; hover the chart to focus
   </div>
+  <div class="controls">
+    <label>Smoothing
+      <input id="smooth" type="range" min="1" max="12" value="1" step="1" />
+      <span id="smooth-val" style="color:var(--fg);min-width:88px;font-variant-numeric:tabular-nums;">1 week (raw)</span>
+    </label>
+    <div class="group" role="tablist">
+      <button data-norm="minmax" class="active" title="Each metric scaled to [0,1] by its own min/max across the window. Absolute level visible.">Min-max [0,1]</button>
+      <button data-norm="zscore" title="Each metric centered on its mean and scaled by its std. Up = above-window-average, down = below. Directional trends pop.">Z-score (centered)</button>
+    </div>
+  </div>
   <div class="legend" id="legend"></div>
   <svg id="chart"></svg>
   <div class="tooltip" id="tt"></div>
@@ -292,7 +328,7 @@ const html = `<!doctype html>
   <table class="leaderboard">
     <thead><tr><th>#</th><th>Author</th><th>Messages</th><th>Mean effort</th><th>Mean resonance</th><th>Avg length</th><th>Sample</th></tr></thead>
     <tbody>${top10.map((a, i) => `
-      <tr><td>${i + 1}</td><td><code>${a.id}</code></td><td>${a.msgs.toLocaleString()}</td><td><b>${a.mean_effort.toFixed(3)}</b></td><td>${a.mean_resonance.toFixed(3)}</td><td>${a.median_length.toFixed(1)}</td><td class="sample">${a.sample || '—'}</td></tr>`).join('')}
+      <tr><td>${i + 1}</td><td><b>${(a.display || a.id).replace(/</g, '&lt;')}</b>${a.username && a.username !== a.display ? ` <span class="uname">@${a.username}</span>` : ''}${!a.in_guild ? ' <span class="badge">left</span>' : ''}</td><td>${a.msgs.toLocaleString()}</td><td><b>${a.mean_effort.toFixed(3)}</b></td><td>${a.mean_resonance.toFixed(3)}</td><td>${a.median_length.toFixed(1)}</td><td class="sample">${(a.sample || '—').replace(/</g, '&lt;')}</td></tr>`).join('')}
     </tbody>
   </table>
 
@@ -301,7 +337,7 @@ const html = `<!doctype html>
   <table class="leaderboard">
     <thead><tr><th>#</th><th>Author</th><th>Messages</th><th>Mean effort</th><th>Mean resonance</th><th>Avg length</th><th>Sample</th></tr></thead>
     <tbody>${bottom10.map((a, i) => `
-      <tr><td>${i + 1}</td><td><code>${a.id}</code></td><td>${a.msgs.toLocaleString()}</td><td><b>${a.mean_effort.toFixed(3)}</b></td><td>${a.mean_resonance.toFixed(3)}</td><td>${a.median_length.toFixed(1)}</td><td class="sample">${a.sample || '—'}</td></tr>`).join('')}
+      <tr><td>${i + 1}</td><td><b>${(a.display || a.id).replace(/</g, '&lt;')}</b>${a.username && a.username !== a.display ? ` <span class="uname">@${a.username}</span>` : ''}${!a.in_guild ? ' <span class="badge">left</span>' : ''}</td><td>${a.msgs.toLocaleString()}</td><td><b>${a.mean_effort.toFixed(3)}</b></td><td>${a.mean_resonance.toFixed(3)}</td><td>${a.median_length.toFixed(1)}</td><td class="sample">${(a.sample || '—').replace(/</g, '&lt;')}</td></tr>`).join('')}
     </tbody>
   </table>
 </div>
@@ -322,13 +358,40 @@ const g = svg.append('g').attr('transform', \`translate(\${margin.left},\${margi
 const x = d3.scaleTime()
   .domain(d3.extent(data, d => new Date(d.weekStart * 1000)))
   .range([0, W]);
-const y = d3.scaleLinear().domain([0, 1]).range([H, 0]);
 
-g.append('g').attr('class','grid').call(d3.axisLeft(y).ticks(5).tickSize(-W).tickFormat(''));
-g.append('g').attr('class','axis').attr('transform', \`translate(0,\${H})\`)
-  .call(d3.axisBottom(x).ticks(d3.timeMonth.every(3)).tickFormat(d3.timeFormat('%b %Y')));
-g.append('g').attr('class','axis')
-  .call(d3.axisLeft(y).ticks(5).tickFormat(d3.format('.1f')));
+// Y scale rebuilt per mode
+let y = d3.scaleLinear().domain([0, 1]).range([H, 0]);
+
+const gridLayer = g.append('g').attr('class','grid');
+const xAxisLayer = g.append('g').attr('class','axis').attr('transform', \`translate(0,\${H})\`);
+const yAxisLayer = g.append('g').attr('class','axis');
+const zeroLineLayer = g.append('line').attr('class','zero-line').attr('x1',0).attr('x2',W).style('display','none');
+
+xAxisLayer.call(d3.axisBottom(x).ticks(d3.timeMonth.every(3)).tickFormat(d3.timeFormat('%b %Y')));
+
+// stats per metric for normalization
+const stats = {};
+for (const k of KEYS) {
+  const vals = data.map(d => d.raw[k]);
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const mean = vals.reduce((s,v) => s+v, 0) / vals.length;
+  const variance = vals.reduce((s,v) => s + (v - mean) * (v - mean), 0) / vals.length;
+  const std = Math.sqrt(variance) || 1;
+  stats[k] = { min, max, mean, std };
+}
+
+// Rolling-mean smoother. Trailing window of size N centered on the trailing edge.
+function smooth(values, n) {
+  if (n <= 1) return values.slice();
+  const out = new Array(values.length);
+  for (let i = 0; i < values.length; i++) {
+    const start = Math.max(0, i - n + 1);
+    let s = 0, c = 0;
+    for (let j = start; j <= i; j++) { s += values[j]; c++; }
+    out[i] = s / c;
+  }
+  return out;
+}
 
 // build legend
 const legend = d3.select('#legend');
@@ -345,28 +408,85 @@ for (const k of KEYS) {
   });
 }
 
-const lineGen = (key) => d3.line()
-  .x(d => x(new Date(d.weekStart*1000)))
-  .y(d => y(d.scaled[key]))
+let mode = 'minmax';   // 'minmax' | 'zscore'
+let window_ = 1;
+
+function transform(key) {
+  const raw = data.map(d => d.raw[key]);
+  const sm = smooth(raw, window_);
+  const s = stats[key];
+  if (mode === 'minmax') {
+    return sm.map(v => s.max > s.min ? (v - s.min) / (s.max - s.min) : 0.5);
+  }
+  // z-score: standardize then map onto [-3,3] visual range
+  return sm.map(v => (v - s.mean) / s.std);
+}
+
+const lineGen = (yvals) => d3.line()
+  .x((_, i) => x(new Date(data[i].weekStart * 1000)))
+  .y(v => y(v))
   .curve(d3.curveMonotoneX);
 
 const paths = {};
 for (const k of KEYS) {
   paths[k] = g.append('path')
-    .datum(data)
     .attr('fill','none')
     .attr('stroke', META[k].color)
     .attr('stroke-width', 1.7)
     .attr('opacity', 0.85)
-    .attr('class', \`metric-line metric-\${k}\`)
-    .attr('d', lineGen(k));
+    .attr('class', \`metric-line metric-\${k}\`);
 }
 
+const lastTransformed = {}; // cache for hover
+
 function redraw() {
+  // recompute y-domain based on mode
+  if (mode === 'minmax') {
+    y = d3.scaleLinear().domain([0, 1]).range([H, 0]);
+    zeroLineLayer.style('display', 'none');
+  } else {
+    // z-score: dynamic domain from current data
+    let lo = 0, hi = 0;
+    for (const k of KEYS) {
+      const t = transform(k);
+      for (const v of t) { if (v < lo) lo = v; if (v > hi) hi = v; }
+    }
+    const pad = (hi - lo) * 0.05;
+    y = d3.scaleLinear().domain([lo - pad, hi + pad]).range([H, 0]);
+    zeroLineLayer.attr('y1', y(0)).attr('y2', y(0)).style('display', null);
+  }
+
+  gridLayer.call(d3.axisLeft(y).ticks(6).tickSize(-W).tickFormat(''));
+  yAxisLayer.call(d3.axisLeft(y).ticks(6).tickFormat(mode === 'zscore' ? d3.format('+.1f') : d3.format('.1f')));
+
   for (const k of KEYS) {
-    paths[k].style('display', visible[k] ? null : 'none');
+    const t = transform(k);
+    lastTransformed[k] = t;
+    paths[k]
+      .datum(t)
+      .attr('d', lineGen(t))
+      .style('display', visible[k] ? null : 'none');
   }
 }
+
+redraw();
+
+// controls wiring
+const smoothInput = document.getElementById('smooth');
+const smoothVal = document.getElementById('smooth-val');
+smoothInput.addEventListener('input', (ev) => {
+  window_ = parseInt(ev.target.value, 10);
+  smoothVal.textContent = window_ === 1 ? '1 week (raw)' : \`\${window_} weeks\`;
+  redraw();
+});
+document.querySelectorAll('.controls .group button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.controls .group button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    mode = btn.dataset.norm;
+    redraw();
+  });
+});
 
 // hover
 const bisect = d3.bisector(d => d.weekStart).left;
@@ -384,11 +504,11 @@ svg.on('mousemove', (ev) => {
   const d = data[i];
   if (!d) return;
 
-  // find nearest line
+  // find nearest line using current transform
   let bestKey = null, bestDist = Infinity;
   for (const k of KEYS) {
     if (!visible[k]) continue;
-    const py = y(d.scaled[k]);
+    const py = y(lastTransformed[k][i]);
     const dist = Math.abs(py - my);
     if (dist < bestDist) { bestDist = dist; bestKey = k; }
   }
@@ -398,13 +518,15 @@ svg.on('mousemove', (ev) => {
   const rows = KEYS.map(k => {
     const swatch = \`<span class="swatch" style="background:\${META[k].color}"></span>\`;
     const focused = k === bestKey ? ' style="font-weight:600"' : '';
-    return \`<div class="row"\${focused}><span class="name">\${swatch}\${META[k].label}</span><span class="val">\${fmt(d.raw[k])}</span></div>\`;
+    const tv = lastTransformed[k][i];
+    const tvStr = mode === 'zscore' ? (tv >= 0 ? '+' : '') + tv.toFixed(2) : tv.toFixed(2);
+    return \`<div class="row"\${focused}><span class="name">\${swatch}\${META[k].label}</span><span class="val">\${fmt(d.raw[k])} <span style="color:var(--muted);margin-left:6px;">(\${tvStr})</span></span></div>\`;
   }).join('');
 
   tt.style('display','block')
     .style('left', (ev.pageX + 12) + 'px')
     .style('top', (ev.pageY + 12) + 'px')
-    .html(\`<h4>\${d.iso} &middot; n=\${d.count.toLocaleString()}</h4>\${rows}\`);
+    .html(\`<h4>\${d.iso} &middot; n=\${d.count.toLocaleString()} &middot; \${window_ === 1 ? 'raw' : window_+'-wk smoothed'} &middot; \${mode}</h4>\${rows}\`);
 }).on('mouseleave', () => { tt.style('display','none'); focus(null); });
 </script>
 </body>
