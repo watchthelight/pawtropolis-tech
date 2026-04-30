@@ -6,7 +6,7 @@
 	import {
 		House, ClipboardCheck, BarChart3, Activity, Flag,
 		Grid3x3, Palette, Settings, ScrollText, Server,
-		MessageCircleQuestion, Mail
+		MessageCircleQuestion, Mail, Sparkles
 	} from 'lucide-svelte';
 
 	let { user, collapsed = false, mobileOnly = false, isArtist = false }: {
@@ -47,6 +47,7 @@
 	const ICON_MAP: Record<string, typeof House> = {
 		Home: House, Reviews: ClipboardCheck, Stats: BarChart3, Modmail: Mail, Pulse: Activity,
 		Flags: Flag, Heatmap: Grid3x3, Art: Palette, QOTD: MessageCircleQuestion,
+		Quality: Sparkles,
 		Config: Settings, Audit: ScrollText, System: Server
 	};
 
@@ -56,6 +57,7 @@
 		{ label: 'Stats',    href: '/dashboard/stats',    minTier: 'gk',    group: 'ops' },
 		{ label: 'Modmail',  href: '/dashboard/modmail',  minTier: 'gk',    group: 'ops' },
 		{ label: 'Pulse',    href: '/dashboard/pulse',    minTier: 'mod',   group: 'ops' },
+		{ label: 'Quality',  href: '/dashboard/quality',  minTier: 'mod',   group: 'ops' },
 		{ label: 'Flags',    href: '/dashboard/flags',    minTier: 'sm',    group: 'ops' },
 		{ label: 'Heatmap',  href: '/dashboard/heatmap',  minTier: 'sm',    group: 'ops' },
 		{ label: 'Art',      href: '/dashboard/art',      minTier: 'sm',    group: 'ops' },

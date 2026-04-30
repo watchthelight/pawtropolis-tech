@@ -12,6 +12,7 @@
 	import { setBotOffline, setBotOnline, getBotOnline } from '$lib/stores/bot-status.svelte';
 	import { getIsMobile } from '$lib/stores/viewport.svelte';
 	import { relativeTime } from '$lib/utils/time';
+	import { slide } from 'svelte/transition';
 	import gsap from 'gsap';
 
 	let {
@@ -37,6 +38,7 @@
 	let detailBody: HTMLElement;
 	let isMobile = $derived(getIsMobile());
 	let profileExpanded = $state(true);
+	let moreOpen = $state(false);
 
 	// Flip state: 'answers' (front) or 'modmail' (back)
 	let showModmail = $state(false);
@@ -45,11 +47,12 @@
 	let memberLeft = $state(false);
 	let lastAppId = $state(app.id);
 
-	// Reset modmail view only when navigating to a DIFFERENT application
+	// Reset view state only when navigating to a DIFFERENT application
 	$effect(() => {
 		if (app.id !== lastAppId) {
 			showModmail = false;
 			memberLeft = false;
+			moreOpen = false;
 			lastAppId = app.id;
 		}
 	});
@@ -211,16 +214,49 @@
 	let kickCountdown = $state(0);
 	let kickTimer: ReturnType<typeof setInterval> | undefined;
 	let reasonInput: HTMLInputElement;
+	let reasonTextarea: HTMLTextAreaElement;
+
+	const ACTION_LABELS: Record<DecisionAction, string> = {
+		approve: 'Approve',
+		reject: 'Reject',
+		wrong_password: 'Wrong Password',
+		stale_modmail: 'Stale Modmail',
+		kick: 'Kick',
+		permreject: 'Perm Reject'
+	};
+	type ActionTone = 'success' | 'warning' | 'danger';
+	const ACTION_TONES: Record<DecisionAction, ActionTone> = {
+		approve: 'success',
+		reject: 'warning',
+		wrong_password: 'warning',
+		stale_modmail: 'warning',
+		kick: 'danger',
+		permreject: 'danger'
+	};
+
+	let requiresReason = $derived(activeAction === 'kick' || activeAction === 'permreject');
+	let activeActionLabel = $derived(activeAction ? ACTION_LABELS[activeAction] : '');
+	let activeActionTone = $derived<ActionTone>(activeAction ? ACTION_TONES[activeAction] : 'success');
+	let canSubmitReason = $derived(
+		!decisionLoading && (!requiresReason || reasonText.trim().length > 0)
+	);
+	let voteOutLabel = $derived(
+		hasVoted ? 'Voted' : voteOutLoading ? 'Voting…' : `Vote Out (${voteOutInfo.count}/${voteOutInfo.threshold})`
+	);
+	let dockError = $derived(claimError || decisionError || voteOutError || null);
 
 	function startDecision(action: DecisionAction) {
 		activeAction = action;
 		reasonText = '';
 		decisionError = null;
+		moreOpen = false;
 		if (action === 'wrong_password' || action === 'stale_modmail') {
 			executeDecision(action);
 			return;
 		}
-		requestAnimationFrame(() => reasonInput?.focus());
+		requestAnimationFrame(() => {
+			(isMobile ? reasonTextarea : reasonInput)?.focus();
+		});
 	}
 
 	function cancelDecision() {
@@ -513,6 +549,185 @@
 			<span class="vote-out-voters">{voteOutInfo.voters.map(v => v.name).join(', ')}</span>
 		{/if}
 	</div>
+
+	<!-- Mobile Review Dock (mobile-only, CSS-hidden on desktop) -->
+	<div class="mobile-review-dock" aria-label="Review actions">
+		{#if decisionDone}
+			<div class="mobile-dock-status">
+				<span class="dock-status-pill dock-status-success">{decisionDone}</span>
+			</div>
+		{:else if kickCountdown > 0}
+			<div class="mobile-kick-countdown">
+				<span class="kick-countdown-label">Kicking in {kickCountdown}s…</span>
+				<button class="mobile-btn mobile-btn-undo" onclick={undoKick}>Undo</button>
+			</div>
+		{:else if activeAction}
+			<div class="mobile-decision-sheet sheet-tone-{activeActionTone}" transition:slide={{ duration: 180 }}>
+				<div class="sheet-header">
+					<strong>{activeActionLabel}</strong>
+					<span class="sheet-hint">{requiresReason ? 'Reason required' : 'Reason optional'}</span>
+				</div>
+				<textarea
+					bind:this={reasonTextarea}
+					bind:value={reasonText}
+					class="sheet-textarea"
+					rows="3"
+					placeholder={requiresReason ? 'Explain why…' : 'Optional context…'}
+					onkeydown={(e) => { if (e.key === 'Escape') cancelDecision(); }}
+					disabled={decisionLoading}
+				></textarea>
+				{#if dockError}
+					<div class="mobile-dock-error">{dockError}</div>
+				{/if}
+				<div class="sheet-actions">
+					<button class="sheet-btn sheet-btn-cancel" onclick={cancelDecision} disabled={decisionLoading}>Cancel</button>
+					<button
+						class="sheet-btn sheet-btn-confirm sheet-btn-confirm-{activeActionTone}"
+						onclick={submitReason}
+						disabled={!canSubmitReason}
+					>
+						{decisionLoading ? 'Sending…' : activeAction === 'kick' ? 'Kick (3s undo)' : activeActionLabel}
+					</button>
+				</div>
+			</div>
+		{:else}
+			{#if moreOpen && isClaimedByMe}
+				<div class="mobile-more-panel" id="mobile-more-panel" transition:slide={{ duration: 180 }}>
+					<button class="more-btn" onclick={handleUnclaim} disabled={claimLoading || !botOnline}>
+						{claimLoading ? 'Releasing…' : 'Unclaim'}
+					</button>
+					<button class="more-btn" onclick={() => startDecision('wrong_password')} disabled={decisionLoading || !botOnline}>
+						Wrong Password
+					</button>
+					{#if isStale}
+						<button class="more-btn more-btn-warn" onclick={() => startDecision('stale_modmail')} disabled={decisionLoading || !botOnline}>
+							Stale Modmail
+						</button>
+					{/if}
+					<button class="more-btn more-btn-danger" onclick={() => startDecision('kick')} disabled={decisionLoading || !botOnline}>
+						Kick
+					</button>
+					{#if canAdminUnclaim}
+						<button class="more-btn more-btn-danger" onclick={() => startDecision('permreject')} disabled={decisionLoading || !botOnline}>
+							Perm Reject
+						</button>
+					{/if}
+					<button
+						class="more-btn more-btn-danger more-btn-full"
+						onclick={handleVoteOut}
+						disabled={voteOutLoading || hasVoted || !botOnline}
+					>
+						{voteOutLabel}
+					</button>
+				</div>
+			{/if}
+
+			{#if dockError}
+				<div class="mobile-dock-error">{dockError}</div>
+			{/if}
+
+			<div class="mobile-dock-status">
+				{#if isResolved}
+					<span class="dock-status-pill dock-status-resolved">
+						{app.status.charAt(0).toUpperCase() + app.status.slice(1)}
+					</span>
+					{#if app.claimedByName}
+						<span class="dock-status-meta">
+							by
+							{#if app.claimedByAvatar}<img src={app.claimedByAvatar} alt="" class="claimer-avatar" />{/if}
+							{app.claimedByName}
+						</span>
+					{/if}
+				{:else if isClaimedByMe}
+					<span class="dock-status-pill dock-status-claimed-me" style:color={claimAgeColor(app.claimedAt)}>
+						Claimed by you
+					</span>
+					{#if voteOutInfo.voters.length > 0}
+						<span class="dock-status-meta">Vote-out: {voteOutInfo.voters.map(v => v.name).join(', ')}</span>
+					{/if}
+				{:else if isClaimedByOther}
+					<span class="dock-status-pill dock-status-claimed-other">
+						{#if app.claimedByAvatar}<img src={app.claimedByAvatar} alt="" class="claimer-avatar" />{/if}
+						Claimed by {app.claimedByName ?? 'unknown'}
+					</span>
+				{:else if isUnclaimed}
+					<span class="mobile-dock-hint">Claim this application to unlock decisions.</span>
+				{/if}
+			</div>
+
+			{#if isUnclaimed}
+				<div class="mobile-primary-actions layout-claim">
+					<button
+						class="mobile-btn mobile-btn-primary"
+						onclick={handleClaim}
+						disabled={claimLoading || !botOnline}
+					>
+						{claimLoading ? 'Claiming…' : !botOnline ? 'Bot offline' : 'Claim'}
+					</button>
+					<button
+						class="mobile-btn mobile-btn-danger-outline"
+						onclick={handleVoteOut}
+						disabled={voteOutLoading || hasVoted || !botOnline}
+					>
+						{voteOutLabel}
+					</button>
+				</div>
+			{:else if isClaimedByMe}
+				<div class="mobile-primary-actions layout-claim-mine">
+					<button
+						class="mobile-btn mobile-btn-approve"
+						onclick={() => startDecision('approve')}
+						disabled={decisionLoading || !botOnline}
+						aria-label="Approve this application"
+					>
+						{!botOnline ? 'Bot offline' : 'Approve'}
+					</button>
+					<button
+						class="mobile-btn mobile-btn-reject"
+						onclick={() => startDecision('reject')}
+						disabled={decisionLoading || !botOnline}
+					>
+						Reject
+					</button>
+					<button
+						class="mobile-btn mobile-btn-more"
+						onclick={() => moreOpen = !moreOpen}
+						aria-expanded={moreOpen}
+						aria-controls="mobile-more-panel"
+					>
+						{moreOpen ? 'Close' : 'More'}
+					</button>
+				</div>
+			{:else if isClaimedByOther && canAdminUnclaim}
+				<div class="mobile-primary-actions layout-admin">
+					<button
+						class="mobile-btn mobile-btn-admin"
+						onclick={handleUnclaim}
+						disabled={claimLoading || !botOnline}
+					>
+						{claimLoading ? 'Releasing…' : !botOnline ? 'Bot offline' : 'Unclaim (Admin)'}
+					</button>
+					<button
+						class="mobile-btn mobile-btn-danger-outline"
+						onclick={handleVoteOut}
+						disabled={voteOutLoading || hasVoted || !botOnline}
+					>
+						{voteOutLabel}
+					</button>
+				</div>
+			{:else if isClaimedByOther}
+				<div class="mobile-primary-actions layout-other">
+					<button
+						class="mobile-btn mobile-btn-danger-outline"
+						onclick={handleVoteOut}
+						disabled={voteOutLoading || hasVoted || !botOnline}
+					>
+						{voteOutLabel}
+					</button>
+				</div>
+			{/if}
+		{/if}
+	</div>
 </div>
 
 <style>
@@ -719,6 +934,357 @@
 	.action-resolved { font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); opacity: 0.7; display: inline-flex; align-items: center; gap: 0.25rem; }
 	.vote-out-voters { font-size: 0.65rem; color: var(--text-secondary); opacity: 0.7; margin-left: auto; }
 
+	/* ── Mobile Review Dock (display:none on desktop, shown inside mobile @media below) ── */
+	.mobile-review-dock {
+		display: none;
+		flex-direction: column;
+		gap: 0.625rem;
+		position: sticky;
+		bottom: 0;
+		z-index: 10;
+		flex-shrink: 0;
+		padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+		background: var(--surface-raised);
+		border-top: 1px solid var(--border-holdfast);
+		box-shadow: 0 -8px 24px oklch(0% 0 0 / 0.25);
+	}
+
+	.mobile-dock-status {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem;
+		min-height: 1.5rem;
+	}
+
+	.dock-status-pill {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		padding: 0.2rem 0.65rem;
+		border-radius: 999px;
+		font-size: 0.7rem;
+		font-weight: 600;
+		letter-spacing: 0.02em;
+	}
+
+	.dock-status-success {
+		background: var(--status-success);
+		color: var(--bg);
+	}
+
+	.dock-status-claimed-me {
+		background: var(--accent-dim);
+		color: var(--accent);
+	}
+
+	.dock-status-claimed-other {
+		background: var(--surface-overlay);
+		color: var(--text-secondary);
+		border: 1px solid var(--border-holdfast);
+	}
+
+	.dock-status-resolved {
+		background: var(--surface-overlay);
+		color: var(--text-secondary);
+		border: 1px solid var(--border-holdfast);
+	}
+
+	.dock-status-meta {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		font-size: 0.7rem;
+		color: var(--text-tertiary);
+	}
+
+	.mobile-dock-hint {
+		font-size: 0.75rem;
+		color: var(--text-tertiary);
+		line-height: 1.4;
+	}
+
+	.mobile-dock-error {
+		padding: 0.5rem 0.75rem;
+		border-radius: var(--radius-sm);
+		background: oklch(25% 0.06 25 / 0.25);
+		border: 1px solid oklch(45% 0.08 25 / 0.5);
+		color: var(--status-danger);
+		font-size: 0.8125rem;
+		line-height: 1.35;
+	}
+
+	.mobile-primary-actions {
+		display: grid;
+		gap: 0.5rem;
+	}
+
+	.layout-claim,
+	.layout-admin,
+	.layout-other {
+		grid-template-columns: 1fr;
+	}
+
+	.layout-claim-mine {
+		grid-template-columns: 1fr 1fr;
+		grid-template-areas:
+			'approve approve'
+			'reject more';
+	}
+
+	.layout-claim-mine .mobile-btn-approve { grid-area: approve; }
+	.layout-claim-mine .mobile-btn-reject  { grid-area: reject; }
+	.layout-claim-mine .mobile-btn-more    { grid-area: more; }
+
+	.mobile-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 48px;
+		padding: 0.5rem 0.75rem;
+		border-radius: var(--radius-md);
+		border: none;
+		font-family: inherit;
+		font-size: 0.9rem;
+		font-weight: 600;
+		cursor: pointer;
+		background: var(--surface);
+		color: var(--text-primary);
+		transition: transform 120ms var(--ease-smooth), filter 120ms, background 150ms;
+		-webkit-tap-highlight-color: transparent;
+	}
+
+	.mobile-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.mobile-btn:active:not(:disabled) {
+		transform: scale(0.98);
+	}
+
+	.mobile-btn-primary {
+		background: var(--accent);
+		color: var(--text-on-accent);
+		min-height: 56px;
+		font-size: 1rem;
+		box-shadow: var(--shadow-sm);
+	}
+
+	.mobile-btn-approve {
+		background: var(--status-success);
+		color: var(--bg);
+		min-height: 56px;
+		font-size: 1rem;
+		letter-spacing: 0.01em;
+		box-shadow: var(--shadow-sm);
+	}
+
+	.mobile-btn-reject {
+		background: var(--surface);
+		color: var(--status-warning);
+		border: 1px solid var(--status-warning);
+	}
+
+	.mobile-btn-more {
+		background: var(--surface);
+		color: var(--text-secondary);
+		border: 1px solid var(--border-holdfast);
+		font-weight: 500;
+	}
+
+	.mobile-btn-more[aria-expanded='true'] {
+		background: var(--surface-overlay);
+		color: var(--text-primary);
+		border-color: var(--accent);
+	}
+
+	.mobile-btn-danger-outline {
+		background: transparent;
+		color: var(--status-danger);
+		border: 1px solid var(--status-danger);
+	}
+
+	.mobile-btn-admin {
+		background: var(--surface);
+		color: var(--status-warning);
+		border: 1px solid var(--status-warning);
+		min-height: 52px;
+	}
+
+	.mobile-btn-undo {
+		background: var(--surface);
+		color: var(--status-danger);
+		border: 1px solid var(--status-danger);
+		min-height: 52px;
+		font-weight: 700;
+		padding-inline: 1.25rem;
+	}
+
+	/* More panel */
+	.mobile-more-panel {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.5rem;
+		padding: 0.625rem;
+		background: var(--surface);
+		border: 1px solid var(--border-holdfast);
+		border-radius: var(--radius-md);
+	}
+
+	.more-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 44px;
+		padding: 0.5rem 0.625rem;
+		border-radius: var(--radius-sm);
+		border: 1px solid var(--border-holdfast);
+		background: var(--surface-raised);
+		color: var(--text-primary);
+		font-family: inherit;
+		font-size: 0.8125rem;
+		font-weight: 600;
+		cursor: pointer;
+		text-align: center;
+		transition: transform 120ms var(--ease-smooth), filter 120ms, background 150ms;
+		-webkit-tap-highlight-color: transparent;
+	}
+
+	.more-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+	.more-btn:active:not(:disabled) { transform: scale(0.98); }
+
+	.more-btn-warn {
+		color: var(--status-warning);
+		border-color: var(--status-warning);
+	}
+
+	.more-btn-danger {
+		color: var(--status-danger);
+		border-color: var(--status-danger);
+	}
+
+	.more-btn-full {
+		grid-column: span 2;
+	}
+
+	/* Decision sheet */
+	.mobile-decision-sheet {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		padding: 0.75rem;
+		background: var(--surface);
+		border: 1px solid var(--border-holdfast);
+		border-left-width: 3px;
+		border-radius: var(--radius-md);
+	}
+
+	.sheet-tone-success { border-left-color: var(--status-success); }
+	.sheet-tone-warning { border-left-color: var(--status-warning); }
+	.sheet-tone-danger  { border-left-color: var(--status-danger); }
+
+	.sheet-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 0.5rem;
+	}
+
+	.sheet-header strong {
+		font-size: 0.95rem;
+		font-weight: 700;
+		color: var(--text-primary);
+	}
+
+	.sheet-hint {
+		font-size: 0.65rem;
+		color: var(--text-tertiary);
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		font-weight: 600;
+	}
+
+	.sheet-textarea {
+		width: 100%;
+		min-height: 88px;
+		max-height: 200px;
+		padding: 0.625rem 0.75rem;
+		background: var(--bg);
+		border: 1px solid var(--border-holdfast);
+		border-radius: var(--radius-sm);
+		color: var(--text-primary);
+		font-family: inherit;
+		font-size: 16px;
+		line-height: 1.4;
+		resize: vertical;
+		outline: none;
+		transition: border-color 150ms;
+		box-sizing: border-box;
+	}
+
+	.sheet-textarea:focus {
+		border-color: var(--accent);
+	}
+
+	.sheet-textarea::placeholder {
+		color: var(--text-tertiary);
+	}
+
+	.sheet-actions {
+		display: grid;
+		grid-template-columns: 1fr 1.4fr;
+		gap: 0.5rem;
+	}
+
+	.sheet-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 48px;
+		padding: 0.5rem;
+		border-radius: var(--radius-sm);
+		border: none;
+		font-family: inherit;
+		font-size: 0.875rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: transform 120ms, filter 120ms, background 150ms;
+		-webkit-tap-highlight-color: transparent;
+	}
+
+	.sheet-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+	.sheet-btn:active:not(:disabled) { transform: scale(0.98); }
+
+	.sheet-btn-cancel {
+		background: var(--surface-raised);
+		color: var(--text-secondary);
+		border: 1px solid var(--border-holdfast);
+	}
+
+	.sheet-btn-confirm-success { background: var(--status-success); color: var(--bg); }
+	.sheet-btn-confirm-warning { background: var(--status-warning); color: var(--bg); }
+	.sheet-btn-confirm-danger  { background: var(--status-danger); color: var(--bg); }
+
+	/* Kick countdown (mobile) */
+	.mobile-kick-countdown {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		padding: 0.75rem 1rem;
+		background: oklch(25% 0.06 25 / 0.3);
+		border: 1px solid var(--status-danger);
+		border-radius: var(--radius-md);
+	}
+
+	.kick-countdown-label {
+		color: var(--status-danger);
+		font-weight: 700;
+		font-size: 0.95rem;
+		animation: pulse-text 1s ease infinite;
+	}
+
 	/* ── Mobile ── */
 	@media (max-width: 767px) {
 		.detail-body {
@@ -802,53 +1368,18 @@
 			line-height: 1.6;
 		}
 
+		/* Desktop-only action bar hides on mobile — replaced by .mobile-review-dock */
 		.action-bar {
-			position: sticky;
-			bottom: 0;
-			flex-wrap: wrap;
-			padding: 1rem;
-			gap: 0.625rem;
-			background: var(--surface);
-			border-top: 1px solid var(--border-holdfast);
-			z-index: 5;
-			box-shadow: 0 -4px 16px oklch(0% 0 0 / 0.15);
+			display: none;
 		}
 
-		.decision-buttons {
-			margin-left: 0;
-			width: 100%;
-			display: grid;
-			grid-template-columns: 1fr 1fr;
-			gap: 0.625rem;
+		/* Make room under answers so the last block breathes above the dock */
+		.content-body {
+			padding-bottom: 1.5rem;
 		}
 
-		.reason-input {
-			width: 100%;
-			flex: none;
-			min-height: 48px;
-			font-size: 16px;
-			padding: 0.75rem 1rem;
-		}
-
-		.btn {
-			min-height: 48px;
-			padding: 0.75rem 1rem;
-			font-size: 0.8125rem;
-		}
-
-		.btn-claim {
-			width: 100%;
-			min-height: 52px;
-			font-size: 0.9375rem;
-			border-radius: var(--radius-md);
-		}
-
-		.btn-unclaim {
-			width: 100%;
-		}
-
-		.btn-vote-out {
-			width: 100%;
+		.mobile-review-dock {
+			display: flex;
 		}
 	}
 

@@ -1,8 +1,10 @@
 /**
  * scripts/backfill-general.mjs
  *
- * Pages Discord history for the #general channel backwards to JAN_2024_FLOOR
- * and stores raw message rows in data/data.db (table: general_messages_raw).
+ * Pages Discord history for the #general channel backwards as far as
+ * Discord will return and stores raw message rows in data/data.db (table:
+ * general_messages_raw). No date floor — stops only when Discord returns
+ * an empty page (channel start) or --limit hits.
  *
  * Resumable: state lives in _recon/backfill-general.cursor.json. Re-running
  * picks up at the oldest fetched message.
@@ -21,7 +23,6 @@ import { dirname } from 'node:path';
 
 const GUILD_ID = '896070888594759740';
 const CHANNEL_ID = '896070889462976608';
-const JAN_2024_FLOOR = Math.floor(Date.UTC(2024, 0, 1) / 1000);
 const DB_PATH = 'data/data.db';
 const CURSOR_PATH = '_recon/backfill-general.cursor.json';
 
@@ -143,12 +144,12 @@ client.once('ready', async () => {
       runAdded += rows.length;
 
       const oldestIso = new Date(cursor.oldestTs * 1000).toISOString();
-      console.log(`[page ${cursor.pages}] +${rows.length}  total=${cursor.total}  oldest=${oldestIso}`);
-
-      if (cursor.oldestTs < JAN_2024_FLOOR) {
-        console.log(`[done] passed Jan 2024 floor`);
-        stop = true;
+      // Throttle stdout chatter for multi-day pm2 runs: log every page for the
+      // first 50, then every 50th. Cursor file is the authoritative progress.
+      if (cursor.pages <= 50 || cursor.pages % 50 === 0) {
+        console.log(`[page ${cursor.pages}] +${rows.length}  total=${cursor.total}  oldest=${oldestIso}`);
       }
+
       if (runAdded >= LIMIT) {
         console.log(`[done] hit --limit ${LIMIT} for this run`);
         stop = true;

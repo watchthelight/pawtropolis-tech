@@ -69,6 +69,7 @@
 		{ href: '/dashboard/modmail',  minTier: 'gk' },
 		{ href: '/dashboard/tickets',  minTier: 'viewer' },
 		{ href: '/dashboard/pulse',    minTier: 'mod' },
+		{ href: '/dashboard/quality',  minTier: 'mod' },
 		{ href: '/dashboard/flags',    minTier: 'sm' },
 		{ href: '/dashboard/heatmap',  minTier: 'sm' },
 		{ href: '/dashboard/art',      minTier: 'sm' },

@@ -1,0 +1,16 @@
+# Crontab entries for the EC2 chat-quality worker pipeline.
+#
+# Install once on EC2:
+#   ssh bash-ec2 'crontab -l 2>/dev/null > /tmp/crontab.bak; \
+#                 cat /home/ubuntu/pawtropolis-tech/scripts/quality-cron.txt >> /tmp/crontab.bak; \
+#                 sort -u /tmp/crontab.bak | crontab -'
+#
+# Each script is resumable / capped. Memory peaks at ~200MB for embed-incremental;
+# everything else is sub-50MB.
+#
+# Logs: /tmp/quality-*.log (rotate yourself if they grow large; not critical).
+
+*/15 * * * * cd /home/ubuntu/pawtropolis-tech && /usr/bin/node scripts/build-context-incremental.mjs >> /tmp/quality-ctx.log 2>&1
+*/30 * * * * cd /home/ubuntu/pawtropolis-tech && /usr/bin/node scripts/embed-incremental.mjs        >> /tmp/quality-embed.log 2>&1
+*/30 * * * * cd /home/ubuntu/pawtropolis-tech && /usr/bin/node scripts/score-effort-v1.mjs          >> /tmp/quality-effort.log 2>&1
+0    * * * * cd /home/ubuntu/pawtropolis-tech && /usr/bin/node scripts/score-resonance.mjs          >> /tmp/quality-reso.log 2>&1
