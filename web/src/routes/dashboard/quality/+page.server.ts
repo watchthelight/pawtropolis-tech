@@ -11,6 +11,7 @@ import {
 	getBackfillStatus,
 } from '$lib/server/queries/quality';
 import { parseTimeWindowSpec, resolveRange, formatWindowLabel } from '$lib/shared/timeWindow';
+import { cached, cacheKey, CACHE_TTL, CACHE_HEADERS } from '$lib/server/cache';
 import type { PageServerLoad } from './$types';
 
 export const config = { isr: false };
@@ -29,7 +30,7 @@ try {
 }
 
 export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
-	setHeaders({ 'cache-control': 'no-store' });
+	setHeaders({ 'cache-control': CACHE_HEADERS.default });
 	if (!locals.user || !hasMinTier(locals.user.tier, 'mod')) {
 		error(403, "You don't have permission to view this page.");
 	}
@@ -38,22 +39,16 @@ export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
 	const guildId = process.env.GUILD_ID;
 	const spec = parseTimeWindowSpec(url.searchParams, '30d');
 	const range = resolveRange(spec);
+	const key = cacheKey(['quality', guildId, range.startS, range.endS]);
 
-	const overview = getQualityOverview(guildId, range);
-	const timeseries = getQualityTimeseries(guildId, range);
-	const distribution = getEffortDistribution(guildId, range);
-	const leaderboards = getEffortLeaderboards(guildId, range, 200);
-	const overlay = getMetricsOverlay(guildId, range, LOWLIST_TOKENS);
-	const backfill = getBackfillStatus(guildId);
-
-	return {
-		overview,
-		timeseries,
-		distribution,
-		leaderboards,
-		overlay,
-		backfill,
+	return cached(key, CACHE_TTL.medium, () => ({
+		overview: getQualityOverview(guildId, range),
+		timeseries: getQualityTimeseries(guildId, range),
+		distribution: getEffortDistribution(guildId, range),
+		leaderboards: getEffortLeaderboards(guildId, range, 200),
+		overlay: getMetricsOverlay(guildId, range, LOWLIST_TOKENS),
+		backfill: getBackfillStatus(guildId),
 		spec,
 		windowLabel: formatWindowLabel(spec),
-	};
+	}));
 };

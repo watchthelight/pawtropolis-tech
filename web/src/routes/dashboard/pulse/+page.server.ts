@@ -11,39 +11,37 @@ import {
 	getEngagementWindow
 } from '$lib/server/queries/pulse';
 import { parseTimeWindowSpec, resolveRange, formatWindowLabel } from '$lib/shared/timeWindow';
+import { cached, cacheKey, CACHE_TTL, CACHE_HEADERS } from '$lib/server/cache';
 import type { PageServerLoad } from './$types';
 
 export const config = { isr: false };
 
 export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
-	setHeaders({ 'cache-control': 'no-store' });
+	setHeaders({ 'cache-control': CACHE_HEADERS.default });
 	if (!locals.user || !hasMinTier(locals.user.tier, 'mod')) {
 		error(403, "You don't have permission to view this page.");
 	}
 	if (!process.env.GUILD_ID) throw new Error('GUILD_ID environment variable is required');
 
 	const guildId = process.env.GUILD_ID;
-
 	const spec = parseTimeWindowSpec(url.searchParams, '7d');
 	const range = resolveRange(spec);
+	const guildKey = cacheKey(['pulse:guild', guildId, range.startS, range.endS]);
 
-	const metrics = getPulseMetrics(guildId, range);
-	const newsletterStats = getNewsletterStats(guildId, range);
-	const insights = getInsights(guildId, range);
-	const guildSnapshot = getGuildSnapshot(guildId);
-	const topVoiceChannels = getTopVoiceChannels(guildId, range);
-	const channelRanking = getChannelActivityRanking(guildId, range);
-	const engagement = getEngagementWindow(guildId, range);
+	const guildData = await cached(guildKey, CACHE_TTL.medium, () => ({
+		metrics: getPulseMetrics(guildId, range),
+		newsletterStats: getNewsletterStats(guildId, range),
+		insights: getInsights(guildId, range),
+		guildSnapshot: getGuildSnapshot(guildId),
+		topVoiceChannels: getTopVoiceChannels(guildId, range),
+		channelRanking: getChannelActivityRanking(guildId, range),
+		engagement: getEngagementWindow(guildId, range)
+	}));
+
 	const levelRoleStats = await getLevelRoleStats(locals.user.id, locals.user.tier).catch(() => null);
 
 	return {
-		metrics,
-		newsletterStats,
-		insights,
-		guildSnapshot,
-		topVoiceChannels,
-		channelRanking,
-		engagement,
+		...guildData,
 		levelRoleStats,
 		spec,
 		windowLabel: formatWindowLabel(spec)
