@@ -47,7 +47,8 @@ export function cacheKey(parts: (string | number | null | undefined)[]): string 
 export const CACHE_TTL = {
 	short: 30_000,
 	medium: 60_000,
-	long: 300_000
+	long: 300_000,
+	veryLong: 30 * 60_000
 } as const;
 
 export const CACHE_HEADERS = {

@@ -152,13 +152,29 @@ export function isPresetEqual(spec: TimeWindowSpec, preset: PresetWindow): boole
  */
 export function rangeCacheKeyParts(
 	range: ResolvedRange,
-	bucketSeconds = 60
+	bucketSeconds?: number
 ): (string | number)[] {
 	if (range.spec.kind === 'custom') {
 		return ['custom', range.spec.fromS, range.spec.toS];
 	}
+	const bucket = bucketSeconds ?? presetBucketSeconds(range.spec);
 	return [
 		range.spec.preset,
-		Math.floor(range.endS / Math.max(1, bucketSeconds))
+		Math.floor(range.endS / Math.max(1, bucket))
 	];
+}
+
+/**
+ * Cache-bucket size matched to how fast each preset shifts. Short windows
+ * (7d) reroll every 5 min; long windows (90d, all) survive an hour or a day
+ * because their endpoint barely moves.
+ */
+export function presetBucketSeconds(spec: TimeWindowSpec): number {
+	if (spec.kind === 'custom') return 60;
+	switch (spec.preset) {
+		case '7d':  return 300;
+		case '30d': return 1800;
+		case '90d': return 3600;
+		case 'all': return 86400;
+	}
 }
