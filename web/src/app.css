@@ -107,9 +107,21 @@
 	/* ── Animation ── */
 	--ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 	--ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+	--ease-out:    cubic-bezier(0.22, 0.61, 0.36, 1);
 	--duration-fast: 150ms;
 	--duration-normal: 250ms;
 	--duration-slow: 400ms;
+
+	/* ── Motion vocabulary (use these on every animated element) ──
+	   enter:  fade/slide-in for elements arriving on screen
+	   exit:   fade-out for elements leaving
+	   hover:  hover state changes
+	   focus:  focus / press state changes
+	*/
+	--motion-enter: opacity var(--duration-normal) var(--ease-out), transform var(--duration-normal) var(--ease-out);
+	--motion-exit:  opacity var(--duration-fast)   var(--ease-smooth);
+	--motion-hover: background var(--duration-fast) var(--ease-smooth), border-color var(--duration-fast) var(--ease-smooth), color var(--duration-fast) var(--ease-smooth), box-shadow var(--duration-fast) var(--ease-smooth);
+	--motion-focus: transform var(--duration-fast) var(--ease-spring), box-shadow var(--duration-fast) var(--ease-spring);
 
 	/* ── Mobile ── */
 	--vh-full: 100dvh;

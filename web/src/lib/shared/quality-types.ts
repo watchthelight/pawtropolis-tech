@@ -8,6 +8,27 @@ export interface QualityOverview {
 	meanEffort: number;
 	meanResonance: number;
 	lowEffortShare: number;
+	meanSubstantiveness: number;
+	meanNovelty: number;
+	fillerRate: number;
+	meanLexDensity: number;
+}
+
+export interface SubstantivenessSparkPoint {
+	weekStart: number;
+	iso: string;
+	effort: number;
+	substantiveness: number;
+}
+
+export interface SubstantivenessTrend {
+	currentSubst: number;
+	priorSubst: number;
+	currentEffort: number;
+	priorEffort: number;
+	deltaSubstPct: number;
+	deltaEffortPct: number;
+	interpretation: string;
 }
 
 export interface QualityWeekBucket {
@@ -49,6 +70,7 @@ export const OVERLAY_METRIC_KEYS = [
 	'effort', 'heuristic', 'resonance',
 	'median_length', 'lexical_diversity', 'question_rate',
 	'no_repeat_spam', 'no_lowlist_hit', 'reply_rate', 'author_distribution',
+	'substantiveness',
 ] as const;
 
 export type OverlayMetricKey = typeof OVERLAY_METRIC_KEYS[number];

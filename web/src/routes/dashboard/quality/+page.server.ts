@@ -1,33 +1,23 @@
 import { error } from '@sveltejs/kit';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { hasMinTier } from '$lib/server/roles';
 import {
 	getQualityOverview,
 	getQualityTimeseries,
 	getEffortDistribution,
 	getEffortLeaderboards,
-	getMetricsOverlay,
-	getBackfillStatus,
+	getSubstantivenessSparkline,
+	getSubstantivenessTrend,
 } from '$lib/server/queries/quality';
-import { parseTimeWindowSpec, resolveRange, formatWindowLabel } from '$lib/shared/timeWindow';
+import {
+	parseTimeWindowSpec,
+	resolveRange,
+	formatWindowLabel,
+	rangeCacheKeyParts
+} from '$lib/shared/timeWindow';
 import { cached, cacheKey, CACHE_TTL, CACHE_HEADERS } from '$lib/server/cache';
 import type { PageServerLoad } from './$types';
 
 export const config = { isr: false };
-
-// Lowlist for the metrics overlay. Loaded once at module init from the
-// canonical scripts/lowlist.json shipped with the bot.
-const lowlistPath = resolve(process.cwd(), '../scripts/lowlist.json');
-let LOWLIST_TOKENS: Set<string> = new Set();
-try {
-	const raw = JSON.parse(readFileSync(lowlistPath, 'utf8'));
-	LOWLIST_TOKENS = new Set((raw.tokens ?? []).map((t: string) => t.toLowerCase()));
-} catch {
-	// Fall back to an empty lowlist; overlay will compute "no_lowlist_hit" as 1.0
-	// for every week, which is harmless.
-	LOWLIST_TOKENS = new Set();
-}
 
 export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
 	setHeaders({ 'cache-control': CACHE_HEADERS.default });
@@ -39,16 +29,31 @@ export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
 	const guildId = process.env.GUILD_ID;
 	const spec = parseTimeWindowSpec(url.searchParams, '30d');
 	const range = resolveRange(spec);
-	const key = cacheKey(['quality', guildId, range.startS, range.endS]);
+	const rangeKey = rangeCacheKeyParts(range, 300);
+	const dataKey = cacheKey(['quality:data', guildId, ...rangeKey]);
 
-	return cached(key, CACHE_TTL.medium, () => ({
+	const fastKey = cacheKey(['quality:fast', guildId, ...rangeKey]);
+	const fastData = await cached(fastKey, CACHE_TTL.long, () => ({
 		overview: getQualityOverview(guildId, range),
 		timeseries: getQualityTimeseries(guildId, range),
 		distribution: getEffortDistribution(guildId, range),
-		leaderboards: getEffortLeaderboards(guildId, range, 200),
-		overlay: getMetricsOverlay(guildId, range, LOWLIST_TOKENS),
-		backfill: getBackfillStatus(guildId),
-		spec,
-		windowLabel: formatWindowLabel(spec),
+		substSparkline: getSubstantivenessSparkline(guildId, range),
+		substTrend: getSubstantivenessTrend(guildId, range)
 	}));
+
+	// Leaderboards are the heaviest query (GROUP BY all authors). Stream as a
+	// promise so the page renders the rest immediately and the table skeletons
+	// in until it resolves.
+	const leaderboardsPromise = cached(
+		cacheKey(['quality:leaderboards', guildId, ...rangeKey]),
+		CACHE_TTL.long,
+		() => getEffortLeaderboards(guildId, range, 200)
+	);
+
+	return {
+		...fastData,
+		streamed: { leaderboards: leaderboardsPromise },
+		spec,
+		windowLabel: formatWindowLabel(spec)
+	};
 };

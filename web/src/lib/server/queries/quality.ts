@@ -65,13 +65,86 @@ export function getQualityOverview(_guildId: string, range: ResolvedRange): Qual
 		distinctAuthors: number;
 	};
 
+	// Substantiveness components — a separate query because the table may not exist
+	// on every deploy yet, and we want graceful degrade rather than a 500.
+	let subst = { meanSubst: 0, meanNov: 0, meanNF: 1, meanDens: 0 };
+	try {
+		const sRow = db().prepare(`
+			SELECT AVG(score) AS meanSubst, AVG(novelty) AS meanNov,
+			       AVG(not_filler) AS meanNF, AVG(lexical_density) AS meanDens
+			FROM general_messages_substantiveness
+			WHERE created_at_s >= ? AND created_at_s < ?
+		`).get(range.startS, range.endS) as { meanSubst: number | null; meanNov: number | null; meanNF: number | null; meanDens: number | null };
+		subst = {
+			meanSubst: sRow?.meanSubst ?? 0,
+			meanNov:   sRow?.meanNov ?? 0,
+			meanNF:    sRow?.meanNF ?? 1,
+			meanDens:  sRow?.meanDens ?? 0,
+		};
+	} catch { /* table missing on first deploy */ }
+
 	return {
 		totalScored: row.totalScored ?? 0,
 		distinctAuthors: row.distinctAuthors ?? 0,
 		meanEffort: row.meanEffort ?? 0,
 		meanResonance: row.meanResonance ?? 0,
 		lowEffortShare: row.lowEffortShare ?? 0,
+		meanSubstantiveness: subst.meanSubst,
+		meanNovelty: subst.meanNov,
+		fillerRate: 1 - subst.meanNF,
+		meanLexDensity: subst.meanDens,
 	};
+}
+
+// 12-week sparkline of effort + substantiveness, anchored on the latest week
+// in the range. Used for the dashboard tile beneath the headline numbers.
+export function getSubstantivenessSparkline(_guildId: string, range: ResolvedRange): import('$lib/shared/quality-types').SubstantivenessSparkPoint[] {
+	try {
+		return db().prepare(`
+			SELECT week_start, effort, substantiveness
+			FROM general_messages_overlay_weekly
+			WHERE week_start < ?
+			ORDER BY week_start DESC
+			LIMIT 12
+		`).all(range.endS).reverse().map((r: any) => ({
+			weekStart: r.week_start,
+			iso: new Date(r.week_start * 1000).toISOString().slice(0, 10),
+			effort: r.effort ?? 0,
+			substantiveness: r.substantiveness ?? 0,
+		}));
+	} catch {
+		return [];
+	}
+}
+
+// Auto-generated narrative — compares last 4 weeks vs the prior 4. The mods
+// reading this won't crunch percentages on the fly; the line tells them what
+// the numbers mean.
+export function getSubstantivenessTrend(_guildId: string, range: ResolvedRange): import('$lib/shared/quality-types').SubstantivenessTrend {
+	const empty = { currentSubst: 0, priorSubst: 0, currentEffort: 0, priorEffort: 0, deltaSubstPct: 0, deltaEffortPct: 0, interpretation: 'Insufficient data.' };
+	try {
+		const FOUR_WEEKS = 4 * 7 * 86_400;
+		const cur  = db().prepare(`SELECT AVG(effort) AS e, AVG(substantiveness) AS s FROM general_messages_overlay_weekly WHERE week_start >= ? AND week_start < ?`).get(range.endS - FOUR_WEEKS, range.endS) as { e: number | null; s: number | null };
+		const prio = db().prepare(`SELECT AVG(effort) AS e, AVG(substantiveness) AS s FROM general_messages_overlay_weekly WHERE week_start >= ? AND week_start < ?`).get(range.endS - 2 * FOUR_WEEKS, range.endS - FOUR_WEEKS) as { e: number | null; s: number | null };
+		if (!cur?.e || !prio?.e) return empty;
+		const dE = ((cur.e - prio.e) / prio.e) * 100;
+		const dS = cur.s && prio.s ? ((cur.s - prio.s) / prio.s) * 100 : 0;
+		const sign = (n: number) => (n >= 0 ? `+${n.toFixed(1)}%` : `${n.toFixed(1)}%`);
+		let interp: string;
+		const big = (n: number) => Math.abs(n) >= 2;
+		if (!big(dE) && !big(dS))         interp = 'Quality and substantiveness both holding steady.';
+		else if (dE > 0 && dS > 0)        interp = `Effort ${sign(dE)} and substantiveness ${sign(dS)} — both lifting.`;
+		else if (dE < 0 && dS < 0)        interp = `Effort ${sign(dE)} and substantiveness ${sign(dS)} — both dipping.`;
+		else if (dE > 0 && dS < 0)        interp = `Effort ${sign(dE)} but substantiveness ${sign(dS)} — more talk, less new content.`;
+		else if (dE < 0 && dS > 0)        interp = `Effort ${sign(dE)} yet substantiveness ${sign(dS)} — fewer messages, denser content.`;
+		else                              interp = `Effort ${sign(dE)}, substantiveness ${sign(dS)}.`;
+		return {
+			currentSubst: cur.s ?? 0, priorSubst: prio.s ?? 0,
+			currentEffort: cur.e, priorEffort: prio.e,
+			deltaSubstPct: dS, deltaEffortPct: dE,
+			interpretation: interp,
+		};
+	} catch { return empty; }
 }
 
 // ─── Weekly time-series ─────────────────────────────────────────────────────
