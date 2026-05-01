@@ -84,7 +84,7 @@ export function getQualityTimeseries(_guildId: string, range: ResolvedRange): Qu
 	// Aggregate weekly buckets in SQL — avoids materializing ~1M rows in JS.
 	const rows = db().prepare(`
 		SELECT
-			((eff.created_at_s - ?) / ?) * ? + ? AS week_start,
+			(CAST((eff.created_at_s - ?) / ? AS INTEGER) * ? + ?) AS week_start,
 			COUNT(*)                              AS n,
 			SUM(eff.score)                        AS effort_sum,
 			SUM(res.score)                        AS resonance_sum,
@@ -110,13 +110,18 @@ export function getQualityTimeseries(_guildId: string, range: ResolvedRange): Qu
 		lowEffortShare: +(r.low_count / r.n).toFixed(4),
 	}));
 
-	// 4-week rolling mean effort weighted by message count
+	// 4-week rolling mean effort weighted by message count.
 	const ROLL = 4;
+	let rollingSum = 0;
+	let rollingCount = 0;
 	for (let i = 0; i < weeks.length; i++) {
-		const slice = weeks.slice(Math.max(0, i - ROLL + 1), i + 1);
-		const sum = slice.reduce((s, w) => s + w.meanEffort * w.count, 0);
-		const cnt = slice.reduce((s, w) => s + w.count, 0);
-		weeks[i].rolling4w = +(sum / cnt).toFixed(4);
+		rollingSum += weeks[i].meanEffort * weeks[i].count;
+		rollingCount += weeks[i].count;
+		if (i >= ROLL) {
+			rollingSum -= weeks[i - ROLL].meanEffort * weeks[i - ROLL].count;
+			rollingCount -= weeks[i - ROLL].count;
+		}
+		weeks[i].rolling4w = +(rollingSum / rollingCount).toFixed(4);
 	}
 
 	return weeks;
@@ -240,95 +245,55 @@ function median(arr: number[]): number {
 export function getMetricsOverlay(
 	_guildId: string,
 	range: ResolvedRange,
-	lowlistTokens: Set<string>,
+	_lowlistTokens: Set<string>,
 ): OverlayWeek[] {
-	// Cap overlay window to last 90 days regardless of input range — overlay does
-	// per-message JS work (tokenize, gini, lengths) and 1M+ rows blow CF's 100s timeout.
-	const OVERLAY_MAX_DAYS = 90;
-	const overlayStartS = Math.max(range.startS, range.endS - OVERLAY_MAX_DAYS * 86_400);
-	const rows = db().prepare(`
-		SELECT
-			r.id, r.created_at_s, r.author_id, r.content, r.reply_to,
-			s.score   AS heuristic,
-			eff.score AS effort,
-			res.score AS resonance
-		FROM general_messages_raw r
-		LEFT JOIN general_messages_score s     ON s.id   = r.id
-		LEFT JOIN general_messages_effort eff  ON eff.id = r.id
-		LEFT JOIN general_messages_resonance res ON res.id = r.id
-		WHERE r.created_at_s >= ? AND r.created_at_s < ? AND r.is_bot = 0 AND length(r.content) > 0
-		ORDER BY r.created_at_s
-	`).all(overlayStartS, range.endS) as Array<{
-		id: string;
-		created_at_s: number;
-		author_id: string;
-		content: string;
-		reply_to: string | null;
-		heuristic: number | null;
-		effort: number | null;
-		resonance: number | null;
-	}>;
+	// Reads from precomputed weekly table (filled by scripts/build-overlay-weekly.mjs).
+	// Falls back to empty array if the table is missing — first-deploy graceful degrade.
+	try {
+		const rows = db().prepare(`
+			SELECT
+				week_start, count,
+				effort, heuristic, resonance,
+				median_length, lexical_diversity, question_rate,
+				no_repeat_spam, no_lowlist_hit, reply_rate, author_distribution
+			FROM general_messages_overlay_weekly
+			WHERE week_start >= ? AND week_start < ?
+			ORDER BY week_start
+		`).all(range.startS, range.endS) as Array<{
+			week_start: number;
+			count: number;
+			effort: number;
+			heuristic: number;
+			resonance: number;
+			median_length: number;
+			lexical_diversity: number;
+			question_rate: number;
+			no_repeat_spam: number;
+			no_lowlist_hit: number;
+			reply_rate: number;
+			author_distribution: number;
+		}>;
 
-	type Bucket = {
-		n: number;
-		sumEffort: number; nEffort: number;
-		sumHeur: number; nHeur: number;
-		sumResonance: number; nResonance: number;
-		lengths: number[];
-		uniqueTokens: Set<string>;
-		totalTokens: number;
-		questions: number;
-		repeatSpam: number;
-		lowlistHits: number;
-		replies: number;
-		authorCounts: Map<string, number>;
-	};
-	const buckets = new Map<number, Bucket>();
-
-	for (const r of rows) {
-		const w = weekStartOf(r.created_at_s);
-		let b = buckets.get(w);
-		if (!b) {
-			b = { n: 0, sumEffort: 0, nEffort: 0, sumHeur: 0, nHeur: 0, sumResonance: 0, nResonance: 0,
-				lengths: [], uniqueTokens: new Set(), totalTokens: 0, questions: 0, repeatSpam: 0,
-				lowlistHits: 0, replies: 0, authorCounts: new Map() };
-			buckets.set(w, b);
-		}
-		b.n++;
-		if (r.effort !== null) { b.sumEffort += r.effort; b.nEffort++; }
-		if (r.heuristic !== null) { b.sumHeur += r.heuristic; b.nHeur++; }
-		if (r.resonance !== null) { b.sumResonance += r.resonance; b.nResonance++; }
-
-		const toks = tokensOf(r.content);
-		b.lengths.push(toks.length);
-		b.totalTokens += toks.length;
-		for (const t of toks) b.uniqueTokens.add(t);
-		if (r.content.includes('?')) b.questions++;
-		if (maxCharRun(r.content) >= 4) b.repeatSpam++;
-		if (toks.length > 0 && toks.length <= 3 && toks.every((t) => lowlistTokens.has(t))) b.lowlistHits++;
-		if (r.reply_to) b.replies++;
-		b.authorCounts.set(r.author_id, (b.authorCounts.get(r.author_id) ?? 0) + 1);
-	}
-
-	return [...buckets.entries()]
-		.sort((a, b) => a[0] - b[0])
-		.map(([weekStart, b]) => ({
-			weekStart,
-			iso: new Date(weekStart * 1000).toISOString().slice(0, 10),
-			count: b.n,
+		return rows.map((r) => ({
+			weekStart: r.week_start,
+			iso: new Date(r.week_start * 1000).toISOString().slice(0, 10),
+			count: r.count,
 			raw: {
-				effort:              b.nEffort ? b.sumEffort / b.nEffort : 0,
-				heuristic:           b.nHeur ? b.sumHeur / b.nHeur : 0,
-				resonance:           b.nResonance ? b.sumResonance / b.nResonance : 0,
-				median_length:       median(b.lengths),
-				lexical_diversity:   b.totalTokens > 0 ? Math.log1p(b.uniqueTokens.size) / Math.log1p(b.totalTokens) : 0,
-				question_rate:       b.questions / b.n,
-				no_repeat_spam:      1 - b.repeatSpam / b.n,
-				no_lowlist_hit:      1 - b.lowlistHits / b.n,
-				reply_rate:          b.replies / b.n,
-				author_distribution: 1 - gini([...b.authorCounts.values()]),
+				effort:              r.effort,
+				heuristic:           r.heuristic,
+				resonance:           r.resonance,
+				median_length:       r.median_length,
+				lexical_diversity:   r.lexical_diversity,
+				question_rate:       r.question_rate,
+				no_repeat_spam:      r.no_repeat_spam,
+				no_lowlist_hit:      r.no_lowlist_hit,
+				reply_rate:          r.reply_rate,
+				author_distribution: r.author_distribution,
 			},
 		}));
+	} catch {
+		return [];
+	}
 }
 
 // ─── Backfill / pipeline status ─────────────────────────────────────────────
@@ -336,25 +301,31 @@ export function getMetricsOverlay(
 export function getBackfillStatus(_guildId: string): BackfillStatus {
 	const d = db();
 	const totalRaw = (d.prepare(`SELECT COUNT(*) AS c FROM general_messages_raw`).get() as { c: number }).c;
+	const totalCtx = (d.prepare(`SELECT COUNT(*) AS c FROM general_messages_ctx`).get() as { c: number }).c;
 	const embedded = (d.prepare(`SELECT COUNT(*) AS c FROM general_messages_embed`).get() as { c: number }).c;
 	const scoredEffort = (d.prepare(`SELECT COUNT(*) AS c FROM general_messages_effort`).get() as { c: number }).c;
 	const scoredResonance = (d.prepare(`SELECT COUNT(*) AS c FROM general_messages_resonance`).get() as { c: number }).c;
-	const range = d.prepare(`SELECT MIN(created_at_s) AS lo, MAX(created_at_s) AS hi FROM general_messages_raw`).get() as { lo: number | null; hi: number | null };
+	const oldest = d.prepare(`SELECT created_at_s AS ts FROM general_messages_raw ORDER BY created_at_s ASC LIMIT 1`).get() as { ts: number } | undefined;
+	const newest = d.prepare(`SELECT created_at_s AS ts FROM general_messages_raw ORDER BY created_at_s DESC LIMIT 1`).get() as { ts: number } | undefined;
 
-	const pendingCtx = (d.prepare(`
+	const pendingCtx = Math.max(0, totalRaw - totalCtx);
+
+	const eligibleForEmbed = (d.prepare(`
 		SELECT COUNT(*) AS c
-		FROM general_messages_raw r
-		LEFT JOIN general_messages_ctx c ON c.id = r.id
-		WHERE c.id IS NULL
+		FROM general_messages_ctx c
+		JOIN general_messages_raw r ON r.id = c.id
+		WHERE r.is_bot = 0 AND length(r.content) > 0
 	`).get() as { c: number }).c;
 
-	const pendingEmbed = (d.prepare(`
+	const embeddedEligible = (d.prepare(`
 		SELECT COUNT(*) AS c
-		FROM general_messages_raw r
-		JOIN general_messages_ctx c ON c.id = r.id
-		LEFT JOIN general_messages_embed e ON e.id = r.id
-		WHERE e.id IS NULL AND r.is_bot = 0 AND length(r.content) > 0
+		FROM general_messages_embed e
+		JOIN general_messages_ctx c ON c.id = e.id
+		JOIN general_messages_raw r ON r.id = e.id
+		WHERE r.is_bot = 0 AND length(r.content) > 0
 	`).get() as { c: number }).c;
+
+	const pendingEmbed = Math.max(0, eligibleForEmbed - embeddedEligible);
 
 	const pendingEffort = (d.prepare(`
 		SELECT COUNT(*) AS c
@@ -368,8 +339,8 @@ export function getBackfillStatus(_guildId: string): BackfillStatus {
 		embedded,
 		scoredEffort,
 		scoredResonance,
-		oldestRawTs: range.lo,
-		newestRawTs: range.hi,
+		oldestRawTs: oldest?.ts ?? null,
+		newestRawTs: newest?.ts ?? null,
 		pendingCtx,
 		pendingEmbed,
 		pendingEffort,
