@@ -47,12 +47,15 @@ export const load: PageServerLoad = async ({ locals }) => {
 	try {
 		health = await cached(
 			cacheKey(['system:health']),
-			10_000,
+			20_000,
 			async () => {
+				// Bot's getSummary() can take 30-90s on this box (DB scan +
+				// pm2 jlist fork + queue metrics aggregate). Be patient — the
+				// 20s cache means we only pay this cost once per cache window.
 				const res = await callBotApi<SystemHealth>(
 					'/api/dashboard/health',
 					{ userId, tier },
-					25_000
+					120_000
 				);
 				if (!res.success) throw new Error(res.error);
 				return res.data;

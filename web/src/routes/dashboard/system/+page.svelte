@@ -10,14 +10,15 @@
 	let health = $derived(data.health);
 	let alerts = $derived(data.alerts);
 
-	// Live polling — every 15s while tab is foregrounded. Pairs with the
-	// server-side 10s cached() so each poll either returns from cache (cheap)
-	// or kicks off one upstream bot health request.
+	// Live polling — every 30s while tab is foregrounded. Pairs with the
+	// server-side 20s cached() so each poll either returns from cache (cheap)
+	// or refreshes from upstream. Bot health endpoint can take 60-90s cold
+	// on this box, so don't poll faster than that.
 	let pollTimer: ReturnType<typeof setInterval> | undefined;
 	onMount(() => {
 		pollTimer = setInterval(() => {
 			if (document.visibilityState === 'visible') invalidateAll();
-		}, 15_000);
+		}, 30_000);
 	});
 	onDestroy(() => { if (pollTimer) clearInterval(pollTimer); });
 
