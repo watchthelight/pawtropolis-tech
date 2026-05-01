@@ -21,7 +21,7 @@
 import Database from 'better-sqlite3';
 import { readFileSync } from 'node:fs';
 
-const DB_PATH = 'data/data.db';
+const DB_PATH = process.env.DB_PATH || 'data/data.db';
 const LOWLIST_PATH = 'scripts/lowlist.json';
 
 const args = process.argv.slice(2);
