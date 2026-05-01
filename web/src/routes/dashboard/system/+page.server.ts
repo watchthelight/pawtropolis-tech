@@ -13,6 +13,20 @@ export interface SystemHealth {
 	activeAlertCount: number;
 	pm2: Array<{ name: string; status: string; cpu?: number; memory?: number }>;
 	dbIntegrity: { ok: boolean; message: string; checkedAt: number };
+	host?: {
+		loadavg: [number, number, number];
+		cpuCount: number;
+		totalMemMB: number;
+		freeMemMB: number;
+		usedMemPct: number;
+		uptimeS: number;
+	};
+	cost?: {
+		hourlyUsd: number;
+		dailyUsd: number;
+		monthlyUsd: number;
+		note: string;
+	};
 }
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -22,7 +36,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const alerts = getRecentHealthAlerts(20);
 
-	// Bot API call — may fail if bot is offline
 	let health: SystemHealth | null = null;
 	const res = await callBotApi<SystemHealth>('/api/dashboard/health', {
 		userId: locals.user.id,

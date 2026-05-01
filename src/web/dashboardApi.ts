@@ -1710,6 +1710,19 @@ export async function startDashboardApi(client: Client): Promise<void> {
       const minutes = Math.floor((uptime % 3600) / 60);
       const uptimeFormatted = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
 
+      // Host metrics — gives the dashboard a real ops view, not just a bot view.
+      const os = await import("node:os");
+      const loadavg = os.loadavg();
+      const totalMemBytes = os.totalmem();
+      const freeMemBytes = os.freemem();
+      const cpuCount = os.cpus().length;
+      const hostUptimeS = os.uptime();
+
+      // Cost: EC2 t3.small us-east-1 ($0.0208/hr) + 30GB gp3 (~$2.40/mo)
+      const HOURLY_USD = 0.0208;
+      const STORAGE_USD_PER_MO = 2.40;
+      const monthlyUsd = HOURLY_USD * 24 * 30.4 + STORAGE_USD_PER_MO;
+
       return {
         success: true,
         data: {
@@ -1721,6 +1734,20 @@ export async function startDashboardApi(client: Client): Promise<void> {
           activeAlertCount: summary.activeAlerts.length,
           pm2: summary.pm2,
           dbIntegrity: summary.db,
+          host: {
+            loadavg,
+            cpuCount,
+            totalMemMB: Math.round(totalMemBytes / 1024 / 1024),
+            freeMemMB: Math.round(freeMemBytes / 1024 / 1024),
+            usedMemPct: Math.round(((totalMemBytes - freeMemBytes) / totalMemBytes) * 100),
+            uptimeS: Math.round(hostUptimeS),
+          },
+          cost: {
+            hourlyUsd: HOURLY_USD,
+            dailyUsd: +(HOURLY_USD * 24).toFixed(2),
+            monthlyUsd: +monthlyUsd.toFixed(2),
+            note: "EC2 t3.small us-east-1 + 30GB gp3 (storage flat rate)",
+          },
         },
       } satisfies ApiSuccess;
     } catch (err) {

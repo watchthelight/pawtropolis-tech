@@ -1,7 +1,7 @@
 <script lang="ts">
+	import { onDestroy, onMount } from 'svelte';
+	import { invalidateAll } from '$app/navigation';
 	import PageHeader from '$lib/components/layout/PageHeader.svelte';
-	import DataCard from '$lib/components/data/DataCard.svelte';
-	import StatNumber from '$lib/components/data/StatNumber.svelte';
 	import EmptyState from '$lib/components/feedback/EmptyState.svelte';
 	import SpringReveal from '$lib/components/motion/SpringReveal.svelte';
 	import { relativeTime } from '$lib/utils/time';
@@ -10,50 +10,65 @@
 	let health = $derived(data.health);
 	let alerts = $derived(data.alerts);
 
-	/** Threshold color for WS ping */
+	// Live polling — every 5s while tab is foregrounded.
+	let pollTimer: ReturnType<typeof setInterval> | undefined;
+	onMount(() => {
+		pollTimer = setInterval(() => {
+			if (document.visibilityState === 'visible') invalidateAll();
+		}, 5000);
+	});
+	onDestroy(() => { if (pollTimer) clearInterval(pollTimer); });
+
 	function pingColor(ms: number): string {
 		if (ms < 100) return 'var(--status-success)';
 		if (ms <= 500) return 'var(--status-warning)';
 		return 'var(--status-danger)';
 	}
-
-	/** Threshold color for percentage-based metrics */
-	function percentColor(pct: number, amberAt: number = 70, redAt: number = 90): string {
-		if (pct < amberAt) return 'var(--status-success)';
-		if (pct <= redAt) return 'var(--status-warning)';
+	function pctColor(pct: number, amber = 70, red = 90): string {
+		if (pct < amber) return 'var(--status-success)';
+		if (pct <= red) return 'var(--status-warning)';
 		return 'var(--status-danger)';
 	}
-
+	function formatBytesMB(mb: number): string {
+		if (mb < 1024) return `${mb} MB`;
+		return `${(mb / 1024).toFixed(2)} GB`;
+	}
+	function formatHostUptime(s: number): string {
+		const days = Math.floor(s / 86400);
+		const hours = Math.floor((s % 86400) / 3600);
+		const minutes = Math.floor((s % 3600) / 60);
+		if (days) return `${days}d ${hours}h`;
+		if (hours) return `${hours}h ${minutes}m`;
+		return `${minutes}m`;
+	}
+	function pm2Color(status: string): string {
+		if (status === 'online') return 'var(--status-success)';
+		if (status === 'launching' || status === 'restarting') return 'var(--status-warning)';
+		return 'var(--status-danger)';
+	}
 	function severityColor(severity: string): string {
 		return severity === 'critical' ? 'var(--status-danger)' : 'var(--status-warning)';
 	}
-
 	function alertStatusLabel(status: string): string {
 		if (status === 'resolved') return 'Resolved';
 		if (status === 'acknowledged') return 'Acknowledged';
 		return 'Active';
 	}
-
 	function alertStatusColor(status: string): string {
 		if (status === 'resolved') return 'var(--status-success)';
 		if (status === 'acknowledged') return 'var(--status-info, var(--accent))';
 		return 'var(--status-danger)';
 	}
-
 	function formatAlertType(type: string): string {
-		// Preserve known acronyms (DB, PM2, WS, P95)
-		return type.replace(/_/g, ' ')
-			.replace(/\b\w+/g, w => {
-				const upper = w.toUpperCase();
-				if (['DB', 'PM2', 'WS', 'P95'].includes(upper)) return upper;
-				return w.charAt(0).toUpperCase() + w.slice(1);
-			});
+		return type.replace(/_/g, ' ').replace(/\b\w+/g, w => {
+			const upper = w.toUpperCase();
+			if (['DB', 'PM2', 'WS', 'P95'].includes(upper)) return upper;
+			return w.charAt(0).toUpperCase() + w.slice(1);
+		});
 	}
-
 	function formatResolution(alert: typeof alerts[number]): string {
 		if (alert.status !== 'resolved' || !alert.resolvedAt) return '';
-		const durationMs = alert.resolvedAt - alert.triggeredAt;
-		const minutes = Math.round(durationMs / 60000);
+		const minutes = Math.round((alert.resolvedAt - alert.triggeredAt) / 60000);
 		if (minutes < 60) return `${minutes}m to resolve`;
 		const hours = Math.floor(minutes / 60);
 		const mins = minutes % 60;
@@ -62,52 +77,112 @@
 </script>
 
 <SpringReveal stagger={30}>
-	<PageHeader title="System" subtitle="Bot system health" />
+	<PageHeader title="System" subtitle="Process and host telemetry — auto-refreshes every 5s" />
 
-	<!-- Live metrics from bot API -->
 	{#if health}
-		<div class="metrics-grid">
-			<DataCard>
-				<span class="metric-uptime">{health.uptimeFormatted}</span>
-				<span class="metric-detail">Uptime</span>
-			</DataCard>
-			<DataCard>
-				<div class="metric-colored" style:color={pingColor(health.wsPingMs)}>
-					<StatNumber value={health.wsPingMs} label="WS Ping" />
-					<span class="metric-unit">ms</span>
+		<!-- Bot tile row -->
+		<div class="section-label">Bot process</div>
+		<div class="tile-row">
+			<div class="tile">
+				<span class="tile-label">Uptime</span>
+				<span class="tile-value">{health.uptimeFormatted}</span>
+			</div>
+			<div class="tile">
+				<span class="tile-label">WS ping</span>
+				<span class="tile-value" style:color={pingColor(health.wsPingMs)}>
+					{health.wsPingMs}<span class="unit"> ms</span>
+				</span>
+			</div>
+			{#if health.memory.heapTotalMB > 0}
+				{@const heapPct = Math.round((health.memory.heapUsedMB / health.memory.heapTotalMB) * 100)}
+				<div class="tile">
+					<span class="tile-label">Heap</span>
+					<span class="tile-value" style:color={pctColor(heapPct)}>{heapPct}<span class="unit">%</span></span>
+					<span class="tile-sub">{health.memory.heapUsedMB} / {health.memory.heapTotalMB} MB · RSS {health.memory.rssMB} MB</span>
 				</div>
-			</DataCard>
-			<DataCard>
-				{@const memPct = Math.round((health.memory.heapUsedMB / health.memory.heapTotalMB) * 100)}
-				<div class="metric-colored" style:color={percentColor(memPct)}>
-					<StatNumber value={memPct} label="Memory" />
-					<span class="metric-unit">%</span>
-				</div>
-				<span class="metric-detail">{health.memory.heapUsedMB} / {health.memory.heapTotalMB} MB (RSS: {health.memory.rssMB} MB)</span>
-			</DataCard>
-			<DataCard>
-				<div class="metric-colored" style:color={percentColor(health.disk.percentUsed, 70, 85)}>
-					<StatNumber value={health.disk.percentUsed} label="Disk" />
-					<span class="metric-unit">%</span>
-				</div>
-				<span class="metric-detail">{health.disk.usedGB} / {health.disk.totalGB} GB</span>
-			</DataCard>
+			{/if}
+			<div class="tile">
+				<span class="tile-label">Disk</span>
+				<span class="tile-value" style:color={pctColor(health.disk.percentUsed, 70, 85)}>
+					{health.disk.percentUsed}<span class="unit">%</span>
+				</span>
+				<span class="tile-sub">{health.disk.usedGB} / {health.disk.totalGB} GB</span>
+			</div>
 		</div>
 
 		<!-- DB integrity -->
 		<div class="db-status">
 			<span class="db-dot" style:background={health.dbIntegrity.ok ? 'var(--status-success)' : 'var(--status-danger)'} aria-hidden="true"></span>
-			<span class="db-label" aria-label="Database status: {health.dbIntegrity.message}">Database: {health.dbIntegrity.message}</span>
+			<span class="db-label">Database: {health.dbIntegrity.message}</span>
 		</div>
+
+		<!-- Host metrics -->
+		{#if health.host}
+			<div class="section-label">Host (EC2)</div>
+			<div class="tile-row">
+				<div class="tile">
+					<span class="tile-label">Load avg</span>
+					<span class="tile-value">{health.host.loadavg[0].toFixed(2)}</span>
+					<span class="tile-sub">5m {health.host.loadavg[1].toFixed(2)} · 15m {health.host.loadavg[2].toFixed(2)} · {health.host.cpuCount} cores</span>
+				</div>
+				<div class="tile">
+					<span class="tile-label">Host RAM</span>
+					<span class="tile-value" style:color={pctColor(health.host.usedMemPct, 75, 90)}>{health.host.usedMemPct}<span class="unit">%</span></span>
+					<span class="tile-sub">{formatBytesMB(health.host.totalMemMB - health.host.freeMemMB)} / {formatBytesMB(health.host.totalMemMB)}</span>
+				</div>
+				<div class="tile">
+					<span class="tile-label">Host uptime</span>
+					<span class="tile-value">{formatHostUptime(health.host.uptimeS)}</span>
+				</div>
+			</div>
+		{/if}
+
+		<!-- Cost panel -->
+		{#if health.cost}
+			<div class="section-label">Real-time costs</div>
+			<div class="tile-row">
+				<div class="tile cost-tile">
+					<span class="tile-label">Hourly burn</span>
+					<span class="tile-value">${health.cost.hourlyUsd.toFixed(4)}</span>
+				</div>
+				<div class="tile cost-tile">
+					<span class="tile-label">Today (24h)</span>
+					<span class="tile-value">${health.cost.dailyUsd.toFixed(2)}</span>
+				</div>
+				<div class="tile cost-tile">
+					<span class="tile-label">Monthly projection</span>
+					<span class="tile-value">${health.cost.monthlyUsd.toFixed(2)}</span>
+					<span class="tile-sub">{health.cost.note}</span>
+				</div>
+			</div>
+		{/if}
+
+		<!-- PM2 process table -->
+		{#if health.pm2 && health.pm2.length > 0}
+			<div class="section-label">Processes (PM2)</div>
+			<div class="pm2-table">
+				<div class="pm2-row pm2-head">
+					<span>Name</span><span>Status</span><span>CPU</span><span>Memory</span>
+				</div>
+				{#each health.pm2 as proc}
+					<div class="pm2-row">
+						<span class="proc-name">{proc.name}</span>
+						<span style:color={pm2Color(proc.status)}>● {proc.status}</span>
+						<span class="proc-num">{proc.cpu != null ? `${proc.cpu.toFixed(1)}%` : '—'}</span>
+						<span class="proc-num">{proc.memory != null ? formatBytesMB(Math.round(proc.memory / 1024 / 1024)) : '—'}</span>
+					</div>
+				{/each}
+			</div>
+		{/if}
 	{:else}
 		<div class="offline-banner">
-			Bot offline — live metrics unavailable
+			<div class="offline-msg">Bot offline — live metrics unavailable</div>
+			<button class="retry" onclick={() => invalidateAll()}>Retry</button>
 		</div>
 	{/if}
 
-	<!-- Health alerts from SQLite -->
-	<div class="section-heading">Recent Alerts ({alerts.length})</div>
-
+	<!-- Alerts -->
+	<div class="section-label">Recent alerts ({alerts.length})</div>
 	{#if alerts.length === 0}
 		<EmptyState message="No recent alerts" subtitle="All systems healthy" />
 	{:else}
@@ -132,75 +207,7 @@
 </SpringReveal>
 
 <style>
-	.metrics-grid {
-		display: grid;
-		grid-template-columns: repeat(4, 1fr);
-		gap: 1rem;
-		margin-bottom: 1.5rem;
-	}
-
-	.metric-uptime {
-		font-size: 1.5rem;
-		font-weight: 700;
-		color: var(--text-primary);
-		font-variant-numeric: tabular-nums;
-	}
-
-	.metric-detail {
-		font-size: 0.7rem;
-		color: var(--text-secondary);
-		margin-top: 0.25rem;
-		display: block;
-	}
-
-	.metric-colored {
-		display: flex;
-		align-items: baseline;
-		gap: 0.25rem;
-	}
-
-	.metric-unit {
-		font-size: 0.75rem;
-		font-weight: 600;
-		opacity: 0.8;
-	}
-
-	.db-status {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		margin-bottom: 1.5rem;
-		padding: 0.5rem 0.75rem;
-		background: var(--surface);
-		border: 1px solid var(--border);
-		border-radius: var(--radius-sm);
-	}
-
-	.db-dot {
-		width: 8px;
-		height: 8px;
-		border-radius: 50%;
-		flex-shrink: 0;
-	}
-
-	.db-label {
-		font-size: 0.75rem;
-		color: var(--text-secondary);
-	}
-
-	.offline-banner {
-		padding: 1rem;
-		text-align: center;
-		background: var(--surface);
-		border: 1px solid var(--status-danger);
-		border-radius: var(--radius-sm);
-		color: var(--status-danger);
-		font-size: 0.85rem;
-		font-weight: 500;
-		margin-bottom: 1.5rem;
-	}
-
-	.section-heading {
+	.section-label {
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
@@ -209,76 +216,98 @@
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 		color: var(--text-secondary);
-		margin-bottom: 0.75rem;
-		padding-bottom: 0.5rem;
+		margin: 1.5rem 0 0.6rem;
+		padding-bottom: 0.4rem;
 		border-bottom: 1px solid var(--border);
 	}
-
-	.section-heading::before {
+	.section-label::before {
 		content: '';
-		width: 4px;
-		height: 4px;
-		border-radius: 50%;
-		background: var(--accent);
-		flex-shrink: 0;
+		width: 4px; height: 4px; border-radius: 50%; background: var(--accent);
 	}
-
-	.alert-list {
+	.tile-row {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+		gap: 0.75rem;
+		margin-bottom: 0.5rem;
+	}
+	.tile {
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
-		list-style: none;
-		margin: 0;
-		padding: 0;
-	}
-
-	.alert-row {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		padding: 0.5rem 0.75rem;
+		gap: 0.2rem;
+		padding: 0.85rem 1rem;
 		background: var(--surface);
 		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+	}
+	.tile-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); font-weight: 600; }
+	.tile-value { font-size: 1.55rem; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; line-height: 1.05; }
+	.tile-sub { font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.15rem; }
+	.unit { font-size: 0.85rem; font-weight: 500; opacity: 0.7; margin-left: 2px; }
+	.cost-tile .tile-value { color: var(--accent); }
+
+	.db-status {
+		display: flex; align-items: center; gap: 0.5rem;
+		margin-top: 0.6rem; padding: 0.5rem 0.75rem;
+		background: var(--surface); border: 1px solid var(--border);
 		border-radius: var(--radius-sm);
 	}
+	.db-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+	.db-label { font-size: 0.78rem; color: var(--text-secondary); }
 
-	.alert-severity {
-		font-size: 0.55rem;
-		font-weight: 700;
-		letter-spacing: 0.05em;
-		padding: 0.1rem 0.35rem;
-		border-radius: 3px;
-		color: var(--bg);
-		flex-shrink: 0;
+	.pm2-table {
+		display: flex; flex-direction: column; gap: 1px;
+		background: var(--border);
+		border-radius: var(--radius-md);
+		overflow: hidden;
+		border: 1px solid var(--border);
 	}
+	.pm2-row {
+		display: grid;
+		grid-template-columns: 1.5fr 1fr 0.7fr 1fr;
+		gap: 0.75rem;
+		padding: 0.55rem 0.85rem;
+		background: var(--surface);
+		font-size: 0.78rem;
+		align-items: center;
+	}
+	.pm2-head { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); font-weight: 600; }
+	.proc-name { color: var(--text-primary); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78rem; }
+	.proc-num { color: var(--text-secondary); font-variant-numeric: tabular-nums; }
 
-	.alert-type {
-		font-size: 0.8rem;
-		color: var(--text-primary);
-		flex: 1;
+	.offline-banner {
+		display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+		padding: 1rem 1.25rem;
+		background: var(--surface); border: 1px solid var(--status-danger);
+		border-radius: var(--radius-md); margin-bottom: 1rem;
 	}
+	.offline-msg { color: var(--status-danger); font-weight: 500; font-size: 0.85rem; }
+	.retry {
+		padding: 0.4rem 0.85rem;
+		border: 1px solid var(--status-danger);
+		background: transparent;
+		color: var(--status-danger);
+		border-radius: var(--radius-sm);
+		font-size: 0.75rem; font-weight: 600;
+		cursor: pointer;
+	}
+	.retry:hover { background: oklch(25% 0.08 25); }
 
-	.alert-time {
-		font-size: 0.7rem;
-		color: var(--text-secondary);
-		flex-shrink: 0;
+	.alert-list { display: flex; flex-direction: column; gap: 2px; list-style: none; margin: 0; padding: 0; }
+	.alert-row {
+		display: flex; align-items: center; gap: 0.75rem;
+		padding: 0.5rem 0.75rem;
+		background: var(--surface); border: 1px solid var(--border);
+		border-radius: var(--radius-sm);
 	}
-
-	.alert-status {
-		font-size: 0.65rem;
-		font-weight: 600;
-		flex-shrink: 0;
-	}
-
-	.alert-resolution {
-		font-size: 0.6rem;
-		color: var(--text-secondary);
-		flex-shrink: 0;
-	}
+	.alert-severity { font-size: 0.55rem; font-weight: 700; letter-spacing: 0.05em; padding: 0.1rem 0.35rem; border-radius: 3px; color: var(--bg); flex-shrink: 0; }
+	.alert-type { font-size: 0.8rem; color: var(--text-primary); flex: 1; }
+	.alert-time { font-size: 0.7rem; color: var(--text-secondary); flex-shrink: 0; }
+	.alert-status { font-size: 0.65rem; font-weight: 600; flex-shrink: 0; }
+	.alert-resolution { font-size: 0.6rem; color: var(--text-secondary); flex-shrink: 0; }
 
 	@media (max-width: 768px) {
-		.metrics-grid {
-			grid-template-columns: repeat(2, 1fr);
-		}
+		.pm2-row { grid-template-columns: 1fr 1fr; }
+		.pm2-head span:nth-child(3), .pm2-head span:nth-child(4),
+		.pm2-row:not(.pm2-head) span:nth-child(3), .pm2-row:not(.pm2-head) span:nth-child(4) { display: none; }
 	}
 </style>
