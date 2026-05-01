@@ -121,6 +121,34 @@ export function markSuggestionUsed(
   return stmt.run(usedBy, id).changes > 0;
 }
 
+/**
+ * Move a rejected/used suggestion back to approved (dashboard restore action).
+ * Pending suggestions are not restored — they are already actionable.
+ */
+export function restoreSuggestion(id: number, reviewerId: string): boolean {
+  const stmt = db.prepare(`
+    UPDATE qotd_suggestion
+    SET status = 'approved', reviewed_by = ?, reviewed_at_s = strftime('%s', 'now'),
+        reject_reason = NULL, used_by = NULL, used_at_s = NULL
+    WHERE id = ? AND status IN ('rejected', 'used')
+  `);
+  return stmt.run(reviewerId, id).changes > 0;
+}
+
+/**
+ * Edit the question text. Allowed only on pending suggestions so reviewers can
+ * tighten phrasing before approval — once approved/used, edits are blocked to
+ * preserve audit trail.
+ */
+export function editSuggestionQuestion(id: number, newQuestion: string): boolean {
+  const stmt = db.prepare(`
+    UPDATE qotd_suggestion
+    SET question = ?
+    WHERE id = ? AND status = 'pending'
+  `);
+  return stmt.run(newQuestion, id).changes > 0;
+}
+
 export function getApprovedQueueSize(guildId: string): number {
   const stmt = (_getApprovedQueueSize ??= db.prepare(`
     SELECT COUNT(*) as count FROM qotd_suggestion
