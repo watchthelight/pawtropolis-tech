@@ -157,8 +157,8 @@ const schema = z.object({
   PM2_PROCESS_NAME: z
     .string()
     .default("pawtropolis")
-    .refine((val) => SAFE_NAME_REGEX.test(val), {
-      message: "PM2_PROCESS_NAME contains invalid characters (only alphanumeric, underscore, hyphen allowed)",
+    .refine((val) => /^[a-zA-Z0-9_,-]+$/.test(val), {
+      message: "PM2_PROCESS_NAME contains invalid characters (only alphanumeric, underscore, hyphen, comma allowed)",
     }),
   DB_BACKUPS_DIR: z
     .string()
