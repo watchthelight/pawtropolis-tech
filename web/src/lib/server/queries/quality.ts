@@ -81,36 +81,34 @@ function weekStartOf(ts: number): number {
 }
 
 export function getQualityTimeseries(_guildId: string, range: ResolvedRange): QualityWeekBucket[] {
+	// Aggregate weekly buckets in SQL — avoids materializing ~1M rows in JS.
 	const rows = db().prepare(`
-		SELECT eff.created_at_s, eff.score AS effort, res.score AS resonance
+		SELECT
+			((eff.created_at_s - ?) / ?) * ? + ? AS week_start,
+			COUNT(*)                              AS n,
+			SUM(eff.score)                        AS effort_sum,
+			SUM(res.score)                        AS resonance_sum,
+			SUM(CASE WHEN eff.score < ? THEN 1 ELSE 0 END) AS low_count
 		FROM general_messages_effort eff
 		JOIN general_messages_resonance res ON res.id = eff.id
 		WHERE eff.created_at_s >= ? AND eff.created_at_s < ?
-		ORDER BY eff.created_at_s
-	`).all(range.startS, range.endS) as { created_at_s: number; effort: number; resonance: number }[];
+		GROUP BY week_start
+		ORDER BY week_start
+	`).all(
+		EPOCH_TO_MONDAY, WEEK_S, WEEK_S, EPOCH_TO_MONDAY,
+		LOW_EFFORT_CUTOFF,
+		range.startS, range.endS
+	) as { week_start: number; n: number; effort_sum: number; resonance_sum: number; low_count: number }[];
 
-	const buckets = new Map<number, { effortSum: number; resonanceSum: number; lowCount: number; n: number }>();
-	for (const r of rows) {
-		const w = weekStartOf(r.created_at_s);
-		let b = buckets.get(w);
-		if (!b) { b = { effortSum: 0, resonanceSum: 0, lowCount: 0, n: 0 }; buckets.set(w, b); }
-		b.effortSum += r.effort;
-		b.resonanceSum += r.resonance;
-		if (r.effort < LOW_EFFORT_CUTOFF) b.lowCount++;
-		b.n++;
-	}
-
-	const weeks = [...buckets.entries()]
-		.sort((a, b) => a[0] - b[0])
-		.map(([weekStart, b]) => ({
-			weekStart,
-			iso: new Date(weekStart * 1000).toISOString().slice(0, 10),
-			count: b.n,
-			meanEffort: +(b.effortSum / b.n).toFixed(4),
-			meanResonance: +(b.resonanceSum / b.n).toFixed(4),
-			rolling4w: 0,
-			lowEffortShare: +(b.lowCount / b.n).toFixed(4),
-		}));
+	const weeks = rows.map((r) => ({
+		weekStart: r.week_start,
+		iso: new Date(r.week_start * 1000).toISOString().slice(0, 10),
+		count: r.n,
+		meanEffort: +(r.effort_sum / r.n).toFixed(4),
+		meanResonance: +(r.resonance_sum / r.n).toFixed(4),
+		rolling4w: 0,
+		lowEffortShare: +(r.low_count / r.n).toFixed(4),
+	}));
 
 	// 4-week rolling mean effort weighted by message count
 	const ROLL = 4;
@@ -244,6 +242,10 @@ export function getMetricsOverlay(
 	range: ResolvedRange,
 	lowlistTokens: Set<string>,
 ): OverlayWeek[] {
+	// Cap overlay window to last 90 days regardless of input range — overlay does
+	// per-message JS work (tokenize, gini, lengths) and 1M+ rows blow CF's 100s timeout.
+	const OVERLAY_MAX_DAYS = 90;
+	const overlayStartS = Math.max(range.startS, range.endS - OVERLAY_MAX_DAYS * 86_400);
 	const rows = db().prepare(`
 		SELECT
 			r.id, r.created_at_s, r.author_id, r.content, r.reply_to,
@@ -256,7 +258,7 @@ export function getMetricsOverlay(
 		LEFT JOIN general_messages_resonance res ON res.id = r.id
 		WHERE r.created_at_s >= ? AND r.created_at_s < ? AND r.is_bot = 0 AND length(r.content) > 0
 		ORDER BY r.created_at_s
-	`).all(range.startS, range.endS) as Array<{
+	`).all(overlayStartS, range.endS) as Array<{
 		id: string;
 		created_at_s: number;
 		author_id: string;
