@@ -5,7 +5,6 @@ import { cached, cacheKey, CACHE_TTL, CACHE_HEADERS } from '$lib/server/cache';
 import type { PageServerLoad } from './$types';
 
 const QUERY_TIMEOUT_MS = 8000;
-const MAX_PAGE = 1000;
 
 export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
 	setHeaders({ 'cache-control': CACHE_HEADERS.default });
@@ -17,8 +16,8 @@ export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
 
 	const action = url.searchParams.get('action') || undefined;
 	const search = (url.searchParams.get('q') || '').trim().slice(0, 100) || undefined;
-	const requestedPage = parseInt(url.searchParams.get('page') || '1', 10) || 1;
-	const page = Math.min(MAX_PAGE, Math.max(1, requestedPage));
+	const cursorRaw = url.searchParams.get('cursor');
+	const cursor = cursorRaw ? Number.parseInt(cursorRaw, 10) : undefined;
 
 	const nowS = Math.floor(Date.now() / 1000);
 	const defaultFromS = nowS - 7 * 86400;
@@ -27,7 +26,13 @@ export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
 	const fromS = fromParam ? Math.floor(new Date(fromParam).getTime() / 1000) || defaultFromS : defaultFromS;
 	const toS = toParam ? Math.floor(new Date(toParam).getTime() / 1000) || undefined : undefined;
 
-	const filters: AuditFilters = { action, search, fromS, toS };
+	const filters: AuditFilters = {
+		action,
+		search,
+		fromS,
+		toS,
+		cursor: Number.isFinite(cursor) ? cursor : undefined
+	};
 
 	const key = cacheKey([
 		'audit:log',
@@ -36,13 +41,13 @@ export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
 		search ?? '',
 		fromS,
 		toS ?? '',
-		page
+		cursor ?? ''
 	]);
 
 	try {
 		const result = await Promise.race([
 			cached(key, CACHE_TTL.medium, () => ({
-				...getAuditLog(guildId, filters, page),
+				...getAuditLog(guildId, filters),
 				actionTypes: getActionTypes(guildId)
 			})),
 			new Promise<never>((_, reject) =>

@@ -9,7 +9,7 @@
 
 	let { data } = $props();
 	let entries = $derived(data.entries);
-	let totalPages = $derived(Math.ceil(data.total / data.pageSize));
+	let hasMore = $derived(data.nextCursor != null);
 
 	// Filter state (bound to URL params)
 	let actionFilter = $state(data.filters.action);
@@ -23,13 +23,12 @@
 	// Debounced search
 	let searchTimer: ReturnType<typeof setTimeout> | undefined;
 
-	function applyFilters(resetPage = true) {
+	function applyFilters() {
 		const params = new URLSearchParams();
 		if (actionFilter) params.set('action', actionFilter);
 		if (searchQuery) params.set('q', searchQuery);
 		if (fromDate) params.set('from', fromDate);
 		if (toDate) params.set('to', toDate);
-		if (!resetPage && data.page > 1) params.set('page', String(data.page));
 		goto(`?${params.toString()}`, { keepFocus: true, replaceState: true });
 	}
 
@@ -46,10 +45,15 @@
 		goto('?', { keepFocus: true, replaceState: true });
 	}
 
-	function goToPage(p: number) {
+	function loadMore() {
+		if (data.nextCursor == null) return;
 		const params = new URLSearchParams($page.url.searchParams);
-		if (p > 1) params.set('page', String(p));
-		else params.delete('page');
+		params.set('cursor', String(data.nextCursor));
+		goto(`?${params.toString()}`, { keepFocus: true });
+	}
+	function backToTop() {
+		const params = new URLSearchParams($page.url.searchParams);
+		params.delete('cursor');
 		goto(`?${params.toString()}`, { keepFocus: true });
 	}
 
@@ -203,28 +207,15 @@
 		</div>
 
 		<!-- Pagination -->
-		{#if totalPages > 1}
-			<div class="pagination">
-				<button
-					class="page-btn"
-					disabled={data.page <= 1}
-					onclick={() => goToPage(data.page - 1)}
-				>
-					Prev
-				</button>
-				<span class="page-info">
-					Page {data.page} of {totalPages}
-					<span class="page-total">({data.total} entries)</span>
-				</span>
-				<button
-					class="page-btn"
-					disabled={data.page >= totalPages}
-					onclick={() => goToPage(data.page + 1)}
-				>
-					Next
-				</button>
+		<div class="pagination">
+			<span class="page-info">
+				Showing {entries.length} of {data.total.toLocaleString()} entries
+			</span>
+			<div class="pag-actions">
+				<button class="page-btn" onclick={backToTop}>Back to top</button>
+				<button class="page-btn" disabled={!hasMore} onclick={loadMore}>Load older</button>
 			</div>
-		{/if}
+		</div>
 	{/if}
 </SpringReveal>
 

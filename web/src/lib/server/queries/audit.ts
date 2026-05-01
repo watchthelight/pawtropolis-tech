@@ -19,13 +19,16 @@ export interface AuditFilters {
 	search?: string;
 	fromS?: number;
 	toS?: number;
+	/** Keyset cursor — return entries with id < cursor. Omitted = first page. */
+	cursor?: number;
 }
 
 export interface AuditResult {
 	entries: AuditEntry[];
 	total: number;
-	page: number;
 	pageSize: number;
+	/** Cursor for the next page (id of the oldest row in this page). null when no more. */
+	nextCursor: number | null;
 }
 
 const PAGE_SIZE = 50;
@@ -78,8 +81,9 @@ export function getActionTypes(guildId: string): string[] {
 export function getAuditLog(
 	guildId: string,
 	filters: AuditFilters = {},
-	page = 1
+	_pageDeprecated?: number
 ): AuditResult {
+	void _pageDeprecated;
 	const conditions: string[] = ['a.guild_id = ?'];
 	const params: unknown[] = [guildId];
 
@@ -128,25 +132,34 @@ export function getAuditLog(
 		}
 	}
 
-	const whereClause = conditions.join(' AND ');
+	// Build the keyset clause separately so the COUNT (which should ignore the
+	// cursor) keeps showing the total matching set.
+	const baseWhere = conditions.join(' AND ');
+	const pagedConditions = [...conditions];
+	const pagedParams = [...params];
+	if (filters.cursor != null) {
+		pagedConditions.push('a.id < ?');
+		pagedParams.push(filters.cursor);
+	}
+	const pagedWhere = pagedConditions.join(' AND ');
 
-	// Total count. The user_cache joins are only needed when a name search is
-	// active (the search regex hits ua.display_name etc.). For the common no-search
-	// case skip them — count over a multi-million-row action_log table without
-	// joins is the difference between sub-100ms and multi-second.
+	// Total count of the unpaginated filter. user_cache joins only matter when
+	// a name search is active — skipping them on the common path turns the
+	// COUNT from multi-second into sub-100ms on a million-row table.
 	const needsUserCacheJoin = !!filters.search;
 	const countSql = needsUserCacheJoin
 		? `SELECT COUNT(*) as count
 		   FROM action_log a
 		   LEFT JOIN user_cache ua ON a.actor_id = ua.user_id AND ua.guild_id = a.guild_id
 		   LEFT JOIN user_cache us ON a.subject_id = us.user_id AND us.guild_id = a.guild_id
-		   WHERE ${whereClause}`
-		: `SELECT COUNT(*) as count FROM action_log a WHERE ${whereClause}`;
+		   WHERE ${baseWhere}`
+		: `SELECT COUNT(*) as count FROM action_log a WHERE ${baseWhere}`;
 	const countRow = db().prepare(countSql).get(...params) as { count: number };
 	const total = countRow.count;
 
-	// Paginated results
-	const offset = (page - 1) * PAGE_SIZE;
+	// Keyset-paginated results. ORDER BY a.id DESC instead of created_at_s
+	// because action_log.id is monotonically increasing — equivalent ordering
+	// for a single insert stream, and lets the index seek directly.
 	const rows = db()
 		.prepare(
 			`SELECT
@@ -166,11 +179,11 @@ export function getAuditLog(
 			FROM action_log a
 			LEFT JOIN user_cache ua ON a.actor_id = ua.user_id AND ua.guild_id = a.guild_id
 			LEFT JOIN user_cache us ON a.subject_id = us.user_id AND us.guild_id = a.guild_id
-			WHERE ${whereClause}
-			ORDER BY a.created_at_s DESC
-			LIMIT ? OFFSET ?`
+			WHERE ${pagedWhere}
+			ORDER BY a.id DESC
+			LIMIT ?`
 		)
-		.all(...params, PAGE_SIZE, offset) as {
+		.all(...pagedParams, PAGE_SIZE + 1) as {
 		id: number;
 		actor_id: string;
 		actor_name: string;
@@ -182,6 +195,12 @@ export function getAuditLog(
 		meta_json: string | null;
 		created_at_s: number;
 	}[];
+
+	let nextCursor: number | null = null;
+	if (rows.length > PAGE_SIZE) {
+		const trailing = rows.pop();
+		nextCursor = trailing ? trailing.id : null;
+	}
 
 	return {
 		entries: rows.map((r) => ({
@@ -197,7 +216,7 @@ export function getAuditLog(
 			createdAt: normalizeTimestamp(r.created_at_s) ?? 0
 		})),
 		total,
-		page,
-		pageSize: PAGE_SIZE
+		pageSize: PAGE_SIZE,
+		nextCursor
 	};
 }
