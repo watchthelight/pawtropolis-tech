@@ -77,6 +77,7 @@ import type { ModalSubmitInteraction } from "discord.js";
 import { wrapEvent } from "./lib/eventWrap.js";
 import { env } from "./lib/env.js";
 import * as health from "./commands/health.js";
+import * as cleanup from "./commands/cleanup.js";
 import * as gate from "./commands/gate.js";
 import * as update from "./commands/update.js";
 import * as config from "./commands/config.js";
@@ -172,6 +173,7 @@ const commands = new Collection<
   (interaction: ChatInputCommandInteraction) => Promise<void>
 >();
 commands.set(health.data.name, wrapCommand("health", health.execute));
+commands.set(cleanup.data.name, wrapCommand("cleanup", cleanup.execute));
 commands.set(gate.data.name, wrapCommand("gate", gate.execute));
 commands.set(gate.acceptData.name, wrapCommand("accept", gate.executeAccept));
 commands.set(gate.rejectData.name, wrapCommand("reject", gate.executeReject));

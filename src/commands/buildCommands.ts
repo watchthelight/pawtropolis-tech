@@ -30,6 +30,7 @@ import { data as eventData } from "./event/index.js";
 import { data as sendData } from "./send.js";
 import { data as resetdataData } from "./resetdata.js";
 import { data as purgeData } from "./purge.js";
+import { data as cleanupData } from "./cleanup.js";
 import { data as flagData } from "./flag.js";
 import { data as sampleData } from "./sample.js";
 import { data as listopenData } from "./listopen.js";
@@ -91,6 +92,7 @@ export function buildCommands() {
     sendData.toJSON(),
     resetdataData.toJSON(),
     purgeData.toJSON(),
+    cleanupData.toJSON(),
     flagData.toJSON(),
     sampleData.toJSON(),
     listopenData.toJSON(),
