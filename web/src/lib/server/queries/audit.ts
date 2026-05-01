@@ -79,16 +79,19 @@ export function getAuditLog(
 
 	const whereClause = conditions.join(' AND ');
 
-	// Total count
-	const countRow = db()
-		.prepare(
-			`SELECT COUNT(*) as count
-			FROM action_log a
-			LEFT JOIN user_cache ua ON a.actor_id = ua.user_id AND ua.guild_id = a.guild_id
-			LEFT JOIN user_cache us ON a.subject_id = us.user_id AND us.guild_id = a.guild_id
-			WHERE ${whereClause}`
-		)
-		.get(...params) as { count: number };
+	// Total count. The user_cache joins are only needed when a name search is
+	// active (the search regex hits ua.display_name etc.). For the common no-search
+	// case skip them — count over a multi-million-row action_log table without
+	// joins is the difference between sub-100ms and multi-second.
+	const needsUserCacheJoin = !!filters.search;
+	const countSql = needsUserCacheJoin
+		? `SELECT COUNT(*) as count
+		   FROM action_log a
+		   LEFT JOIN user_cache ua ON a.actor_id = ua.user_id AND ua.guild_id = a.guild_id
+		   LEFT JOIN user_cache us ON a.subject_id = us.user_id AND us.guild_id = a.guild_id
+		   WHERE ${whereClause}`
+		: `SELECT COUNT(*) as count FROM action_log a WHERE ${whereClause}`;
+	const countRow = db().prepare(countSql).get(...params) as { count: number };
 	const total = countRow.count;
 
 	// Paginated results
