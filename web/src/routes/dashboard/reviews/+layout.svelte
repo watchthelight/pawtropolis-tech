@@ -3,7 +3,6 @@
 	import { page } from '$app/stores';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { slide } from 'svelte/transition';
-	import { flip } from 'svelte/animate';
 	import { subscribe, unsubscribe } from '$lib/stores/sse.svelte';
 	import type { SSEEvent } from '$lib/types/events';
 	import { getIsMobile } from '$lib/stores/viewport.svelte';
@@ -274,7 +273,7 @@
 					onscroll={isMobile ? undefined : onQueueScroll}
 				>
 					{#each filteredItems as item (item.id)}
-						<div transition:slide={{ duration: 200 }} animate:flip={{ duration: 200 }}>
+						<div transition:slide={{ duration: 200 }}>
 						<ReviewCard
 							applicantName={item.applicantName}
 							avatarUrl={item.avatarUrl}

@@ -22,7 +22,8 @@
 		canAdminUnclaim = false,
 		cachedProfile = null,
 		priorDecisions = [],
-		voteOutInfo = { count: 0, threshold: 2, voters: [] }
+		voteOutInfo = { count: 0, threshold: 2, voters: [] },
+		nextUnclaimedId = null
 	}: {
 		app: ApplicationDetail;
 		modmail?: ModmailThreadSummary[];
@@ -31,6 +32,7 @@
 		cachedProfile?: CachedProfile | null;
 		priorDecisions?: PriorDecision[];
 		voteOutInfo?: VoteOutInfo;
+		nextUnclaimedId?: string | null;
 	} = $props();
 
 	let claimLoading = $state(false);
@@ -166,7 +168,14 @@
 				invalidateAll();
 			} else {
 				setBotOnline();
-				goto(`/dashboard/reviews/${app.id}?tab=mine`);
+				// click-click-click: jump straight to the next unclaimed app so a mod can
+				// claim N apps in a row without dipping back to the queue. If nothing is
+				// queued, stay on the just-claimed app under the "mine" filter.
+				if (nextUnclaimedId && nextUnclaimedId !== app.id) {
+					goto(`/dashboard/reviews/${nextUnclaimedId}?tab=unclaimed`);
+				} else {
+					goto(`/dashboard/reviews/${app.id}?tab=mine`);
+				}
 			}
 		} catch {
 			claimError = 'Failed to connect';

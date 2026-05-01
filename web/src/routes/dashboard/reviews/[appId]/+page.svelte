@@ -20,6 +20,11 @@
 	let currentIdx = $derived(queue.findIndex((q: any) => q.id === app.id));
 	let prevApp = $derived(currentIdx > 0 ? queue[currentIdx - 1] : null);
 	let nextApp = $derived(currentIdx >= 0 && currentIdx < queue.length - 1 ? queue[currentIdx + 1] : null);
+	// Next unclaimed app (excluding current). Powers the click-click-click claim flow.
+	let nextUnclaimedId = $derived.by(() => {
+		const pool = queue.filter((q: any) => q.id !== app.id && q.claimedBy == null);
+		return pool.length ? pool[0].id : null;
+	});
 </script>
 
 {#if isMobile}
@@ -44,7 +49,7 @@
 {/if}
 
 <SpringReveal stagger={30}>
-	<AppDetail {app} {modmail} {sessionUserId} {canAdminUnclaim} {cachedProfile} {priorDecisions} {voteOutInfo} />
+	<AppDetail {app} {modmail} {sessionUserId} {canAdminUnclaim} {cachedProfile} {priorDecisions} {voteOutInfo} {nextUnclaimedId} />
 </SpringReveal>
 
 <style>
