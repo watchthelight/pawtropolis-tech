@@ -80,7 +80,7 @@
 </script>
 
 <SpringReveal stagger={30}>
-	<PageHeader title="System" subtitle="Process and host telemetry — auto-refreshes every 5s" />
+	<PageHeader title="System" subtitle="Process and host telemetry — auto-refreshes every 30s" />
 
 	{#if health}
 		<!-- Bot tile row -->
@@ -171,8 +171,8 @@
 					<div class="pm2-row">
 						<span class="proc-name">{proc.name}</span>
 						<span style:color={pm2Color(proc.status)}>● {proc.status}</span>
-						<span class="proc-num">{proc.cpu != null ? `${proc.cpu.toFixed(1)}%` : '—'}</span>
-						<span class="proc-num">{proc.memory != null ? formatBytesMB(Math.round(proc.memory / 1024 / 1024)) : '—'}</span>
+						<span class="proc-num">{proc.cpuPercent != null ? `${proc.cpuPercent.toFixed(1)}%` : '—'}</span>
+						<span class="proc-num">{proc.memoryBytes != null ? formatBytesMB(Math.round(proc.memoryBytes / 1024 / 1024)) : '—'}</span>
 					</div>
 				{/each}
 			</div>

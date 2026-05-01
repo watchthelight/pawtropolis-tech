@@ -1718,10 +1718,13 @@ export async function startDashboardApi(client: Client): Promise<void> {
       const cpuCount = os.cpus().length;
       const hostUptimeS = os.uptime();
 
-      // Cost: EC2 t3.small us-east-1 ($0.0208/hr) + 30GB gp3 (~$2.40/mo)
-      const HOURLY_USD = 0.0208;
-      const STORAGE_USD_PER_MO = 2.40;
+      // Cost: EC2 instance + EBS gp3. Tweak via env so resize doesn't need a
+      // code edit. Defaults reflect t3.large + 64GB gp3 in us-east-1.
+      const HOURLY_USD = parseFloat(process.env.EC2_HOURLY_USD ?? "0.0832");
+      const STORAGE_USD_PER_MO = parseFloat(process.env.EC2_STORAGE_USD_PER_MO ?? "5.12");
       const monthlyUsd = HOURLY_USD * 24 * 30.4 + STORAGE_USD_PER_MO;
+      const instanceType = process.env.EC2_INSTANCE_TYPE ?? "t3.large";
+      const storageGB = parseInt(process.env.EC2_STORAGE_GB ?? "64", 10);
 
       return {
         success: true,
@@ -1746,7 +1749,7 @@ export async function startDashboardApi(client: Client): Promise<void> {
             hourlyUsd: HOURLY_USD,
             dailyUsd: +(HOURLY_USD * 24).toFixed(2),
             monthlyUsd: +monthlyUsd.toFixed(2),
-            note: "EC2 t3.small us-east-1 + 30GB gp3 (storage flat rate)",
+            note: `EC2 ${instanceType} us-east-1 + ${storageGB}GB gp3 (storage flat rate)`,
           },
         },
       } satisfies ApiSuccess;

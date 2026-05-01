@@ -12,7 +12,7 @@ export interface SystemHealth {
 	memory: { heapUsedMB: number; heapTotalMB: number; rssMB: number };
 	disk: { usedGB: number; totalGB: number; percentUsed: number };
 	activeAlertCount: number;
-	pm2: Array<{ name: string; status: string; cpu?: number; memory?: number }>;
+	pm2: Array<{ name: string; status: string; cpuPercent?: number; memoryBytes?: number; uptimeSeconds?: number }>;
 	dbIntegrity: { ok: boolean; message: string; checkedAt: number };
 	host?: {
 		loadavg: [number, number, number];
