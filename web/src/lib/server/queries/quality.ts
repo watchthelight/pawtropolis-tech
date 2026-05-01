@@ -328,7 +328,8 @@ export function getMetricsOverlay(
 				week_start, count,
 				effort, heuristic, resonance,
 				median_length, lexical_diversity, question_rate,
-				no_repeat_spam, no_lowlist_hit, reply_rate, author_distribution
+				no_repeat_spam, no_lowlist_hit, reply_rate, author_distribution,
+				COALESCE(substantiveness, 0) AS substantiveness
 			FROM general_messages_overlay_weekly
 			WHERE week_start >= ? AND week_start < ?
 			ORDER BY week_start
@@ -345,6 +346,7 @@ export function getMetricsOverlay(
 			no_lowlist_hit: number;
 			reply_rate: number;
 			author_distribution: number;
+			substantiveness: number;
 		}>;
 
 		return rows.map((r) => ({
@@ -362,6 +364,7 @@ export function getMetricsOverlay(
 				no_lowlist_hit:      r.no_lowlist_hit,
 				reply_rate:          r.reply_rate,
 				author_distribution: r.author_distribution,
+				substantiveness:     r.substantiveness,
 			},
 		}));
 	} catch {

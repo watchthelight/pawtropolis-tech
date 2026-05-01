@@ -18,6 +18,7 @@
 		no_lowlist_hit:      { label: 'Anti-throwaway',     color: '#ee9c5d' },
 		reply_rate:          { label: 'Reply rate',         color: '#6ed6e8' },
 		author_distribution: { label: 'Author distribution',color: '#ed7eb1' },
+		substantiveness:     { label: 'Substantiveness',    color: '#c850c0' },
 	};
 
 	let containerWidth = $state(0);

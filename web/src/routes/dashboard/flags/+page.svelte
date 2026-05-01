@@ -155,7 +155,6 @@
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<svelte:window onkeydown={lightboxUrl ? onLightboxKey : undefined} />
 
 <SpringReveal stagger={30}>
 	<PageHeader title="Flags" subtitle="Flagged user triage" badge={flags.length || undefined} />
@@ -255,7 +254,7 @@
 					>
 						<div class="flag-summary" class:flag-summary-compact={viewMode === 'compact'}>
 							<div class="flag-avatar-col">
-								<Avatar src={flag.avatarUrl} name={flag.displayName} size={viewMode === 'compact' ? 36 : 48} clickable={!!flag.avatarUrl} onclick={flag.avatarUrl ? (e) => { e.stopPropagation(); openLightbox(flag.avatarUrl); } : undefined} />
+								<Avatar src={flag.avatarUrl} name={flag.displayName} size={viewMode === 'compact' ? 36 : 48} clickable={!!flag.avatarUrl} onclick={flag.avatarUrl ? (e) => { e.stopPropagation(); openLightbox(flag.avatarUrl!); } : undefined} />
 							</div>
 
 							<div class="flag-info">

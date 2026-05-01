@@ -219,7 +219,7 @@
 								onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goto(`/dashboard/reviews/${item.id}`); } }}
 							>
 								<div class="history-card-row">
-									<Avatar src={item.avatarUrl} name={item.applicantName} size={48} clickable={!!item.avatarUrl} onclick={item.avatarUrl ? (e) => { e.stopPropagation(); openLightbox(item.avatarUrl); } : undefined} />
+									<Avatar src={item.avatarUrl} name={item.applicantName} size={48} clickable={!!item.avatarUrl} onclick={item.avatarUrl ? (e) => { e.stopPropagation(); openLightbox(item.avatarUrl!); } : undefined} />
 									<div class="history-card-info">
 										<div class="history-card-top">
 											<span class="history-card-name">{item.applicantName}</span>
