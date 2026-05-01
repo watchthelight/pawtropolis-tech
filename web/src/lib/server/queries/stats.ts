@@ -406,7 +406,8 @@ const NEUTRAL_TREND: StatTrend = { direction: 'neutral', delta: 0, label: '' };
 export function getPersonalStatsTrend(
 	userId: string,
 	guildId: string,
-	range: ResolvedRange
+	range: ResolvedRange,
+	currentStats?: PersonalStats
 ): PersonalStatsTrend {
 	if (range.prevStartS == null) {
 		return {
@@ -424,7 +425,7 @@ export function getPersonalStatsTrend(
 	const previousTo = currentFrom;
 	const periodLabel = comparisonLabel(range.spec);
 
-	const current = getPersonalStats(userId, guildId, range);
+	const current = currentStats ?? getPersonalStats(userId, guildId, range);
 
 	const prevRow = db()
 		.prepare(

@@ -10,7 +10,12 @@ import {
 	getLevelRoleStats,
 	getEngagementWindow
 } from '$lib/server/queries/pulse';
-import { parseTimeWindowSpec, resolveRange, formatWindowLabel } from '$lib/shared/timeWindow';
+import {
+	parseTimeWindowSpec,
+	resolveRange,
+	formatWindowLabel,
+	rangeCacheKeyParts
+} from '$lib/shared/timeWindow';
 import { cached, cacheKey, CACHE_TTL, CACHE_HEADERS } from '$lib/server/cache';
 import type { PageServerLoad } from './$types';
 
@@ -26,7 +31,8 @@ export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
 	const guildId = process.env.GUILD_ID;
 	const spec = parseTimeWindowSpec(url.searchParams, '7d');
 	const range = resolveRange(spec);
-	const guildKey = cacheKey(['pulse:guild', guildId, range.startS, range.endS]);
+	const rangeKey = rangeCacheKeyParts(range, 60);
+	const guildKey = cacheKey(['pulse:guild', guildId, ...rangeKey]);
 
 	const guildData = await cached(guildKey, CACHE_TTL.medium, () => ({
 		metrics: getPulseMetrics(guildId, range),

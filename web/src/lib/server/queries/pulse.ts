@@ -30,6 +30,9 @@ function fmt(n: number): string {
 	return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
+const EXCLUDED_CHANNEL_TTL_MS = 5 * 60_000;
+const excludedChannelCache = new Map<string, { ids: string[]; expiresAt: number }>();
+
 /**
  * Server-wide pulse metrics for the M+ dashboard.
  * Aggregates pending apps, open modmail, NSFW flags, and today's decision count.
@@ -183,17 +186,28 @@ export interface NewsletterStats {
  * Returns empty array if nothing configured (queries run unfiltered).
  */
 function getExcludedChannelIds(guildId: string): string[] {
+	const now = Date.now();
+	const cached = excludedChannelCache.get(guildId);
+	if (cached && cached.expiresAt > now) return cached.ids;
+
 	const row = db().prepare(
 		'SELECT pulse_excluded_category_ids_json FROM guild_config WHERE guild_id = ?'
 	).get(guildId) as { pulse_excluded_category_ids_json: string | null } | undefined;
 
-	if (!row?.pulse_excluded_category_ids_json) return [];
+	if (!row?.pulse_excluded_category_ids_json) {
+		excludedChannelCache.set(guildId, { ids: [], expiresAt: now + EXCLUDED_CHANNEL_TTL_MS });
+		return [];
+	}
 
 	let categoryIds: string[];
 	try {
 		categoryIds = JSON.parse(row.pulse_excluded_category_ids_json);
-		if (!Array.isArray(categoryIds) || categoryIds.length === 0) return [];
+		if (!Array.isArray(categoryIds) || categoryIds.length === 0) {
+			excludedChannelCache.set(guildId, { ids: [], expiresAt: now + EXCLUDED_CHANNEL_TTL_MS });
+			return [];
+		}
 	} catch {
+		excludedChannelCache.set(guildId, { ids: [], expiresAt: now + EXCLUDED_CHANNEL_TTL_MS });
 		return [];
 	}
 
@@ -202,7 +216,9 @@ function getExcludedChannelIds(guildId: string): string[] {
 		`SELECT channel_id FROM channel_cache WHERE guild_id = ? AND parent_id IN (${placeholders})`
 	).all(guildId, ...categoryIds) as { channel_id: string }[];
 
-	return channels.map(c => c.channel_id);
+	const ids = channels.map(c => c.channel_id);
+	excludedChannelCache.set(guildId, { ids, expiresAt: now + EXCLUDED_CHANNEL_TTL_MS });
+	return ids;
 }
 
 function weekStats(guildId: string, from: number, to: number, excludedChannelIds: string[]): WeekStats {

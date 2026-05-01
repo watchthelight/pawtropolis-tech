@@ -8,6 +8,7 @@ const MAX_ENTRIES = 200;
 type Entry<T> = { value: T; expiresAt: number };
 
 const store = new Map<string, Entry<unknown>>();
+const pending = new Map<string, Promise<unknown>>();
 
 function evictIfFull() {
 	if (store.size < MAX_ENTRIES) return;
@@ -20,11 +21,23 @@ export async function cached<T>(key: string, ttlMs: number, compute: () => T | P
 	const hit = store.get(key) as Entry<T> | undefined;
 	if (hit && hit.expiresAt > now) return hit.value;
 
-	const value = await compute();
-	store.delete(key);
-	evictIfFull();
-	store.set(key, { value, expiresAt: now + ttlMs });
-	return value;
+	const inFlight = pending.get(key) as Promise<T> | undefined;
+	if (inFlight) return inFlight;
+
+	const work = Promise.resolve()
+		.then(compute)
+		.then((value) => {
+			store.delete(key);
+			evictIfFull();
+			store.set(key, { value, expiresAt: Date.now() + ttlMs });
+			return value;
+		})
+		.finally(() => {
+			pending.delete(key);
+		});
+
+	pending.set(key, work);
+	return work;
 }
 
 export function cacheKey(parts: (string | number | null | undefined)[]): string {

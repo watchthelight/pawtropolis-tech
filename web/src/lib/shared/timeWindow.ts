@@ -38,7 +38,9 @@ export interface ResolvedRange {
 const ALL_DAYS = 36_500;
 
 function nowS(): number {
-	return Math.floor(Date.now() / 1000);
+	// Dashboard windows do not need second precision. Snapping to the minute keeps
+	// preset ranges stable long enough for server-side and browser caches to hit.
+	return Math.floor(Date.now() / 60_000) * 60;
 }
 
 function parseIsoSeconds(raw: string): number | null {
@@ -141,4 +143,22 @@ export function windowToParams(spec: TimeWindowSpec, existing?: URLSearchParams)
 
 export function isPresetEqual(spec: TimeWindowSpec, preset: PresetWindow): boolean {
 	return spec.kind === 'preset' && spec.preset === preset;
+}
+
+/**
+ * Stable key parts for cached server loads. Preset windows are bucketed by end
+ * time so rapid reloads/window toggles reuse the same cache entry; custom
+ * ranges are already explicit and stable.
+ */
+export function rangeCacheKeyParts(
+	range: ResolvedRange,
+	bucketSeconds = 60
+): (string | number)[] {
+	if (range.spec.kind === 'custom') {
+		return ['custom', range.spec.fromS, range.spec.toS];
+	}
+	return [
+		range.spec.preset,
+		Math.floor(range.endS / Math.max(1, bucketSeconds))
+	];
 }

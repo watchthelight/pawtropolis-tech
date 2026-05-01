@@ -11,7 +11,12 @@ import {
 	getInviteSourceBreakdown,
 	getApplicationFunnel
 } from '$lib/server/queries/stats';
-import { parseTimeWindowSpec, resolveRange, formatWindowLabel } from '$lib/shared/timeWindow';
+import {
+	parseTimeWindowSpec,
+	resolveRange,
+	formatWindowLabel,
+	rangeCacheKeyParts
+} from '$lib/shared/timeWindow';
 import { cached, cacheKey, CACHE_TTL, CACHE_HEADERS } from '$lib/server/cache';
 import type { PageServerLoad } from './$types';
 
@@ -26,14 +31,14 @@ export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
 	const userId = locals.user.id;
 	const spec = parseTimeWindowSpec(url.searchParams, 'all');
 	const range = resolveRange(spec);
+	const rangeKey = rangeCacheKeyParts(range, 60);
 
-	const personalKey = cacheKey(['stats:personal', userId, guildId, range.startS, range.endS]);
-	const teamKey = cacheKey(['stats:team', guildId, range.startS, range.endS]);
+	const personalKey = cacheKey(['stats:personal', userId, guildId, ...rangeKey]);
+	const teamKey = cacheKey(['stats:team', guildId, ...rangeKey]);
 
 	const [personalData, teamData] = await Promise.all([
 		cached(personalKey, CACHE_TTL.medium, () => ({
 			personal: getPersonalStats(userId, guildId, range),
-			trend: getPersonalStatsTrend(userId, guildId, range),
 			timeline: getActivityTimeline(userId, guildId, range),
 			responseTrend: getResponseTrend(userId, guildId, range)
 		})),
@@ -45,9 +50,15 @@ export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
 			funnel: getApplicationFunnel(guildId, range)
 		}))
 	]);
+	const trend = await cached(
+		cacheKey(['stats:personal-trend', userId, guildId, ...rangeKey]),
+		CACHE_TTL.medium,
+		() => getPersonalStatsTrend(userId, guildId, range, personalData.personal)
+	);
 
 	return {
 		...personalData,
+		trend,
 		...teamData,
 		spec,
 		windowLabel: formatWindowLabel(spec),
