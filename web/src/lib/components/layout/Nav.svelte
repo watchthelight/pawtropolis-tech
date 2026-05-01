@@ -88,6 +88,10 @@
 		<img
 			src={user.avatarUrl}
 			alt={user.globalName || user.username}
+			width="48"
+			height="48"
+			decoding="async"
+			referrerpolicy="no-referrer"
 			class="avatar"
 			class:avatar-collapsed={collapsed}
 		/>

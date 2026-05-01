@@ -3,6 +3,7 @@
 	import RiskAura from '$lib/components/data/RiskAura.svelte';
 	import { relativeTime } from '$lib/utils/time';
 	import { openLightbox } from '$lib/stores/lightbox.svelte';
+	import Avatar from '$lib/components/data/Avatar.svelte';
 
 	let { applicantName, avatarUrl = null, status, submittedAt, claimedBy, claimedByName, claimedByAvatar = null, riskScore, hasUnreadModmail = false, isStale = false, selected = false, onclick }: {
 		applicantName: string;
@@ -46,12 +47,7 @@
 >
 	<div class="review-card-row">
 		<div class="avatar-wrapper">
-			{#if avatarUrl}
-				<!-- svelte-ignore a11y_no_static_element_interactions -->
-				<img src={avatarUrl} alt={applicantName} class="review-card-avatar clickable-avatar" onclick={(e) => { e.stopPropagation(); openLightbox(avatarUrl!); }} />
-			{:else}
-				<div class="review-card-avatar-placeholder">{applicantName.charAt(0).toUpperCase()}</div>
-			{/if}
+			<Avatar src={avatarUrl} name={applicantName} size={48} clickable={!!avatarUrl} onclick={avatarUrl ? (e) => { e.stopPropagation(); openLightbox(avatarUrl); } : undefined} />
 			{#if hasUnreadModmail}
 				<span class="modmail-dot" title="Unread modmail from applicant"></span>
 			{/if}
@@ -71,7 +67,7 @@
 			{#if claimedBy}
 				<div class="review-card-claimed">
 					{#if claimedByAvatar}
-						<img src={claimedByAvatar} alt="" class="claimer-avatar" />
+						<img src={claimedByAvatar} alt="" width="20" height="20" loading="lazy" decoding="async" referrerpolicy="no-referrer" class="claimer-avatar" />
 					{/if}
 					Claimed by {claimedByName ?? 'unknown'}
 				</div>

@@ -4,6 +4,7 @@
 	import EmptyState from '$lib/components/feedback/EmptyState.svelte';
 	import SpringReveal from '$lib/components/motion/SpringReveal.svelte';
 	import CopyableId from '$lib/components/data/CopyableId.svelte';
+	import Avatar from '$lib/components/data/Avatar.svelte';
 	import { relativeTime } from '$lib/utils/time';
 	import { slide } from 'svelte/transition';
 	import { invalidateAll } from '$app/navigation';
@@ -213,11 +214,7 @@
 					<!-- svelte-ignore a11y_click_events_have_key_events -->
 					<div class="icon-tile" role="button" tabindex="0" onclick={() => toggleExpand(key)} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpand(key); } }}>
 						<div class="icon-avatar-wrap">
-							{#if flag.avatarUrl}
-								<img src={flag.avatarUrl} alt={flag.displayName} class="icon-avatar" />
-							{:else}
-								<div class="icon-avatar-ph">{flag.displayName.charAt(0).toUpperCase()}</div>
-							{/if}
+							<Avatar src={flag.avatarUrl} name={flag.displayName} size={48} />
 							<span class="severity-dot icon-sev" class:severity-high={flag.severity === 'high'} class:severity-medium={flag.severity === 'medium'} class:severity-low={flag.severity === 'low'}></span>
 						</div>
 						<span class="icon-name">{flag.displayName}</span>
@@ -258,20 +255,7 @@
 					>
 						<div class="flag-summary" class:flag-summary-compact={viewMode === 'compact'}>
 							<div class="flag-avatar-col">
-								{#if flag.avatarUrl}
-									<!-- svelte-ignore a11y_click_events_have_key_events -->
-									<img
-										src={flag.avatarUrl}
-										alt={flag.displayName}
-										class="flag-avatar"
-										class:flag-avatar-compact={viewMode === 'compact'}
-										role="button"
-										tabindex="-1"
-										onclick={(e) => { e.stopPropagation(); openLightbox(flag.avatarUrl!); }}
-									/>
-								{:else}
-									<div class="flag-avatar-ph" class:flag-avatar-ph-compact={viewMode === 'compact'}>{flag.displayName.charAt(0).toUpperCase()}</div>
-								{/if}
+								<Avatar src={flag.avatarUrl} name={flag.displayName} size={viewMode === 'compact' ? 36 : 48} clickable={!!flag.avatarUrl} onclick={flag.avatarUrl ? (e) => { e.stopPropagation(); openLightbox(flag.avatarUrl); } : undefined} />
 							</div>
 
 							<div class="flag-info">

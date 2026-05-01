@@ -40,6 +40,11 @@
 		<img
 			src={user.avatarUrl}
 			alt={user.globalName || user.username}
+			width="56"
+			height="56"
+			loading="eager"
+			decoding="async"
+			referrerpolicy="no-referrer"
 			class="welcome-avatar"
 			style="cursor: zoom-in"
 			onclick={() => openLightbox(user.avatarUrl)}

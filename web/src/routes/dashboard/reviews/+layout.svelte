@@ -14,6 +14,7 @@
 	import TabBar from '$lib/components/review/TabBar.svelte';
 	import { relativeTime } from '$lib/utils/time';
 	import { openLightbox } from '$lib/stores/lightbox.svelte';
+	import Avatar from '$lib/components/data/Avatar.svelte';
 
 	let { data, children } = $props();
 
@@ -219,12 +220,7 @@
 								onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goto(`/dashboard/reviews/${item.id}`); } }}
 							>
 								<div class="history-card-row">
-									{#if item.avatarUrl}
-										<!-- svelte-ignore a11y_no_static_element_interactions -->
-									<img src={item.avatarUrl} alt={item.applicantName} class="history-card-avatar" style="cursor: zoom-in" onclick={(e) => { e.stopPropagation(); openLightbox(item.avatarUrl!); }} />
-									{:else}
-										<div class="history-card-avatar-ph">{item.applicantName.charAt(0).toUpperCase()}</div>
-									{/if}
+									<Avatar src={item.avatarUrl} name={item.applicantName} size={48} clickable={!!item.avatarUrl} onclick={item.avatarUrl ? (e) => { e.stopPropagation(); openLightbox(item.avatarUrl); } : undefined} />
 									<div class="history-card-info">
 										<div class="history-card-top">
 											<span class="history-card-name">{item.applicantName}</span>
