@@ -36,6 +36,13 @@ db.pragma("synchronous = NORMAL");
 db.pragma("foreign_keys = ON");
 // Busy timeout to fail-soft during brief contention rather than throwing immediately
 db.pragma(`busy_timeout = ${DB_BUSY_TIMEOUT_MS}`);
+// Cache 32MB of pages in-process. Default ~8MB is too small for a 3GB DB but
+// 128MB+ blew memory on this 2GB-RAM box (RSS jumped to 1GB, host swapping).
+// 32MB strikes the balance: modMetrics + guildSnapshot hot pages stay resident
+// without crowding out the rest of the process.
+db.pragma("cache_size = -32768");
+// Temp tables in RAM keeps large GROUP BY / ORDER BY off disk.
+db.pragma("temp_store = MEMORY");
 const dbTraceEnabled = process.env.DB_TRACE === "1";
 logger.info({ dbPath, dbTraceEnabled }, "SQLite opened");
 
