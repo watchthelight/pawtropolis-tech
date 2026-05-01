@@ -94,6 +94,12 @@ db.exec(`
 	);
 `);
 
+// Idempotent add for substantiveness columns. SQLite has no ALTER IF NOT EXISTS;
+// swallow the duplicate-column error per column.
+for (const col of ['substantiveness', 'novelty', 'not_filler', 'lex_density']) {
+	try { db.exec(`ALTER TABLE general_messages_overlay_weekly ADD COLUMN ${col} REAL DEFAULT 0`); } catch {}
+}
+
 let sinceS;
 if (SINCE_OVERRIDE !== null) {
 	sinceS = SINCE_OVERRIDE;
@@ -118,13 +124,18 @@ console.log(`[overlay] iterating ${totalRows} raw rows`);
 const stmt = db.prepare(`
 	SELECT
 		r.id, r.created_at_s, r.author_id, r.content, r.reply_to,
-		s.score   AS heuristic,
-		eff.score AS effort,
-		res.score AS resonance
+		s.score    AS heuristic,
+		eff.score  AS effort,
+		res.score  AS resonance,
+		sub.score           AS subst,
+		sub.novelty         AS subst_novelty,
+		sub.not_filler      AS subst_not_filler,
+		sub.lexical_density AS subst_density
 	FROM general_messages_raw r
-	LEFT JOIN general_messages_score s     ON s.id   = r.id
-	LEFT JOIN general_messages_effort eff  ON eff.id = r.id
-	LEFT JOIN general_messages_resonance res ON res.id = r.id
+	LEFT JOIN general_messages_score          s   ON s.id   = r.id
+	LEFT JOIN general_messages_effort         eff ON eff.id = r.id
+	LEFT JOIN general_messages_resonance      res ON res.id = r.id
+	LEFT JOIN general_messages_substantiveness sub ON sub.id = r.id
 	WHERE r.created_at_s >= ? AND r.is_bot = 0 AND length(r.content) > 0
 	ORDER BY r.created_at_s
 `);
@@ -140,7 +151,8 @@ for (const r of stmt.iterate(sinceS)) {
 			n: 0, sumEffort: 0, nEffort: 0, sumHeur: 0, nHeur: 0, sumReso: 0, nReso: 0,
 			lengths: [], uniqueTokens: new Set(), totalTokens: 0,
 			questions: 0, repeatSpam: 0, lowlistHits: 0, replies: 0,
-			authorCounts: new Map()
+			authorCounts: new Map(),
+			sumSubst: 0, sumNov: 0, sumNF: 0, sumDens: 0, nSubst: 0
 		};
 		buckets.set(w, b);
 	}
@@ -148,6 +160,13 @@ for (const r of stmt.iterate(sinceS)) {
 	if (r.effort !== null) { b.sumEffort += r.effort; b.nEffort++; }
 	if (r.heuristic !== null) { b.sumHeur += r.heuristic; b.nHeur++; }
 	if (r.resonance !== null) { b.sumReso += r.resonance; b.nReso++; }
+	if (r.subst !== null) {
+		b.sumSubst += r.subst;
+		b.sumNov   += r.subst_novelty;
+		b.sumNF    += r.subst_not_filler;
+		b.sumDens  += r.subst_density;
+		b.nSubst++;
+	}
 
 	const toks = tokensOf(r.content);
 	b.lengths.push(toks.length);
@@ -171,8 +190,9 @@ const upsert = db.prepare(`
 		week_start, count, effort, heuristic, resonance,
 		median_length, lexical_diversity, question_rate,
 		no_repeat_spam, no_lowlist_hit, reply_rate, author_distribution,
+		substantiveness, novelty, not_filler, lex_density,
 		computed_at_s
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	ON CONFLICT(week_start) DO UPDATE SET
 		count = excluded.count,
 		effort = excluded.effort,
@@ -185,6 +205,10 @@ const upsert = db.prepare(`
 		no_lowlist_hit = excluded.no_lowlist_hit,
 		reply_rate = excluded.reply_rate,
 		author_distribution = excluded.author_distribution,
+		substantiveness = excluded.substantiveness,
+		novelty = excluded.novelty,
+		not_filler = excluded.not_filler,
+		lex_density = excluded.lex_density,
 		computed_at_s = excluded.computed_at_s
 `);
 
@@ -208,6 +232,10 @@ for (const [weekStart, b] of buckets.entries()) {
 		1 - b.lowlistHits / b.n,
 		b.replies / b.n,
 		1 - gini([...b.authorCounts.values()]),
+		b.nSubst ? b.sumSubst / b.nSubst : 0,
+		b.nSubst ? b.sumNov   / b.nSubst : 0,
+		b.nSubst ? b.sumNF    / b.nSubst : 0,
+		b.nSubst ? b.sumDens  / b.nSubst : 0,
 		nowS
 	]);
 }
