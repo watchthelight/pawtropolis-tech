@@ -14,8 +14,8 @@ if (existsSync('.env.build')) {
   dotenv.config({ path: '.env.build' });
 }
 
-// Run the TypeScript migration script with tsx
-const result = spawnSync('npx', ['tsx', 'scripts/migrate.ts'], {
+// Run the TypeScript migration script with tsx.
+const result = spawnSync('npx', ['tsx', 'scripts/migrate.ts', ...process.argv.slice(2)], {
   stdio: 'inherit',
   shell: true,
   env: process.env
