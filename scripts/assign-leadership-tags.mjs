@@ -90,15 +90,35 @@ async function fetchAllMembers() {
 	return out;
 }
 
+// Highest-tier classification: a user with both Admin and GK is treated as Admin,
+// not as both. So they belong in Above only — not in Below.
+function highestTier(member) {
+	const r = new Set(member.roles ?? []);
+	if (r.has(TIER_ROLES.owner_server_owner))   return 'owner';
+	if (r.has(TIER_ROLES.community_manager))    return 'cm';
+	if (r.has(TIER_ROLES.community_dev_lead))   return 'cdl';
+	if (r.has(TIER_ROLES.senior_admin))         return 'sa';
+	if (r.has(TIER_ROLES.administrator))        return 'admin';
+	if (r.has(TIER_ROLES.senior_mod))           return 'sm';
+	if (r.has(TIER_ROLES.moderator))            return 'mod';
+	if (r.has(TIER_ROLES.junior_mod))           return 'jm';
+	if (r.has(TIER_ROLES.gatekeeper))           return 'gk';
+	return null;
+}
+const ABOVE_TIERS = new Set(['owner', 'cm', 'cdl', 'sa', 'admin', 'sm']);
+const BELOW_TIERS = new Set(['sm', 'mod', 'jm', 'gk']);
+
 function classify(member) {
-	const roles = new Set(member.roles ?? []);
-	const above = [...ABOVE_ROLES].some((r) => roles.has(r));
-	const below = [...BELOW_ROLES].some((r) => roles.has(r));
-	return { above, below };
+	const tier = highestTier(member);
+	if (!tier) return { above: false, below: false };
+	return { above: ABOVE_TIERS.has(tier), below: BELOW_TIERS.has(tier) };
 }
 
 async function addRole(userId, roleId) {
 	await api(`/guilds/${GUILD_ID}/members/${userId}/roles/${roleId}`, { method: 'PUT' });
+}
+async function removeRole(userId, roleId) {
+	await api(`/guilds/${GUILD_ID}/members/${userId}/roles/${roleId}`, { method: 'DELETE' });
 }
 
 async function verifyHasRole(userId, roleId) {
@@ -109,45 +129,52 @@ async function verifyHasRole(userId, roleId) {
 async function main() {
 	const members = await fetchAllMembers();
 
-	const aboveTargets = []; // need ROLE_ABOVE
-	const belowTargets = []; // need ROLE_BELOW
+	const aboveAdd = [], aboveRemove = [];
+	const belowAdd = [], belowRemove = [];
 	for (const m of members) {
 		if (m.user.bot) continue;
 		const cls = classify(m);
 		const roles = new Set(m.roles ?? []);
-		if (cls.above && !roles.has(ROLE_ABOVE)) aboveTargets.push(m);
-		if (cls.below && !roles.has(ROLE_BELOW)) belowTargets.push(m);
+		if (cls.above && !roles.has(ROLE_ABOVE)) aboveAdd.push(m);
+		if (!cls.above && roles.has(ROLE_ABOVE)) aboveRemove.push(m);
+		if (cls.below && !roles.has(ROLE_BELOW)) belowAdd.push(m);
+		if (!cls.below && roles.has(ROLE_BELOW)) belowRemove.push(m);
 	}
 
-	console.log(`\n[plan] Senior Mod and Above (Leadership ${ROLE_ABOVE}): ${aboveTargets.length} need it`);
-	for (const m of aboveTargets) console.log(`        - ${m.user.username} (${m.user.id})`);
-	console.log(`\n[plan] Senior Mod and Below (${ROLE_BELOW}): ${belowTargets.length} need it`);
-	for (const m of belowTargets) console.log(`        - ${m.user.username} (${m.user.id})`);
+	console.log(`\n[plan] Leadership ${ROLE_ABOVE}`);
+	console.log(`  add (${aboveAdd.length}):`);    for (const m of aboveAdd)    console.log(`    + ${m.user.username} (${m.user.id})`);
+	console.log(`  remove (${aboveRemove.length}):`); for (const m of aboveRemove) console.log(`    - ${m.user.username} (${m.user.id})`);
+
+	console.log(`\n[plan] Below-Senior-Mod ${ROLE_BELOW}`);
+	console.log(`  add (${belowAdd.length}):`);    for (const m of belowAdd)    console.log(`    + ${m.user.username} (${m.user.id})`);
+	console.log(`  remove (${belowRemove.length}):`); for (const m of belowRemove) console.log(`    - ${m.user.username} (${m.user.id})`);
 
 	if (DRY) {
-		console.log('\n[dry-run] no changes. Pass --one to test on one each, or --apply for bulk.');
+		console.log('\n[dry-run] no changes. Pass --one to test on one per change-type, or --apply for full sync.');
 		return;
 	}
 
-	const list = ONE ? { above: aboveTargets.slice(0, 1), below: belowTargets.slice(0, 1) } : { above: aboveTargets, below: belowTargets };
+	const lists = ONE
+		? { aA: aboveAdd.slice(0,1), aR: aboveRemove.slice(0,1), bA: belowAdd.slice(0,1), bR: belowRemove.slice(0,1) }
+		: { aA: aboveAdd, aR: aboveRemove, bA: belowAdd, bR: belowRemove };
 
-	for (const m of list.above) {
-		console.log(`[apply] +Leadership → ${m.user.username} (${m.user.id})`);
-		await addRole(m.user.id, ROLE_ABOVE);
-		const ok = await verifyHasRole(m.user.id, ROLE_ABOVE);
-		console.log(`        verified: ${ok}`);
-		if (!ok) { console.error('FAIL — stopping'); process.exit(2); }
+	async function exec(kind, list, action, roleId, expectedAfter) {
+		for (const m of list) {
+			console.log(`[apply] ${kind} → ${m.user.username} (${m.user.id})`);
+			await action(m.user.id, roleId);
+			const has = await verifyHasRole(m.user.id, roleId);
+			const ok = has === expectedAfter;
+			console.log(`        verified hasRole=${has} (expected ${expectedAfter}): ${ok}`);
+			if (!ok) { console.error('FAIL — stopping'); process.exit(2); }
+		}
 	}
-	for (const m of list.below) {
-		console.log(`[apply] +Below-Senior-Mod → ${m.user.username} (${m.user.id})`);
-		await addRole(m.user.id, ROLE_BELOW);
-		const ok = await verifyHasRole(m.user.id, ROLE_BELOW);
-		console.log(`        verified: ${ok}`);
-		if (!ok) { console.error('FAIL — stopping'); process.exit(2); }
-	}
+	await exec('+Leadership',         lists.aA, addRole,    ROLE_ABOVE, true);
+	await exec('-Leadership',         lists.aR, removeRole, ROLE_ABOVE, false);
+	await exec('+Below-Senior-Mod',   lists.bA, addRole,    ROLE_BELOW, true);
+	await exec('-Below-Senior-Mod',   lists.bR, removeRole, ROLE_BELOW, false);
 
-	if (ONE) console.log('\n[one] verified. Re-run with --apply for full rollout.');
-	else console.log('\n[done] all assigned.');
+	if (ONE) console.log('\n[one] verified. Re-run with --apply for full sync.');
+	else console.log('\n[done] all synced.');
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });
