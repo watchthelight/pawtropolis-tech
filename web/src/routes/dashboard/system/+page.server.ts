@@ -9,7 +9,7 @@ export interface SystemHealth {
 	uptime: number;
 	uptimeFormatted: string;
 	wsPingMs: number;
-	memory: { heapUsedMB: number; heapTotalMB: number; rssMB: number };
+	memory: { heapUsedMB: number; heapTotalMB: number; heapLimitMB?: number; rssMB: number };
 	disk: { usedGB: number; totalGB: number; percentUsed: number };
 	activeAlertCount: number;
 	pm2: Array<{ name: string; status: string; cpuPercent?: number; memoryBytes?: number; uptimeSeconds?: number }>;

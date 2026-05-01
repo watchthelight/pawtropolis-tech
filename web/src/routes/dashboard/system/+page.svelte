@@ -96,12 +96,13 @@
 					{health.wsPingMs}<span class="unit"> ms</span>
 				</span>
 			</div>
-			{#if health.memory.heapTotalMB > 0}
-				{@const heapPct = Math.round((health.memory.heapUsedMB / health.memory.heapTotalMB) * 100)}
+			{@const limit = health.memory.heapLimitMB ?? health.memory.heapTotalMB}
+			{#if limit > 0}
+				{@const heapPct = Math.round((health.memory.heapUsedMB / limit) * 100)}
 				<div class="tile">
 					<span class="tile-label">Heap</span>
-					<span class="tile-value" style:color={pctColor(heapPct)}>{heapPct}<span class="unit">%</span></span>
-					<span class="tile-sub">{health.memory.heapUsedMB} / {health.memory.heapTotalMB} MB · RSS {health.memory.rssMB} MB</span>
+					<span class="tile-value" style:color={pctColor(heapPct, 60, 80)}>{heapPct}<span class="unit">%</span></span>
+					<span class="tile-sub">{health.memory.heapUsedMB} / {limit} MB · RSS {health.memory.rssMB} MB</span>
 				</div>
 			{/if}
 			<div class="tile">

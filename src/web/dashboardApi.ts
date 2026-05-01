@@ -1677,10 +1677,15 @@ export async function startDashboardApi(client: Client): Promise<void> {
       const { getSummary } = await import("../features/opsHealth.js");
       const summary = await getSummary(GUILD_ID);
 
-      // Process memory
+      // Process memory. heapTotal grows lazily so heapUsed/heapTotal hovers
+      // near 100% even when there's gigabytes of headroom — report against the
+      // V8 heap_size_limit instead so the % is actually meaningful.
       const mem = process.memoryUsage();
+      const v8 = await import("node:v8");
+      const heapStats = v8.getHeapStatistics();
       const heapUsedMB = Math.round(mem.heapUsed / 1024 / 1024);
       const heapTotalMB = Math.round(mem.heapTotal / 1024 / 1024);
+      const heapLimitMB = Math.round(heapStats.heap_size_limit / 1024 / 1024);
       const rssMB = Math.round(mem.rss / 1024 / 1024);
 
       // Disk space (Linux)
@@ -1732,7 +1737,7 @@ export async function startDashboardApi(client: Client): Promise<void> {
           uptime: Math.round(uptime),
           uptimeFormatted,
           wsPingMs: summary.wsPingMs,
-          memory: { heapUsedMB, heapTotalMB, rssMB },
+          memory: { heapUsedMB, heapTotalMB, heapLimitMB, rssMB },
           disk,
           activeAlertCount: summary.activeAlerts.length,
           pm2: summary.pm2,
