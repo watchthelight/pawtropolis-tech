@@ -589,36 +589,47 @@ export interface DecisionPercentiles {
 
 export function getDecisionPercentiles(guildId: string, range: ResolvedRange): DecisionPercentiles {
 	const { startS, endS } = rangeBounds(range);
-	const rows = db()
+	// Compute percentiles in SQL via ROW_NUMBER() + COUNT() OVER () so we never
+	// fetch the full decision set into JS. The previous implementation pulled
+	// every decision row across the range and sorted in JS — unbounded memory
+	// + sort, which is brutal on the all-time window.
+	const row = db()
 		.prepare(
-			`SELECT d.decision_time_s
-			FROM (
+			`WITH d AS (
 				SELECT
-					a.app_id,
 					a.created_at_s - COALESCE(
 						(SELECT MIN(c.created_at_s) FROM action_log c
 						 WHERE c.app_id = a.app_id AND c.action = 'claim'),
 						a.created_at_s
-					) as decision_time_s
+					) AS decision_time_s
 				FROM action_log a
 				WHERE a.guild_id = ?
 					AND a.action IN ('approve', 'reject', 'perm_reject', 'kick')
 					AND (? = 0 OR a.created_at_s >= ?) AND a.created_at_s < ?
-			) d
-			WHERE d.decision_time_s > 0
-			ORDER BY d.decision_time_s ASC`
+			),
+			ranked AS (
+				SELECT
+					decision_time_s,
+					ROW_NUMBER() OVER (ORDER BY decision_time_s) AS rn,
+					COUNT(*)    OVER ()                          AS total
+				FROM d
+				WHERE decision_time_s > 0
+			)
+			SELECT
+				MAX(total)                                                        AS total,
+				MAX(CASE WHEN rn = MAX(1, CAST(total * 0.50 AS INTEGER)) THEN decision_time_s END) AS p50,
+				MAX(CASE WHEN rn = MAX(1, CAST(total * 0.75 AS INTEGER)) THEN decision_time_s END) AS p75,
+				MAX(CASE WHEN rn = MAX(1, CAST(total * 0.95 AS INTEGER)) THEN decision_time_s END) AS p95
+			FROM ranked`
 		)
-		.all(guildId, startS, startS, endS) as Array<{ decision_time_s: number }>;
+		.get(guildId, startS, startS, endS) as { total: number | null; p50: number | null; p75: number | null; p95: number | null };
 
-	const count = rows.length;
+	const count = row?.total ?? 0;
 	if (count === 0) return { p50: null, p75: null, p95: null, count: 0 };
-
-	const p = (pct: number) => rows[Math.min(Math.floor(count * pct), count - 1)].decision_time_s;
-
 	return {
-		p50: Math.round(p(0.5)),
-		p75: Math.round(p(0.75)),
-		p95: Math.round(p(0.95)),
+		p50: row.p50 != null ? Math.round(row.p50) : null,
+		p75: row.p75 != null ? Math.round(row.p75) : null,
+		p95: row.p95 != null ? Math.round(row.p95) : null,
 		count
 	};
 }
