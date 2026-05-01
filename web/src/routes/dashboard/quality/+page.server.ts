@@ -7,7 +7,10 @@ import {
 	getEffortLeaderboards,
 	getSubstantivenessSparkline,
 	getSubstantivenessTrend,
+	getMetricsOverlay,
+	getBackfillStatus
 } from '$lib/server/queries/quality';
+import { getQualityLowlistTokens } from '$lib/server/quality-lowlist';
 import {
 	parseTimeWindowSpec,
 	resolveRange,
@@ -29,11 +32,12 @@ export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
 	const guildId = process.env.GUILD_ID;
 	const spec = parseTimeWindowSpec(url.searchParams, '30d');
 	const range = resolveRange(spec);
-	const rangeKey = rangeCacheKeyParts(range, 300);
-	const dataKey = cacheKey(['quality:data', guildId, ...rangeKey]);
+	// Auto-pick bucket size based on preset: 7d→5min, 30d→30min, 90d→1h, all→1d.
+	// Custom windows are stable. Reroll less = more cache hits = sub-100ms switches.
+	const rangeKey = rangeCacheKeyParts(range);
 
 	const fastKey = cacheKey(['quality:fast', guildId, ...rangeKey]);
-	const fastData = await cached(fastKey, CACHE_TTL.long, () => ({
+	const fastData = await cached(fastKey, CACHE_TTL.veryLong, () => ({
 		overview: getQualityOverview(guildId, range),
 		timeseries: getQualityTimeseries(guildId, range),
 		distribution: getEffortDistribution(guildId, range),
@@ -41,18 +45,34 @@ export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
 		substTrend: getSubstantivenessTrend(guildId, range)
 	}));
 
-	// Leaderboards are the heaviest query (GROUP BY all authors). Stream as a
-	// promise so the page renders the rest immediately and the table skeletons
-	// in until it resolves.
+	// Stream the heavy/slower payloads as Promises so the page paints the fast
+	// data immediately and the rest fills in. SvelteKit serializes streamed
+	// promises lazily — leaving the page mid-stream does not block navigation.
 	const leaderboardsPromise = cached(
 		cacheKey(['quality:leaderboards', guildId, ...rangeKey]),
-		CACHE_TTL.long,
+		CACHE_TTL.veryLong,
 		() => getEffortLeaderboards(guildId, range, 200)
+	);
+
+	const overlayPromise = cached(
+		cacheKey(['quality:overlay', guildId, ...rangeKey]),
+		CACHE_TTL.veryLong,
+		() => getMetricsOverlay(guildId, range, getQualityLowlistTokens())
+	);
+
+	const backfillPromise = cached(
+		cacheKey(['quality:backfill', guildId]),
+		CACHE_TTL.long,
+		() => getBackfillStatus(guildId)
 	);
 
 	return {
 		...fastData,
-		streamed: { leaderboards: leaderboardsPromise },
+		streamed: {
+			leaderboards: leaderboardsPromise,
+			overlay: overlayPromise,
+			backfill: backfillPromise
+		},
 		spec,
 		windowLabel: formatWindowLabel(spec)
 	};
