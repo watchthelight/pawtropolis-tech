@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { slide } from 'svelte/transition';
+	import { fade } from 'svelte/transition';
 	import ConnectionIndicator from './ConnectionIndicator.svelte';
 	import StyleSwitcher from './StyleSwitcher.svelte';
 	import {
@@ -111,7 +111,7 @@
 			{#if prevItem && prevItem.group === 'ops' && item.group === 'admin'}
 				<li class="nav-divider" aria-hidden="true"></li>
 			{/if}
-			<li transition:slide={{ duration: 200 }}>
+			<li transition:fade={{ duration: 150 }}>
 				<a
 					href={item.href}
 					aria-current={active ? 'page' : undefined}
