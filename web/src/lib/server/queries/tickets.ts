@@ -41,13 +41,15 @@ export interface TicketListFilters {
 	status?: TicketStatus;
 	search?: string;
 	restrictReports: boolean; // true = exclude report-user / report-staff
+	/** Keyset cursor — return tickets with opened_at < cursor. Omitted = first page. */
+	cursor?: number;
 }
 
 export interface TicketListResult {
 	rows: TicketRow[];
 	total: number;
-	page: number;
 	pageSize: number;
+	nextCursor: number | null;
 }
 
 const PAGE_SIZE = 50;
@@ -101,7 +103,8 @@ function mapRow(r: DbTicketRow): TicketRow {
 	};
 }
 
-export function listTickets(filters: TicketListFilters, page = 1): TicketListResult {
+export function listTickets(filters: TicketListFilters, _pageDeprecated?: number): TicketListResult {
+	void _pageDeprecated;
 	const conditions: string[] = ['1 = 1'];
 	const params: unknown[] = [];
 
@@ -124,11 +127,17 @@ export function listTickets(filters: TicketListFilters, page = 1): TicketListRes
 		conditions.push("t.type_key NOT IN ('report-user', 'report-staff')");
 	}
 
-	const whereSql = conditions.join(' AND ');
-	const offset = Math.max(0, page - 1) * PAGE_SIZE;
+	const baseWhere = conditions.join(' AND ');
+	const pagedConditions = [...conditions];
+	const pagedParams = [...params];
+	if (filters.cursor != null) {
+		pagedConditions.push('t.opened_at < ?');
+		pagedParams.push(filters.cursor);
+	}
+	const pagedWhere = pagedConditions.join(' AND ');
 
 	const totalRow = db()
-		.prepare(`SELECT COUNT(*) AS c FROM ticket t WHERE ${whereSql}`)
+		.prepare(`SELECT COUNT(*) AS c FROM ticket t WHERE ${baseWhere}`)
 		.get(...params) as { c: number };
 
 	const rows = db()
@@ -137,17 +146,23 @@ export function listTickets(filters: TicketListFilters, page = 1): TicketListRes
 			        tt.panel_stack AS type_panel_stack
 			   FROM ticket t
 			   JOIN ticket_type tt ON tt.key = t.type_key
-			  WHERE ${whereSql}
+			  WHERE ${pagedWhere}
 			  ORDER BY t.opened_at DESC
-			  LIMIT ${PAGE_SIZE} OFFSET ${offset}`
+			  LIMIT ${PAGE_SIZE + 1}`
 		)
-		.all(...params) as DbTicketRow[];
+		.all(...pagedParams) as DbTicketRow[];
+
+	let nextCursor: number | null = null;
+	if (rows.length > PAGE_SIZE) {
+		const trailing = rows.pop();
+		nextCursor = trailing ? trailing.opened_at : null;
+	}
 
 	return {
 		rows: rows.map(mapRow),
 		total: totalRow.c,
-		page,
-		pageSize: PAGE_SIZE
+		pageSize: PAGE_SIZE,
+		nextCursor
 	};
 }
 

@@ -4,7 +4,6 @@ import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const user = locals.user!;
-	// Mod Team / Senior Mod+ see reports. Ambassador-only viewers don't.
 	const restrictReports = !hasMinTier(user.tier, 'mod');
 
 	const typeKey = url.searchParams.get('type') || undefined;
@@ -12,17 +11,16 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const status: TicketStatus | undefined =
 		statusRaw === 'open' ? 'open' : statusRaw === 'closed' ? 'closed' : undefined;
 	const search = url.searchParams.get('search') || undefined;
-	const page = Math.max(1, Number(url.searchParams.get('page') || '1') || 1);
+	const cursorRaw = url.searchParams.get('cursor');
+	const cursor = cursorRaw ? Number.parseInt(cursorRaw, 10) : undefined;
 
-	const result = listTickets(
-		{
-			typeKey,
-			status,
-			search,
-			restrictReports
-		},
-		page
-	);
+	const result = listTickets({
+		typeKey,
+		status,
+		search,
+		restrictReports,
+		cursor: Number.isFinite(cursor) ? cursor : undefined
+	});
 
 	const typeKeys = listTicketTypeKeys(restrictReports);
 

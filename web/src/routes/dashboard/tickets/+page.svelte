@@ -9,20 +9,26 @@
 	let filterStatus = $state(data.filters.status ?? '');
 	let filterSearch = $state(data.filters.search ?? '');
 
-	const totalPages = $derived(Math.max(1, Math.ceil(data.total / data.pageSize)));
+	const hasMore = $derived(data.nextCursor != null);
 
 	function applyFilters() {
 		const params = new URLSearchParams();
 		if (filterType) params.set('type', filterType);
 		if (filterStatus) params.set('status', filterStatus);
 		if (filterSearch) params.set('search', filterSearch);
-		params.set('page', '1');
 		goto(`/dashboard/tickets?${params.toString()}`);
 	}
 
-	function gotoPage(n: number) {
+	function loadMore() {
+		if (data.nextCursor == null) return;
 		const params = new URLSearchParams($page.url.searchParams);
-		params.set('page', String(n));
+		params.set('cursor', String(data.nextCursor));
+		goto(`/dashboard/tickets?${params.toString()}`);
+	}
+
+	function backToTop() {
+		const params = new URLSearchParams($page.url.searchParams);
+		params.delete('cursor');
 		goto(`/dashboard/tickets?${params.toString()}`);
 	}
 
@@ -35,7 +41,7 @@
 <div class="page">
 	<header>
 		<h1>Tickets</h1>
-		<p class="muted">{data.total} total · page {data.page} of {totalPages}</p>
+		<p class="muted">Showing {data.rows.length} · {data.total} total</p>
 	</header>
 
 	<div class="filters">
@@ -106,13 +112,10 @@
 		</tbody>
 	</table>
 
-	{#if totalPages > 1}
-		<nav class="pagination">
-			<button disabled={data.page <= 1} onclick={() => gotoPage(data.page - 1)}>Prev</button>
-			<span>Page {data.page} / {totalPages}</span>
-			<button disabled={data.page >= totalPages} onclick={() => gotoPage(data.page + 1)}>Next</button>
-		</nav>
-	{/if}
+	<nav class="pagination">
+		<button onclick={backToTop}>Back to top</button>
+		<button disabled={!hasMore} onclick={loadMore}>Load older</button>
+	</nav>
 </div>
 
 <style>
