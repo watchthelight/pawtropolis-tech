@@ -134,6 +134,68 @@ interface MessageRow {
 	created_at: string | null;
 }
 
+/**
+ * Single-thread fetch for the dashboard modmail viewer. Returns the thread
+ * summary plus its messages and the resolved target user id (the applicant /
+ * user whose modmail this is). Returns null if the ticket does not belong to
+ * the supplied guild — protects against URL probing.
+ */
+export interface ModmailThreadDetail {
+	thread: ModmailThreadSummary;
+	userId: string;
+	username: string;
+	avatarUrl: string | null;
+	appCode: string | null;
+}
+
+export function getModmailThreadDetail(guildId: string, ticketId: number): ModmailThreadDetail | null {
+	const t = db().prepare(`
+		SELECT
+			t.id, t.user_id, t.app_code, t.status, t.created_at, t.closed_at,
+			COALESCE(u.display_name, u.global_name, u.username, 'User ' || substr(t.user_id, -6)) AS username,
+			u.avatar_url
+		FROM modmail_ticket t
+		LEFT JOIN user_cache u ON u.guild_id = t.guild_id AND u.user_id = t.user_id
+		WHERE t.id = ? AND t.guild_id = ?
+	`).get(ticketId, guildId) as {
+		id: number; user_id: string; app_code: string | null; status: string;
+		created_at: string | null; closed_at: string | null;
+		username: string; avatar_url: string | null;
+	} | undefined;
+	if (!t) return null;
+
+	const messages = db().prepare(`
+		SELECT id, direction, content, created_at
+		FROM modmail_message
+		WHERE ticket_id = ?
+		ORDER BY created_at ASC
+	`).all(ticketId) as Array<{ id: number; direction: string; content: string | null; created_at: string | null }>;
+
+	const items: ModmailMessageItem[] = messages.map((m) => ({
+		id: m.id,
+		direction: m.direction as 'to_user' | 'to_staff',
+		content: m.content ?? '',
+		createdAt: normalizeTimestamp(m.created_at)
+	}));
+
+	return {
+		thread: {
+			id: t.id,
+			status: t.status as 'open' | 'closed',
+			messageCount: items.length,
+			latestMessage: items.length ? items[items.length - 1].content.slice(0, 120) : null,
+			latestDirection: items.length ? items[items.length - 1].direction : null,
+			createdAt: normalizeTimestamp(t.created_at),
+			closedAt: normalizeTimestamp(t.closed_at),
+			messages: items
+		},
+		userId: t.user_id,
+		username: t.username,
+		avatarUrl: t.avatar_url,
+		appCode: t.app_code
+	};
+}
+
 export function getModmailForApplication(userId: string, guildId: string): ModmailThreadSummary[] {
 	const threads = db().prepare(`
 		SELECT

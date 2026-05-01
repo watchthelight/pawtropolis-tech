@@ -1,9 +1,9 @@
 import { error } from '@sveltejs/kit';
 import { hasMinTier } from '$lib/server/roles';
 import { getModmailThreads, getModmailStats } from '$lib/server/queries/modmail';
-import type { PageServerLoad } from './$types';
+import type { LayoutServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ locals, url }) => {
+export const load: LayoutServerLoad = async ({ locals, url }) => {
 	if (!locals.user || !hasMinTier(locals.user.tier, 'gk')) {
 		error(403, "You don't have permission to view this page.");
 	}
