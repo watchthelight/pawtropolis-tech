@@ -31,6 +31,37 @@ export interface AuditResult {
 const PAGE_SIZE = 50;
 
 /**
+ * Sanitize user input for FTS5 MATCH. FTS5 treats some characters as syntax
+ * (-, ", *, etc.); we strip them, then append `*` for prefix matching so
+ * "alic" matches "alice".
+ */
+function sanitizeFtsTerm(raw: string): string {
+	const cleaned = raw
+		.replace(/["()\\:^-]/g, ' ')
+		.split(/\s+/)
+		.filter((t) => t.length >= 2)
+		.map((t) => `${t}*`)
+		.join(' AND ');
+	return cleaned;
+}
+
+/**
+ * Get user_ids whose name fields match the search pattern. Bounded LIMIT so a
+ * vague search doesn't balloon the IN list.
+ */
+function lookupUserIdsByName(guildId: string, pattern: string): string[] {
+	const rows = db()
+		.prepare(
+			`SELECT user_id FROM user_cache
+			 WHERE guild_id = ?
+			   AND (display_name LIKE ? OR username LIKE ? OR global_name LIKE ?)
+			 LIMIT 200`
+		)
+		.all(guildId, pattern, pattern, pattern) as { user_id: string }[];
+	return rows.map((r) => r.user_id);
+}
+
+/**
  * Get distinct action types for filter dropdown.
  */
 export function getActionTypes(guildId: string): string[] {
@@ -68,13 +99,33 @@ export function getAuditLog(
 		params.push(filters.action);
 	}
 
-	// Search: match actor name, subject name, reason, or app_code
+	// Search: prefer FTS5 over reason / app_code / actor_id / subject_id; fall
+	// back to a small user_cache name LIKE that returns matching user_ids and
+	// OR's them into the action_log filter. Total cost stays bounded by the
+	// FTS index + user_cache size, NOT the full action_log table scan.
 	if (filters.search) {
+		const ftsTerm = sanitizeFtsTerm(filters.search);
 		const searchPattern = `%${filters.search}%`;
-		conditions.push(
-			`(ua.display_name LIKE ? OR ua.username LIKE ? OR us.display_name LIKE ? OR us.username LIKE ? OR a.reason LIKE ? OR a.app_code LIKE ? OR a.actor_id LIKE ? OR a.subject_id LIKE ?)`
-		);
-		params.push(searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern);
+		const nameMatchIds = lookupUserIdsByName(guildId, searchPattern);
+
+		const orParts: string[] = [];
+		if (ftsTerm) {
+			orParts.push(`a.id IN (SELECT rowid FROM action_log_fts WHERE action_log_fts MATCH ?)`);
+			params.push(ftsTerm);
+		}
+		if (nameMatchIds.length > 0) {
+			const placeholders = nameMatchIds.map(() => '?').join(',');
+			orParts.push(`a.actor_id IN (${placeholders})`);
+			params.push(...nameMatchIds);
+			orParts.push(`a.subject_id IN (${placeholders})`);
+			params.push(...nameMatchIds);
+		}
+		if (orParts.length > 0) {
+			conditions.push(`(${orParts.join(' OR ')})`);
+		} else {
+			// Search produced no possible matches — short-circuit with impossible filter.
+			conditions.push(`1 = 0`);
+		}
 	}
 
 	const whereClause = conditions.join(' AND ');
