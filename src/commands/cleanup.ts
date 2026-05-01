@@ -88,44 +88,64 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
 
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-  let deleted = 0;
-  let skippedOld = 0;
+  let bulkDeleted = 0;
+  let oneByOneDeleted = 0;
   let remaining = count;
+  let lastFetchedId: string | undefined;
   const cutoff = Date.now() - TWO_WEEKS_MS;
   const textChannel = channel as GuildTextBasedChannel;
 
   try {
     while (remaining > 0) {
       const fetchSize = Math.min(BATCH_SIZE, remaining);
-      const fetched = await textChannel.messages.fetch({ limit: fetchSize });
+      const fetched = await textChannel.messages.fetch({
+        limit: fetchSize,
+        before: lastFetchedId,
+      });
       if (fetched.size === 0) break;
+      lastFetchedId = fetched.last()?.id;
 
-      // Partition by age. Messages older than 14d cannot be bulk-deleted by Discord.
+      // Bulk-delete the fresh ones (Discord forbids bulkDelete >14d).
       const fresh = fetched.filter((m) => m.createdTimestamp > cutoff);
       const stale = fetched.filter((m) => m.createdTimestamp <= cutoff);
-      skippedOld += stale.size;
 
-      if (fresh.size === 0) {
-        // Nothing more we can purge in this batch — older messages would block progress.
-        break;
+      if (fresh.size > 0) {
+        const result = await textChannel.bulkDelete(fresh, true);
+        bulkDeleted += result.size;
       }
 
-      // bulkDelete with filterOld=true skips anything stale we may have missed.
-      const result = await textChannel.bulkDelete(fresh, true);
-      deleted += result.size;
-      remaining -= fetched.size;
+      // Fall back to one-by-one delete for stale messages so the requested
+      // count is honoured even on quiet channels where everything is old.
+      // Rate-limited: 5 deletes/sec is the Discord-safe ceiling for individual
+      // message deletes; sleep 250ms between to stay well clear.
+      for (const m of stale.values()) {
+        try {
+          await m.delete();
+          oneByOneDeleted++;
+        } catch {
+          // Permission / message-already-gone errors are non-fatal — keep going.
+        }
+        await new Promise((r) => setTimeout(r, 250));
+      }
 
-      // If we got fewer than asked and nothing fresh remains, we're done early.
+      remaining -= fetched.size;
+      // If Discord returned fewer than asked, no more messages to fetch.
       if (fetched.size < fetchSize) break;
     }
 
+    const total = bulkDeleted + oneByOneDeleted;
     const lines = [
-      `Purged **${deleted}** message${deleted === 1 ? "" : "s"} from <#${channel.id}>.`,
+      `Purged **${total}** message${total === 1 ? "" : "s"} from <#${channel.id}>.`,
     ];
-    if (skippedOld > 0) lines.push(`Skipped **${skippedOld}** older than 14 days (Discord limit).`);
+    if (oneByOneDeleted > 0) {
+      lines.push(`Of those, **${oneByOneDeleted}** were older than 14 days and deleted individually (slower).`);
+    }
     if (reason) lines.push(`Reason: ${reason}`);
 
     await interaction.editReply({ content: lines.join("\n") });
+
+    const deleted = total;
+    const skippedOld = 0;
 
     logger.info(
       { guildId: interaction.guild.id, channelId: channel.id, actorId: interaction.user.id, deleted, skippedOld, reason },
