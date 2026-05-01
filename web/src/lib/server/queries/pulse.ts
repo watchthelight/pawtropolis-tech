@@ -59,10 +59,18 @@ export function getPulseMetrics(guildId: string, range?: ResolvedRange): PulseMe
 	const endS = range?.endS ?? nowS;
 	const windowDays = Math.max(1, Math.round((endS - startS) / 86400));
 
-	const pendingApps = count(
-		"SELECT COUNT(*) as count FROM application WHERE guild_id = ? AND status IN ('submitted', 'needs_info')",
-		guildId
-	);
+	// Single application aggregate: pending count + window submits in one scan.
+	// startISO/endISO are computed below; declare them earlier so we can reuse.
+	const startISO = new Date(startS * 1000).toISOString().slice(0, 19).replace('T', ' ');
+	const endISO = new Date(endS * 1000).toISOString().slice(0, 19).replace('T', ' ');
+	const appRow = db().prepare(
+		`SELECT
+			SUM(CASE WHEN status IN ('submitted','needs_info') THEN 1 ELSE 0 END) AS pending,
+			SUM(CASE WHEN created_at >= ? AND created_at < ? THEN 1 ELSE 0 END) AS submitted
+		FROM application WHERE guild_id = ?`
+	).get(startISO, endISO, guildId) as { pending: number | null; submitted: number | null };
+	const pendingApps = appRow.pending ?? 0;
+	const submittedToday = appRow.submitted ?? 0;
 
 	const openModmail = count(
 		"SELECT COUNT(*) as count FROM modmail_ticket WHERE guild_id = ? AND status = 'open'",
@@ -93,15 +101,7 @@ export function getPulseMetrics(guildId: string, range?: ResolvedRange): PulseMe
 		endS
 	);
 
-	// application.created_at is ISO text (e.g. "2026-04-30 12:34:56"); convert window epoch → ISO
-	const startISO = new Date(startS * 1000).toISOString().slice(0, 19).replace('T', ' ');
-	const endISO = new Date(endS * 1000).toISOString().slice(0, 19).replace('T', ' ');
-	const submittedToday = count(
-		'SELECT COUNT(*) as count FROM application WHERE guild_id = ? AND created_at >= ? AND created_at < ?',
-		guildId,
-		startISO,
-		endISO
-	);
+	// (pendingApps + submittedToday batched into appRow above.)
 
 	// Hourly distribution: last 24h leading up to endS, bucketed by hour
 	const hourlyStartS = endS - 24 * 3600;
@@ -127,22 +127,20 @@ export function getPulseMetrics(guildId: string, range?: ResolvedRange): PulseMe
 	const messagesToday = winStats.total;
 	const messagesAvg7d = winStats.days > 0 ? Math.round(winStats.total / winStats.days) : 0;
 
-	// Member counts (range-independent)
-	const allTimeMembers = count(
-		'SELECT COUNT(*) as count FROM user_activity WHERE guild_id = ?',
-		guildId
-	);
-	const membersLeft = count(
-		'SELECT COUNT(*) as count FROM user_activity WHERE guild_id = ? AND left_at IS NOT NULL',
-		guildId
-	);
+	// Member counts (range-independent). Three SUM(CASE) over a single user_activity
+	// scan instead of three separate COUNT(*) queries — saves 2 prepared-statement
+	// round-trips on every Pulse load.
+	const memberRow = db().prepare(
+		`SELECT
+			COUNT(*) AS allTime,
+			SUM(CASE WHEN left_at IS NOT NULL THEN 1 ELSE 0 END) AS leftCount,
+			SUM(CASE WHEN first_message_at IS NULL AND left_at IS NULL THEN 1 ELSE 0 END) AS botCount
+		FROM user_activity WHERE guild_id = ?`
+	).get(guildId) as { allTime: number; leftCount: number; botCount: number };
+	const allTimeMembers = memberRow.allTime ?? 0;
+	const membersLeft = memberRow.leftCount ?? 0;
 	const totalMembers = allTimeMembers - membersLeft;
-
-	const estimatedBots = count(
-		'SELECT COUNT(*) as count FROM user_activity WHERE guild_id = ? AND first_message_at IS NULL AND left_at IS NULL',
-		guildId
-	);
-
+	const estimatedBots = memberRow.botCount ?? 0;
 	const estimatedRealUsers = Math.max(0, totalMembers - estimatedBots);
 
 	// Active real users: ≥ N messages within window. Threshold scales with window length
