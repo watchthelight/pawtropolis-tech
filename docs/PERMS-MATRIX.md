@@ -18,7 +18,7 @@ Roles follow a strict hierarchy. When a permission level says "X+", that means t
 
 | Rank | Role | Role ID | Abbreviation |
 |:----:|------|---------|:------------:|
-| 1 | Server Owner | `896070888779317254` | SO |
+| 1 | Community Founder | `896070888779317254` | CF |
 | 2 | Community Manager | `1190093021170114680` | CM |
 | 3 | Community Development Lead | `1382242769468260352` | CDL |
 | 4 | Senior Administrator | `1420440472169746623` | SA |
@@ -27,9 +27,11 @@ Roles follow a strict hierarchy. When a permission level says "X+", that means t
 | 7 | Moderator | `896070888762535975` | M |
 | 8 | Junior Moderator | `896070888762535966` | JM |
 | 9 | Gatekeeper | `896070888762535969` | GK |
-| 10 | Moderation Team | `987662057069482024` | MT |
+| 10 | Community Staff | `987662057069482024` | CS |
 
-**Note:** Moderation Team (MT) is view-only and cannot use most commands.
+**Note:** Community Staff (CS) is the broad mod-perm role (ManageMessages / MentionEveryone / ModerateMembers) attached to most staff roles. On its own it does not unlock the gatekeeping commands, which require the Gatekeeper role specifically. The role is named "Community Staff" in Discord; older code constants and docs may refer to it as `MOD_TEAM` / "Moderation Team" — same role.
+
+The rank-1 role is named **Community Founder** in Discord. It is the role currently held by the server owner (`wwerew0lf`). Older docs called this rank "Server Owner"; the live label is what permission-denied embeds and role mentions render.
 
 ---
 
@@ -53,7 +55,7 @@ Three permission systems are in use:
 **"X+"** means the specified role and all roles above it in the hierarchy.
 
 Example: **"Senior Mod+"** (SM+) includes:
-- Senior Moderator, Administrator, Senior Administrator, CDL, Community Manager, Server Owner
+- Senior Moderator, Administrator, Senior Administrator, CDL, Community Manager, Community Founder
 - Plus Server Dev and Bot Owner bypass
 
 ### Role-Based Explicit ("[X]")
@@ -307,7 +309,7 @@ You need one of:
     @Senior Administrator
     @Community Development Lead
     @Community Manager
-    @Server Owner
+    @Community Founder
 
 Trace: A1B2C3D4
 ```
@@ -392,7 +394,7 @@ Bypass conditions are checked before anything else:
 | Administrator+ | A+ | `/config`, `/audit` |
 | Senior Admin+ | SA+ | `/panic`, `/stats export/reset` |
 | Community Manager+ | CM+ | `/backfill`, `/gate setup` |
-| Owner Only | [BO/SD] | `/database`, `/poke` |
+| Bot Owner / Server Dev | [BO/SD] | `/database`, `/poke` |
 | Discord Perm | ManageMessages | `/send`, `/purge` |
 | Discord Perm | ManageRoles | `/roles`, `/artistqueue` |
 | Hybrid | ManageRoles OR Ambassador | `/redeemreward` |
@@ -405,8 +407,8 @@ Bypass conditions are checked before anything else:
 ### Tier-Specific Guides
 - [Gatekeeper Guide](GATEKEEPER-GUIDE.md) — Gate system permissions
 - [Moderator Guide](MODERATOR-GUIDE.md) — Event management permissions
-- [Admin Guide](ADMIN-GUIDE.md) — Configuration permissions
-- [Leadership Guide](LEADERSHIP-GUIDE.md) — Audit and management permissions
+- [Admin Guide](ADMIN-GUIDE.md) — Configuration and audit permissions
+- [Leadership Guide](LEADERSHIP-GUIDE.md) — Server-wide management permissions
 
 ### Reference Documentation
 - [BOT-HANDBOOK.md](BOT-HANDBOOK.md) — Complete command reference
