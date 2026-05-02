@@ -53,19 +53,21 @@ const WIDE_CHARS = new Set([
 
 function charWidth(ch: string): number {
   const code = ch.codePointAt(0) ?? 0;
-  if (code >= 0x800) return 14;
-  if (code >= 0x80) return 9.5;
-  if (NARROW_CHARS.has(ch)) return 4.5;
-  if (WIDE_CHARS.has(ch)) return 9.5;
-  if (ch >= "A" && ch <= "Z") return 8.6;
-  if (ch >= "0" && ch <= "9") return 7.4;
-  return 7.4;
+  if (code >= 0x800) return 15;
+  if (code >= 0x80) return 10.5;
+  if (NARROW_CHARS.has(ch)) return 5;
+  if (WIDE_CHARS.has(ch)) return 10.5;
+  if (ch >= "A" && ch <= "Z") return 9.5;
+  if (ch >= "0" && ch <= "9") return 7.8;
+  return 7.8;
 }
 
 function estimateTextWidth(text: string): number {
   let w = 0;
   for (const ch of text) w += charWidth(ch);
-  return Math.ceil(w + 2);
+  // Add 4px safety so the trailing glyph never clips when the browser font
+  // metrics differ from our estimator.
+  return Math.ceil(w + 4);
 }
 
 function gradientStops(badge: ResolvedBadge): string[] {
