@@ -636,7 +636,7 @@ Report content violations with screenshot evidence. Creates a forum thread for s
 
 > 📚 **Reference Section.** Admin+ command. Skip unless you're Administrator or above.
 
-**Who can use it:** ![@Administrator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-administrator.svg?v=5), ![@Senior Administrator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-senior-admin.svg?v=5), ![@Community Manager](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-manager.svg?v=5), or ![@Server Dev](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-server-dev.svg?v=5) (the allowed-roles list lives in `src/commands/audit.ts`).
+**Who can use it:** ![@Administrator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-administrator.svg?v=f7dbae0c), ![@Senior Administrator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-senior-admin.svg?v=8e0011c1), ![@Community Manager](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-manager.svg?v=3a4f4445), or ![@Server Dev](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-server-dev.svg?v=84ea0228) (the allowed-roles list lives in `src/commands/audit.ts`).
 
 Server audit commands for detecting suspicious accounts and NSFW content. This command has two subcommands:
 
@@ -967,7 +967,7 @@ A queue system that fairly distributes art commissions among Server Artists. Whe
 
 The artist rotation works as a round-robin queue. When it's your turn, you get the next assignment, then you go to the back of the line so everyone gets a turn.
 
-1. **Artists join the queue**: Anyone with the ![@Server Artist](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-server-artist.svg?v=5) role is automatically added to the queue
+1. **Artists join the queue**: Anyone with the ![@Server Artist](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-server-artist.svg?v=e0398b83) role is automatically added to the queue
 2. **Queue positions are assigned**: Artists are numbered from 1 (next up) to whatever the total count is. New artists go to the end
 3. **Order is maintained**: The queue stays in order unless staff manually moves someone with `/artistqueue move`
 4. **Someone redeems a reward**: When you use `/redeemreward`, the bot picks the artist at position 1 (unless they're skipped)
@@ -1396,10 +1396,10 @@ You need to stay **at least 30 minutes** during a movie night for it to count to
 
 | Tier | Role | How to earn it |
 |------|------|----------------|
-| T1 | ![@Red Carpet Guest](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-1.svg?v=5) | Attend 1+ movie night |
-| T2 | ![@Popcorn Club](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-2.svg?v=5) | Attend 5+ movie nights |
-| T3 | ![@Director's Cut](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-3.svg?v=5) | Attend 10+ movie nights |
-| T4 | ![@Cinematic Royalty](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-4.svg?v=5) | Attend 20+ movie nights |
+| T1 | ![@Red Carpet Guest](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-1.svg?v=bc6a0468) | Attend 1+ movie night |
+| T2 | ![@Popcorn Club](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-2.svg?v=87441842) | Attend 5+ movie nights |
+| T3 | ![@Director's Cut](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-3.svg?v=2aeb1605) | Attend 10+ movie nights |
+| T4 | ![@Cinematic Royalty](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-4.svg?v=a14bc801) | Attend 20+ movie nights |
 
 **How tier assignment works:**
 1. Bot counts how many qualified movies you've attended (ever, not just recently)
@@ -1411,7 +1411,7 @@ You need to stay **at least 30 minutes** during a movie night for it to count to
 
 **Important rules:**
 - People only get promoted, never demoted
-- If someone has ![@Director's Cut](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-3.svg?v=5) and misses a few movies, they keep the role
+- If someone has ![@Director's Cut](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-3.svg?v=2aeb1605) and misses a few movies, they keep the role
 - You can't lose tiers by not attending: once earned, always earned
 - Each movie night counts as one event, even if you attend for 3 hours
 

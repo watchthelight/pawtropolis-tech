@@ -44,10 +44,10 @@ Key features:
 
 | Your Role | Guide |
 |-----------|-------|
-| ![@Gatekeeper](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-gatekeeper.svg?v=5) ![@Junior Moderator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-junior-mod.svg?v=5) | [Gatekeeper Guide](GATEKEEPER-GUIDE.md) |
-| ![@Moderator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-moderator.svg?v=5) ![@Senior Moderator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-senior-mod.svg?v=5) | [Moderator Guide](MODERATOR-GUIDE.md) |
-| ![@Administrator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-administrator.svg?v=5) ![@Senior Administrator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-senior-admin.svg?v=5) | [Admin Guide](ADMIN-GUIDE.md) |
-| ![@Community Manager](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-manager.svg?v=5) ![@Community Development Lead](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-dev-lead.svg?v=5) ![@Community Founder](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-founder.svg?v=5) | [Leadership Guide](LEADERSHIP-GUIDE.md) |
+| ![@Gatekeeper](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-gatekeeper.svg?v=6a1c2aae) ![@Junior Moderator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-junior-mod.svg?v=a02c7a16) | [Gatekeeper Guide](GATEKEEPER-GUIDE.md) |
+| ![@Moderator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-moderator.svg?v=b3fbe0ea) ![@Senior Moderator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-senior-mod.svg?v=a98a1ff8) | [Moderator Guide](MODERATOR-GUIDE.md) |
+| ![@Administrator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-administrator.svg?v=f7dbae0c) ![@Senior Administrator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-senior-admin.svg?v=8e0011c1) | [Admin Guide](ADMIN-GUIDE.md) |
+| ![@Community Manager](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-manager.svg?v=3a4f4445) ![@Community Development Lead](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-dev-lead.svg?v=7783a266) ![@Community Founder](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-founder.svg?v=cf66a1a6) | [Leadership Guide](LEADERSHIP-GUIDE.md) |
 
 ---
 
@@ -477,7 +477,7 @@ This is a 100% SFW Community. To comply with Discord's Terms and keep teens safe
 **Not Allowed:**
 - Discussion of 18+ topics
 - Any NSFW content
-- Suggestive content, even when posted in ![#「✍️」writing](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-writing.svg?v=5)
+- Suggestive content, even when posted in ![#「✍️」writing](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-writing.svg?v=69f5397e)
 - Streaming gambling in voice channels
 
 **Action:** Discussion of 18+ topics is an **automatic 3-strike penalty**.
@@ -543,7 +543,7 @@ When the whole channel starts saying the same thing back-to-back, it stops being
 - Repeated low-effort messages from the same group with no actual conversation between them
 - Brainrot or media that doesn't add anything to the channel it's posted in
 
-**Where it goes instead:** ![#「🗣️」yapping-space](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-yapping-space.svg?v=5) exists for content that doesn't fit elsewhere. Send people there when you redirect them.
+**Where it goes instead:** ![#「🗣️」yapping-space](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-yapping-space.svg?v=d0e920e7) exists for content that doesn't fit elsewhere. Send people there when you redirect them.
 
 **Action:** Remove the message and leave a short reminder. No warn the first time unless they ignore the redirect.
 

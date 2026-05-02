@@ -7,7 +7,7 @@ Use this guide whenever a doc would otherwise contain a raw Discord mention.
 1. Replace `<@&id>`, `<#id>`, and `<@id>` with a registered badge image.
 2. Alt text is the badge label a sighted reader would expect, prefixed with
    `@` for roles or users and `#` for channels. Example:
-   `![@Server Artist](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-server-artist.svg?v=5)`.
+   `![@Server Artist](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-server-artist.svg?v=e0398b83)`.
 3. Use the registry id, never the raw Discord ID. Registry ids are stable;
    Discord IDs are not human-friendly.
 4. Code blocks that demonstrate Discord mention syntax are exempt because
@@ -19,13 +19,13 @@ Use this guide whenever a doc would otherwise contain a raw Discord mention.
 ### Role pill
 
 ```markdown
-![@Director's Cut](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-3.svg?v=5)
+![@Director's Cut](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-3.svg?v=2aeb1605)
 ```
 
 ### Channel pill
 
 ```markdown
-![#「✍️」writing](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-writing.svg?v=5)
+![#「✍️」writing](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-writing.svg?v=69f5397e)
 ```
 
 ### Pill with suffix (rendered inline by the SVG)
@@ -39,7 +39,7 @@ GitHub does not let SVG `<a>` tags link out, so wrap the image in a
 Markdown link:
 
 ```markdown
-[![#「✍️」writing](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-writing.svg?v=5)](https://discord.com/channels/<GUILD_ID>/<CHANNEL_ID>)
+[![#「✍️」writing](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-writing.svg?v=69f5397e)](https://discord.com/channels/<GUILD_ID>/<CHANNEL_ID>)
 ```
 
 Only do this when a click target is genuinely useful; otherwise the bare
