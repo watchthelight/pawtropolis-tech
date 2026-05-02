@@ -351,55 +351,11 @@ import { SLASH_COMMAND_NAMES } from "./commands/runtimeManifest.js";
 client.once(Events.ClientReady, async () => {
   // schema self-heal before anything else
   // sudo make it work
-  try {
-    const {
-      ensureAvatarScanSchema,
-      ensureApplicationPermaRejectColumn,
-      ensureOpenModmailTable,
-      ensureReviewActionFreeText,
-      ensureApplicationStatusIndex,
-      ensureActionLogSchema,
-      ensureActionLogFreeText,
-      ensureManualFlagColumns,
-      ensureSearchIndexes,
-      ensurePanicModeColumn,
-      ensureApplicationStaleAlertColumns,
-      ensureArtistRotationConfigColumns,
-    } = await import("./db/ensure.js");
-    const { ensureBotStatusSchema } = await import("./features/statusStore.js");
-    const {
-      ensureUnverifiedChannelColumn,
-      ensureWelcomeTemplateColumn,
-      ensureWelcomeChannelsColumns,
-      ensureModRolesColumns,
-      ensureDadModeColumns,
-      ensureSkullModeColumns,
-      ensureListopenPublicOutputColumn,
-    } = await import("./lib/config.js");
-    ensureAvatarScanSchema();
-    ensureApplicationPermaRejectColumn();
-    ensureOpenModmailTable();
-    ensureReviewActionFreeText();
-    ensureApplicationStatusIndex();
-    ensureActionLogSchema();
-    ensureActionLogFreeText();
-    ensureManualFlagColumns();
-    ensureSearchIndexes();
-    ensurePanicModeColumn();
-    ensureApplicationStaleAlertColumns();
-    ensureArtistRotationConfigColumns();
-    ensureBotStatusSchema();
-    // Config column migrations (moved from getConfig/upsertConfig for performance)
-    ensureUnverifiedChannelColumn();
-    ensureWelcomeTemplateColumn();
-    ensureWelcomeChannelsColumns();
-    ensureModRolesColumns();
-    ensureDadModeColumns();
-    ensureSkullModeColumns();
-    ensureListopenPublicOutputColumn();
-  } catch (err) {
-    logger.error({ err }, "[startup] schema ensure failed");
-  }
+  // Extracted to src/startup/schema.ts so the list of ensure* calls is
+  // auditable in one place. Behavior preserved: errors logged at error
+  // level via runStartupTask, startup continues regardless.
+  const { runSchemaSelfHeal } = await import("./startup/schema.js");
+  await runSchemaSelfHeal();
 
   // Load panic mode state from database (survives restarts now)
   try {
