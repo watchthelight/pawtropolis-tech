@@ -133,6 +133,10 @@ export async function startSchedulers(client: Client): Promise<void> {
         "../scheduler/badgeRefreshScheduler.js"
       );
       startBadgeRefreshScheduler(client);
+      const { attachBadgeLiveListeners } = await import(
+        "../features/badges/liveUpdates.js"
+      );
+      attachBadgeLiveListeners(client);
     },
     { level: "warn" },
   );

@@ -8,6 +8,9 @@ Discord data.
 - Runs every `BADGE_REFRESH_INTERVAL_HOURS` (default 24).
 - On bot ready, an initial refresh is queued 60 seconds later so startup
   is not blocked.
+- Live event listeners (`roleUpdate`, `roleDelete`, `channelUpdate`,
+  `channelDelete`, `userUpdate`) refresh just the affected badge within
+  ~1.5 seconds, debounced. Daily refresh remains the safety net.
 - Per-badge errors are caught inside `resolveBadge`. The scheduler never
   crashes the bot.
 - Pacing: 50ms between badges to avoid hammering the Discord API.
