@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "baseUrl": "https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs",
-  "generatedAt": "2026-05-02T15:41:44.815Z",
+  "generatedAt": "2026-05-02T15:45:22.588Z",
   "entries": {
     "movie-tier-1": {
       "id": "movie-tier-1",
@@ -15,11 +15,11 @@
       "backgroundHex": "#512A2D",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.731Z",
+      "resolvedAt": "2026-05-02T15:45:22.495Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-1.svg",
-      "generatedAt": "2026-05-02T15:41:44.731Z"
+      "generatedAt": "2026-05-02T15:45:22.495Z"
     },
     "movie-tier-2": {
       "id": "movie-tier-2",
@@ -33,11 +33,11 @@
       "backgroundHex": "#635B3E",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.734Z",
+      "resolvedAt": "2026-05-02T15:45:22.497Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-2.svg",
-      "generatedAt": "2026-05-02T15:41:44.734Z"
+      "generatedAt": "2026-05-02T15:45:22.498Z"
     },
     "movie-tier-3": {
       "id": "movie-tier-3",
@@ -51,11 +51,11 @@
       "backgroundHex": "#5A4534",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.735Z",
+      "resolvedAt": "2026-05-02T15:45:22.499Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-3.svg",
-      "generatedAt": "2026-05-02T15:41:44.735Z"
+      "generatedAt": "2026-05-02T15:45:22.499Z"
     },
     "movie-tier-4": {
       "id": "movie-tier-4",
@@ -69,11 +69,11 @@
       "backgroundHex": "#3D2454",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.736Z",
+      "resolvedAt": "2026-05-02T15:45:22.500Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-4.svg",
-      "generatedAt": "2026-05-02T15:41:44.736Z"
+      "generatedAt": "2026-05-02T15:45:22.500Z"
     },
     "role-server-artist": {
       "id": "role-server-artist",
@@ -86,11 +86,11 @@
       "backgroundHex": "#383D67",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.759Z",
+      "resolvedAt": "2026-05-02T15:45:22.524Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-server-artist.svg",
-      "generatedAt": "2026-05-02T15:41:44.759Z"
+      "generatedAt": "2026-05-02T15:45:22.524Z"
     },
     "channel-writing": {
       "id": "channel-writing",
@@ -103,10 +103,10 @@
       "backgroundHex": "#404249",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.798Z",
+      "resolvedAt": "2026-05-02T15:45:22.568Z",
       "style": "discord-channel",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-writing.svg",
-      "generatedAt": "2026-05-02T15:41:44.798Z"
+      "generatedAt": "2026-05-02T15:45:22.568Z"
     },
     "channel-yapping-space": {
       "id": "channel-yapping-space",
@@ -119,10 +119,10 @@
       "backgroundHex": "#404249",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.797Z",
+      "resolvedAt": "2026-05-02T15:45:22.567Z",
       "style": "discord-channel",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-yapping-space.svg",
-      "generatedAt": "2026-05-02T15:41:44.797Z"
+      "generatedAt": "2026-05-02T15:45:22.567Z"
     },
     "channel-memes": {
       "id": "channel-memes",
@@ -135,10 +135,10 @@
       "backgroundHex": "#404249",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.796Z",
+      "resolvedAt": "2026-05-02T15:45:22.565Z",
       "style": "discord-channel",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-memes.svg",
-      "generatedAt": "2026-05-02T15:41:44.796Z"
+      "generatedAt": "2026-05-02T15:45:22.565Z"
     },
     "game-tier-trophy-hunter": {
       "id": "game-tier-trophy-hunter",
@@ -151,11 +151,11 @@
       "backgroundHex": "#645523",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.737Z",
+      "resolvedAt": "2026-05-02T15:45:22.501Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/game-tier-trophy-hunter.svg",
-      "generatedAt": "2026-05-02T15:41:44.737Z"
+      "generatedAt": "2026-05-02T15:45:22.501Z"
     },
     "game-tier-key-masher": {
       "id": "game-tier-key-masher",
@@ -168,11 +168,11 @@
       "backgroundHex": "#4B2F5A",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.738Z",
+      "resolvedAt": "2026-05-02T15:45:22.502Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/game-tier-key-masher.svg",
-      "generatedAt": "2026-05-02T15:41:44.738Z"
+      "generatedAt": "2026-05-02T15:45:22.502Z"
     },
     "game-tier-night-builder": {
       "id": "game-tier-night-builder",
@@ -185,11 +185,11 @@
       "backgroundHex": "#3F584E",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.739Z",
+      "resolvedAt": "2026-05-02T15:45:22.503Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/game-tier-night-builder.svg",
-      "generatedAt": "2026-05-02T15:41:44.740Z"
+      "generatedAt": "2026-05-02T15:45:22.503Z"
     },
     "role-community-founder": {
       "id": "role-community-founder",
@@ -202,11 +202,11 @@
       "backgroundHex": "#66564D",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.741Z",
+      "resolvedAt": "2026-05-02T15:45:22.504Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-founder.svg",
-      "generatedAt": "2026-05-02T15:41:44.741Z"
+      "generatedAt": "2026-05-02T15:45:22.504Z"
     },
     "role-community-manager": {
       "id": "role-community-manager",
@@ -219,11 +219,11 @@
       "backgroundHex": "#383D67",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.742Z",
+      "resolvedAt": "2026-05-02T15:45:22.505Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-manager.svg",
-      "generatedAt": "2026-05-02T15:41:44.742Z"
+      "generatedAt": "2026-05-02T15:45:22.505Z"
     },
     "role-community-dev-lead": {
       "id": "role-community-dev-lead",
@@ -236,11 +236,11 @@
       "backgroundHex": "#383D67",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.742Z",
+      "resolvedAt": "2026-05-02T15:45:22.506Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-dev-lead.svg",
-      "generatedAt": "2026-05-02T15:41:44.743Z"
+      "generatedAt": "2026-05-02T15:45:22.506Z"
     },
     "role-server-dev": {
       "id": "role-server-dev",
@@ -253,11 +253,11 @@
       "backgroundHex": "#273230",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.744Z",
+      "resolvedAt": "2026-05-02T15:45:22.507Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-server-dev.svg",
-      "generatedAt": "2026-05-02T15:41:44.744Z"
+      "generatedAt": "2026-05-02T15:45:22.507Z"
     },
     "role-senior-admin": {
       "id": "role-senior-admin",
@@ -270,11 +270,11 @@
       "backgroundHex": "#383D67",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.745Z",
+      "resolvedAt": "2026-05-02T15:45:22.508Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-senior-admin.svg",
-      "generatedAt": "2026-05-02T15:41:44.745Z"
+      "generatedAt": "2026-05-02T15:45:22.508Z"
     },
     "role-administrator": {
       "id": "role-administrator",
@@ -287,11 +287,11 @@
       "backgroundHex": "#383D67",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.746Z",
+      "resolvedAt": "2026-05-02T15:45:22.509Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-administrator.svg",
-      "generatedAt": "2026-05-02T15:41:44.746Z"
+      "generatedAt": "2026-05-02T15:45:22.509Z"
     },
     "role-vrc-group-lead": {
       "id": "role-vrc-group-lead",
@@ -304,11 +304,11 @@
       "backgroundHex": "#383D67",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.747Z",
+      "resolvedAt": "2026-05-02T15:45:22.510Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-vrc-group-lead.svg",
-      "generatedAt": "2026-05-02T15:41:44.747Z"
+      "generatedAt": "2026-05-02T15:45:22.510Z"
     },
     "role-senior-mod": {
       "id": "role-senior-mod",
@@ -321,11 +321,11 @@
       "backgroundHex": "#383D67",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.748Z",
+      "resolvedAt": "2026-05-02T15:45:22.512Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-senior-mod.svg",
-      "generatedAt": "2026-05-02T15:41:44.748Z"
+      "generatedAt": "2026-05-02T15:45:22.512Z"
     },
     "role-moderator": {
       "id": "role-moderator",
@@ -338,11 +338,11 @@
       "backgroundHex": "#383D67",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.749Z",
+      "resolvedAt": "2026-05-02T15:45:22.513Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-moderator.svg",
-      "generatedAt": "2026-05-02T15:41:44.749Z"
+      "generatedAt": "2026-05-02T15:45:22.513Z"
     },
     "role-junior-mod": {
       "id": "role-junior-mod",
@@ -355,11 +355,11 @@
       "backgroundHex": "#383D67",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.750Z",
+      "resolvedAt": "2026-05-02T15:45:22.514Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-junior-mod.svg",
-      "generatedAt": "2026-05-02T15:41:44.750Z"
+      "generatedAt": "2026-05-02T15:45:22.514Z"
     },
     "role-community-staff": {
       "id": "role-community-staff",
@@ -372,11 +372,11 @@
       "backgroundHex": "#383D67",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.751Z",
+      "resolvedAt": "2026-05-02T15:45:22.514Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-staff.svg",
-      "generatedAt": "2026-05-02T15:41:44.751Z"
+      "generatedAt": "2026-05-02T15:45:22.515Z"
     },
     "role-gatekeeper": {
       "id": "role-gatekeeper",
@@ -389,11 +389,11 @@
       "backgroundHex": "#383D67",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.751Z",
+      "resolvedAt": "2026-05-02T15:45:22.515Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-gatekeeper.svg",
-      "generatedAt": "2026-05-02T15:41:44.751Z"
+      "generatedAt": "2026-05-02T15:45:22.515Z"
     },
     "role-community-ambassador": {
       "id": "role-community-ambassador",
@@ -406,11 +406,11 @@
       "backgroundHex": "#383D67",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.752Z",
+      "resolvedAt": "2026-05-02T15:45:22.517Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-ambassador.svg",
-      "generatedAt": "2026-05-02T15:41:44.752Z"
+      "generatedAt": "2026-05-02T15:45:22.517Z"
     },
     "role-events-manager": {
       "id": "role-events-manager",
@@ -423,11 +423,11 @@
       "backgroundHex": "#383D67",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.753Z",
+      "resolvedAt": "2026-05-02T15:45:22.518Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-events-manager.svg",
-      "generatedAt": "2026-05-02T15:41:44.753Z"
+      "generatedAt": "2026-05-02T15:45:22.518Z"
     },
     "role-event-host": {
       "id": "role-event-host",
@@ -440,11 +440,11 @@
       "backgroundHex": "#383D67",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.754Z",
+      "resolvedAt": "2026-05-02T15:45:22.519Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-event-host.svg",
-      "generatedAt": "2026-05-02T15:41:44.754Z"
+      "generatedAt": "2026-05-02T15:45:22.519Z"
     },
     "role-staff-emeritus": {
       "id": "role-staff-emeritus",
@@ -457,11 +457,11 @@
       "backgroundHex": "#4A4640",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.755Z",
+      "resolvedAt": "2026-05-02T15:45:22.520Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-staff-emeritus.svg",
-      "generatedAt": "2026-05-02T15:41:44.755Z"
+      "generatedAt": "2026-05-02T15:45:22.520Z"
     },
     "role-community-contributor": {
       "id": "role-community-contributor",
@@ -474,11 +474,11 @@
       "backgroundHex": "#2B4753",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.756Z",
+      "resolvedAt": "2026-05-02T15:45:22.521Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-contributor.svg",
-      "generatedAt": "2026-05-02T15:41:44.756Z"
+      "generatedAt": "2026-05-02T15:45:22.521Z"
     },
     "role-og-citizen": {
       "id": "role-og-citizen",
@@ -491,11 +491,11 @@
       "backgroundHex": "#665432",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.757Z",
+      "resolvedAt": "2026-05-02T15:45:22.522Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-og-citizen.svg",
-      "generatedAt": "2026-05-02T15:41:44.757Z"
+      "generatedAt": "2026-05-02T15:45:22.522Z"
     },
     "role-verified-2d-artist": {
       "id": "role-verified-2d-artist",
@@ -508,11 +508,11 @@
       "backgroundHex": "#36616B",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.760Z",
+      "resolvedAt": "2026-05-02T15:45:22.525Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-verified-2d-artist.svg",
-      "generatedAt": "2026-05-02T15:41:44.760Z"
+      "generatedAt": "2026-05-02T15:45:22.525Z"
     },
     "role-verified-3d-artist": {
       "id": "role-verified-3d-artist",
@@ -525,11 +525,11 @@
       "backgroundHex": "#2E454C",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.761Z",
+      "resolvedAt": "2026-05-02T15:45:22.526Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-verified-3d-artist.svg",
-      "generatedAt": "2026-05-02T15:41:44.761Z"
+      "generatedAt": "2026-05-02T15:45:22.526Z"
     },
     "role-verified-music-artist": {
       "id": "role-verified-music-artist",
@@ -542,11 +542,11 @@
       "backgroundHex": "#3B2E68",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.762Z",
+      "resolvedAt": "2026-05-02T15:45:22.527Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-verified-music-artist.svg",
-      "generatedAt": "2026-05-02T15:41:44.762Z"
+      "generatedAt": "2026-05-02T15:45:22.527Z"
     },
     "role-verified-fursuit-creator": {
       "id": "role-verified-fursuit-creator",
@@ -559,11 +559,11 @@
       "backgroundHex": "#663A5F",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.762Z",
+      "resolvedAt": "2026-05-02T15:45:22.528Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-verified-fursuit-creator.svg",
-      "generatedAt": "2026-05-02T15:41:44.762Z"
+      "generatedAt": "2026-05-02T15:45:22.528Z"
     },
     "role-og-verified-2d-artist": {
       "id": "role-og-verified-2d-artist",
@@ -576,11 +576,11 @@
       "backgroundHex": "#2E4B44",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.763Z",
+      "resolvedAt": "2026-05-02T15:45:22.530Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-og-verified-2d-artist.svg",
-      "generatedAt": "2026-05-02T15:41:44.763Z"
+      "generatedAt": "2026-05-02T15:45:22.530Z"
     },
     "role-fresh-fur-lvl0": {
       "id": "role-fresh-fur-lvl0",
@@ -593,11 +593,11 @@
       "backgroundHex": "#383D67",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.764Z",
+      "resolvedAt": "2026-05-02T15:45:22.531Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-fresh-fur-lvl0.svg",
-      "generatedAt": "2026-05-02T15:41:44.764Z"
+      "generatedAt": "2026-05-02T15:45:22.531Z"
     },
     "role-newcomer-fur-lvl1": {
       "id": "role-newcomer-fur-lvl1",
@@ -610,11 +610,11 @@
       "backgroundHex": "#516858",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.765Z",
+      "resolvedAt": "2026-05-02T15:45:22.531Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-newcomer-fur-lvl1.svg",
-      "generatedAt": "2026-05-02T15:41:44.765Z"
+      "generatedAt": "2026-05-02T15:45:22.531Z"
     },
     "role-beginner-fur-lvl5": {
       "id": "role-beginner-fur-lvl5",
@@ -627,11 +627,11 @@
       "backgroundHex": "#4D6866",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.766Z",
+      "resolvedAt": "2026-05-02T15:45:22.532Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-beginner-fur-lvl5.svg",
-      "generatedAt": "2026-05-02T15:41:44.766Z"
+      "generatedAt": "2026-05-02T15:45:22.532Z"
     },
     "role-chatty-fur-lvl10": {
       "id": "role-chatty-fur-lvl10",
@@ -644,11 +644,11 @@
       "backgroundHex": "#486867",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.767Z",
+      "resolvedAt": "2026-05-02T15:45:22.533Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-chatty-fur-lvl10.svg",
-      "generatedAt": "2026-05-02T15:41:44.767Z"
+      "generatedAt": "2026-05-02T15:45:22.533Z"
     },
     "role-engaged-fur-lvl15": {
       "id": "role-engaged-fur-lvl15",
@@ -661,11 +661,11 @@
       "backgroundHex": "#555F6B",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.768Z",
+      "resolvedAt": "2026-05-02T15:45:22.534Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-engaged-fur-lvl15.svg",
-      "generatedAt": "2026-05-02T15:41:44.768Z"
+      "generatedAt": "2026-05-02T15:45:22.534Z"
     },
     "role-active-fur-lvl20": {
       "id": "role-active-fur-lvl20",
@@ -678,11 +678,11 @@
       "backgroundHex": "#626048",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.769Z",
+      "resolvedAt": "2026-05-02T15:45:22.536Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-active-fur-lvl20.svg",
-      "generatedAt": "2026-05-02T15:41:44.769Z"
+      "generatedAt": "2026-05-02T15:45:22.536Z"
     },
     "role-known-fur-lvl30": {
       "id": "role-known-fur-lvl30",
@@ -695,11 +695,11 @@
       "backgroundHex": "#65584C",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.770Z",
+      "resolvedAt": "2026-05-02T15:45:22.537Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-known-fur-lvl30.svg",
-      "generatedAt": "2026-05-02T15:41:44.770Z"
+      "generatedAt": "2026-05-02T15:45:22.537Z"
     },
     "role-experienced-fur-lvl40": {
       "id": "role-experienced-fur-lvl40",
@@ -712,11 +712,11 @@
       "backgroundHex": "#604243",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.771Z",
+      "resolvedAt": "2026-05-02T15:45:22.538Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-experienced-fur-lvl40.svg",
-      "generatedAt": "2026-05-02T15:41:44.771Z"
+      "generatedAt": "2026-05-02T15:45:22.538Z"
     },
     "role-noble-fur-lvl50": {
       "id": "role-noble-fur-lvl50",
@@ -729,11 +729,11 @@
       "backgroundHex": "#654566",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.772Z",
+      "resolvedAt": "2026-05-02T15:45:22.539Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-noble-fur-lvl50.svg",
-      "generatedAt": "2026-05-02T15:41:44.772Z"
+      "generatedAt": "2026-05-02T15:45:22.539Z"
     },
     "role-veteran-fur-lvl60": {
       "id": "role-veteran-fur-lvl60",
@@ -746,11 +746,11 @@
       "backgroundHex": "#59456B",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.774Z",
+      "resolvedAt": "2026-05-02T15:45:22.540Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-veteran-fur-lvl60.svg",
-      "generatedAt": "2026-05-02T15:41:44.774Z"
+      "generatedAt": "2026-05-02T15:45:22.540Z"
     },
     "role-elite-fur-lvl70": {
       "id": "role-elite-fur-lvl70",
@@ -763,11 +763,11 @@
       "backgroundHex": "#665569",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.774Z",
+      "resolvedAt": "2026-05-02T15:45:22.540Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-elite-fur-lvl70.svg",
-      "generatedAt": "2026-05-02T15:41:44.774Z"
+      "generatedAt": "2026-05-02T15:45:22.540Z"
     },
     "role-legendary-fur-lvl80": {
       "id": "role-legendary-fur-lvl80",
@@ -780,11 +780,11 @@
       "backgroundHex": "#483E6B",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.775Z",
+      "resolvedAt": "2026-05-02T15:45:22.543Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-legendary-fur-lvl80.svg",
-      "generatedAt": "2026-05-02T15:41:44.775Z"
+      "generatedAt": "2026-05-02T15:45:22.543Z"
     },
     "role-mythic-fur-lvl90": {
       "id": "role-mythic-fur-lvl90",
@@ -797,11 +797,11 @@
       "backgroundHex": "#523466",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.776Z",
+      "resolvedAt": "2026-05-02T15:45:22.544Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-mythic-fur-lvl90.svg",
-      "generatedAt": "2026-05-02T15:41:44.776Z"
+      "generatedAt": "2026-05-02T15:45:22.544Z"
     },
     "role-eternal-fur-lvl100": {
       "id": "role-eternal-fur-lvl100",
@@ -814,11 +814,11 @@
       "backgroundHex": "#4E596B",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.777Z",
+      "resolvedAt": "2026-05-02T15:45:22.545Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-eternal-fur-lvl100.svg",
-      "generatedAt": "2026-05-02T15:41:44.777Z"
+      "generatedAt": "2026-05-02T15:45:22.545Z"
     },
     "role-booster-fur": {
       "id": "role-booster-fur",
@@ -831,11 +831,11 @@
       "backgroundHex": "#602F68",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.778Z",
+      "resolvedAt": "2026-05-02T15:45:22.545Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-booster-fur.svg",
-      "generatedAt": "2026-05-02T15:41:44.778Z"
+      "generatedAt": "2026-05-02T15:45:22.545Z"
     },
     "role-vip-fur": {
       "id": "role-vip-fur",
@@ -848,11 +848,11 @@
       "backgroundHex": "#665063",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.779Z",
+      "resolvedAt": "2026-05-02T15:45:22.546Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-vip-fur.svg",
-      "generatedAt": "2026-05-02T15:41:44.779Z"
+      "generatedAt": "2026-05-02T15:45:22.546Z"
     },
     "role-patreon": {
       "id": "role-patreon",
@@ -865,11 +865,11 @@
       "backgroundHex": "#5F4236",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.780Z",
+      "resolvedAt": "2026-05-02T15:45:22.548Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-patreon.svg",
-      "generatedAt": "2026-05-02T15:41:44.780Z"
+      "generatedAt": "2026-05-02T15:45:22.548Z"
     },
     "role-donator": {
       "id": "role-donator",
@@ -882,11 +882,11 @@
       "backgroundHex": "#602F68",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.781Z",
+      "resolvedAt": "2026-05-02T15:45:22.549Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-donator.svg",
-      "generatedAt": "2026-05-02T15:41:44.781Z"
+      "generatedAt": "2026-05-02T15:45:22.549Z"
     },
     "role-allbyte-token-mythic": {
       "id": "role-allbyte-token-mythic",
@@ -899,11 +899,11 @@
       "backgroundHex": "#4E596B",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.782Z",
+      "resolvedAt": "2026-05-02T15:45:22.550Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-allbyte-token-mythic.svg",
-      "generatedAt": "2026-05-02T15:41:44.782Z"
+      "generatedAt": "2026-05-02T15:45:22.550Z"
     },
     "role-allbyte-token-legendary": {
       "id": "role-allbyte-token-legendary",
@@ -916,11 +916,11 @@
       "backgroundHex": "#5A4534",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.783Z",
+      "resolvedAt": "2026-05-02T15:45:22.551Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-allbyte-token-legendary.svg",
-      "generatedAt": "2026-05-02T15:41:44.783Z"
+      "generatedAt": "2026-05-02T15:45:22.551Z"
     },
     "role-allbyte-token-epic": {
       "id": "role-allbyte-token-epic",
@@ -933,11 +933,11 @@
       "backgroundHex": "#664442",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.784Z",
+      "resolvedAt": "2026-05-02T15:45:22.552Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-allbyte-token-epic.svg",
-      "generatedAt": "2026-05-02T15:41:44.784Z"
+      "generatedAt": "2026-05-02T15:45:22.552Z"
     },
     "role-byte-token-mythic": {
       "id": "role-byte-token-mythic",
@@ -950,11 +950,11 @@
       "backgroundHex": "#4E596B",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.785Z",
+      "resolvedAt": "2026-05-02T15:45:22.554Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-byte-token-mythic.svg",
-      "generatedAt": "2026-05-02T15:41:44.785Z"
+      "generatedAt": "2026-05-02T15:45:22.554Z"
     },
     "role-byte-token-legendary": {
       "id": "role-byte-token-legendary",
@@ -967,11 +967,11 @@
       "backgroundHex": "#5A4534",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.787Z",
+      "resolvedAt": "2026-05-02T15:45:22.555Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-byte-token-legendary.svg",
-      "generatedAt": "2026-05-02T15:41:44.787Z"
+      "generatedAt": "2026-05-02T15:45:22.555Z"
     },
     "role-byte-token-epic": {
       "id": "role-byte-token-epic",
@@ -984,11 +984,11 @@
       "backgroundHex": "#664442",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.788Z",
+      "resolvedAt": "2026-05-02T15:45:22.556Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-byte-token-epic.svg",
-      "generatedAt": "2026-05-02T15:41:44.788Z"
+      "generatedAt": "2026-05-02T15:45:22.556Z"
     },
     "role-byte-token-rare": {
       "id": "role-byte-token-rare",
@@ -1001,11 +1001,11 @@
       "backgroundHex": "#385168",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.789Z",
+      "resolvedAt": "2026-05-02T15:45:22.557Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-byte-token-rare.svg",
-      "generatedAt": "2026-05-02T15:41:44.789Z"
+      "generatedAt": "2026-05-02T15:45:22.557Z"
     },
     "role-byte-token-common": {
       "id": "role-byte-token-common",
@@ -1018,11 +1018,11 @@
       "backgroundHex": "#3F4A43",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.790Z",
+      "resolvedAt": "2026-05-02T15:45:22.558Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-byte-token-common.svg",
-      "generatedAt": "2026-05-02T15:41:44.790Z"
+      "generatedAt": "2026-05-02T15:45:22.558Z"
     },
     "role-announcements": {
       "id": "role-announcements",
@@ -1035,11 +1035,11 @@
       "backgroundHex": "#5D4034",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.790Z",
+      "resolvedAt": "2026-05-02T15:45:22.559Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-announcements.svg",
-      "generatedAt": "2026-05-02T15:41:44.790Z"
+      "generatedAt": "2026-05-02T15:45:22.559Z"
     },
     "role-events": {
       "id": "role-events",
@@ -1052,11 +1052,11 @@
       "backgroundHex": "#614B3B",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.791Z",
+      "resolvedAt": "2026-05-02T15:45:22.560Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-events.svg",
-      "generatedAt": "2026-05-02T15:41:44.791Z"
+      "generatedAt": "2026-05-02T15:45:22.561Z"
     },
     "role-giveaways": {
       "id": "role-giveaways",
@@ -1069,11 +1069,11 @@
       "backgroundHex": "#60293F",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.792Z",
+      "resolvedAt": "2026-05-02T15:45:22.562Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-giveaways.svg",
-      "generatedAt": "2026-05-02T15:41:44.792Z"
+      "generatedAt": "2026-05-02T15:45:22.562Z"
     },
     "role-polls": {
       "id": "role-polls",
@@ -1086,11 +1086,11 @@
       "backgroundHex": "#2C5A43",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.793Z",
+      "resolvedAt": "2026-05-02T15:45:22.563Z",
       "holographic": false,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-polls.svg",
-      "generatedAt": "2026-05-02T15:41:44.793Z"
+      "generatedAt": "2026-05-02T15:45:22.563Z"
     },
     "channel-general": {
       "id": "channel-general",
@@ -1103,10 +1103,10 @@
       "backgroundHex": "#404249",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.795Z",
+      "resolvedAt": "2026-05-02T15:45:22.564Z",
       "style": "discord-channel",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-general.svg",
-      "generatedAt": "2026-05-02T15:41:44.795Z"
+      "generatedAt": "2026-05-02T15:45:22.564Z"
     },
     "channel-artwork": {
       "id": "channel-artwork",
@@ -1119,10 +1119,10 @@
       "backgroundHex": "#404249",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.799Z",
+      "resolvedAt": "2026-05-02T15:45:22.569Z",
       "style": "discord-channel",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-artwork.svg",
-      "generatedAt": "2026-05-02T15:41:44.799Z"
+      "generatedAt": "2026-05-02T15:45:22.569Z"
     },
     "channel-art-commissions": {
       "id": "channel-art-commissions",
@@ -1135,10 +1135,10 @@
       "backgroundHex": "#404249",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.800Z",
+      "resolvedAt": "2026-05-02T15:45:22.570Z",
       "style": "discord-channel",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-art-commissions.svg",
-      "generatedAt": "2026-05-02T15:41:44.800Z"
+      "generatedAt": "2026-05-02T15:45:22.570Z"
     },
     "channel-gallery": {
       "id": "channel-gallery",
@@ -1151,10 +1151,10 @@
       "backgroundHex": "#404249",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.801Z",
+      "resolvedAt": "2026-05-02T15:45:22.572Z",
       "style": "discord-channel",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-gallery.svg",
-      "generatedAt": "2026-05-02T15:41:44.801Z"
+      "generatedAt": "2026-05-02T15:45:22.572Z"
     },
     "channel-tickets": {
       "id": "channel-tickets",
@@ -1167,10 +1167,10 @@
       "backgroundHex": "#404249",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.802Z",
+      "resolvedAt": "2026-05-02T15:45:22.573Z",
       "style": "discord-channel",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-tickets.svg",
-      "generatedAt": "2026-05-02T15:41:44.802Z"
+      "generatedAt": "2026-05-02T15:45:22.573Z"
     },
     "channel-apply": {
       "id": "channel-apply",
@@ -1183,10 +1183,10 @@
       "backgroundHex": "#404249",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.803Z",
+      "resolvedAt": "2026-05-02T15:45:22.574Z",
       "style": "discord-channel",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-apply.svg",
-      "generatedAt": "2026-05-02T15:41:44.803Z"
+      "generatedAt": "2026-05-02T15:45:22.574Z"
     },
     "channel-rules": {
       "id": "channel-rules",
@@ -1199,10 +1199,10 @@
       "backgroundHex": "#404249",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.804Z",
+      "resolvedAt": "2026-05-02T15:45:22.575Z",
       "style": "discord-channel",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-rules.svg",
-      "generatedAt": "2026-05-02T15:41:44.804Z"
+      "generatedAt": "2026-05-02T15:45:22.575Z"
     },
     "channel-roles": {
       "id": "channel-roles",
@@ -1215,10 +1215,10 @@
       "backgroundHex": "#404249",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.805Z",
+      "resolvedAt": "2026-05-02T15:45:22.576Z",
       "style": "discord-channel",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-roles.svg",
-      "generatedAt": "2026-05-02T15:41:44.805Z"
+      "generatedAt": "2026-05-02T15:45:22.576Z"
     },
     "channel-news": {
       "id": "channel-news",
@@ -1231,10 +1231,10 @@
       "backgroundHex": "#404249",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.806Z",
+      "resolvedAt": "2026-05-02T15:45:22.578Z",
       "style": "discord-channel",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-news.svg",
-      "generatedAt": "2026-05-02T15:41:44.806Z"
+      "generatedAt": "2026-05-02T15:45:22.578Z"
     },
     "channel-events-announce": {
       "id": "channel-events-announce",
@@ -1247,10 +1247,10 @@
       "backgroundHex": "#404249",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.807Z",
+      "resolvedAt": "2026-05-02T15:45:22.579Z",
       "style": "discord-channel",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-events-announce.svg",
-      "generatedAt": "2026-05-02T15:41:44.807Z"
+      "generatedAt": "2026-05-02T15:45:22.579Z"
     },
     "channel-giveaways-announce": {
       "id": "channel-giveaways-announce",
@@ -1263,10 +1263,10 @@
       "backgroundHex": "#404249",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.808Z",
+      "resolvedAt": "2026-05-02T15:45:22.580Z",
       "style": "discord-channel",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-giveaways-announce.svg",
-      "generatedAt": "2026-05-02T15:41:44.808Z"
+      "generatedAt": "2026-05-02T15:45:22.580Z"
     },
     "channel-gaming": {
       "id": "channel-gaming",
@@ -1279,10 +1279,10 @@
       "backgroundHex": "#404249",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.809Z",
+      "resolvedAt": "2026-05-02T15:45:22.581Z",
       "style": "discord-channel",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-gaming.svg",
-      "generatedAt": "2026-05-02T15:41:44.809Z"
+      "generatedAt": "2026-05-02T15:45:22.581Z"
     },
     "channel-reports": {
       "id": "channel-reports",
@@ -1295,10 +1295,10 @@
       "backgroundHex": "#404249",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.810Z",
+      "resolvedAt": "2026-05-02T15:45:22.582Z",
       "style": "discord-channel",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-reports.svg",
-      "generatedAt": "2026-05-02T15:41:44.810Z"
+      "generatedAt": "2026-05-02T15:45:22.582Z"
     },
     "channel-mod-actions": {
       "id": "channel-mod-actions",
@@ -1311,10 +1311,10 @@
       "backgroundHex": "#404249",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.811Z",
+      "resolvedAt": "2026-05-02T15:45:22.583Z",
       "style": "discord-channel",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-mod-actions.svg",
-      "generatedAt": "2026-05-02T15:41:44.811Z"
+      "generatedAt": "2026-05-02T15:45:22.583Z"
     },
     "channel-staff-news": {
       "id": "channel-staff-news",
@@ -1327,10 +1327,10 @@
       "backgroundHex": "#404249",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.812Z",
+      "resolvedAt": "2026-05-02T15:45:22.585Z",
       "style": "discord-channel",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-staff-news.svg",
-      "generatedAt": "2026-05-02T15:41:44.812Z"
+      "generatedAt": "2026-05-02T15:45:22.585Z"
     },
     "channel-appeals": {
       "id": "channel-appeals",
@@ -1343,10 +1343,10 @@
       "backgroundHex": "#404249",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.813Z",
+      "resolvedAt": "2026-05-02T15:45:22.586Z",
       "style": "discord-channel",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-appeals.svg",
-      "generatedAt": "2026-05-02T15:41:44.813Z"
+      "generatedAt": "2026-05-02T15:45:22.586Z"
     },
     "channel-staff-log": {
       "id": "channel-staff-log",
@@ -1359,10 +1359,10 @@
       "backgroundHex": "#404249",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.814Z",
+      "resolvedAt": "2026-05-02T15:45:22.587Z",
       "style": "discord-channel",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-staff-log.svg",
-      "generatedAt": "2026-05-02T15:41:44.814Z"
+      "generatedAt": "2026-05-02T15:45:22.587Z"
     },
     "role-holographic": {
       "id": "role-holographic",
@@ -1375,7 +1375,7 @@
       "backgroundHex": "#4E596B",
       "foregroundHex": "#FFFFFF",
       "stale": false,
-      "resolvedAt": "2026-05-02T15:41:44.758Z",
+      "resolvedAt": "2026-05-02T15:45:22.523Z",
       "gradient": {
         "primary": "#FF6B6B",
         "secondary": "#A855F7",
@@ -1384,7 +1384,7 @@
       "holographic": true,
       "style": "discord-role",
       "url": "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-holographic.svg",
-      "generatedAt": "2026-05-02T15:41:44.758Z"
+      "generatedAt": "2026-05-02T15:45:22.523Z"
     }
   }
 }

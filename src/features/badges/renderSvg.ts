@@ -31,11 +31,12 @@ import type { ResolvedBadge } from "./types.js";
 const FONT_FAMILY =
   "system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
 const FONT_SIZE_PX = 13;
-const PILL_HEIGHT = 22;
-// Bottom padding embedded inside the SVG so its visible pill ends up
-// centered on text x-height rather than sitting above the baseline.
-const BASELINE_OFFSET = 5;
-const SVG_HEIGHT = PILL_HEIGHT + BASELINE_OFFSET;
+const PILL_HEIGHT = 20;
+// GitHub's markdown CSS applies vertical-align: middle to inline images, so
+// the image's vertical center aligns with the text x-height midline (also
+// where bullet markers sit). Keeping SVG height equal to pill height puts
+// the visible pill center exactly at the image center -> perfect alignment.
+const SVG_HEIGHT = PILL_HEIGHT;
 const PADDING_X = 8;
 const SUFFIX_GAP = 6;
 const SEPARATOR_PADDING = 6;
@@ -195,14 +196,14 @@ export function renderBadgeSvg(badge: ResolvedBadge): string {
     `<rect x="0" y="0" width="${totalWidth}" height="${PILL_HEIGHT}" rx="${radius}" ry="${radius}" fill="${pillBg}"/>`,
   );
   parts.push(
-    `<text x="${mainTextX}" y="15" font-family="${FONT_FAMILY}" font-size="${FONT_SIZE_PX}" font-weight="600" fill="${mainColor}" text-rendering="geometricPrecision">${escapedMain}</text>`,
+    `<text x="${mainTextX}" y="14" font-family="${FONT_FAMILY}" font-size="${FONT_SIZE_PX}" font-weight="600" fill="${mainColor}" text-rendering="geometricPrecision">${escapedMain}</text>`,
   );
   if (suffix) {
     parts.push(
-      `<rect x="${sepX + SEPARATOR_PADDING}" y="6" width="1" height="${PILL_HEIGHT - 12}" fill="${suffixColor}" opacity="0.5"/>`,
+      `<rect x="${sepX + SEPARATOR_PADDING}" y="5" width="1" height="${PILL_HEIGHT - 10}" fill="${suffixColor}" opacity="0.5"/>`,
     );
     parts.push(
-      `<text x="${suffixTextX}" y="15" font-family="${FONT_FAMILY}" font-size="${FONT_SIZE_PX}" font-weight="400" fill="${suffixColor}" text-rendering="geometricPrecision">${escapedSuffix}</text>`,
+      `<text x="${suffixTextX}" y="14" font-family="${FONT_FAMILY}" font-size="${FONT_SIZE_PX}" font-weight="400" fill="${suffixColor}" text-rendering="geometricPrecision">${escapedSuffix}</text>`,
     );
   }
   parts.push(`</svg>`);
@@ -220,7 +221,7 @@ export function renderUnknownBadgeSvg(label = "unknown badge"): string {
     `<title>${safe}</title>`,
     `<desc>Pawtropolis Tech badge fallback</desc>`,
     `<rect x="0" y="0" width="${width}" height="${PILL_HEIGHT}" rx="${PILL_HEIGHT / 2}" ry="${PILL_HEIGHT / 2}" fill="${DISCORD_NEUTRAL_PILL}"/>`,
-    `<text x="${PADDING_X}" y="15" font-family="${FONT_FAMILY}" font-size="${FONT_SIZE_PX}" fill="${DISCORD_STALE}">${safe}</text>`,
+    `<text x="${PADDING_X}" y="14" font-family="${FONT_FAMILY}" font-size="${FONT_SIZE_PX}" fill="${DISCORD_STALE}">${safe}</text>`,
     `</svg>`,
   ].join("");
 }
