@@ -26,7 +26,7 @@ const MOVIE_TIER_ROLES = [
 ] as const;
 
 const NOTABLE_ROLES = [
-  { id: "role-server-artist", roleId: "1201395606455562341" },
+  { id: "role-server-artist", roleId: "896070888749940770" },
 ] as const;
 
 const NOTABLE_CHANNELS = [

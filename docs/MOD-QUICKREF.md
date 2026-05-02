@@ -51,10 +51,10 @@ For server-wide numbers, `/stats approval-rate` shows the overall approve vs rej
 Check attendance with `/movie attendance` or `/event game attendance`. Add `user:@Username` to look up someone's progress.
 
 **Movie Tier Roles** (30+ min per event):
-- <@&1388676461657063505>: 1+ movies
-- <@&1388676662337736804>: 5+ movies
-- <@&1388675577778802748>: 10+ movies
-- <@&1388677466993987677>: 20+ movies
+- ![@Red Carpet Guest - 1+ movies](https://status.pawtropolis.tech/badges/movie-tier-1.svg)
+- ![@Popcorn Club - 5+ movies](https://status.pawtropolis.tech/badges/movie-tier-2.svg)
+- ![@Director's Cut - 10+ movies](https://status.pawtropolis.tech/badges/movie-tier-3.svg)
+- ![@Cinematic Royalty - 20+ movies](https://status.pawtropolis.tech/badges/movie-tier-4.svg)
 
 **Game Tier Roles** (50%+ of event duration):
 Configured via `/roles add-game-tier`. Use `/roles list type:game_night` to see current tiers.

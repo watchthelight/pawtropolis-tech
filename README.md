@@ -170,6 +170,16 @@ For full command reference, see [docs/BOT-HANDBOOK.md](docs/BOT-HANDBOOK.md).
 | [MOD-QUICKREF.md](docs/MOD-QUICKREF.md) | Quick reference for moderators |
 | [PERMS-MATRIX.md](docs/PERMS-MATRIX.md) | Permission requirements |
 | [CHANGELOG.md](CHANGELOG.md) | Version history |
+| [github-discord-badges](docs/reference/github-discord-badges.md) | GitHub-renderable Discord role/channel badges |
+
+### Discord Badges in Docs
+
+GitHub Markdown cannot render Discord mention syntax. Pawtropolis Tech
+generates SVG pill badges that look like Discord mentions, use real role
+names and colors, and are refreshed daily. Docs reference them as
+`![alt](https://status.pawtropolis.tech/badges/<id>.svg)` instead of raw
+`<@&id>` strings. See [docs/reference/github-discord-badges.md](docs/reference/github-discord-badges.md)
+for the full system.
 
 ---
 
