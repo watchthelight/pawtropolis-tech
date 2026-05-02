@@ -212,36 +212,25 @@ db.prepare(
 // Ensure guild_config has new avatar scan columns (migration helper)
 // Migration helper: probe schema and add a column if absent.
 // Uses PRAGMA table_info to introspect: https://sqlite.org/pragma.html#pragma_table_info
-// SECURITY: table/column names validated to prevent SQL injection
+// SECURITY: table/column names validated to prevent SQL injection.
+// Validation + ALTER logic now lives in src/db/columnUtil.ts so it can be
+// unit-tested without booting the live SQLite handle. The wrapper below
+// preserves the previous warn/debug logging shape on failures.
+
+import { addColumnIfMissing as addColumnIfMissingImpl } from "./columnUtil.js";
 
 const addColumnIfMissing = (table: string, column: string, definition: string) => {
-  // Validate identifiers to prevent SQL injection
-  if (!SQL_IDENTIFIER_RE.test(table)) {
-    throw new Error(`Invalid table name: ${table}`);
-  }
-  if (!SQL_IDENTIFIER_RE.test(column)) {
-    throw new Error(`Invalid column name: ${column}`);
-  }
-  // Block dangerous patterns in definition
-  if (definition.includes(";") || definition.includes("--") || definition.includes("/*")) {
-    throw new Error(`Invalid column definition: ${definition}`);
-  }
-
   try {
-    const cols = db.pragma(`table_info(${table})`) as Array<{ name: string }>;
-    if (!cols.some((c) => c.name === column)) {
-      db.prepare(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`).run();
-      logger.info({ table, column }, "Added missing column");
-    }
+    addColumnIfMissingImpl(db as unknown as Parameters<typeof addColumnIfMissingImpl>[0], table, column, definition, {
+      onAdded: (t, c) => logger.info({ table: t, column: c }, "Added missing column"),
+      onNoTable: (t, c) =>
+        logger.debug(
+          { table: t, column: c },
+          "Table doesn't exist yet, skipping column migration",
+        ),
+    });
   } catch (err) {
-    // Only ignore "no such table" errors - those are expected during initial setup
-    // Other errors (permissions, disk full, corruption) should be logged
-    const errMsg = err instanceof Error ? err.message : String(err);
-    if (/no such table/i.test(errMsg)) {
-      logger.debug({ table, column }, "Table doesn't exist yet, skipping column migration");
-    } else {
-      logger.warn({ err, table, column }, "Failed to add column (non-fatal)");
-    }
+    logger.warn({ err, table, column }, "Failed to add column (non-fatal)");
   }
 };
 
