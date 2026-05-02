@@ -562,27 +562,12 @@ client.once(Events.ClientReady, async () => {
     logger.error({ err }, "[startup] logging channel check failed");
   }
 
-  // ===== Status Endpoint Server =====
-  // WHAT: Simple HTTP server for status badge endpoint
-  // WHY: Provides real-time status for Shields.io dynamic badge
-  // ENDPOINT: GET /api/status returns Shields.io badge JSON
-  try {
-    const { startStatusServer, getStatusPort } = await import("./web/statusEndpoint.js");
-    startStatusServer(client);
-    logger.info({ port: getStatusPort() }, "[startup] Status endpoint started");
-  } catch (err) {
-    logger.warn({ err }, "[startup] Status endpoint failed to start - badges will show offline");
-  }
-
-  // ===== Dashboard API Server =====
-  // WHAT: Fastify server on port 3003 for dashboard mutation requests
-  // WHY: Dashboard proxies review actions (claim/approve/reject/kick/unclaim) through this API
-  try {
-    const { startDashboardApi, getDashboardApiPort } = await import("./web/dashboardApi.js");
-    await startDashboardApi(client);
-    logger.info({ port: getDashboardApiPort() }, "[startup] Dashboard API started");
-  } catch (err) {
-    logger.warn({ err }, "[startup] Dashboard API failed to start - dashboard mutations disabled");
+  // ===== Web Servers =====
+  // Status endpoint + Dashboard API.
+  // Extracted to src/startup/web.ts; behavior preserved.
+  {
+    const { startWebServers } = await import("./startup/web.js");
+    await startWebServers(client);
   }
 
   // ===== Scheduler Initialization =====
@@ -643,13 +628,13 @@ client.once(Events.ClientReady, async () => {
         logger.warn({ err }, "[shutdown] Game session persist failed (non-fatal)");
       }
 
-      // 0b. Stop Dashboard API server
+      // 0b. Stop web servers (extracted to src/startup/web.ts)
       try {
-        const { stopDashboardApi } = await import("./web/dashboardApi.js");
-        await stopDashboardApi();
-        logger.debug("[shutdown] Dashboard API stopped");
+        const { stopWebServers } = await import("./startup/web.js");
+        await stopWebServers();
+        logger.debug("[shutdown] Web servers stopped");
       } catch (err) {
-        logger.warn({ err }, "[shutdown] Dashboard API stop failed (non-fatal)");
+        logger.warn({ err }, "[shutdown] Web servers stop failed (non-fatal)");
       }
 
       // 1. Stop schedulers (extracted to src/startup/schedulers.ts)
