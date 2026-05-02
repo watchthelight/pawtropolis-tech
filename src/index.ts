@@ -78,6 +78,7 @@ import { wrapEvent } from "./lib/eventWrap.js";
 import { env } from "./lib/env.js";
 import * as health from "./commands/health.js";
 import * as cleanup from "./commands/cleanup.js";
+import * as restoreroles from "./commands/restoreroles.js";
 import * as gate from "./commands/gate.js";
 import * as update from "./commands/update.js";
 import * as config from "./commands/config.js";
@@ -174,6 +175,7 @@ const commands = new Collection<
 >();
 commands.set(health.data.name, wrapCommand("health", health.execute));
 commands.set(cleanup.data.name, wrapCommand("cleanup", cleanup.execute));
+commands.set(restoreroles.data.name, wrapCommand("restoreroles", restoreroles.execute));
 commands.set(gate.data.name, wrapCommand("gate", gate.execute));
 commands.set(gate.acceptData.name, wrapCommand("accept", gate.executeAccept));
 commands.set(gate.rejectData.name, wrapCommand("reject", gate.executeReject));
@@ -1135,6 +1137,20 @@ client.on("guildMemberRemove", wrapEvent("guildMemberRemove", async (member) => 
   if (!member.guild) return;
   const guildId = member.guild.id;
   const userId = member.id;
+
+  // ROLE SNAPSHOT: capture roles before any later code runs, so a downstream
+  // failure can't lose the snapshot. Audit-log classification runs async.
+  try {
+    const { snapshotMemberRoles, classifyRemoval } = await import("./features/roleSnapshot.js");
+    const snapshotId = snapshotMemberRoles(member);
+    if (snapshotId) {
+      classifyRemoval(member.guild, userId, snapshotId).catch((err) =>
+        logger.warn({ err, guildId, userId }, "[roleSnapshot] classify failed")
+      );
+    }
+  } catch (err) {
+    logger.warn({ err, guildId, userId }, "[roleSnapshot] snapshot failed");
+  }
 
   // Clean up any active DM verification session
   const { cleanupSession } = await import("./features/gate/dmVerification.js");
