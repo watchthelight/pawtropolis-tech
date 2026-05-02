@@ -28,7 +28,7 @@ Roles unlock as you level up. Each level adds perks on top of the previous one.
 | `896070888712175689` | Next level tier role |
 | `1280767926147878962` | Soundboards in voice channels; role `1385194063841722439`; media posting in `896070889462976608` |
 | `896070888712175690` | Link embed posting in `896070889462976608`; poll creation in `1437295827134447768` |
-| `896070888712175691` | Role `1385194838890119229`; "Known Chat" access in `1437291915979522078` |
+| `896070888712175691` | Role `1385194838890119229`; access to `「⭐」known-chat` (`1488258803928404069`) |
 | `896070888712175692` | Roles `1385054283904323665`, `1385054324295733278` |
 | `1214944241050976276` | Roles `1385195450856112198`, `929950578379993108` |
 | `1280766451208421407` | (base unlock) |
@@ -42,28 +42,26 @@ Byte tokens are redeemable through `/byte` in channel `896070890457018384`. AllB
 
 ## Activity Rewards (Weekly Newsletter)
 
-The top three most active users each week get announced in the newsletter with the following rewards.
+The top three most active users each week get announced in a weekly newsletter post. The exact role names and reward amounts can shift over time; the in-Discord newsletter thread is the canonical source — find it linked from the **City Hall** post inside `「🔍」server-info` (the message describing reward systems lists the newsletter channel).
+
+The current shape of the reward (subject to change in the newsletter thread):
 
 ### 1st Place
 
-- Weekly Winner role (`973375865306120232`)
-- +5000 XP
-- +8,500 currency
-- 1 monthly credit
+- The active "weekly winner" role tied to that week's newsletter
+- A bonus XP grant
+- A currency grant
+- One monthly credit (counts toward the credit-redemption tiers below)
 
 If the 1st-place user is on a streak, the reward pool doubles. The pool resets when the streak breaks.
 
-### 2nd Place
+### 2nd and 3rd Place
 
-- Second-place role (`1371630364178645102`)
-- +3500 XP
-- +4600 currency
+- A "runner-up" role for that week
+- A smaller XP grant
+- A smaller currency grant
 
-### 3rd Place
-
-- Second-place role (`1371630364178645102`)
-- +1500 XP
-- +2400 currency
+> **Why no exact role IDs here?** The role IDs that previously appeared in this section no longer match the current live "weekly winner" / "runner-up" roles, and the canonical reward breakdown lives in the newsletter post inside `「🔍」server-info` rather than this doc. Refer to the live thread for the current numbers.
 
 ---
 
@@ -108,7 +106,7 @@ AllBytes only come in Epic rarity or higher.
 1. Check your inventory with `/inventory` to confirm the Byte is there.
 2. Run `/shop use <item>` to consume it. This adds a role to your profile matching the Byte's level and duration.
 3. With the role applied, run `/byte` in channel `896070890457018384` to activate it.
-4. For AllBytes, a staff member activates it; global XP boosts are announced in `1381923831102574675`.
+4. For AllBytes, a staff member activates it; the global XP boost is announced in the staff-managed AllByte announcement thread (link in the live `「🔍」server-info` Reward System post).
 
 Only one role of each rarity can be attached at a time. You can't stack another Byte of the same rarity until the first one is consumed, but different rarities can coexist.
 
@@ -182,7 +180,7 @@ Bets must be 5000 gems or higher.
 
 ### Pick Drops
 
-Random gem drops appear in these channels: `896070890457018384`, `896070889798508599`, `896070889462976610`, `896070889462976608`, `1121191510642274354`, `896070889198731286`.
+Random gem drops appear in these channels: `「🧰」bot-stuff` (`896070890457018384`), `「🎹」music` (`896070889798508599`), `「😂」memes` (`896070889462976610`), `「💭」main-chat` (`896070889462976608`), `「📷」media` (`1121191510642274354`), `「❓」qotd` (`896070889198731288`).
 
 Giveaways and events also hand out currency; keep an eye on the announcements.
 
