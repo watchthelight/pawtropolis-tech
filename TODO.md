@@ -1,7 +1,29 @@
 # Pawtropolis Tech Master TODO
 
-> **Last Updated:** 2026-01-11
+> **Last Updated:** 2026-05-02 (hardening pass)
 > **Audit Reference:** See `audit/` folder for detailed reports
+> **Hardening Plan:** [docs/roadmap/pawtropolis-hardening-plan-2026-05-02.md](docs/roadmap/pawtropolis-hardening-plan-2026-05-02.md)
+
+---
+
+## Hardening Pass Follow-ups (2026-05-02)
+
+CI / test infrastructure work tracked from the May 2026 hardening pass. See `docs/operations/ci-policy.md` for the gate-promotion conditions.
+
+### Soft gate cleanup
+- [ ] eslint config: declare Svelte runes + browser globals in `web/`
+- [ ] eslint config: declare Cloudflare Workers globals in `workers/`
+- [ ] Run `npm run format` repo-wide and commit (after open `web/` PRs land)
+- [ ] Apply test-setup migration injection so `tests/features/artistRotation/handlers.test.ts` can run on a fresh DB
+- [ ] Update `tests/lib/roles.test.ts` to expect `"Community Founder"` (the role was renamed in `src/lib/roles.ts:77`)
+- [ ] Promote Lint, Format, Tests from SOFT to HARD in `.github/workflows/ci.yml` once the above are green
+
+### Deeper refactors (deferred)
+- [ ] Make all module-level `db.prepare` calls lazy (started with `src/features/tickets/counters.ts`; `src/features/artJobs/store.ts` and `src/features/tickets/service.ts` still eager)
+- [ ] Implement `--rollback` switch in `deploy.sh` (path documented in `docs/operations/deployment-hardening.md`)
+- [ ] Continue startup decomposition: extract `src/startup/recovery.ts` and `src/startup/discordRefresh.ts` from `src/index.ts` ClientReady
+
+---
 
 ---
 
@@ -96,11 +118,12 @@ Add rate limits: ✅
 ### 2.4 Deployment Improvements
 > Reference: [audit/04_DEPLOYMENT_AUDIT.md](audit/04_DEPLOYMENT_AUDIT.md)
 
-- [ ] Add SSH timeout options to all SSH commands
-- [ ] Add deploy lock mechanism (prevent concurrent deploys)
-- [ ] Move `REMOTE_HOST` to environment variable
-- [ ] Add database backup before deploy (optional)
-- [ ] Add rollback capability (keep `dist.backup`)
+- [x] Add SSH timeout options to all SSH commands (2026-05-02)
+- [x] Add deploy lock mechanism (prevent concurrent deploys) (2026-05-02)
+- [x] Move `REMOTE_HOST` to environment variable (2026-05-02; also REMOTE_USER, REMOTE_PATH, PM2_PROCESS_BOT, PM2_PROCESS_WEB)
+- [x] Add database backup before deploy (optional) (2026-05-02; gated by `BACKUP_BEFORE_DEPLOY=1`)
+- [ ] Add rollback capability (keep `dist.backup`) (path documented in `docs/operations/deployment-hardening.md`)
+- [x] Add `--dry-run` mode and preflight summary (2026-05-02)
 
 ---
 

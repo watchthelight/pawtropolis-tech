@@ -2,9 +2,46 @@
 
 All changes to Pawtropolis Tech are tracked here.
 
-**Versions:** [Unreleased](#unreleased) | [5.1.1](#511---2026-01-27) | [5.1.0](#510---2026-01-17) | [5.0.0](#500---2026-01-12) | [4.9.2](#492---2026-01-07) | [4.9.1](#491---2026-01-07) | [4.9.0](#490---2026-01-04) | [4.8.0](#480---2025-12-08) | [4.7.1](#471---2025-12-03) | [4.7.0](#470---2025-12-03) | [4.6.0](#460---2025-12-03) | [4.5.0](#450---2025-12-02) | [4.4.4](#444---2025-12-03) | [4.4.3](#443---2025-12-03) | [4.4.2](#442---2025-12-03) | [4.4.1](#441---2025-12-03) | [4.4.0](#440---2025-12-03) | [4.3.0](#430---2025-12-02) | [4.2.0](#420---2025-12-01) | [4.1.0](#410---2025-12-01) | [4.0.3](#403---2025-12-01) | [4.0.2](#402---2025-12-01) | [4.0.1](#401---2025-12-01) | [4.0.0](#400---2025-12-01) | [Earlier versions](#earlier-versions)
+**Versions:** [Unreleased](#unreleased) | [5.2.0](#520---2026-05-02) | [5.1.1](#511---2026-01-27) | [5.1.0](#510---2026-01-17) | [5.0.0](#500---2026-01-12) | [4.9.2](#492---2026-01-07) | [4.9.1](#491---2026-01-07) | [4.9.0](#490---2026-01-04) | [4.8.0](#480---2025-12-08) | [4.7.1](#471---2025-12-03) | [4.7.0](#470---2025-12-03) | [4.6.0](#460---2025-12-03) | [4.5.0](#450---2025-12-02) | [4.4.4](#444---2025-12-03) | [4.4.3](#443---2025-12-03) | [4.4.2](#442---2025-12-03) | [4.4.1](#441---2025-12-03) | [4.4.0](#440---2025-12-03) | [4.3.0](#430---2025-12-02) | [4.2.0](#420---2025-12-01) | [4.1.0](#410---2025-12-01) | [4.0.3](#403---2025-12-01) | [4.0.2](#402---2025-12-01) | [4.0.1](#401---2025-12-01) | [4.0.0](#400---2025-12-01) | [Earlier versions](#earlier-versions)
 
 ## [Unreleased]
+
+### Reliability / Test / Orchestration Pass (2026-05-02)
+
+Behavior-preserving hardening pass. No commands, customId formats, dashboard contracts, or features were changed. Plan: `docs/roadmap/pawtropolis-hardening-plan-2026-05-02.md`.
+
+#### Added
+
+- **Command registration drift guard** — `src/commands/runtimeManifest.ts` is the single source of truth for runtime command names; `src/index.ts` asserts at startup that the runtime command Collection matches. `tests/commands/registration.test.ts` (8 cases) ties `buildCommands.ts` to the manifest. Doc: `docs/reference/command-registration-invariants.md`.
+
+- **Review kick transaction tests** — `tests/features/review/kick.test.ts` (12 cases) covering submitted/needs_info → kicked, terminal-state rejections, and audit row insertion. Tightened `reject.test.ts` to assert bound values (not just SQL shape) for the permanent rejection path.
+
+- **Dashboard API authorization tests** — Pulled `TIER_ORDER`, `hasMinTier`, `missingStringFields`, `missingIntegerFields` out of `dashboardApi.ts` into a sibling `dashboardAuth.ts`. `tests/web/dashboardAuth.test.ts` (50 cases) covers the seven-tier hierarchy, fail-closed semantics for unknown tiers, body validation, and the `admin` requirement on permreject. Doc: `docs/reference/dashboard-api-security.md`.
+
+- **Modmail routing observability tests** — Added 18 cases to `tests/features/modmail/routing.test.ts` covering image attachment selection, reply-mapping in both directions, `SAFE_ALLOWED_MENTIONS` application, transcript persistence, dashboard notification, forwarded-cache loop guard, and thread-fetch / DM-send failure paths.
+
+- **Startup task wrapper + extracted modules** — `src/startup/runStartupTask.ts` standardizes the fail-soft try/catch shape; `src/startup/{schema,schedulers,web}.ts` host the corresponding ClientReady and gracefulShutdown sections. `tests/startup/runStartupTask.test.ts` (8 cases) verifies isolation. Doc: `docs/architecture/startup-lifecycle.md`.
+
+- **DB schema utility extraction** — `src/db/columnUtil.ts` (extracted from `src/db/db.ts`) holds `addColumnIfMissing`, identifier validation, and definition sanitization. `tests/db/columnUtil.test.ts` (22 cases) and `tests/db/legacyGuard.test.ts` (7 cases) cover SQL identifier safety and the `__old` / `ALTER TABLE ... RENAME` guard regex. Doc: `docs/reference/database-schema-safety.md`.
+
+- **Deployment hardening** — `deploy.sh` now supports env overrides for `REMOTE_USER` / `REMOTE_HOST` / `REMOTE_PATH` / `PM2_PROCESS_BOT` / `PM2_PROCESS_WEB`, SSH/SCP timeouts (`ConnectTimeout=15`, keepalive 30s × 3), an atomic remote deploy lock under `/tmp/pawtropolis-deploy.lock`, optional pre-deploy DB backup (`BACKUP_BEFORE_DEPLOY=1`), `--dry-run`, and a preflight summary. All existing flags (`--logs`, `--restart`, `--status`, `--fast`, `--web`, `--bot`, `--graceful`) keep working unchanged. Doc: `docs/operations/deployment-hardening.md`.
+
+- **Observability and error cards reference** — `docs/reference/observability-and-error-cards.md` documents the structured-logging conventions, `withStep` / `withSql` usage, error card V1 vs V2, and `SAFE_ALLOWED_MENTIONS` policy.
+
+- **CI policy doc** — `docs/operations/ci-policy.md` enumerates HARD vs SOFT gates with explicit promotion conditions for each soft gate.
+
+#### Changed
+
+- **CI typecheck is now a HARD gate** — Removed `continue-on-error: true` from the typecheck step in `.github/workflows/ci.yml` after fixing two real defects in `src/commands/cleanup.ts` (`requireMinRole` was being called with two args instead of three; channel-narrowing collapsed to `never` after the exhaustive type check). Lint, format, and tests remain SOFT with documented exit conditions.
+
+- **Lazy module-level prepare for `src/features/tickets/counters.ts`** — `incrementStmt` is now lazy-prepared on first call rather than at module load, so the file imports cleanly on a fresh DB. The `service.ts` counterpart is tracked for the same treatment in the next pass; the test soft-gate in `docs/operations/ci-policy.md` documents the path forward.
+
+#### Stats
+
+- 6 new test files, 1 file with additions: `tests/commands/registration.test.ts`, `tests/features/review/kick.test.ts`, `tests/web/dashboardAuth.test.ts`, `tests/startup/runStartupTask.test.ts`, `tests/db/columnUtil.test.ts`, `tests/db/legacyGuard.test.ts`, `tests/features/modmail/routing.test.ts` (additions).
+- ~125 new test cases.
+- 3 new modules: `src/startup/{runStartupTask,schema,schedulers,web}.ts`, `src/commands/runtimeManifest.ts`, `src/db/columnUtil.ts`, `src/web/dashboardAuth.ts`.
+- 7 new docs: registration invariants, dashboard API security, database schema safety, observability, startup lifecycle, deployment hardening, CI policy, plus the hardening plan in `docs/roadmap/`.
 
 ### Added
 
