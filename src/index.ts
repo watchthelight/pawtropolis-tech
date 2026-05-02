@@ -322,6 +322,32 @@ commands.set(
 commands.set(closeticket.data.name, wrapCommand("closeticket", closeticket.execute));
 commands.set(assignticket.data.name, wrapCommand("assignticket", assignticket.execute));
 
+// Drift guard: every name in runtimeManifest must have a registered handler,
+// every registered handler must be in the manifest. Catches mistakes where a
+// command is added to one place but not the other.
+import { SLASH_COMMAND_NAMES } from "./commands/runtimeManifest.js";
+{
+  const missingHandlers = SLASH_COMMAND_NAMES.filter((n) => !commands.has(n));
+  const orphanHandlers = Array.from(commands.keys()).filter(
+    (n) => !(SLASH_COMMAND_NAMES as readonly string[]).includes(n),
+  );
+  if (missingHandlers.length > 0 || orphanHandlers.length > 0) {
+    logger.error(
+      {
+        evt: "command_registration_drift",
+        missingHandlers,
+        orphanHandlers,
+        manifestSize: SLASH_COMMAND_NAMES.length,
+        runtimeSize: commands.size,
+      },
+      "[startup] command registration drift detected — runtime handlers and runtimeManifest disagree",
+    );
+    throw new Error(
+      `Command registration drift: missing=${JSON.stringify(missingHandlers)} orphan=${JSON.stringify(orphanHandlers)}`,
+    );
+  }
+}
+
 client.once(Events.ClientReady, async () => {
   // schema self-heal before anything else
   // sudo make it work
