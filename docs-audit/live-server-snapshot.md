@@ -1,4 +1,4 @@
-# Live Server Snapshot — Pawtropolis | Furry • LGBTQ+
+# Live Server Snapshot: Pawtropolis | Furry • LGBTQ+
 
 **Audit date:** 2026-05-02 (local time)
 **Snapshot generated:** 2026-05-02T14:22:11Z (server audit), 2026-05-02T14:08Z (channel content fetches)
@@ -43,7 +43,7 @@ Source files (raw evidence):
 Only channels visible to ordinary members (or unverified arrivals) are listed. Staff-internal categories (Staff Info, Staff Room, Leadership Hub, Application Answers, Tickets, Logs, Ticket Logs, Events Team, VRC Group Team, Community Ambassador Team, Moderation Team ticket, Not in use Channels, October 2025!) are intentionally omitted from public documentation. Private/restricted notes are in §8.
 
 ### Category: `- discord.gg/floof -` (`896070888779317255`)
-Vanity-tagged top of the channel list — counters and gallery.
+Vanity-tagged top of the channel list: counters and gallery.
 
 | Channel | Type | ID | Notes |
 |---|---|---|---|
@@ -100,7 +100,7 @@ Vanity-tagged top of the channel list — counters and gallery.
 | `「😂」memes` | Text | `896070889462976610` | |
 | `「📷」media` | Text | `1121191510642274354` | |
 | `「💕」bump-us` | Forum | `1486499975247433738` | |
-| `「🧰」bot-stuff` | Text | `896070890457018384` | Bot commands lounge — `/byte` and `/inventory` are used here |
+| `「🧰」bot-stuff` | Text | `896070890457018384` | Bot commands lounge: `/byte` and `/inventory` are used here |
 
 ### Category: `[5] Interests` (`899667519105814619`)
 
@@ -136,11 +136,11 @@ Gated to Verified 2D/3D/Fursuit/Music Artists. Includes `verify-artist`, `artist
 
 ### Category: `[11] [Booster💎] [ Patreon👑]` (`1210760381946007632`)
 
-Gated to boosters/Patreon — `vip-colors`, `Lounge` (voice), `supporter-colors`, `plink-lounge`.
+Gated to boosters/Patreon: `vip-colors`, `Lounge` (voice), `supporter-colors`, `plink-lounge`.
 
 ### Category: `[12] Custom Channels` (`1432302478723911781`)
 
-Member-purchased custom text/voice channels — list is dynamic; do not enumerate in public docs.
+Member-purchased custom text/voice channels: list is dynamic; do not enumerate in public docs.
 
 ### Category: `[13] Unverified Area` (`896070891174260765`)
 
@@ -163,26 +163,26 @@ Visible only to unverified members and staff:
 
 Source: `「📜」rules` (`896070889005781038`) and `「📜」unverified-rules` (`1150525497982337134`). Both carry the same content, posted by the **Community Guidelines** webhook on 2026-04-08. Last revision date in the rules text itself: **4/8/2026**. Sections, in order:
 
-1. **Top banner** — "By joining Pawtropolis, you agree to follow our guidelines…" Terms may be updated without notice. Disputes via tickets.
-2. **DISCORD TERMS OF SERVICE** — server follows Discord TOS and community guidelines.
+1. **Top banner**: "By joining Pawtropolis, you agree to follow our guidelines…" Terms may be updated without notice. Disputes via tickets.
+2. **DISCORD TERMS OF SERVICE**: server follows Discord TOS and community guidelines.
 3. **AI Usage and No Tolerance for DM Advertising**
    - DM advertising of artwork without explicit consent → ban.
    - AI art posting in art channels not allowed (including AI-generated memes in `<#896070889462976610>` = `「😂」memes`).
    - AI art commissions not allowed.
    - Asking for art to feed AI not allowed.
    - Disallowed AI topics enumerated: image, text/fiction, poetry, script, character creation, concept art, illustration, graphic design automation, logo, animation, video, cinematic scene, music composition, vocal synthesis, sound-effect, voice cloning, 3D asset, 3D character, texture, environment/level art, photo editing automation, creative style transfer.
-4. **HARASSMENT & TROLLING** — bans homophobia/sexism/transphobia/racism/antisemitism/xenophobia, leaking private info (incl. selfies of others), forcing sensitive topics; trolling/raiding → automatic ban.
-5. **LISTEN TO STAFF** — staff instructions must be followed; blocking staff is allowed but doesn't waive accountability; if you have a staff issue, open a *report-staff* ticket in `「📥」tickets`.
-6. **AVOID DRAMA & TOUCHY SUBJECTS** — prohibits suicide/self-harm, substance abuse incl. legal substances, alcohol, politics/religion, graphic content/weapon imagery, homophobia/transphobia/racism/sexism, begging for Nitro or free art. References suicidepreventionlifeline.org.
-7. **LINKS AND ADVERTISEMENT** — bans Discord invite links, non-compliant links, malicious links, display-name advertising, asking/begging for users, DM advertising.
-8. **ADULT CONTENT** — server is **100% SFW, 13+** community. No 18+ topic discussion, no streaming gambling in VCs. Suggestive content prohibited even in `「✍️」writing` (`1446602187655610461`).
+4. **HARASSMENT & TROLLING**: bans homophobia/sexism/transphobia/racism/antisemitism/xenophobia, leaking private info (incl. selfies of others), forcing sensitive topics; trolling/raiding → automatic ban.
+5. **LISTEN TO STAFF**: staff instructions must be followed; blocking staff is allowed but doesn't waive accountability; if you have a staff issue, open a *report-staff* ticket in `「📥」tickets`.
+6. **AVOID DRAMA & TOUCHY SUBJECTS**: prohibits suicide/self-harm, substance abuse incl. legal substances, alcohol, politics/religion, graphic content/weapon imagery, homophobia/transphobia/racism/sexism, begging for Nitro or free art. References suicidepreventionlifeline.org.
+7. **LINKS AND ADVERTISEMENT**: bans Discord invite links, non-compliant links, malicious links, display-name advertising, asking/begging for users, DM advertising.
+8. **ADULT CONTENT**: server is **100% SFW, 13+** community. No 18+ topic discussion, no streaming gambling in VCs. Suggestive content prohibited even in `「✍️」writing` (`1446602187655610461`).
 9. **ENGLISH ONLY**.
-10. **WARNINGS & PUNISHMENTS** — three-strike system: L-1 (Low/Minor) drops every 30 days; M-2 (Medium) drops every 2 months; H-3 (High/Major) does not drop. Ban appeals via Dyno: `https://dyno.gg/form/b18001d3`.
+10. **WARNINGS & PUNISHMENTS**: three-strike system: L-1 (Low/Minor) drops every 30 days; M-2 (Medium) drops every 2 months; H-3 (High/Major) does not drop. Ban appeals via Dyno: `https://dyno.gg/form/b18001d3`.
 11. **ROLEPLAY / SPAM**
     - Roleplay (any form, including passive-RP like "*waves tail hi*") prohibited because of minor-safety risk.
     - Spam not allowed; non-standard communication ("meowing", emoticon-texting) is fine in moderation.
     - "Brainrot" / low-value content → minor intervention; redirected to `「🗣️」yapping-space` (`1393507326865969152`).
-12. **USER SAFETY** — direct selfies prohibited; cosplay allowed if face is not identifiable. Profile descriptors (display name, avatar/banner, server tag, bio) must remain appropriate. Cautions on unsolicited DMs / friend requests / phishing. Links to a self-help news post.
+12. **USER SAFETY**: direct selfies prohibited; cosplay allowed if face is not identifiable. Profile descriptors (display name, avatar/banner, server tag, bio) must remain appropriate. Cautions on unsolicited DMs / friend requests / phishing. Links to a self-help news post.
 
 ---
 
@@ -245,9 +245,9 @@ The **roles** channel posts (by `Sapphire` bot, 2025-08-14) drive self-assign. C
 - **Personal Pings** (~9 roles, character-themed)
 - **Pings** (~21 roles for ping subscriptions, including Announcements / World Updates / Community Updates / Events / Xp Announcement Ping)
 
-Additional opt-in role announced 2026-04-01 by `watchthelight`: **Thin Line** (`1488629735293452418`) — for active or former Firefighters, EMTs, Paramedics, Military, Law Enforcement. Granted via `/verify` on honor system.
+Additional opt-in role announced 2026-04-01 by `watchthelight`: **Thin Line** (`1488629735293452418`): for active or former Firefighters, EMTs, Paramedics, Military, Law Enforcement. Granted via `/verify` on honor system.
 
-### 5.3 Level rewards (from `server-info` — Level Rewards thread)
+### 5.3 Level rewards (from `server-info`: Level Rewards thread)
 
 Leveling drives access to embed-link/GIF/streaming permissions across `「💭」main-chat`, `「🎨」looking-for-comms`, etc. Tiered roles by display position:
 
@@ -345,7 +345,7 @@ Source: `src/commands/buildCommands.ts`. Top-level slash commands registered wit
 
 Context-menu commands: **Is it real?** (message), **Modmail** (user).
 
-Permission tiers (per `docs/PERMS-MATRIX.md`) must be cross-checked in Phase 2 — many commands gate on staff role hierarchy via `src/lib/perms.ts`.
+Permission tiers (per `docs/PERMS-MATRIX.md`) must be cross-checked in Phase 2: many commands gate on staff role hierarchy via `src/lib/perms.ts`.
 
 ---
 
@@ -370,7 +370,7 @@ Even though a doc may currently mention them, the following must not appear in u
 - Specific staff-only channels: `appeals` (`932485736366759977`), `verify-blacklist` (`1468347731100700835`), `handbook` (`1383953381269438504`), `ban-summaries`, `mod-actions`, `change-log`, `qotd-review`, `senior-chat`, `leadership-chat`, `Management VC`, `development`, `owner-room`, `training-logging`, `to-do-list`, `staff-furry-rp`, `i-see-you-have-vencord-buddy`.
 - Logs channels (`message﹒logs`, `server﹒logs`, `vc﹒logs`, `admin-logs`, `invite﹒logs`, `user﹒logs`, `moderation﹒logs`, `ban﹒logs`, `kick﹒logs`, `warn﹒logs`, `automod﹒logs`, `tech﹒logs`, `staff﹒logs`, `archived-logs`).
 - Active ticket channel IDs (the `support-XXXX`, `art-XXXX`, `staff-XXXX`, `user-XXXX`, `stickerwall-XXXX` series). The *concept* of `「📥」tickets` (`1103728856294236160`) is publicly known; specific ticket IDs are not.
-- Custom personal channels under `[12] Custom Channels` — list changes regularly and represents paid customizations, not policy.
+- Custom personal channels under `[12] Custom Channels`: list changes regularly and represents paid customizations, not policy.
 
 Forward-facing docs may reference *category* concepts ("Staff Room", "Logs") generically when describing *policy* (for example, "moderator action logs are kept internally"). They should not enumerate channel IDs or names in those categories.
 
@@ -381,10 +381,10 @@ Forward-facing docs may reference *category* concepts ("Staff Room", "Logs") gen
 Tracked in `docs-audit/discrepancy-matrix.md` once issues are surveyed against the docs:
 
 - Several reaction-role IDs in `「🎀」roles` post on 2025-08-14 may have drifted vs. the actual roles. The role IDs in the embed should be verified against `ROLES.md` when patching role guides.
-- Number of gate-flow questions: `「❓」verify` advertises **6 simple questions** — the bot's question schema (`/gate set-questions`) needs cross-check; some staff handbooks may state different counts.
+- Number of gate-flow questions: `「❓」verify` advertises **6 simple questions**: the bot's question schema (`/gate set-questions`) needs cross-check; some staff handbooks may state different counts.
 - Bot identity: memory + welcome embed both confirm **Pawtropolis Tech** (`1490507577614663876`) as current. Older docs may still reference the prior application ID `1427436615021629590` (deprecated 2026-04-08 per memory).
 - Channel rename detection: matrix will compare every `<#…>` ID and `#name` in docs against the live name.
-- Two categories share the visible label `[15]` (`Staff Room` and `Leadership Hub`) — not a rename, deliberate.
+- Two categories share the visible label `[15]` (`Staff Room` and `Leadership Hub`): not a rename, deliberate.
 
 ---
 

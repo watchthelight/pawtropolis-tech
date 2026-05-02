@@ -29,7 +29,7 @@ Roles follow a strict hierarchy. When a permission level says "X+", that means t
 | 9 | Gatekeeper | `896070888762535969` | GK |
 | 10 | Community Staff | `987662057069482024` | CS |
 
-**Note:** Community Staff (CS) is the broad mod-perm role (ManageMessages / MentionEveryone / ModerateMembers) attached to most staff roles. On its own it does not unlock the gatekeeping commands, which require the Gatekeeper role specifically. The role is named "Community Staff" in Discord; older code constants and docs may refer to it as `MOD_TEAM` / "Moderation Team" — same role.
+**Note:** Community Staff (CS) is the broad mod-perm role (ManageMessages, MentionEveryone, ModerateMembers) attached to most staff roles. On its own it does not unlock the gatekeeping commands, which require the Gatekeeper role specifically. The role is named "Community Staff" in Discord. Older code constants and docs may refer to it as `MOD_TEAM` or "Moderation Team"; same role.
 
 The rank-1 role is named **Community Founder** in Discord. It is the role currently held by the server owner (`wwerew0lf`). Older docs called this rank "Server Owner"; the live label is what permission-denied embeds and role mentions render.
 
@@ -407,8 +407,8 @@ Bypass conditions are checked before anything else:
 ### Tier-Specific Guides
 - [Gatekeeper Guide](GATEKEEPER-GUIDE.md) — Gate system permissions
 - [Moderator Guide](MODERATOR-GUIDE.md) — Event management permissions
-- [Admin Guide](ADMIN-GUIDE.md) — Configuration and audit permissions
-- [Leadership Guide](LEADERSHIP-GUIDE.md) — Server-wide management permissions
+- [Admin Guide](ADMIN-GUIDE.md): Configuration and audit permissions
+- [Leadership Guide](LEADERSHIP-GUIDE.md): Server-wide management permissions
 
 ### Reference Documentation
 - [BOT-HANDBOOK.md](BOT-HANDBOOK.md) — Complete command reference

@@ -12,7 +12,7 @@ How the application system works.
 6. Bot validates and saves the application to the database.
 7. Bot posts a review card in the configured review channel.
 
-> The staff-facing `/gate` slash command is for setup, status checks, and welcome-message configuration — it is not how members submit applications.
+> The staff-facing `/gate` slash command is for setup, status checks, and welcome-message configuration. It is not how members submit applications.
 
 ## Step 2: Moderator Claims
 

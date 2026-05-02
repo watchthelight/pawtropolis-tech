@@ -144,8 +144,8 @@ The hierarchy below lists every staff role in rank order. Each entry describes t
 
 These two are not part of the rank-and-file staff hierarchy but bypass every permission check:
 
-- **Server Dev** — staff role intended for engineers maintaining the bot. Treated as "above everyone" by `src/lib/roles.ts`.
-- **Bot Owner** — single hardcoded user ID at the top of the bypass chain.
+- **Server Dev**: staff role intended for engineers maintaining the bot. Treated as "above everyone" by `src/lib/roles.ts`.
+- **Bot Owner**: single hardcoded user ID at the top of the bypass chain.
 
 If a permission-denied embed says you need a role you don't have, it is showing the live Discord role names. You may also see "Community Staff" or "Community Founder" rendered in the bot's responses where older docs say "Moderation Team" or "Server Owner".
 
@@ -778,7 +778,7 @@ Only enforce violations under our guidelines. Refer to *Cross Banning & Drama* b
 
 #### Report Staff
 
-Members may report staff for any wrongdoing. Routes to leadership only — Community Manager and above review these tickets to keep them out of the same channel as the staff being reported.
+Members may report staff for any wrongdoing. Routes to leadership only. Community Manager and above review these tickets to keep them out of the same channel as the staff being reported.
 
 #### VRChat World Bug Report
 
@@ -807,7 +807,7 @@ Be mindful that many scammers try to verify. Consult another staff member if you
 
 ### Access notes
 
-- Channel access: ticket channels add the **Community Staff** and **Community Ambassador** roles automatically when a ticket opens. The actual decision-makers vary by ticket type — Report Staff is restricted to Community Manager and above; the rest are handled by general staff.
+- Channel access: ticket channels add the **Community Staff** and **Community Ambassador** roles automatically when a ticket opens. The actual decision-makers vary by ticket type. Report Staff is restricted to Community Manager and above; the rest are handled by general staff.
 - Multi-staff rule still applies: one staff member per ticket, no in-thread consultation.
 
 ---
@@ -1389,7 +1389,7 @@ Flagged users show warning badges on their applications, alerting reviewers to l
 - **[GATEKEEPER-GUIDE.md](GATEKEEPER-GUIDE.md)** — For Gatekeeper and Junior Mod
 - **[MODERATOR-GUIDE.md](MODERATOR-GUIDE.md)** — For Moderator and Senior Mod
 - **[ADMIN-GUIDE.md](ADMIN-GUIDE.md)** — For Administrator and Senior Admin
-- **[LEADERSHIP-GUIDE.md](LEADERSHIP-GUIDE.md)** — For CM, CDL, and Community Founder
+- **[LEADERSHIP-GUIDE.md](LEADERSHIP-GUIDE.md)**: For CM, CDL, and Community Founder
 
 ### Navigation
 - **[Bot Handbook](BOT-HANDBOOK.md)** — Start here for all docs

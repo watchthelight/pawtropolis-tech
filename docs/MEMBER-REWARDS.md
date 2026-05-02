@@ -42,7 +42,7 @@ Byte tokens are redeemable through `/byte` in channel `896070890457018384`. AllB
 
 ## Activity Rewards (Weekly Newsletter)
 
-The top three most active users each week get announced in a weekly newsletter post. The exact role names and reward amounts can shift over time; the in-Discord newsletter thread is the canonical source — find it linked from the **City Hall** post inside `「🔍」server-info` (the message describing reward systems lists the newsletter channel).
+The top three most active users each week get announced in a weekly newsletter post. The exact role names and reward amounts can shift over time; the in-Discord newsletter thread is the canonical source. Find it linked from the **City Hall** post inside `「🔍」server-info` (the message describing reward systems lists the newsletter channel).
 
 The current shape of the reward (subject to change in the newsletter thread):
 

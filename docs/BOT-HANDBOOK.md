@@ -634,7 +634,7 @@ Report content violations with screenshot evidence. Creates a forum thread for s
 
 ### `/audit`
 
-> 📚 **Reference Section** — Admin+ command. Skip unless you're Administrator or above.
+> 📚 **Reference Section.** Admin+ command. Skip unless you're Administrator or above.
 
 **Who can use it:** Administrator, Senior Administrator, Community Manager, or Server Dev (the allowed-roles list lives in `src/commands/audit.ts`).
 
