@@ -1,5 +1,7 @@
 # Leadership Guide
 
+![@Community Manager](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-manager.svg) ![@Community Development Lead](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-dev-lead.svg) ![@Community Founder](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-founder.svg)
+
 Server-wide audits, data resets, branding, analytics, and the bot-owner-only controls.
 
 **Prerequisite:** [Admin Guide](ADMIN-GUIDE.md) | **Other docs:** [Quick Reference](MOD-QUICKREF.md) | [Bot Handbook](BOT-HANDBOOK.md)

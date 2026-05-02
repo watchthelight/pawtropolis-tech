@@ -1,5 +1,7 @@
 # Administrator Guide
 
+![@Administrator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-administrator.svg) ![@Senior Administrator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-senior-admin.svg)
+
 Bot configuration, automated role assignment, and the kill-switches you reach for when something goes sideways.
 
 **Prerequisite:** [Moderator Guide](MODERATOR-GUIDE.md) | **Other docs:** [Quick Reference](MOD-QUICKREF.md) - [Bot Handbook](BOT-HANDBOOK.md)

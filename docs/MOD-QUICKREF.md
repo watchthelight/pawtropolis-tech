@@ -57,6 +57,10 @@ Check attendance with `/movie attendance` or `/event game attendance`. Add `user
 - ![@Cinematic Royalty - 20+ movies](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-4.svg)
 
 **Game Tier Roles** (50%+ of event duration):
+- ![@Trophy Hunter](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/game-tier-trophy-hunter.svg)
+- ![@Key Masher](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/game-tier-key-masher.svg)
+- ![@Night Builder](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/game-tier-night-builder.svg)
+
 Configured via `/roles add-game-tier`. Use `/roles list type:game_night` to see current tiers.
 
 ## Utility Commands

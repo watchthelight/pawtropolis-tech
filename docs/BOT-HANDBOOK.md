@@ -636,7 +636,7 @@ Report content violations with screenshot evidence. Creates a forum thread for s
 
 > 📚 **Reference Section.** Admin+ command. Skip unless you're Administrator or above.
 
-**Who can use it:** Administrator, Senior Administrator, Community Manager, or Server Dev (the allowed-roles list lives in `src/commands/audit.ts`).
+**Who can use it:** ![@Administrator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-administrator.svg), ![@Senior Administrator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-senior-admin.svg), ![@Community Manager](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-manager.svg), or ![@Server Dev](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-server-dev.svg) (the allowed-roles list lives in `src/commands/audit.ts`).
 
 Server audit commands for detecting suspicious accounts and NSFW content. This command has two subcommands:
 

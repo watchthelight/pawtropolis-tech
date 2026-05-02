@@ -44,10 +44,10 @@ Key features:
 
 | Your Role | Guide |
 |-----------|-------|
-| Gatekeeper / Junior Mod | [Gatekeeper Guide](GATEKEEPER-GUIDE.md) |
-| Moderator / Senior Mod | [Moderator Guide](MODERATOR-GUIDE.md) |
-| Admin / Senior Admin | [Admin Guide](ADMIN-GUIDE.md) |
-| CM / CDL / Owner | [Leadership Guide](LEADERSHIP-GUIDE.md) |
+| ![@Gatekeeper](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-gatekeeper.svg) ![@Junior Moderator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-junior-mod.svg) | [Gatekeeper Guide](GATEKEEPER-GUIDE.md) |
+| ![@Moderator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-moderator.svg) ![@Senior Moderator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-senior-mod.svg) | [Moderator Guide](MODERATOR-GUIDE.md) |
+| ![@Administrator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-administrator.svg) ![@Senior Administrator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-senior-admin.svg) | [Admin Guide](ADMIN-GUIDE.md) |
+| ![@Community Manager](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-manager.svg) ![@Community Development Lead](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-dev-lead.svg) ![@Community Founder](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-founder.svg) | [Leadership Guide](LEADERSHIP-GUIDE.md) |
 
 ---
 
