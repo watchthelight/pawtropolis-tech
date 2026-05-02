@@ -17,6 +17,12 @@ export type BadgeStyle =
   | "compact"
   | "shield";
 
+export type RoleGradient = {
+  primary: string;
+  secondary: string;
+  tertiary?: string;
+};
+
 export type BadgeDefinition = {
   id: string;
   guildId: string;
@@ -27,6 +33,8 @@ export type BadgeDefinition = {
   style: BadgeStyle;
   linkUrl?: string;
   enabled: boolean;
+  gradient?: RoleGradient;
+  holographic?: boolean;
 };
 
 export type ResolvedBadge = {
@@ -43,6 +51,8 @@ export type ResolvedBadge = {
   linkUrl?: string;
   stale: boolean;
   resolvedAt: string;
+  gradient?: RoleGradient;
+  holographic?: boolean;
 };
 
 export type BadgeManifestEntry = ResolvedBadge & {

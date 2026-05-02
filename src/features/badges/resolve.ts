@@ -99,6 +99,24 @@ async function resolveRole(
 
   const colorHex = intToHex(role.color);
   const bg = tintForPill(colorHex, 0.28);
+  // Discord 2024 added two/three-stop gradient roles. discord.js may not
+  // type role.colors yet, so probe defensively.
+  const colors = (role as unknown as {
+    colors?: {
+      primary_color?: number;
+      secondary_color?: number | null;
+      tertiary_color?: number | null;
+    };
+  }).colors;
+  const gradient =
+    colors && colors.secondary_color != null
+      ? {
+          primary: intToHex(colors.primary_color),
+          secondary: intToHex(colors.secondary_color),
+          tertiary:
+            colors.tertiary_color != null ? intToHex(colors.tertiary_color) : undefined,
+        }
+      : def.gradient;
   return {
     id: def.id,
     kind: "role",
@@ -113,6 +131,8 @@ async function resolveRole(
     linkUrl: def.linkUrl,
     stale: false,
     resolvedAt: nowIso(),
+    gradient,
+    holographic: def.holographic,
   };
 }
 

@@ -133,6 +133,8 @@ export function resolveFromSnapshot(
         linkUrl: def.linkUrl,
         stale: false,
         resolvedAt: nowIso(),
+        gradient: def.gradient,
+        holographic: def.holographic,
       };
     }
   }

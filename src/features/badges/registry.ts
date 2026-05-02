@@ -82,6 +82,27 @@ const LEVEL_ROLES = [
   { id: "role-eternal-fur-lvl100", roleId: "896070888712175693" },
 ] as const;
 
+// Roles with explicit Discord gradient color (Nitro feature). The runtime
+// resolver picks up role.colors from discord.js when the API returns it; the
+// entries below carry hand-curated overrides so the snapshot generator (no
+// Discord call) can render them too.
+const GRADIENT_ROLE_OVERRIDES: Record<
+  string,
+  { primary: string; secondary: string; tertiary?: string; holographic?: boolean }
+> = {
+  // Holographic role: ROYGBIV iridescent shimmer
+  "role-holographic": {
+    primary: "#FF6B6B",
+    secondary: "#A855F7",
+    tertiary: "#22D3EE",
+    holographic: true,
+  },
+};
+
+const HOLOGRAPHIC_ROLES = [
+  { id: "role-holographic", roleId: "1385435356580548628" },
+] as const;
+
 // Patreon / boost / monetary
 const SUPPORTER_ROLES = [
   { id: "role-booster-fur", roleId: "896074753004158987" },
@@ -155,6 +176,7 @@ function role(
   roleId: string,
   suffix?: string,
 ): BadgeDefinition {
+  const grad = GRADIENT_ROLE_OVERRIDES[id];
   return {
     id,
     guildId: "",
@@ -163,6 +185,10 @@ function role(
     suffix,
     style: "discord-role",
     enabled: true,
+    gradient: grad
+      ? { primary: grad.primary, secondary: grad.secondary, tertiary: grad.tertiary }
+      : undefined,
+    holographic: grad?.holographic ?? false,
   };
 }
 
@@ -181,6 +207,7 @@ export const BADGE_REGISTRY: BadgeDefinition[] = [
   ...MOVIE_TIER_ROLES.map((r) => role(r.id, r.roleId, r.suffix)),
   ...GAME_TIER_ROLES.map((r) => role(r.id, r.roleId)),
   ...STAFF_ROLES.map((r) => role(r.id, r.roleId)),
+  ...HOLOGRAPHIC_ROLES.map((r) => role(r.id, r.roleId)),
   ...ARTIST_ROLES.map((r) => role(r.id, r.roleId)),
   ...LEVEL_ROLES.map((r) => role(r.id, r.roleId)),
   ...SUPPORTER_ROLES.map((r) => role(r.id, r.roleId)),
