@@ -76,6 +76,14 @@ Key features:
 
 ## Staff Roles
 
+The hierarchy below lists every staff role in rank order. Each entry describes the responsibilities the role carries here. Role IDs and the full permission matrix live in [PERMS-MATRIX.md](PERMS-MATRIX.md).
+
+### Community Founder
+
+- The role currently held by the server owner.
+- Sets overall direction for the community and has final say on appeals and policy.
+- Older docs and code constants refer to this rank as "Server Owner"; the live Discord name is "Community Founder".
+
 ### Community Manager(s)
 
 - Leads and supervises the entire staff team.
@@ -84,12 +92,18 @@ Key features:
 - Coordinates with moderators and administrators on high-impact community actions.
 - Represents server leadership in community interactions.
 
-### Administrator(s)
+### Community Development Lead
+
+- Owns staff development, training pipelines, and cross-team coordination.
+- Works with the Community Manager on team structure and onboarding.
+
+### Senior Administrator / Administrator
 
 - Maintains day-to-day technical aspects of the server (channels, permissions, etc.).
 - Supports moderation and ensures rules, bots, and internal tools are functioning.
-- Assists with documentation and setup tasks—not responsible for community-wide direction.
-- Works with Sr. Mods and Mods to ensure reports and issues are addressed correctly.
+- Assists with documentation and setup tasks; not responsible for community-wide direction.
+- Works with Senior Moderators and Moderators to ensure reports and issues are addressed correctly.
+- Senior Administrators handle audit-level operations and act as escalation for Administrators.
 
 ### Senior Moderator(s)
 
@@ -98,13 +112,42 @@ Key features:
 - Provides training and mentorship to new mods.
 - Acts as liaison between Mods and Admins/Community Managers.
 
-### Moderator(s)
+### Moderator(s) / Junior Moderator(s)
 
 - Enforces rules fairly and consistently across the server.
 - Manages behavior in text and voice channels.
 - Uses appropriate tools (warn, mute, kick, ban) following the server's escalation guidelines.
 - Files proper modlogs and communicates issues internally.
 - Maintains a helpful, approachable presence within the community.
+- Junior Moderators handle the same day-to-day moderation work as Moderators with closer mentor oversight; they typically do not take lead on H-3 cases.
+
+### Gatekeeper
+
+- Reviews join applications, accepts/rejects/kicks via the gate flow.
+- Does not handle in-server moderation actions.
+- See the [Gatekeeper Guide](GATEKEEPER-GUIDE.md) for the full workflow.
+
+### Community Staff (broad mod role)
+
+- The catch-all "mod-perm" role attached to most staff roles.
+- Carries `ManageMessages`, `MentionEveryone`, and `ModerateMembers` Discord perms.
+- Used by ticket panels and `/report` to grant staff access without naming each individual rank.
+- Older code constants and docs call this role "Moderation Team"; the live Discord name is "Community Staff".
+
+### Community Ambassador
+
+- Non-moderator member-support role.
+- Can use `/report` to escalate violations they handle (delete + screenshot first, document with the report).
+- Cannot ban, mute, or take direct moderation actions.
+
+### Bypass roles
+
+These two are not part of the rank-and-file staff hierarchy but bypass every permission check:
+
+- **Server Dev** — staff role intended for engineers maintaining the bot. Treated as "above everyone" by `src/lib/roles.ts`.
+- **Bot Owner** — single hardcoded user ID at the top of the bypass chain.
+
+If a permission-denied embed says you need a role you don't have, it is showing the live Discord role names. You may also see "Community Staff" or "Community Founder" rendered in the bot's responses where older docs say "Moderation Team" or "Server Owner".
 
 ---
 
@@ -734,44 +777,66 @@ Make sure the user actually got what they came for. Ask "Anything else I can hel
 **Save a transcript before deleting.**
 Click the transcript button after the ticket closes. Once it's saved you can delete the ticket itself.
 
-### Ticket Types
+### Where members open tickets
 
-#### General Support
+Members start a ticket from the panel in `「📥」tickets` (`1103728856294236160`) inside the **City Hall** category. The panel posts the ticket types described below.
 
-Our general support tickets is a good way to get support for basic community needs:
+### Ticket Types (general panel)
+
+The general panel offers six buttons (live as of 2026-04-28 ticket-tool config snapshot):
+
+#### Support
+
+Catch-all support requests:
 - Redeem role items
-- Community Rewards
+- Community rewards
 - How to do something
 - Consulting with staff before posting
 
-*Access: Moderators and Senior Moderators*
+#### Report User
 
-#### User Report
-
-Members need a way to report users in bad faith. This ticket allows bad faith actors to be reported to us. Some reports may include:
-- DM Advertisers
+For members reporting another user in bad faith. Examples:
+- DM advertisers
 - Rule violators
-- DM Issues
-- Drama
-- An argument in one of the talkative channels
+- DM issues
+- Drama spilling into chat
+- Heated arguments in talkative channels
 
-Remember to only enforce violations made by our guidelines. Refer to section 8 on outside drama and issues.
+Only enforce violations under our guidelines. Refer to *Cross Banning & Drama* below for outside-drama issues.
 
-*Access: Senior Moderators*
+#### Report Staff
 
-#### Staff Report
+Members may report staff for any wrongdoing. Routes to leadership only — Community Manager and above review these tickets to keep them out of the same channel as the staff being reported.
 
-Members have rights to report staff for any wrongdoing. It is important that we are transparent with the community.
+#### VRChat World Bug Report
 
-*Access: Community Managers only*
+Bug reports for the official Pawtropolis VRChat world. Handled by the VRChat development team rather than general moderation.
 
-#### Verified Artist Program
+#### VRC Sticker Wall
 
-This program allows fellow artists to verify their artwork which gains them access to advertising commissions.
+Submissions for stickers/decals in the in-world sticker wall feature.
 
-Please be mindful, there are many scammers that try to verify. It's important that you consult with other staff members if you are unsure about verifying artwork.
+#### Art Ticket Redeem
 
-*Access: Moderators and Senior Moderators*
+Members redeem their earned art rewards (Server Artist commissions) here. Pairs with `/redeemreward` and the Server Artist queue.
+
+### Verified Artist Program tickets (separate panel)
+
+A second panel posts the four verification tracks:
+
+| Track | Purpose | Minimum proofs |
+|---|---|---|
+| **2D Artist Verification** | Showcase 2D art and gain access to verified commissions channels | WIPs/layers, speedpaints, commissions page, 6+ months of experience, active commission work |
+| **3D Artist Verification** | For 3D model creators / VRChat avatar artists | Scene file (`.blend`/`.fbx`/`.zpr`), recorded modeling timelapse, viewport wireframe + UV layout screenshots |
+| **Music Creator Program** | Musicians and sound designers showcasing original work | DAW project file, screen-recorded session of at least 45 s, stem export pack, MIDI-setup photo with handwritten date + client name |
+| **Fursuit Creator Program** | Verified fursuit makers advertising suits, parts, and services | Dated DTD photos with measurements, multi-stage in-progress photos, walkthrough video, shipping insurance proof for items over $500 |
+
+Be mindful that many scammers try to verify. Consult another staff member if you are unsure about a verification claim.
+
+### Access notes
+
+- Channel access: ticket channels add the **Community Staff** and **Community Ambassador** roles automatically when a ticket opens. The actual decision-makers vary by ticket type — Report Staff is restricted to Community Manager and above; the rest are handled by general staff.
+- Multi-staff rule still applies: one staff member per ticket, no in-thread consultation.
 
 ---
 
@@ -1140,7 +1205,7 @@ The server uses automated tools to detect and flag suspicious accounts and inapp
 - `/audit members` — Detect bot-like accounts
 - `/audit nsfw` — Scan member avatars for NSFW content
 
-**Who can use it:** Community Managers and Bot Developer only
+**Who can use it:** Administrator, Senior Administrator, Community Manager, or Server Dev (allowed-roles list lives in `src/commands/audit.ts`).
 
 ### `/audit members` — Bot Account Detection
 
@@ -1227,7 +1292,7 @@ For confirmed NSFW avatars:
 
 The `/isitreal` command lets staff detect AI-generated images directly in Discord without visiting external websites.
 
-**Who can use it:** Staff (requires mod role)
+**Who can use it:** Junior Moderator and above (any role at Junior Mod rank or higher in the [permission matrix](PERMS-MATRIX.md))
 
 #### How it works:
 
@@ -1352,7 +1417,7 @@ Flagged users show warning badges on their applications, alerting reviewers to l
 - **[GATEKEEPER-GUIDE.md](GATEKEEPER-GUIDE.md)** — For Gatekeeper and Junior Mod
 - **[MODERATOR-GUIDE.md](MODERATOR-GUIDE.md)** — For Moderator and Senior Mod
 - **[ADMIN-GUIDE.md](ADMIN-GUIDE.md)** — For Administrator and Senior Admin
-- **[LEADERSHIP-GUIDE.md](LEADERSHIP-GUIDE.md)** — For CM, CDL, and Server Owner
+- **[LEADERSHIP-GUIDE.md](LEADERSHIP-GUIDE.md)** — For CM, CDL, and Community Founder
 
 ### Navigation
 - **[Bot Handbook](BOT-HANDBOOK.md)** — Start here for all docs
