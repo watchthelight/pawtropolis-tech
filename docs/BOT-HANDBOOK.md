@@ -602,7 +602,7 @@ Flags don't automatically reject people — they just warn other reviewers to pa
 ### `/report`
 **Who can use it:** Ambassadors and Staff
 
-Report content violations with screenshot evidence. Creates a forum thread for staff to review and resolve. Automatically pings the Moderation Team and consolidates multiple reports for the same user.
+Report content violations with screenshot evidence. Creates a forum thread for staff to review and resolve. Automatically pings the Community Staff role (the staff role attached to most moderator roles) and consolidates multiple reports for the same user.
 
 | Option | Required? | What it does |
 |--------|-----------|--------------|
@@ -616,7 +616,7 @@ Report content violations with screenshot evidence. Creates a forum thread for s
 2. Takes action (e.g., deletes the message) and screenshots as evidence
 3. Runs `/report user:@Violator reason:What they did actions:What I did evidence:<screenshot>`
 4. Bot posts to the report forum — if the user already has a report thread, it adds to that thread; otherwise creates a new one
-5. Moderation Team gets pinged automatically
+5. Community Staff gets pinged automatically
 6. Staff clicks **Resolve** button when handled
 7. Thread gets archived automatically
 
@@ -634,9 +634,9 @@ Report content violations with screenshot evidence. Creates a forum thread for s
 
 ### `/audit`
 
-> 📚 **Reference Section** — Leadership-only command. Skip unless you're Community Manager or above.
+> 📚 **Reference Section** — Admin+ command. Skip unless you're Administrator or above.
 
-**Who can use it:** Community Managers and Bot Developer only (hardcoded role IDs)
+**Who can use it:** Administrator, Senior Administrator, Community Manager, or Server Dev (the allowed-roles list lives in `src/commands/audit.ts`).
 
 Server audit commands for detecting suspicious accounts and NSFW content. This command has two subcommands:
 
@@ -2323,7 +2323,7 @@ This is an interactive wizard that helps you:
 
 | Rank | Role | Abbreviation |
 |------|------|--------------|
-| 1 | Server Owner | SO |
+| 1 | Community Founder | CF |
 | 2 | Community Manager | CM |
 | 3 | Community Development Lead | CDL |
 | 4 | Senior Administrator | SA |
@@ -2332,7 +2332,7 @@ This is an interactive wizard that helps you:
 | 7 | Moderator | M |
 | 8 | Junior Moderator | JM |
 | 9 | Gatekeeper | GK |
-| 10 | Moderation Team | MT |
+| 10 | Community Staff | CS |
 
 ### Special Bypass Roles
 - **Server Dev** - Full access to all commands (same as Bot Owner)
@@ -2349,10 +2349,10 @@ This is an interactive wizard that helps you:
 | **Event Staff** | Event Host, Events Manager | `/event`, `/movie` |
 | **Moderator+** | M and above | (inherits event commands) |
 | **Senior Mod+** | SM and above | `/stats activity`, `/skullmode`, `/update activity/status` |
-| **Administrator+** | A and above | `/config` |
+| **Administrator+** | A and above | `/config`, `/audit` |
 | **Senior Admin+** | SA and above | `/panic`, `/stats export/reset` |
-| **Community Manager+** | CM and above | `/update banner/avatar`, `/backfill`, `/audit` |
-| **Bot Owner only** | Server Dev or Bot Owner | `/database` |
+| **Community Manager+** | CM and above | `/update banner/avatar`, `/backfill` |
+| **Bot Owner / Server Dev** | Server Dev or Bot Owner | `/database`, `/poke` |
 
 ### Understanding "X and above"
 
@@ -2362,7 +2362,7 @@ When a command requires "Senior Mod+" (Senior Moderator and above), any of these
 - Senior Administrator
 - Community Development Lead
 - Community Manager
-- Server Owner
+- Community Founder
 - Server Dev (bypass)
 - Bot Owner (bypass)
 
