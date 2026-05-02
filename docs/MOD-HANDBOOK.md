@@ -362,55 +362,27 @@ flowchart TD
     SECURE --> SCREEN[2. Screenshot BEFORE deleting]
     SCREEN --> Q1{Content illegal?}
 
-    Q1 -->|Yes| C4["C-4: Critical
-    ━━━━━━━━━━
-    • Raids
-    • Doxxing
-    • CSAM
-    • Illegal content"]
+    Q1 -->|Yes| C4["C-4: Critical<br/>Raids, Doxxing, CSAM, Illegal content"]
     Q1 -->|No| Q2{Severity?}
 
-    Q2 -->|Slurs/Threats| H3["H-3: High
-    ━━━━━━━━━━
-    • Hate speech
-    • Direct threats
-    • Identity attacks"]
-    Q2 -->|Harassment/Repeat| M2["M-2: Medium
-    ━━━━━━━━━━
-    • Harassment
-    • VC abuse
-    • Repeated L-1s"]
-    Q2 -->|Spam/Minor| L1["L-1: Low
-    ━━━━━━━━━━
-    • Spam/Caps
-    • Minor drama
-    • First offense"]
+    Q2 -->|Slurs/Threats| H3["H-3: High<br/>Hate speech, Direct threats, Identity attacks"]
+    Q2 -->|Harassment/Repeat| M2["M-2: Medium<br/>Harassment, VC abuse, Repeated L-1s"]
+    Q2 -->|Spam/Minor| L1["L-1: Low<br/>Spam/Caps, Minor drama, First offense"]
 
     C4 --> BAN1["/ban preserve_messages: true"]
     H3 --> BAN2["/ban preserve_messages: true"]
     M2 --> MUTE["/mute or /warn"]
     L1 --> WARN["/warn or verbal"]
 
-    BAN1 --> LOG["📋 Log in #ban-log
-    ━━━━━━━━━━━━━━━━
-    Use thread for evidence"]
+    BAN1 --> LOG["Log in #ban-log<br/>Use thread for evidence"]
     BAN2 --> LOG
 
-    LOG --> FORMAT["Format: INC-YYYYMMDD-###
-    ━━━━━━━━━━━━━━━━━━━━
-    Include:
-    • User ID
-    • Time (UTC)
-    • Channel/message links
-    • Clear reason
-    • Action taken"]
+    LOG --> FORMAT["Format: INC-YYYYMMDD-###<br/>User ID, Time UTC, Channel/message links, Clear reason, Action taken"]
 
     FORMAT --> OWNER{C-4?}
 
-    OWNER -->|Yes| NOTIFY["🚨 Notify Owner IMMEDIATELY
-    + Admin alert"]
-    OWNER -->|No| REVIEW["Admin Review
-    within 48 hours"]
+    OWNER -->|Yes| NOTIFY["Notify Owner IMMEDIATELY<br/>+ Admin alert"]
+    OWNER -->|No| REVIEW["Admin Review<br/>within 48 hours"]
 
     MUTE --> ESCALATE{M-2 or above?}
     WARN --> DONE([Complete])
