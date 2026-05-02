@@ -12,29 +12,29 @@ Behavior-preserving hardening pass. No commands, customId formats, dashboard con
 
 #### Added
 
-- **Command registration drift guard** — `src/commands/runtimeManifest.ts` is the single source of truth for runtime command names; `src/index.ts` asserts at startup that the runtime command Collection matches. `tests/commands/registration.test.ts` (8 cases) ties `buildCommands.ts` to the manifest. Doc: `docs/reference/command-registration-invariants.md`.
+- **Command registration drift guard**: `src/commands/runtimeManifest.ts` is the single source of truth for runtime command names; `src/index.ts` asserts at startup that the runtime command Collection matches. `tests/commands/registration.test.ts` (8 cases) ties `buildCommands.ts` to the manifest. Doc: `docs/reference/command-registration-invariants.md`.
 
-- **Review kick transaction tests** — `tests/features/review/kick.test.ts` (12 cases) covering submitted/needs_info → kicked, terminal-state rejections, and audit row insertion. Tightened `reject.test.ts` to assert bound values (not just SQL shape) for the permanent rejection path.
+- **Review kick transaction tests**: `tests/features/review/kick.test.ts` (12 cases) covering submitted/needs_info → kicked, terminal-state rejections, and audit row insertion. Tightened `reject.test.ts` to assert bound values (not just SQL shape) for the permanent rejection path.
 
-- **Dashboard API authorization tests** — Pulled `TIER_ORDER`, `hasMinTier`, `missingStringFields`, `missingIntegerFields` out of `dashboardApi.ts` into a sibling `dashboardAuth.ts`. `tests/web/dashboardAuth.test.ts` (50 cases) covers the seven-tier hierarchy, fail-closed semantics for unknown tiers, body validation, and the `admin` requirement on permreject. Doc: `docs/reference/dashboard-api-security.md`.
+- **Dashboard API authorization tests**: Pulled `TIER_ORDER`, `hasMinTier`, `missingStringFields`, `missingIntegerFields` out of `dashboardApi.ts` into a sibling `dashboardAuth.ts`. `tests/web/dashboardAuth.test.ts` (50 cases) covers the seven-tier hierarchy, fail-closed semantics for unknown tiers, body validation, and the `admin` requirement on permreject. Doc: `docs/reference/dashboard-api-security.md`.
 
-- **Modmail routing observability tests** — Added 18 cases to `tests/features/modmail/routing.test.ts` covering image attachment selection, reply-mapping in both directions, `SAFE_ALLOWED_MENTIONS` application, transcript persistence, dashboard notification, forwarded-cache loop guard, and thread-fetch / DM-send failure paths.
+- **Modmail routing observability tests**: Added 18 cases to `tests/features/modmail/routing.test.ts` covering image attachment selection, reply-mapping in both directions, `SAFE_ALLOWED_MENTIONS` application, transcript persistence, dashboard notification, forwarded-cache loop guard, and thread-fetch / DM-send failure paths.
 
-- **Startup task wrapper + extracted modules** — `src/startup/runStartupTask.ts` standardizes the fail-soft try/catch shape; `src/startup/{schema,schedulers,web}.ts` host the corresponding ClientReady and gracefulShutdown sections. `tests/startup/runStartupTask.test.ts` (8 cases) verifies isolation. Doc: `docs/architecture/startup-lifecycle.md`.
+- **Startup task wrapper + extracted modules**: `src/startup/runStartupTask.ts` standardizes the fail-soft try/catch shape; `src/startup/{schema,schedulers,web}.ts` host the corresponding ClientReady and gracefulShutdown sections. `tests/startup/runStartupTask.test.ts` (8 cases) verifies isolation. Doc: `docs/architecture/startup-lifecycle.md`.
 
-- **DB schema utility extraction** — `src/db/columnUtil.ts` (extracted from `src/db/db.ts`) holds `addColumnIfMissing`, identifier validation, and definition sanitization. `tests/db/columnUtil.test.ts` (22 cases) and `tests/db/legacyGuard.test.ts` (7 cases) cover SQL identifier safety and the `__old` / `ALTER TABLE ... RENAME` guard regex. Doc: `docs/reference/database-schema-safety.md`.
+- **DB schema utility extraction**: `src/db/columnUtil.ts` (extracted from `src/db/db.ts`) holds `addColumnIfMissing`, identifier validation, and definition sanitization. `tests/db/columnUtil.test.ts` (22 cases) and `tests/db/legacyGuard.test.ts` (7 cases) cover SQL identifier safety and the `__old` / `ALTER TABLE ... RENAME` guard regex. Doc: `docs/reference/database-schema-safety.md`.
 
-- **Deployment hardening** — `deploy.sh` now supports env overrides for `REMOTE_USER` / `REMOTE_HOST` / `REMOTE_PATH` / `PM2_PROCESS_BOT` / `PM2_PROCESS_WEB`, SSH/SCP timeouts (`ConnectTimeout=15`, keepalive 30s × 3), an atomic remote deploy lock under `/tmp/pawtropolis-deploy.lock`, optional pre-deploy DB backup (`BACKUP_BEFORE_DEPLOY=1`), `--dry-run`, and a preflight summary. All existing flags (`--logs`, `--restart`, `--status`, `--fast`, `--web`, `--bot`, `--graceful`) keep working unchanged. Doc: `docs/operations/deployment-hardening.md`.
+- **Deployment hardening**: `deploy.sh` now supports env overrides for `REMOTE_USER` / `REMOTE_HOST` / `REMOTE_PATH` / `PM2_PROCESS_BOT` / `PM2_PROCESS_WEB`, SSH/SCP timeouts (`ConnectTimeout=15`, keepalive 30s × 3), an atomic remote deploy lock under `/tmp/pawtropolis-deploy.lock`, optional pre-deploy DB backup (`BACKUP_BEFORE_DEPLOY=1`), `--dry-run`, and a preflight summary. All existing flags (`--logs`, `--restart`, `--status`, `--fast`, `--web`, `--bot`, `--graceful`) keep working unchanged. Doc: `docs/operations/deployment-hardening.md`.
 
-- **Observability and error cards reference** — `docs/reference/observability-and-error-cards.md` documents the structured-logging conventions, `withStep` / `withSql` usage, error card V1 vs V2, and `SAFE_ALLOWED_MENTIONS` policy.
+- **Observability and error cards reference**: `docs/reference/observability-and-error-cards.md` documents the structured-logging conventions, `withStep` / `withSql` usage, error card V1 vs V2, and `SAFE_ALLOWED_MENTIONS` policy.
 
-- **CI policy doc** — `docs/operations/ci-policy.md` enumerates HARD vs SOFT gates with explicit promotion conditions for each soft gate.
+- **CI policy doc**: `docs/operations/ci-policy.md` enumerates HARD vs SOFT gates with explicit promotion conditions for each soft gate.
 
 #### Changed
 
-- **CI typecheck is now a HARD gate** — Removed `continue-on-error: true` from the typecheck step in `.github/workflows/ci.yml` after fixing two real defects in `src/commands/cleanup.ts` (`requireMinRole` was being called with two args instead of three; channel-narrowing collapsed to `never` after the exhaustive type check). Lint, format, and tests remain SOFT with documented exit conditions.
+- **CI typecheck is now a HARD gate**: Removed `continue-on-error: true` from the typecheck step in `.github/workflows/ci.yml` after fixing two real defects in `src/commands/cleanup.ts` (`requireMinRole` was being called with two args instead of three; channel-narrowing collapsed to `never` after the exhaustive type check). Lint, format, and tests remain SOFT with documented exit conditions.
 
-- **Lazy module-level prepare for `src/features/tickets/counters.ts`** — `incrementStmt` is now lazy-prepared on first call rather than at module load, so the file imports cleanly on a fresh DB. The `service.ts` counterpart is tracked for the same treatment in the next pass; the test soft-gate in `docs/operations/ci-policy.md` documents the path forward.
+- **Lazy module-level prepare for `src/features/tickets/counters.ts`**: `incrementStmt` is now lazy-prepared on first call rather than at module load, so the file imports cleanly on a fresh DB. The `service.ts` counterpart is tracked for the same treatment in the next pass; the test soft-gate in `docs/operations/ci-policy.md` documents the path forward.
 
 #### Stats
 
@@ -45,26 +45,26 @@ Behavior-preserving hardening pass. No commands, customId formats, dashboard con
 
 ### Added
 
-- **`/attendance` Command** — Public event attendance stats and leaderboards:
-  - `/attendance user [user]` — View your own or another user's movie/game night stats
-  - `/attendance leaderboard [type]` — View top event attendees with optional movie/game filter
+- **`/attendance` Command**: Public event attendance stats and leaderboards:
+  - `/attendance user [user]`: View your own or another user's movie/game night stats
+  - `/attendance leaderboard [type]`: View top event attendees with optional movie/game filter
   - Shows total qualified events, time spent, and recent event history
   - Leaderboard displays top 15 with user's own rank if not listed
-  - Available to everyone — no permission requirements
+  - Available to everyone: no permission requirements
   - See `src/commands/attendance.ts`
 
 ### Changed
 
-- **`/event` Permission Update** — Now accessible to Event Host and Events Manager roles, in addition to Moderator+. Allows independent event hosts to manage movie/game nights without needing mod roles.
+- **`/event` Permission Update**: Now accessible to Event Host and Events Manager roles, in addition to Moderator+. Allows independent event hosts to manage movie/game nights without needing mod roles.
 
-- **`/config set movie_threshold` → `/config set-advanced movie_threshold`** — Moved to fix Discord's 25-subcommand limit. The `/config set` group was at 26 subcommands which caused command registration to fail.
+- **`/config set movie_threshold` → `/config set-advanced movie_threshold`**: Moved to fix Discord's 25-subcommand limit. The `/config set` group was at 26 subcommands which caused command registration to fail.
 
-- **`/report` Command Enhancements** — Updated per manager feedback:
-  - **Thread title is now the user ID** — Makes searching for existing reports easier
-  - **Mod team ping** — Automatically pings `@Moderation Team` when a report is created
-  - **Reuses existing threads** — If a user already has a report thread, new reports post there instead of creating a new thread
-  - **Default channel fallback** — Now defaults to `#reports` if no report forum is configured via `/config set report_forum`
-  - **New `actions` option** — Reporters can document what actions they took (e.g., "Deleted message", "Issued warning")
+- **`/report` Command Enhancements**: Updated per manager feedback:
+  - **Thread title is now the user ID**: Makes searching for existing reports easier
+  - **Mod team ping**: Automatically pings `@Moderation Team` when a report is created
+  - **Reuses existing threads**: If a user already has a report thread, new reports post there instead of creating a new thread
+  - **Default channel fallback**: Now defaults to `#reports` if no report forum is configured via `/config set report_forum`
+  - **New `actions` option**: Reporters can document what actions they took (e.g., "Deleted message", "Issued warning")
 
 ---
 
@@ -72,15 +72,15 @@ Behavior-preserving hardening pass. No commands, customId formats, dashboard con
 
 ### Fixed
 
-- **Event Voice Channel Switch Tracking** — Previously, users who switched directly between voice channels (e.g., from another VC to Gaming Lounge) weren't tracked for event attendance. Now properly detects channel switches in addition to join/leave from no channel. See `src/index.ts` voiceStateUpdate handler.
+- **Event Voice Channel Switch Tracking**: Previously, users who switched directly between voice channels (e.g., from another VC to Gaming Lounge) weren't tracked for event attendance. Now properly detects channel switches in addition to join/leave from no channel. See `src/index.ts` voiceStateUpdate handler.
 
-- **Event Command Defer Timing** — `/event game start`, `/event game end`, `/event movie start`, `/event movie end` now call `deferReply()` immediately to prevent Discord's 3-second timeout. Previously, database checks ran before defer which could cause "The application did not respond" errors.
+- **Event Command Defer Timing**: `/event game start`, `/event game end`, `/event movie start`, `/event movie end` now call `deferReply()` immediately to prevent Discord's 3-second timeout. Previously, database checks ran before defer which could cause "The application did not respond" errors.
 
-- **Interaction Deduplication** — Added protection against Discord sending duplicate interaction events (observed: 4 duplicates within 19ms for a single command). Tracks recent interaction IDs and skips duplicates to prevent race conditions and "Unknown interaction" errors.
+- **Interaction Deduplication**: Added protection against Discord sending duplicate interaction events (observed: 4 duplicates within 19ms for a single command). Tracks recent interaction IDs and skips duplicates to prevent race conditions and "Unknown interaction" errors.
 
 ### Improved
 
-- **Review Card Debug Logging** — Added info-level logging for member fetch results in `ensureReviewMessage()` to help diagnose "left server" detection issues. Logs whether member was found and their display name.
+- **Review Card Debug Logging**: Added info-level logging for member fetch results in `ensureReviewMessage()` to help diagnose "left server" detection issues. Logs whether member was found and their display name.
 
 ---
 
@@ -88,7 +88,7 @@ Behavior-preserving hardening pass. No commands, customId formats, dashboard con
 
 ### Added
 
-- **`/report` Command** — Ambassador content violation reporting system:
+- **`/report` Command**: Ambassador content violation reporting system:
   - Ambassadors and staff can report rule violations with screenshot evidence
   - Creates forum thread in configurable report forum channel
   - Staff resolves reports via Resolve button with optional note
@@ -96,7 +96,7 @@ Behavior-preserving hardening pass. No commands, customId formats, dashboard con
   - Configure with `/config set report_forum channel:#content-reports`
   - See `src/commands/report.ts`, `src/features/report/`
 
-- **Disk Space Monitor** — Scheduler that monitors server disk usage and alerts before outages:
+- **Disk Space Monitor**: Scheduler that monitors server disk usage and alerts before outages:
   - Runs every 30 minutes (configurable via `DISK_SPACE_CHECK_INTERVAL_MINUTES`)
   - Warning alert at 80% usage, critical alert at 90%
   - Critical alerts ping bot_dev_role
@@ -104,7 +104,7 @@ Behavior-preserving hardening pass. No commands, customId formats, dashboard con
   - 4-hour cooldown between repeated alerts (unless escalating from warning to critical)
   - See `src/scheduler/diskSpaceScheduler.ts`
 
-- **`/usebyte` Command** — Self-service byte token redemption for XP multipliers:
+- **`/usebyte` Command**: Self-service byte token redemption for XP multipliers:
   - Members with Byte Token roles can redeem them without opening support tickets
   - Supports 5 token rarities: Common (2x/12h), Rare (3x/24h), Epic (5x/48h), Legendary (5x/72h), Mythic (10x/168h)
   - Confirmation flow shows token info, multiplier details, and expiration time
@@ -113,22 +113,22 @@ Behavior-preserving hardening pass. No commands, customId formats, dashboard con
   - Full audit trail logging with new action types
   - See `src/commands/usebyte.ts`, `src/features/byteTokenHandler.ts`, `src/scheduler/byteMultiplierScheduler.ts`
 - **New Audit ActionTypes** for byte token system:
-  - `byte_token_redeemed` — User redeemed a byte token
-  - `byte_multiplier_applied` — Multiplier role granted to user
-  - `byte_multiplier_expired` — Scheduler removed expired multiplier role
-  - `byte_multiplier_replaced` — User upgraded to higher multiplier
-- **Database Table** `active_byte_multipliers` — Tracks active XP multipliers with expiration times
-- **Ambassador `/redeemreward` access** — Community Ambassadors can now use `/redeemreward` to assign art rewards, improving ticket response time
+  - `byte_token_redeemed`: User redeemed a byte token
+  - `byte_multiplier_applied`: Multiplier role granted to user
+  - `byte_multiplier_expired`: Scheduler removed expired multiplier role
+  - `byte_multiplier_replaced`: User upgraded to higher multiplier
+- **Database Table** `active_byte_multipliers`: Tracks active XP multipliers with expiration times
+- **Ambassador `/redeemreward` access**: Community Ambassadors can now use `/redeemreward` to assign art rewards, improving ticket response time
 
 ### Fixed
 
-- **Trace ID consistency** — Permission denied embeds now use the request context trace ID instead of generating a new one. This ensures `/developer trace` can find the trace for any error. Fixed in:
+- **Trace ID consistency**: Permission denied embeds now use the request context trace ID instead of generating a new one. This ensures `/developer trace` can find the trace for any error. Fixed in:
   - `src/lib/permissionCard.ts`
   - `src/features/review/handlers/buttons.ts`
   - `src/features/review/handlers/modals.ts`
   - `src/features/modmail/threadOpen.ts`
 
-- **Byte token stacking race condition** — Fixed issue where rapidly clicking multiple confirm buttons could stack multiplier roles. Now removes ALL multiplier roles before adding the new one, with post-add cleanup for concurrent requests.
+- **Byte token stacking race condition**: Fixed issue where rapidly clicking multiple confirm buttons could stack multiplier roles. Now removes ALL multiplier roles before adding the new one, with post-add cleanup for concurrent requests.
 
 ---
 
@@ -136,17 +136,17 @@ Behavior-preserving hardening pass. No commands, customId formats, dashboard con
 
 ### Added
 
-- **`/art cancel` Subcommand** — Staff-only command to cancel an art job without counting towards the artist's completed pieces:
+- **`/art cancel` Subcommand**: Staff-only command to cancel an art job without counting towards the artist's completed pieces:
   - Use case: Job reassignment, recipient left server, request withdrawn
   - Adds new "cancelled" status to job workflow (separate from "done")
   - Cancelled jobs don't appear in `/art jobs`, `/art all`, or leaderboards
   - Usage: `/art cancel id:<job_number> [reason:<text>]`
 
-- **Security Audit Overhaul** — Major enhancement to `/audit security` with comprehensive permission analysis:
-  - **Snapshot & Diff Tracking** — Each audit stores a snapshot for change detection between runs
+- **Security Audit Overhaul**: Major enhancement to `/audit security` with comprehensive permission analysis:
+  - **Snapshot & Diff Tracking**: Each audit stores a snapshot for change detection between runs
   - **New Subcommands:**
-    - `/audit trends [days]` — Show security issue trends over 7/30 days
-    - `/audit diff` — Show permission changes since last audit with dangerous change highlights
+    - `/audit trends [days]`: Show security issue trends over 7/30 days
+    - `/audit diff`: Show permission changes since last audit with dangerous change highlights
   - **New Security Checks:**
     - Role hierarchy inversions (lower role with more perms than higher)
     - ManageRoles scope warnings (position vs assignable roles)
@@ -155,25 +155,25 @@ Behavior-preserving hardening pass. No commands, customId formats, dashboard con
     - Gate channel exposure detection
     - Unverified role dangerous permission detection
   - **New Documentation:**
-    - `HIERARCHY.md` — Visual role hierarchy with permission analysis
-    - `DIFF.md` — Permission changes since last audit (auto-generated)
+    - `HIERARCHY.md`: Visual role hierarchy with permission analysis
+    - `DIFF.md`: Permission changes since last audit (auto-generated)
   - **Enhanced Scheduler:**
     - Now posts diff alerts when dangerous permissions are added
     - Pings leadership for critical issues AND dangerous permission changes
     - Stores snapshots for trend tracking
   - **Database Tables:**
-    - `security_audit_snapshots` — Complete audit state for diff tracking
-    - `security_issue_history` — Issue counts over time for trends
-    - `bot_permission_requirements` — Document expected bot permissions (future)
+    - `security_audit_snapshots`: Complete audit state for diff tracking
+    - `security_issue_history`: Issue counts over time for trends
+    - `bot_permission_requirements`: Document expected bot permissions (future)
   - See `migrations/042_security_audit_snapshots.ts`, `src/features/securityDiff.ts`, `src/store/securitySnapshotStore.ts`
 
-- **Automated Security Audit Scheduler** — New scheduler that runs `/audit security` automatically every 30 minutes:
+- **Automated Security Audit Scheduler**: New scheduler that runs `/audit security` automatically every 30 minutes:
   - Posts results to the logging channel (#bot-logs)
   - Pings Server Dev, Community Manager, and Senior Administrator roles for unacknowledged critical issues
   - Helps catch dangerous permission misconfigurations like INC-002 (Community Apps with Admin)
   - See `src/scheduler/securityAuditScheduler.ts`
-- **`/skullmode` Command Registration** — The `/skullmode` command was missing from Discord command registration. Now properly registered in `buildCommands.ts` and `index.ts`.
-- **`/developer trace` Command** — Staff can now look up verbose trace details from error card trace IDs:
+- **`/skullmode` Command Registration**: The `/skullmode` command was missing from Discord command registration. Now properly registered in `buildCommands.ts` and `index.ts`.
+- **`/developer trace` Command**: Staff can now look up verbose trace details from error card trace IDs:
   - Request overview (command, user, guild, outcome, duration)
   - Execution timeline with individual phase timings
   - Database queries with SQL and timing
@@ -181,41 +181,41 @@ Behavior-preserving hardening pass. No commands, customId formats, dashboard con
   - Full error details (kind, code, message, stack trace in dev)
   - Custom attributes and affected entities
   - Traces stored in-memory for 30 minutes (500 trace max)
-- **`/developer stats` Command** — Shows trace cache statistics (size, TTL, memory estimate)
-- **Slash Command System Documentation** — Comprehensive developer guide at `docs/SLASH-COMMANDS.md` covering:
+- **`/developer stats` Command**: Shows trace cache statistics (size, TTL, memory estimate)
+- **Slash Command System Documentation**: Comprehensive developer guide at `docs/SLASH-COMMANDS.md` covering:
   - Command file structure and required exports
   - Registration in `buildCommands.ts` and `index.ts`
   - Deployment process and runtime auto-sync
   - Interaction handlers (buttons, modals, autocomplete)
   - Helper patterns (withStep, withSql, permissions)
   - Troubleshooting guide and checklist for new commands
-- **`metrics_reset` ActionType** — New audit trail action type for `/resetdata` command. Previously used `modmail_close` as a workaround.
-- **New Audit ActionTypes** — Added 5 new action types for unified audit trail logging:
-  - `flag_added` — User manually flagged as suspicious
-  - `flag_removed` — User unflagged
-  - `message_purge` — Bulk message deletion
-  - `dm_sent` — Anonymous DM sent via `/send`
-  - `user_unblocked` — Permanent rejection removed
-- **Audit Trail Logging** — Added `logActionPretty` calls to `/flag`, `/purge`, `/send`, and `/unblock` commands for unified audit trail visibility.
+- **`metrics_reset` ActionType**: New audit trail action type for `/resetdata` command. Previously used `modmail_close` as a workaround.
+- **New Audit ActionTypes**: Added 5 new action types for unified audit trail logging:
+  - `flag_added`: User manually flagged as suspicious
+  - `flag_removed`: User unflagged
+  - `message_purge`: Bulk message deletion
+  - `dm_sent`: Anonymous DM sent via `/send`
+  - `user_unblocked`: Permanent rejection removed
+- **Audit Trail Logging**: Added `logActionPretty` calls to `/flag`, `/purge`, `/send`, and `/unblock` commands for unified audit trail visibility.
 
 ### Security
 
-- **Rate Limit on `/send`** — Added 60-second cooldown per user to prevent DM spam abuse via the anonymous message command.
-- **Rate Limit on `/poke`** — Added 60-second cooldown per user to prevent notification spam.
-- **Rate Limit on `/stats export`** — Added 5-minute cooldown per user to prevent expensive CSV generation abuse.
-- **DM Permission Restrictions** — Added `.setDMPermission(false)` to prevent guild-only commands from being used in DMs:
-  - `/roles` — Role automation configuration
-  - `/flag` — User flagging system
-  - `/art` — Artist job management
-  - `/artistqueue` — Artist rotation queue management
+- **Rate Limit on `/send`**: Added 60-second cooldown per user to prevent DM spam abuse via the anonymous message command.
+- **Rate Limit on `/poke`**: Added 60-second cooldown per user to prevent notification spam.
+- **Rate Limit on `/stats export`**: Added 5-minute cooldown per user to prevent expensive CSV generation abuse.
+- **DM Permission Restrictions**: Added `.setDMPermission(false)` to prevent guild-only commands from being used in DMs:
+  - `/roles`: Role automation configuration
+  - `/flag`: User flagging system
+  - `/art`: Artist job management
+  - `/artistqueue`: Artist rotation queue management
 
 ### Fixed
 
-- **`/resetdata` ActionType** — Changed from incorrect `"modmail_close"` to proper `"metrics_reset"` action type for accurate audit logging.
+- **`/resetdata` ActionType**: Changed from incorrect `"modmail_close"` to proper `"metrics_reset"` action type for accurate audit logging.
 
 ### Changed
 
-- **Command Instrumentation Unification (Complete: 10 Phases)** — Standardized execution tracing across 50+ command handlers using `withStep()` and `withSql()` patterns:
+- **Command Instrumentation Unification (Complete: 10 Phases)**: Standardized execution tracing across 50+ command handlers using `withStep()` and `withSql()` patterns:
   - **Config Handlers (11 files)**: setRoles, setChannels, setAdvanced, setFeatures, get, artist, movie, game, poke, isitreal, toggleapis
   - **Gate Commands (5 files)**: gateMain (10 subcommands), accept, reject, kick, unclaim
   - **Event Commands (3 files)**: event/index (router), event/movie (7 handlers), event/game (7 handlers)
@@ -224,12 +224,12 @@ Behavior-preserving hardening pass. No commands, customId formats, dashboard con
   - All commands now have consistent phase tracking for debugging via `/developer trace`
   - Database operations are properly instrumented for query timing in error cards
   - Updated `withStep()` to accept all interaction types (ChatInput, Modal, Button)
-- **Structured Logging `evt` Fields** — Added `evt` (event type) field to all logger calls in commands for consistent log aggregation and filtering:
-  - `/unblock` — 8 event types: `unblock_success`, `unblock_error`, `unblock_dm_sent`, `unblock_dm_failed`, etc.
-  - `/search` — 3 event types: `search_executed`, `search_unauthorized`, `search_error`
-  - `/stats user` — Added `stats_user_view` event
-  - `/stats export` — Added `stats_export` event
-- **Deployment Script Robustness** — Improved `deploy.sh` reliability:
+- **Structured Logging `evt` Fields**: Added `evt` (event type) field to all logger calls in commands for consistent log aggregation and filtering:
+  - `/unblock`: 8 event types: `unblock_success`, `unblock_error`, `unblock_dm_sent`, `unblock_dm_failed`, etc.
+  - `/search`: 3 event types: `search_executed`, `search_unauthorized`, `search_error`
+  - `/stats user`: Added `stats_user_view` event
+  - `/stats export`: Added `stats_export` event
+- **Deployment Script Robustness**: Improved `deploy.sh` reliability:
   - Added `set -euo pipefail` for stricter error handling
   - Added post-deploy health check (waits 3s, verifies PM2 process status)
   - Added remote tarball cleanup step
@@ -237,11 +237,11 @@ Behavior-preserving hardening pass. No commands, customId formats, dashboard con
 
 ### Deprecated
 
-- **`/movie` Command** — This command is deprecated in favor of `/event movie`. All subcommands (start, end, attendance, add, credit, bump, resume) show a deprecation notice in the response footer. Target removal: **v6.0.0**. Migration path: Use the equivalent `/event movie *` subcommands which are part of the unified event tracking system.
+- **`/movie` Command**: This command is deprecated in favor of `/event movie`. All subcommands (start, end, attendance, add, credit, bump, resume) show a deprecation notice in the response footer. Target removal: **v6.0.0**. Migration path: Use the equivalent `/event movie *` subcommands which are part of the unified event tracking system.
 
 ### Removed
 
-- **Dead Code Cleanup** — Removed 9 unused exports and 2 unused imports:
+- **Dead Code Cleanup**: Removed 9 unused exports and 2 unused imports:
   - `invalidateDraftsCache` from listopen.ts
   - `clearMetricsEpoch` from metricsEpoch.ts
   - `APPLICANT_ACTIONS`, `getModeratorMetrics`, `getTopModerators` from modPerformance.ts
@@ -256,12 +256,12 @@ Behavior-preserving hardening pass. No commands, customId formats, dashboard con
 
 ### Fixed
 
-- **`/audit acknowledge` & `/audit unacknowledge` Timeout** — Fixed "The application did not respond" error that occurred when these commands took too long. Interaction is now deferred immediately before permission checks.
-- **`/audit security` Git Sync** — Fixed push failures when the server's git repo was out of sync with remote. The command now auto-syncs (fetch, stash, pull --rebase, pop) before pushing.
+- **`/audit acknowledge` & `/audit unacknowledge` Timeout**: Fixed "The application did not respond" error that occurred when these commands took too long. Interaction is now deferred immediately before permission checks.
+- **`/audit security` Git Sync**: Fixed push failures when the server's git repo was out of sync with remote. The command now auto-syncs (fetch, stash, pull --rebase, pop) before pushing.
 
 ### Changed
 
-- **`/audit security` Verbose Progress** — Now shows real-time progress updates instead of "is thinking":
+- **`/audit security` Verbose Progress**: Now shows real-time progress updates instead of "is thinking":
   - Fetching server roles
   - Analyzing permissions
   - Git operations (sync, commit, push)
@@ -273,7 +273,7 @@ Behavior-preserving hardening pass. No commands, customId formats, dashboard con
 
 ### Changed
 
-- **`/unclaim` Admin Override** — Administrators+ can now unclaim applications claimed by other staff members. Previously, only the person who claimed an application could unclaim it. This allows admins to resolve stalemates when a staff member is unavailable.
+- **`/unclaim` Admin Override**: Administrators+ can now unclaim applications claimed by other staff members. Previously, only the person who claimed an application could unclaim it. This allows admins to resolve stalemates when a staff member is unavailable.
 
 ---
 

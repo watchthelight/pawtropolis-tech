@@ -85,6 +85,6 @@ Run this in Discord and you'll get the heatmap for the period you just backfille
 
 ## See Also
 
-- [Bot Handbook — `/backfill`](../BOT-HANDBOOK.md#backfill) — user-facing command details and cooldown info
-- [Leadership Guide](../LEADERSHIP-GUIDE.md) — when to backfill and why (it's a Leadership-tier command)
-- [Troubleshooting](../operations/troubleshooting.md) — fixes for SSH/disk/permission issues that can interrupt the script
+- [Bot Handbook: `/backfill`](../BOT-HANDBOOK.md#backfill): user-facing command details and cooldown info
+- [Leadership Guide](../LEADERSHIP-GUIDE.md): when to backfill and why (it's a Leadership-tier command)
+- [Troubleshooting](../operations/troubleshooting.md): fixes for SSH/disk/permission issues that can interrupt the script

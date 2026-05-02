@@ -1,12 +1,12 @@
 # Developer Notes
 
-## AI Detection Engines — Status (2026-03-18)
+## AI Detection Engines: Status (2026-03-18)
 
 The `/isitreal` command and dashboard Scan AI button use 4 parallel AI-generated image detection APIs. Results are averaged across responding services.
 
 | Engine | Status | Notes |
 |--------|--------|-------|
-| **Hive Moderation** | **Down** — 403 Invalid Auth Token | Key expired or revoked. Regenerate at https://thehive.ai/dashboard |
+| **Hive Moderation** | **Down**: 403 Invalid Auth Token | Key expired or revoked. Regenerate at https://thehive.ai/dashboard |
 | **SightEngine** | **Working** | Returns `type.ai_generated` score 0-1. Credentials: `SIGHTENGINE_API_USER` + `SIGHTENGINE_API_SECRET` |
 | **Optic (AI or Not)** | **Out of credits** | Free tier exhausted (10/10 images used). Top up at https://aiornot.com/dashboard |
 | **RapidAPI AI Art** | **Not configured** | Key commented out in `.env`. Sign up at https://rapidapi.com/ai-image-detection/api/ai-generated-image-detection-api |
@@ -54,7 +54,7 @@ Keys can be set via `/config isitreal` in Discord (no restart needed) or by edit
 
 ---
 
-## Google Cloud Vision — NSFW Detection
+## Google Cloud Vision: NSFW Detection
 
 Used for avatar and banner NSFW scanning on the dashboard and automated avatar monitoring.
 
@@ -123,8 +123,8 @@ Bot writes live Discord gateway data to SQLite every 5 minutes so the web dashbo
 
 ## See Also
 
-- [Architecture: System Overview](architecture/system-overview.md) — where these subsystems fit in the runtime topology
-- [Database Schema](reference/database-schema.md) — `voice_session`, `guild_snapshot`, `avatar_scan`, `ai_detection_toggles` table definitions
-- [Bot Handbook — `/isitreal`](BOT-HANDBOOK.md#isitreal) — user-facing AI detection command
-- [Slash Commands System](SLASH-COMMANDS.md) — how the `/isitreal` command and its config sub-commands are wired up
-- [Deployment Config](operations/deployment-config.md) — env vars and where to set them on the server
+- [Architecture: System Overview](architecture/system-overview.md): where these subsystems fit in the runtime topology
+- [Database Schema](reference/database-schema.md): `voice_session`, `guild_snapshot`, `avatar_scan`, `ai_detection_toggles` table definitions
+- [Bot Handbook: `/isitreal`](BOT-HANDBOOK.md#isitreal): user-facing AI detection command
+- [Slash Commands System](SLASH-COMMANDS.md): how the `/isitreal` command and its config sub-commands are wired up
+- [Deployment Config](operations/deployment-config.md): env vars and where to set them on the server

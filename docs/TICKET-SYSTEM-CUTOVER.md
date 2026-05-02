@@ -1,4 +1,4 @@
-# Ticket System — Production Cutover
+# Ticket System: Production Cutover
 
 This document describes how to flip Pawtropolis from the third-party Ticket Tool bot to the first-party ticket system shipped in migrations 067 + 068 and the `src/features/tickets/` module tree.
 
@@ -30,17 +30,17 @@ This document describes how to flip Pawtropolis from the third-party Ticket Tool
 
 5. **Smoke test on the test guild** (`1491989610182606919`, EmojiBank001):
    - Configure `TICKETS_CATEGORY_ID` and `TICKETS_PANEL_CHANNEL_ID` env vars on the test bot deployment.
-   - Run `/postticketpanel` — verify two embeds appear.
-   - Click each of 10 buttons — verify channel created with correct name + greeting + Claim/Close row + private staff thread.
+   - Run `/postticketpanel`: verify two embeds appear.
+   - Click each of 10 buttons: verify channel created with correct name + greeting + Claim/Close row + private staff thread.
    - Send a few messages; verify they appear in `ticket_message`.
-   - Close one — verify channel renames to `closed-…`, archive JSON written, dashboard shows transcript.
+   - Close one: verify channel renames to `closed-…`, archive JSON written, dashboard shows transcript.
 
 ## Cutover (production guild `896070888594759740`)
 
-1. **Announce in staff channel**, 24 hours ahead. "Ticket panel changing — old open tickets keep working until they close, new tickets land on our system."
+1. **Announce in staff channel**, 24 hours ahead. "Ticket panel changing: old open tickets keep working until they close, new tickets land on our system."
 
 2. **Run `/postticketpanel` as a server admin.**
-   - Idempotent — if our panels already exist (footer marker `Pawtropolis Ticket System • <stack>`), it edits in place.
+   - Idempotent: if our panels already exist (footer marker `Pawtropolis Ticket System • <stack>`), it edits in place.
    - First run posts both embeds fresh.
 
 3. **Manually delete** the two existing Ticket Tool panel messages in `1103728856294236160`:
@@ -52,7 +52,7 @@ This document describes how to flip Pawtropolis from the third-party Ticket Tool
    - Verification stack: 2D Artist, 3D Artist, Music Creator, Fursuit Creator
    - Each opens with the correct permission template (reports = Mod Team only; rest visible to Community Ambassador + sometimes Mod Team).
 
-5. **Spot-check a legacy art ticket** — open one of the existing 26 Ticket Tool channels and run `/redeemreward` on it. Should fall through to the `$add` path because there's no `ticket` row. Confirms back-compat.
+5. **Spot-check a legacy art ticket**: open one of the existing 26 Ticket Tool channels and run `/redeemreward` on it. Should fall through to the `$add` path because there's no `ticket` row. Confirms back-compat.
 
 ## Retro-rename (one-shot)
 
@@ -72,16 +72,16 @@ The script:
 - Iterates `ticket WHERE status='open' AND legacy_source IS NULL AND type_key='art-redeem'`.
 - Resolves current artist via `TicketService.getCurrentArtistId` (latest open `art_job` joined to `ticket_id`, fallback to latest `artist_assignment_log` by channel).
 - Renames the channel to include the artist's nickname / globalName / username, sanitized.
-- Idempotent — skips if the channel name already matches.
+- Idempotent: skips if the channel name already matches.
 - Sleeps 3 seconds between renames to be polite (Discord rate limit is 2 per 10 minutes per channel; per-channel we are never close, but global politeness avoids cluster API spikes).
 
-## Coexistence — what stays on Ticket Tool
+## Coexistence: what stays on Ticket Tool
 
 The 26 in-flight Ticket Tool tickets continue to function unchanged:
 
 - They have **no** `ticket` row in our DB → `/redeemreward` falls back to sending `$add <@artistId>` to Ticket Tool, exactly as today.
-- They have **no** Claim or Close button from us — the red Close button on the Ticket Tool greeting embed still works for closing.
-- They have **no** transcript capture — only first-party tickets get mirrored into `ticket_message`.
+- They have **no** Claim or Close button from us: the red Close button on the Ticket Tool greeting embed still works for closing.
+- They have **no** transcript capture: only first-party tickets get mirrored into `ticket_message`.
 
 Once those 26 close naturally, Ticket Tool can be removed from the server. No deadline; bleed-off is the whole point.
 
@@ -91,10 +91,10 @@ If the new system needs to be rolled back:
 
 1. **Disable the new panel** by deleting our two embeds in `1103728856294236160`.
 2. **Re-post Ticket Tool's panels** through the Ticket Tool dashboard.
-3. **Stop /redeemreward from creating ticket rows** — temporary measure; the existing branch on `legacy_source` already gates this so legacy channels keep working without changes. New tickets opened on Ticket Tool would have no `ticket` row, so `/redeemreward` would send `$add` again.
-4. **Stop bot** if needed — first-party tickets that already opened keep their channels but no further state mutations happen.
+3. **Stop /redeemreward from creating ticket rows**: temporary measure; the existing branch on `legacy_source` already gates this so legacy channels keep working without changes. New tickets opened on Ticket Tool would have no `ticket` row, so `/redeemreward` would send `$add` again.
+4. **Stop bot** if needed: first-party tickets that already opened keep their channels but no further state mutations happen.
 
-The schema (migrations 067 + 068) is additive only — no rollback migration needed. Tables can be dropped at leisure if a decision is made to abandon the project.
+The schema (migrations 067 + 068) is additive only: no rollback migration needed. Tables can be dropped at leisure if a decision is made to abandon the project.
 
 ## File map (for future maintenance)
 

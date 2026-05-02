@@ -42,5 +42,5 @@ Features that were considered but rejected. Documented here to avoid re-proposin
 
 ## See Also
 
-- [Think About Later](THINK_ABOUT_LATER.md) — features that are deferred but not rejected
-- [Bot Handbook](../BOT-HANDBOOK.md) — current feature set
+- [Think About Later](THINK_ABOUT_LATER.md): features that are deferred but not rejected
+- [Bot Handbook](../BOT-HANDBOOK.md): current feature set

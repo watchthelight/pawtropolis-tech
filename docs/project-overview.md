@@ -124,8 +124,8 @@ npm run check        # typecheck + lint + format + test
 
 ## See Also
 
-- [Executive Summary](./overview/executive-summary.md) — the user-facing version of this overview
-- [Architecture](./architecture.md) — system design and tech stack
-- [Source Tree Analysis](./source-tree-analysis.md) — annotated directory layout
-- [Development Guide](./development-guide.md) — full setup, build, and deploy reference
-- [Deployment Config](./operations/deployment-config.md) — runtime config and EC2 setup
+- [Executive Summary](./overview/executive-summary.md): the user-facing version of this overview
+- [Architecture](./architecture.md): system design and tech stack
+- [Source Tree Analysis](./source-tree-analysis.md): annotated directory layout
+- [Development Guide](./development-guide.md): full setup, build, and deploy reference
+- [Deployment Config](./operations/deployment-config.md): runtime config and EC2 setup

@@ -10,11 +10,11 @@ Production incidents and their resolutions for Pawtropolis Tech. Most recent fir
 Users receiving duplicate level-up reward DMs when Amaribot re-syncs level roles. UID 1424329992745127968 received identical Level 80 rewards on both March 16 and March 19. Systemic issue: 28 users affected, one user received Level 50 rewards 6 times.
 
 ### Reported By
-UID 1424329992745127968 — duplicate Level 80 DM on 2026-03-19 (first sent 2026-03-16)
+UID 1424329992745127968: duplicate Level 80 DM on 2026-03-19 (first sent 2026-03-16)
 
 ### Timeline
 - **2025-12-18**: Earliest known duplicate (user 655469007784378408, level 50)
-- **2026-01-08 to 2026-01-10**: Burst of 5 duplicate grants for single user — some only 20 minutes apart
+- **2026-01-08 to 2026-01-10**: Burst of 5 duplicate grants for single user: some only 20 minutes apart
 - **2026-03-16 08:41**: UID 1424329992745127968 receives Level 80 rewards (correct)
 - **2026-03-19 12:44**: Same user receives identical Level 80 reward DM (duplicate)
 - **2026-03-19**: Bug reported, investigation begins
@@ -25,7 +25,7 @@ UID 1424329992745127968 — duplicate Level 80 DM on 2026-03-19 (first sent 2026
 
 **Issue 1 (PRIMARY): 24-hour dedup window is insufficient.** The dedup in `levelRewards.ts:120-137` only checks `role_assignments` for grants within the last 24 hours. Level milestones are permanent one-time achievements, but when Amaribot re-syncs roles days later the dedup window has expired. The reported case: grants 3.17 days apart, far outside the 86,400s window.
 
-**Issue 2 (SECONDARY): TOCTOU race condition.** The dedup query runs before `role_assignments` entries are written. Concurrent `guildMemberUpdate` events (e.g., after bot restart with stale member cache) can all pass the dedup before any write. Evidence: user received 3 duplicate grants on Jan 10 alone (17:26, 17:46, 22:38) — the 17:46 grant should have been blocked by the 17:26 entry.
+**Issue 2 (SECONDARY): TOCTOU race condition.** The dedup query runs before `role_assignments` entries are written. Concurrent `guildMemberUpdate` events (e.g., after bot restart with stale member cache) can all pass the dedup before any write. Evidence: user received 3 duplicate grants on Jan 10 alone (17:26, 17:46, 22:38): the 17:46 grant should have been blocked by the 17:26 entry.
 
 **Contributing factor:** Every level role has 2 entries in `role_tiers` with different naming ("Legendary Fur" vs "Legendary Fur ‹‹ LVL 80 ››"). Same role_id/threshold. Setup script ran twice. Dashboard already needed a dedup fix for this (commit `dcd7b28`).
 
@@ -36,15 +36,15 @@ UID 1424329992745127968 — duplicate Level 80 DM on 2026-03-19 (first sent 2026
 - Confusing duplicate messages, potential double-granting of consumable token roles
 
 ### Recommended Fix
-1. **Remove time constraint from dedup** — check for ANY previous grant ever, not just 24h
-2. **Fix race condition** — write dedup marker before granting, or add `level_rewards_granted` table with UNIQUE constraint on `(guild_id, user_id, level)`
+1. **Remove time constraint from dedup**: check for ANY previous grant ever, not just 24h
+2. **Fix race condition**: write dedup marker before granting, or add `level_rewards_granted` table with UNIQUE constraint on `(guild_id, user_id, level)`
 3. **Clean up 13 duplicate `role_tiers` entries**
 
 ### Severity
-**Medium** — No security impact. User-facing annoyance and growing (28 users affected).
+**Medium**: No security impact. User-facing annoyance and growing (28 users affected).
 
 ### Lessons Learned
-1. Dedup windows must match the lifecycle of the thing being deduplicated — permanent achievements need permanent dedup
+1. Dedup windows must match the lifecycle of the thing being deduplicated: permanent achievements need permanent dedup
 2. Time-based dedup is fragile for event-driven systems where re-triggers happen at arbitrary intervals
 3. Setup scripts should be idempotent
 
@@ -54,7 +54,7 @@ UID 1424329992745127968 — duplicate Level 80 DM on 2026-03-19 (first sent 2026
 
 Migration 057 deployed the `level_reward_granted` table with a `UNIQUE(guild_id, user_id, level)` constraint. This provides schema-level enforcement that makes it impossible to grant the same level's rewards twice, regardless of timing or concurrency.
 
-The grant logic now uses `INSERT OR IGNORE` into `level_reward_granted` before processing rewards. If the row already exists (duplicate), the insert silently fails and no rewards are granted. This eliminates the TOCTOU race condition from the old approach — the check and the write are the same atomic operation.
+The grant logic now uses `INSERT OR IGNORE` into `level_reward_granted` before processing rewards. If the row already exists (duplicate), the insert silently fails and no rewards are granted. This eliminates the TOCTOU race condition from the old approach: the check and the write are the same atomic operation.
 
 Migration 057 also backfills all historical grants from the `role_assignments` table, covering the 150+ unprotected pre-fix grants that occurred between December 2025 and March 2026. The 13 duplicate `role_tiers` entries were cleaned up separately (migration 055).
 
@@ -339,8 +339,8 @@ Additionally, two idle instances were discovered:
 
 ## See Also
 
-- [Operations: Troubleshooting](operations/troubleshooting.md) — runbook for the disk-full and SSH-failure scenarios from INC-003 and the memory-pressure scenarios from INC-004
-- [Operations: Deployment Config](operations/deployment-config.md) — current EC2 instance type, EBS volume, and resource sizing
-- [Audits Index](audits/README.md) — security and code audits, including the `/audit security` command that caught INC-002
-- [Code Audit 2026](audits/CODE-AUDIT-2026.md) — current findings backlog including F072 (session token encryption) and other security work
-- [Architecture: System Overview](architecture/system-overview.md) — runtime topology that constrains incident response
+- [Operations: Troubleshooting](operations/troubleshooting.md): runbook for the disk-full and SSH-failure scenarios from INC-003 and the memory-pressure scenarios from INC-004
+- [Operations: Deployment Config](operations/deployment-config.md): current EC2 instance type, EBS volume, and resource sizing
+- [Audits Index](audits/README.md): security and code audits, including the `/audit security` command that caught INC-002
+- [Code Audit 2026](audits/CODE-AUDIT-2026.md): current findings backlog including F072 (session token encryption) and other security work
+- [Architecture: System Overview](architecture/system-overview.md): runtime topology that constrains incident response

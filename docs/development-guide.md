@@ -336,8 +336,8 @@ npm run deploy:cmds          # Register commands
 
 ## See Also
 
-- [Deployment Config](./operations/deployment-config.md) — environment variables, EC2 setup, deploy details
-- [Troubleshooting](./operations/troubleshooting.md) — fixes for common deploy and runtime failures
-- [Slash Commands System](./SLASH-COMMANDS.md) — how to create and register new commands
-- [Command Patterns](./reference/command-patterns.md) — patterns to follow when writing commands
-- [Architecture](./architecture.md) — high-level system design context
+- [Deployment Config](./operations/deployment-config.md): environment variables, EC2 setup, deploy details
+- [Troubleshooting](./operations/troubleshooting.md): fixes for common deploy and runtime failures
+- [Slash Commands System](./SLASH-COMMANDS.md): how to create and register new commands
+- [Command Patterns](./reference/command-patterns.md): patterns to follow when writing commands
+- [Architecture](./architecture.md): high-level system design context

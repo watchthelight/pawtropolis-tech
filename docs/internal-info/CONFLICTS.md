@@ -1,4 +1,4 @@
-# Permission Conflicts & Security Concerns — Pawtropolis | Furry • LGBTQ+
+# Permission Conflicts & Security Concerns: Pawtropolis | Furry • LGBTQ+
 
 **Generated:** 2026-05-02T14:22:11.592Z
 **Guild ID:** 896070888594759740

@@ -482,8 +482,8 @@ pawtropolis-tech/
 
 ## See Also
 
-- [Architecture](./architecture.md) — design rationale and tech stack
-- [Project Overview](./project-overview.md) — high-level project summary
-- [Development Guide](./development-guide.md) — how to actually work in the tree
-- [Slash Commands System](./SLASH-COMMANDS.md) — how `src/commands/` is organized and registered
-- [Database Schema](./reference/database-schema.md) — what `migrations/` builds toward
+- [Architecture](./architecture.md): design rationale and tech stack
+- [Project Overview](./project-overview.md): high-level project summary
+- [Development Guide](./development-guide.md): how to actually work in the tree
+- [Slash Commands System](./SLASH-COMMANDS.md): how `src/commands/` is organized and registered
+- [Database Schema](./reference/database-schema.md): what `migrations/` builds toward

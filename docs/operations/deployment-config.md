@@ -612,8 +612,8 @@ ssh bash-ec2 "sudo du -sh /* 2>/dev/null | sort -h"
 
 ## See Also
 
-- [Troubleshooting](troubleshooting.md) — what to do when the bot is offline, the disk fills up, or migrations fail
-- [Deploy Agent](DEPLOY-AGENT.md) — automated deploy procedure used by `deploy.sh`
-- [Architecture: System Overview](../architecture/system-overview.md) — how these components fit together at runtime
-- [Database Schema](../reference/database-schema.md) — what the migrations are touching
-- [Incidents Log](../INCIDENTS.md) — past production outages and their root causes
+- [Troubleshooting](troubleshooting.md): what to do when the bot is offline, the disk fills up, or migrations fail
+- [Deploy Agent](DEPLOY-AGENT.md): automated deploy procedure used by `deploy.sh`
+- [Architecture: System Overview](../architecture/system-overview.md): how these components fit together at runtime
+- [Database Schema](../reference/database-schema.md): what the migrations are touching
+- [Incidents Log](../INCIDENTS.md): past production outages and their root causes

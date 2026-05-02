@@ -144,7 +144,7 @@ CREATE TABLE level_reward_granted (
 
 **Notes:**
 - The `UNIQUE(guild_id, user_id, level)` constraint enforces at the schema level that a user can only receive rewards for a given level once
-- Grant logic uses `INSERT OR IGNORE` — if the row already exists, the insert silently fails and no rewards are processed
+- Grant logic uses `INSERT OR IGNORE`: if the row already exists, the insert silently fails and no rewards are processed
 - Migration 057 backfills all historical grants from `role_assignments` to cover pre-fix grants
 - Replaces the old time-windowed dedup approach that was vulnerable to TOCTOU races
 
@@ -185,9 +185,9 @@ The `logging_channel_id` column was added by migration 001 (`migrations/001_add_
 
 ## See Also
 
-- [Gate Review Flow](gate-review-flow.md) — how `review_action` and `action_log` get populated
-- [Modmail System](modmail-system.md) — `open_modmail` table usage
-- [Logging and ModStats](logging-and-modstats.md) — how the stats engine queries `action_log`
-- [Architecture: System Overview](../architecture/system-overview.md) — where the database fits in the overall design
-- [Deployment Config](../operations/deployment-config.md) — DB path, WAL mode, and backup setup
+- [Gate Review Flow](gate-review-flow.md): how `review_action` and `action_log` get populated
+- [Modmail System](modmail-system.md): `open_modmail` table usage
+- [Logging and ModStats](logging-and-modstats.md): how the stats engine queries `action_log`
+- [Architecture: System Overview](../architecture/system-overview.md): where the database fits in the overall design
+- [Deployment Config](../operations/deployment-config.md): DB path, WAL mode, and backup setup
 

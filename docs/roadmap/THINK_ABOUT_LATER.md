@@ -33,7 +33,7 @@ Features to consider for future implementation. Not rejected, just deferred.
 
 ## See Also
 
-- [Rejected Features](REJECTED.md) — feature suggestions that were considered and declined (don't re-propose)
-- [Code Audit 2026](../audits/CODE-AUDIT-2026.md) — current technical findings backlog
-- [Bot Handbook](../BOT-HANDBOOK.md) — what the bot already does
-- [Architecture](../architecture/system-overview.md) — system context for any new feature work
+- [Rejected Features](REJECTED.md): feature suggestions that were considered and declined (don't re-propose)
+- [Code Audit 2026](../audits/CODE-AUDIT-2026.md): current technical findings backlog
+- [Bot Handbook](../BOT-HANDBOOK.md): what the bot already does
+- [Architecture](../architecture/system-overview.md): system context for any new feature work

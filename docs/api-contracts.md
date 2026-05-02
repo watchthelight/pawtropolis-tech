@@ -184,8 +184,8 @@ Rate limits: General 10/min, OAuth 5/5min, State token expiry 10min.
 
 ## See Also
 
-- [Bot Handbook](./BOT-HANDBOOK.md) — full per-command details for everything in this catalog
-- [Slash Commands Reference](./reference/slash-commands.md) — curated user-facing command list
-- [Slash Commands System](./SLASH-COMMANDS.md) — developer guide for creating commands
-- [Permissions Matrix](./PERMS-MATRIX.md) — full permission rules behind the table above
-- [Architecture](./architecture.md) — where these interaction handlers live in the codebase
+- [Bot Handbook](./BOT-HANDBOOK.md): full per-command details for everything in this catalog
+- [Slash Commands Reference](./reference/slash-commands.md): curated user-facing command list
+- [Slash Commands System](./SLASH-COMMANDS.md): developer guide for creating commands
+- [Permissions Matrix](./PERMS-MATRIX.md): full permission rules behind the table above
+- [Architecture](./architecture.md): where these interaction handlers live in the codebase

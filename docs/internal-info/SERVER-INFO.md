@@ -1,4 +1,4 @@
-# Server Information — Pawtropolis | Furry • LGBTQ+
+# Server Information: Pawtropolis | Furry • LGBTQ+
 
 **Generated:** 2026-05-02T14:22:11.592Z
 

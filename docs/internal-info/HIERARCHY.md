@@ -1,4 +1,4 @@
-# Role Hierarchy — Pawtropolis™ | Furry • LGBTQ+
+# Role Hierarchy: Pawtropolis™ | Furry • LGBTQ+
 
 **Generated:** 2026-01-21T15:28:07.601Z
 

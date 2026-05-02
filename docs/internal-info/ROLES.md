@@ -1,4 +1,4 @@
-# Server Roles — Pawtropolis | Furry • LGBTQ+
+# Server Roles: Pawtropolis | Furry • LGBTQ+
 
 **Generated:** 2026-05-02T14:22:11.589Z
 **Guild ID:** 896070888594759740

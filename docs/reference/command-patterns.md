@@ -50,7 +50,7 @@ async function handleFoo(ctx: CommandContext<ChatInputCommandInteraction>) {
 
 ## Core Patterns
 
-### 1. `withStep()` — Execution Tracing
+### 1. `withStep()`: Execution Tracing
 
 Wrap logical phases for error tracing and debugging:
 
@@ -83,7 +83,7 @@ const config = withStep(ctx, "get_config", () => getConfig(guildId));
 
 ---
 
-### 2. `withSql()` — Database Tracking
+### 2. `withSql()`: Database Tracking
 
 Wrap database operations for query logging and error context:
 
