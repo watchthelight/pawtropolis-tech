@@ -55,7 +55,15 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   }
 
   // Mod or higher; requireMinRole handles bypass list + ephemeral denial reply
-  if (!requireMinRole(interaction, ROLE_IDS.MODERATOR)) return;
+  if (
+    !requireMinRole(interaction, ROLE_IDS.MODERATOR, {
+      command: "cleanup",
+      description: "Bulk-delete recent messages in this channel.",
+      requirements: [{ type: "hierarchy", minRoleId: ROLE_IDS.MODERATOR }],
+    })
+  ) {
+    return;
+  }
 
   const channel = interaction.channel;
   if (!channel || !("bulkDelete" in channel)) {
@@ -152,11 +160,17 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
       "[cleanup] purge complete"
     );
 
+    // After the early-return for unsupported channel types above, TS narrows
+    // `channel` to `never` because the union of types we accepted does not
+    // overlap with the type guards above. Cast to a structurally-typed
+    // accessor so we can read `name` (text channels and threads) or fall
+    // back to id (voice/stage where `name` may not be present at type level).
+    const channelDesc = channel as { id: string; name?: string };
     await logActionPretty(interaction.guild, {
       actorId: interaction.user.id,
       action: "message_purge",
-      reason: `Purged ${deleted} messages in #${("name" in channel ? channel.name : channel.id) ?? channel.id}${reason ? ` — ${reason}` : ""}`,
-      meta: { channelId: channel.id, deleted, skippedOld, requested: count },
+      reason: `Purged ${deleted} messages in #${channelDesc.name ?? channelDesc.id}${reason ? ` — ${reason}` : ""}`,
+      meta: { channelId: channelDesc.id, deleted, skippedOld, requested: count },
     });
   } catch (err) {
     logger.error(

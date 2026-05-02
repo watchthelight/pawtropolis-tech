@@ -18,14 +18,15 @@ jobs:
           cache: "npm"
       - run: npm ci
       - name: Typecheck
+        # HARD GATE — promoted 2026-05-02 after fixing src/commands/cleanup.ts
+        # See docs/operations/ci-policy.md for the gate hierarchy.
         run: npm run typecheck
-        continue-on-error: true  # Pre-existing TS errors - tracked for cleanup
       - name: Lint
         run: npm run lint
-        continue-on-error: true  # Pre-existing lint errors in scripts/
+        continue-on-error: true  # SOFT — large web/ + workers/ globals backlog tracked in TODO.md
       - name: Format Check
         run: npm run format:check
-        continue-on-error: true  # Pre-existing formatting issues
+        continue-on-error: true  # SOFT — large web/ Prettier drift tracked in TODO.md
 
   test:
     name: Tests
@@ -44,7 +45,12 @@ jobs:
       - run: npm ci
       - name: Run tests
         run: npm run test -- --coverage
-        continue-on-error: true  # Some tests have pre-existing failures
+        # SOFT — two pre-existing suite failures tracked in docs/operations/ci-policy.md:
+        #   1. tests/features/artistRotation/handlers.test.ts (module-level prepares
+        #      against tables not present in fresh DB — partial fix in counters.ts)
+        #   2. tests/lib/roles.test.ts (assertion expects "Server Owner" but the
+        #      role was renamed to "Community Founder")
+        continue-on-error: true
       - uses: actions/upload-artifact@v4
         with:
           name: coverage
