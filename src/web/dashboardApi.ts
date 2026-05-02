@@ -36,15 +36,11 @@ import { SAFE_ALLOWED_MENTIONS } from "../lib/constants.js";
 import type { TextChannel } from "discord.js";
 
 // ===== Tier Check =====
+// Tier ordering and the hasMinTier comparator live in src/web/dashboardAuth.ts
+// so they can be unit-tested without spinning up Fastify. See
+// docs/reference/dashboard-api-security.md for the auth model.
 
-const TIER_ORDER = ["owner", "cm", "cdl", "sa", "admin", "sm", "mod", "jm", "gk", "viewer", "none"];
-
-function hasMinTier(userTier: string, minTier: string): boolean {
-  const userIdx = TIER_ORDER.indexOf(userTier);
-  const minIdx = TIER_ORDER.indexOf(minTier);
-  if (userIdx === -1 || minIdx === -1) return false;
-  return userIdx <= minIdx;
-}
+import { hasMinTier } from "./dashboardAuth.js";
 
 // ===== Types =====
 
