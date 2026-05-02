@@ -7,7 +7,7 @@ Use this guide whenever a doc would otherwise contain a raw Discord mention.
 1. Replace `<@&id>`, `<#id>`, and `<@id>` with a registered badge image.
 2. Alt text is the badge label a sighted reader would expect, prefixed with
    `@` for roles or users and `#` for channels. Example:
-   `![@Server Artist](https://status.pawtropolis.tech/badges/role-server-artist.svg)`.
+   `![@Server Artist](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/role-server-artist.svg)`.
 3. Use the registry id, never the raw Discord ID. Registry ids are stable;
    Discord IDs are not human-friendly.
 4. Code blocks that demonstrate Discord mention syntax are exempt because
@@ -19,13 +19,13 @@ Use this guide whenever a doc would otherwise contain a raw Discord mention.
 ### Role pill
 
 ```markdown
-![@Director's Cut](https://status.pawtropolis.tech/badges/movie-tier-3.svg)
+![@Director's Cut](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-3.svg)
 ```
 
 ### Channel pill
 
 ```markdown
-![#「✍️」writing](https://status.pawtropolis.tech/badges/channel-writing.svg)
+![#「✍️」writing](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/channel-writing.svg)
 ```
 
 ### Pill with suffix (rendered inline by the SVG)
@@ -39,7 +39,7 @@ GitHub does not let SVG `<a>` tags link out, so wrap the image in a
 Markdown link:
 
 ```markdown
-[![#「✍️」writing](https://status.pawtropolis.tech/badges/channel-writing.svg)](https://discord.com/channels/<GUILD_ID>/<CHANNEL_ID>)
+[![#「✍️」writing](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/channel-writing.svg)](https://discord.com/channels/<GUILD_ID>/<CHANNEL_ID>)
 ```
 
 Only do this when a click target is genuinely useful; otherwise the bare

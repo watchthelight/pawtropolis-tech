@@ -177,7 +177,7 @@ For full command reference, see [docs/BOT-HANDBOOK.md](docs/BOT-HANDBOOK.md).
 GitHub Markdown cannot render Discord mention syntax. Pawtropolis Tech
 generates SVG pill badges that look like Discord mentions, use real role
 names and colors, and are refreshed daily. Docs reference them as
-`![alt](https://status.pawtropolis.tech/badges/<id>.svg)` instead of raw
+`![alt](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/<id>.svg)` instead of raw
 `<@&id>` strings. See [docs/reference/github-discord-badges.md](docs/reference/github-discord-badges.md)
 for the full system.
 

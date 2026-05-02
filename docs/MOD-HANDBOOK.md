@@ -477,7 +477,7 @@ This is a 100% SFW Community. To comply with Discord's Terms and keep teens safe
 **Not Allowed:**
 - Discussion of 18+ topics
 - Any NSFW content
-- Suggestive content, even when posted in ![#「✍️」writing](https://status.pawtropolis.tech/badges/channel-writing.svg)
+- Suggestive content, even when posted in ![#「✍️」writing](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/channel-writing.svg)
 - Streaming gambling in voice channels
 
 **Action:** Discussion of 18+ topics is an **automatic 3-strike penalty**.
@@ -543,7 +543,7 @@ When the whole channel starts saying the same thing back-to-back, it stops being
 - Repeated low-effort messages from the same group with no actual conversation between them
 - Brainrot or media that doesn't add anything to the channel it's posted in
 
-**Where it goes instead:** ![#「🗣️」yapping-space](https://status.pawtropolis.tech/badges/channel-yapping-space.svg) exists for content that doesn't fit elsewhere. Send people there when you redirect them.
+**Where it goes instead:** ![#「🗣️」yapping-space](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/channel-yapping-space.svg) exists for content that doesn't fit elsewhere. Send people there when you redirect them.
 
 **Action:** Remove the message and leave a short reminder. No warn the first time unless they ignore the redirect.
 

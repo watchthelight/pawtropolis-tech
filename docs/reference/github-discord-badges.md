@@ -9,38 +9,49 @@ use the real role color, and refresh daily from the live server.
 GitHub Markdown does not understand Discord mention syntax. Strings like
 `<@&1388676461657063505>`, `<#1446602187655610461>`, and `<@123>` show up as
 raw text. Worse, they leak Discord IDs and hide the actual name. The badge
-system replaces them with `![alt](https://status.pawtropolis.tech/badges/<id>.svg)`.
+system replaces them with `![alt](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/<id>.svg)`.
 
 ## How it works
 
 ```
-Discord (roles/channels/users)
-  -> badgeRefreshScheduler        (daily)
-  -> features/badges/resolve.ts   (resolve names + role colors)
-  -> features/badges/renderSvg.ts (render pill SVG)
-  -> features/badges/store.ts     (write data/badges/generated/<id>.svg)
-  -> web/badgeEndpoint.ts         (serve /badges/<id>.svg + manifest)
-  -> GitHub Markdown              (![alt](url))
+Live server snapshot (docs/internal-info/ROLES.md, CHANNELS.md)
+  -> scripts/generate-badges.ts --from-snapshot
+  -> features/badges/snapshotResolve.ts (resolve names + colors offline)
+  -> features/badges/renderSvg.ts       (render pill SVG)
+  -> docs/badges/svg/<id>.svg            (committed to repo)
+  -> GitHub Markdown                     (![alt](raw URL))
+
+In parallel, the running bot:
+  -> features/badges/resolve.ts          (live Discord lookup)
+  -> features/badges/liveUpdates.ts      (event-driven refresh)
+  -> data/badges/generated/<id>.svg      (runtime cache)
+  -> web/badgeEndpoint.ts                (serves status.pawtropolis.tech)
 ```
 
-The bot does the rendering. The badge HTTP server hosts the SVG. GitHub
-embeds the SVG via `<img>`. No external services are involved.
+Two URLs serve the same content:
+
+- **Canonical for docs (recommended):**
+  `https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/<id>.svg`
+  Renders on GitHub immediately when committed; no infra required.
+- **Live fallback for non-GitHub consumers:**
+  `https://status.pawtropolis.tech/badges/<id>.svg`
+  Served by the bot's HTTP endpoint; reflects the bot's runtime cache.
 
 ## Embedding a badge
 
 Use the registry id as the file name:
 
 ```markdown
-![@Red Carpet Guest - 1+ movies](https://status.pawtropolis.tech/badges/movie-tier-1.svg)
+![@Red Carpet Guest - 1+ movies](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-1.svg)
 ```
 
 Examples:
-- ![@Red Carpet Guest - 1+ movies](https://status.pawtropolis.tech/badges/movie-tier-1.svg)
-- ![@Popcorn Club - 5+ movies](https://status.pawtropolis.tech/badges/movie-tier-2.svg)
-- ![@Director's Cut - 10+ movies](https://status.pawtropolis.tech/badges/movie-tier-3.svg)
-- ![@Cinematic Royalty - 20+ movies](https://status.pawtropolis.tech/badges/movie-tier-4.svg)
-- ![@Server Artist](https://status.pawtropolis.tech/badges/role-server-artist.svg)
-- ![#「✍️」writing](https://status.pawtropolis.tech/badges/channel-writing.svg)
+- ![@Red Carpet Guest - 1+ movies](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-1.svg)
+- ![@Popcorn Club - 5+ movies](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-2.svg)
+- ![@Director's Cut - 10+ movies](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-3.svg)
+- ![@Cinematic Royalty - 20+ movies](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-4.svg)
+- ![@Server Artist](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/role-server-artist.svg)
+- ![#「✍️」writing](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/channel-writing.svg)
 
 ## URL scheme
 
@@ -71,7 +82,7 @@ color.
 3. Pick a stable kebab-style id (matches `^[a-z0-9][a-z0-9_-]{0,63}$`).
 4. Run `npx tsx scripts/generate-badges.ts --list` to confirm it shows up.
 5. Reference the badge in docs as
-   `![alt](https://status.pawtropolis.tech/badges/<id>.svg)`.
+   `![alt](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/<id>.svg)`.
 
 ## Regenerating badges manually
 
