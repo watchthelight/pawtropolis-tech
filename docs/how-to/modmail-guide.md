@@ -82,8 +82,9 @@ Key features:
 - Send Messages (for DMs)
 
 **You need one of:**
-- Manage Guild permission
-- Reviewer Role
+- A staff role with full bot access (any role from Junior Mod up; Community Staff, Server Dev, Bot Owner all qualify)
+- Discord's "Manage Guild" permission
+- The configured Reviewer Role (see `/config get reviewer_role`)
 
 ## Technical Details
 
@@ -121,7 +122,7 @@ Right-click a review card and select this to open modmail.
 
 ### You don't have permission
 - Error: "You do not have permission for this"
-- Need Manage Guild or Reviewer Role
+- You need a staff role that grants full bot access, the Discord "Manage Guild" permission, or the configured Reviewer Role
 
 ### Thread already open
 - Error: "Modmail thread already exists"
