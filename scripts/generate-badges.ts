@@ -59,7 +59,7 @@ const CHANNELS_SNAPSHOT = path.join("docs", "internal-info", "CHANNELS.md");
 
 const RAW_PREFIX =
   process.env.BADGE_RAW_URL_PREFIX ??
-  "https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg";
+  "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg";
 
 function repoUrl(id: string): string {
   return `${RAW_PREFIX.replace(/\/+$/, "")}/${id}.svg`;

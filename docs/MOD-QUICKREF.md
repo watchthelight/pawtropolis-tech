@@ -51,10 +51,10 @@ For server-wide numbers, `/stats approval-rate` shows the overall approve vs rej
 Check attendance with `/movie attendance` or `/event game attendance`. Add `user:@Username` to look up someone's progress.
 
 **Movie Tier Roles** (30+ min per event):
-- ![@Red Carpet Guest - 1+ movies](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-1.svg)
-- ![@Popcorn Club - 5+ movies](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-2.svg)
-- ![@Director's Cut - 10+ movies](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-3.svg)
-- ![@Cinematic Royalty - 20+ movies](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-4.svg)
+- ![@Red Carpet Guest - 1+ movies](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-1.svg)
+- ![@Popcorn Club - 5+ movies](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-2.svg)
+- ![@Director's Cut - 10+ movies](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-3.svg)
+- ![@Cinematic Royalty - 20+ movies](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-4.svg)
 
 **Game Tier Roles** (50%+ of event duration):
 Configured via `/roles add-game-tier`. Use `/roles list type:game_night` to see current tiers.

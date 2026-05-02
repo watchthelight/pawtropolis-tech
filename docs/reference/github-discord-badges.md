@@ -9,7 +9,7 @@ use the real role color, and refresh daily from the live server.
 GitHub Markdown does not understand Discord mention syntax. Strings like
 `<@&1388676461657063505>`, `<#1446602187655610461>`, and `<@123>` show up as
 raw text. Worse, they leak Discord IDs and hide the actual name. The badge
-system replaces them with `![alt](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/<id>.svg)`.
+system replaces them with `![alt](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/<id>.svg)`.
 
 ## How it works
 
@@ -31,7 +31,7 @@ In parallel, the running bot:
 Two URLs serve the same content:
 
 - **Canonical for docs (recommended):**
-  `https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/<id>.svg`
+  `https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/<id>.svg`
   Renders on GitHub immediately when committed; no infra required.
 - **Live fallback for non-GitHub consumers:**
   `https://status.pawtropolis.tech/badges/<id>.svg`
@@ -42,16 +42,16 @@ Two URLs serve the same content:
 Use the registry id as the file name:
 
 ```markdown
-![@Red Carpet Guest - 1+ movies](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-1.svg)
+![@Red Carpet Guest - 1+ movies](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-1.svg)
 ```
 
 Examples:
-- ![@Red Carpet Guest - 1+ movies](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-1.svg)
-- ![@Popcorn Club - 5+ movies](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-2.svg)
-- ![@Director's Cut - 10+ movies](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-3.svg)
-- ![@Cinematic Royalty - 20+ movies](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-4.svg)
-- ![@Server Artist](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/role-server-artist.svg)
-- ![#「✍️」writing](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/channel-writing.svg)
+- ![@Red Carpet Guest - 1+ movies](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-1.svg)
+- ![@Popcorn Club - 5+ movies](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-2.svg)
+- ![@Director's Cut - 10+ movies](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-3.svg)
+- ![@Cinematic Royalty - 20+ movies](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-4.svg)
+- ![@Server Artist](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-server-artist.svg)
+- ![#「✍️」writing](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-writing.svg)
 
 ## URL scheme
 
@@ -82,17 +82,27 @@ color.
 3. Pick a stable kebab-style id (matches `^[a-z0-9][a-z0-9_-]{0,63}$`).
 4. Run `npx tsx scripts/generate-badges.ts --list` to confirm it shows up.
 5. Reference the badge in docs as
-   `![alt](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/<id>.svg)`.
+   `![alt](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/<id>.svg)`.
 
 ## Regenerating badges manually
 
-Daily refresh is automatic. To force a refresh from a workstation:
+Daily refresh is automatic (bot scheduler, GitHub Actions). To force a
+refresh from a workstation:
 
 ```bash
-npx tsx scripts/generate-badges.ts        # refresh all
-npx tsx scripts/generate-badges.ts --list # list registry only
+# offline; reads docs/internal-info/ROLES.md + CHANNELS.md, no Discord login
+npx tsx scripts/generate-badges.ts --from-snapshot
+
+# live; requires DISCORD_TOKEN + GUILD_ID, refreshes runtime cache
+npx tsx scripts/generate-badges.ts
+
+# inspection-only
+npx tsx scripts/generate-badges.ts --list
 npx tsx scripts/generate-badges.ts --id movie-tier-1
 ```
+
+After `--from-snapshot`, commit `docs/badges/svg/*.svg` and push; jsdelivr
+picks up the change within minutes.
 
 ## Troubleshooting
 
