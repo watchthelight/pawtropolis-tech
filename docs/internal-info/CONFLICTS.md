@@ -1,6 +1,6 @@
 # Permission Conflicts & Security Concerns — Pawtropolis | Furry • LGBTQ+
 
-**Generated:** 2026-04-20T15:02:43.250Z
+**Generated:** 2026-05-02T14:22:11.592Z
 **Guild ID:** 896070888594759740
 **Total Issues Found:** 13
 
@@ -134,7 +134,7 @@
 ### [LOW-011] Wide @everyone/@here Access
 
 - **Affected:** Role: Community Staff (987662057069482024)
-- **Issue:** 18 members can mention @everyone/@here.
+- **Issue:** 19 members can mention @everyone/@here.
 - **Risk:** Potential for spam or disruption.
 - **Recommendation:** Consider restricting to staff roles or specific channels only.
 
