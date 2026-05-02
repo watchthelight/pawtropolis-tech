@@ -52,6 +52,21 @@ Examples:
 - ![@Cinematic Royalty - 20+ movies](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-4.svg)
 - ![@Server Artist](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-server-artist.svg)
 - ![#「✍️」writing](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-writing.svg)
+- ![@Holographic](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-holographic.svg) (animated gradient shimmer)
+
+## Gradient + holographic roles
+
+Discord 2024 added two/three-stop gradient roles (Nitro feature) and the
+"Holographic" role effect. The renderer supports both:
+
+- **Gradient roles**: `BadgeDefinition.gradient = { primary, secondary, tertiary? }`.
+  The pill background and text use a `<linearGradient>` with the role's
+  configured stops. Live refresh reads `role.colors.{primary,secondary,tertiary}`
+  from discord.js when the API exposes them.
+- **Holographic shimmer**: set `holographic: true` on the definition. The
+  SVG embeds SMIL `<animate>` elements that pan the gradient endpoints,
+  producing a continuous iridescent shimmer. No scripts; safe under
+  GitHub's image proxy.
 
 ## URL scheme
 
