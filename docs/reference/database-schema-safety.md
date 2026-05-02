@@ -10,7 +10,7 @@ Files in `migrations/<NNN>_<name>.ts`. Run by `scripts/migrate.ts` (locally) and
 
 - Numbered, ordered, applied at most once. The `_migrations` table tracks which have run.
 - Free to do anything: CREATE TABLE, CREATE INDEX, INSERT seed data, transactional table-recreate to drop a CHECK constraint, etc.
-- If a migration fails, the rest of the deploy bails. There is no automatic rollback for migrations that partially succeeded — each migration should run inside its own transaction.
+- If a migration fails, the rest of the deploy bails. There is no automatic rollback for migrations that partially succeeded: each migration should run inside its own transaction.
 
 This is the **default** path for schema changes. New columns, tables, indexes, and FK constraints belong here.
 
@@ -19,7 +19,7 @@ This is the **default** path for schema changes. New columns, tables, indexes, a
 Functions in `src/db/ensure.ts`, plus the inline `addColumnIfMissing` block at the top of `src/db/db.ts`. Run at every `Events.ClientReady` startup via `runSchemaSelfHeal` (`src/startup/schema.ts`).
 
 - Idempotent: each call probes `PRAGMA table_info` (or sqlite_master) and either does the work or no-ops.
-- Their job is to bring **legacy databases** up to current expectations — DBs that pre-date a given migration, or production rows installed before the migration framework existed.
+- Their job is to bring **legacy databases** up to current expectations: DBs that pre-date a given migration, or production rows installed before the migration framework existed.
 - They must remain backward-compatible. Changing an ensure helper to require a column that doesn't yet exist would crash startup on an older DB.
 
 This is the **legacy compatibility** path. New work should go through migrations; the ensure layer exists so older DBs still boot cleanly.
@@ -33,11 +33,11 @@ This is the **legacy compatibility** path. New work should go through migrations
 | Create a new table | Migration |
 | Add an index for a query-perf fix | Migration |
 | Drop a CHECK constraint via table-recreate | Migration; the existing pattern in `runReviewActionMigration` is a good template |
-| Add a new ensure* helper | Only when you have a reason a migration cannot accomplish the same thing — e.g. a column that needs to exist before the migration runner itself starts |
+| Add a new ensure* helper | Only when you have a reason a migration cannot accomplish the same thing: e.g. a column that needs to exist before the migration runner itself starts |
 
 ## Identifier validation
 
-Every ensure helper that takes a table or column name passes it through `SQL_IDENTIFIER_RE` (`src/db/utils.ts`). The regex is `^[a-zA-Z_][a-zA-Z0-9_]*$` — no spaces, no quotes, no semicolons, no parentheses. Anything else throws.
+Every ensure helper that takes a table or column name passes it through `SQL_IDENTIFIER_RE` (`src/db/utils.ts`). The regex is `^[a-zA-Z_][a-zA-Z0-9_]*$`: no spaces, no quotes, no semicolons, no parentheses. Anything else throws.
 
 `addColumnIfMissing` (now in `src/db/columnUtil.ts`) extends that with a definition-string check that rejects `;`, `--`, and `/*`. These are the only characters that could chain a second statement or hide arbitrary SQL through a comment.
 
@@ -81,7 +81,7 @@ If you change a PRAGMA, document the trade-off here.
 
 ## Lazy module-level prepares
 
-`src/features/tickets/counters.ts` and `src/features/artJobs/store.ts` prepare statements at module load time. If those tables are missing (e.g., a fresh test DB without migration 067 applied), the import itself crashes — you cannot even load the module to mock it.
+`src/features/tickets/counters.ts` and `src/features/artJobs/store.ts` prepare statements at module load time. If those tables are missing (e.g., a fresh test DB without migration 067 applied), the import itself crashes: you cannot even load the module to mock it.
 
 This is the failure pattern that produced the `tests/features/artistRotation/handlers.test.ts` and `tests/commands/registration.test.ts` issues during the May 2026 hardening pass. The Phase 7 fix introduced lazy prepare wrappers (memoize on first call); follow that pattern for any new module-level statements.
 

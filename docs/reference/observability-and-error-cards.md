@@ -48,7 +48,7 @@ const row = withSql(ctx, "SELECT ... FROM application WHERE id = ?", () =>
 );
 ```
 
-Use `withStep` when the work is async and you want timing. Use `withSql` for any DB read or write — it tracks the SQL string for error cards and records query duration in the wide event.
+Use `withStep` when the work is async and you want timing. Use `withSql` for any DB read or write: it tracks the SQL string for error cards and records query duration in the wide event.
 
 For module-level prepared statements that you re-use, pass the SQL string to `setLastSql` immediately before `.run()` / `.get()` / `.all()`:
 
@@ -61,8 +61,8 @@ updateStmt.run(appId);
 
 Two error card implementations live in the codebase:
 
-- `src/lib/errorCard.ts` — legacy v1 card. Used by the catch-all router safety net in `src/index.ts`.
-- `src/lib/errorCardV2.ts` — current card. Used by `wrapCommand`. Includes build identity (version, SHA, age, deploy ID), response state (deferred / replied / outcome), the failing phase, and last SQL.
+- `src/lib/errorCard.ts`: legacy v1 card. Used by the catch-all router safety net in `src/index.ts`.
+- `src/lib/errorCardV2.ts`: current card. Used by `wrapCommand`. Includes build identity (version, SHA, age, deploy ID), response state (deferred / replied / outcome), the failing phase, and last SQL.
 
 Wrapped commands use V2 automatically. Loose router-level handlers (button regex matches, modal route misses) fall back to V1.
 
@@ -70,7 +70,7 @@ Wrapped commands use V2 automatically. Loose router-level handlers (button regex
 
 ## Safe allowed mentions
 
-`SAFE_ALLOWED_MENTIONS` (`src/lib/constants.ts`) is `{ parse: [] }` — no role mentions, no user mentions, no `@everyone`. Apply it to any channel send where the content originates from user input or staff free-text:
+`SAFE_ALLOWED_MENTIONS` (`src/lib/constants.ts`) is `{ parse: [] }`: no role mentions, no user mentions, no `@everyone`. Apply it to any channel send where the content originates from user input or staff free-text:
 
 ```ts
 await channel.send({
@@ -81,7 +81,7 @@ await channel.send({
 
 Where it is currently applied:
 
-- modmail relays (`src/features/modmail/routing.ts` — covered by tests)
+- modmail relays (`src/features/modmail/routing.ts`: covered by tests)
 - dashboard API confirmation messages (`src/web/dashboardApi.ts:116, 1141`)
 - announcement / log channel posts that include staff-supplied reasons
 

@@ -6,15 +6,15 @@ This doc describes the order of operations when the bot boots and shuts down. Th
 
 `main()` runs three things before connecting to Discord:
 
-1. `requireHealthyDatabase()` — fails fast on a corrupted SQLite file.
+1. `requireHealthyDatabase()`: fails fast on a corrupted SQLite file.
 2. Validates `DISCORD_TOKEN` and warns if `GUILD_ID` is unset.
-3. `client.login(DISCORD_TOKEN)` — opens the websocket.
+3. `client.login(DISCORD_TOKEN)`: opens the websocket.
 
 If the token is invalid or the DB is corrupt, the process exits with code 1 before any handlers register.
 
 ## ClientReady
 
-Once Discord finishes the IDENTIFY handshake, `Events.ClientReady` fires once. The handler runs the following in order. Each step is wrapped in `runStartupTask` (`src/startup/runStartupTask.ts`) which logs failures and continues — one broken step does not abort startup.
+Once Discord finishes the IDENTIFY handshake, `Events.ClientReady` fires once. The handler runs the following in order. Each step is wrapped in `runStartupTask` (`src/startup/runStartupTask.ts`) which logs failures and continues: one broken step does not abort startup.
 
 | # | Step | Module |
 |---|------|--------|
@@ -72,7 +72,7 @@ Before `ClientReady` fires, `src/index.ts` runs an immediate startup-time assert
 
 Each step has its own try/catch so a single failure does not block the rest. The outer try/catch logs at error level and exits with code 1 if anything escapes.
 
-`isShuttingDown` is a guard against re-entry — if a second signal arrives before exit, the second call logs and returns immediately.
+`isShuttingDown` is a guard against re-entry: if a second signal arrives before exit, the second call logs and returns immediately.
 
 ## Where new startup work should live
 

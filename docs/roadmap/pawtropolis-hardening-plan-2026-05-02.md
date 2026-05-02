@@ -1,4 +1,4 @@
-# Pawtropolis Tech Hardening Plan — 2026-05-02
+# Pawtropolis Tech Hardening Plan: 2026-05-02
 
 Branch: `hardening/reliability-test-orchestration-pass`
 
@@ -11,21 +11,21 @@ Pawtropolis Tech is a high-complexity production Discord operations platform. v5
 | Check | Status | Notes |
 |------|--------|-------|
 | `npm ci` | OK (assumed; node_modules present) | not re-run; lock files unchanged |
-| `npm run typecheck` | FAIL — 2 errors | both in `src/commands/cleanup.ts` |
-| `npm run lint` | FAIL — 2000 errors / 1456 warnings | almost entirely in `web/`, `workers/`, generated `dist/` |
-| `npm run format:check` | FAIL — 1064 files | mixed `web/` + `src/` |
-| `npm test` | FAIL — 1 suite (`tests/features/artistRotation/handlers.test.ts`) | 165 of 166 suites pass; 4455 tests pass |
+| `npm run typecheck` | FAIL: 2 errors | both in `src/commands/cleanup.ts` |
+| `npm run lint` | FAIL: 2000 errors / 1456 warnings | almost entirely in `web/`, `workers/`, generated `dist/` |
+| `npm run format:check` | FAIL: 1064 files | mixed `web/` + `src/` |
+| `npm test` | FAIL: 1 suite (`tests/features/artistRotation/handlers.test.ts`) | 165 of 166 suites pass; 4455 tests pass |
 | `npm run build` | OK | dist + scan:legacy clean |
 | `npm run check` | FAIL (typecheck) | composite of above |
 
 ### Detailed failures
 
 1. **Typecheck**:
-   - `src/commands/cleanup.ts:58` — `requireMinRole(interaction, ROLE_IDS.MODERATOR)` is missing the third `options` arg.
-   - `src/commands/cleanup.ts:158` — `("name" in channel ? channel.name : channel.id)` — TS narrows `channel` to `never` after the exhaustive type check above; needs assertion.
+   - `src/commands/cleanup.ts:58`: `requireMinRole(interaction, ROLE_IDS.MODERATOR)` is missing the third `options` arg.
+   - `src/commands/cleanup.ts:158`: `("name" in channel ? channel.name : channel.id)`: TS narrows `channel` to `never` after the exhaustive type check above; needs assertion.
 
 2. **Tests**:
-   - `tests/features/artistRotation/handlers.test.ts` — `SqliteError: no such table: ticket_counter`. Root cause: `src/features/tickets/counters.ts` runs `db.prepare(UPDATE ticket_counter ...)` at import time. Migration 067 creates the table. The test setup imports the file transitively without running migrations.
+   - `tests/features/artistRotation/handlers.test.ts`: `SqliteError: no such table: ticket_counter`. Root cause: `src/features/tickets/counters.ts` runs `db.prepare(UPDATE ticket_counter ...)` at import time. Migration 067 creates the table. The test setup imports the file transitively without running migrations.
 
 3. **Lint** (selected): hundreds of `'$state' is not defined`, `'document' is not defined`, `URLSearchParams` etc. inside `web/` (Svelte runes / browser globals not configured in eslint), plus a bunch in `workers/discord-proxy/` (Cloudflare Workers globals). These are config gaps, not real defects.
 
@@ -38,13 +38,13 @@ The biggest sources of accidental complexity right now:
 1. `src/index.ts` is 2688 lines and orchestrates: command registration, schema self-heal, recovery hooks, scheduler boot, web server boot, modmail hydration, review-card refresh, ID-card refresh, all event handlers, the full interaction router, and shutdown.
 2. Commands are registered both in `src/commands/buildCommands.ts` (for Discord registration) and again in `src/index.ts` (for runtime dispatch). No automated alignment.
 3. CI tolerates failures with `continue-on-error` on typecheck, lint, format, and tests. Real issues hide behind the soft gate (cleanup.ts typecheck error has been there a while).
-4. Dashboard API (`src/web/dashboardApi.ts`, 1782 lines) is a parallel mutation surface — approve/reject/kick/permreject/vote_out/claim/unclaim/modmail/QOTD/config/art jobs/etc. — with its own tier-check helper duplicated per-route.
+4. Dashboard API (`src/web/dashboardApi.ts`, 1782 lines) is a parallel mutation surface: approve/reject/kick/permreject/vote_out/claim/unclaim/modmail/QOTD/config/art jobs/etc.: with its own tier-check helper duplicated per-route.
 5. Review approve/reject/kick are tested for the transaction layer but not in fully isolated DB; tests rely on mocked `db` rather than an in-memory better-sqlite3.
 6. Modmail routing has 11 test files but lacks coverage of: closed-ticket-no-route, null-thread-id, DM-send-fail user feedback, transcript persistence, cache eviction.
 7. Schema split: 74 formal migrations *and* a heavy `src/db/db.ts` + `src/db/ensure.ts` self-heal layer. Boundary undocumented.
 8. `deploy.sh` has `set -euo pipefail` and a post-deploy health check, but no SSH timeouts, no deploy lock, no env override for `REMOTE_HOST`/`REMOTE_USER`, no rollback path.
 9. `src/web/dashboardApi.ts` validates auth via header secret but has no tests for tier enforcement.
-10. `tests/features/artistRotation/handlers.test.ts` failure indicates `src/features/tickets/counters.ts` runs DDL-dependent code at import time — fragile pattern.
+10. `tests/features/artistRotation/handlers.test.ts` failure indicates `src/features/tickets/counters.ts` runs DDL-dependent code at import time: fragile pattern.
 
 ## Top risks ranked by production impact
 
@@ -65,11 +65,11 @@ The biggest sources of accidental complexity right now:
 
 The phases below preserve behavior. No commands, customId formats, dashboard contracts, or features change. New tests, extracted modules, and documentation only.
 
-### Phase 0 — Baseline verification (DONE)
+### Phase 0: Baseline verification (DONE)
 
 Captured above.
 
-### Phase 1 — Command registration drift protection
+### Phase 1: Command registration drift protection
 
 - Extract a `src/commands/runtimeRegistry.ts` that returns the runtime command name → handler-name map (no Discord client needed).
 - Add `tests/commands/registration.test.ts`:
@@ -81,7 +81,7 @@ Captured above.
 
 Behavior: zero. Pure inspection.
 
-### Phase 2 — Review transaction tests
+### Phase 2: Review transaction tests
 
 Existing `tests/features/review/approve.test.ts` and `reject.test.ts` cover most cases. Add:
 
@@ -91,7 +91,7 @@ Existing `tests/features/review/approve.test.ts` and `reject.test.ts` cover most
 
 Behavior: zero.
 
-### Phase 3 — Dashboard API safety tests + extraction
+### Phase 3: Dashboard API safety tests + extraction
 
 - Extract `src/web/dashboardAuth.ts`:
   - `TIER_ORDER`
@@ -107,15 +107,15 @@ Behavior: zero.
 
 Behavior: zero. dashboardApi keeps the same routes; helpers move to a sibling module.
 
-### Phase 4 — Modmail routing/lifecycle tests
+### Phase 4: Modmail routing/lifecycle tests
 
 Add to existing test files (or new ones):
 
 - `tests/features/modmail/routing.test.ts`:
   - closed ticket does not route
   - ticket with null thread_id does not route
-  - thread fetch fails — non-fatal, logged
-  - DM send fails — staff sees a useful warning
+  - thread fetch fails: non-fatal, logged
+  - DM send fails: staff sees a useful warning
   - allowedMentions: SAFE_ALLOWED_MENTIONS is applied
 - `tests/features/modmail/transcript.test.ts`:
   - successful relay calls `captureMessage` (or transcript persistence)
@@ -126,23 +126,23 @@ Add to existing test files (or new ones):
 
 Behavior: zero. Privacy preservation (hide staff identity in DMs) is not changed.
 
-### Phase 5 — Startup decomposition
+### Phase 5: Startup decomposition
 
-Extract from `src/index.ts` only — preserve behavior, no reordering except where documented:
+Extract from `src/index.ts` only: preserve behavior, no reordering except where documented:
 
-- `src/startup/schema.ts` — all `ensure*` calls
-- `src/startup/recovery.ts` — panic state, movie/game session recovery, voice seeding, channel cache sync, modmail hydration, modmail retrofit, gate panel refresh, review card refresh, banner sync, invite cache, patreon dedup sweep
-- `src/startup/schedulers.ts` — start* + stop* for all schedulers
-- `src/startup/web.ts` — status endpoint + dashboard API start/stop
-- `src/startup/discordRefresh.ts` — `syncCommandsToAllGuilds` hydration
-- `src/startup/shutdown.ts` — gracefulShutdown
-- `src/commands/runtimeRegistry.ts` — already in Phase 1, just plug in here
+- `src/startup/schema.ts`: all `ensure*` calls
+- `src/startup/recovery.ts`: panic state, movie/game session recovery, voice seeding, channel cache sync, modmail hydration, modmail retrofit, gate panel refresh, review card refresh, banner sync, invite cache, patreon dedup sweep
+- `src/startup/schedulers.ts`: start* + stop* for all schedulers
+- `src/startup/web.ts`: status endpoint + dashboard API start/stop
+- `src/startup/discordRefresh.ts`: `syncCommandsToAllGuilds` hydration
+- `src/startup/shutdown.ts`: gracefulShutdown
+- `src/commands/runtimeRegistry.ts`: already in Phase 1, just plug in here
 
 Result: `src/index.ts` orchestrates phases by name with `try/catch + log` per phase, preserving fail-soft behavior.
 
-Tests: `tests/startup/runStartupTasks.test.ts` — orchestrator runs every task even if one fails; logs evt-tagged warnings; uses mocked task functions.
+Tests: `tests/startup/runStartupTasks.test.ts`: orchestrator runs every task even if one fails; logs evt-tagged warnings; uses mocked task functions.
 
-### Phase 6 — DB schema boundary hardening
+### Phase 6: DB schema boundary hardening
 
 - Extract `addColumnIfMissing` from `src/db/db.ts` into a testable utility `src/db/columnUtil.ts`.
 - Add `tests/db/columnUtil.test.ts`:
@@ -154,21 +154,21 @@ Tests: `tests/startup/runStartupTasks.test.ts` — orchestrator runs every task 
   - prepare() rejects `ALTER TABLE ... RENAME`
 - Document migrations vs ensure boundary in `docs/reference/database-schema-safety.md`:
   - migrations: durable, numbered, recorded in `_migrations` table
-  - ensure helpers: idempotent backward-compat repair for legacy DBs only — every new column should land via a migration first.
+  - ensure helpers: idempotent backward-compat repair for legacy DBs only: every new column should land via a migration first.
 
 Behavior: zero. Function relocation only.
 
-### Phase 7 — CI honesty pass
+### Phase 7: CI honesty pass
 
 Realistic fixes only:
 
-1. Fix the two typecheck errors in `src/commands/cleanup.ts` (real bug — missing options arg) and remove `continue-on-error: true` from the Typecheck step.
+1. Fix the two typecheck errors in `src/commands/cleanup.ts` (real bug: missing options arg) and remove `continue-on-error: true` from the Typecheck step.
 2. Lint and format are huge (web/ Svelte/Cloudflare globals); these stay soft for this pass with a comment pointing to a follow-up. Keep continue-on-error but link to a TODO with measurable exit conditions.
 3. Tests: fix the import-time crash in `src/features/tickets/counters.ts` by making `incrementStmt` lazy (memoized on first call). This unblocks `tests/features/artistRotation/handlers.test.ts`. Then remove `continue-on-error: true` from the Tests step.
 
 Update `docs/operations/ci-policy.md` documenting hard vs soft gates and exit conditions for each soft gate.
 
-### Phase 8 — Deployment hardening
+### Phase 8: Deployment hardening
 
 `deploy.sh` changes that are non-destructive and preserve every flag:
 
@@ -176,36 +176,36 @@ Update `docs/operations/ci-policy.md` documenting hard vs soft gates and exit co
 - All `ssh`/`scp` calls use `-o ConnectTimeout=15 -o ServerAliveInterval=30 -o ServerAliveCountMax=3`.
 - Deploy lock via `mkdir /tmp/pawtropolis-deploy.lock` on remote before tar-extract; cleanup via `trap`.
 - Optional pre-deploy DB backup: gated by `BACKUP_BEFORE_DEPLOY=1` env, runs `cp data/data.db data/backups/data.db.<ts>` on remote before the new tarball lands.
-- Rollback path: keep prior `dist.bak` (one slot) on remote; document `--rollback` switch (separate, additive — does NOT change current default behavior).
+- Rollback path: keep prior `dist.bak` (one slot) on remote; document `--rollback` switch (separate, additive: does NOT change current default behavior).
 - Optional `--dry-run` mode that prints commands without executing.
 - Clearer preflight summary at the top of FULL deploy mode.
 
 Add `docs/operations/deployment-hardening.md`.
 
-### Phase 9 — Observability spot-check
+### Phase 9: Observability spot-check
 
-- Verify `SAFE_ALLOWED_MENTIONS` use in dashboardApi confirmation messages (already present at line 119 — confirm coverage in tests).
+- Verify `SAFE_ALLOWED_MENTIONS` use in dashboardApi confirmation messages (already present at line 119: confirm coverage in tests).
 - Check `withSql`/`withStep` wrap around dashboardApi mutations. If missing in critical paths, document in next-pass section rather than retrofit at scale.
 - Update `docs/reference/observability-and-error-cards.md` only if missing or stale.
 
 Behavior: zero. Pure documentation + spot tests.
 
-### Phase 10 — Docs + TODO reconciliation
+### Phase 10: Docs + TODO reconciliation
 
 Update:
 
-- `TODO.md` — mark CI deploy, deploy lock, REMOTE_HOST env, etc. as done where they are.
-- `CHANGELOG.md` — Unreleased section with hardening pass entries grouped by area.
+- `TODO.md`: mark CI deploy, deploy lock, REMOTE_HOST env, etc. as done where they are.
+- `CHANGELOG.md`: Unreleased section with hardening pass entries grouped by area.
 - New docs: see references in earlier phases.
 
-### Phase 11 — Final validation
+### Phase 11: Final validation
 
 Re-run the baseline command set. Document any remaining failures with cause + next step.
 
 ## Test strategy
 
 - Unit tests for pure helpers (tier ordering, body validation, addColumnIfMissing).
-- Mock-based tests for transactions (no real DB) — keeps existing pattern.
+- Mock-based tests for transactions (no real DB): keeps existing pattern.
 - For the ticket-counter import crash fix: make import lazy and add `tests/features/tickets/counters.test.ts` covering missing-row throw.
 - Startup orchestrator tests use mocked task functions to validate fail-soft semantics.
 - No new integration tests against Discord; preserve discord.js mocking pattern already in use.
@@ -285,7 +285,7 @@ For deploy.sh: the changes are flag-additive and env-fallback; old invocations (
 - New tests cover every helper extracted.
 - Plan, hardening docs, and TODO updated.
 - CI workflow is no longer soft on typecheck/tests.
-- Deploy script supports env overrides, lock, optional backup, rollback path, dry-run — without breaking current invocations.
+- Deploy script supports env overrides, lock, optional backup, rollback path, dry-run: without breaking current invocations.
 - Final validation report attached at end of pass.
 
 ## TODO summary

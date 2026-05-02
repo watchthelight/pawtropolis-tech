@@ -1,6 +1,6 @@
 # Dashboard API security model
 
-The dashboard API (`src/web/dashboardApi.ts`) is the bot's second mutation surface — it lets the web dashboard at pawtropolis.tech proxy review actions, modmail messages, QOTD lifecycle, art job updates, and config changes through the same Discord client the slash commands use.
+The dashboard API (`src/web/dashboardApi.ts`) is the bot's second mutation surface: it lets the web dashboard at pawtropolis.tech proxy review actions, modmail messages, QOTD lifecycle, art job updates, and config changes through the same Discord client the slash commands use.
 
 This doc explains the auth model, the trust boundary, and the rules each route enforces.
 
@@ -10,9 +10,9 @@ The Fastify server runs on `127.0.0.1:DASHBOARD_API_PORT` (default `3003`). Ngin
 
 Three things must line up for a write to succeed:
 
-1. **Header secret** — `X-Dashboard-Secret` must equal `DASHBOARD_API_SECRET` from the bot's environment. Enforced by a Fastify `onRequest` hook before any route handler runs.
-2. **Caller tier** — the request body must contain a `tier` string the bot accepts (see `TIER_ORDER` in `src/web/dashboardAuth.ts`). The dashboard derives this from the user's Discord roles via the OAuth session.
-3. **Per-route authority** — each route calls `hasMinTier(tier, minTier)` with its own minimum. Routes that touch resolved applications also check claim ownership; admin-tier callers can override.
+1. **Header secret**: `X-Dashboard-Secret` must equal `DASHBOARD_API_SECRET` from the bot's environment. Enforced by a Fastify `onRequest` hook before any route handler runs.
+2. **Caller tier**: the request body must contain a `tier` string the bot accepts (see `TIER_ORDER` in `src/web/dashboardAuth.ts`). The dashboard derives this from the user's Discord roles via the OAuth session.
+3. **Per-route authority**: each route calls `hasMinTier(tier, minTier)` with its own minimum. Routes that touch resolved applications also check claim ownership; admin-tier callers can override.
 
 If any of those three fails the bot returns 401 / 403 / 409 without performing the side effect.
 
@@ -54,7 +54,7 @@ Failure modes the comparator must cover (asserted by `tests/web/dashboardAuth.te
 | `POST /api/modmail/open` | `gk` | rejects if user already has open ticket |
 | `POST /api/modmail/close` | `gk` | |
 | `POST /api/modmail/reopen` | `gk` | |
-| `POST /api/qotd/*` | (varies by route — see source) | |
+| `POST /api/qotd/*` | (varies by route: see source) | |
 | `POST /api/config/*` | (varies; some require admin) | |
 
 Authoritative list lives in `src/web/dashboardApi.ts`. This table is a tour; if the two ever diverge, treat the source as the source of truth and update the doc.
@@ -65,7 +65,7 @@ For applications that are claimed (`review_claim` row exists for the appId):
 
 - Approve, reject (any variant), kick: caller must be the claim owner.
 - Unclaim: caller must be the claim owner OR have `admin` tier.
-- Vote out: claim ownership is NOT required — any GK can vote regardless of who claimed.
+- Vote out: claim ownership is NOT required: any GK can vote regardless of who claimed.
 
 The admin override on unclaim bypasses `unclaimTx` (which has its own ownership check) and writes the audit row directly with `meta = { type: "admin_override", previousClaimer: <id> }`. This pattern is intentional: it preserves audit fidelity while letting an admin recover from an absent reviewer.
 
@@ -80,13 +80,13 @@ if (!userId || !tier || !appId) {
 }
 ```
 
-The `missingStringFields` and `missingIntegerFields` helpers in `dashboardAuth.ts` express this contract for tests. Each route currently inlines the check; if the patterns ever diverge from the helpers, adopt the helper or update the helper to match — they should not stay subtly different.
+The `missingStringFields` and `missingIntegerFields` helpers in `dashboardAuth.ts` express this contract for tests. Each route currently inlines the check; if the patterns ever diverge from the helpers, adopt the helper or update the helper to match: they should not stay subtly different.
 
 ## What the dashboard cannot do
 
 - It cannot modify guild_config values that fail validation in `lib/configValidation.ts`.
 - It cannot grant the Owner tier to itself (the OAuth session derives tier from real Discord roles).
-- It cannot bypass tier enforcement by passing an unknown tier string — `hasMinTier` returns false for anything outside `TIER_ORDER`.
+- It cannot bypass tier enforcement by passing an unknown tier string: `hasMinTier` returns false for anything outside `TIER_ORDER`.
 - It cannot run actions on resolved applications (the underlying transaction enforces terminal-state rejections regardless of HTTP authorization).
 
 ## Failure semantics
@@ -98,4 +98,4 @@ The `missingStringFields` and `missingIntegerFields` helpers in `dashboardAuth.t
 - Application or thread not found → 404.
 - Unhandled error → 500 with no stack trace; full error logged with `evt: dashboardApi`.
 
-The 207 status appears for partial success — for example, an approve that records the DB transition and audit row but fails to grant the accepted role on Discord. The dashboard renders that as a warning so a human can grant the role manually.
+The 207 status appears for partial success: for example, an approve that records the DB transition and audit row but fails to grant the accepted role on Discord. The dashboard renders that as a warning so a human can grant the role manually.

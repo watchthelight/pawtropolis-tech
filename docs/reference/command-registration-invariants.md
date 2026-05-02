@@ -2,8 +2,8 @@
 
 Pawtropolis Tech registers slash commands in two places that must stay in lockstep:
 
-1. `src/commands/buildCommands.ts` — `buildCommands()` returns the JSON payloads sent to Discord's bulk command registration endpoint.
-2. `src/index.ts` — populates a `Collection<string, executor>` keyed by command name; the interaction router looks up handlers by name when an interaction arrives.
+1. `src/commands/buildCommands.ts`: `buildCommands()` returns the JSON payloads sent to Discord's bulk command registration endpoint.
+2. `src/index.ts`: populates a `Collection<string, executor>` keyed by command name; the interaction router looks up handlers by name when an interaction arrives.
 
 `src/commands/runtimeManifest.ts` is the single source of truth tying the two together.
 

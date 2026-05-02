@@ -59,8 +59,8 @@ When all three are done, drop `continue-on-error: true` from the Lint step.
 
 Two pre-existing suite failures, both unrelated to the May 2026 hardening pass:
 
-1. `tests/features/artistRotation/handlers.test.ts` — historically failed at import time because `src/features/tickets/counters.ts` and `src/features/tickets/service.ts` prepare statements at module load against tables (`ticket_counter`, `ticket`) that may not exist on a fresh DB. Phase 7 made `counters.ts` lazy-prepare; `service.ts` still eager-prepares. The deeper fix — running migrations as part of test setup, or making every module-level prepare lazy — is tracked in TODO.md.
-2. `tests/lib/roles.test.ts` — assertion expects role name `"Server Owner"`, but the role was renamed to `"Community Founder"` in `src/lib/roles.ts:77`. The test predates the rename. Fix is a one-liner; it has not landed because the test was being hidden by the soft gate.
+1. `tests/features/artistRotation/handlers.test.ts`: historically failed at import time because `src/features/tickets/counters.ts` and `src/features/tickets/service.ts` prepare statements at module load against tables (`ticket_counter`, `ticket`) that may not exist on a fresh DB. Phase 7 made `counters.ts` lazy-prepare; `service.ts` still eager-prepares. The deeper fix: running migrations as part of test setup, or making every module-level prepare lazy: is tracked in TODO.md.
+2. `tests/lib/roles.test.ts`: assertion expects role name `"Server Owner"`, but the role was renamed to `"Community Founder"` in `src/lib/roles.ts:77`. The test predates the rename. Fix is a one-liner; it has not landed because the test was being hidden by the soft gate.
 
 **Promotion conditions:**
 
@@ -73,11 +73,11 @@ Two pre-existing suite failures, both unrelated to the May 2026 hardening pass:
 
 - Real production deploy (handled by `deploy.sh`, run manually).
 - Vulnerability scanning (no Dependabot or `npm audit` step today).
-- Migration dry-run (`npm run migrate:dry`) — could be added cheaply.
+- Migration dry-run (`npm run migrate:dry`): could be added cheaply.
 - Coverage thresholds beyond the artifact upload (Vitest config has thresholds at lines:50, functions:45, branches:40, statements:50 but these are not enforced as a CI failure).
 
 ## Why we keep soft gates
 
-Removing CI's tolerance for failures the moment they appear forces every contributor to fix the backlog before they can merge their feature. That backlog can be huge — the lint backlog here is 3500 items. It would freeze the project. Soft gates with documented promotion conditions strike the balance: real regressions get caught (typecheck, build), legacy backlog stays visible (the warning lights still glow yellow), and contributors can still ship.
+Removing CI's tolerance for failures the moment they appear forces every contributor to fix the backlog before they can merge their feature. That backlog can be huge: the lint backlog here is 3500 items. It would freeze the project. Soft gates with documented promotion conditions strike the balance: real regressions get caught (typecheck, build), legacy backlog stays visible (the warning lights still glow yellow), and contributors can still ship.
 
 The promotion conditions above keep the team honest: each soft gate has a measurable exit condition, and the doc must be updated when one is met.
