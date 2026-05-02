@@ -11,7 +11,13 @@
  * state never blocks Discord event handling.
  */
 
-import type { Client, Role, GuildBasedChannel, User } from "discord.js";
+import type {
+  Client,
+  Role,
+  GuildBasedChannel,
+  User,
+  PartialUser,
+} from "discord.js";
 import { logger } from "../../lib/logger.js";
 import {
   defaultStoreConfig,
@@ -138,7 +144,7 @@ export function attachBadgeLiveListeners(
     if (defs.length === 0) return;
     scheduleRefresh(client, defs, config);
   });
-  client.on("userUpdate", (_old: User, next: User) => {
+  client.on("userUpdate", (_old: User | PartialUser, next: User) => {
     const defs = defsForDiscordId(next.id, "user");
     if (defs.length === 0) return;
     scheduleRefresh(client, defs, config);

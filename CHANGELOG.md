@@ -6,6 +6,26 @@ All changes to Pawtropolis Tech are tracked here.
 
 ## [Unreleased]
 
+### GitHub Discord Badge System (2026-05-02)
+
+GitHub Markdown cannot render Discord mention syntax. Added a self-hosted SVG badge system that renders Discord roles, channels, and users as Discord-style pills using the real names and role colors. Plan: `docs/roadmap/github-discord-badges-plan-2026-05-02.md`.
+
+#### Added
+
+- **Badge feature module** (`src/features/badges/`): `types.ts`, `registry.ts`, `color.ts`, `svgEscape.ts`, `renderSvg.ts`, `store.ts`, `resolve.ts`, `liveUpdates.ts`, `index.ts`. Stable kebab-style badge ids; XML-safe escaping; contrast-aware color helpers; pill renderer with stale + suffix variants; manifest IO with traversal-safe paths.
+- **Public HTTP endpoint** (`src/web/badgeEndpoint.ts`): default port 3004. Routes `/badges/<id>.svg`, `/api/badges/manifest.json`, `/api/badges/health`. Direct Discord ID routes are gated behind `BADGE_ALLOW_DIRECT_DISCORD_ID_ROUTES=true` (off by default). ETag-based 304 handling.
+- **Daily refresh scheduler** (`src/scheduler/badgeRefreshScheduler.ts`): refreshes every `BADGE_REFRESH_INTERVAL_HOURS` hours (default 24); initial refresh delayed 60s after bot ready; per-badge errors fall back to prior cache and mark stale.
+- **Live event-driven updates** (`src/features/badges/liveUpdates.ts`): `roleUpdate`, `roleDelete`, `channelUpdate`, `channelDelete`, `userUpdate` listeners refresh just the affected badge within ~1.5s, debounced.
+- **CLI helper** (`scripts/generate-badges.ts`): `--list`, `--id <id>`, `--dry-run` for offline regen.
+- **Tests**: 60+ new tests covering escape, color, render, registry, store, resolve, endpoint, scheduler, live updates, and a docs guard test that fails on raw Discord mention regressions.
+- **Docs**: `docs/reference/github-discord-badges.md`, `docs/reference/documentation-badge-style-guide.md`, `docs/operations/badge-refresh.md`, `docs/architecture/badge-system.md`. README has a Discord Badges section.
+
+#### Changed
+
+- `docs/MOD-QUICKREF.md`, `docs/BOT-HANDBOOK.md`, `docs/MOD-HANDBOOK.md` use generated badge image references instead of raw Discord mention syntax for the movie tier roles, Server Artist role, and `「✍️」writing` / `「🗣️」yapping-space` channels.
+- `src/startup/web.ts` and `src/startup/schedulers.ts` mount the badge endpoint, scheduler, and live listeners.
+- `.env.example` documents the new badge env vars.
+
 ### Reliability / Test / Orchestration Pass (2026-05-02)
 
 Behavior-preserving hardening pass. No commands, customId formats, dashboard contracts, or features were changed. Plan: `docs/roadmap/pawtropolis-hardening-plan-2026-05-02.md`.
