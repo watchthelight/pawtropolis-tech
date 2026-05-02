@@ -50,6 +50,23 @@ export async function startWebServers(client: Client): Promise<void> {
     },
     { level: "warn" },
   );
+
+  await runStartupTask(
+    "web_badge_endpoint",
+    async () => {
+      const { startBadgeServer, getBadgePort } = await import(
+        "../web/badgeEndpoint.js"
+      );
+      const srv = startBadgeServer();
+      if (srv) {
+        logger.info(
+          { port: getBadgePort() },
+          "[startup] Badge endpoint started",
+        );
+      }
+    },
+    { level: "warn" },
+  );
 }
 
 /**
@@ -61,4 +78,6 @@ export async function startWebServers(client: Client): Promise<void> {
 export async function stopWebServers(): Promise<void> {
   const { stopDashboardApi } = await import("../web/dashboardApi.js");
   await stopDashboardApi();
+  const { stopBadgeServer } = await import("../web/badgeEndpoint.js");
+  await stopBadgeServer();
 }
