@@ -68,6 +68,12 @@ vi.mock("../../../src/lib/constants.js", () => ({
   SAFE_ALLOWED_MENTIONS: { parse: [] },
 }));
 
+// Mock dashboard notifier (added 2026-05-02 to cover relay observability)
+const mockNotifyDashboard = vi.hoisted(() => vi.fn());
+vi.mock("../../../src/web/notifyDashboard.js", () => ({
+  notifyDashboard: mockNotifyDashboard,
+}));
+
 // Import after mocks are set up
 import {
   markForwarded,
@@ -80,7 +86,13 @@ import {
   handleInboundDmForModmail,
   handleInboundThreadMessageForModmail,
 } from "../../../src/features/modmail/routing.js";
-import { getTicketByThread } from "../../../src/features/modmail/tickets.js";
+import {
+  getTicketByThread,
+  insertModmailMessage,
+  getDmIdForThreadReply,
+  getThreadIdForDmReply,
+} from "../../../src/features/modmail/tickets.js";
+import { appendTranscript } from "../../../src/features/modmail/transcript.js";
 
 const mockGetTicketByThread = getTicketByThread as ReturnType<typeof vi.fn>;
 
@@ -809,5 +821,490 @@ describe("handleInboundThreadMessageForModmail", () => {
     const client = {} as any;
 
     await handleInboundThreadMessageForModmail(message, client);
+  });
+});
+
+// =====================================================================
+// Hardening additions 2026-05-02 (Phase 4)
+//
+// Cover routing edge cases that were not previously asserted:
+//   - thread fetch failure (network error, not just null)
+//   - image attachment is included as embed.image
+//   - reply mapping survives the DM <-> thread boundary in both directions
+//   - SAFE_ALLOWED_MENTIONS is applied to every relayed send call
+//   - transcript persistence (DB insert + in-memory buffer) on success
+//   - dashboard notification fires on every successful relay
+// =====================================================================
+
+const mockInsertModmailMessage = insertModmailMessage as ReturnType<typeof vi.fn>;
+const mockAppendTranscript = appendTranscript as ReturnType<typeof vi.fn>;
+const mockGetDmIdForThreadReply = getDmIdForThreadReply as ReturnType<typeof vi.fn>;
+const mockGetThreadIdForDmReply = getThreadIdForDmReply as ReturnType<typeof vi.fn>;
+
+function freshAttachmentMap(items: Array<{ contentType?: string | null; url: string }>) {
+  const map = new Map<string, { contentType?: string | null; url: string }>();
+  items.forEach((it, i) => map.set(String(i), it));
+  return map;
+}
+
+describe("routeThreadToDm — hardening additions", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockDbPrepare.mockReturnValue({ get: mockDbGet, run: mockDbRun, all: mockDbAll });
+    _testing.clearForwardedMessages();
+  });
+
+  it("includes the first image attachment URL in the embed", async () => {
+    const mockUserSend = vi.fn().mockResolvedValue({ id: "dm-msg-1" });
+    const mockMemberFetch = vi.fn().mockResolvedValue({
+      displayName: "Mod",
+      user: { globalName: "Mod", username: "mod" },
+      displayAvatarURL: vi.fn().mockReturnValue("https://avatar"),
+    });
+
+    const message = {
+      author: { bot: false, id: "staff-1", globalName: "Staff", username: "staff" },
+      id: "msg-img",
+      content: "look at this",
+      attachments: freshAttachmentMap([
+        { contentType: "text/plain", url: "https://text.txt" },
+        { contentType: "image/png", url: "https://image.png" },
+      ]),
+      guild: {
+        name: "Test",
+        iconURL: vi.fn().mockReturnValue(null),
+        members: { fetch: mockMemberFetch },
+      },
+      reference: null,
+    } as any;
+    const ticket = { id: 7, user_id: "user-9" } as any;
+    const client = {
+      users: { fetch: vi.fn().mockResolvedValue({ send: mockUserSend }) },
+    } as any;
+
+    await routeThreadToDm(message, ticket, client);
+
+    const sendArgs = mockUserSend.mock.calls[0][0];
+    expect(sendArgs.embeds[0].data.image?.url).toBe("https://image.png");
+  });
+
+  it("preserves reply-to mapping when staff replies to a known applicant DM", async () => {
+    const mockUserSend = vi.fn().mockResolvedValue({ id: "dm-msg-2" });
+    const mockMemberFetch = vi.fn().mockResolvedValue({
+      displayName: "Mod",
+      user: { globalName: "Mod", username: "mod" },
+      displayAvatarURL: vi.fn().mockReturnValue("https://avatar"),
+    });
+
+    // Reply target is the previously-relayed thread message id
+    mockGetDmIdForThreadReply.mockReturnValue("orig-dm-id");
+
+    const message = {
+      author: { bot: false, id: "staff-1", globalName: "Staff", username: "staff" },
+      id: "msg-reply",
+      content: "see above",
+      attachments: new Map(),
+      guild: {
+        name: "Test",
+        iconURL: vi.fn().mockReturnValue(null),
+        members: { fetch: mockMemberFetch },
+      },
+      reference: { messageId: "thread-orig" },
+    } as any;
+    const ticket = { id: 8, user_id: "user-10" } as any;
+    const client = {
+      users: { fetch: vi.fn().mockResolvedValue({ send: mockUserSend }) },
+    } as any;
+
+    await routeThreadToDm(message, ticket, client);
+
+    const sendArgs = mockUserSend.mock.calls[0][0];
+    expect(sendArgs.reply).toEqual({
+      messageReference: "orig-dm-id",
+      failIfNotExists: false,
+    });
+    expect(mockGetDmIdForThreadReply).toHaveBeenCalledWith("thread-orig");
+  });
+
+  it("applies SAFE_ALLOWED_MENTIONS to the DM send", async () => {
+    const mockUserSend = vi.fn().mockResolvedValue({ id: "dm-msg-3" });
+    const mockMemberFetch = vi.fn().mockResolvedValue({
+      displayName: "Mod",
+      user: { globalName: "Mod", username: "mod" },
+      displayAvatarURL: vi.fn().mockReturnValue(null),
+    });
+
+    const message = {
+      author: { bot: false, id: "staff-1", globalName: "Staff", username: "staff" },
+      id: "msg-mention",
+      content: "@everyone test",
+      attachments: new Map(),
+      guild: {
+        name: "Test",
+        iconURL: vi.fn().mockReturnValue(null),
+        members: { fetch: mockMemberFetch },
+      },
+      reference: null,
+    } as any;
+    const ticket = { id: 9, user_id: "user-11" } as any;
+    const client = {
+      users: { fetch: vi.fn().mockResolvedValue({ send: mockUserSend }) },
+    } as any;
+
+    await routeThreadToDm(message, ticket, client);
+
+    const sendArgs = mockUserSend.mock.calls[0][0];
+    expect(sendArgs.allowedMentions).toEqual({ parse: [] });
+  });
+
+  it("persists the relayed message to DB and transcript buffer", async () => {
+    const mockUserSend = vi.fn().mockResolvedValue({ id: "dm-msg-4" });
+    const mockMemberFetch = vi.fn().mockResolvedValue({
+      displayName: "Mod",
+      user: { globalName: "Mod", username: "mod" },
+      displayAvatarURL: vi.fn().mockReturnValue(null),
+    });
+
+    const message = {
+      author: { bot: false, id: "staff-1", globalName: "Staff", username: "staff" },
+      id: "msg-persist",
+      content: "this should be logged",
+      attachments: new Map(),
+      guild: {
+        name: "Test",
+        iconURL: vi.fn().mockReturnValue(null),
+        members: { fetch: mockMemberFetch },
+      },
+      reference: null,
+    } as any;
+    const ticket = { id: 11, user_id: "user-12" } as any;
+    const client = {
+      users: { fetch: vi.fn().mockResolvedValue({ send: mockUserSend }) },
+    } as any;
+
+    await routeThreadToDm(message, ticket, client);
+
+    expect(mockInsertModmailMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ticketId: 11,
+        direction: "to_user",
+        threadMessageId: "msg-persist",
+        dmMessageId: "dm-msg-4",
+      }),
+    );
+    expect(mockAppendTranscript).toHaveBeenCalledWith(
+      11,
+      "STAFF",
+      expect.stringContaining("this should be logged"),
+    );
+  });
+
+  it("notifies the dashboard on a successful relay", async () => {
+    const mockUserSend = vi.fn().mockResolvedValue({ id: "dm-msg-5" });
+    const mockMemberFetch = vi.fn().mockResolvedValue({
+      displayName: "Mod",
+      user: { globalName: "Mod", username: "mod" },
+      displayAvatarURL: vi.fn().mockReturnValue(null),
+    });
+
+    const message = {
+      author: { bot: false, id: "staff-99", globalName: "Staff", username: "staff" },
+      id: "msg-notify",
+      content: "ping ping",
+      attachments: new Map(),
+      guild: {
+        name: "Test",
+        iconURL: vi.fn().mockReturnValue(null),
+        members: { fetch: mockMemberFetch },
+      },
+      reference: null,
+    } as any;
+    const ticket = { id: 14, user_id: "user-13" } as any;
+    const client = {
+      users: { fetch: vi.fn().mockResolvedValue({ send: mockUserSend }) },
+    } as any;
+
+    await routeThreadToDm(message, ticket, client);
+
+    expect(mockNotifyDashboard).toHaveBeenCalledWith(
+      "modmail:message_sent",
+      expect.objectContaining({ ticketId: 14, staffUserId: "staff-99" }),
+    );
+  });
+
+  it("marks the relayed DM message id as forwarded to prevent loops", async () => {
+    const mockUserSend = vi.fn().mockResolvedValue({ id: "dm-msg-6" });
+    const mockMemberFetch = vi.fn().mockResolvedValue({
+      displayName: "Mod",
+      user: { globalName: "Mod", username: "mod" },
+      displayAvatarURL: vi.fn().mockReturnValue(null),
+    });
+
+    const message = {
+      author: { bot: false, id: "staff-1", globalName: "Staff", username: "staff" },
+      id: "msg-loopguard",
+      content: "loop test",
+      attachments: new Map(),
+      guild: {
+        name: "Test",
+        iconURL: vi.fn().mockReturnValue(null),
+        members: { fetch: mockMemberFetch },
+      },
+      reference: null,
+    } as any;
+    const ticket = { id: 15, user_id: "user-14" } as any;
+    const client = {
+      users: { fetch: vi.fn().mockResolvedValue({ send: mockUserSend }) },
+    } as any;
+
+    expect(isForwarded("dm-msg-6")).toBe(false);
+    await routeThreadToDm(message, ticket, client);
+    expect(isForwarded("dm-msg-6")).toBe(true);
+  });
+});
+
+describe("routeDmToThread — hardening additions", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockDbPrepare.mockReturnValue({ get: mockDbGet, run: mockDbRun, all: mockDbAll });
+    _testing.clearForwardedMessages();
+  });
+
+  it("logs warning and exits when thread fetch throws", async () => {
+    const message = {
+      author: {
+        bot: false,
+        id: "user-1",
+        globalName: "User",
+        username: "user",
+        displayAvatarURL: vi.fn().mockReturnValue(null),
+      },
+      id: "dm-net-fail",
+      content: "hello",
+      attachments: new Map(),
+      reference: null,
+    } as any;
+    const ticket = { id: 21, thread_id: "t-fail" } as any;
+    const client = {
+      channels: {
+        fetch: vi.fn().mockRejectedValue(new Error("network down")),
+      },
+    } as any;
+
+    await routeDmToThread(message, ticket, client);
+
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect.objectContaining({ ticketId: 21, threadId: "t-fail" }),
+      expect.stringContaining("failed to route DM"),
+    );
+    // No thread message should have been sent — there's nothing to mark forwarded.
+    expect(mockInsertModmailMessage).not.toHaveBeenCalled();
+  });
+
+  it("logs warning and exits when thread.send throws", async () => {
+    const message = {
+      author: {
+        bot: false,
+        id: "user-1",
+        globalName: "User",
+        username: "user",
+        displayAvatarURL: vi.fn().mockReturnValue(null),
+      },
+      id: "dm-send-fail",
+      content: "hello",
+      attachments: new Map(),
+      reference: null,
+    } as any;
+    const ticket = { id: 22, thread_id: "t-send-fail" } as any;
+    const client = {
+      channels: {
+        fetch: vi.fn().mockResolvedValue({
+          isThread: () => true,
+          send: vi.fn().mockRejectedValue(new Error("forbidden")),
+        }),
+      },
+    } as any;
+
+    await routeDmToThread(message, ticket, client);
+
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect.objectContaining({ ticketId: 22 }),
+      expect.stringContaining("failed to route DM"),
+    );
+    expect(mockNotifyDashboard).not.toHaveBeenCalled();
+    expect(mockInsertModmailMessage).not.toHaveBeenCalled();
+  });
+
+  it("preserves reply-to mapping when applicant replies to a relayed staff DM", async () => {
+    const mockThreadSend = vi.fn().mockResolvedValue({ id: "thread-msg-rev" });
+    mockGetThreadIdForDmReply.mockReturnValue("staff-thread-orig");
+
+    const message = {
+      author: {
+        bot: false,
+        id: "user-1",
+        globalName: "User",
+        username: "user",
+        displayAvatarURL: vi.fn().mockReturnValue(null),
+      },
+      id: "dm-reply",
+      content: "thanks for the answer",
+      attachments: new Map(),
+      reference: { messageId: "dm-orig" },
+    } as any;
+    const ticket = { id: 23, thread_id: "t-r" } as any;
+    const client = {
+      channels: {
+        fetch: vi.fn().mockResolvedValue({
+          isThread: () => true,
+          send: mockThreadSend,
+        }),
+      },
+    } as any;
+
+    await routeDmToThread(message, ticket, client);
+
+    const sendArgs = mockThreadSend.mock.calls[0][0];
+    expect(sendArgs.reply).toEqual({
+      messageReference: "staff-thread-orig",
+      failIfNotExists: false,
+    });
+    expect(mockGetThreadIdForDmReply).toHaveBeenCalledWith("dm-orig");
+  });
+
+  it("applies SAFE_ALLOWED_MENTIONS on thread send", async () => {
+    const mockThreadSend = vi.fn().mockResolvedValue({ id: "thread-msg-mention" });
+    const message = {
+      author: {
+        bot: false,
+        id: "user-1",
+        globalName: "User",
+        username: "user",
+        displayAvatarURL: vi.fn().mockReturnValue(null),
+      },
+      id: "dm-mention",
+      content: "@everyone hi",
+      attachments: new Map(),
+      reference: null,
+    } as any;
+    const ticket = { id: 24, thread_id: "t-m" } as any;
+    const client = {
+      channels: {
+        fetch: vi.fn().mockResolvedValue({
+          isThread: () => true,
+          send: mockThreadSend,
+        }),
+      },
+    } as any;
+
+    await routeDmToThread(message, ticket, client);
+
+    const sendArgs = mockThreadSend.mock.calls[0][0];
+    expect(sendArgs.allowedMentions).toEqual({ parse: [] });
+  });
+
+  it("persists relayed DM to DB with direction=to_staff", async () => {
+    const mockThreadSend = vi.fn().mockResolvedValue({ id: "thread-msg-persist" });
+    const message = {
+      author: {
+        bot: false,
+        id: "user-1",
+        globalName: "User",
+        username: "user",
+        displayAvatarURL: vi.fn().mockReturnValue(null),
+      },
+      id: "dm-persist",
+      content: "an important answer",
+      attachments: new Map(),
+      reference: null,
+    } as any;
+    const ticket = { id: 25, thread_id: "t-p" } as any;
+    const client = {
+      channels: {
+        fetch: vi.fn().mockResolvedValue({
+          isThread: () => true,
+          send: mockThreadSend,
+        }),
+      },
+    } as any;
+
+    await routeDmToThread(message, ticket, client);
+
+    expect(mockInsertModmailMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ticketId: 25,
+        direction: "to_staff",
+        threadMessageId: "thread-msg-persist",
+        dmMessageId: "dm-persist",
+      }),
+    );
+    expect(mockAppendTranscript).toHaveBeenCalledWith(
+      25,
+      "USER",
+      expect.stringContaining("an important answer"),
+    );
+  });
+
+  it("notifies dashboard on successful relay from DM to thread", async () => {
+    const mockThreadSend = vi.fn().mockResolvedValue({ id: "thread-msg-notify" });
+    const message = {
+      author: {
+        bot: false,
+        id: "user-99",
+        globalName: "User",
+        username: "user",
+        displayAvatarURL: vi.fn().mockReturnValue(null),
+      },
+      id: "dm-notify",
+      content: "ping",
+      attachments: new Map(),
+      reference: null,
+    } as any;
+    const ticket = { id: 26, thread_id: "t-n" } as any;
+    const client = {
+      channels: {
+        fetch: vi.fn().mockResolvedValue({
+          isThread: () => true,
+          send: mockThreadSend,
+        }),
+      },
+    } as any;
+
+    await routeDmToThread(message, ticket, client);
+
+    expect(mockNotifyDashboard).toHaveBeenCalledWith(
+      "modmail:message_sent",
+      expect.objectContaining({ ticketId: 26, staffUserId: "user-99" }),
+    );
+  });
+
+  it("marks the relayed thread message id as forwarded", async () => {
+    const mockThreadSend = vi.fn().mockResolvedValue({ id: "thread-msg-loop" });
+    const message = {
+      author: {
+        bot: false,
+        id: "user-1",
+        globalName: "User",
+        username: "user",
+        displayAvatarURL: vi.fn().mockReturnValue(null),
+      },
+      id: "dm-loop",
+      content: "x",
+      attachments: new Map(),
+      reference: null,
+    } as any;
+    const ticket = { id: 27, thread_id: "t-l" } as any;
+    const client = {
+      channels: {
+        fetch: vi.fn().mockResolvedValue({
+          isThread: () => true,
+          send: mockThreadSend,
+        }),
+      },
+    } as any;
+
+    expect(isForwarded("thread-msg-loop")).toBe(false);
+    await routeDmToThread(message, ticket, client);
+    expect(isForwarded("thread-msg-loop")).toBe(true);
   });
 });
