@@ -69,8 +69,12 @@ export const ROLE_RANK: Record<string, number> = Object.fromEntries(
 // Role Name Mapping (for display in permission errors)
 // =============================================================================
 
+// Display labels rendered to staff in permission-denied embeds and similar UI.
+// These should match the live Discord role name so users can find the role.
+// The constant identifiers above (SERVER_OWNER, MOD_TEAM) keep their original
+// names for backwards compatibility with older code paths.
 export const ROLE_NAMES: Record<string, string> = {
-  [ROLE_IDS.SERVER_OWNER]: "Server Owner",
+  [ROLE_IDS.SERVER_OWNER]: "Community Founder",
   [ROLE_IDS.COMMUNITY_MANAGER]: "Community Manager",
   [ROLE_IDS.COMMUNITY_DEV_LEAD]: "Community Development Lead",
   [ROLE_IDS.SENIOR_ADMIN]: "Senior Administrator",
@@ -79,7 +83,7 @@ export const ROLE_NAMES: Record<string, string> = {
   [ROLE_IDS.MODERATOR]: "Moderator",
   [ROLE_IDS.JUNIOR_MOD]: "Junior Moderator",
   [ROLE_IDS.GATEKEEPER]: "Gatekeeper",
-  [ROLE_IDS.MOD_TEAM]: "Moderation Team",
+  [ROLE_IDS.MOD_TEAM]: "Community Staff",
   [ROLE_IDS.SERVER_DEV]: "Server Dev",
   [ROLE_IDS.SERVER_ARTIST]: "Server Artist",
   [ROLE_IDS.EVENT_HOST]: "Event Host",
