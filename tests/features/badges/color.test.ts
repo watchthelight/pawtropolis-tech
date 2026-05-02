@@ -13,10 +13,10 @@ describe("intToHex", () => {
   it("formats a Discord role color", () => {
     expect(intToHex(0x5865f2)).toBe("#5865F2");
   });
-  it("falls back on 0/null/NaN", () => {
-    expect(intToHex(0)).toBe("#5865F2");
-    expect(intToHex(undefined)).toBe("#5865F2");
-    expect(intToHex(NaN)).toBe("#5865F2");
+  it("returns empty for 0/null/NaN (signals no Discord color)", () => {
+    expect(intToHex(0)).toBe("");
+    expect(intToHex(undefined)).toBe("");
+    expect(intToHex(NaN)).toBe("");
   });
   it("clamps oversized ints", () => {
     expect(intToHex(0xff_ff_ff_00)).toBe("#FFFFFF");

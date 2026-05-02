@@ -13,12 +13,22 @@ export const DISCORD_TEXT_DARK = "#0D0D0D";
 export const DISCORD_NEUTRAL_PILL = "#404249";
 export const DISCORD_STALE = "#6E6E6E";
 
+/**
+ * Convert a Discord role.color int (0..0xffffff) to a 6-digit hex string.
+ * Returns "" when the role has no color set (Discord uses 0 for default),
+ * which the renderer treats as a neutral pill instead of blurple. Use the
+ * helper `intToHexOrBlurple` if you need the legacy fallback behavior.
+ */
 export function intToHex(value: number | null | undefined): string {
   if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
-    return DISCORD_BLURPLE;
+    return "";
   }
   const clamped = Math.max(0, Math.min(0xffffff, Math.floor(value)));
   return "#" + clamped.toString(16).padStart(6, "0").toUpperCase();
+}
+
+export function intToHexOrBlurple(value: number | null | undefined): string {
+  return intToHex(value) || DISCORD_BLURPLE;
 }
 
 export function normalizeHex(hex: string | undefined | null): string {

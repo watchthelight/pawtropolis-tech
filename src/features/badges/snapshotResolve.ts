@@ -66,8 +66,9 @@ export function parseRolesSnapshot(markdown: string): Map<string, RoleSnapshotEn
   const out = new Map<string, RoleSnapshotEntry>();
   for (const [name, id] of idByName) {
     const rawColor = colorByName.get(name) ?? "default";
-    const colorHex =
-      rawColor.startsWith("#") ? normalizeHex(rawColor) : DISCORD_BLURPLE;
+    // Empty string signals "no Discord color"; the renderer treats that as a
+    // neutral pill (matches how Discord renders no-color role mentions).
+    const colorHex = rawColor.startsWith("#") ? normalizeHex(rawColor) : "";
     out.set(id, { name, colorHex });
   }
   return out;

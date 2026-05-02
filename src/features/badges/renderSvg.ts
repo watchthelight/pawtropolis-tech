@@ -41,15 +41,31 @@ const PADDING_X = 8;
 const SUFFIX_GAP = 6;
 const SEPARATOR_PADDING = 6;
 
+// Per-char advance widths for system-ui 13px weight 600. Uppercase, "m",
+// and "w" are visibly wider; digits/lowercase mid are average; "i", "l",
+// "t" are narrower. Tuned by measuring rendered widths of the staff role
+// names ("Community Development Lead", "Senior Administrator") and adding
+// a small safety margin so text never clips inside the pill.
+const NARROW_CHARS = new Set(["i", "l", "t", "I", "j", "f", "r", " "]);
+const WIDE_CHARS = new Set([
+  "m", "w", "M", "W", "G", "Q", "C", "D", "O", "U", "&", "@",
+]);
+
+function charWidth(ch: string): number {
+  const code = ch.codePointAt(0) ?? 0;
+  if (code >= 0x800) return 14;
+  if (code >= 0x80) return 9.5;
+  if (NARROW_CHARS.has(ch)) return 4.5;
+  if (WIDE_CHARS.has(ch)) return 9.5;
+  if (ch >= "A" && ch <= "Z") return 8.6;
+  if (ch >= "0" && ch <= "9") return 7.4;
+  return 7.4;
+}
+
 function estimateTextWidth(text: string): number {
   let w = 0;
-  for (const ch of text) {
-    const code = ch.codePointAt(0) ?? 0;
-    if (code < 0x80) w += 7.0;
-    else if (code < 0x800) w += 9.0;
-    else w += 12.0;
-  }
-  return Math.ceil(w);
+  for (const ch of text) w += charWidth(ch);
+  return Math.ceil(w + 2);
 }
 
 function gradientStops(badge: ResolvedBadge): string[] {
@@ -124,9 +140,17 @@ export function renderBadgeSvg(badge: ResolvedBadge): string {
     pillBg = DISCORD_NEUTRAL_PILL;
     mainColor = DISCORD_STALE;
   } else if (badge.kind === "role") {
-    const accent = accentForRole(badge.colorHex || DISCORD_BLURPLE);
-    pillBg = tintForPill(accent, 0.28);
-    mainColor = accent;
+    const hasColor = !!badge.colorHex;
+    if (hasColor) {
+      const accent = accentForRole(badge.colorHex);
+      pillBg = tintForPill(accent, 0.28);
+      mainColor = accent;
+    } else {
+      // No Discord color set: render as neutral pill matching Discord's
+      // default mention appearance (light text on dark grey).
+      pillBg = DISCORD_NEUTRAL_PILL;
+      mainColor = "#DCDDDE";
+    }
   } else if (badge.kind === "channel") {
     pillBg = DISCORD_NEUTRAL_PILL;
     mainColor = "#C9CDD3";
