@@ -18,16 +18,16 @@ Roles follow a strict hierarchy. When a permission level says "X+", that means t
 
 | Rank | Role | Role ID | Abbreviation |
 |:----:|------|---------|:------------:|
-| 1 | ![@Community Founder](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-founder.svg?v=3) | `896070888779317254` | CF |
-| 2 | ![@Community Manager](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-manager.svg?v=3) | `1190093021170114680` | CM |
-| 3 | ![@Community Development Lead](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-dev-lead.svg?v=3) | `1382242769468260352` | CDL |
-| 4 | ![@Senior Administrator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-senior-admin.svg?v=3) | `1420440472169746623` | SA |
-| 5 | ![@Administrator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-administrator.svg?v=3) | `896070888779317248` | A |
-| 6 | ![@Senior Moderator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-senior-mod.svg?v=3) | `1095757038899953774` | SM |
-| 7 | ![@Moderator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-moderator.svg?v=3) | `896070888762535975` | M |
-| 8 | ![@Junior Moderator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-junior-mod.svg?v=3) | `896070888762535966` | JM |
-| 9 | ![@Gatekeeper](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-gatekeeper.svg?v=3) | `896070888762535969` | GK |
-| 10 | ![@Community Staff](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-staff.svg?v=3) | `987662057069482024` | CS |
+| 1 | ![@Community Founder](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-founder.svg?v=4) | `896070888779317254` | CF |
+| 2 | ![@Community Manager](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-manager.svg?v=4) | `1190093021170114680` | CM |
+| 3 | ![@Community Development Lead](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-dev-lead.svg?v=4) | `1382242769468260352` | CDL |
+| 4 | ![@Senior Administrator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-senior-admin.svg?v=4) | `1420440472169746623` | SA |
+| 5 | ![@Administrator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-administrator.svg?v=4) | `896070888779317248` | A |
+| 6 | ![@Senior Moderator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-senior-mod.svg?v=4) | `1095757038899953774` | SM |
+| 7 | ![@Moderator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-moderator.svg?v=4) | `896070888762535975` | M |
+| 8 | ![@Junior Moderator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-junior-mod.svg?v=4) | `896070888762535966` | JM |
+| 9 | ![@Gatekeeper](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-gatekeeper.svg?v=4) | `896070888762535969` | GK |
+| 10 | ![@Community Staff](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-staff.svg?v=4) | `987662057069482024` | CS |
 
 **Note:** Community Staff (CS) is the broad mod-perm role (ManageMessages, MentionEveryone, ModerateMembers) attached to most staff roles. On its own it does not unlock the gatekeeping commands, which require the Gatekeeper role specifically. The role is named "Community Staff" in Discord. Older code constants and docs may refer to it as `MOD_TEAM` or "Moderation Team"; same role.
 
@@ -41,7 +41,7 @@ These roles bypass all permission checks and have full access to every command:
 
 | Role | ID | Notes |
 |------|-----|-------|
-| ![@Server Dev](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-server-dev.svg?v=3) | `1120074045883420753` | Staff role with full access |
+| ![@Server Dev](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-server-dev.svg?v=4) | `1120074045883420753` | Staff role with full access |
 | Bot Owner | User ID: `697169405422862417` | Hardcoded user ID |
 
 ---
@@ -257,8 +257,8 @@ The `/event` command accepts two special roles in addition to the Moderator+ hie
 
 | Role | ID | Access |
 |------|----|--------|
-| ![@Event Host](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-event-host.svg?v=3) | `1243805450835853383` | `/event movie`, `/event game` |
-| ![@Events Manager](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-events-manager.svg?v=3) | `1243805681904259124` | `/event movie`, `/event game` |
+| ![@Event Host](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-event-host.svg?v=4) | `1243805450835853383` | `/event movie`, `/event game` |
+| ![@Events Manager](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-events-manager.svg?v=4) | `1243805681904259124` | `/event movie`, `/event game` |
 
 ---
 

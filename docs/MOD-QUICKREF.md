@@ -51,15 +51,15 @@ For server-wide numbers, `/stats approval-rate` shows the overall approve vs rej
 Check attendance with `/movie attendance` or `/event game attendance`. Add `user:@Username` to look up someone's progress.
 
 **Movie Tier Roles** (30+ min per event):
-- ![@Red Carpet Guest - 1+ movies](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-1.svg?v=3)
-- ![@Popcorn Club - 5+ movies](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-2.svg?v=3)
-- ![@Director's Cut - 10+ movies](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-3.svg?v=3)
-- ![@Cinematic Royalty - 20+ movies](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-4.svg?v=3)
+- ![@Red Carpet Guest - 1+ movies](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-1.svg?v=4)
+- ![@Popcorn Club - 5+ movies](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-2.svg?v=4)
+- ![@Director's Cut - 10+ movies](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-3.svg?v=4)
+- ![@Cinematic Royalty - 20+ movies](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-4.svg?v=4)
 
 **Game Tier Roles** (50%+ of event duration):
-- ![@Trophy Hunter](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/game-tier-trophy-hunter.svg?v=3)
-- ![@Key Masher](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/game-tier-key-masher.svg?v=3)
-- ![@Night Builder](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/game-tier-night-builder.svg?v=3)
+- ![@Trophy Hunter](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/game-tier-trophy-hunter.svg?v=4)
+- ![@Key Masher](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/game-tier-key-masher.svg?v=4)
+- ![@Night Builder](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/game-tier-night-builder.svg?v=4)
 
 Configured via `/roles add-game-tier`. Use `/roles list type:game_night` to see current tiers.
 

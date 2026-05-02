@@ -118,8 +118,10 @@ export function resolveFromSnapshot(
   if (def.kind === "role" && def.discordId) {
     const entry = snapshot.rolesById.get(def.discordId);
     if (entry) {
-      const colorHex = entry.colorHex || DISCORD_BLURPLE;
-      const bg = tintForPill(colorHex, 0.28);
+      // Preserve "" (no Discord color) so the renderer uses the neutral
+      // pill style instead of forcing the role into blurple.
+      const colorHex = entry.colorHex;
+      const bg = colorHex ? tintForPill(colorHex, 0.28) : DISCORD_NEUTRAL_PILL;
       return {
         id: def.id,
         kind: "role",
