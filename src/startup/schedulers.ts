@@ -124,6 +124,18 @@ export async function startSchedulers(client: Client): Promise<void> {
     },
     { level: "warn" },
   );
+
+  // Badge refresh: refreshes Discord-name + role-color cache for docs badges
+  await runStartupTask(
+    "scheduler_badge_refresh",
+    async () => {
+      const { startBadgeRefreshScheduler } = await import(
+        "../scheduler/badgeRefreshScheduler.js"
+      );
+      startBadgeRefreshScheduler(client);
+    },
+    { level: "warn" },
+  );
 }
 
 /**
@@ -171,4 +183,9 @@ export async function stopSchedulers(): Promise<void> {
     "../scheduler/eventTimeoutScheduler.js"
   );
   stopEventTimeoutScheduler();
+
+  const { stopBadgeRefreshScheduler } = await import(
+    "../scheduler/badgeRefreshScheduler.js"
+  );
+  stopBadgeRefreshScheduler();
 }
