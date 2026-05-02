@@ -586,108 +586,13 @@ client.once(Events.ClientReady, async () => {
   }
 
   // ===== Scheduler Initialization =====
-  // Start mod metrics periodic refresh scheduler
-  // WHAT: Recalculates mod_metrics table every 15 minutes
-  // WHY: Keeps performance analytics current without manual triggers
-  // DOCS: See src/scheduler/modMetricsScheduler.ts
-  try {
-    const { startModMetricsScheduler } = await import("./scheduler/modMetricsScheduler.js");
-    startModMetricsScheduler(client);
-  } catch (err) {
-    logger.warn(
-      { err },
-      "[startup] mod metrics scheduler failed to start - continuing without periodic refresh"
-    );
-  }
-
-  // Guild snapshot scheduler: writes live Discord data to SQLite every 5 minutes
-  // WHY: Web dashboard reads member count, online count, boost status, voice users from DB
-  try {
-    const { startGuildSnapshotScheduler } = await import("./scheduler/guildSnapshotScheduler.js");
-    startGuildSnapshotScheduler(client);
-  } catch (err) {
-    logger.warn({ err }, "[startup] guild snapshot scheduler failed to start");
-  }
-
-  // Start ops health periodic check scheduler
-  // WHAT: Runs health checks every 60s (configurable) to monitor bot health
-  // WHY: Early detection of issues (high queue backlog, WS ping, PM2 down, DB corruption)
-  // DOCS: See src/scheduler/opsHealthScheduler.ts
-  try {
-    const { startOpsHealthScheduler } = await import("./scheduler/opsHealthScheduler.js");
-    const { setHealthClient } = await import("./features/opsHealth.js");
-    setHealthClient(client);
-    startOpsHealthScheduler(client);
-  } catch (err) {
-    logger.warn(
-      { err },
-      "[startup] ops health scheduler failed to start - continuing without health monitoring"
-    );
-  }
-
-  // Start stale application alert scheduler
-  // WHAT: Checks for unclaimed applications every 30 minutes
-  // WHY: Alerts Gatekeepers when applications have been waiting 24+ hours
-  // DOCS: See src/scheduler/staleApplicationCheck.ts
-  try {
-    const { startStaleApplicationScheduler } = await import("./scheduler/staleApplicationCheck.js");
-    startStaleApplicationScheduler(client);
-  } catch (err) {
-    logger.warn(
-      { err },
-      "[startup] stale application scheduler failed to start - continuing without stale alerts"
-    );
-  }
-
-  // Start security audit scheduler
-  // WHAT: Runs security permission audit every 30 minutes
-  // WHY: Continuous monitoring for dangerous permissions, alerts leadership for critical issues
-  // DOCS: See src/scheduler/securityAuditScheduler.ts
-  try {
-    const { startSecurityAuditScheduler } = await import("./scheduler/securityAuditScheduler.js");
-    startSecurityAuditScheduler(client);
-  } catch (err) {
-    logger.warn(
-      { err },
-      "[startup] security audit scheduler failed to start - continuing without security monitoring"
-    );
-  }
-
-  // Start byte multiplier expiration scheduler
-  // WHAT: Removes expired XP multiplier roles every 60 seconds
-  // WHY: Auto-cleanup byte token redemptions without staff intervention
-  // DOCS: See src/scheduler/byteMultiplierScheduler.ts
-  try {
-    const { startByteMultiplierCleanup } = await import("./scheduler/byteMultiplierScheduler.js");
-    startByteMultiplierCleanup(client);
-  } catch (err) {
-    logger.warn(
-      { err },
-      "[startup] byte multiplier scheduler failed to start - continuing without auto-expiration"
-    );
-  }
-
-  // WHY: Alert dev before disk fills up and causes outages (migration failures, etc.)
-  // DOCS: See src/scheduler/diskSpaceScheduler.ts
-  try {
-    const { startDiskSpaceScheduler } = await import("./scheduler/diskSpaceScheduler.js");
-    startDiskSpaceScheduler(client);
-  } catch (err) {
-    logger.warn(
-      { err },
-      "[startup] disk space scheduler failed to start - continuing without disk monitoring"
-    );
-  }
-
-  // WHY: Auto-end movie/game events that staff forgot to close after 12 hours
-  try {
-    const { startEventTimeoutScheduler } = await import("./scheduler/eventTimeoutScheduler.js");
-    startEventTimeoutScheduler(client);
-  } catch (err) {
-    logger.warn(
-      { err },
-      "[startup] event timeout scheduler failed to start - continuing without event auto-end"
-    );
+  // Extracted to src/startup/schedulers.ts. Each scheduler is started
+  // under runStartupTask with level=warn (optional, non-fatal).
+  // The corresponding stopSchedulers() call lives in gracefulShutdown
+  // so the start/stop pair is auditable in one file.
+  {
+    const { startSchedulers } = await import("./startup/schedulers.js");
+    await startSchedulers(client);
   }
 
   // Initialize banner sync (bot profile + website)
@@ -747,30 +652,11 @@ client.once(Events.ClientReady, async () => {
         logger.warn({ err }, "[shutdown] Dashboard API stop failed (non-fatal)");
       }
 
-      // 1. Stop schedulers
-      const { stopModMetricsScheduler } = await import("./scheduler/modMetricsScheduler.js");
-      stopModMetricsScheduler();
-
-      const { stopGuildSnapshotScheduler } = await import("./scheduler/guildSnapshotScheduler.js");
-      stopGuildSnapshotScheduler();
-
-      const { stopOpsHealthScheduler } = await import("./scheduler/opsHealthScheduler.js");
-      stopOpsHealthScheduler();
-
-      const { stopStaleApplicationScheduler } = await import("./scheduler/staleApplicationCheck.js");
-      stopStaleApplicationScheduler();
-
-      const { stopSecurityAuditScheduler } = await import("./scheduler/securityAuditScheduler.js");
-      stopSecurityAuditScheduler();
-
-      const { stopByteMultiplierCleanup } = await import("./scheduler/byteMultiplierScheduler.js");
-      stopByteMultiplierCleanup();
-
-      const { stopDiskSpaceScheduler } = await import("./scheduler/diskSpaceScheduler.js");
-      stopDiskSpaceScheduler();
-
-      const { stopEventTimeoutScheduler } = await import("./scheduler/eventTimeoutScheduler.js");
-      stopEventTimeoutScheduler();
+      // 1. Stop schedulers (extracted to src/startup/schedulers.ts)
+      {
+        const { stopSchedulers } = await import("./startup/schedulers.js");
+        await stopSchedulers();
+      }
 
       // 2. Flush message activity buffer before shutdown
       try {
