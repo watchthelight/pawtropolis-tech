@@ -103,7 +103,7 @@ This must be run after:
 
 ## See Also
 
-- [Bot Handbook](../BOT-HANDBOOK.md) — full per-command details for everything in the table above
-- [SLASH-COMMANDS.md](../SLASH-COMMANDS.md) — developer guide for *creating* slash commands (not using them)
-- [Permissions Matrix](../PERMS-MATRIX.md) — full permission requirements per command
-- [Command Patterns](command-patterns.md) — design patterns used across commands
+- [Bot Handbook](../BOT-HANDBOOK.md): full per-command details for everything in the table above
+- [SLASH-COMMANDS.md](../SLASH-COMMANDS.md): developer guide for *creating* slash commands (not using them)
+- [Permissions Matrix](../PERMS-MATRIX.md): full permission requirements per command
+- [Command Patterns](command-patterns.md): design patterns used across commands

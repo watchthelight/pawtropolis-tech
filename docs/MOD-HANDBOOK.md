@@ -20,9 +20,9 @@
 
 ## New Staff? Start here:
 
-1. Read [Staff Roles](#staff-roles) — understand the hierarchy
-2. Read [Conduct & Expectations](#conduct--expectations) — what we expect from you
-3. Read [Training Guide](#training-guide) — how onboarding works
+1. Read [Staff Roles](#staff-roles): understand the hierarchy
+2. Read [Conduct & Expectations](#conduct--expectations): what we expect from you
+3. Read [Training Guide](#training-guide): how onboarding works
 
 ---
 
@@ -161,7 +161,7 @@ You're held to a higher standard than regular members because the rest of the co
 - Represent the server professionally and respectfully.
 - Stay neutral in conflicts. Don't argue with members in public.
 - Don't use your permissions for personal gain or vendettas.
-- Follow the server rules yourself — you're held to a higher standard, not a lower one.
+- Follow the server rules yourself: you're held to a higher standard, not a lower one.
 - Be transparent. Always leave a log and a reason.
 - Respect the chain of command.
 
@@ -173,13 +173,13 @@ Use discretion with sensitive topics. Bans, reports, and member disputes stay in
 
 ### Attitude & Demeanor
 
-Treat every member the same regardless of how long they've been around or how popular they are. Lead by example — your tone sets the tone for everyone watching.
+Treat every member the same regardless of how long they've been around or how popular they are. Lead by example: your tone sets the tone for everyone watching.
 
 ### Responsiveness & Engagement
 
 Respond to mod pings reasonably quickly. If you can't be available, set your status or tell the team.
 
-Stay involved in everyday activity. Greeting people, cleaning up spam, answering questions in general — that's most of the job.
+Stay involved in everyday activity. Greeting people, cleaning up spam, answering questions in general: that's most of the job.
 
 Track tasks where the team can see them: Trello, bot logs, or the dedicated staff channels. Don't just remember things in your head.
 
@@ -210,7 +210,7 @@ Don't clutter moderation channels with casual chatter. They exist for tracking a
 
 Log decisions accurately. Reports should include the time, the user, and what actually happened.
 
-Keep emotion out of the log. Stick to facts — your feelings about the user belong somewhere else.
+Keep emotion out of the log. Stick to facts: your feelings about the user belong somewhere else.
 
 Explain your actions in mod channels when you can. It keeps the team aligned and gives anyone reviewing the case the context they need.
 
@@ -656,7 +656,7 @@ Our top priority is keeping members safe here. We aren't a courtroom, and lately
 
 ### Cross Banning Policy
 
-Cross banning is an act of banning someone from the community because of another ban from different community due to their reputation elsewhere—regardless of their behavior here.
+Cross banning is an act of banning someone from the community because of another ban from different community due to their reputation elsewhere, regardless of their behavior here.
 
 #### Why We Don't Enforce It
 
@@ -690,7 +690,7 @@ We do not intervene in outside drama unless it begins to affect our community di
 #### Why We Don't Get Involved
 
 **We can't moderate the entire internet.**
-- Our role is to keep this server safe — not to resolve every personal conflict that happens online. We don't have the context, involvement, or authority to fairly handle off-server drama.
+- Our role is to keep this server safe: not to resolve every personal conflict that happens online. We don't have the context, involvement, or authority to fairly handle off-server drama.
 
 **Reports are often one-sided or incomplete.**
 - Reports usually come from one person's perspective.
@@ -711,14 +711,14 @@ We will only get involved in outside drama if it crosses into our space and begi
 - Members start using our public channels to continue or amplify external conflicts.
 - Someone from another server begins targeting or threatening our members here.
 
-In these cases, staff will act — but only based on what happens inside our server, not on external allegations alone.
+In these cases, staff will act: but only based on what happens inside our server, not on external allegations alone.
 
 #### What Members Should Do Instead
 
 If someone is experiencing harassment or serious issues outside of our server, we recommend:
 - Blocking the person involved.
 - Reporting them to Discord Trust & Safety if it involves ToS violations (e.g., harassment, threats, stalking): https://dis.gd/report
-- Not bringing the drama into our channels — we want this space to remain calm, inclusive, and drama-free.
+- Not bringing the drama into our channels: we want this space to remain calm, inclusive, and drama-free.
 
 ### In Server Drama or Conflicts
 
@@ -849,9 +849,9 @@ Fraud is common in art commissioning -- AI art, stolen work, and scammers who di
 
 **Minimum Acceptable Evidence (at least TWO required):**
 
-1. **Recorded timelapse** — Minimum 30 seconds, no unexplained cuts
-2. **Layered source file** — .psd, .clip, .sai2, etc. showing dated layers and logical workflow
-3. **Work-in-progress photo** — Handwritten current date + client identifier beside the artwork
+1. **Recorded timelapse**: Minimum 30 seconds, no unexplained cuts
+2. **Layered source file**: .psd, .clip, .sai2, etc. showing dated layers and logical workflow
+3. **Work-in-progress photo**: Handwritten current date + client identifier beside the artwork
 
 **AI-Generated Content Policy:**
 
@@ -1174,12 +1174,12 @@ Assign an art reward to a user.
 ### Overview
 
 The server uses automated tools to detect and flag suspicious accounts and inappropriate content. The `/audit` command has two subcommands:
-- `/audit members` — Detect bot-like accounts
-- `/audit nsfw` — Scan member avatars for NSFW content
+- `/audit members`: Detect bot-like accounts
+- `/audit nsfw`: Scan member avatars for NSFW content
 
 **Who can use it:** Administrator, Senior Administrator, Community Manager, or Server Dev (allowed-roles list lives in `src/commands/audit.ts`).
 
-### `/audit members` — Bot Account Detection
+### `/audit members`: Bot Account Detection
 
 The `/audit members` command performs a bulk scan of all server members and flags accounts that match bot-like patterns.
 
@@ -1205,7 +1205,7 @@ Accounts scoring **4 or more points** are automatically flagged.
 
 #### What to do with flagged accounts:
 
-Flagged accounts aren't automatically actioned — staff should review them:
+Flagged accounts aren't automatically actioned: staff should review them:
 
 - **Check profile**: Look at their Discord profile for signs of legitimacy
 - **Check activity**: Have they interacted anywhere in the server?
@@ -1222,7 +1222,7 @@ For confirmed bot accounts:
 - **Periodic cleanup**: Monthly or quarterly maintenance
 - **Before events**: Ensure member quality before big server events
 
-### `/audit nsfw` — Avatar NSFW Detection
+### `/audit nsfw`: Avatar NSFW Detection
 
 The `/audit nsfw` command scans member avatars using Google Vision API to detect NSFW content.
 
@@ -1260,7 +1260,7 @@ For confirmed NSFW avatars:
 - If they refuse, mute until compliant
 - For egregious violations, escalate as appropriate
 
-### `/isitreal` — AI Image Detection
+### `/isitreal`: AI Image Detection
 
 The `/isitreal` command lets staff detect AI-generated images directly in Discord without visiting external websites.
 
@@ -1286,30 +1286,30 @@ Each engine returns a percentage score. The bot averages them for an overall con
 | Score | Interpretation |
 |-------|----------------|
 | **70%+** | Highly likely AI-generated |
-| **40-70%** | Uncertain — use judgment |
+| **40-70%** | Uncertain: use judgment |
 | **Below 40%** | Likely authentic |
 
 #### When to use:
 
-- **Verified Artist applications** — Check if submitted art samples are AI-generated
-- **Art contest submissions** — Verify authenticity of entries
-- **Suspicious profile images** — Check avatars that look "too perfect"
-- **Commission disputes** — Help verify if delivered art is AI-generated
+- **Verified Artist applications**: Check if submitted art samples are AI-generated
+- **Art contest submissions**: Verify authenticity of entries
+- **Suspicious profile images**: Check avatars that look "too perfect"
+- **Commission disputes**: Help verify if delivered art is AI-generated
 
 #### Important considerations:
 
-- **Not 100% accurate** — Use as guidance, not absolute proof
-- **Digital art styles** — Anime and digital art may get false positives
-- **Ask questions** — If suspicious, ask the artist for process screenshots or speedpaints
-- **Multiple checks** — Consider checking multiple pieces from the same artist
+- **Not 100% accurate**: Use as guidance, not absolute proof
+- **Digital art styles**: Anime and digital art may get false positives
+- **Ask questions**: If suspicious, ask the artist for process screenshots or speedpaints
+- **Multiple checks**: Consider checking multiple pieces from the same artist
 
 #### External AI Detection Tools
 
 For manual verification or when the bot command isn't available, use these websites:
 
-- **[Hive Moderation](https://hivemoderation.com/ai-generated-content-detection)** — AI content detection
-- **[Was It AI](https://wasitai.com/)** — Quick AI image checker
-- **[SightEngine](https://sightengine.com/detect-ai-generated-images)** — AI image detection
+- **[Hive Moderation](https://hivemoderation.com/ai-generated-content-detection)**: AI content detection
+- **[Was It AI](https://wasitai.com/)**: Quick AI image checker
+- **[SightEngine](https://sightengine.com/detect-ai-generated-images)**: AI image detection
 
 #### API cost considerations:
 
@@ -1381,16 +1381,16 @@ Flagged users show warning badges on their applications, alerting reviewers to l
 ## See Also
 
 ### Bot Documentation
-- **[BOT-HANDBOOK.md](BOT-HANDBOOK.md)** — Full technical documentation for all bot commands
-- **[MOD-QUICKREF.md](MOD-QUICKREF.md)** — Quick reference for everyday tasks
-- **[PERMS-MATRIX.md](PERMS-MATRIX.md)** — Complete permission reference
+- **[BOT-HANDBOOK.md](BOT-HANDBOOK.md)**: Full technical documentation for all bot commands
+- **[MOD-QUICKREF.md](MOD-QUICKREF.md)**: Quick reference for everyday tasks
+- **[PERMS-MATRIX.md](PERMS-MATRIX.md)**: Complete permission reference
 
 ### Tier-Specific Guides
-- **[GATEKEEPER-GUIDE.md](GATEKEEPER-GUIDE.md)** — For Gatekeeper and Junior Mod
-- **[MODERATOR-GUIDE.md](MODERATOR-GUIDE.md)** — For Moderator and Senior Mod
-- **[ADMIN-GUIDE.md](ADMIN-GUIDE.md)** — For Administrator and Senior Admin
+- **[GATEKEEPER-GUIDE.md](GATEKEEPER-GUIDE.md)**: For Gatekeeper and Junior Mod
+- **[MODERATOR-GUIDE.md](MODERATOR-GUIDE.md)**: For Moderator and Senior Mod
+- **[ADMIN-GUIDE.md](ADMIN-GUIDE.md)**: For Administrator and Senior Admin
 - **[LEADERSHIP-GUIDE.md](LEADERSHIP-GUIDE.md)**: For CM, CDL, and Community Founder
 
 ### Navigation
-- **[Bot Handbook](BOT-HANDBOOK.md)** — Start here for all docs
-- **[CHANGELOG.md](../CHANGELOG.md)** — Version history and recent changes
+- **[Bot Handbook](BOT-HANDBOOK.md)**: Start here for all docs
+- **[CHANGELOG.md](../CHANGELOG.md)**: Version history and recent changes

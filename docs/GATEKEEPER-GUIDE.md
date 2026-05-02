@@ -16,21 +16,21 @@ When someone wants to join the server, they fill out an application. You review 
 1. Someone clicks Verify in the gate channel
 2. A review card appears in your staff channel
 3. You claim it (so others know you're handling it)
-4. You make the call — Accept, Reject, or Kick
+4. You make the call: Accept, Reject, or Kick
 5. The bot handles the rest (roles, DMs, welcome messages)
 
 **Commands:**
-- `/accept` — Approve an application (they get the member role)
-- `/reject reason:... [perm:true]` — Deny with explanation (optionally permanent)
-- `/kick reason:...` — Remove without formal rejection (can reapply)
-- `/unclaim` — Release a claimed application for someone else
-- `/listopen` — See pending applications (`scope:all` for everything)
-- `/search user:@Name` — Look up someone's application history
+- `/accept`: Approve an application (they get the member role)
+- `/reject reason:... [perm:true]`: Deny with explanation (optionally permanent)
+- `/kick reason:...`: Remove without formal rejection (can reapply)
+- `/unclaim`: Release a claimed application for someone else
+- `/listopen`: See pending applications (`scope:all` for everything)
+- `/search user:@Name`: Look up someone's application history
 
 **Identifying applications:** Use ONE of these with any command:
-- `app:A1B2C3` — The short code on the review card
-- `user:@Username` — Mention or pick from list
-- `uid:123456789` — Discord ID (for users who left)
+- `app:A1B2C3`: The short code on the review card
+- `user:@Username`: Mention or pick from list
+- `uid:123456789`: Discord ID (for users who left)
 
 📖 [Full documentation →](BOT-HANDBOOK.md#gate-system-application-review)
 
@@ -78,7 +78,7 @@ Flagged users get a warning indicator on their review card. Good reasons to flag
 You can scan submitted art to check whether it's AI-generated.
 
 **Command:**
-- `/isitreal message:<message_id_or_link>` — Scans images for AI generation
+- `/isitreal message:<message_id_or_link>`: Scans images for AI generation
 
 **Quick method:** Right-click any message → Apps → "Is It Real?"
 
@@ -95,8 +95,8 @@ The bot uses multiple detection services and shows confidence scores. Not perfec
 The bot tracks your review activity.
 
 **Commands:**
-- `/stats user moderator:@YourName` — Your personal stats
-- `/stats leaderboard` — See how everyone's doing
+- `/stats user moderator:@YourName`: Your personal stats
+- `/stats leaderboard`: See how everyone's doing
 
 Stats include:
 - Total reviews (accepts, rejects, kicks)
@@ -112,8 +112,8 @@ Stats include:
 ### Getting Help
 
 **Commands:**
-- `/help` — Interactive help browser (search or browse by category)
-- `/health` — Check if the bot is running properly
+- `/help`: Interactive help browser (search or browse by category)
+- `/health`: Check if the bot is running properly
 
 **If something's broken**, check the [Troubleshooting section](BOT-HANDBOOK.md#troubleshooting) in the handbook.
 
@@ -128,10 +128,10 @@ Stats include:
 
 ## Common Mistakes to Avoid
 
-1. Forgetting to claim. Always claim first — otherwise two people end up reviewing the same application.
+1. Forgetting to claim. Always claim first: otherwise two people end up reviewing the same application.
 2. Mixing identifiers. Pick one of `app:`, `user:`, or `uid:` per command and stick with it.
 3. Treating `perm:true` like a regular reject. It's permanent and irreversible without `/unblock`. Save it for spam, bots, and clear rule violations.
-4. Skipping the password check. Most "rejects" are people who guessed the password wrong — they can just try again.
+4. Skipping the password check. Most "rejects" are people who guessed the password wrong: they can just try again.
 
 ---
 

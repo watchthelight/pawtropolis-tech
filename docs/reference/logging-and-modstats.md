@@ -131,7 +131,7 @@ WHERE decided_at IS NOT NULL;
 
 ## See Also
 
-- [Bot Handbook — `/modstats`](../BOT-HANDBOOK.md#modstats) — user-facing command details
-- [Admin Guide](../ADMIN-GUIDE.md) — admin-tier stats export and reset commands
-- [Database Schema](database-schema.md) — full `action_log` table definition
-- [Gate Review Flow](gate-review-flow.md) — what populates the action log in the first place
+- [Bot Handbook: `/modstats`](../BOT-HANDBOOK.md#modstats): user-facing command details
+- [Admin Guide](../ADMIN-GUIDE.md): admin-tier stats export and reset commands
+- [Database Schema](database-schema.md): full `action_log` table definition
+- [Gate Review Flow](gate-review-flow.md): what populates the action log in the first place

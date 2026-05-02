@@ -6,9 +6,9 @@ Who can use what commands.
 
 ## Contents
 
-- [Role Hierarchy](#role-hierarchy) — Staff ranks
-- [Commands by Level](#commands-by-permission-level) — What each role can do
-- [Quick Reference](#quick-reference-card) — One-page summary
+- [Role Hierarchy](#role-hierarchy): Staff ranks
+- [Commands by Level](#commands-by-permission-level): What each role can do
+- [Quick Reference](#quick-reference-card): One-page summary
 
 ---
 
@@ -158,17 +158,17 @@ These are locked to Gatekeeper specifically because higher-ranked staff who don'
 |---------|-------------|-------------|
 | `/config set` | `mod_roles`, `gatekeeper`, `logging`, `flags_channel`, `dadmode`, `skullmode`, etc. | Configure server settings |
 | `/config get` | `logging`, `flags`, `movie_config`, `artist_rotation` | View current configuration |
-| `/config view` | — | Overview of all settings |
+| `/config view` |  | Overview of all settings |
 | `/config set-advanced` | `flags_threshold`, `reapply_cooldown`, `min_account_age`, etc. | Advanced configuration |
 | `/config artist` | `rotation`, `ignored_users` | Artist rotation configuration |
 | `/config movie` | `threshold` | Movie night settings |
 | `/config poke` | `add-category`, `remove-category`, `list` | Poke system config |
-| `/art leaderboard` | — | View artist statistics |
-| `/audit members` | — | Scan server for suspicious bot accounts |
-| `/audit nsfw` | — | Scan all member avatars for NSFW content |
-| `/audit security` | — | Generate server permission/security documentation |
-| `/audit acknowledge` | — | Acknowledge a security finding |
-| `/audit unacknowledge` | — | Remove acknowledgment from a finding |
+| `/art leaderboard` |  | View artist statistics |
+| `/audit members` |  | Scan server for suspicious bot accounts |
+| `/audit nsfw` |  | Scan all member avatars for NSFW content |
+| `/audit security` |  | Generate server permission/security documentation |
+| `/audit acknowledge` |  | Acknowledge a security finding |
+| `/audit unacknowledge` |  | Remove acknowledgment from a finding |
 
 ---
 
@@ -375,8 +375,8 @@ requireArtist(interaction, commandName, description)
 
 Bypass conditions are checked before anything else:
 
-1. **Bot Owner check** — If `userId === "697169405422862417"`, always pass
-2. **Server Dev check** — If member has role `1120074045883420753`, always pass
+1. **Bot Owner check**: If `userId === "697169405422862417"`, always pass
+2. **Server Dev check**: If member has role `1120074045883420753`, always pass
 3. **Then** apply the specific permission check
 
 ---
@@ -405,16 +405,16 @@ Bypass conditions are checked before anything else:
 ## See Also
 
 ### Tier-Specific Guides
-- [Gatekeeper Guide](GATEKEEPER-GUIDE.md) — Gate system permissions
-- [Moderator Guide](MODERATOR-GUIDE.md) — Event management permissions
+- [Gatekeeper Guide](GATEKEEPER-GUIDE.md): Gate system permissions
+- [Moderator Guide](MODERATOR-GUIDE.md): Event management permissions
 - [Admin Guide](ADMIN-GUIDE.md): Configuration and audit permissions
 - [Leadership Guide](LEADERSHIP-GUIDE.md): Server-wide management permissions
 
 ### Reference Documentation
-- [BOT-HANDBOOK.md](BOT-HANDBOOK.md) — Complete command reference
-- [MOD-HANDBOOK.md](MOD-HANDBOOK.md) — Staff policies and escalation
-- [ROLES.md](internal-info/ROLES.md) — Server role IDs
+- [BOT-HANDBOOK.md](BOT-HANDBOOK.md): Complete command reference
+- [MOD-HANDBOOK.md](MOD-HANDBOOK.md): Staff policies and escalation
+- [ROLES.md](internal-info/ROLES.md): Server role IDs
 
 ### Navigation
-- [Bot Handbook](BOT-HANDBOOK.md) — Start here for all docs
-- [CHANGELOG.md](../CHANGELOG.md) — Version history
+- [Bot Handbook](BOT-HANDBOOK.md): Start here for all docs
+- [CHANGELOG.md](../CHANGELOG.md): Version history

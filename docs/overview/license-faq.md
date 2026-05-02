@@ -26,6 +26,6 @@ Used/modified under ANW-1.0 license.
 
 ## See Also
 
-- [Executive Summary](executive-summary.md) — what the bot does and who it's for
-- [Repo README](../../README.md) — project intro and quick start
-- [LICENSE](../../LICENSE) — full text of the ANW-1.0 license
+- [Executive Summary](executive-summary.md): what the bot does and who it's for
+- [Repo README](../../README.md): project intro and quick start
+- [LICENSE](../../LICENSE): full text of the ANW-1.0 license

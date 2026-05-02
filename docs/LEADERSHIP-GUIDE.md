@@ -27,8 +27,8 @@ See [Admin Guide](ADMIN-GUIDE.md) for details.
 Sweep the whole member list for bot accounts and for avatars that violate the server's content rules.
 
 **Commands:**
-- `/audit members` — Scan all members for bot accounts using detection heuristics
-- `/audit nsfw scope:...` — Scan avatars for NSFW content using Google Vision API
+- `/audit members`: Scan all members for bot accounts using detection heuristics
+- `/audit nsfw scope:...`: Scan avatars for NSFW content using Google Vision API
 
 **Member Audit Detection Scoring:**
 
@@ -43,8 +43,8 @@ Sweep the whole member list for bot accounts and for avatars that violate the se
 Accounts scoring 4+ points get flagged automatically.
 
 **NSFW Audit Scopes:**
-- `All members` — Scan everyone (uses more API calls)
-- `Flagged members only` — Only scan members flagged by `/audit members`
+- `All members`: Scan everyone (uses more API calls)
+- `Flagged members only`: Only scan members flagged by `/audit members`
 
 **Tip:** Run `/audit members` first, then `/audit nsfw scope:Flagged members only` to save API costs.
 
@@ -59,11 +59,11 @@ Full docs: [BOT-HANDBOOK](BOT-HANDBOOK.md#audit)
 Rebuild activity data and manage server metrics.
 
 **Commands:**
-- `/backfill weeks:N` — Rebuild activity data by scanning message history
+- `/backfill weeks:N`: Rebuild activity data by scanning message history
   - Use after first enabling activity tracking
   - Use if heatmap data seems incomplete
   - `dry-run:true` previews without saving
-- `/resetdata password:...` — Reset all moderator metrics (nuclear option)
+- `/resetdata password:...`: Reset all moderator metrics (nuclear option)
   - Preserves action log history
   - Only resets calculated stats and leaderboards
 
@@ -84,8 +84,8 @@ Full docs: [BOT-HANDBOOK](BOT-HANDBOOK.md#backfill)
 Update the bot's profile picture and the banners shown to applicants and new members.
 
 **Commands:**
-- `/update banner image:<attachment>` — Update profile, gate, and welcome banners
-- `/update avatar image:<attachment>` — Change the bot's profile picture
+- `/update banner image:<attachment>`: Update profile, gate, and welcome banners
+- `/update avatar image:<attachment>`: Change the bot's profile picture
 
 **Banner updates affect:**
 1. Bot's Discord profile banner
@@ -108,17 +108,17 @@ Full docs: [BOT-HANDBOOK](BOT-HANDBOOK.md#update)
 Manage the rotation that hands out art commissions to Server Artists.
 
 **Commands:**
-- `/artistqueue list` — See current queue order and who's skipped
-- `/artistqueue sync` — Update queue to match who has the Server Artist role
-- `/artistqueue move user:@Artist position:N` — Put an artist at a specific position
-- `/artistqueue skip user:@Artist reason:...` — Temporarily take artist out of rotation
-- `/artistqueue unskip user:@Artist` — Put them back in rotation
-- `/artistqueue history limit:N` — See past art reward assignments
-- `/artistqueue setup` — First-time setup
+- `/artistqueue list`: See current queue order and who's skipped
+- `/artistqueue sync`: Update queue to match who has the Server Artist role
+- `/artistqueue move user:@Artist position:N`: Put an artist at a specific position
+- `/artistqueue skip user:@Artist reason:...`: Temporarily take artist out of rotation
+- `/artistqueue unskip user:@Artist`: Put them back in rotation
+- `/artistqueue history limit:N`: See past art reward assignments
+- `/artistqueue setup`: First-time setup
 
 **Redemption:**
-- `/redeemreward user:@Winner type:headshot` — Assign next artist in queue
-- `/redeemreward user:@Winner type:fullbody artist:@Artist` — Override with specific artist
+- `/redeemreward user:@Winner type:headshot`: Assign next artist in queue
+- `/redeemreward user:@Winner type:fullbody artist:@Artist`: Override with specific artist
 
 **Art types:** headshot, halfbody, fullbody, emoji
 
@@ -133,9 +133,9 @@ Full docs: [BOT-HANDBOOK](BOT-HANDBOOK.md#artistqueue)
 Track artwork from assignment to completion.
 
 **Staff Commands:**
-- `/art all` — View all active jobs server-wide
-- `/art assign artist:@Artist scope:user recipient:@Client type:headshot` — Manual job assignment
-- `/art assign artist:@Artist scope:special description:"Create server banner"` — Special task
+- `/art all`: View all active jobs server-wide
+- `/art assign artist:@Artist scope:user recipient:@Client type:headshot`: Manual job assignment
+- `/art assign artist:@Artist scope:special description:"Create server banner"`: Special task
 
 **Job Statuses:** Assigned > Sketching > Lining > Coloring > Done
 
@@ -150,8 +150,8 @@ Full docs: [BOT-HANDBOOK](BOT-HANDBOOK.md#art)
 Look up what a specific moderator has been doing.
 
 **Commands:**
-- `/stats history moderator:@ModName days:N` — See everything a mod has done
-- `/stats history moderator:@ModName export:true` — Download as CSV
+- `/stats history moderator:@ModName days:N`: See everything a mod has done
+- `/stats history moderator:@ModName export:true`: Download as CSV
 
 **You'll see:**
 - Every accept, reject, and kick they've made
@@ -174,10 +174,10 @@ Full docs: [BOT-HANDBOOK](BOT-HANDBOOK.md#modhistory)
 Charts and CSV exports of server activity over time.
 
 **Commands:**
-- `/stats approval-rate` — View server-wide approval/rejection rate analytics
-- `/stats approval-rate days:N` — Analyze a specific time period
-- `/stats leaderboard` — Ranked moderator performance
-- `/stats leaderboard export:true` — Download as CSV
+- `/stats approval-rate`: View server-wide approval/rejection rate analytics
+- `/stats approval-rate days:N`: Analyze a specific time period
+- `/stats leaderboard`: Ranked moderator performance
+- `/stats leaderboard export:true`: Download as CSV
 
 **What the charts cover:**
 - Application volume trends
@@ -193,11 +193,11 @@ Full docs: [BOT-HANDBOOK](BOT-HANDBOOK.md#analytics)
 
 ## Tips
 
-1. Run `/audit members` once a month — bot accounts accumulate over time and this is the cheapest way to catch them.
+1. Run `/audit members` once a month: bot accounts accumulate over time and this is the cheapest way to catch them.
 2. After a member audit, run `/audit nsfw scope:Flagged members only`. The full scope hits the Vision API for every member and that gets expensive.
 3. Skim `/stats history` for each mod once a month. You're looking for burnout (response times creeping up) and for outliers (reject rates that don't match the rest of the team).
 4. Don't trust activity heatmaps you haven't backfilled. If the bot was offline for a while, run `/backfill` first.
-5. Keep the original PNG/WebP files when you change banners or the avatar — you'll want them if you need to revert.
+5. Keep the original PNG/WebP files when you change banners or the avatar: you'll want them if you need to revert.
 6. Check `/artistqueue history` periodically. If one artist is getting picked far more than the others, the rotation is broken.
 
 ---
@@ -207,11 +207,11 @@ Full docs: [BOT-HANDBOOK](BOT-HANDBOOK.md#analytics)
 These commands are restricted to Bot Owner and Server Dev only:
 
 **Database Management:**
-- `/database check` — Run integrity checks and show database health stats
-- `/database recover` — Interactive assistant for recovering from database corruption
+- `/database check`: Run integrity checks and show database health stats
+- `/database recover`: Interactive assistant for recovering from database corruption
 
 **Multi-Channel Communication:**
-- `/poke user:@Username` — Ping someone across every channel in a category
+- `/poke user:@Username`: Ping someone across every channel in a category
 
 Full docs: [BOT-HANDBOOK](BOT-HANDBOOK.md#database)
 

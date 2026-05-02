@@ -108,6 +108,6 @@ When closing, bot can save full conversation to database. View with:
 
 ## See Also
 
-- [Modmail Guide](../how-to/modmail-guide.md) — staff walkthrough for opening, replying, and closing tickets
-- [Bot Handbook](../BOT-HANDBOOK.md) — `/modmail` command reference
-- [Troubleshooting](../operations/troubleshooting.md) — fixes for the 50013 / Manage Threads permission errors mentioned above
+- [Modmail Guide](../how-to/modmail-guide.md): staff walkthrough for opening, replying, and closing tickets
+- [Bot Handbook](../BOT-HANDBOOK.md): `/modmail` command reference
+- [Troubleshooting](../operations/troubleshooting.md): fixes for the 50013 / Manage Threads permission errors mentioned above

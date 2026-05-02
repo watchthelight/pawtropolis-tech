@@ -10,15 +10,15 @@ When a new application comes in, click the **Claim** button first so other mods 
 
 If an application is bugged and you can't use the buttons, use these commands instead:
 
-- `/accept` — approve the application
-- `/reject reason:Your reason here` — reject with explanation
-- `/kick reason:Your reason here` — kick from server
-- `/unclaim` — release so someone else can review it
+- `/accept`: approve the application
+- `/reject reason:Your reason here`: reject with explanation
+- `/kick reason:Your reason here`: kick from server
+- `/unclaim`: release so someone else can review it
 
 Each command accepts one of these to identify the application:
-- `app:A1B2C3` — the short code shown on the embed
-- `user:@Username` — mention or pick from the list
-- `uid:123456789` — their Discord ID if they already left
+- `app:A1B2C3`: the short code shown on the embed
+- `user:@Username`: mention or pick from the list
+- `uid:123456789`: their Discord ID if they already left
 
 For rejections, add `perm:true` if they should never be allowed to re-apply.
 
@@ -51,10 +51,10 @@ For server-wide numbers, `/stats approval-rate` shows the overall approve vs rej
 Check attendance with `/movie attendance` or `/event game attendance`. Add `user:@Username` to look up someone's progress.
 
 **Movie Tier Roles** (30+ min per event):
-- <@&1388676461657063505> — 1+ movies
-- <@&1388676662337736804> — 5+ movies
-- <@&1388675577778802748> — 10+ movies
-- <@&1388677466993987677> — 20+ movies
+- <@&1388676461657063505>: 1+ movies
+- <@&1388676662337736804>: 5+ movies
+- <@&1388675577778802748>: 10+ movies
+- <@&1388677466993987677>: 20+ movies
 
 **Game Tier Roles** (50%+ of event duration):
 Configured via `/roles add-game-tier`. Use `/roles list type:game_night` to see current tiers.
@@ -68,20 +68,20 @@ If someone seems suspicious, `/flag user:@Username reason:Alt account` flags the
 ## Audit & Detection Tools
 
 Check if an image is AI-generated:
-- `/isitreal message:<message_id_or_link>` — scans all images in a message
+- `/isitreal message:<message_id_or_link>`: scans all images in a message
 
 Flag suspicious users:
-- `/flag user:@Username reason:Alt account` — marks user for extra review
+- `/flag user:@Username reason:Alt account`: marks user for extra review
 
 Server audits (leadership only):
-- `/audit members` — scan for bot accounts
-- `/audit nsfw` — scan avatars for NSFW content
+- `/audit members`: scan for bot accounts
+- `/audit nsfw`: scan avatars for NSFW content
 
 ## Tips
 
-- Only use ONE identifier per command (app code, user mention, OR user ID — not multiple)
+- Only use ONE identifier per command (app code, user mention, OR user ID: not multiple)
 - Always claim before reviewing to avoid stepping on someone else's work
-- The `perm:true` option is permanent — use it sparingly
+- The `perm:true` option is permanent: use it sparingly
 - User left the server? Their Discord ID still works with the `uid:` option
 
 ---

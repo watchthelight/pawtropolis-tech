@@ -29,9 +29,9 @@ You still have all Moderator capabilities:
 Change what the bot does, where it logs, and which roles can use which features.
 
 **Command:**
-- `/config set <setting> <value>` — Change a bot setting
-- `/config get <setting>` — Check a specific setting's status
-- `/config view` — See all current settings at once
+- `/config set <setting> <value>`: Change a bot setting
+- `/config get <setting>`: Check a specific setting's status
+- `/config view`: See all current settings at once
 
 **Key settings you can configure:**
 
@@ -60,15 +60,15 @@ Change what the bot does, where it logs, and which roles can use which features.
 Configure automatic role assignments based on Amaribot levels and event attendance.
 
 **Commands:**
-- `/roles add-level-tier level:N role:@Role` — Connect an Amaribot level to a role
-- `/roles add-level-reward level:N role:@Role` — Give a one-time token role at a level
-- `/roles add-movie-tier tier_name:Name role:@Role movies_required:N` — Set up movie attendance tiers
-- `/roles add-game-tier tier_name:Name role:@Role games_required:N` — Set up game attendance tiers
-- `/roles list type:...` — See all configured mappings
-- `/roles remove-level-tier level:N` — Delete a level tier
-- `/roles remove-level-reward level:N` — Delete a level reward
-- `/roles remove-movie-tier tier_name:Name` — Delete a movie tier
-- `/roles remove-game-tier tier_name:Name` — Delete a game tier
+- `/roles add-level-tier level:N role:@Role`: Connect an Amaribot level to a role
+- `/roles add-level-reward level:N role:@Role`: Give a one-time token role at a level
+- `/roles add-movie-tier tier_name:Name role:@Role movies_required:N`: Set up movie attendance tiers
+- `/roles add-game-tier tier_name:Name role:@Role games_required:N`: Set up game attendance tiers
+- `/roles list type:...`: See all configured mappings
+- `/roles remove-level-tier level:N`: Delete a level tier
+- `/roles remove-level-reward level:N`: Delete a level reward
+- `/roles remove-movie-tier tier_name:Name`: Delete a movie tier
+- `/roles remove-game-tier tier_name:Name`: Delete a game tier
 
 **Level Tiers vs Level Rewards:**
 - **Level Tiers** are the roles Amaribot assigns (like "Engaged Fur LVL 15")
@@ -85,9 +85,9 @@ Configure automatic role assignments based on Amaribot levels and event attendan
 If role automation goes wrong, you can stop it cold.
 
 **Commands:**
-- `/panic on` — Stop all automatic role grants
-- `/panic off` — Resume normal operation
-- `/panic status` — Check if panic mode is currently on
+- `/panic on`: Stop all automatic role grants
+- `/panic off`: Resume normal operation
+- `/panic status`: Check if panic mode is currently on
 
 **When to use panic mode:**
 - Roles going to wrong people
@@ -108,8 +108,8 @@ Panic mode survives bot restarts. It stays on until you explicitly turn it off.
 Export and manage moderator statistics for performance reviews.
 
 **Commands:**
-- `/stats export days:N` — Download stats as CSV for spreadsheet analysis
-- `/stats reset password:...` — Reset all metrics to zero (requires password confirmation)
+- `/stats export days:N`: Download stats as CSV for spreadsheet analysis
+- `/stats reset password:...`: Reset all metrics to zero (requires password confirmation)
 
 **Export includes:**
 - Every action (accepts, rejects, kicks)
@@ -134,14 +134,14 @@ Export and manage moderator statistics for performance reviews.
 Configure how the review system notifies staff about new applications.
 
 **Commands:**
-- `/review-set-notify-config` — Set up notifications for new forum posts
+- `/review-set-notify-config`: Set up notifications for new forum posts
   - `mode`: post (reply in thread) or channel (send to separate channel)
   - `role`: Which role to ping
   - `forum`: Which forum to watch
   - `cooldown`: Seconds between notifications
   - `max_per_hour`: Cap on notifications per hour
-- `/review-get-notify-config` — View current notification settings
-- `/review-set-listopen-output mode:...` — Control if `/listopen` is public or ephemeral
+- `/review-get-notify-config`: View current notification settings
+- `/review-set-listopen-output mode:...`: Control if `/listopen` is public or ephemeral
 
 [Full documentation](BOT-HANDBOOK.md#review-set-notify-config)
 
@@ -163,11 +163,11 @@ Configure how the review system notifies staff about new applications.
 
 Community Managers and above also have:
 
-- Server-wide audits — `/audit members` and `/audit nsfw`
-- Data management — `/backfill` to rebuild activity history, `/resetdata` to clear metrics
-- Bot branding — `/update banner` and `/update avatar`
-- Artist rotation — full queue control with `/artistqueue`
-- Per-moderator history — `/stats history`
+- Server-wide audits: `/audit members` and `/audit nsfw`
+- Data management: `/backfill` to rebuild activity history, `/resetdata` to clear metrics
+- Bot branding: `/update banner` and `/update avatar`
+- Artist rotation: full queue control with `/artistqueue`
+- Per-moderator history: `/stats history`
 
 See the [Leadership Guide](LEADERSHIP-GUIDE.md) for the details.
 

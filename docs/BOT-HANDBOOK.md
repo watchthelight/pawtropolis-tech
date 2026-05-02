@@ -22,17 +22,17 @@ All bot commands and how to use them.
 
 ## Contents
 
-1. [Gate System](#gate-system-application-review) — Reviewing applications
-2. [Mod Tools](#moderator-tools) — Stats, flags, audits
-3. [Artist Rotation](#artist-rotation) — Art queue and jobs
-4. [Events](#events) — Movie & game night tracking
-5. [QOTD](#qotd-question-of-the-day) — Community question suggestions
-6. [Role Automation](#role-automation) — Auto-assign roles
-7. [Configuration](#configuration) — Bot settings
-8. [Utility Commands](#utility--admin) — Help, send, purge, etc.
-9. [Permissions](#permission-reference) — Who can do what
-10. [Troubleshooting](#troubleshooting) — Fix common problems
-11. [Quick Reference](#quick-reference) — Commands at a glance
+1. [Gate System](#gate-system-application-review): Reviewing applications
+2. [Mod Tools](#moderator-tools): Stats, flags, audits
+3. [Artist Rotation](#artist-rotation): Art queue and jobs
+4. [Events](#events): Movie & game night tracking
+5. [QOTD](#qotd-question-of-the-day): Community question suggestions
+6. [Role Automation](#role-automation): Auto-assign roles
+7. [Configuration](#configuration): Bot settings
+8. [Utility Commands](#utility--admin): Help, send, purge, etc.
+9. [Permissions](#permission-reference): Who can do what
+10. [Troubleshooting](#troubleshooting): Fix common problems
+11. [Quick Reference](#quick-reference): Commands at a glance
 
 ---
 
@@ -44,11 +44,11 @@ The gate system is how new members join the server. When someone wants in, they 
 
 The flow from start to finish:
 
-1. **Someone applies** — They click the Verify button in the gate channel and answer the questions you've set up (up to 5 questions)
-2. **Bot creates a review** — An embed appears in the review channel showing their answers, how old their account is, when they joined, and a short code like `A1B2C3` for quick reference
-3. **A mod claims it** — Click the Claim button so other mods know you're handling this one
-4. **You make the call** — Use the Accept, Reject, or Kick buttons (or slash commands if the buttons aren't working)
-5. **Bot handles the rest** — Accepted users get the member role and a welcome message. Rejected users get a DM explaining why. Kicked users are removed.
+1. **Someone applies**: They click the Verify button in the gate channel and answer the questions you've set up (up to 5 questions)
+2. **Bot creates a review**: An embed appears in the review channel showing their answers, how old their account is, when they joined, and a short code like `A1B2C3` for quick reference
+3. **A mod claims it**: Click the Claim button so other mods know you're handling this one
+4. **You make the call**: Use the Accept, Reject, or Kick buttons (or slash commands if the buttons aren't working)
+5. **Bot handles the rest**: Accepted users get the member role and a welcome message. Rejected users get a DM explaining why. Kicked users are removed.
 
 **Visual Flow:**
 
@@ -123,8 +123,8 @@ This is how you set up and configure the whole application system.
 
 | Subcommand | What it does |
 |------------|--------------|
-| `setup` | First-time setup — tells the bot which channels to use and what role to give accepted members |
-| `status` | Shows you the numbers — how many apps total, how many pending, accepted, rejected, etc. |
+| `setup` | First-time setup: tells the bot which channels to use and what role to give accepted members |
+| `status` | Shows you the numbers: how many apps total, how many pending, accepted, rejected, etc. |
 | `config` | Displays all your current settings so you can double-check everything |
 | `reset` | Wipes all application data and starts fresh. Be careful with this one! |
 | `welcome set` | Change what the welcome message says when someone gets accepted |
@@ -134,13 +134,13 @@ This is how you set up and configure the whole application system.
 | `set-questions` | Set the questions applicants have to answer (q1 through q5) |
 
 **Placeholders you can use in welcome messages:**
-- `{applicant.mention}` — @mentions the new member
-- `{applicant.username}` — just their name
-- `{applicant.id}` — their Discord ID
-- `{channel.rules}` — links to #rules
-- `{channel.roles}` — links to #roles
-- `{server.name}` — the server name
-- `{server.memberCount}` — current member count
+- `{applicant.mention}`: @mentions the new member
+- `{applicant.username}`: just their name
+- `{applicant.id}`: their Discord ID
+- `{channel.rules}`: links to #rules
+- `{channel.roles}`: links to #roles
+- `{server.name}`: the server name
+- `{server.memberCount}`: current member count
 
 **Examples:**
 ```
@@ -157,9 +157,9 @@ This is how you set up and configure the whole application system.
 Use this to approve someone's application. They'll get the member role and a welcome message will be posted.
 
 You need to tell the bot which application you mean. Pick ONE of these:
-- `app:A1B2C3` — the short code shown on the review embed
-- `user:@Username` — mention them or pick from the list
-- `uid:123456789012345678` — their Discord ID (handy if they already left)
+- `app:A1B2C3`: the short code shown on the review embed
+- `user:@Username`: mention them or pick from the list
+- `uid:123456789012345678`: their Discord ID (handy if they already left)
 
 **What happens when you accept someone:**
 
@@ -210,13 +210,13 @@ Use this when you need to turn someone down. You have to give a reason, and they
 
 | Option | Required? | What it does |
 |--------|-----------|--------------|
-| `reason` | **Yes** | Why you're rejecting them — this gets sent to the user and logged (max 500 characters) |
+| `reason` | **Yes** | Why you're rejecting them: this gets sent to the user and logged (max 500 characters) |
 | `app` | No | The short code from the review embed |
 | `user` | No | Mention them or pick from the list |
 | `uid` | No | Their Discord ID |
 | `perm` | No | Set this to `true` if they should never be allowed to apply again |
 
-Pick ONE of app/user/uid — not multiple.
+Pick ONE of app/user/uid: not multiple.
 
 **What happens when you reject someone:**
 1. They get a DM with your reason (if their DMs are open)
@@ -267,7 +267,7 @@ This removes someone from the server but doesn't count as a formal rejection. Go
 ### `/unclaim`
 **Who can use it:** Staff (Gatekeepers can unclaim their own; Administrators+ can unclaim anyone's)
 
-If you claimed an application but can't finish reviewing it, use this to release it so someone else can take over. **Administrators and above** can also unclaim applications claimed by other staff members—useful when someone is unavailable and their claimed application needs to be reassigned.
+If you claimed an application but can't finish reviewing it, use this to release it so someone else can take over. **Administrators and above** can also unclaim applications claimed by other staff members, useful when someone is unavailable and their claimed application needs to be reassigned.
 
 | Option | Required? | What it does |
 |--------|-----------|--------------|
@@ -296,7 +296,7 @@ See what applications are waiting for review. Shows up to 10 applications per pa
 | Scope | What you'll see |
 |-------|-----------------|
 | `mine` | Just the apps you've claimed (default) |
-| `all` | Everything that's open — claimed and unclaimed |
+| `all` | Everything that's open: claimed and unclaimed |
 | `drafts` | Applications people started but haven't finished yet |
 
 **What each scope shows:**
@@ -329,7 +329,7 @@ If there are more than 10 apps, you'll see Previous/Next buttons to navigate bet
 ### `/search`
 **Who can use it:** Staff (Reviewer role or Manage Guild)
 
-Look up someone's entire application history — every app they've submitted, what happened, and which mod handled it.
+Look up someone's entire application history: every app they've submitted, what happened, and which mod handled it.
 
 | Option | Required? | What it does |
 |--------|-----------|--------------|
@@ -344,12 +344,12 @@ This command is how you review repeat applicants. When someone applies for the s
 **What you'll see:**
 
 The search results show up to 10 most recent applications from this user. For each one:
-- **App code** (like `A1B2C3`) — the short identifier
-- **Status** — approved, rejected, kicked, or still pending
-- **Date** — when they submitted it
-- **Outcome** — if resolved, who handled it and when
-- **Reason** — if rejected or kicked, the reason that was given
-- **Link to review card** — click to see the full application
+- **App code** (like `A1B2C3`): the short identifier
+- **Status**: approved, rejected, kicked, or still pending
+- **Date**: when they submitted it
+- **Outcome**: if resolved, who handled it and when
+- **Reason**: if rejected or kicked, the reason that was given
+- **Link to review card**: click to see the full application
 
 At the top, you'll see:
 - Total number of applications from this user
@@ -364,7 +364,7 @@ At the top, you'll see:
 
 "They got accepted before but then got banned. Why are they applying again?"
 
-The search works even if the person left the server — you just need their user ID or to mention them from a message they sent before leaving.
+The search works even if the person left the server: you just need their user ID or to mention them from a message they sent before leaving.
 
 **Example:**
 ```
@@ -383,13 +383,13 @@ Made a mistake with a permanent rejection? Or did someone's appeal get approved?
 | `target` | No | Mention the user |
 | `user_id` | No | Their Discord ID (if they left) |
 | `username` | No | Their username as a fallback |
-| `reason` | No | Why you're unblocking them — gets logged |
+| `reason` | No | Why you're unblocking them: gets logged |
 
 **How unblocking works:**
 
 When someone is permanently rejected, the bot sets a flag in the database that prevents them from even starting an application. When they click Verify, instead of seeing the questions, they get "You have been permanently rejected from this server."
 
-Unblocking removes that flag. The next time they click Verify, they'll be able to fill out the application normally. Their previous applications (including the permanent rejection) stay in the history — you're not erasing the past, just giving them another chance.
+Unblocking removes that flag. The next time they click Verify, they'll be able to fill out the application normally. Their previous applications (including the permanent rejection) stay in the history: you're not erasing the past, just giving them another chance.
 
 **Common scenarios:**
 
@@ -419,7 +419,7 @@ This creates an audit trail. If someone gets unblocked and perm rejected again, 
 
 ## Moderator Tools
 
-These commands help you track how mods are doing, spot patterns, and keep an eye on things. The bot automatically tracks every action moderators take — claims, accepts, rejects, kicks — and turns that data into useful insights.
+These commands help you track how mods are doing, spot patterns, and keep an eye on things. The bot automatically tracks every action moderators take: claims, accepts, rejects, kicks: and turns that data into useful insights.
 
 ### How the Stats System Works
 
@@ -448,13 +448,13 @@ graph LR
 
 The bot tracks two different types of response time to help you understand how fast your team is working:
 
-**Claim to Decision Time** — How long it takes a mod to make a decision after claiming an application. This is measured from when they click "Claim" to when they click "Accept" or "Reject." Fast claim-to-decision times mean mods are reviewing applications quickly.
+**Claim to Decision Time**: How long it takes a mod to make a decision after claiming an application. This is measured from when they click "Claim" to when they click "Accept" or "Reject." Fast claim-to-decision times mean mods are reviewing applications quickly.
 
-**Submit to First Claim Time** — How long applications sit in the queue before anyone claims them. This is measured across the whole server, not per-mod. Long wait times here mean you might need more active reviewers.
+**Submit to First Claim Time**: How long applications sit in the queue before anyone claims them. This is measured across the whole server, not per-mod. Long wait times here mean you might need more active reviewers.
 
 The bot shows these as "p50" and "p95" which are percentiles:
-- **p50** (median) — Half of the reviews were faster than this, half were slower
-- **p95** — 95% of reviews were faster than this (shows your slowest cases)
+- **p50** (median): Half of the reviews were faster than this, half were slower
+- **p95**: 95% of reviews were faster than this (shows your slowest cases)
 
 ### `/stats`
 **Who can use it:** Various (see subcommands)
@@ -536,7 +536,7 @@ Leadership-only detailed mod action history with optional CSV export.
 
 ### Anomaly Detection: What It Means
 
-> 📚 **Reference Section** — You don't need to memorize this. It explains how the bot detects unusual patterns. Most mods never need to touch this.
+> 📚 **Reference Section**: You don't need to memorize this. It explains how the bot detects unusual patterns. Most mods never need to touch this.
 
 The bot uses z-score analysis to flag unusual patterns. The idea is straightforward.
 
@@ -546,9 +546,9 @@ The bot uses z-score analysis to flag unusual patterns. The idea is straightforw
 3. If a recent day is way above or below their normal pattern, it flags it
 
 **What the scores mean:**
-- **Z-score under 2.5** — Normal variation, nothing to worry about
-- **Z-score 2.5-3.0** — Noticeable change, worth checking
-- **Z-score over 3.0** — Unusual pattern, investigate
+- **Z-score under 2.5**: Normal variation, nothing to worry about
+- **Z-score 2.5-3.0**: Noticeable change, worth checking
+- **Z-score over 3.0**: Unusual pattern, investigate
 
 **Why anomalies get flagged:**
 - Sudden spike in activity (might be catching up after vacation)
@@ -581,7 +581,7 @@ Mark someone as suspicious. Flagged users show a warning badge on their applicat
 | Option | Required? | What it does |
 |--------|-----------|--------------|
 | `user` | **Yes** | Who to flag |
-| `reason` | No | Why — this shows to other staff |
+| `reason` | No | Why: this shows to other staff |
 
 **Good reasons to flag someone:**
 - Suspicious account (brand new, no avatar, weird username)
@@ -589,7 +589,7 @@ Mark someone as suspicious. Flagged users show a warning badge on their applicat
 - Other members reported them
 - Bad history in other servers
 
-Flags don't automatically reject people — they just warn other reviewers to pay extra attention.
+Flags don't automatically reject people: they just warn other reviewers to pay extra attention.
 
 **Examples:**
 ```
@@ -615,7 +615,7 @@ Report content violations with screenshot evidence. Creates a forum thread for s
 1. Ambassador sees rule violation
 2. Takes action (e.g., deletes the message) and screenshots as evidence
 3. Runs `/report user:@Violator reason:What they did actions:What I did evidence:<screenshot>`
-4. Bot posts to the report forum — if the user already has a report thread, it adds to that thread; otherwise creates a new one
+4. Bot posts to the report forum: if the user already has a report thread, it adds to that thread; otherwise creates a new one
 5. Community Staff gets pinged automatically
 6. Staff clicks **Resolve** button when handled
 7. Thread gets archived automatically
@@ -644,7 +644,7 @@ Server audit commands for detecting suspicious accounts and NSFW content. This c
 Bulk-scan all server members to detect bot accounts. This command crawls every member and flags suspicious accounts using multiple detection heuristics.
 
 **How it works:**
-1. Run `/audit members` — you'll see a confirmation prompt with member count
+1. Run `/audit members`: you'll see a confirmation prompt with member count
 2. Click **Confirm** to start (or **Cancel** to abort)
 3. The bot scans every member and posts an embed for each flagged account
 4. A progress bar shows how far along the scan is
@@ -671,7 +671,7 @@ Bulk-scan all server members to detect bot accounts. This command crawls every m
 **Important notes:**
 - Already-flagged users are skipped (won't double-flag)
 - Discord bot accounts are skipped
-- Flagged accounts use the same system as `/flag` — they show up in reviews
+- Flagged accounts use the same system as `/flag`: they show up in reviews
 - The scan can take a while on large servers (expect ~1 minute per 1000 members)
 
 #### `/audit nsfw`
@@ -679,8 +679,8 @@ Scan member avatars for NSFW content using Google Vision API SafeSearch detectio
 
 **Options:**
 - **Scope** (required):
-  - `All members` — Scan all server members
-  - `Flagged members only` — Only scan members already flagged by `/audit members` or `/flag`
+  - `All members`: Scan all server members
+  - `Flagged members only`: Only scan members already flagged by `/audit members` or `/flag`
 
 **How it works:**
 1. Run `/audit nsfw` and select scope
@@ -690,7 +690,7 @@ Scan member avatars for NSFW content using Google Vision API SafeSearch detectio
 5. Avatars scoring 80%+ adult content are flagged
 6. Summary shows total scanned, flagged, and API calls made
 
-**Threshold:** 80% adult content score (Hard Evidence) — conservative to avoid false positives.
+**Threshold:** 80% adult content score (Hard Evidence): conservative to avoid false positives.
 
 **What NSFW flag embeds show:**
 - User mention and ID
@@ -711,9 +711,9 @@ Scan member avatars for NSFW content using Google Vision API SafeSearch detectio
 
 **Resume functionality:**
 If an audit is interrupted (bot restart, error, etc.), running `/audit nsfw` again will detect the incomplete session and offer:
-- **Resume** — Continue where it left off, skipping already-scanned users
-- **Start Fresh** — Cancel the old session and start a new scan
-- **Cancel** — Do nothing
+- **Resume**: Continue where it left off, skipping already-scanned users
+- **Start Fresh**: Cancel the old session and start a new scan
+- **Cancel**: Do nothing
 
 Progress is saved to the database every 10 members, so you won't lose much work on interruption.
 
@@ -726,7 +726,7 @@ In addition to manual audits, the bot automatically monitors avatar changes in r
 - The alert pings the configured moderator role
 - Flagged users are saved to the `nsfw_flags` table
 
-This runs automatically — no commands needed. Check `/health` to confirm "NSFW Avatar Monitor: Active" is shown.
+This runs automatically: no commands needed. Check `/health` to confirm "NSFW Avatar Monitor: Active" is shown.
 
 ---
 
@@ -742,7 +742,7 @@ Detect AI-generated images in any Discord message. This command uses multiple ex
 **Context menu shortcut:** Right-click any message → Apps → **"Is It Real?"** to scan without typing the command.
 
 **How it works:**
-1. Run `/isitreal message:<id_or_link>` — provide a message ID or full Discord message link (or use the context menu)
+1. Run `/isitreal message:<id_or_link>`: provide a message ID or full Discord message link (or use the context menu)
 2. The bot extracts all images from the message (attachments and embeds, up to 10)
 3. Each image is sent to multiple AI detection services in parallel
 4. Results are averaged and displayed in an ephemeral embed
@@ -766,9 +766,9 @@ Engine 4:  60%
 ```
 
 **Reading the results:**
-- **70%+** — Highly likely AI-generated
-- **40-70%** — Uncertain, use judgment
-- **Below 40%** — Likely authentic
+- **70%+**: Highly likely AI-generated
+- **40-70%**: Uncertain, use judgment
+- **Below 40%**: Likely authentic
 
 **When to use this:**
 - Reviewing art submissions for authenticity
@@ -778,15 +778,15 @@ Engine 4:  60%
 
 **Important notes:**
 - Results are ephemeral (only visible to you)
-- API services have rate limits — don't spam the command
-- Not all services are 100% accurate — use results as guidance, not absolute proof
+- API services have rate limits: don't spam the command
+- Not all services are 100% accurate: use results as guidance, not absolute proof
 - Some art styles (digital art, anime) may get false positives
 
 ---
 
 ### `/resetdata`
 
-> 📚 **Reference Section** — You'll likely never use this. Here for completeness.
+> 📚 **Reference Section**: You'll likely never use this. Here for completeness.
 
 **Who can use it:** Manage Guild permission + Password
 
@@ -798,10 +798,10 @@ Resets all moderator statistics, leaderboards, and analytics to start fresh from
 
 #### When Resetting Makes Sense
 
-- **New moderation team** — If you've replaced most of your mod team, old stats aren't relevant anymore
-- **Policy changes** — If you changed your acceptance criteria significantly, old approval rates don't compare fairly
-- **Testing cleanup** — If you were testing the bot and generated fake data, reset before going live
-- **Fresh start** — Sometimes you just want a clean slate for a new year or season
+- **New moderation team**: If you've replaced most of your mod team, old stats aren't relevant anymore
+- **Policy changes**: If you changed your acceptance criteria significantly, old approval rates don't compare fairly
+- **Testing cleanup**: If you were testing the bot and generated fake data, reset before going live
+- **Fresh start**: Sometimes you just want a clean slate for a new year or season
 
 #### What Gets Reset
 
@@ -819,18 +819,18 @@ flowchart TD
 ```
 
 **What resets:**
-- Moderator leaderboards — Everyone starts at 0 decisions
-- Individual mod stats — Response times, approval rates, all reset
-- Approval rate calculations — Server-wide stats start fresh
-- Analytics charts — Historical charts only show data after the reset
-- Anomaly detection baselines — Z-scores recalculate from new data
+- Moderator leaderboards: Everyone starts at 0 decisions
+- Individual mod stats: Response times, approval rates, all reset
+- Approval rate calculations: Server-wide stats start fresh
+- Analytics charts: Historical charts only show data after the reset
+- Anomaly detection baselines: Z-scores recalculate from new data
 
 **What stays:**
-- The action log — Every accept, reject, kick is still recorded forever
-- Application history — `/search` still shows all past applications
-- User flags — Flagged users stay flagged
-- Permanent rejections — Blocked users stay blocked
-- Configuration — All your settings remain unchanged
+- The action log: Every accept, reject, kick is still recorded forever
+- Application history: `/search` still shows all past applications
+- User flags: Flagged users stay flagged
+- Permanent rejections: Blocked users stay blocked
+- Configuration: All your settings remain unchanged
 
 #### How the Epoch System Works
 
@@ -847,11 +847,11 @@ If you ever need old data for legal or audit reasons, it's still in the database
 
 This command has multiple layers of protection:
 
-1. **Permission check** — You need Manage Guild permission or an admin role
-2. **Password required** — Same password used for `/gate reset` and `/purge`
-3. **Constant-time comparison** — Password checking is timing-attack resistant
-4. **Audit logging** — The reset is logged with who did it and when
-5. **Ephemeral response** — The confirmation only shows to you, not the whole channel
+1. **Permission check**: You need Manage Guild permission or an admin role
+2. **Password required**: Same password used for `/gate reset` and `/purge`
+3. **Constant-time comparison**: Password checking is timing-attack resistant
+4. **Audit logging**: The reset is logged with who did it and when
+5. **Ephemeral response**: The confirmation only shows to you, not the whole channel
 
 #### After You Reset
 
@@ -888,23 +888,23 @@ Create a preview of a review card with various options to customize what it show
 
 Training new moderators is easier when you can show them what they'll actually see. With `/sample`, you can:
 
-- **Train new reviewers** — Show them exactly what a review card looks like before they see a real one
-- **Test different states** — See how accepted, rejected, and pending applications look different
-- **Debug UI issues** — If someone reports a display problem, recreate it with sample data
-- **Demonstrate features** — Show leadership what the review system looks like
+- **Train new reviewers**: Show them exactly what a review card looks like before they see a real one
+- **Test different states**: See how accepted, rejected, and pending applications look different
+- **Debug UI issues**: If someone reports a display problem, recreate it with sample data
+- **Demonstrate features**: Show leadership what the review system looks like
 
 #### What the Sample Card Shows
 
 The sample review card is nearly identical to a real one. It includes:
 
-- **Header** — Applicant name, avatar, and account age indicator
-- **Status badge** — Shows the current application state (Pending, Accepted, Rejected)
-- **Application code** — A fake code starting with "SAMPLE01" so you know it's not real
-- **Answers** — Sample responses to typical gate questions
-- **Claim info** — Shows who claimed it and when
-- **Avatar scan results** — Sample scan data (always shows clean/safe)
-- **Action history** — Fake history entries showing typical actions
-- **Buttons** — All the same buttons as a real card (but they don't work)
+- **Header**: Applicant name, avatar, and account age indicator
+- **Status badge**: Shows the current application state (Pending, Accepted, Rejected)
+- **Application code**: A fake code starting with "SAMPLE01" so you know it's not real
+- **Answers**: Sample responses to typical gate questions
+- **Claim info**: Shows who claimed it and when
+- **Avatar scan results**: Sample scan data (always shows clean/safe)
+- **Action history**: Fake history entries showing typical actions
+- **Buttons**: All the same buttons as a real card (but they don't work)
 
 **Important:** The buttons on sample cards are intentionally non-functional. Clicking them won't do anything. This prevents accidents where someone thinks they're accepting a real application.
 
@@ -934,8 +934,8 @@ The sample review card is nearly identical to a real one. It includes:
 
 The `applicant` and `claimed_by` options let you use real Discord users instead of placeholders:
 
-- **applicant** — The sample card will show that user's real avatar and username
-- **claimed_by** — The "Claimed by" section will show that moderator's name
+- **applicant**: The sample card will show that user's real avatar and username
+- **claimed_by**: The "Claimed by" section will show that moderator's name
 
 This is useful when you want to show someone "here's what your application would look like" or when training a specific moderator.
 
@@ -967,13 +967,13 @@ A queue system that fairly distributes art commissions among Server Artists. Whe
 
 The artist rotation works as a round-robin queue. When it's your turn, you get the next assignment, then you go to the back of the line so everyone gets a turn.
 
-1. **Artists join the queue** — Anyone with the Server Artist role (<@&1201395606455562341>) is automatically added to the queue
-2. **Queue positions are assigned** — Artists are numbered from 1 (next up) to whatever the total count is. New artists go to the end
-3. **Order is maintained** — The queue stays in order unless staff manually moves someone with `/artistqueue move`
-4. **Someone redeems a reward** — When you use `/redeemreward`, the bot picks the artist at position 1 (unless they're skipped)
-5. **Rotation happens** — After an assignment, that artist moves to the very end of the queue, and everyone else shifts up by one position
-6. **Skip if needed** — Artists can be temporarily skipped if they're on vacation or too busy. Skipped artists stay in their position but won't be picked
-7. **Stats are tracked** — The bot keeps count of how many assignments each artist has handled and when they last worked
+1. **Artists join the queue**: Anyone with the Server Artist role (<@&1201395606455562341>) is automatically added to the queue
+2. **Queue positions are assigned**: Artists are numbered from 1 (next up) to whatever the total count is. New artists go to the end
+3. **Order is maintained**: The queue stays in order unless staff manually moves someone with `/artistqueue move`
+4. **Someone redeems a reward**: When you use `/redeemreward`, the bot picks the artist at position 1 (unless they're skipped)
+5. **Rotation happens**: After an assignment, that artist moves to the very end of the queue, and everyone else shifts up by one position
+6. **Skip if needed**: Artists can be temporarily skipped if they're on vacation or too busy. Skipped artists stay in their position but won't be picked
+7. **Stats are tracked**: The bot keeps count of how many assignments each artist has handled and when they last worked
 
 ```mermaid
 graph TD
@@ -1029,7 +1029,7 @@ Manage who's in the queue and their order.
 | `skip` | Temporarily take an artist out of rotation |
 | `unskip` | Put them back in rotation |
 | `history` | See past art reward assignments |
-| `setup` | First-time setup — syncs the queue and gets everything configured |
+| `setup` | First-time setup: syncs the queue and gets everything configured |
 
 **Examples:**
 ```
@@ -1078,13 +1078,13 @@ You get two buttons: Confirm and Cancel. If you click Cancel, nothing happens an
 
 **What happens when you click Confirm:**
 
-1. **Ticket role is removed** — The bot removes the matching ticket role from the recipient (if they have it)
-2. **Artist is added to ticket** — The bot sends `$add <@artistId>` in the channel to add the artist to the ticket (works with Ticket Tool bot)
-3. **Queue rotates** — The artist moves from their current position to the very end of the queue
-4. **Positions update** — Everyone else in the queue shifts up by one position
-5. **Stats increase** — The artist's assignment count goes up by 1
-6. **Assignment is logged** — Everything gets recorded in the database for history tracking
-7. **You get confirmation** — The bot shows you a summary of what happened
+1. **Ticket role is removed**: The bot removes the matching ticket role from the recipient (if they have it)
+2. **Artist is added to ticket**: The bot sends `$add <@artistId>` in the channel to add the artist to the ticket (works with Ticket Tool bot)
+3. **Queue rotates**: The artist moves from their current position to the very end of the queue
+4. **Positions update**: Everyone else in the queue shifts up by one position
+5. **Stats increase**: The artist's assignment count goes up by 1
+6. **Assignment is logged**: Everything gets recorded in the database for history tracking
+7. **You get confirmation**: The bot shows you a summary of what happened
 
 **Override mode:**
 
@@ -1108,7 +1108,7 @@ The bot checks if the recipient has the correct ticket role for the type of art 
 Every time an art reward is assigned via `/redeemreward`, the bot creates a **job** that tracks the artwork from assignment to completion. This gives artists a way to manage their workload and lets recipients check on their art's progress.
 
 **What each job tracks:**
-- **Job Number**: Two IDs — a personal number for the artist (e.g., #0001, #0002) and a global server-wide number for staff reference
+- **Job Number**: Two IDs: a personal number for the artist (e.g., #0001, #0002) and a global server-wide number for staff reference
 - **Status**: Current progress stage (assigned → sketching → lining → coloring → done)
 - **Client**: The user receiving the artwork
 - **Type**: Headshot, Half-body, Emoji, or Full-body
@@ -1336,13 +1336,13 @@ Track who shows up to movie nights and automatically give out tier roles based o
 
 Movie night tracking watches the voice channel and counts how long people stay:
 
-1. **Start tracking** — When the movie begins, a staff member runs `/movie start` and picks the voice channel
-2. **Bot starts watching** — The bot listens for voice channel events (joins, leaves, moves)
-3. **Time gets counted** — Every time someone joins or leaves, the bot records a timestamp
-4. **End the event** — When the movie's over, run `/movie end` to stop tracking
-5. **Bot does the math** — The bot adds up all the time each person spent in the channel
-6. **Roles get assigned** — Anyone who stayed 30+ minutes gets credit, and tier roles update automatically
-7. **You get a DM** — The bot sends you a message showing your progress toward the next tier
+1. **Start tracking**: When the movie begins, a staff member runs `/movie start` and picks the voice channel
+2. **Bot starts watching**: The bot listens for voice channel events (joins, leaves, moves)
+3. **Time gets counted**: Every time someone joins or leaves, the bot records a timestamp
+4. **End the event**: When the movie's over, run `/movie end` to stop tracking
+5. **Bot does the math**: The bot adds up all the time each person spent in the channel
+6. **Roles get assigned**: Anyone who stayed 30+ minutes gets credit, and tier roles update automatically
+7. **You get a DM**: The bot sends you a message showing your progress toward the next tier
 
 ```mermaid
 flowchart TD
@@ -1412,7 +1412,7 @@ You need to stay **at least 30 minutes** during a movie night for it to count to
 **Important rules:**
 - People only get promoted, never demoted
 - If someone has <@&1388675577778802748> and misses a few movies, they keep the role
-- You can't lose tiers by not attending — once earned, always earned
+- You can't lose tiers by not attending: once earned, always earned
 - Each movie night counts as one event, even if you attend for 3 hours
 
 #### `/movie`
@@ -1432,7 +1432,7 @@ You need to stay **at least 30 minutes** during a movie night for it to count to
 **Attendance options:**
 | Option | Required? | What it does |
 |--------|-----------|--------------|
-| `user` | No | Check a specific person — leave blank to see everyone |
+| `user` | No | Check a specific person: leave blank to see everyone |
 
 **Examples:**
 ```
@@ -1450,11 +1450,11 @@ You need to stay **at least 30 minutes** during a movie night for it to count to
 - Each event shows: date, total time, longest session, and whether they qualified
 
 **Edge cases the bot handles:**
-- Someone joins, leaves, and rejoins — all their time gets added up
-- Someone was already in the VC when you started tracking — counted from start time
-- Bot restarts mid-movie — session data is lost (in-memory only), so end and restart the event
-- Multiple people leaving at once — each person's time is tracked separately
-- Someone switches between voice channels — only time in the tracked channel counts
+- Someone joins, leaves, and rejoins: all their time gets added up
+- Someone was already in the VC when you started tracking: counted from start time
+- Bot restarts mid-movie: session data is lost (in-memory only), so end and restart the event
+- Multiple people leaving at once: each person's time is tracked separately
+- Someone switches between voice channels: only time in the tracked channel counts
 
 ### Game Night
 
@@ -1464,12 +1464,12 @@ Track who shows up to game nights with percentage-based qualification. Unlike mo
 
 Game night tracking works similarly to movie night, but the qualification is based on event duration:
 
-1. **Start tracking** — Staff runs `/event game start` and picks the voice channel
-2. **Bot starts watching** — Same voice channel monitoring as movie nights
-3. **Time gets counted** — Every join/leave is recorded
-4. **End the event** — Run `/event game end` to stop tracking
-5. **Bot calculates percentage** — For each person, the bot divides their time by total event duration
-6. **Qualification check** — Anyone who attended more than the threshold percentage (default 50%) qualifies
+1. **Start tracking**: Staff runs `/event game start` and picks the voice channel
+2. **Bot starts watching**: Same voice channel monitoring as movie nights
+3. **Time gets counted**: Every join/leave is recorded
+4. **End the event**: Run `/event game end` to stop tracking
+5. **Bot calculates percentage**: For each person, the bot divides their time by total event duration
+6. **Qualification check**: Anyone who attended more than the threshold percentage (default 50%) qualifies
 
 **Example:** A 2-hour game night with 50% threshold:
 - Event duration: 120 minutes
@@ -1530,11 +1530,11 @@ Let members suggest questions for the server's Question of the Day. Staff review
 
 ### How It Works
 
-1. **A member submits a question** — They run `/qotd suggest`, which opens a modal where they type their question (10-500 characters)
-2. **Bot creates a review card** — The suggestion appears in the configured QOTD review channel with Approve and Reject buttons
-3. **Staff reviews it** — Any Gatekeeper+ can click Approve or Reject. Rejecting opens a modal for a reason.
-4. **The suggester gets a DM** — Whether approved or rejected, the bot sends the member a DM with the result (and the reason, if rejected)
-5. **Staff pulls a question** — When it's time for QOTD, a Gatekeeper+ runs `/qotd pull` to grab a random approved suggestion. The bot shows it ephemerally and marks it as used so it won't come up again.
+1. **A member submits a question**: They run `/qotd suggest`, which opens a modal where they type their question (10-500 characters)
+2. **Bot creates a review card**: The suggestion appears in the configured QOTD review channel with Approve and Reject buttons
+3. **Staff reviews it**: Any Gatekeeper+ can click Approve or Reject. Rejecting opens a modal for a reason.
+4. **The suggester gets a DM**: Whether approved or rejected, the bot sends the member a DM with the result (and the reason, if rejected)
+5. **Staff pulls a question**: When it's time for QOTD, a Gatekeeper+ runs `/qotd pull` to grab a random approved suggestion. The bot shows it ephemerally and marks it as used so it won't come up again.
 
 ### Rate Limits
 
@@ -1615,12 +1615,12 @@ flowchart TD
 
 Amaribot is a separate bot that tracks message activity and assigns levels. Our bot works alongside it:
 
-1. **Someone sends messages** — Amaribot counts their messages and gives them XP
-2. **They level up** — Amaribot assigns them a level role (like "Level 15")
-3. **Our bot notices** — We watch for role changes and detect when Amaribot adds a level role
-4. **We check our database** — Is there a level tier or level reward configured for level 15?
-5. **We assign rewards** — If configured, we give them token roles or other rewards
-6. **User gets notified** — They get a DM telling them what they earned
+1. **Someone sends messages**: Amaribot counts their messages and gives them XP
+2. **They level up**: Amaribot assigns them a level role (like "Level 15")
+3. **Our bot notices**: We watch for role changes and detect when Amaribot adds a level role
+4. **We check our database**: Is there a level tier or level reward configured for level 15?
+5. **We assign rewards**: If configured, we give them token roles or other rewards
+6. **User gets notified**: They get a DM telling them what they earned
 
 **Important:** You need to configure level tiers to match Amaribot's level roles. If Amaribot gives people "Engaged Fur LVL 15" at level 15, you'd use:
 ```
@@ -1959,10 +1959,10 @@ General-purpose tools and admin commands. These help you maintain the bot, commu
 The interactive help system for Pawtropolis Tech. It shows you every command you have access to, organized by category, with full documentation, examples, and workflow tips.
 
 **Basic usage:**
-- `/help` — Main overview with category buttons
-- `/help command:accept` — Detailed info for a specific command
-- `/help search:role` — Search all commands by keyword
-- `/help category:gate` — Browse all commands in a category
+- `/help`: Main overview with category buttons
+- `/help command:accept`: Detailed info for a specific command
+- `/help search:role`: Search all commands by keyword
+- `/help category:gate`: Browse all commands in a category
 
 #### Browsing by Category
 
@@ -1986,20 +1986,20 @@ Click any category button to see all commands in that category. From there, use 
 
 There are three ways to search:
 
-1. **Autocomplete** — Type `/help command:` and start typing. Suggestions appear filtered by what you can access.
-2. **Keyword search** — Use `/help search:role` to find any command mentioning "role" in its name, description, or aliases.
-3. **Search modal** — Click the Search button on the overview to open a modal where you can enter your query.
+1. **Autocomplete**: Type `/help command:` and start typing. Suggestions appear filtered by what you can access.
+2. **Keyword search**: Use `/help search:role` to find any command mentioning "role" in its name, description, or aliases.
+3. **Search modal**: Click the Search button on the overview to open a modal where you can enter your query.
 
-Search is smart — it looks at command names, aliases (like "approve" for "accept"), descriptions, and even subcommand names.
+Search is smart: it looks at command names, aliases (like "approve" for "accept"), descriptions, and even subcommand names.
 
 #### Quick vs Full Mode
 
 Each command has two viewing modes:
 
 - **Quick Mode** (default): Shows usage, permission level, and category. Good for quick reference.
-- **Full Mode**: Shows everything — options, examples, notes, and workflow tips. Click "Full Details" to expand.
+- **Full Mode**: Shows everything: options, examples, notes, and workflow tips. Click "Full Details" to expand.
 
-The workflow tips are particularly helpful — they tell you things like "After accepting, check /listopen for your next review" to guide you through common workflows.
+The workflow tips are particularly helpful: they tell you things like "After accepting, check /listopen for your next review" to guide you through common workflows.
 
 **Pro tips:**
 - Commands you can't access won't show up at all (permission filtering)
@@ -2011,7 +2011,7 @@ The workflow tips are particularly helpful — they tell you things like "After 
 ### `/usebyte`
 **Who can use it:** Everyone (members with Byte Token roles)
 
-Redeem your Byte Token for an XP multiplier. This is a self-service command — no need to open a ticket.
+Redeem your Byte Token for an XP multiplier. This is a self-service command: no need to open a ticket.
 
 | Option | Required? | What it does |
 |--------|-----------|--------------|
@@ -2020,7 +2020,7 @@ Redeem your Byte Token for an XP multiplier. This is a self-service command — 
 **How it works:**
 
 1. You must have a Byte Token role (earned from giveaways, events, level rewards, or the Paw Bank shop)
-2. Run `/usebyte` — if you have multiple tokens, a dropdown menu lets you choose which to use
+2. Run `/usebyte`: if you have multiple tokens, a dropdown menu lets you choose which to use
 3. Review the confirmation and click Confirm to redeem
 4. The token role is removed and the multiplier role is added
 5. The multiplier role is automatically removed when it expires
@@ -2035,7 +2035,7 @@ Redeem your Byte Token for an XP multiplier. This is a self-service command — 
 | Byte Token [Legendary] | 4x XP | 24 hours |
 | Byte Token [Mythic] | 6x XP | 72 hours (3 days) |
 
-**Upgrading:** If you already have an active multiplier and use another token, the new one replaces the old one. Time remaining on the old multiplier is lost — you'll see a warning before confirming.
+**Upgrading:** If you already have an active multiplier and use another token, the new one replaces the old one. Time remaining on the old multiplier is lost: you'll see a warning before confirming.
 
 **Multiple tokens:** If you have multiple token rarities, you can choose which one to use via the dropdown menu, or specify directly with `/usebyte rarity:common`.
 
@@ -2270,7 +2270,7 @@ This command sends a message mentioning the user in every text channel within th
 
 ### `/database`
 
-> 📚 **Reference Section** — Bot owner only. Skip unless you're troubleshooting infrastructure.
+> 📚 **Reference Section**: Bot owner only. Skip unless you're troubleshooting infrastructure.
 
 **Who can use it:** Bot Owner + Password
 
@@ -2731,6 +2731,6 @@ The more details you provide, the faster support can help you.
 
 ## See Also
 
-- **[MOD-HANDBOOK.md](MOD-HANDBOOK.md)** — Staff policies, escalation guidelines, and moderation protocols
-- **[MOD-QUICKREF.md](MOD-QUICKREF.md)** — Quick reference for everyday tasks
-- **[CHANGELOG.md](../CHANGELOG.md)** — Version history and recent changes
+- **[MOD-HANDBOOK.md](MOD-HANDBOOK.md)**: Staff policies, escalation guidelines, and moderation protocols
+- **[MOD-QUICKREF.md](MOD-QUICKREF.md)**: Quick reference for everyday tasks
+- **[CHANGELOG.md](../CHANGELOG.md)**: Version history and recent changes

@@ -112,7 +112,7 @@ This releases the application back to the queue.
 
 ## See Also
 
-- [Gatekeeper Guide](../GATEKEEPER-GUIDE.md) — the role guide for the people who actually run this flow
-- [Bot Handbook — Gate System](../BOT-HANDBOOK.md#gate-system-application-review) — the user-facing command reference
-- [Database Schema](database-schema.md) — `review_action` and `action_log` table definitions
-- [Logging and ModStats](logging-and-modstats.md) — how accept/reject actions feed the per-mod stats
+- [Gatekeeper Guide](../GATEKEEPER-GUIDE.md): the role guide for the people who actually run this flow
+- [Bot Handbook: Gate System](../BOT-HANDBOOK.md#gate-system-application-review): the user-facing command reference
+- [Database Schema](database-schema.md): `review_action` and `action_log` table definitions
+- [Logging and ModStats](logging-and-modstats.md): how accept/reject actions feed the per-mod stats

@@ -96,6 +96,6 @@ Run `npm run deploy:cmds`
 
 ## See Also
 
-- [Bot Handbook — `/send`](../BOT-HANDBOOK.md) — user-facing command details
-- [Permissions Matrix](../PERMS-MATRIX.md) — who has Manage Messages by default
-- [Logging and ModStats](logging-and-modstats.md) — how `/send` actions get audit-logged
+- [Bot Handbook: `/send`](../BOT-HANDBOOK.md): user-facing command details
+- [Permissions Matrix](../PERMS-MATRIX.md): who has Manage Messages by default
+- [Logging and ModStats](logging-and-modstats.md): how `/send` actions get audit-logged
