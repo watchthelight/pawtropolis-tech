@@ -33,7 +33,7 @@ Discord (roles/channels/users)
   -> features/badges/store.ts (persist manifest + generated SVG)
   -> features/badges/renderSvg.ts (render pill SVG)
   -> web/badgeEndpoint.ts (serve /badges/:id.svg + /api/badges/manifest.json)
-  -> GitHub Markdown ![Movie Tier 1](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-1.svg?v=4)
+  -> GitHub Markdown ![Movie Tier 1](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-1.svg?v=5)
 ```
 
 New modules:
