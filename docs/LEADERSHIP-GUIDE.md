@@ -1,6 +1,6 @@
 # Leadership Guide
 
-![@Community Manager](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-manager.svg?v=3a4f4445) ![@Community Development Lead](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-dev-lead.svg?v=7783a266) ![@Community Founder](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-founder.svg?v=cf66a1a6)
+![@Community Manager](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/role-community-manager.svg?v=ecfff95d) ![@Community Development Lead](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/role-community-dev-lead.svg?v=ae7a902d) ![@Community Founder](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/role-community-founder.svg?v=44af25d7)
 
 Server-wide audits, data resets, branding, analytics, and the bot-owner-only controls.
 

@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="110" height="20" viewBox="0 0 110 20" role="img" aria-label="@Holographic"><title>@Holographic</title><desc>Discord role; resolved at 2026-05-02T16:00:34.771Z</desc><defs>
+<svg xmlns="http://www.w3.org/2000/svg" width="110" height="20" viewBox="0 0 110 20" role="img" aria-label="@Holographic"><title>@Holographic</title><desc>Discord role; resolved at 2026-05-02T16:03:26.308Z</desc><defs>
         <linearGradient id="bg-role-holographic" x1="0%" y1="0%" x2="100%" y2="0%">
         <animate attributeName="x1" values="0%;-50%;0%" dur="3s" repeatCount="indefinite"/>
         <animate attributeName="x2" values="100%;150%;100%" dur="3s" repeatCount="indefinite"/>

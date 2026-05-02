@@ -1,6 +1,6 @@
 # Gatekeeper Guide
 
-![@Gatekeeper](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-gatekeeper.svg?v=6a1c2aae)
+![@Gatekeeper](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/role-gatekeeper.svg?v=479cc131)
 
 You review applications and decide who gets into the server.
 

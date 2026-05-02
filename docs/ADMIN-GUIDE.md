@@ -1,6 +1,6 @@
 # Administrator Guide
 
-![@Administrator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-administrator.svg?v=f7dbae0c) ![@Senior Administrator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-senior-admin.svg?v=8e0011c1)
+![@Administrator](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/role-administrator.svg?v=1c41a0a5) ![@Senior Administrator](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/role-senior-admin.svg?v=e9b89663)
 
 Bot configuration, automated role assignment, and the kill-switches you reach for when something goes sideways.
 

@@ -62,7 +62,7 @@ const CHANNELS_SNAPSHOT = path.join("docs", "internal-info", "CHANNELS.md");
 
 const RAW_PREFIX =
   process.env.BADGE_RAW_URL_PREFIX ??
-  "https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg";
+  "https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg";
 
 function repoUrl(id: string, version?: string): string {
   const base = `${RAW_PREFIX.replace(/\/+$/, "")}/${id}.svg`;
@@ -122,10 +122,11 @@ function updateDocUrls(badgeVersions: Map<string, string>): number {
       visited.add(file);
       const before = fs.readFileSync(file, "utf8");
       const after = before.replace(
-        /(cdn\.jsdelivr\.net\/gh\/watchthelight\/pawtropolis-tech@main\/docs\/badges\/svg\/([a-z0-9_-]+)\.svg)(\?v=[a-zA-Z0-9_-]+)?/g,
-        (_match, base, id) => {
+        /(?:cdn\.jsdelivr\.net\/gh\/watchthelight\/pawtropolis-tech@main|raw\.githubusercontent\.com\/watchthelight\/pawtropolis-tech\/main)(\/docs\/badges\/svg\/([a-z0-9_-]+)\.svg)(\?v=[a-zA-Z0-9_-]+)?/g,
+        (_match, tail, id) => {
           const v = badgeVersions.get(id);
-          return v ? `${base}?v=${v}` : `${base}`;
+          const base = `raw.githubusercontent.com/watchthelight/pawtropolis-tech/main${tail}`;
+          return v ? `${base}?v=${v}` : base;
         },
       );
       if (after !== before) {
