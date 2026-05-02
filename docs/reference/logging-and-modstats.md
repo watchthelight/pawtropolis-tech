@@ -65,11 +65,11 @@ LOGGING_CHANNEL=123456789
 
 ## ModStats
 
-View moderator statistics with `/modstats`.
+View moderator statistics with the `/stats` subcommands. The slash command is `/stats`, with subcommands; "ModStats" is the conceptual feature name.
 
-### Leaderboard Mode
+### Leaderboard
 ```
-/modstats mode:leaderboard days:30
+/stats leaderboard
 ```
 
 Shows:
@@ -78,9 +78,9 @@ Shows:
 - Average response time
 - Acceptance rate
 
-### User Mode
+### Per-mod stats
 ```
-/modstats mode:user user:@ModName days:90
+/stats user moderator:@ModName days:90
 ```
 
 Shows for one mod:

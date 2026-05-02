@@ -4,15 +4,15 @@ How the application system works.
 
 ## Step 1: User Submits Application
 
-1. User types `/gate`
-2. Bot shows form with fields:
-   - Display Name (2-32 chars)
-   - Age (must be 18+)
-   - Reason (min 50 chars)
-   - Referral (optional)
-3. User submits form
-4. Bot validates and saves to database
-5. Bot posts review card in review channel
+1. User joins the server and lands in the Unverified Area; on Pawtropolis the gate channel is `「❓」verify` (`896070891539169311`).
+2. User clicks the **Verify** button on the welcome embed.
+3. Bot shows a multi-page modal flow with the questions configured per guild via `/gate set-questions`. On Pawtropolis the embed advertises **6 simple questions**.
+4. Each modal page validates required fields client-side; the bot persists drafts so an interrupted flow can be resumed.
+5. User submits the final page.
+6. Bot validates and saves the application to the database.
+7. Bot posts a review card in the configured review channel.
+
+> The staff-facing `/gate` slash command is for setup, status checks, and welcome-message configuration — it is not how members submit applications.
 
 ## Step 2: Moderator Claims
 
