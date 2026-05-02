@@ -43,7 +43,7 @@
 - [Admin Guide](./ADMIN-GUIDE.md) - Administration tasks for Admins and Senior Admins
 - [Moderator Guide](./MODERATOR-GUIDE.md) - Core moderation responsibilities
 - [Gatekeeper Guide](./GATEKEEPER-GUIDE.md) - Essential gatekeeper and Junior Mod tasks
-- [Leadership Guide](./LEADERSHIP-GUIDE.md) - Strategic responsibilities for CM, CDL, Server Owner
+- [Leadership Guide](./LEADERSHIP-GUIDE.md) - Strategic responsibilities for CM, CDL, Community Founder
 
 ### Technical Reference
 - [Slash Commands](./SLASH-COMMANDS.md) - Command system documentation and deployment

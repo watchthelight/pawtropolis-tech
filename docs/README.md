@@ -21,7 +21,7 @@ The Bot Handbook has everything you need - commands, features, and how to use th
 - [GATEKEEPER-GUIDE.md](GATEKEEPER-GUIDE.md) - For Gatekeepers and Junior Mods
 - [MODERATOR-GUIDE.md](MODERATOR-GUIDE.md) - For Moderators and Senior Mods
 - [ADMIN-GUIDE.md](ADMIN-GUIDE.md) - For Admins and Senior Admins
-- [LEADERSHIP-GUIDE.md](LEADERSHIP-GUIDE.md) - For CM, CDL, and Server Owner
+- [LEADERSHIP-GUIDE.md](LEADERSHIP-GUIDE.md) - For CM, CDL, and Community Founder
 
 ---
 
