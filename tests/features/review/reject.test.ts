@@ -177,6 +177,49 @@ describe("rejectTx", () => {
         expect.stringMatching(/permanent_reject_at = CASE WHEN/)
       );
     });
+
+    it("UPDATE application call passes permanent=1 in both positional args", () => {
+      // The UPDATE binds permanently_rejected (param 3) and the CASE WHEN guard
+      // for permanent_reject_at (param 4). Both must be 1 when permanent=true so
+      // the timestamp is actually written.
+      mockDbStatement.get.mockReturnValue({ status: "submitted" });
+
+      rejectTx("app-123", "mod-456", "Reason", true);
+
+      // Find the UPDATE run call (it has 5 args; the INSERT has 5 different ones).
+      const updateCalls = mockDbStatement.run.mock.calls.filter((call) => {
+        // UPDATE pattern: (moderator_id, reason, permanently_rejected, permanent_flag, app_id)
+        return (
+          call.length === 5 &&
+          call[0] === "mod-456" &&
+          call[1] === "Reason" &&
+          call[4] === "app-123"
+        );
+      });
+      expect(updateCalls.length).toBe(1);
+      const [, , permRej, permFlag] = updateCalls[0];
+      expect(permRej).toBe(1);
+      expect(permFlag).toBe(1);
+    });
+
+    it("UPDATE application call passes 0 in both positional args when permanent=false", () => {
+      mockDbStatement.get.mockReturnValue({ status: "submitted" });
+
+      rejectTx("app-123", "mod-456", "Reason", false);
+
+      const updateCalls = mockDbStatement.run.mock.calls.filter((call) => {
+        return (
+          call.length === 5 &&
+          call[0] === "mod-456" &&
+          call[1] === "Reason" &&
+          call[4] === "app-123"
+        );
+      });
+      expect(updateCalls.length).toBe(1);
+      const [, , permRej, permFlag] = updateCalls[0];
+      expect(permRej).toBe(0);
+      expect(permFlag).toBe(0);
+    });
   });
 
   describe("status checks", () => {
