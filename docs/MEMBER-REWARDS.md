@@ -23,18 +23,18 @@ Roles unlock as you level up. Each level adds perks on top of the previous one.
 
 | Level Role | Unlocks |
 |------------|---------|
-| ![@Newcomer Fur](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-newcomer-fur-lvl1.svg) | Media posting in most media channels; video + streaming in voice channels |
-| ![@Beginner Fur](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-beginner-fur-lvl5.svg) | Embed links in most media channels; message history in art channels |
-| ![@Chatty Fur](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-chatty-fur-lvl10.svg) | Next level tier role |
-| ![@Engaged Fur](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-engaged-fur-lvl15.svg) | Soundboards in voice channels; ![@Byte Token Common](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-byte-token-common.svg); media posting in ![#main-chat](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-general.svg) |
-| ![@Active Fur](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-active-fur-lvl20.svg) | Link embed posting in ![#main-chat](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-general.svg); poll creation |
-| ![@Known Fur](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-known-fur-lvl30.svg) | ![@Byte Token Rare](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-byte-token-rare.svg); access to known-chat |
-| ![@Noble Fur](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-noble-fur-lvl50.svg) | ![@Byte Token Epic](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-byte-token-epic.svg), ![@Byte Token Legendary](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-byte-token-legendary.svg) |
-| ![@Veteran Fur](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-veteran-fur-lvl60.svg) | ![@Byte Token Mythic](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-byte-token-mythic.svg) |
-| ![@Elite Fur](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-elite-fur-lvl70.svg) | (base unlock) |
-| ![@Legendary Fur](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-legendary-fur-lvl80.svg) | ![@AllByte Token Legendary](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-allbyte-token-legendary.svg) |
-| ![@Mythic Fur](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-mythic-fur-lvl90.svg) | ![@AllByte Token Mythic](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-allbyte-token-mythic.svg) |
-| ![@Eternal Fur](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-eternal-fur-lvl100.svg) | All ![@AllByte Mythic](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-allbyte-token-mythic.svg) + ![@Byte Mythic](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-byte-token-mythic.svg) |
+| ![@Newcomer Fur](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-newcomer-fur-lvl1.svg?v=3) | Media posting in most media channels; video + streaming in voice channels |
+| ![@Beginner Fur](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-beginner-fur-lvl5.svg?v=3) | Embed links in most media channels; message history in art channels |
+| ![@Chatty Fur](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-chatty-fur-lvl10.svg?v=3) | Next level tier role |
+| ![@Engaged Fur](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-engaged-fur-lvl15.svg?v=3) | Soundboards in voice channels; ![@Byte Token Common](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-byte-token-common.svg?v=3); media posting in ![#main-chat](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-general.svg?v=3) |
+| ![@Active Fur](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-active-fur-lvl20.svg?v=3) | Link embed posting in ![#main-chat](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-general.svg?v=3); poll creation |
+| ![@Known Fur](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-known-fur-lvl30.svg?v=3) | ![@Byte Token Rare](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-byte-token-rare.svg?v=3); access to known-chat |
+| ![@Noble Fur](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-noble-fur-lvl50.svg?v=3) | ![@Byte Token Epic](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-byte-token-epic.svg?v=3), ![@Byte Token Legendary](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-byte-token-legendary.svg?v=3) |
+| ![@Veteran Fur](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-veteran-fur-lvl60.svg?v=3) | ![@Byte Token Mythic](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-byte-token-mythic.svg?v=3) |
+| ![@Elite Fur](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-elite-fur-lvl70.svg?v=3) | (base unlock) |
+| ![@Legendary Fur](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-legendary-fur-lvl80.svg?v=3) | ![@AllByte Token Legendary](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-allbyte-token-legendary.svg?v=3) |
+| ![@Mythic Fur](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-mythic-fur-lvl90.svg?v=3) | ![@AllByte Token Mythic](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-allbyte-token-mythic.svg?v=3) |
+| ![@Eternal Fur](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-eternal-fur-lvl100.svg?v=3) | All ![@AllByte Mythic](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-allbyte-token-mythic.svg?v=3) + ![@Byte Mythic](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-byte-token-mythic.svg?v=3) |
 
 Byte tokens are redeemable through `/byte` in channel `896070890457018384`. AllByte tokens need to be in a ticket.
 
@@ -71,8 +71,8 @@ If the 1st-place user is on a streak, the reward pool doubles. The pool resets w
 
 | Credits | Reward |
 |---------|--------|
-| 1 | Headshot art piece from a ![@Server Artist](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-server-artist.svg) |
-| 2 | Half-body art piece from a ![@Server Artist](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-server-artist.svg) |
+| 1 | Headshot art piece from a ![@Server Artist](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-server-artist.svg?v=3) |
+| 2 | Half-body art piece from a ![@Server Artist](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-server-artist.svg?v=3) |
 | 3 | Two $5 Discord shop items |
 | 4 | One $9.99 Nitro 2x Boost |
 
@@ -118,10 +118,10 @@ Attend movie nights in the voice channel for at least 30 minutes each to earn cr
 
 | Tier | Role | Requirement | Perks |
 |------|------|-------------|-------|
-| Tier 1 | ![@Red Carpet Guest](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-1.svg) | Attend 1 movie night | Tier 1 role |
-| Tier 2 | ![@Popcorn Club](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-2.svg) | Attend 5 movie nights | 2x chat XP |
-| Tier 3 | ![@Director's Cut](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-3.svg) | Attend 10 movie nights | 3x chat XP |
-| Tier 4 | ![@Cinematic Royalty](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-4.svg) | Attend 20+ movie nights | 5x chat XP + one movie-themed art piece by a ![@Server Artist](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-server-artist.svg) |
+| Tier 1 | ![@Red Carpet Guest](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-1.svg?v=3) | Attend 1 movie night | Tier 1 role |
+| Tier 2 | ![@Popcorn Club](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-2.svg?v=3) | Attend 5 movie nights | 2x chat XP |
+| Tier 3 | ![@Director's Cut](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-3.svg?v=3) | Attend 10 movie nights | 3x chat XP |
+| Tier 4 | ![@Cinematic Royalty](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-4.svg?v=3) | Attend 20+ movie nights | 5x chat XP + one movie-themed art piece by a ![@Server Artist](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-server-artist.svg?v=3) |
 
 Staff verify attendance before awarding.
 

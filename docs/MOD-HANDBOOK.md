@@ -44,10 +44,10 @@ Key features:
 
 | Your Role | Guide |
 |-----------|-------|
-| ![@Gatekeeper](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-gatekeeper.svg) ![@Junior Moderator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-junior-mod.svg) | [Gatekeeper Guide](GATEKEEPER-GUIDE.md) |
-| ![@Moderator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-moderator.svg) ![@Senior Moderator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-senior-mod.svg) | [Moderator Guide](MODERATOR-GUIDE.md) |
-| ![@Administrator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-administrator.svg) ![@Senior Administrator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-senior-admin.svg) | [Admin Guide](ADMIN-GUIDE.md) |
-| ![@Community Manager](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-manager.svg) ![@Community Development Lead](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-dev-lead.svg) ![@Community Founder](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-founder.svg) | [Leadership Guide](LEADERSHIP-GUIDE.md) |
+| ![@Gatekeeper](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-gatekeeper.svg?v=3) ![@Junior Moderator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-junior-mod.svg?v=3) | [Gatekeeper Guide](GATEKEEPER-GUIDE.md) |
+| ![@Moderator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-moderator.svg?v=3) ![@Senior Moderator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-senior-mod.svg?v=3) | [Moderator Guide](MODERATOR-GUIDE.md) |
+| ![@Administrator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-administrator.svg?v=3) ![@Senior Administrator](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-senior-admin.svg?v=3) | [Admin Guide](ADMIN-GUIDE.md) |
+| ![@Community Manager](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-manager.svg?v=3) ![@Community Development Lead](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-dev-lead.svg?v=3) ![@Community Founder](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/role-community-founder.svg?v=3) | [Leadership Guide](LEADERSHIP-GUIDE.md) |
 
 ---
 
@@ -477,7 +477,7 @@ This is a 100% SFW Community. To comply with Discord's Terms and keep teens safe
 **Not Allowed:**
 - Discussion of 18+ topics
 - Any NSFW content
-- Suggestive content, even when posted in ![#「✍️」writing](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-writing.svg)
+- Suggestive content, even when posted in ![#「✍️」writing](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-writing.svg?v=3)
 - Streaming gambling in voice channels
 
 **Action:** Discussion of 18+ topics is an **automatic 3-strike penalty**.
@@ -543,7 +543,7 @@ When the whole channel starts saying the same thing back-to-back, it stops being
 - Repeated low-effort messages from the same group with no actual conversation between them
 - Brainrot or media that doesn't add anything to the channel it's posted in
 
-**Where it goes instead:** ![#「🗣️」yapping-space](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-yapping-space.svg) exists for content that doesn't fit elsewhere. Send people there when you redirect them.
+**Where it goes instead:** ![#「🗣️」yapping-space](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/channel-yapping-space.svg?v=3) exists for content that doesn't fit elsewhere. Send people there when you redirect them.
 
 **Action:** Remove the message and leave a short reminder. No warn the first time unless they ignore the redirect.
 
