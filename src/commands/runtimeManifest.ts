@@ -26,6 +26,7 @@ export const SLASH_COMMAND_NAMES = [
   "reject",
   "kick",
   "unclaim",
+  "welcomebatch",
 
   // System / admin
   "health",
