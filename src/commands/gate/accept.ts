@@ -23,6 +23,7 @@ import {
   getClaim,
   claimGuard,
   postWelcomeCard,
+  tryEnqueueWelcome,
   closeModmailForApplication,
   type CommandContext,
   ensureDeferred,
@@ -166,12 +167,16 @@ export async function executeAccept(ctx: CommandContext<ChatInputCommandInteract
           messages.push("DM failed (closed DMs?).");
         }
         try {
-          await postWelcomeCard({
-            guild: interaction.guild!,
-            user: member,
-            config: cfg,
-            memberCount: interaction.guild!.memberCount,
-          });
+          if (!tryEnqueueWelcome(member)) {
+            await postWelcomeCard({
+              guild: interaction.guild!,
+              user: member,
+              config: cfg,
+              memberCount: interaction.guild!.memberCount,
+            });
+          } else {
+            messages.push("Welcome batched (use `/welcomebatch send` to deliver).");
+          }
         } catch {
           // Non-critical
         }
@@ -287,6 +292,10 @@ export async function executeAccept(ctx: CommandContext<ChatInputCommandInteract
     // without the verified role looks weird and confuses everyone.
     if (cfg && approvedMember && (cfg.accepted_role_id ? roleApplied : true)) {
       try {
+        if (tryEnqueueWelcome(approvedMember)) {
+          note = "Welcome batched (use `/welcomebatch send` to deliver).";
+          return { dmDelivered: delivered, welcomeNote: note };
+        }
         await postWelcomeCard({
           guild: interaction.guild!,
           user: approvedMember,

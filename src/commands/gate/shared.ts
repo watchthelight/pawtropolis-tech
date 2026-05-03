@@ -41,6 +41,8 @@ export {
   postWelcomeCard,
 } from "../../features/welcome.js";
 
+export { tryEnqueueWelcome } from "../../features/welcomeBatch.js";
+
 export {
   closeModmailForApplication,
 } from "../../features/modmail.js";

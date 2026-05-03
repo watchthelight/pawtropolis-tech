@@ -181,6 +181,7 @@ commands.set(gate.acceptData.name, wrapCommand("accept", gate.executeAccept));
 commands.set(gate.rejectData.name, wrapCommand("reject", gate.executeReject));
 commands.set(gate.kickData.name, wrapCommand("kick", gate.executeKick));
 commands.set(gate.unclaimData.name, wrapCommand("unclaim", gate.executeUnclaim));
+commands.set(gate.welcomeBatchData.name, wrapCommand("welcomebatch", gate.executeWelcomeBatch));
 commands.set(update.data.name, wrapCommand("update", update.execute));
 commands.set(config.data.name, wrapCommand("config", config.execute));
 commands.set(database.data.name, wrapCommand("database", database.execute));

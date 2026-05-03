@@ -16,7 +16,7 @@
  * the bundler can tree-shake and we get compile-time errors if a command breaks.
  * The verbose pain here saves debugging pain later.
  */
-import { data as gateData, acceptData, rejectData, kickData, unclaimData } from "./gate.js";
+import { data as gateData, acceptData, rejectData, kickData, unclaimData, welcomeBatchData } from "./gate.js";
 import { data as healthData } from "./health.js";
 import { data as updateData } from "./update.js";
 import { data as configData } from "./config.js";
@@ -79,6 +79,7 @@ export function buildCommands() {
     rejectData.toJSON(),
     kickData.toJSON(),
     unclaimData.toJSON(),
+    welcomeBatchData.toJSON(),
 
     // System/admin commands
     healthData.toJSON(),

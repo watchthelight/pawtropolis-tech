@@ -26,6 +26,7 @@ import { logActionPretty } from "../../../logging/pretty.js";
 import { closeModmailForApplication } from "../../modmail.js";
 import { SAFE_ALLOWED_MENTIONS } from "../../../lib/constants.js";
 import { postWelcomeCard } from "../../welcome.js";
+import { tryEnqueueWelcome } from "../../welcomeBatch.js";
 
 import type {
   ApplicationRow,
@@ -195,12 +196,16 @@ export async function runApproveAction(
   let roleNote: string | null = null;
   if (cfg && approvedMember && (cfg.accepted_role_id ? roleApplied : true)) {
     try {
-      await postWelcomeCard({
-        guild,
-        user: approvedMember,
-        config: cfg,
-        memberCount: guild.memberCount,
-      });
+      if (tryEnqueueWelcome(approvedMember)) {
+        welcomeNote = "Welcome batched (use `/welcomebatch send` to deliver).";
+      } else {
+        await postWelcomeCard({
+          guild,
+          user: approvedMember,
+          config: cfg,
+          memberCount: guild.memberCount,
+        });
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "unknown error";
       logger.warn(

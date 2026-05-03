@@ -193,6 +193,135 @@ export async function postWelcomeCard(opts: {
 }
 
 /**
+ * postBatchWelcomeCard
+ * WHAT: Posts a single welcome card mentioning multiple newly-accepted users at once.
+ * WHY: When several users get approved in a short window, batch their welcomes into one
+ *      message to avoid spamming the general channel.
+ */
+export async function postBatchWelcomeCard(opts: {
+  guild: Guild;
+  users: GuildMember[];
+  config: GuildConfig;
+  memberCount: number;
+}): Promise<Message> {
+  const { guild, users, config, memberCount } = opts;
+
+  if (users.length === 0) throw new Error("postBatchWelcomeCard: empty users");
+  if (users.length === 1) {
+    return postWelcomeCard({ guild, user: users[0], config, memberCount });
+  }
+
+  const channelId = config.general_channel_id;
+  if (!channelId) throw new Error("general channel not configured");
+
+  let channel: GuildTextBasedChannel;
+  try {
+    const fetched = await guild.channels.fetch(channelId);
+    if (!fetched || !fetched.isTextBased()) {
+      throw new Error("general channel is not a valid text channel");
+    }
+    channel = fetched as GuildTextBasedChannel;
+  } catch (err) {
+    logger.warn({ err, guildId: guild.id, channelId }, "[welcome] failed to fetch general channel (batch)");
+    throw new Error("failed to fetch general channel");
+  }
+
+  const me = guild.members.me;
+  if (me) {
+    const perms = channel.permissionsFor(me);
+    const missingPerms: string[] = [];
+    if (!perms?.has(PermissionFlagsBits.ViewChannel)) missingPerms.push("ViewChannel");
+    if (!perms?.has(PermissionFlagsBits.SendMessages)) missingPerms.push("SendMessages");
+    if (!perms?.has(PermissionFlagsBits.EmbedLinks)) missingPerms.push("EmbedLinks");
+    if (!perms?.has(PermissionFlagsBits.AttachFiles)) missingPerms.push("AttachFiles");
+    if (missingPerms.length > 0) {
+      throw new Error(`missing permissions: ${missingPerms.join(", ")}`);
+    }
+  }
+
+  // Discord allowedMentions caps role mentions but user mentions are bounded by message length.
+  // We cap at 25 to keep the message readable and stay safely under any limits.
+  const MAX_USERS_PER_CARD = 25;
+  const cappedUsers = users.slice(0, MAX_USERS_PER_CARD);
+  const userMentions = cappedUsers.map((u) => `<@${u.id}>`);
+
+  const contentParts = [...userMentions];
+  if (config.welcome_ping_role_id) {
+    contentParts.push(`<@&${config.welcome_ping_role_id}>`);
+  }
+  const content = contentParts.join(" ");
+
+  const descriptionLines: string[] = [
+    `👋 Welcome ${userMentions.join(", ")}!`,
+    `This server now has **${memberCount.toLocaleString()} Users!**`,
+  ];
+
+  const infoChannelMention = config.info_channel_id ? `<#${config.info_channel_id}>` : null;
+  const rulesChannelMention = config.rules_channel_id ? `<#${config.rules_channel_id}>` : null;
+  if (infoChannelMention || rulesChannelMention) {
+    descriptionLines.push("", "🔗 Be sure to check out:");
+    if (infoChannelMention) descriptionLines.push(`• ${infoChannelMention}`);
+    if (rulesChannelMention) descriptionLines.push(`• ${rulesChannelMention}`);
+  }
+  descriptionLines.push("", "✅ Enjoy your stay!", "", "_Bot by watchthelight._");
+
+  const embed: APIEmbed = {
+    color: 0x00c2ff,
+    author: {
+      name: guild.name,
+      icon_url: guild.iconURL({ size: 128 }) ?? undefined,
+    },
+    title: `Welcome to Pawtropolis 🐾 (${cappedUsers.length} new ${cappedUsers.length === 1 ? "member" : "members"})`,
+    description: descriptionLines.join("\n"),
+    image: { url: "attachment://banner.webp" },
+    footer: { text: "Pawtropolis Moderation Team" },
+  };
+
+  const files = [{ attachment: "./assets/banner.webp", name: "banner.webp" }];
+  const allowedMentions = {
+    users: cappedUsers.map((u) => u.id),
+    roles: config.welcome_ping_role_id ? [config.welcome_ping_role_id] : [],
+  };
+
+  const MAX_RETRIES = 3;
+  const RETRY_DELAY_MS = 500;
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const message = await channel.send({ content, embeds: [embed], files, allowedMentions });
+      logger.info(
+        {
+          guildId: guild.id,
+          channelId: channel.id,
+          messageId: message.id,
+          userCount: cappedUsers.length,
+          userIds: cappedUsers.map((u) => u.id),
+          attempt,
+        },
+        "[welcome] posted batch welcome card"
+      );
+      return message;
+    } catch (err) {
+      lastError = err;
+      if (isTransientError(err) && attempt < MAX_RETRIES) {
+        logger.warn(
+          { err, guildId: guild.id, channelId: channel.id, attempt },
+          "[welcome] transient error on batch, retrying..."
+        );
+        await sleep(RETRY_DELAY_MS * attempt);
+        continue;
+      }
+      logger.error(
+        { err, guildId: guild.id, channelId: channel.id, attempt },
+        "[welcome] failed to send batch welcome card"
+      );
+      throw err;
+    }
+  }
+  throw lastError;
+}
+
+/**
  * Checks if an error is a transient network error that should be retried.
  * Common transient errors from undici/Discord:
  * - SocketError: other side closed (UND_ERR_SOCKET)

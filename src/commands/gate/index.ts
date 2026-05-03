@@ -20,3 +20,4 @@ export { acceptData, executeAccept } from "./accept.js";
 export { rejectData, executeReject } from "./reject.js";
 export { kickData, executeKick } from "./kick.js";
 export { unclaimData, executeUnclaim } from "./unclaim.js";
+export { welcomeBatchData, executeWelcomeBatch } from "./welcomebatch.js";

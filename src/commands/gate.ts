@@ -20,4 +20,6 @@ export {
   executeKick,
   unclaimData,
   executeUnclaim,
+  welcomeBatchData,
+  executeWelcomeBatch,
 } from "./gate/index.js";
