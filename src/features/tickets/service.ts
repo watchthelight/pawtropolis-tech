@@ -37,39 +37,95 @@ import {
 } from "./rendering.js";
 import type { Ticket, TicketEventType, TicketRow } from "./types.js";
 
-const insertTicketStmt = db.prepare(
-  `INSERT INTO ticket (
-     id, type_key, number, channel_id, staff_thread_id, greeting_message_id,
-     guild_id, opener_user_id, claimed_by_user_id, status, close_reason,
-     closed_by_user_id, archive_path, legacy_source,
-     opened_at, claimed_at, closed_at
-   ) VALUES (
-     @id, @type_key, @number, @channel_id, @staff_thread_id, NULL,
-     @guild_id, @opener_user_id, NULL, 'open', NULL, NULL, NULL, NULL,
-     @opened_at, NULL, NULL
-   )`
-);
+// Statements are lazy-prepared on first call rather than at module import.
+// Eager prepare requires the `ticket` / `ticket_event` tables (migration 067)
+// to exist before this module loads, which breaks any test setup or fresh DB
+// where that migration has not run yet. Lazy prepare keeps the module
+// importable even when the tables are absent — call sites still throw a
+// clear SqliteError on first use if the migration is missing.
+type Stmt = ReturnType<typeof db.prepare<unknown[]>>;
+let cachedInsertTicketStmt: Stmt | null = null;
+let cachedInsertEventStmt: Stmt | null = null;
+let cachedSetStaffThreadStmt: Stmt | null = null;
+let cachedSetGreetingMessageStmt: Stmt | null = null;
+let cachedSetClaimedStmt: Stmt | null = null;
+let cachedSetUnclaimedStmt: Stmt | null = null;
+let cachedSetClosedStmt: Stmt | null = null;
 
-const insertEventStmt = db.prepare(
-  `INSERT INTO ticket_event (ticket_id, event_type, actor_user_id, payload_json, created_at)
-   VALUES (?, ?, ?, ?, unixepoch())`
-);
+function getInsertTicketStmt() {
+  if (!cachedInsertTicketStmt) {
+    cachedInsertTicketStmt = db.prepare(
+      `INSERT INTO ticket (
+         id, type_key, number, channel_id, staff_thread_id, greeting_message_id,
+         guild_id, opener_user_id, claimed_by_user_id, status, close_reason,
+         closed_by_user_id, archive_path, legacy_source,
+         opened_at, claimed_at, closed_at
+       ) VALUES (
+         @id, @type_key, @number, @channel_id, @staff_thread_id, NULL,
+         @guild_id, @opener_user_id, NULL, 'open', NULL, NULL, NULL, NULL,
+         @opened_at, NULL, NULL
+       )`
+    );
+  }
+  return cachedInsertTicketStmt;
+}
 
-const setStaffThreadStmt = db.prepare(`UPDATE ticket SET staff_thread_id = ? WHERE id = ?`);
-const setGreetingMessageStmt = db.prepare(
-  `UPDATE ticket SET greeting_message_id = ? WHERE id = ?`
-);
-const setClaimedStmt = db.prepare(
-  `UPDATE ticket SET claimed_by_user_id = ?, claimed_at = unixepoch() WHERE id = ?`
-);
-const setUnclaimedStmt = db.prepare(
-  `UPDATE ticket SET claimed_by_user_id = NULL, claimed_at = NULL WHERE id = ?`
-);
-const setClosedStmt = db.prepare(
-  `UPDATE ticket SET status = 'closed', close_reason = ?, closed_by_user_id = ?,
-                     closed_at = unixepoch(), archive_path = ?
-   WHERE id = ?`
-);
+function getInsertEventStmt() {
+  if (!cachedInsertEventStmt) {
+    cachedInsertEventStmt = db.prepare(
+      `INSERT INTO ticket_event (ticket_id, event_type, actor_user_id, payload_json, created_at)
+       VALUES (?, ?, ?, ?, unixepoch())`
+    );
+  }
+  return cachedInsertEventStmt;
+}
+
+function getSetStaffThreadStmt() {
+  if (!cachedSetStaffThreadStmt) {
+    cachedSetStaffThreadStmt = db.prepare(
+      `UPDATE ticket SET staff_thread_id = ? WHERE id = ?`
+    );
+  }
+  return cachedSetStaffThreadStmt;
+}
+
+function getSetGreetingMessageStmt() {
+  if (!cachedSetGreetingMessageStmt) {
+    cachedSetGreetingMessageStmt = db.prepare(
+      `UPDATE ticket SET greeting_message_id = ? WHERE id = ?`
+    );
+  }
+  return cachedSetGreetingMessageStmt;
+}
+
+function getSetClaimedStmt() {
+  if (!cachedSetClaimedStmt) {
+    cachedSetClaimedStmt = db.prepare(
+      `UPDATE ticket SET claimed_by_user_id = ?, claimed_at = unixepoch() WHERE id = ?`
+    );
+  }
+  return cachedSetClaimedStmt;
+}
+
+function getSetUnclaimedStmt() {
+  if (!cachedSetUnclaimedStmt) {
+    cachedSetUnclaimedStmt = db.prepare(
+      `UPDATE ticket SET claimed_by_user_id = NULL, claimed_at = NULL WHERE id = ?`
+    );
+  }
+  return cachedSetUnclaimedStmt;
+}
+
+function getSetClosedStmt() {
+  if (!cachedSetClosedStmt) {
+    cachedSetClosedStmt = db.prepare(
+      `UPDATE ticket SET status = 'closed', close_reason = ?, closed_by_user_id = ?,
+                         closed_at = unixepoch(), archive_path = ?
+       WHERE id = ?`
+    );
+  }
+  return cachedSetClosedStmt;
+}
 
 /**
  * Maps an internal ticket_event type to the SSE event name surfaced to the
@@ -96,7 +152,7 @@ function emitEvent(
   actorUserId: string | null,
   payload?: Record<string, unknown>
 ): void {
-  insertEventStmt.run(ticketId, type, actorUserId, payload ? JSON.stringify(payload) : null);
+  getInsertEventStmt().run(ticketId, type, actorUserId, payload ? JSON.stringify(payload) : null);
 
   // Fire-and-forget SSE push for live dashboard updates. Always include the
   // ticket's typeKey so subscribers can apply tier-specific filters.
@@ -194,7 +250,7 @@ export class TicketService {
     const ticketId = randomUUID();
     const openedAt = Math.floor(Date.now() / 1000);
 
-    insertTicketStmt.run({
+    getInsertTicketStmt().run({
       id: ticketId,
       type_key: type.key,
       number,
@@ -231,7 +287,7 @@ export class TicketService {
         roles: type.pingRoleIds,
       },
     });
-    setGreetingMessageStmt.run(greeting.id, ticketId);
+    getSetGreetingMessageStmt().run(greeting.id, ticketId);
 
     // Spawn staff-only private thread if the type wants one.
     // GOTCHA: message.startThread() can only create public threads. For a
@@ -245,7 +301,7 @@ export class TicketService {
           invitable: false,
           reason: `Ticket ${type.key}-${number} staff notes thread`,
         });
-        setStaffThreadStmt.run(thread.id, ticketId);
+        getSetStaffThreadStmt().run(thread.id, ticketId);
 
         // Add staff role members (Community Ambassador / Mod Team, per type).
         // Private threads need explicit membership; matches modmail pattern.
@@ -332,7 +388,7 @@ export class TicketService {
       return;
     }
 
-    setClaimedStmt.run(claimerUserId, ticketId);
+    getSetClaimedStmt().run(claimerUserId, ticketId);
     emitEvent(ticketId, "claimed", claimerUserId, {
       previousClaimer: ticket.claimedByUserId,
     });
@@ -351,7 +407,7 @@ export class TicketService {
       return;
     }
     const previousClaimer = ticket.claimedByUserId;
-    setUnclaimedStmt.run(ticketId);
+    getSetUnclaimedStmt().run(ticketId);
     emitEvent(ticketId, "unclaimed", actorUserId, { previousClaimer });
     await TicketService.refreshGreetingMessage(ticket, guild, null);
   }
@@ -408,7 +464,7 @@ export class TicketService {
     }
 
     const archivePath = await TicketService.writeArchive(ticket);
-    setClosedStmt.run(reason, closedByUserId, archivePath, ticketId);
+    getSetClosedStmt().run(reason, closedByUserId, archivePath, ticketId);
     emitEvent(ticketId, "closed", closedByUserId, { reason, archivePath });
 
     let channel: TextChannel | null = null;
