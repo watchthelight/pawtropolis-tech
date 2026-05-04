@@ -44,7 +44,10 @@ function makeClient(roleData: Map<string, { name: string; color: number }>, chan
   };
 }
 
-describe("refreshAllBadges", () => {
+// Real SVG rendering for ~80 badges (sharp/canvas first-init) routinely
+// runs >5s on slow CI runners; a 20s budget keeps the test honest while
+// avoiding flakes.
+describe("refreshAllBadges", { timeout: 20_000 }, () => {
   it("writes SVGs and manifest for resolvable badges", async () => {
     const client = makeClient(
       new Map([
