@@ -107,7 +107,7 @@ describe("roles", () => {
 
   describe("ROLE_NAMES", () => {
     it("provides display names for roles", () => {
-      expect(ROLE_NAMES[ROLE_IDS.SERVER_OWNER]).toBe("Server Owner");
+      expect(ROLE_NAMES[ROLE_IDS.SERVER_OWNER]).toBe("Community Founder");
       expect(ROLE_NAMES[ROLE_IDS.ADMINISTRATOR]).toBe("Administrator");
       expect(ROLE_NAMES[ROLE_IDS.MODERATOR]).toBe("Moderator");
     });
@@ -276,7 +276,7 @@ describe("roles", () => {
     });
 
     it("returns just role name for SERVER_OWNER (highest)", () => {
-      expect(getMinRoleDescription(ROLE_IDS.SERVER_OWNER)).toBe("Server Owner");
+      expect(getMinRoleDescription(ROLE_IDS.SERVER_OWNER)).toBe("Community Founder");
     });
 
     it("returns 'Unknown role' for unknown role ID", () => {
