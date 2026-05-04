@@ -14,12 +14,14 @@ CI / test infrastructure work tracked from the May 2026 hardening pass. See `doc
 - [ ] eslint config: declare Svelte runes + browser globals in `web/`
 - [ ] eslint config: declare Cloudflare Workers globals in `workers/`
 - [ ] Run `npm run format` repo-wide and commit (after open `web/` PRs land)
-- [ ] Apply test-setup migration injection so `tests/features/artistRotation/handlers.test.ts` can run on a fresh DB
-- [ ] Update `tests/lib/roles.test.ts` to expect `"Community Founder"` (the role was renamed in `src/lib/roles.ts:77`)
-- [ ] Promote Lint, Format, Tests from SOFT to HARD in `.github/workflows/ci.yml` once the above are green
+- [x] Apply test-setup migration injection so `tests/features/artistRotation/handlers.test.ts` can run on a fresh DB (2026-05-04; pragmatic mock of TicketService rather than full migration injection — broader fix still desirable)
+- [x] Update `tests/lib/roles.test.ts` to expect `"Community Founder"` (the role was renamed in `src/lib/roles.ts:77`) (2026-05-04)
+- [x] Promote Tests from SOFT to HARD in `.github/workflows/ci.yml` (2026-05-04)
+- [ ] Promote Lint, Format from SOFT to HARD in `.github/workflows/ci.yml` once the eslint/format backlog is cleared
 
 ### Deeper refactors (deferred)
-- [ ] Make all module-level `db.prepare` calls lazy (started with `src/features/tickets/counters.ts`; `src/features/artJobs/store.ts` and `src/features/tickets/service.ts` still eager)
+- [ ] Make all module-level `db.prepare` calls lazy (`src/features/tickets/counters.ts` and `src/features/tickets/service.ts` done 2026-05-04; `src/features/artJobs/store.ts` still eager)
+- [ ] Test-DB isolation: inject migrations into `tests/setup.ts` or set `DB_PATH=:memory:` so handler tests don't depend on the dev `data/data.db` schema
 - [ ] Implement `--rollback` switch in `deploy.sh` (path documented in `docs/operations/deployment-hardening.md`)
 - [ ] Continue startup decomposition: extract `src/startup/recovery.ts` and `src/startup/discordRefresh.ts` from `src/index.ts` ClientReady
 
