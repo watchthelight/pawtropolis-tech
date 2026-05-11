@@ -283,17 +283,17 @@ async function handleSync(
   const artistConfig = getArtistConfig(guild.id);
 
   const roleHolderIds = await withStep(ctx, "fetch_role_members", async () => {
-    const role = await guild.roles.fetch(artistConfig.artistRoleId);
+    const role = await guild.roles.fetch(artistConfig.artistRoleId, { force: true });
     if (!role) {
       return null;
     }
-    // Fetch only members with the artist role instead of ALL members.
-    // guild.members.fetch({ query }) doesn't filter by role, but we can use
-    // the role's cached members and re-fetch them individually if needed.
-    await guild.members.fetch(); // Hydrate cache from gateway
+    // members.fetch() sends REQUEST_GUILD_MEMBERS over the gateway and
+    // refreshes the cache. Filter members.cache directly rather than
+    // role.members so the result reflects the latest fetch.
+    const members = await guild.members.fetch();
     const ignoredUsers = getIgnoredArtistUsers(guild.id);
-    return role.members
-      .filter((m) => !ignoredUsers.has(m.id))
+    return members
+      .filter((m) => m.roles.cache.has(artistConfig.artistRoleId) && !ignoredUsers.has(m.id))
       .map((m) => m.id);
   });
 
@@ -323,15 +323,27 @@ async function handleSync(
     }
   }
 
+  const totalAfter = result.unchanged.length + result.added.length;
+
   if (result.added.length === 0 && result.removed.length === 0) {
-    lines.push("Queue is already in sync with Server Artist role.");
+    if (totalAfter === 0 && roleHolderIds.length === 0) {
+      // Sync ran clean but role has zero members — likely a config mismatch
+      // (wrong artist_role_id in guild_config) or stale cache. Surface the
+      // role ID so staff can verify they granted the role bot is checking.
+      lines.push(
+        `No members found with the configured Server Artist role (\`${artistConfig.artistRoleId}\`).`,
+        `If this role does not match the one you just assigned, update \`artist_role_id\` in guild config.`
+      );
+    } else {
+      lines.push("Queue is already in sync with Server Artist role.");
+    }
   }
 
   const embed = new EmbedBuilder()
     .setTitle("Queue Synchronized")
     .setDescription(lines.join("\n"))
-    .setColor(0x00cc00)
-    .setFooter({ text: `${result.unchanged.length + result.added.length} artists in queue` });
+    .setColor(totalAfter === 0 && roleHolderIds.length === 0 ? 0xffaa00 : 0x00cc00)
+    .setFooter({ text: `${totalAfter} artists in queue` });
 
   await interaction.editReply({ embeds: [embed] });
 
@@ -668,7 +680,7 @@ async function handleSetup(
   // setup has slightly different error handling (accumulate vs return early).
   await withStep(ctx, "sync_queue", async () => {
     try {
-      const role = await guild.roles.fetch(artistConfig.artistRoleId);
+      const role = await guild.roles.fetch(artistConfig.artistRoleId, { force: true });
       if (role) {
         // Same full-member-fetch as in handleSync. Yes, we hit the API hard here.
         const members = await guild.members.fetch();

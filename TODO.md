@@ -6,6 +6,13 @@
 
 ---
 
+## User-reported (2026-05-11)
+
+- [ ] **/gate welcome set — staff formatting docs.** Werewolf confused by modal placeholder "Template content (supports {applicant.*} tokens)". Add example block to `docs/BOT-HANDBOOK.md` (or `LEADERSHIP-GUIDE.md`) listing supported tokens (`{applicant.mention}`, `{applicant.tag}`, `{applicant.display}`, `{guild.name}`), the default template (`src/features/review/welcome.ts:33`), and 2-3 sample customizations. Optionally extend the slash-command option description in `src/commands/gate/gateMain.ts:97` with a one-line example.
+- [x] **/artistqueue sync — empty-result diagnostic + cache refresh.** Reported by Werewolf: granting Server Artist role then running sync yielded "Queue is already in sync. 0 artists in queue". Fixed in `src/commands/artistqueue.ts:285-298` by (a) calling `roles.fetch(..., {force:true})`, (b) filtering `members.cache` directly instead of `role.members` (matches `handleSetup`), and (c) surfacing the configured `artist_role_id` when sync ran clean but role has zero holders, so config drift is visible (2026-05-11).
+
+---
+
 ## Hardening Pass Follow-ups (2026-05-02)
 
 CI / test infrastructure work tracked from the May 2026 hardening pass. See `docs/operations/ci-policy.md` for the gate-promotion conditions.
