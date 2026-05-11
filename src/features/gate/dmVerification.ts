@@ -383,11 +383,23 @@ export async function handleDmAnswer(message: Message): Promise<void> {
   if (answer.length > 0) {
     session.answers.set(question.q_index, answer);
 
-    // Persist to DB immediately
-    try {
-      upsertAnswer(db, session.appId, question.q_index, answer);
-    } catch (err) {
-      logger.error({ err, appId: session.appId, qIndex: question.q_index }, "[dmVerify] Failed to save answer");
+    // Persist to DB immediately. Retry on SQLITE_BUSY since concurrent verifications
+    // can briefly hold the write lock past the busy_timeout PRAGMA.
+    let lastErr: unknown = null;
+    for (let attempt = 0; attempt < 4; attempt++) {
+      try {
+        upsertAnswer(db, session.appId, question.q_index, answer);
+        lastErr = null;
+        break;
+      } catch (err) {
+        lastErr = err;
+        const code = (err as { code?: string })?.code;
+        if (code !== "SQLITE_BUSY" && code !== "SQLITE_BUSY_SNAPSHOT") break;
+        await new Promise((r) => setTimeout(r, 150 * (attempt + 1)));
+      }
+    }
+    if (lastErr) {
+      logger.error({ err: lastErr, appId: session.appId, qIndex: question.q_index }, "[dmVerify] Failed to save answer");
       await message.reply("Failed to save your answer. Please try again.");
       return;
     }
