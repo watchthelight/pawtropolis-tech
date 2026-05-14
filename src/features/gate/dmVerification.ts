@@ -169,32 +169,41 @@ export async function startDmVerification(
   guildId: string,
   userId: string
 ): Promise<void> {
+  // Defer in thread mode to extend the 3s interaction window past slow
+  // DB writes / DM sends. DM mode (no thread) keeps the synchronous reply
+  // path because the fallback uses interaction.showModal(), which Discord
+  // rejects after deferReply/reply.
+  const isThreadInteraction = interaction.channel?.isThread() ?? false;
+  if (isThreadInteraction && !interaction.deferred && !interaction.replied) {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  }
+
+  // Helper that picks reply vs editReply based on whether we deferred.
+  const respond = async (content: string): Promise<void> => {
+    if (interaction.deferred) {
+      await interaction.editReply({ content });
+    } else if (!interaction.replied) {
+      await interaction.reply({ content, flags: MessageFlags.Ephemeral });
+    }
+  };
+
   // Check for existing active session
   const existingKey = sessionKey(guildId, userId);
   if (activeSessions.has(existingKey)) {
-    await interaction.reply({
-      content: "You already have a verification in progress! Check your DMs.",
-      flags: MessageFlags.Ephemeral,
-    });
+    await respond("You already have a verification in progress! Check your DMs.");
     return;
   }
 
   // Panic mode check
   if (isPanicMode(guildId)) {
-    await interaction.reply({
-      content: "Applications are temporarily paused. Please try again later.",
-      flags: MessageFlags.Ephemeral,
-    });
+    await respond("Applications are temporarily paused. Please try again later.");
     return;
   }
 
   // Load questions
   const rawQuestions = getQuestions(guildId);
   if (rawQuestions.length === 0) {
-    await interaction.reply({
-      content: "No verification questions are configured. Please contact staff.",
-      flags: MessageFlags.Ephemeral,
-    });
+    await respond("No verification questions are configured. Please contact staff.");
     return;
   }
 
@@ -212,20 +221,11 @@ export async function startDmVerification(
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     if (msg.includes("permanently rejected")) {
-      await interaction.reply({
-        content: "You have been permanently rejected from this server.",
-        flags: MessageFlags.Ephemeral,
-      });
+      await respond("You have been permanently rejected from this server.");
     } else if (msg.includes("already submitted")) {
-      await interaction.reply({
-        content: "You already have a submitted application under review.",
-        flags: MessageFlags.Ephemeral,
-      });
+      await respond("You already have a submitted application under review.");
     } else {
-      await interaction.reply({
-        content: "Something went wrong. Please try again.",
-        flags: MessageFlags.Ephemeral,
-      });
+      await respond("Something went wrong. Please try again.");
       captureException(err);
     }
     return;
@@ -286,36 +286,22 @@ export async function startDmVerification(
     );
 
     if (targetThread) {
-      // Thread send failure — try the ephemeral modal as a last-resort fallback.
-      // The user can still complete verification, but in modal pages instead of inline.
-      try {
-        const pages = paginate(questions);
-        const modal = buildModalForPage(pages[0], existingAnswers, appId);
-        await interaction.showModal(modal);
-      } catch (modalErr) {
-        captureException(modalErr);
-        if (!interaction.replied && !interaction.deferred) {
-          await interaction.reply({
-            content: "Something went wrong starting verification. Please contact staff.",
-            flags: MessageFlags.Ephemeral,
-          });
-        }
-      }
+      // Thread send failure — we already deferred, so showModal is no longer
+      // valid (Discord rejects modals after defer/reply). Surface the failure
+      // via editReply instead.
+      await respond("Something went wrong starting verification. Please contact staff.");
       return;
     }
 
+    // DM mode (not deferred) — fall back to the modal flow so the user can
+    // still complete verification in pages.
     try {
       const pages = paginate(questions);
       const modal = buildModalForPage(pages[0], existingAnswers, appId);
       await interaction.showModal(modal);
     } catch (modalErr) {
       captureException(modalErr);
-      if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({
-          content: "Something went wrong. Please try again.",
-          flags: MessageFlags.Ephemeral,
-        });
-      }
+      await respond("Something went wrong. Please try again.");
     }
     return;
   }
@@ -336,12 +322,11 @@ export async function startDmVerification(
   activeSessions.set(existingKey, session);
 
   // Acknowledge — wording depends on whether we sent to thread or DM
-  await interaction.reply({
-    content: targetThread
+  await respond(
+    targetThread
       ? "Verification started — please answer the questions above."
-      : "Check your DMs! I've sent you the verification questions.",
-    flags: MessageFlags.Ephemeral,
-  });
+      : "Check your DMs! I've sent you the verification questions."
+  );
 
   logger.info(
     {
