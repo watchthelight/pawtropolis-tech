@@ -81,28 +81,25 @@ export async function handlePatreonRoleDedup(
     removing: lowerRoles.map((r) => r.name),
   }, `Deduplicating stacked Patreon roles — keeping ${highest.name}, removing ${lowerRoles.length} lower tier(s)`);
 
-  // Remove lower-tier roles sequentially to respect Discord rate limits
-  const ROLE_REMOVE_DELAY_MS = 1100;
-  const removed: string[] = [];
+  // discord.js's REST manager queues per-route and respects the X-RateLimit
+  // headers Discord returns, so we don't need a manual 1.1s spacer between
+  // role removes. Issuing them in parallel lets a member with 5 stacked tiers
+  // resolve in ~200ms instead of ~4.4s.
+  const results = await Promise.all(
+    lowerRoles.map((lower) =>
+      removeRole(
+        guild,
+        fresh.id,
+        lower.roleId,
+        `patreon_dedup: member has higher tier ${highest.name}`,
+        botId
+      ).then((result) => ({ lower, result }))
+    )
+  );
 
-  for (let i = 0; i < lowerRoles.length; i++) {
-    const lower = lowerRoles[i];
-    const result = await removeRole(
-      guild,
-      fresh.id,
-      lower.roleId,
-      `patreon_dedup: member has higher tier ${highest.name}`,
-      botId
-    );
-
-    if (result.action === "remove") {
-      removed.push(lower.name);
-    }
-
-    if (i < lowerRoles.length - 1) {
-      await new Promise((resolve) => setTimeout(resolve, ROLE_REMOVE_DELAY_MS));
-    }
-  }
+  const removed: string[] = results
+    .filter(({ result }) => result.action === "remove")
+    .map(({ lower }) => lower.name);
 
   if (removed.length > 0) {
     await logActionPretty(guild, {
