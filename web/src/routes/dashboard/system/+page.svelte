@@ -83,6 +83,7 @@
 	<PageHeader title="System" subtitle="Process and host telemetry — auto-refreshes every 30s" />
 
 	{#if health}
+		{@const limit = health.memory.heapLimitMB ?? health.memory.heapTotalMB}
 		<!-- Bot tile row -->
 		<div class="section-label">Bot process</div>
 		<div class="tile-row">
@@ -96,7 +97,6 @@
 					{health.wsPingMs}<span class="unit"> ms</span>
 				</span>
 			</div>
-			{@const limit = health.memory.heapLimitMB ?? health.memory.heapTotalMB}
 			{#if limit > 0}
 				{@const heapPct = Math.round((health.memory.heapUsedMB / limit) * 100)}
 				<div class="tile">
