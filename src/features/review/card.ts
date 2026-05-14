@@ -644,10 +644,39 @@ export async function ensureReviewMessage(
         }
       | undefined;
 
-    const user = await client.users.fetch(appRow.user_id).catch((err) => {
-      logger.warn({ err, userId: appRow.user_id }, "Failed to fetch applicant user");
-      return null;
-    });
+    // Build the lastAction snapshot up front so its moderator fetch can run in
+    // parallel with the other Discord REST calls below.
+    const lastAction: ReviewActionSnapshot | null = lastActionRow
+      ? {
+          action: lastActionRow.action as ReviewActionKind,
+          moderator_id: lastActionRow.moderator_id,
+          reason: lastActionRow.reason,
+          created_at: lastActionRow.created_at,
+          meta: parseMeta(lastActionRow.meta),
+        }
+      : null;
+
+    // Parallelize four independent REST fetches that previously ran serially.
+    // These dominate ensureReviewMessage latency; serial fetches summed to
+    // ~1s in production traces. Member fetch still depends on guild.
+    const [user, guild, reviewChannel, modUser] = await Promise.all([
+      client.users.fetch(appRow.user_id).catch((err) => {
+        logger.warn({ err, userId: appRow.user_id }, "Failed to fetch applicant user");
+        return null;
+      }),
+      client.guilds.fetch(appRow.guild_id).catch(() => null),
+      client.channels.fetch(appRow.review_channel_id).catch((err) => {
+        logger.warn({ err, channelId: appRow.review_channel_id }, "Failed to fetch review channel");
+        return null;
+      }),
+      lastAction
+        ? client.users.fetch(lastAction.moderator_id).catch((err) => {
+            logger.warn({ err, moderatorId: lastAction.moderator_id }, "Failed to fetch reviewer user");
+            return null;
+          })
+        : Promise.resolve(null),
+    ]);
+
     let accountCreatedAt: number | null = null;
     if (user && typeof user.createdTimestamp === "number") {
       accountCreatedAt = user.createdTimestamp;
@@ -662,8 +691,7 @@ export async function ensureReviewMessage(
       }
     }
 
-    // Fetch guild member for role information
-    const guild = await client.guilds.fetch(appRow.guild_id).catch(() => null);
+    // Member fetch depends on the guild handle, so it runs after the parallel batch.
     const member = guild
       ? await guild.members.fetch(appRow.user_id).catch((err) => {
           logger.info(
@@ -674,7 +702,6 @@ export async function ensureReviewMessage(
         })
       : null;
 
-    // Log member status for debugging
     logger.info({
       appId,
       userId: appRow.user_id,
@@ -682,33 +709,12 @@ export async function ensureReviewMessage(
       memberDisplayName: member?.displayName ?? null,
     }, "[review] ensureReviewMessage member fetch result");
 
-    const reviewChannel = await client.channels.fetch(appRow.review_channel_id).catch((err) => {
-      logger.warn({ err, channelId: appRow.review_channel_id }, "Failed to fetch review channel");
-      return null;
-    });
-
     if (!reviewChannel || !reviewChannel.isTextBased() || reviewChannel.type === ChannelType.DM) {
       throw new Error(`Review channel ${appRow.review_channel_id} is unavailable`);
     }
 
-    const lastAction: ReviewActionSnapshot | null = lastActionRow
-      ? {
-          action: lastActionRow.action as ReviewActionKind,
-          moderator_id: lastActionRow.moderator_id,
-          reason: lastActionRow.reason,
-          created_at: lastActionRow.created_at,
-          meta: parseMeta(lastActionRow.meta),
-        }
-      : null;
-
-    if (lastAction) {
-      const modUser = await client.users.fetch(lastAction.moderator_id).catch((err) => {
-        logger.warn({ err, moderatorId: lastAction.moderator_id }, "Failed to fetch reviewer user");
-        return null;
-      });
-      if (modUser) {
-        lastAction.moderatorTag = formatUserTag(modUser.username, modUser.discriminator);
-      }
+    if (lastAction && modUser) {
+      lastAction.moderatorTag = formatUserTag(modUser.username, modUser.discriminator);
     }
 
     const avatarUrl = user?.displayAvatarURL({ size: 256 }) ?? undefined;
