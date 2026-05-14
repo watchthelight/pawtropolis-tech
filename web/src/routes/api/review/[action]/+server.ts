@@ -1,13 +1,11 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { callBotApi } from '$lib/server/botApi';
-import { hasMinTier } from '$lib/server/roles';
+import { canPerformReviewAction, type ReviewAction } from '$lib/server/reviewGate';
 
 const VALID_ACTIONS = ['claim', 'unclaim', 'approve', 'reject', 'wrong_password', 'stale_modmail', 'kick', 'permreject', 'vote_out'] as const;
-type ReviewAction = (typeof VALID_ACTIONS)[number];
 
 const REASON_REQUIRED: ReviewAction[] = ['kick', 'permreject'];
-const ADMIN_REQUIRED: ReviewAction[] = ['permreject'];
 
 export const POST: RequestHandler = async ({ params, locals, request }) => {
 	const action = params.action as string;
@@ -20,8 +18,7 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
 		error(401, 'Not authenticated');
 	}
 
-	const minTier = ADMIN_REQUIRED.includes(action as ReviewAction) ? 'admin' : 'gk';
-	if (!hasMinTier(locals.user.tier, minTier)) {
+	if (!canPerformReviewAction(locals.user.tier, locals.user.roles, action as ReviewAction)) {
 		error(403, 'Insufficient permissions');
 	}
 
