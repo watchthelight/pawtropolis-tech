@@ -46,21 +46,24 @@ async function cleanupExpiredMultipliers(client: Client): Promise<number> {
     "[byteMultiplier] Processing expired multipliers"
   );
 
-  let successCount = 0;
-  let skipCount = 0;
-  let errorCount = 0;
+  // Process all expired entries in parallel — each one is two REST calls
+  // (member.roles.remove + logActionPretty), and discord.js's REST manager
+  // queues per route automatically. Sequential processing turned a 50-entry
+  // batch into ~20s of blocking; parallel keeps it under one round-trip's
+  // worth.
+  const settled = await Promise.allSettled(
+    expired.map((entry) => processExpiredMultiplier(client, entry))
+  );
 
-  for (const entry of expired) {
-    try {
-      await processExpiredMultiplier(client, entry);
+  let successCount = 0;
+  let errorCount = 0;
+  for (let i = 0; i < settled.length; i++) {
+    const r = settled[i];
+    if (r.status === "fulfilled") {
       successCount++;
-    } catch (err) {
-      // Log but don't throw - we want to continue processing other entries
-      // The database entry is already deleted, so we won't retry this one.
-      // This is intentional: if role removal fails, we'd rather lose the role
-      // tracking than have a user keep their multiplier forever.
+    } else {
       logger.error(
-        { err, guildId: entry.guild_id, userId: entry.user_id },
+        { err: r.reason, guildId: expired[i].guild_id, userId: expired[i].user_id },
         "[byteMultiplier] Failed to process expired multiplier"
       );
       errorCount++;
@@ -68,7 +71,7 @@ async function cleanupExpiredMultipliers(client: Client): Promise<number> {
   }
 
   logger.info(
-    { successCount, skipCount, errorCount, total: expired.length },
+    { successCount, errorCount, total: expired.length },
     "[byteMultiplier] Cleanup batch complete"
   );
 
