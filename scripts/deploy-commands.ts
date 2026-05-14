@@ -215,4 +215,9 @@ if (import.meta.url === `file://${process.argv[1].replace(/\\/g, "/")}`) {
     console.error("Usage: node scripts/deploy-commands.js --all");
     process.exit(1);
   }
+
+  // Force exit — importing command modules pulls in the bot's DB connection
+  // and other long-lived handles that prevent Node from exiting cleanly.
+  // A previous run orphaned for 13 days and held data.db, causing SQLITE_BUSY.
+  process.exit(0);
 }
