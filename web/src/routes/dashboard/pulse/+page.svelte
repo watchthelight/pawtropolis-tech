@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import { invalidateAll } from '$app/navigation';
+	import { navigating } from '$app/stores';
+	import PulseSkeleton from '$lib/components/pulse/PulseSkeleton.svelte';
 	import PageHeader from '$lib/components/layout/PageHeader.svelte';
 	import StatNumber from '$lib/components/data/StatNumber.svelte';
 	import SpringReveal from '$lib/components/motion/SpringReveal.svelte';
@@ -93,6 +95,9 @@
 	});
 </script>
 
+{#if $navigating?.to?.url.pathname?.startsWith('/dashboard/pulse')}
+	<PulseSkeleton />
+{:else}
 <SpringReveal stagger={30}>
 	<div class="pulse-header">
 		<PageHeader title="Pulse" subtitle="Server overview at a glance" />
@@ -374,6 +379,7 @@
 	<h3 class="section-title">Weekly Newsletter</h3>
 	<NewsletterStatsCard stats={newsletterStats} {guildSnapshot} {topVoiceChannels} />
 </SpringReveal>
+{/if}
 
 <style>
 	.pulse-header {
