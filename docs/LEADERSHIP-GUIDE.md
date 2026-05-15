@@ -221,6 +221,25 @@ Full docs: [BOT-HANDBOOK](BOT-HANDBOOK.md#database)
 
 ---
 
+## Migrations and Returning Members
+
+### `/admin-migrate-unverified`
+
+One-shot migration. Walks every current member who lacks the accepted role and creates a per-user verification thread for them. Run this **before** locking down `@everyone` View on the lobby category, otherwise existing unverified users would lose visibility with no way to verify.
+
+- Community Manager and Server Dev only.
+- Safe to re-run: users who already have a thread are skipped.
+- Expect this to take several minutes at scale because Discord rate-limits thread creation. Watch the progress message and don't cancel it.
+
+### `/restoreroles user:@x [dry_run]`
+
+Re-grant the roles a returning member held before they left, were kicked, or banned. The snapshot at the moment of leaving is in `member_role_snapshots`; the command filters out roles that have since been deleted, are managed by an integration, are above the bot's top role, or that the user already has, then applies the remainder atomically.
+
+- Administrator+ can run it day-to-day, but leadership should know it exists for bulk-restore situations (post-purge cleanup, bot-mistake recovery).
+- The action is logged to `action_log` and posted to the audit channel.
+
+---
+
 ## See Also
 
 **Previous:** [Admin Guide](ADMIN-GUIDE.md) | [Moderator Guide](MODERATOR-GUIDE.md) | [Gatekeeper Guide](GATEKEEPER-GUIDE.md)

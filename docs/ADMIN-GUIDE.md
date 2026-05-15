@@ -161,6 +161,27 @@ Configure how the review system notifies staff about new applications.
 
 ---
 
+## Channel Hygiene
+
+### `/cleanup count:N [reason:...]`
+
+Purge up to 1000 recent messages from the channel you're in. Useful for spam waves, accidental floods, or just clearing scratchpad chatter from a staff channel.
+
+- Messages older than 14 days are skipped (Discord bulk-delete limit) and reported in the result.
+- Provide `reason:` whenever you can — it shows up in the audit channel so leadership knows the why.
+- Moderator+ can run it; the command also requires the Discord-level **Manage Messages** permission.
+
+`/purge` is the bigger sibling for targeted/filtered deletes; `/cleanup` is the fast "wipe the last N" sweep.
+
+### `/restoreroles user:@x [dry_run]`
+
+Re-grant the roles a returning member had before they left, were kicked, or banned. The bot keeps a snapshot at the moment they lost their roles, filters for roles that are deleted, managed by an integration, above the bot's top role, or that the user already has, and applies the remainder atomically.
+
+- Run with `dry_run:true` first if you want to see the role list before applying.
+- Administrator+ only. The action is logged to `action_log` and posted to the audit channel.
+
+---
+
 ## What Leadership Adds
 
 Community Managers and above also have:

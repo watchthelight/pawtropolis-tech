@@ -385,19 +385,22 @@ Bypass conditions are checked before anything else:
 
 | Level | Notation | Example Commands |
 |-------|----------|------------------|
-| Public | Anyone | `/help`, `/health`, `/qotd suggest` |
-| Gatekeeper | [GK] | `/accept`, `/reject`, `/kick` |
+| Public | Anyone | `/help`, `/health`, `/qotd suggest`, `/verify` |
+| Gatekeeper | [GK] | `/accept`, `/reject`, `/kick`, `/welcomebatch` |
 | Gatekeeper+ | GK+ | `/search`, `/stats leaderboard`, `/qotd queue`, `/qotd pull` |
 | Junior Mod+ | JM+ | `/flag`, `/isitreal` |
-| Moderator+ | M+ | `/movie`, `/event` |
+| Moderator+ | M+ | `/movie`, `/event`, `/cleanup` |
 | Senior Mod+ | SM+ | `/stats activity`, `/skullmode` |
-| Administrator+ | A+ | `/config`, `/audit` |
+| Administrator+ | A+ | `/config`, `/audit`, `/restoreroles` |
 | Senior Admin+ | SA+ | `/panic`, `/stats export/reset` |
-| Community Manager+ | CM+ | `/backfill`, `/gate setup` |
-| Bot Owner / Server Dev | [BO/SD] | `/database`, `/poke` |
-| Discord Perm | ManageMessages | `/send`, `/purge` |
-| Discord Perm | ManageRoles | `/roles`, `/artistqueue` |
-| Hybrid | ManageRoles OR Ambassador | `/redeemreward` |
+| Community Manager+ | CM+ | `/backfill`, `/gate setup`, `/admin-migrate-unverified` |
+| Bot Owner / Server Dev | [BO/SD] | `/database`, `/poke`, `/testidea`, `/test`, `/developer` |
+| Discord Perm | ManageMessages | `/send`, `/purge`, `/closeticket` |
+| Discord Perm | ManageGuild | `/postticketpanel`, `/review-set-listopen-output` |
+| Discord Perm | ManageRoles | `/roles`, `/artistqueue`, `/assignticket` |
+| Discord Perm | Administrator | `/review-set-notify-config`, `/review-get-notify-config` |
+| Hybrid | ManageRoles OR Ambassador | `/redeemreward`, `/assignticket` |
+| Hybrid | Ambassador OR Mod Team | `/closeticket` |
 | Hybrid | Ambassador OR Gatekeeper+ | `/report` |
 
 ---

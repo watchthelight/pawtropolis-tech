@@ -1974,11 +1974,14 @@ The help system organizes commands into 9 categories:
 | Configuration | config (with 24+ subcommands) |
 | Moderation | audit, flag, isitreal, unblock |
 | Queue Management | listopen, search, sample |
-| Analytics | activity, approval-rate, modstats, modhistory |
-| Messaging | send, purge, poke, modmail |
-| Role Automation | roles, movie, event, panic |
-| Artist System | artistqueue, art, redeemreward |
-| System | health, update, database, resetdata, backfill |
+| Analytics | stats (activity, approval-rate, leaderboard, user, export, reset, history) |
+| Messaging | send, poke, modmail, qotd |
+| Role Automation | roles, restoreroles, panic |
+| Artist System | artistqueue, art, redeemreward, usebyte |
+| Events | movie, event, attendance, verify |
+| Tickets | postticketpanel, closeticket, assignticket |
+| Moderation | audit, flag, isitreal, unblock, report, cleanup, purge |
+| System | help, health, update, database, resetdata, backfill |
 
 Click any category button to see all commands in that category. From there, use the select menu to dive into specific commands.
 
@@ -2312,6 +2315,108 @@ This is an interactive wizard that helps you:
 
 ---
 
+### `/cleanup`
+**Who can use it:** Moderator+ (also requires Manage Messages)
+
+Purge up to 1000 recent messages from the current channel. Use it for spam waves, accidental floods, or general channel hygiene.
+
+| Option | Required? | What it does |
+|--------|-----------|--------------|
+| `count` | **Yes** | How many messages to delete (1 to 1000) |
+| `reason` | No | Reason logged to the audit channel |
+
+Messages older than 14 days are skipped because Discord's bulk-delete endpoint refuses them; the result tells you how many were skipped so you can decide whether to do a manual sweep.
+
+### `/restoreroles`
+**Who can use it:** Administrator+
+
+When a member leaves, is kicked, or is banned, the bot snapshots their roles. `/restoreroles user:@x` re-grants whatever they had, filtered for roles that have since been deleted, are managed by an integration, are above the bot's top role, or that the user already has.
+
+| Option | Required? | What it does |
+|--------|-----------|--------------|
+| `user` | **Yes** | User to restore |
+| `dry_run` | No | Preview the role list without applying |
+
+The action is logged to `action_log` so leadership can review later.
+
+### `/admin-migrate-unverified`
+**Who can use it:** Community Manager, Server Dev
+
+One-shot migration. Walks every current member who lacks the accepted role and creates a per-user verification thread for them. Run this **before** locking down `@everyone` View on the public lobby; otherwise the ~50 to 500 unverified members already in the lobby would lose all visibility with no way to verify.
+
+The command is safe to re-run; users who already have a thread are skipped.
+
+### `/welcomebatch`
+**Who can use it:** Gatekeeper+
+
+Batch multiple newly accepted users into one welcome message instead of one-per-user. Useful during onboarding sprees.
+
+| Subcommand | What it does |
+|------------|--------------|
+| `start` | Open a session — subsequent `/accept` results are queued, not posted |
+| `send` | Post one combined welcome and close the session |
+| `cancel` | Drop the queued welcomes and close the session |
+| `status` | Show how many users are queued and time remaining |
+
+### `/verify`
+**Who can use it:** Everyone
+
+Self-verify first responder or military status (firefighter, EMT, paramedic, military, or law enforcement) to receive the Thin Line cosmetic role. The flow runs ephemerally, optionally accepts a document upload, and logs the verification to the audit channel. Honor-system based.
+
+---
+
+## First-Party Ticket System
+
+Replaces Ticket Tool for art commissions, modmail-overflow, and general first-party tickets. See [TICKET-SYSTEM-GUIDE.md](TICKET-SYSTEM-GUIDE.md) for the full flow.
+
+### `/postticketpanel`
+**Who can use it:** Manage Guild
+
+Posts (or refreshes in place) the ticket-system panel embeds in the configured panel channel. Idempotent — re-run after the ticket type registry changes to refresh the embeds without spamming the channel.
+
+### `/closeticket`
+**Who can use it:** Community Ambassador or Mod Team (also requires Manage Messages)
+
+Slash alternative to the red **Close** button on the greeting embed. Useful when the greeting message has scrolled out of view in a long conversation.
+
+| Option | Required? | What it does |
+|--------|-----------|--------------|
+| `reason` | No | Reason saved in the ticket transcript |
+
+### `/assignticket`
+**Who can use it:** Community Ambassador, Mod Team, or Manage Roles
+
+Manually swap the assigned artist on a first-party art ticket. Atomically updates channel permissions, closes the prior `art_job`, inserts a new `art_job` linked to the ticket, and posts a visible reassignment embed.
+
+| Option | Required? | What it does |
+|--------|-----------|--------------|
+| `artist` | **Yes** | Artist to assign to the current ticket |
+
+---
+
+## Developer Tools
+
+These commands exist but are intentionally hidden from `/help`. They are reserved for the bot developer and Server Dev role.
+
+### `/developer`
+**Who can use it:** Server Dev, Bot Owner
+
+Internal debugging entry point. Subcommands cover trace inspection, stats, and other introspection. `/developer trace <id>` is reachable from the **Run trace** button on any error card.
+
+### `/test`
+**Who can use it:** Bot Owner
+
+Triggers an intentional exception. Used to verify the error card, the wide-event pipeline, and Sentry integration end-to-end without breaking real workflows.
+
+### `/testidea`
+**Who can use it:** Bot Owner
+
+The rotating bot-dev experiment slot. Toggles a single mass-server action on or off. The behavior changes from one release to the next — current implementation lives in `src/commands/testidea/currentAction.ts`. Snapshot of pre-toggle state is persisted to `testidea_state` and is scoped by `ACTION_ID` so a swap of the action body cannot revert with a mismatched snapshot. Read the source before running it.
+
+### `/skullmode`
+**Who can use it:** Bot Owner, Senior Moderator+
+
+Sets the odds for the bot to react to messages with the skull emoji. `chance:1` reacts to every message; `chance:1000` reacts rarely. The toggle that enables/disables the feature lives under `/config`.
 
 ---
 
