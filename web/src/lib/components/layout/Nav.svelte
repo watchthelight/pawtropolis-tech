@@ -64,6 +64,7 @@
 		{ label: 'Config',   href: '/dashboard/config',   minTier: 'admin', group: 'admin' },
 		{ label: 'Audit',    href: '/dashboard/audit',    minTier: 'admin', group: 'admin' },
 		{ label: 'System',   href: '/dashboard/system',   minTier: 'owner', group: 'admin' },
+		{ label: 'Backfill', href: '/dashboard/backfill', minTier: 'owner', group: 'admin' },
 		{ label: 'Handbook', href: '/handbook',           minTier: 'none',  group: 'docs' },
 	] as const;
 
