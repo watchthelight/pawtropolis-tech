@@ -16,16 +16,30 @@
  *  4. Leave the old file in-repo for reference and so existing snapshots in
  *     other guilds can still be reverted by manually swapping the import back.
  *
- * Current action: "hoist_staff_flat_v1" — unhoists every staff hierarchy role
- *      and hoists only MOD_TEAM ("Community Staff") so the sidebar collapses
- *      every staff rank into a single group. Proposed by Entropy 2026-05-15.
+ * Current action: "hoist_staff_flat_v2" — unhoists every staff hierarchy role
+ *      AND the rotating "Staff of the Month" award role, leaving only
+ *      MOD_TEAM ("Community Staff") hoisted so the sidebar collapses every
+ *      staff rank into a single group. Proposed by Entropy 2026-05-15.
+ *
+ * v1 → v2 (2026-05-15): added Staff of the Month role to the unhoist set so
+ *      the award doesn't show up as a second hoisted band when the experiment
+ *      is ON. ACTION_ID bumped so any guild that toggled ON under v1 is
+ *      forced to revert via the matching v1 file before adopting v2.
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import type { Guild, Role } from "discord.js";
 import { ROLE_IDS, ROLE_HIERARCHY } from "../../lib/roles.js";
 
-export const ACTION_ID = "hoist_staff_flat_v1";
+export const ACTION_ID = "hoist_staff_flat_v2";
+
+/**
+ * Staff of the Month — rotating monthly recognition role. Not part of
+ * ROLE_HIERARCHY (it's awarded, not earned by rank) but it does carry the
+ * `hoist` flag so award holders show up in their own sidebar band. The
+ * experiment flattens that band along with everything else.
+ */
+const STAFF_OF_THE_MONTH_ROLE = "1231142407681347614";
 
 export type Snapshot = Record<string, boolean>;
 
@@ -35,7 +49,10 @@ export type ActionResult = {
 };
 
 const HOIST_ROLE = ROLE_IDS.MOD_TEAM;
-const UNHOIST_ROLES = ROLE_HIERARCHY.filter((id) => id !== HOIST_ROLE);
+const UNHOIST_ROLES: string[] = [
+	...ROLE_HIERARCHY.filter((id) => id !== HOIST_ROLE),
+	STAFF_OF_THE_MONTH_ROLE
+];
 
 export async function apply(
   guild: Guild,
