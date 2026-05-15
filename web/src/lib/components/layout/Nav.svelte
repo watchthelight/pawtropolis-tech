@@ -6,7 +6,7 @@
 	import {
 		House, ClipboardCheck, BarChart3, Activity, Flag,
 		Grid3x3, Palette, Settings, ScrollText, Server,
-		MessageCircleQuestion, Mail, Sparkles
+		MessageCircleQuestion, Mail, Sparkles, BookOpen
 	} from 'lucide-svelte';
 
 	let { user, collapsed = false, mobileOnly = false, isArtist = false }: {
@@ -48,7 +48,8 @@
 		Home: House, Reviews: ClipboardCheck, Stats: BarChart3, Modmail: Mail, Pulse: Activity,
 		Flags: Flag, Heatmap: Grid3x3, Art: Palette, QOTD: MessageCircleQuestion,
 		Quality: Sparkles,
-		Config: Settings, Audit: ScrollText, System: Server
+		Config: Settings, Audit: ScrollText, System: Server,
+		Handbook: BookOpen
 	};
 
 	const NAV_ITEMS = [
@@ -65,6 +66,7 @@
 		{ label: 'Config',   href: '/dashboard/config',   minTier: 'admin', group: 'admin' },
 		{ label: 'Audit',    href: '/dashboard/audit',    minTier: 'admin', group: 'admin' },
 		{ label: 'System',   href: '/dashboard/system',   minTier: 'owner', group: 'admin' },
+		{ label: 'Handbook', href: '/handbook',           minTier: 'none',  group: 'docs' },
 	] as const;
 
 	const MOBILE_HREFS = new Set(['/dashboard', '/dashboard/reviews', '/dashboard/art']);

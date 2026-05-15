@@ -76,6 +76,7 @@
 		{ href: '/dashboard/config',   minTier: 'admin' },
 		{ href: '/dashboard/audit',    minTier: 'admin' },
 		{ href: '/dashboard/system',   minTier: 'owner' },
+		{ href: '/handbook',           minTier: 'none' },
 	] as const;
 
 	function hasMinTier(userTier: string, minTier: string): boolean {
