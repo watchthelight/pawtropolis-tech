@@ -145,9 +145,12 @@ async function main() {
         INSERT OR IGNORE INTO message_reactions_archive (message_id, emoji, user_id, ingest_source)
         VALUES (?, ?, ?, 'backfill')
       `);
+      // COALESCE on oldest_seen_* — passing null preserves the prior value.
+      // Final "complete" UPDATE passes nulls for oldest fields; we don't want to wipe them.
       const updateProgress = db.prepare(`
         UPDATE backfill_progress SET
-          oldest_seen_id = ?, oldest_seen_ts = ?,
+          oldest_seen_id = COALESCE(?, oldest_seen_id),
+          oldest_seen_ts = COALESCE(?, oldest_seen_ts),
           newest_seen_id = COALESCE(newest_seen_id, ?), newest_seen_ts = COALESCE(newest_seen_ts, ?),
           messages_fetched = messages_fetched + ?,
           reactions_fetched = reactions_fetched + ?,
