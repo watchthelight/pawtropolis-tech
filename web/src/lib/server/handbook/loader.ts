@@ -1,18 +1,27 @@
 /**
  * Pawtropolis Tech — web/src/lib/server/handbook/loader.ts
- * WHAT: Reads every handbook .md file once at startup and caches the marked
- *       token tree per slug. Provides hot-reload in dev so editing a doc on
- *       disk refreshes the handbook without restarting the server.
- * WHY: Parsing ~220 KB of markdown on every page request would be wasteful and
- *      visible. A single startup parse is ~50 ms; the cache survives until
- *      the server restarts.
+ * WHAT: Bundles each handbook .md file into the SvelteKit build via Vite's
+ *       `?raw` import, then tokenises them lazily on first access (or
+ *       eagerly on `preloadAll()`).
+ * WHY: The previous fs.readFileSync approach didn't survive deployment —
+ *      EC2's `web/build/` doesn't ship with the repo's `docs/` directory.
+ *      Inlining the markdown as string literals at build time makes the
+ *      bundle self-contained.
  */
 
-import { readFileSync, statSync, watch } from 'node:fs';
-import { resolve as resolvePath, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { marked, type Token } from 'marked';
-import type { HandbookTier } from './permissionResolver';
+import type { HandbookTier } from '../../handbook-shared';
+
+import BOT_HANDBOOK from '../../../../../docs/BOT-HANDBOOK.md?raw';
+import MOD_HANDBOOK from '../../../../../docs/MOD-HANDBOOK.md?raw';
+import PERMS_MATRIX from '../../../../../docs/PERMS-MATRIX.md?raw';
+import GATEKEEPER_GUIDE from '../../../../../docs/GATEKEEPER-GUIDE.md?raw';
+import MODERATOR_GUIDE from '../../../../../docs/MODERATOR-GUIDE.md?raw';
+import ADMIN_GUIDE from '../../../../../docs/ADMIN-GUIDE.md?raw';
+import LEADERSHIP_GUIDE from '../../../../../docs/LEADERSHIP-GUIDE.md?raw';
+import MOD_QUICKREF from '../../../../../docs/MOD-QUICKREF.md?raw';
+import TICKET_SYSTEM_GUIDE from '../../../../../docs/TICKET-SYSTEM-GUIDE.md?raw';
+import SLASH_COMMANDS_REF from '../../../../../docs/reference/slash-commands.md?raw';
 
 export type DocSlug =
 	| 'bot-handbook'
@@ -29,12 +38,9 @@ export type DocSlug =
 export type DocMeta = {
 	slug: DocSlug;
 	title: string;
-	/** Default tier for sections that don't carry their own "Who can use it" line. */
 	defaultTier: HandbookTier;
-	/** Source path relative to repo root. */
-	sourcePath: string;
-	/** Short one-line description shown in the doc index. */
 	tagline: string;
+	source: string;
 };
 
 export const DOC_REGISTRY: DocMeta[] = [
@@ -42,139 +48,92 @@ export const DOC_REGISTRY: DocMeta[] = [
 		slug: 'bot-handbook',
 		title: 'Bot Handbook',
 		defaultTier: 'public',
-		sourcePath: 'docs/BOT-HANDBOOK.md',
-		tagline: 'Every slash command, its options, who can run it, and how to use it.'
+		tagline: 'Every slash command, its options, who can run it, and how to use it.',
+		source: BOT_HANDBOOK
 	},
 	{
 		slug: 'mod-handbook',
 		title: 'Moderator Handbook',
 		defaultTier: 'gk',
-		sourcePath: 'docs/MOD-HANDBOOK.md',
-		tagline: 'Staff policies, verification procedures, escalation, cross-banning.'
+		tagline: 'Staff policies, verification procedures, escalation, cross-banning.',
+		source: MOD_HANDBOOK
 	},
 	{
 		slug: 'perms-matrix',
 		title: 'Permissions Matrix',
 		defaultTier: 'public',
-		sourcePath: 'docs/PERMS-MATRIX.md',
-		tagline: 'Role hierarchy and which tier can run each command.'
+		tagline: 'Role hierarchy and which tier can run each command.',
+		source: PERMS_MATRIX
 	},
 	{
 		slug: 'gatekeeper-guide',
 		title: 'Gatekeeper Guide',
 		defaultTier: 'gk',
-		sourcePath: 'docs/GATEKEEPER-GUIDE.md',
-		tagline: 'Onboarding for Gatekeepers: accept, reject, listopen workflow.'
+		tagline: 'Onboarding for Gatekeepers: accept, reject, listopen workflow.',
+		source: GATEKEEPER_GUIDE
 	},
 	{
 		slug: 'moderator-guide',
 		title: 'Moderator Guide',
 		defaultTier: 'mod',
-		sourcePath: 'docs/MODERATOR-GUIDE.md',
-		tagline: 'Day-to-day moderation tooling and policies.'
+		tagline: 'Day-to-day moderation tooling and policies.',
+		source: MODERATOR_GUIDE
 	},
 	{
 		slug: 'admin-guide',
 		title: 'Admin Guide',
 		defaultTier: 'admin',
-		sourcePath: 'docs/ADMIN-GUIDE.md',
-		tagline: 'Configuration, audit, cleanup, role recovery.'
+		tagline: 'Configuration, audit, cleanup, role recovery.',
+		source: ADMIN_GUIDE
 	},
 	{
 		slug: 'leadership-guide',
 		title: 'Leadership Guide',
 		defaultTier: 'cm',
-		sourcePath: 'docs/LEADERSHIP-GUIDE.md',
-		tagline: 'Server-wide management: backfill, database recovery, migrations.'
+		tagline: 'Server-wide management: backfill, database recovery, migrations.',
+		source: LEADERSHIP_GUIDE
 	},
 	{
 		slug: 'mod-quickref',
 		title: 'Mod Quick Reference',
 		defaultTier: 'gk',
-		sourcePath: 'docs/MOD-QUICKREF.md',
-		tagline: 'Cheat sheet for the most-used moderation commands.'
+		tagline: 'Cheat sheet for the most-used moderation commands.',
+		source: MOD_QUICKREF
 	},
 	{
 		slug: 'ticket-system',
 		title: 'Ticket System Guide',
 		defaultTier: 'gk',
-		sourcePath: 'docs/TICKET-SYSTEM-GUIDE.md',
-		tagline: 'First-party tickets: panel, close, manual reassign.'
+		tagline: 'First-party tickets: panel, close, manual reassign.',
+		source: TICKET_SYSTEM_GUIDE
 	},
 	{
 		slug: 'slash-commands',
 		title: 'Slash Commands (Quick)',
 		defaultTier: 'public',
-		sourcePath: 'docs/reference/slash-commands.md',
-		tagline: 'Short index pointing into the Bot Handbook.'
+		tagline: 'Short index pointing into the Bot Handbook.',
+		source: SLASH_COMMANDS_REF
 	}
 ];
 
-/** Repo root, derived from this file's location. `web/src/lib/server/handbook/loader.ts` → up four. */
-const REPO_ROOT = resolvePath(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..', '..');
+const cache = new Map<DocSlug, Token[]>();
 
-type CacheEntry = {
-	tokens: Token[];
-	raw: string;
-	mtimeMs: number;
-};
-
-const cache = new Map<DocSlug, CacheEntry>();
-
-function readDoc(meta: DocMeta): CacheEntry {
-	const absPath = resolvePath(REPO_ROOT, meta.sourcePath);
-	const raw = readFileSync(absPath, 'utf8');
-	const tokens = marked.lexer(raw, { gfm: true });
-	const stat = statSync(absPath);
-	return { tokens, raw, mtimeMs: stat.mtimeMs };
-}
-
-/**
- * Eagerly load every doc at startup. Called once from `index.ts` on first use
- * (so cold-start cost lands on the first /handbook request rather than every
- * server boot, regardless of whether anyone visits the page).
- */
 export function preloadAll(): void {
 	for (const meta of DOC_REGISTRY) {
 		if (!cache.has(meta.slug)) {
-			cache.set(meta.slug, readDoc(meta));
-		}
-	}
-	if (process.env.NODE_ENV !== 'production') {
-		setupDevWatchers();
-	}
-}
-
-let devWatchersInstalled = false;
-function setupDevWatchers() {
-	if (devWatchersInstalled) return;
-	devWatchersInstalled = true;
-	for (const meta of DOC_REGISTRY) {
-		const absPath = resolvePath(REPO_ROOT, meta.sourcePath);
-		try {
-			watch(absPath, { persistent: false }, () => {
-				try {
-					cache.set(meta.slug, readDoc(meta));
-				} catch {
-					// Editor save races (rename + replace) sometimes throw transient ENOENT.
-					// Next access will re-read on demand.
-					cache.delete(meta.slug);
-				}
-			});
-		} catch {
-			// File may not exist (slash-commands.md was once renamed); skip silently.
+			cache.set(meta.slug, marked.lexer(meta.source, { gfm: true }));
 		}
 	}
 }
 
 export function getRawTokens(slug: DocSlug): Token[] {
 	const cached = cache.get(slug);
-	if (cached) return cached.tokens;
+	if (cached) return cached;
 	const meta = DOC_REGISTRY.find((d) => d.slug === slug);
 	if (!meta) throw new Error(`Unknown handbook slug: ${slug}`);
-	const fresh = readDoc(meta);
-	cache.set(slug, fresh);
-	return fresh.tokens;
+	const tokens = marked.lexer(meta.source, { gfm: true });
+	cache.set(meta.slug, tokens);
+	return tokens;
 }
 
 export function getDocMeta(slug: DocSlug): DocMeta | undefined {
