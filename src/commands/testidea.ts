@@ -1,15 +1,13 @@
 /**
  * Pawtropolis Tech — src/commands/testidea.ts
- * WHAT: /testidea toggles a staff-display experiment. ON unhoists every staff
- *       hierarchy role and hoists only "Community Staff" (MOD_TEAM); OFF restores
- *       the prior hoist flags captured when the experiment was turned on.
- * WHY: Lets staff trial the "flat sidebar" idea proposed in chat (unhoist all
- *      ranks, hoist a single Community Staff role) without manually editing roles.
- * FLOWS:
- *  - Permission check (SENIOR_ADMIN+) → read testidea_state row →
- *    if enabled: restore snapshot, clear row → reply
- *    else: snapshot current hoist flags, set hierarchy hoist=false +
- *          MOD_TEAM hoist=true, persist snapshot → reply
+ * WHAT: /testidea is a bot-dev-only mass-action toggle. The slash command is
+ *       a stable harness; the body of "what gets toggled" lives in
+ *       ./testidea/currentAction.ts and is rewritten as new experiments come
+ *       and go.
+ * WHY: Lets the bot dev trial server-wide changes (today: flatten the staff
+ *      sidebar) without coding a fresh slash command each time. The same ON/OFF
+ *      switch and snapshot-restore semantics apply to whatever the current
+ *      action does.
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
@@ -17,25 +15,23 @@ import {
   SlashCommandBuilder,
   MessageFlags,
   type ChatInputCommandInteraction,
-  type Guild,
-  type Role,
 } from "discord.js";
 import { type CommandContext } from "../lib/cmdWrap.js";
-import { ROLE_IDS } from "../lib/config.js";
-import { ROLE_HIERARCHY } from "../lib/roles.js";
 import { isOwner } from "../lib/owner.js";
 import { db } from "../db/db.js";
 import { logger } from "../lib/logger.js";
+import * as currentAction from "./testidea/currentAction.js";
+import type { Snapshot } from "./testidea/currentAction.js";
 
-const HOIST_ROLE = ROLE_IDS.MOD_TEAM;
-const UNHOIST_ROLES = ROLE_HIERARCHY.filter((id) => id !== HOIST_ROLE);
-
-type StateRow = { enabled: number; snapshot: string | null };
-type Snapshot = Record<string, boolean>;
+type StateRow = {
+  enabled: number;
+  snapshot: string | null;
+  action_id: string | null;
+};
 
 export const data = new SlashCommandBuilder()
   .setName("testidea")
-  .setDescription("Toggle the flat-sidebar staff hoist experiment")
+  .setDescription("Toggle the current bot-dev experiment (owner-only)")
   .setDMPermission(false);
 
 export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) {
@@ -64,31 +60,57 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
 
   const current = db
     .prepare<[string], StateRow>(
-      `SELECT enabled, snapshot FROM testidea_state WHERE guild_id = ?`
+      `SELECT enabled, snapshot, action_id FROM testidea_state WHERE guild_id = ?`
     )
     .get(guildId);
 
   const turningOn = !current || current.enabled === 0;
-  const reason = `/testidea ${turningOn ? "on" : "off"} by ${interaction.user.tag}`;
+  const reason = `/testidea ${turningOn ? "on" : "off"} (${currentAction.ACTION_ID}) by ${interaction.user.tag}`;
 
   if (turningOn) {
-    const { applied, failed, snapshot } = await applyExperiment(guild, reason);
+    const { applied, failed, snapshot } = await currentAction.apply(guild, reason);
     db.prepare(
-      `INSERT INTO testidea_state (guild_id, enabled, snapshot, updated_at)
-       VALUES (?, 1, ?, strftime('%s','now'))
+      `INSERT INTO testidea_state (guild_id, action_id, enabled, snapshot, updated_at)
+       VALUES (?, ?, 1, ?, strftime('%s','now'))
        ON CONFLICT(guild_id) DO UPDATE SET
+         action_id = excluded.action_id,
          enabled = 1,
          snapshot = excluded.snapshot,
          updated_at = excluded.updated_at`
-    ).run(guildId, JSON.stringify(snapshot));
+    ).run(guildId, currentAction.ACTION_ID, JSON.stringify(snapshot));
 
     logger.info(
-      { evt: "testidea_on", guildId, applied: applied.length, failed: failed.length },
-      "[testidea] experiment enabled"
+      {
+        evt: "testidea_on",
+        guildId,
+        actionId: currentAction.ACTION_ID,
+        actorId: interaction.user.id,
+        applied: applied.length,
+        failed: failed.length,
+        failedIds: failed.map((f) => f.id),
+      },
+      "[testidea] action applied"
     );
 
+    await interaction.editReply({ content: formatResult("ON", applied, failed) });
+    return;
+  }
+
+  if (current?.action_id && current.action_id !== currentAction.ACTION_ID) {
+    logger.warn(
+      {
+        evt: "testidea_action_id_mismatch",
+        guildId,
+        storedActionId: current.action_id,
+        currentActionId: currentAction.ACTION_ID,
+      },
+      "[testidea] cannot revert: snapshot was written by a different action"
+    );
     await interaction.editReply({
-      content: formatResult("ON", applied, failed),
+      content:
+        `Snapshot in DB was written by **${current.action_id}** but the current action is **${currentAction.ACTION_ID}**. ` +
+        `Refusing to revert with mismatched shape. Restore the matching action file and run /testidea again, ` +
+        `or clear \`testidea_state\` manually if the prior action is no longer wanted.`,
     });
     return;
   }
@@ -102,104 +124,31 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
     }
   }
 
-  const { applied, failed } = await revertExperiment(guild, snapshot, reason);
+  const { applied, failed } = await currentAction.revert(guild, snapshot, reason);
   db.prepare(
-    `INSERT INTO testidea_state (guild_id, enabled, snapshot, updated_at)
-     VALUES (?, 0, NULL, strftime('%s','now'))
+    `INSERT INTO testidea_state (guild_id, action_id, enabled, snapshot, updated_at)
+     VALUES (?, NULL, 0, NULL, strftime('%s','now'))
      ON CONFLICT(guild_id) DO UPDATE SET
+       action_id = NULL,
        enabled = 0,
        snapshot = NULL,
        updated_at = excluded.updated_at`
   ).run(guildId);
 
   logger.info(
-    { evt: "testidea_off", guildId, applied: applied.length, failed: failed.length },
-    "[testidea] experiment disabled"
+    {
+      evt: "testidea_off",
+      guildId,
+      actionId: currentAction.ACTION_ID,
+      actorId: interaction.user.id,
+      applied: applied.length,
+      failed: failed.length,
+      failedIds: failed.map((f) => f.id),
+    },
+    "[testidea] action reverted"
   );
 
-  await interaction.editReply({
-    content: formatResult("OFF", applied, failed),
-  });
-}
-
-async function applyExperiment(guild: Guild, reason: string) {
-  const applied: string[] = [];
-  const failed: Array<{ id: string; err: string }> = [];
-  const snapshot: Snapshot = {};
-
-  for (const roleId of UNHOIST_ROLES) {
-    const role = await fetchRole(guild, roleId);
-    if (!role) {
-      failed.push({ id: roleId, err: "role not found" });
-      continue;
-    }
-    snapshot[roleId] = role.hoist;
-    if (!role.hoist) {
-      applied.push(roleId);
-      continue;
-    }
-    try {
-      await role.edit({ hoist: false, reason });
-      applied.push(roleId);
-    } catch (err) {
-      failed.push({ id: roleId, err: err instanceof Error ? err.message : String(err) });
-    }
-  }
-
-  const hoistRole = await fetchRole(guild, HOIST_ROLE);
-  if (!hoistRole) {
-    failed.push({ id: HOIST_ROLE, err: "role not found" });
-  } else {
-    snapshot[HOIST_ROLE] = hoistRole.hoist;
-    if (hoistRole.hoist) {
-      applied.push(HOIST_ROLE);
-    } else {
-      try {
-        await hoistRole.edit({ hoist: true, reason });
-        applied.push(HOIST_ROLE);
-      } catch (err) {
-        failed.push({ id: HOIST_ROLE, err: err instanceof Error ? err.message : String(err) });
-      }
-    }
-  }
-
-  return { applied, failed, snapshot };
-}
-
-async function revertExperiment(guild: Guild, snapshot: Snapshot, reason: string) {
-  const applied: string[] = [];
-  const failed: Array<{ id: string; err: string }> = [];
-
-  const targets = new Set<string>([...UNHOIST_ROLES, HOIST_ROLE, ...Object.keys(snapshot)]);
-
-  for (const roleId of targets) {
-    const role = await fetchRole(guild, roleId);
-    if (!role) {
-      failed.push({ id: roleId, err: "role not found" });
-      continue;
-    }
-    const target = roleId in snapshot ? snapshot[roleId] : roleId !== HOIST_ROLE;
-    if (role.hoist === target) {
-      applied.push(roleId);
-      continue;
-    }
-    try {
-      await role.edit({ hoist: target, reason });
-      applied.push(roleId);
-    } catch (err) {
-      failed.push({ id: roleId, err: err instanceof Error ? err.message : String(err) });
-    }
-  }
-
-  return { applied, failed };
-}
-
-async function fetchRole(guild: Guild, roleId: string): Promise<Role | null> {
-  try {
-    return (await guild.roles.fetch(roleId)) ?? null;
-  } catch {
-    return null;
-  }
+  await interaction.editReply({ content: formatResult("OFF", applied, failed) });
 }
 
 function formatResult(

@@ -936,9 +936,10 @@ export function ensureApplicationStaleAlertColumns() {
 
 /**
  * ensureTestIdeaTable
- * WHAT: Creates testidea_state table for the /testidea hoist-toggle experiment.
- * WHY: Persists per-guild on/off state plus a snapshot of each role's prior hoist
- *      flag so toggling OFF restores exactly what was there before.
+ * WHAT: Creates testidea_state table for the rotating /testidea experiment.
+ * WHY: Persists per-guild on/off state plus a snapshot of whatever state the
+ *      current action mutated, scoped by action_id so a swap of the action
+ *      body cannot try to revert with a stale snapshot of a different shape.
  */
 export function ensureTestIdeaTable() {
   try {
@@ -952,6 +953,14 @@ export function ensureTestIdeaTable() {
       )
     `
     ).run();
+
+    const cols = db.prepare(`PRAGMA table_info(testidea_state)`).all() as Array<{ name: string }>;
+    const colNames = cols.map((c) => c.name);
+    if (!colNames.includes("action_id")) {
+      db.prepare(`ALTER TABLE testidea_state ADD COLUMN action_id TEXT`).run();
+      logger.info("[ensure] added action_id column to testidea_state");
+    }
+
     logger.info("[ensure] testidea_state table ensured");
   } catch (err) {
     logger.error({ err }, "[ensure] failed to ensure testidea_state table");
