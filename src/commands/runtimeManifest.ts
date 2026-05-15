@@ -92,6 +92,9 @@ export const SLASH_COMMAND_NAMES = [
 
   // Role recovery
   "restoreroles",
+
+  // Staff-hoist experiment toggle
+  "testidea",
 ] as const;
 
 export const CONTEXT_MENU_NAMES = [

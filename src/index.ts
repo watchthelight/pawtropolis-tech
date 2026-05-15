@@ -323,6 +323,10 @@ commands.set(
 commands.set(closeticket.data.name, wrapCommand("closeticket", closeticket.execute));
 commands.set(assignticket.data.name, wrapCommand("assignticket", assignticket.execute));
 
+// Staff-hoist experiment toggle
+import * as testidea from "./commands/testidea.js";
+commands.set(testidea.data.name, wrapCommand("testidea", testidea.execute));
+
 // Drift guard: every name in runtimeManifest must have a registered handler,
 // every registered handler must be in the manifest. Catches mistakes where a
 // command is added to one place but not the other.

@@ -64,6 +64,7 @@ import { data as postticketpanelData } from "./postticketpanel.js";
 import { data as closeticketData } from "./closeticket.js";
 import { data as assignticketData } from "./assignticket.js";
 import { data as restorerolesData } from "./restoreroles.js";
+import { data as testideaData } from "./testidea.js";
 
 // Returns an array of command JSON objects for Discord's bulk command registration.
 // Discord has a limit of 100 slash commands per bot per guild, so we're fine here.
@@ -151,6 +152,9 @@ export function buildCommands() {
 
     // Role recovery — re-grant roles to returning members
     restorerolesData.toJSON(),
+
+    // Staff-hoist experiment toggle
+    testideaData.toJSON(),
 
     /*
      * Context menu commands are registered alongside slash commands in Discord.js v14.
