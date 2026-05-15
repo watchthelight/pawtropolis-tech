@@ -151,10 +151,6 @@
 				<div class="metric-head"><Mail size={16} color={metrics.openModmail > 0 ? 'var(--accent)' : 'var(--text-tertiary)'} /><span class="metric-label">Open modmail</span></div>
 				<StatNumber value={metrics.openModmail} label="" />
 			</button>
-			<button class="metric" class:metric-warn={(metrics.activeFlags ?? 0) > 0} onclick={() => goto('/dashboard/flags')}>
-				<div class="metric-head"><AlertTriangle size={16} color={(metrics.activeFlags ?? 0) > 0 ? 'var(--accent)' : 'var(--text-tertiary)'} /><span class="metric-label">Active flags</span></div>
-				<StatNumber value={metrics.activeFlags ?? 0} label="" />
-			</button>
 		</div>
 	{/if}
 

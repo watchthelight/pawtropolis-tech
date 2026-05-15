@@ -6,7 +6,6 @@ export interface HomeMetrics {
 	activeClaims: number;
 	decisionsToday: number;
 	openModmail: number | null;
-	activeFlags: number | null;
 
 	// Command-center extras (mod tier+):
 	nextActions: NextAction[];
@@ -86,17 +85,12 @@ export function getHomeMetrics(
 	};
 
 	let openModmail: number | null = null;
-	let activeFlags: number | null = null;
 	const nextActions: NextAction[] = [];
 	const recentActivity: ActivityItem[] = [];
 
 	if (includeModTier) {
 		openModmail = count(
 			"SELECT COUNT(*) as count FROM modmail_ticket WHERE guild_id = ? AND status = 'open'",
-			guildId
-		);
-		activeFlags = count(
-			'SELECT COUNT(*) as count FROM nsfw_flags WHERE guild_id = ? AND reviewed = 0',
 			guildId
 		);
 
@@ -128,16 +122,6 @@ export function getHomeMetrics(
 			LIMIT 1`
 		).get(guildId) as { id: string; created_at: string; name: string } | undefined;
 
-		const oldestFlag = db().prepare(
-			`SELECT f.user_id,
-				COALESCE(u.display_name, u.global_name, u.username, 'User ' || substr(f.user_id, -6)) AS name
-			FROM nsfw_flags f
-			LEFT JOIN user_cache u ON u.guild_id = f.guild_id AND u.user_id = f.user_id
-			WHERE f.guild_id = ? AND f.reviewed = 0
-			ORDER BY f.flagged_at ASC
-			LIMIT 1`
-		).get(guildId) as { user_id: string; name: string } | undefined;
-
 		if (oldestUnreadModmail) {
 			nextActions.push({
 				kind: 'unread_modmail',
@@ -158,15 +142,6 @@ export function getHomeMetrics(
 					: `Submitted ${ageH}h ago.`,
 				href: `/dashboard/reviews/${oldestUnclaimed.id}`,
 				weight: ageH >= 24 ? 90 : 70
-			});
-		}
-		if (oldestFlag) {
-			nextActions.push({
-				kind: 'flagged_user',
-				label: `Triage flag on ${oldestFlag.name}`,
-				subtitle: 'Awaiting review.',
-				href: `/dashboard/flags`,
-				weight: 50
 			});
 		}
 		nextActions.sort((a, b) => b.weight - a.weight);
@@ -223,7 +198,7 @@ export function getHomeMetrics(
 
 	return {
 		pending, pendingYours, activeClaims, decisionsToday,
-		openModmail, activeFlags,
+		openModmail,
 		nextActions, recentActivity, weekStats
 	};
 }

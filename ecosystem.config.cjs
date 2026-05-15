@@ -4,6 +4,7 @@ module.exports = {
       name: 'pawtropolis',
       script: 'dist/index.js',
       cwd: '/home/ubuntu/pawtropolis-tech',
+      exec_mode: 'fork',
       node_args: '--env-file=.env --env-file=.env.build',
       instances: 1,
       autorestart: true,
@@ -11,7 +12,8 @@ module.exports = {
       restart_delay: 5000,
       kill_timeout: 5000,
       env: {
-        NODE_ENV: 'production'
+        NODE_ENV: 'production',
+        DB_HEALTHCHECK_MODE: 'skip'
       }
     },
     {

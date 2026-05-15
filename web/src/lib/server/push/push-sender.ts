@@ -67,12 +67,6 @@ const PUSH_EVENTS: Record<string, PushEventConfig> = {
 		body: () => 'A new modmail thread was opened',
 		url: () => '/dashboard/reviews'
 	},
-	'flag:created': {
-		domain: 'flag',
-		title: () => 'New Flag',
-		body: (p) => `${p.flagType || 'Unknown'} flag raised`,
-		url: () => '/dashboard/flags'
-	},
 	'audit:scan_completed': {
 		domain: 'audit',
 		title: () => 'Audit Scan Complete',

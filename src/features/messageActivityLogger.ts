@@ -26,32 +26,7 @@ interface MessageActivity {
   userId: string;
   created_at_s: number;
   hour_bucket: number;
-  /**
-   * When the message is in #general we ALSO populate this so the same flush
-   * transaction writes a row to general_messages_raw for chat-quality
-   * scoring. null for everything else.
-   */
-  general?: {
-    id: string;
-    content: string;
-    attachments: number;
-    embeds: number;
-    reply_to: string | null;
-  };
 }
-
-/**
- * #general channel id. Live capture into general_messages_raw is scoped to
- * this single channel; widen later if quality scoring expands.
- */
-const GENERAL_CHANNEL_ID = '896070889462976608';
-
-/**
- * Hard ceiling on stored content length. Discord's user message cap is 2000
- * (4000 for Nitro), but we mirror the conservative limit so old content
- * never exceeds the column's practical width.
- */
-const MAX_CONTENT_LEN = 2000;
 
 /**
  * In-memory buffer for message activity. Flushed every 1 second to reduce
@@ -124,27 +99,12 @@ export function logMessage(message: Message): void {
   // while keeping heatmap rendering fast.
   const hour_bucket = Math.floor(created_at_s / 3600) * 3600;
 
-  // For #general we additionally capture the full content for chat-quality
-  // scoring. This rides the same buffer + transaction so there's no extra
-  // fsync cost — one row goes to message_activity, one to
-  // general_messages_raw, both in the same flush.
-  const general = message.channelId === GENERAL_CHANNEL_ID
-    ? {
-        id: message.id,
-        content: (message.content ?? '').slice(0, MAX_CONTENT_LEN),
-        attachments: message.attachments?.size ?? 0,
-        embeds: message.embeds?.length ?? 0,
-        reply_to: message.reference?.messageId ?? null,
-      }
-    : undefined;
-
   messageBuffer.push({
     guildId: message.guildId,
     channelId: message.channelId,
     userId: message.author.id,
     created_at_s,
     hour_bucket,
-    general,
   });
 
   // Schedule flush if not already scheduled
@@ -182,23 +142,6 @@ function flushMessageBuffer(): void {
       );
       for (const msg of batch) {
         stmt.run(msg.guildId, msg.channelId, msg.userId, msg.created_at_s, msg.hour_bucket);
-      }
-      // Live capture into general_messages_raw for the chat-quality
-      // pipeline. INSERT OR IGNORE so concurrent backfill writes can't
-      // collide on the message-id PK.
-      const generalRows = batch.filter((m): m is MessageActivity & { general: NonNullable<MessageActivity['general']> } => !!m.general);
-      if (generalRows.length > 0) {
-        const stmtGeneral = db.prepare(
-          `INSERT OR IGNORE INTO general_messages_raw
-             (id, created_at_s, author_id, is_bot, content, attachments, embeds, reply_to)
-           VALUES (?, ?, ?, 0, ?, ?, ?, ?)`
-        );
-        for (const m of generalRows) {
-          stmtGeneral.run(
-            m.general.id, m.created_at_s, m.userId,
-            m.general.content, m.general.attachments, m.general.embeds, m.general.reply_to,
-          );
-        }
       }
     })();
 

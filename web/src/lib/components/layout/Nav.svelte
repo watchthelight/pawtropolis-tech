@@ -58,8 +58,6 @@
 		{ label: 'Stats',    href: '/dashboard/stats',    minTier: 'gk',    group: 'ops' },
 		{ label: 'Modmail',  href: '/dashboard/modmail',  minTier: 'gk',    group: 'ops' },
 		{ label: 'Pulse',    href: '/dashboard/pulse',    minTier: 'mod',   group: 'ops' },
-		{ label: 'Quality',  href: '/dashboard/quality',  minTier: 'mod',   group: 'ops' },
-		{ label: 'Flags',    href: '/dashboard/flags',    minTier: 'sm',    group: 'ops' },
 		{ label: 'Heatmap',  href: '/dashboard/heatmap',  minTier: 'sm',    group: 'ops' },
 		{ label: 'Art',      href: '/dashboard/art',      minTier: 'sm',    group: 'ops' },
 		{ label: 'QOTD',     href: '/dashboard/qotd',     minTier: 'gk',    group: 'ops' },

@@ -47,23 +47,26 @@ export function checkDatabaseHealth(): HealthCheckResult {
   };
 
   try {
-    // Step 1: PRAGMA integrity_check scans the entire database for corruption.
-    // This is thorough but can be slow on large DBs (100MB+ takes several seconds).
-    // Worth the cost at startup since catching corruption early prevents data loss.
-    logger.info("[healthcheck] Running SQLite integrity check...");
+    // Step 1: Integrity check. `full` runs PRAGMA integrity_check which scans
+    // every page (minutes on a multi-GB DB); `quick` runs PRAGMA quick_check
+    // which only verifies the index structure (sub-second even at 10 GB).
+    // Choose via DB_HEALTHCHECK_MODE env var. Default `full` preserves prior
+    // behavior; production with a large DB should set `quick`.
+    const mode = process.env.DB_HEALTHCHECK_MODE ?? "full";
+    const pragma = mode === "quick" ? "PRAGMA quick_check" : "PRAGMA integrity_check";
+    const columnKey = mode === "quick" ? "quick_check" : "integrity_check";
+    logger.info({ mode, pragma }, "[healthcheck] Running SQLite integrity check...");
     try {
-      const integrityResults = db.prepare("PRAGMA integrity_check").all() as Array<{
-        integrity_check: string;
-      }>;
+      const integrityResults = db.prepare(pragma).all() as Array<Record<string, string>>;
 
-      if (integrityResults.length === 1 && integrityResults[0].integrity_check === "ok") {
+      if (integrityResults.length === 1 && integrityResults[0][columnKey] === "ok") {
         result.integrity = "ok";
-        logger.info("[healthcheck] ✓ Database integrity: OK");
+        logger.info({ mode }, "[healthcheck] ✓ Database integrity: OK");
       } else {
         result.integrity = "corrupt";
-        const issues = integrityResults.map((r) => r.integrity_check).join("; ");
+        const issues = integrityResults.map((r) => r[columnKey]).join("; ");
         result.errors.push(`Database corruption detected: ${issues}`);
-        logger.error({ issues }, "[healthcheck] ✗ Database integrity: CORRUPT");
+        logger.error({ issues, mode }, "[healthcheck] ✗ Database integrity: CORRUPT");
       }
     } catch (err) {
       result.integrity = "error";
@@ -171,7 +174,12 @@ export function checkDatabaseHealth(): HealthCheckResult {
  * WHY: Prevents bot from running with corrupted data.
  */
 export function requireHealthyDatabase(): void {
-  logger.info("[healthcheck] Starting database health check...");
+  const mode = process.env.DB_HEALTHCHECK_MODE ?? "full";
+  if (mode === "skip") {
+    logger.warn("[healthcheck] SKIPPED (DB_HEALTHCHECK_MODE=skip)");
+    return;
+  }
+  logger.info({ mode }, "[healthcheck] Starting database health check...");
 
   const result = checkDatabaseHealth();
 
