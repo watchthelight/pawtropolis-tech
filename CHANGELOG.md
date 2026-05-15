@@ -2,9 +2,78 @@
 
 All changes to Pawtropolis Tech are tracked here.
 
-**Versions:** [Unreleased](#unreleased) | [5.2.0](#520---2026-05-02) | [5.1.1](#511---2026-01-27) | [5.1.0](#510---2026-01-17) | [5.0.0](#500---2026-01-12) | [4.9.2](#492---2026-01-07) | [4.9.1](#491---2026-01-07) | [4.9.0](#490---2026-01-04) | [4.8.0](#480---2025-12-08) | [4.7.1](#471---2025-12-03) | [4.7.0](#470---2025-12-03) | [4.6.0](#460---2025-12-03) | [4.5.0](#450---2025-12-02) | [4.4.4](#444---2025-12-03) | [4.4.3](#443---2025-12-03) | [4.4.2](#442---2025-12-03) | [4.4.1](#441---2025-12-03) | [4.4.0](#440---2025-12-03) | [4.3.0](#430---2025-12-02) | [4.2.0](#420---2025-12-01) | [4.1.0](#410---2025-12-01) | [4.0.3](#403---2025-12-01) | [4.0.2](#402---2025-12-01) | [4.0.1](#401---2025-12-01) | [4.0.0](#400---2025-12-01) | [Earlier versions](#earlier-versions)
+**Versions:** [Unreleased](#unreleased) | [6.0.0](#600---2026-05-15) | [5.2.0](#520---2026-05-02) | [5.1.1](#511---2026-01-27) | [5.1.0](#510---2026-01-17) | [5.0.0](#500---2026-01-12) | [4.9.2](#492---2026-01-07) | [4.9.1](#491---2026-01-07) | [4.9.0](#490---2026-01-04) | [4.8.0](#480---2025-12-08) | [4.7.1](#471---2025-12-03) | [4.7.0](#470---2025-12-03) | [4.6.0](#460---2025-12-03) | [4.5.0](#450---2025-12-02) | [4.4.4](#444---2025-12-03) | [4.4.3](#443---2025-12-03) | [4.4.2](#442---2025-12-03) | [4.4.1](#441---2025-12-03) | [4.4.0](#440---2025-12-03) | [4.3.0](#430---2025-12-02) | [4.2.0](#420---2025-12-01) | [4.1.0](#410---2025-12-01) | [4.0.3](#403---2025-12-01) | [4.0.2](#402---2025-12-01) | [4.0.1](#401---2025-12-01) | [4.0.0](#400---2025-12-01) | [Earlier versions](#earlier-versions)
 
 ## [Unreleased]
+
+## [6.0.0] - 2026-05-15
+
+Major release. Ships a new `/handbook` web page that mirrors every word of
+`docs/` and renders it with per-section permission badges sourced from the
+viewer's Discord roles. Also folds in the in-flight bot-side work from the
+Unreleased section (cookie-cutter `/testidea`, `/help` drift closure, full
+docs sweep, error-card buttons).
+
+### Added
+
+- **`/handbook` web page** (`web/src/routes/handbook/**`): Permission-aware
+  live documentation at `/handbook` on the dashboard. Server-renders each
+  `docs/*.md` file at startup with `marked.lexer()`, then walks the token
+  tree to produce custom Svelte components (`MdNode`, `CommandSection`,
+  `SectionBlock`, `Heading`, `Paragraph`, `Lists`, `Table`, `CodeBlock`,
+  `Blockquote`, `Callout`, `Inline`, `PermissionBadge`, `LoginCta`). Every
+  command and section gets a tier badge: green dot for "you can run this",
+  lock icon + 55% body opacity for "you can read it, but cannot run it."
+  Logged-out visitors see public-tier content with an inline sign-in CTA on
+  staff-only sections. Mobile gets a bottom-sheet "On this page" TOC; the
+  doc index lives in a left rail on desktop and a sliding drawer on phones.
+- **Permission resolver** (`web/src/lib/server/handbook/permissionResolver.ts`):
+  Parses "Who can use it" prose into a structured `HandbookTier` requirement.
+  Handles `Bot Owner`, `Community Manager+`, `Senior Admin+`, `Admin+`,
+  `Senior Mod+`, `Moderator+`, `Junior Mod+`, `Gatekeeper+`, `[GK]` (exact),
+  bare `Staff` (treated as Gatekeeper+), Discord permission fallbacks
+  (`Manage Messages`/`Manage Guild`/`Manage Roles`), `Mod Team`/`Community
+  Ambassador`/`Server Artist` (viewer tier), and hybrid statements like
+  `Manage Roles OR Community Ambassador OR Mod Team` (resolves to the
+  lowest tier that satisfies the floor).
+- **`/testidea` bot-dev cookie cutter** (`src/commands/testidea/currentAction.ts`):
+  Rotating mass-action slot for the bot dev. Snapshot/restore are scoped by
+  `ACTION_ID` so the action body can be swapped without schema churn or
+  cross-contamination of stored state. Bot-owner-only.
+- **Error-card action row** (`src/lib/errorCardV2.ts`,
+  `src/handlers/errorCardButtons.ts`): Every "Command Failed" embed now
+  ships with **Ping bot dev**, **Copy trace**, and **Run trace** buttons.
+  *Ping* mentions `OWNER_IDS[0]` with the trace ID (staff-gated). *Copy*
+  replies ephemerally with the trace ID in a code block for manual copy.
+  *Run trace* invokes the same renderer as `/developer trace <id>` and
+  replies ephemerally (staff-gated). All three reuse the existing trace
+  cache.
+
+### Changed
+
+- **`/help` drift closed** (`src/commands/help/registry.ts`): 12 commands
+  that were registered but missing from `/help` are now documented
+  (`welcomebatch`, `verify`, `admin-migrate-unverified`, `cleanup`,
+  `restoreroles`, `postticketpanel`, `closeticket`, `assignticket`,
+  `review-set-notify-config`, `review-get-notify-config`,
+  `review-set-listopen-output`, `qotd`). Six phantom standalone analytics
+  entries (`activity`, `approval-rate`, `modstats`, `modhistory`,
+  `analytics`, `analytics-export`) folded into one `/stats` parent with
+  subcommands, mirroring how `/gate` and `/config` are modeled.
+- **Docs sweep** (`docs/`): `BOT-HANDBOOK.md`, `PERMS-MATRIX.md`,
+  `ADMIN-GUIDE.md`, `LEADERSHIP-GUIDE.md` now cover every shipped command.
+  New `docs/TICKET-SYSTEM-GUIDE.md`. `docs/reference/slash-commands.md`
+  converted to a short pointer so we don't sign up to keep two indexes in
+  sync.
+
+### Fixed
+
+- **`deploy:cmds` on EC2**: Switched the npm script from
+  `npx dotenvx run -- tsx ...` to `npx -y tsx ...`. The unscoped `dotenvx`
+  package is now 404 on npmjs (renamed to `@dotenvx/dotenvx`), and EC2's
+  `npm ci --omit=dev` strips local `tsx`. `npx -y tsx` fetches the binary
+  on demand and runs `deploy-commands.ts` which already imports
+  `dotenv/config` itself, so the wrapper was redundant.
 
 ### GitHub Discord Badge System (2026-05-02)
 

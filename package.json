@@ -1,6 +1,6 @@
 {
   "name": "pawtropolis-tech",
-  "version": "5.2.0",
+  "version": "6.0.0",
   "description": "Server-owned Discord gatekeeping bot. Transparent, auditable, and minimal. Built by watchthelight (Bash).",
   "private": true,
   "type": "module",
@@ -27,7 +27,7 @@
     "build": "tsup && npm run scan:legacy",
     "start": "npx @dotenvx/dotenvx run -- node dist/index.js",
     "test": "vitest run",
-    "deploy:cmds": "tsx scripts/deploy-commands.ts --all",
+    "deploy:cmds": "npx -y tsx scripts/deploy-commands.ts --all",
     "sync:cmds": "dotenvx run -- tsx scripts/commands.ts --all",
     "print:cmds": "dotenvx run -- tsx scripts/print-commands.ts",
     "auth:whoami": "dotenvx run -- tsx scripts/auth-check.ts",
