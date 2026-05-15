@@ -148,8 +148,9 @@ export const client = new Client({
     GatewayIntentBits.GuildVoiceStates, // For movie night attendance + voice session tracking
     GatewayIntentBits.GuildPresences,   // For dashboard profile status display + online count
     GatewayIntentBits.GuildInvites,     // For invite usage tracking (growth source attribution)
+    GatewayIntentBits.GuildMessageReactions, // Message archive reactor events
   ],
-  partials: [Partials.Channel],
+  partials: [Partials.Channel, Partials.Message, Partials.Reaction, Partials.User],
   // Cache limits to prevent unbounded memory growth in large servers
   // See: https://discordjs.guide/popular-topics/caching.html#limiting-cache-size
   makeCache: Options.cacheWithLimits({
@@ -655,6 +656,15 @@ client.once(Events.ClientReady, async () => {
         logger.debug("[shutdown] Message activity buffer flushed");
       } catch (err) {
         logger.warn({ err }, "[shutdown] Message activity flush failed (non-fatal)");
+      }
+
+      // 2b. Flush archive buffer (messages + reactions)
+      try {
+        const { flushArchiveBuffersOnShutdown } = await import("./features/messageArchive.js");
+        flushArchiveBuffersOnShutdown();
+        logger.debug("[shutdown] Archive buffer flushed");
+      } catch (err) {
+        logger.warn({ err }, "[shutdown] Archive flush failed (non-fatal)");
       }
 
       // 3. Cleanup banner sync listeners
@@ -1257,6 +1267,66 @@ client.on("messageUpdate", wrapEvent("messageUpdate.tickets", async (_old, newMs
 
 client.on("messageDelete", wrapEvent("messageDelete.tickets", async (msg) => {
   markMessageDeleted(msg);
+}));
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MESSAGE ARCHIVE — every message in guilds, full content + reactions
+// See migrations/075_message_archive.ts + src/features/messageArchive.ts
+// ─────────────────────────────────────────────────────────────────────────────
+import * as archive from "./features/messageArchive.js";
+
+client.on("messageCreate", wrapEvent("messageCreate.archive", async (msg) => {
+  if (!msg.guildId) return;
+  archive.archiveMessage(msg, "live");
+}));
+
+client.on("messageUpdate", wrapEvent("messageUpdate.archive", async (_old, newMsg) => {
+  if (!newMsg.guildId) return;
+  // Fetch full message if partial (Discord may only deliver partial on edit)
+  let full = newMsg;
+  if (newMsg.partial) {
+    try {
+      full = await newMsg.fetch();
+    } catch {
+      return;
+    }
+  }
+  archive.archiveMessage(full as import("discord.js").Message, "live");
+}));
+
+client.on("messageDelete", wrapEvent("messageDelete.archive", async (msg) => {
+  if (!msg.guildId) return;
+  archive.markMessageDeleted(msg);
+}));
+
+client.on("messageReactionAdd", wrapEvent("messageReactionAdd.archive", async (reaction, user) => {
+  let r: import("discord.js").MessageReaction;
+  if (reaction.partial) {
+    try {
+      r = await reaction.fetch();
+    } catch {
+      return;
+    }
+  } else {
+    r = reaction;
+  }
+  if (!r.message.guildId) return;
+  archive.recordReaction(r, user, "live");
+}));
+
+client.on("messageReactionRemove", wrapEvent("messageReactionRemove.archive", async (reaction, user) => {
+  let r: import("discord.js").MessageReaction;
+  if (reaction.partial) {
+    try {
+      r = await reaction.fetch();
+    } catch {
+      return;
+    }
+  } else {
+    r = reaction;
+  }
+  if (!r.message.guildId) return;
+  archive.removeReaction(r, user);
 }));
 
 // Invite tracking: detect which invite each new member used
