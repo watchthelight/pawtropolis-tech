@@ -42,6 +42,9 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
   EmbedBuilder,
   MessageFlags,
   type ChatInputCommandInteraction,
@@ -460,7 +463,8 @@ export async function postErrorCardV2(
 
   // Send the error card (public so staff can see if user asks for help)
   try {
-    await replyOrEdit(interaction, { embeds: [embed] });
+    const row = buildErrorCardActionRow(wideEvent.traceId);
+    await replyOrEdit(interaction, { embeds: [embed], components: [row] });
   } catch (err) {
     const code = (err as { code?: unknown })?.code;
 
@@ -479,6 +483,37 @@ export async function postErrorCardV2(
       "failed to deliver error card v2"
     );
   }
+}
+
+/**
+ * customId prefix for buttons attached to error cards.
+ * Format: ec:<action>:<traceId> — 14 chars + 11-char trace = 25 chars, well under Discord's 100-char cap.
+ * Routed in src/index.ts → src/handlers/errorCardButtons.ts.
+ */
+export const ERROR_CARD_BUTTON_PREFIX = "ec:";
+export const ERROR_CARD_BUTTON_RE = /^ec:(ping|copy|trace):([A-Za-z0-9]+)$/;
+
+/**
+ * Build the action row that ships on every error card.
+ *  - Ping bot dev:  mentions the configured owner in-channel (staff-gated).
+ *  - Copy trace:    ephemeral reply with the trace ID in a code block.
+ *  - Run trace:     ephemeral reply with the full /developer trace embeds (staff-gated).
+ */
+export function buildErrorCardActionRow(traceId: string): ActionRowBuilder<ButtonBuilder> {
+  return new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`ec:ping:${traceId}`)
+      .setLabel("Ping bot dev")
+      .setStyle(ButtonStyle.Danger),
+    new ButtonBuilder()
+      .setCustomId(`ec:copy:${traceId}`)
+      .setLabel("Copy trace")
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`ec:trace:${traceId}`)
+      .setLabel("Run trace")
+      .setStyle(ButtonStyle.Primary)
+  );
 }
 
 /**

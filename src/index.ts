@@ -1509,6 +1509,26 @@ client.on("interactionCreate", wrapEvent("interactionCreate", async (interaction
             return;
           }
 
+          // Error card buttons (Ping bot dev / Copy trace / Run trace).
+          // Attached to every "Command Failed" embed by lib/errorCardV2.ts.
+          const errorCardMatch = (await import("./handlers/errorCardButtons.js")).matchErrorCardButton(customId);
+          if (errorCardMatch) {
+            logger.info(
+              {
+                evt: "ix_route_match",
+                kind: "button",
+                route: `errorcard_${errorCardMatch.action}`,
+                traceIdReferenced: errorCardMatch.traceId,
+                traceId,
+              },
+              "route: errorcard"
+            );
+            const { handleErrorCardButton } = await import("./handlers/errorCardButtons.js");
+            await handleErrorCardButton(interaction, errorCardMatch.action, errorCardMatch.traceId);
+            succeeded = true;
+            return;
+          }
+
           // if this regex breaks, I cry
           const decideMatch = customId.match(BTN_DECIDE_RE);
           if (decideMatch) {

@@ -129,7 +129,7 @@ async function handleStats(ctx: CommandContext<ChatInputCommandInteraction>) {
 
 // ===== Embed Builders =====
 
-function buildTraceEmbeds(trace: WideEvent): EmbedBuilder[] {
+export function buildTraceEmbeds(trace: WideEvent): EmbedBuilder[] {
   const embeds: EmbedBuilder[] = [];
 
   // Embed 1: Request Overview
