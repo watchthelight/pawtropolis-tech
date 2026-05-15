@@ -35,6 +35,7 @@ export async function runSchemaSelfHeal(): Promise<boolean> {
       ensurePanicModeColumn,
       ensureApplicationStaleAlertColumns,
       ensureArtistRotationConfigColumns,
+      ensureTestIdeaTable,
     } = await import("../db/ensure.js");
     const { ensureBotStatusSchema } = await import("../features/statusStore.js");
     const {
@@ -59,6 +60,7 @@ export async function runSchemaSelfHeal(): Promise<boolean> {
     ensurePanicModeColumn();
     ensureApplicationStaleAlertColumns();
     ensureArtistRotationConfigColumns();
+    ensureTestIdeaTable();
     ensureBotStatusSchema();
 
     // Config column migrations (moved from getConfig/upsertConfig for performance)

@@ -934,3 +934,28 @@ export function ensureApplicationStaleAlertColumns() {
   }
 }
 
+/**
+ * ensureTestIdeaTable
+ * WHAT: Creates testidea_state table for the /testidea hoist-toggle experiment.
+ * WHY: Persists per-guild on/off state plus a snapshot of each role's prior hoist
+ *      flag so toggling OFF restores exactly what was there before.
+ */
+export function ensureTestIdeaTable() {
+  try {
+    db.prepare(
+      `
+      CREATE TABLE IF NOT EXISTS testidea_state (
+        guild_id     TEXT PRIMARY KEY,
+        enabled      INTEGER NOT NULL DEFAULT 0,
+        snapshot     TEXT,
+        updated_at   INTEGER NOT NULL DEFAULT (strftime('%s','now'))
+      )
+    `
+    ).run();
+    logger.info("[ensure] testidea_state table ensured");
+  } catch (err) {
+    logger.error({ err }, "[ensure] failed to ensure testidea_state table");
+    throw err;
+  }
+}
+
