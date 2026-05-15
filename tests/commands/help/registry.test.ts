@@ -176,10 +176,10 @@ describe("help/registry", () => {
         expect(listopen!.category).toBe("queue");
       });
 
-      it("has modstats command in analytics category", () => {
-        const modstats = COMMAND_REGISTRY.find((c) => c.name === "modstats");
-        expect(modstats).toBeDefined();
-        expect(modstats!.category).toBe("analytics");
+      it("has stats command in analytics category", () => {
+        const stats = COMMAND_REGISTRY.find((c) => c.name === "stats");
+        expect(stats).toBeDefined();
+        expect(stats!.category).toBe("analytics");
       });
 
       it("has panic command as owner level", () => {

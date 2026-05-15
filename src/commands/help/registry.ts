@@ -274,7 +274,7 @@ export const COMMAND_REGISTRY: CommandMetadata[] = [
       "Set logging channel first to track all configuration changes",
       "Configure mod_roles to grant command access to your team",
     ],
-    relatedCommands: ["gate", "modstats"],
+    relatedCommands: ["gate", "stats"],
     aliases: ["settings", "configure", "setup"],
   },
 
@@ -1021,7 +1021,7 @@ export const COMMAND_REGISTRY: CommandMetadata[] = [
       "Run after initial bot setup to populate activity data",
       "Use dry-run to preview message counts first",
     ],
-    relatedCommands: ["activity"],
+    relatedCommands: ["stats"],
     aliases: ["populate", "filldata"],
   },
   {
