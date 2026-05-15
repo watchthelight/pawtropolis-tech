@@ -27,7 +27,7 @@
     "build": "tsup && npm run scan:legacy",
     "start": "npx @dotenvx/dotenvx run -- node dist/index.js",
     "test": "vitest run",
-    "deploy:cmds": "npx @dotenvx/dotenvx run -- tsx scripts/deploy-commands.ts --all",
+    "deploy:cmds": "tsx scripts/deploy-commands.ts --all",
     "sync:cmds": "dotenvx run -- tsx scripts/commands.ts --all",
     "print:cmds": "dotenvx run -- tsx scripts/print-commands.ts",
     "auth:whoami": "dotenvx run -- tsx scripts/auth-check.ts",
