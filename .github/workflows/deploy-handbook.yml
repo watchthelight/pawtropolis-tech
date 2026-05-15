@@ -1,0 +1,91 @@
+name: Deploy handbook (web) to EC2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'web/**'
+  workflow_dispatch: {}
+
+concurrency:
+  # Coalesce rapid pushes so a long-running deploy can't be doubled-up.
+  group: deploy-handbook
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install web dependencies
+        working-directory: web
+        run: npm ci
+
+      - name: Build web
+        working-directory: web
+        run: npm run build
+
+      - name: Package build artefacts
+        run: |
+          set -euo pipefail
+          tar -czf web-deploy.tar.gz \
+            -C web build package.json package-lock.json static svelte.config.js
+          ls -lh web-deploy.tar.gz
+
+      - name: Add EC2 to known_hosts
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Set up SSH key
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          umask 077
+          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/id_ec2
+          chmod 600 ~/.ssh/id_ec2
+
+      - name: SCP artefact to EC2
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+        run: |
+          scp -i ~/.ssh/id_ec2 -o StrictHostKeyChecking=accept-new \
+            web-deploy.tar.gz "$EC2_USER@$EC2_HOST:/home/ubuntu/pawtropolis-tech/"
+
+      - name: Extract and restart on EC2
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+        run: |
+          ssh -i ~/.ssh/id_ec2 -o StrictHostKeyChecking=accept-new \
+            "$EC2_USER@$EC2_HOST" 'bash -lc "
+              set -euo pipefail
+              cd /home/ubuntu/pawtropolis-tech/web &&
+              tar -xzf ../web-deploy.tar.gz &&
+              pm2 restart pawtropolis-web &&
+              rm -f ../web-deploy.tar.gz &&
+              pm2 list | grep pawtropolis-web
+            "'
+
+      - name: Smoke test
+        env:
+          ORIGIN: https://pawtropolis.tech
+        run: |
+          set -euo pipefail
+          sleep 4
+          code=$(curl -s -o /dev/null -w '%{http_code}' "$ORIGIN/handbook/bot-handbook")
+          echo "GET /handbook/bot-handbook -> $code"
+          test "$code" = "200"
