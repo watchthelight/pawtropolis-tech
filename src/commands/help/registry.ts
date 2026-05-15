@@ -496,108 +496,35 @@ export const COMMAND_REGISTRY: CommandMetadata[] = [
   // ANALYTICS
   // ============================================================================
   {
-    name: "activity",
-    description: "View server activity heatmap with trends",
+    name: "stats",
+    description: "Server analytics, moderator performance, and activity heatmaps",
     category: "analytics",
     permissionLevel: "staff",
-    usage: "/activity [weeks:<1-8>]",
-    options: [
-      { name: "weeks", description: "Number of weeks to display (1-8, default: 1)", type: "integer", required: false },
-    ],
-    examples: ["/activity", "/activity weeks:4"],
-    notes: "Generates a visual heatmap PNG showing message activity by hour and day.",
-    workflowTips: [
-      "Identify peak activity hours for scheduling announcements",
-      "Track engagement trends over multiple weeks",
-      "Use for planning events at high-activity times",
-    ],
-    relatedCommands: ["modstats", "approval-rate"],
-    aliases: ["heatmap", "engagement"],
-  },
-  {
-    name: "approval-rate",
-    description: "View application approval rate analytics",
-    category: "analytics",
-    permissionLevel: "staff",
-    usage: "/approval-rate",
-    examples: ["/approval-rate"],
-    notes: "Shows approval, rejection, and kick rates with historical trends.",
-    workflowTips: [
-      "Monitor team consistency with approval rates",
-      "Identify if rejection rates are unusually high",
-    ],
-    relatedCommands: ["modstats", "activity"],
-    aliases: ["approvalrate", "stats"],
-  },
-  {
-    name: "modstats",
-    description: "Moderation performance analytics",
-    category: "analytics",
-    permissionLevel: "staff",
-    usage: "/modstats <subcommand>",
+    usage: "/stats <subcommand>",
     subcommands: [
-      { name: "leaderboard", description: "View team leaderboard" },
-      { name: "user_stats", description: "View stats for a specific user" },
-      { name: "export", description: "Export stats as CSV" },
-      { name: "reset", description: "Reset metrics (admin only)" },
-    ],
-    examples: ["/modstats leaderboard", "/modstats user_stats user:@Mod", "/modstats export"],
-    notes: "Tracks accept/reject/kick actions per moderator with timing metrics.",
-    workflowTips: [
-      "Use leaderboard to recognize active team members",
-      "Check user_stats for individual performance reviews",
-      "Export data for external analysis",
-    ],
-    relatedCommands: ["modhistory", "approval-rate"],
-    aliases: ["modleaderboard", "teamstats"],
-  },
-  {
-    name: "modhistory",
-    description: "View moderator action history (leadership only)",
-    category: "analytics",
-    permissionLevel: "admin",
-    usage: "/modhistory moderator:<@user> [days:<1-365>] [export:<bool>]",
-    options: [
-      { name: "moderator", description: "Moderator to inspect", type: "user", required: true },
-      { name: "days", description: "Days of history (default: 30)", type: "integer", required: false },
-      { name: "export", description: "Export as CSV", type: "boolean", required: false },
+      { name: "activity", description: "Server activity heatmap (1-8 weeks)" },
+      { name: "approval-rate", description: "Application approval/rejection rates with trends" },
+      { name: "leaderboard", description: "Moderator action leaderboard" },
+      { name: "user", description: "Stats for a specific moderator" },
+      { name: "export", description: "Full CSV export (admin only)" },
+      { name: "reset", description: "Reset and rebuild metrics (admin only)" },
+      { name: "history", description: "Moderator action history (leadership only)" },
     ],
     examples: [
-      "/modhistory moderator:@Mod",
-      "/modhistory moderator:@Mod days:90 export:true",
+      "/stats activity weeks:4",
+      "/stats approval-rate",
+      "/stats leaderboard",
+      "/stats user user:@Mod",
+      "/stats history moderator:@Mod days:90",
     ],
-    notes: "Leadership-only command for oversight. Includes anomaly detection badges.",
+    notes: "One parent command for all analytics. Permission tiers differ per subcommand: activity/approval-rate/leaderboard/user are staff-level; export and reset are admin-only; history is leadership-only.",
     workflowTips: [
-      "Review before promotions or performance discussions",
-      "Look for anomaly badges indicating unusual patterns",
-      "Export for detailed analysis",
+      "Use /stats activity to find peak hours for announcements",
+      "Use /stats leaderboard to recognize active team members",
+      "Use /stats history before promotions or performance reviews",
     ],
-    relatedCommands: ["modstats"],
-    aliases: ["modactions", "moderatorhistory"],
-  },
-  {
-    name: "analytics",
-    description: "View server analytics dashboard",
-    category: "analytics",
-    permissionLevel: "staff",
-    usage: "/analytics",
-    examples: ["/analytics"],
-    notes: "Shows overview dashboard with key metrics.",
-    workflowTips: ["Quick overview of server health metrics"],
-    relatedCommands: ["analytics-export", "activity"],
-    aliases: ["dashboard"],
-  },
-  {
-    name: "analytics-export",
-    description: "Export full analytics data",
-    category: "analytics",
-    permissionLevel: "admin",
-    usage: "/analytics-export",
-    examples: ["/analytics-export"],
-    notes: "Generates comprehensive CSV export of all analytics data.",
-    workflowTips: ["Use for external reporting or backups"],
-    relatedCommands: ["analytics", "modstats"],
-    aliases: ["exportanalytics"],
+    relatedCommands: ["health", "modmail"],
+    aliases: ["analytics", "modstats", "modhistory", "activity", "approval-rate", "modleaderboard"],
   },
 
   // ============================================================================
@@ -1146,6 +1073,207 @@ export const COMMAND_REGISTRY: CommandMetadata[] = [
     ],
     relatedCommands: ["config"],
     aliases: ["skull"],
+  },
+
+  // ============================================================================
+  // GATE (continued) — batched welcome session
+  // ============================================================================
+  {
+    name: "welcomebatch",
+    description: "Batch multiple accepted users into one welcome message",
+    category: "gate",
+    permissionLevel: "staff",
+    usage: "/welcomebatch <subcommand>",
+    subcommands: [
+      { name: "start", description: "Open a batch session — pending welcomes are queued instead of sent" },
+      { name: "send", description: "Send the combined welcome card and close the session" },
+      { name: "cancel", description: "Discard the buffered welcomes and close the session" },
+      { name: "status", description: "Show batch session status (queued users, time remaining)" },
+    ],
+    examples: ["/welcomebatch start", "/welcomebatch send", "/welcomebatch status"],
+    notes: "Gatekeeper+ only. Useful when accepting several users in a row so the channel gets one welcome message instead of N.",
+    relatedCommands: ["accept", "gate"],
+    aliases: ["batch", "welcome-batch"],
+  },
+
+  // ============================================================================
+  // MEMBERSHIP & VERIFICATION
+  // ============================================================================
+  {
+    name: "verify",
+    description: "Self-verify first responder or military status for the Thin Line role",
+    category: "gate",
+    permissionLevel: "public",
+    usage: "/verify",
+    examples: ["/verify"],
+    notes: "Honor-system verification. Runs an ephemeral flow, optionally accepts a document upload, and grants a cosmetic role on completion. Logged to the verification channel.",
+    relatedCommands: ["accept"],
+    aliases: ["firstresponder", "military", "thin-line"],
+  },
+  {
+    name: "admin-migrate-unverified",
+    description: "One-shot migration that creates per-user verify threads for every current unverified member",
+    category: "gate",
+    permissionLevel: "admin",
+    usage: "/admin-migrate-unverified",
+    examples: ["/admin-migrate-unverified"],
+    notes: "Server Dev / Community Manager only. Run BEFORE locking down @everyone View on the lobby category so existing unverified members still get a thread and verification prompt.",
+    workflowTips: [
+      "Run during low-traffic hours — creates one thread per unverified user",
+      "Safe to re-run; existing threads are not duplicated",
+    ],
+    relatedCommands: ["verify", "gate"],
+    aliases: ["migrate-unverified", "verify-migration"],
+  },
+
+  // ============================================================================
+  // MODERATION (continued)
+  // ============================================================================
+  {
+    name: "cleanup",
+    description: "Purge up to 1000 recent messages from this channel",
+    category: "moderation",
+    permissionLevel: "staff",
+    usage: "/cleanup count:<1-1000> [reason:<text>]",
+    options: [
+      { name: "count", description: "How many messages to purge (1–1000)", type: "integer", required: true },
+      { name: "reason", description: "Reason logged to the audit channel", type: "string", required: false },
+    ],
+    examples: ["/cleanup count:50", "/cleanup count:200 reason:Spam wave"],
+    notes: "Moderator+. Messages older than 14 days are skipped (Discord bulk-delete limit) and reported in the result.",
+    relatedCommands: ["purge", "flag"],
+    aliases: ["clear", "sweep"],
+  },
+  {
+    name: "restoreroles",
+    description: "Re-grant the roles a returning member had before they left, were kicked, or banned",
+    category: "roles",
+    permissionLevel: "admin",
+    usage: "/restoreroles user:<@user> [dry_run:<bool>]",
+    options: [
+      { name: "user", description: "User to restore roles for", type: "user", required: true },
+      { name: "dry_run", description: "Preview what would be restored without applying", type: "boolean", required: false },
+    ],
+    examples: ["/restoreroles user:@JaneReturning", "/restoreroles user:@JaneReturning dry_run:true"],
+    notes: "Administrator+. Pulls the most recent snapshot from member_role_snapshots, filters out deleted/managed/hierarchy/already-has roles, and applies the remainder in one batch. Logged to action_log.",
+    relatedCommands: ["roles", "audit"],
+    aliases: ["restore-roles", "regrant", "return"],
+  },
+
+  // ============================================================================
+  // FIRST-PARTY TICKETS
+  // ============================================================================
+  {
+    name: "postticketpanel",
+    description: "Post (or refresh in place) the ticket-system panel embeds in the configured channel",
+    category: "system",
+    permissionLevel: "admin",
+    usage: "/postticketpanel",
+    examples: ["/postticketpanel"],
+    notes: "ManageGuild required. Idempotent — re-run after ticket type registry changes to refresh the embeds without spamming the channel.",
+    relatedCommands: ["closeticket", "assignticket"],
+    aliases: ["ticket-panel", "panel"],
+  },
+  {
+    name: "closeticket",
+    description: "Close the current ticket channel (slash-command alternative to the red Close button)",
+    category: "system",
+    permissionLevel: "staff",
+    usage: "/closeticket [reason:<text>]",
+    options: [
+      { name: "reason", description: "Reason saved in the ticket transcript", type: "string", required: false },
+    ],
+    examples: ["/closeticket", "/closeticket reason:Resolved in DMs"],
+    notes: "Community Ambassador or Mod Team only. Same gate as the red Close button on the greeting embed. Useful when the greeting message has scrolled off-screen.",
+    relatedCommands: ["postticketpanel", "assignticket"],
+    aliases: ["close-ticket"],
+  },
+  {
+    name: "assignticket",
+    description: "Manually swap the assigned artist on a first-party art ticket",
+    category: "system",
+    permissionLevel: "staff",
+    usage: "/assignticket artist:<@user>",
+    options: [
+      { name: "artist", description: "Artist to assign to the current ticket", type: "user", required: true },
+    ],
+    examples: ["/assignticket artist:@NewArtist"],
+    notes: "ManageRoles / Community Ambassador / Mod Team. Atomically updates ticket perms, closes prior art_job, and inserts a new art_job linked to the ticket. Posts a visible reassignment embed.",
+    relatedCommands: ["postticketpanel", "closeticket", "artistqueue"],
+    aliases: ["reassign", "swap-artist"],
+  },
+
+  // ============================================================================
+  // REVIEW NOTIFY CONFIG
+  // ============================================================================
+  {
+    name: "review-set-notify-config",
+    description: "Configure forum-post notification settings for the review queue",
+    category: "config",
+    permissionLevel: "admin",
+    usage: "/review-set-notify-config [mode:<post|channel>] [role:<@role>] [channel:<#channel>] [cooldown:<sec>] [max_per_hour:<n>]",
+    options: [
+      { name: "mode", description: "Notification mode: 'post' (in-thread) or 'channel' (separate)", type: "string", required: false, choices: [{ name: "post (in-thread)", value: "post" }, { name: "channel (separate)", value: "channel" }] },
+      { name: "role", description: "Role to ping on new forum posts", type: "role", required: false },
+      { name: "channel", description: "Channel to post notifications to (channel mode only)", type: "channel", required: false },
+      { name: "cooldown", description: "Cooldown seconds between pings to the same role", type: "integer", required: false },
+      { name: "max_per_hour", description: "Hard cap on pings per hour", type: "integer", required: false },
+    ],
+    examples: [
+      "/review-set-notify-config mode:post role:@Reviewers cooldown:600",
+      "/review-set-notify-config mode:channel channel:#review-pings max_per_hour:6",
+    ],
+    notes: "Administrator/Leadership only. Rate limiting prevents review-queue ping spam from drowning reviewers.",
+    relatedCommands: ["review-get-notify-config", "review-set-listopen-output", "listopen"],
+    aliases: ["notify-config", "review-notify"],
+  },
+  {
+    name: "review-get-notify-config",
+    description: "View the current review forum-post notification settings",
+    category: "config",
+    permissionLevel: "admin",
+    usage: "/review-get-notify-config",
+    examples: ["/review-get-notify-config"],
+    notes: "Administrator/Leadership only. Read-only inspection of the values set by /review-set-notify-config.",
+    relatedCommands: ["review-set-notify-config", "review-set-listopen-output"],
+    aliases: ["notify-config-get", "show-notify-config"],
+  },
+  {
+    name: "review-set-listopen-output",
+    description: "Toggle whether /listopen output is public or ephemeral",
+    category: "config",
+    permissionLevel: "admin",
+    usage: "/review-set-listopen-output mode:<public|ephemeral>",
+    options: [
+      { name: "mode", description: "Visibility for /listopen replies", type: "string", required: true, choices: [{ name: "public", value: "public" }, { name: "ephemeral", value: "ephemeral" }] },
+    ],
+    examples: [
+      "/review-set-listopen-output mode:public",
+      "/review-set-listopen-output mode:ephemeral",
+    ],
+    notes: "ManageGuild required. Some servers want /listopen public for accountability; others want it ephemeral to reduce noise.",
+    relatedCommands: ["listopen", "review-set-notify-config"],
+    aliases: ["listopen-output", "listopen-visibility"],
+  },
+
+  // ============================================================================
+  // QUESTION OF THE DAY
+  // ============================================================================
+  {
+    name: "qotd",
+    description: "Question of the Day suggestion system — community suggests, staff curate",
+    category: "messaging",
+    permissionLevel: "public",
+    usage: "/qotd <subcommand>",
+    subcommands: [
+      { name: "suggest", description: "Open a modal to suggest a Question of the Day" },
+      { name: "queue", description: "View QOTD queue status (staff)" },
+      { name: "pull", description: "Pull a random approved QOTD suggestion (staff)" },
+    ],
+    examples: ["/qotd suggest", "/qotd queue", "/qotd pull"],
+    notes: "Anyone can `suggest`. `queue` and `pull` are staff-only (Gatekeeper+). Approved suggestions are pulled at random and marked used so they don't repeat.",
+    relatedCommands: ["send", "modmail"],
+    aliases: ["question", "questionoftheday"],
   },
 ];
 
