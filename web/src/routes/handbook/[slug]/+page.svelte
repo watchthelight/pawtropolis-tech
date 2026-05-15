@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import MdNode from '$lib/components/handbook/MdNode.svelte';
-	import { HANDBOOK_TIER_LABELS } from '$lib/server/handbook/permissionResolver';
+	import { HANDBOOK_TIER_LABELS } from '$lib/handbook-shared';
 
 	let { data } = $props();
 	let tocOpen = $state(false);

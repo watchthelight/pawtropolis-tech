@@ -8,44 +8,8 @@
  *      module is the bridge between the two.
  */
 
-import type { DashboardTier } from '../roles';
-
-/**
- * Extended tier that adds `public` (anyone, including not signed in) to the
- * dashboard's ladder. Used inside the handbook only.
- */
-export type HandbookTier = DashboardTier | 'public';
-
-/** Order from highest (most-privileged) to lowest. `public` sits below `none`. */
-export const HANDBOOK_TIER_ORDER: HandbookTier[] = [
-	'owner',
-	'cm',
-	'cdl',
-	'sa',
-	'admin',
-	'sm',
-	'mod',
-	'jm',
-	'gk',
-	'viewer',
-	'none',
-	'public'
-];
-
-export const HANDBOOK_TIER_LABELS: Record<HandbookTier, string> = {
-	owner: 'Owner / Dev',
-	cm: 'Community Manager',
-	cdl: 'Community Dev Lead',
-	sa: 'Senior Administrator',
-	admin: 'Administrator',
-	sm: 'Senior Moderator',
-	mod: 'Moderator',
-	jm: 'Junior Moderator',
-	gk: 'Gatekeeper',
-	viewer: 'Mod Team / Ambassador',
-	none: 'Signed in',
-	public: 'Everyone'
-};
+export { HANDBOOK_TIER_ORDER, HANDBOOK_TIER_LABELS, type HandbookTier, type DashboardTier } from '../../handbook-shared';
+import { HANDBOOK_TIER_ORDER, type HandbookTier } from '../../handbook-shared';
 
 /**
  * Whether a viewer with `userTier` meets a section's `requiredTier`. Lower

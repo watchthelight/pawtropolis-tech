@@ -1,5 +1,17 @@
 <script lang="ts">
-	import { TIER_LABELS } from '$lib/server/roles';
+	const TIER_LABELS: Record<string, string> = {
+		owner: 'Owner / Dev',
+		cm: 'Community Manager',
+		cdl: 'Community Dev Lead',
+		sa: 'Senior Administrator',
+		admin: 'Administrator',
+		sm: 'Senior Moderator',
+		mod: 'Moderator',
+		jm: 'Junior Moderator',
+		gk: 'Gatekeeper',
+		viewer: 'Mod Team / Ambassador',
+		none: 'Signed in'
+	};
 
 	let { data } = $props();
 	let user = $derived(data.user);

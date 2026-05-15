@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { HANDBOOK_TIER_LABELS, type HandbookTier } from '$lib/server/handbook/permissionResolver';
+	import { HANDBOOK_TIER_LABELS, type HandbookTier } from '$lib/handbook-shared';
 
 	type Props = {
 		tier: HandbookTier;
