@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Token } from 'marked';
 	import Self from './Inline.svelte';
+	import { rewriteHandbookHref } from '$lib/handbook-shared';
 
 	type Props = { tokens: Token[] | undefined };
 	let { tokens }: Props = $props();
@@ -24,7 +25,7 @@
 			<del><Self tokens={(t as any).tokens} /></del>
 		{:else if t.type === 'link'}
 			<a
-				href={(t as any).href}
+				href={rewriteHandbookHref((t as any).href)}
 				title={(t as any).title ?? undefined}
 				target={(t as any).href?.startsWith('http') ? '_blank' : undefined}
 				rel={(t as any).href?.startsWith('http') ? 'noopener noreferrer' : undefined}

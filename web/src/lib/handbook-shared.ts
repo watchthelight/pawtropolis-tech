@@ -40,6 +40,48 @@ export const HANDBOOK_TIER_ORDER: HandbookTier[] = [
 	'public'
 ];
 
+/**
+ * Map of source filenames to canonical handbook slugs. Used to rewrite the
+ * raw `.md` hrefs that live in cross-references inside docs/* into proper
+ * `/handbook/<slug>` routes so they don't 404. Case-insensitive lookup.
+ */
+export const HANDBOOK_FILENAME_TO_SLUG: Record<string, string> = {
+	'BOT-HANDBOOK.md': 'bot-handbook',
+	'MOD-HANDBOOK.md': 'mod-handbook',
+	'PERMS-MATRIX.md': 'perms-matrix',
+	'GATEKEEPER-GUIDE.md': 'gatekeeper-guide',
+	'MODERATOR-GUIDE.md': 'moderator-guide',
+	'ADMIN-GUIDE.md': 'admin-guide',
+	'LEADERSHIP-GUIDE.md': 'leadership-guide',
+	'MOD-QUICKREF.md': 'mod-quickref',
+	'TICKET-SYSTEM-GUIDE.md': 'ticket-system',
+	'slash-commands.md': 'slash-commands'
+};
+
+/**
+ * Rewrite a raw href as it appears in markdown source so that intra-handbook
+ * cross-references end up at /handbook/<slug>. Anchors and absolute URLs are
+ * preserved unchanged.
+ */
+export function rewriteHandbookHref(href: string | undefined | null): string {
+	if (!href) return '';
+	// Absolute URLs and protocol-relative — leave alone.
+	if (/^(?:[a-z]+:)?\/\//i.test(href)) return href;
+	// Anchor-only — leave alone (in-page jump).
+	if (href.startsWith('#')) return href;
+
+	const [pathPart, anchor] = href.split('#', 2);
+	const filename = pathPart.split('/').filter(Boolean).pop() ?? '';
+	const slug =
+		HANDBOOK_FILENAME_TO_SLUG[filename] ??
+		HANDBOOK_FILENAME_TO_SLUG[filename.toUpperCase()] ??
+		HANDBOOK_FILENAME_TO_SLUG[filename.toLowerCase()];
+	if (slug) {
+		return anchor ? `/handbook/${slug}#${anchor}` : `/handbook/${slug}`;
+	}
+	return href;
+}
+
 export const HANDBOOK_TIER_LABELS: Record<HandbookTier, string> = {
 	owner: 'Owner / Dev',
 	cm: 'Community Manager',
