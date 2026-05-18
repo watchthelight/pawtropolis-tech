@@ -104,16 +104,36 @@
 	let hasVoted = $derived(voteOutInfo.voters.some(v => v.id === sessionUserId));
 	let voteOutLoading = $state(false);
 	let voteOutError = $state<string | null>(null);
+	let voteOutReasonOpen = $state(false);
+	let voteOutReason = $state('');
+
+	function openVoteOutReason() {
+		if (voteOutLoading || hasVoted) return;
+		voteOutError = null;
+		voteOutReason = '';
+		voteOutReasonOpen = true;
+	}
+
+	function cancelVoteOut() {
+		voteOutReasonOpen = false;
+		voteOutReason = '';
+		voteOutError = null;
+	}
 
 	async function handleVoteOut() {
 		if (voteOutLoading || hasVoted) return;
+		const reason = voteOutReason.trim();
+		if (!reason) {
+			voteOutError = 'Reason is required.';
+			return;
+		}
 		voteOutLoading = true;
 		voteOutError = null;
 		try {
 			const res = await fetch('/api/review/vote_out', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ appId: app.id })
+				body: JSON.stringify({ appId: app.id, reason })
 			});
 			const result = await res.json();
 			if (!result.success) {
@@ -123,6 +143,8 @@
 			}
 			setBotOnline();
 			voteOutLoading = false;
+			voteOutReasonOpen = false;
+			voteOutReason = '';
 			if (result.data?.thresholdMet) {
 				decisionDone = 'Voted Out';
 				if (detailBody) {
@@ -496,11 +518,25 @@
 				{decisionLoading ? 'Sending...' : activeAction === 'approve' ? 'Approve' : activeAction === 'reject' ? 'Reject' : activeAction === 'permreject' ? 'Perm Reject' : 'Kick'}
 			</button>
 			<button class="btn btn-cancel" onclick={cancelDecision} disabled={decisionLoading}>Cancel</button>
+		{:else if voteOutReasonOpen}
+			<input
+				bind:value={voteOutReason}
+				class="reason-input"
+				type="text"
+				maxlength="300"
+				placeholder="Reason for vote out (required, max 300)"
+				onkeydown={(e) => { if (e.key === 'Enter') handleVoteOut(); if (e.key === 'Escape') cancelVoteOut(); }}
+				disabled={voteOutLoading}
+			/>
+			<button class="btn btn-vote-out" onclick={handleVoteOut} disabled={voteOutLoading || !voteOutReason.trim()}>
+				{voteOutLoading ? 'Voting...' : 'Submit Vote'}
+			</button>
+			<button class="btn btn-cancel" onclick={cancelVoteOut} disabled={voteOutLoading}>Cancel</button>
 		{:else if isUnclaimed}
 			<button class="btn btn-claim" onclick={handleClaim} disabled={claimLoading || !botOnline}>
 				{claimLoading ? 'Claiming...' : !botOnline ? 'Bot offline' : 'Claim'}
 			</button>
-			<button class="btn btn-vote-out" onclick={handleVoteOut} disabled={voteOutLoading || hasVoted || !botOnline}>
+			<button class="btn btn-vote-out" onclick={openVoteOutReason} disabled={voteOutLoading || hasVoted || !botOnline}>
 				{hasVoted ? 'Voted' : voteOutLoading ? 'Voting...' : `Vote Out (${voteOutInfo.count}/${voteOutInfo.threshold})`}
 			</button>
 		{:else if isClaimedByMe}
@@ -520,7 +556,7 @@
 				{#if canAdminUnclaim}
 					<button class="btn btn-permreject" onclick={() => startDecision('permreject')} disabled={decisionLoading || !botOnline}>Perm Reject</button>
 				{/if}
-				<button class="btn btn-vote-out" onclick={handleVoteOut} disabled={voteOutLoading || hasVoted || !botOnline}>
+				<button class="btn btn-vote-out" onclick={openVoteOutReason} disabled={voteOutLoading || hasVoted || !botOnline}>
 					{hasVoted ? 'Voted' : voteOutLoading ? 'Voting...' : `Vote Out (${voteOutInfo.count}/${voteOutInfo.threshold})`}
 				</button>
 			</div>
@@ -541,7 +577,7 @@
 			<button class="btn btn-admin-unclaim" onclick={handleUnclaim} disabled={claimLoading || !botOnline}>
 				{claimLoading ? 'Releasing...' : !botOnline ? 'Bot offline' : 'Unclaim (Admin)'}
 			</button>
-			<button class="btn btn-vote-out" onclick={handleVoteOut} disabled={voteOutLoading || hasVoted || !botOnline}>
+			<button class="btn btn-vote-out" onclick={openVoteOutReason} disabled={voteOutLoading || hasVoted || !botOnline}>
 				{hasVoted ? 'Voted' : voteOutLoading ? 'Voting...' : `Vote Out (${voteOutInfo.count}/${voteOutInfo.threshold})`}
 			</button>
 		{:else}
@@ -549,7 +585,7 @@
 				{#if app.claimedByAvatar}<img src={app.claimedByAvatar} alt="" class="claimer-avatar" />{/if}
 				Claimed by {app.claimedByName ?? 'unknown'}
 			</span>
-			<button class="btn btn-vote-out" onclick={handleVoteOut} disabled={voteOutLoading || hasVoted || !botOnline}>
+			<button class="btn btn-vote-out" onclick={openVoteOutReason} disabled={voteOutLoading || hasVoted || !botOnline}>
 				{hasVoted ? 'Voted' : voteOutLoading ? 'Voting...' : `Vote Out (${voteOutInfo.count}/${voteOutInfo.threshold})`}
 			</button>
 		{/if}
@@ -569,6 +605,35 @@
 			<div class="mobile-kick-countdown">
 				<span class="kick-countdown-label">Kicking in {kickCountdown}s…</span>
 				<button class="mobile-btn mobile-btn-undo" onclick={undoKick}>Undo</button>
+			</div>
+		{:else if voteOutReasonOpen}
+			<div class="mobile-decision-sheet sheet-tone-danger" transition:slide={{ duration: 180 }}>
+				<div class="sheet-header">
+					<strong>Vote Out</strong>
+					<span class="sheet-hint">Reason required (max 300)</span>
+				</div>
+				<textarea
+					bind:value={voteOutReason}
+					class="sheet-textarea"
+					rows="3"
+					maxlength="300"
+					placeholder="Why are you voting to reject this applicant?"
+					onkeydown={(e) => { if (e.key === 'Escape') cancelVoteOut(); }}
+					disabled={voteOutLoading}
+				></textarea>
+				{#if dockError}
+					<div class="mobile-dock-error">{dockError}</div>
+				{/if}
+				<div class="sheet-actions">
+					<button class="sheet-btn sheet-btn-cancel" onclick={cancelVoteOut} disabled={voteOutLoading}>Cancel</button>
+					<button
+						class="sheet-btn sheet-btn-confirm sheet-btn-confirm-danger"
+						onclick={handleVoteOut}
+						disabled={voteOutLoading || !voteOutReason.trim()}
+					>
+						{voteOutLoading ? 'Voting…' : 'Submit Vote'}
+					</button>
+				</div>
 			</div>
 		{:else if activeAction}
 			<div class="mobile-decision-sheet sheet-tone-{activeActionTone}" transition:slide={{ duration: 180 }}>
@@ -623,7 +688,7 @@
 					{/if}
 					<button
 						class="more-btn more-btn-danger more-btn-full"
-						onclick={handleVoteOut}
+						onclick={openVoteOutReason}
 						disabled={voteOutLoading || hasVoted || !botOnline}
 					>
 						{voteOutLabel}
@@ -675,7 +740,7 @@
 					</button>
 					<button
 						class="mobile-btn mobile-btn-danger-outline"
-						onclick={handleVoteOut}
+						onclick={openVoteOutReason}
 						disabled={voteOutLoading || hasVoted || !botOnline}
 					>
 						{voteOutLabel}
@@ -718,7 +783,7 @@
 					</button>
 					<button
 						class="mobile-btn mobile-btn-danger-outline"
-						onclick={handleVoteOut}
+						onclick={openVoteOutReason}
 						disabled={voteOutLoading || hasVoted || !botOnline}
 					>
 						{voteOutLabel}
@@ -728,7 +793,7 @@
 				<div class="mobile-primary-actions layout-other">
 					<button
 						class="mobile-btn mobile-btn-danger-outline"
-						onclick={handleVoteOut}
+						onclick={openVoteOutReason}
 						disabled={voteOutLoading || hasVoted || !botOnline}
 					>
 						{voteOutLabel}

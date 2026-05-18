@@ -312,6 +312,7 @@ export interface ReviewVoteOutPayload {
 	voterName: string;
 	voteCount: number;
 	threshold: number;
+	reason?: string;
 }
 
 // ---------------------------------------------------------------------------

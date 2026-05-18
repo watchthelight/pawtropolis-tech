@@ -424,6 +424,7 @@ export function getReviewQueue(guildId: string): ReviewQueueItem[] {
 export interface VoteOutVoter {
 	id: string;
 	name: string;
+	reason: string | null;
 }
 
 export interface VoteOutInfo {
@@ -441,7 +442,8 @@ export function getVoteOutInfo(appId: string, guildId: string): VoteOutInfo {
 	const voters = db().prepare(`
 		SELECT
 			vo.voter_id as id,
-			COALESCE(u.display_name, u.global_name, u.username, 'User ' || substr(vo.voter_id, -6)) as name
+			COALESCE(u.display_name, u.global_name, u.username, 'User ' || substr(vo.voter_id, -6)) as name,
+			vo.reason as reason
 		FROM vote_out vo
 		LEFT JOIN user_cache u ON u.user_id = vo.voter_id AND u.guild_id = ?
 		WHERE vo.app_id = ?

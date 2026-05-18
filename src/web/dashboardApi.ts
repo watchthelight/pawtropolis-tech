@@ -23,7 +23,7 @@ import { getRoleTiers } from "../features/roleAutomation.js";
 import { approveTx, approveFlow, deliverApprovalDm } from "../features/review/flows/approve.js";
 import { rejectTx, rejectFlow } from "../features/review/flows/reject.js";
 import { kickTx, kickFlow } from "../features/review/flows/kick.js";
-import { loadApplication, insertVoteOut, getVoteOutVoters } from "../features/review/queries.js";
+import { loadApplication, insertVoteOut, getVoteOutVoters, getVoteOutEntries } from "../features/review/queries.js";
 import { getClaim } from "../features/review/claims.js";
 import { updateReviewActionMeta } from "../features/review/queries.js";
 import { ensureReviewMessage } from "../features/review.js";
@@ -605,9 +605,14 @@ export async function startDashboardApi(client: Client): Promise<void> {
 
   // POST /api/review/vote_out
   server.post<{ Body: ReviewBody }>("/api/review/vote_out", async (request, reply) => {
-    const { userId, tier, appId } = request.body ?? {};
+    const { userId, tier, appId, reason: rawReason } = request.body ?? {};
     if (!userId || !tier || !appId) return reply.code(400).send({ success: false, error: "Missing userId, tier, or appId" } satisfies ApiError);
     if (!hasMinTier(tier, "gk")) return reply.code(403).send({ success: false, error: "Insufficient permissions" } satisfies ApiError);
+
+    const voteReason = (rawReason ?? "").trim().slice(0, 300);
+    if (!voteReason) {
+      return reply.code(400).send({ success: false, error: "Vote out requires a reason (max 300 chars)" } satisfies ApiError);
+    }
 
     const app = loadApplication(appId);
     if (!app) return reply.code(404).send({ success: false, error: "Application not found" } satisfies ApiError);
@@ -620,17 +625,17 @@ export async function startDashboardApi(client: Client): Promise<void> {
     // NO claim guard — any GK can vote regardless of claim status
 
     // Insert vote (idempotent via UNIQUE constraint)
-    const isNew = insertVoteOut(app.id, userId);
+    const isNew = insertVoteOut(app.id, userId, voteReason);
     if (!isNew) {
       return reply.code(409).send({ success: false, error: "You already voted on this application" } satisfies ApiError);
     }
 
-    // Log vote action in review_action audit trail
+    // Log vote action in review_action audit trail (reason included)
     try {
       db.prepare(
         `INSERT INTO review_action (app_id, moderator_id, action, created_at, reason, message_link, meta)
-         VALUES (?, ?, 'vote_out', ?, NULL, NULL, NULL)`
-      ).run(app.id, userId, nowUtc());
+         VALUES (?, ?, 'vote_out', ?, ?, NULL, NULL)`
+      ).run(app.id, userId, nowUtc(), voteReason);
     } catch (err) {
       logger.error({ err, appId: app.id }, "[dashboardApi] failed to log vote_out action");
     }
@@ -647,7 +652,7 @@ export async function startDashboardApi(client: Client): Promise<void> {
       await ensureReviewMessage(client, appId).catch((err) => {
         logger.warn({ err, appId }, "[dashboardApi] failed to refresh card after vote_out");
       });
-      notifyDashboard("review:vote_out", { appId, reviewerId: userId, voteCount: voters.length, threshold });
+      notifyDashboard("review:vote_out", { appId, reviewerId: userId, voteCount: voters.length, threshold, reason: voteReason });
       return { success: true, data: { appId, action: "vote_out", voteCount: voters.length, threshold, thresholdMet: false } } satisfies ApiSuccess;
     }
 
@@ -711,7 +716,16 @@ export async function startDashboardApi(client: Client): Promise<void> {
     if (mentions.length === 1) voterList = mentions[0];
     else if (mentions.length === 2) voterList = `${mentions[0]} and ${mentions[1]}`;
     else voterList = `${mentions.slice(0, -1).join(", ")}, and ${mentions[mentions.length - 1]}`;
-    postReviewChannelMessage(appId, `${voterList} voted <@${app.user_id}> out.`, cardResult?.messageId);
+
+    const entries = getVoteOutEntries(appId);
+    const reasonLines = entries
+      .filter((e) => e.reason && e.reason.trim().length > 0)
+      .map((e) => `- <@${e.voter_id}>: ${e.reason}`)
+      .join("\n");
+    const publicMessage = reasonLines
+      ? `${voterList} voted <@${app.user_id}> out.\n${reasonLines}`
+      : `${voterList} voted <@${app.user_id}> out.`;
+    postReviewChannelMessage(appId, publicMessage, cardResult?.messageId);
 
     notifyDashboard("review:rejected", { appId, reviewerId: userId, action: "vote_out" });
     notifyDashboard("stats:updated", { userId });

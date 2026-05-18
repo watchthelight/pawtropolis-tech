@@ -5,7 +5,7 @@ import { canPerformReviewAction, type ReviewAction } from '$lib/server/reviewGat
 
 const VALID_ACTIONS = ['claim', 'unclaim', 'approve', 'reject', 'wrong_password', 'stale_modmail', 'kick', 'permreject', 'vote_out'] as const;
 
-const REASON_REQUIRED: ReviewAction[] = ['kick', 'permreject'];
+const REASON_REQUIRED: ReviewAction[] = ['kick', 'permreject', 'vote_out'];
 
 export const POST: RequestHandler = async ({ params, locals, request }) => {
 	const action = params.action as string;
