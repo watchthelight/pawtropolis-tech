@@ -500,6 +500,18 @@ CREATE TABLE IF NOT EXISTS role_assignments (
         details TEXT,
         created_at INTEGER DEFAULT (strftime('%s', 'now'))
       );
+CREATE TABLE IF NOT EXISTS role_cache (
+        guild_id TEXT NOT NULL,
+        role_id TEXT NOT NULL,
+        name TEXT NOT NULL,
+        color INTEGER NOT NULL DEFAULT 0,
+        position INTEGER NOT NULL DEFAULT 0,
+        mentionable INTEGER NOT NULL DEFAULT 0,
+        managed INTEGER NOT NULL DEFAULT 0,
+        updated_at_s INTEGER NOT NULL,
+        PRIMARY KEY (guild_id, role_id)
+      );
+CREATE INDEX IF NOT EXISTS idx_role_cache_guild ON role_cache(guild_id);
 CREATE TABLE IF NOT EXISTS role_tiers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         guild_id TEXT NOT NULL,
