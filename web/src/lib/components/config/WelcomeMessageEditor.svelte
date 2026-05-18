@@ -283,7 +283,15 @@
 		sel?.addRange(range);
 	}
 
-	// Discord-style preview: real role + channel chips, plain text otherwise.
+	// Preview must show what the welcome message will *actually look like* once
+	// the bot renders it for a new member: real role pings, real channel chips,
+	// and any legacy {applicant.*}/{guild.name} tokens resolved to stand-in
+	// placeholders. The editor itself doesn't surface tokens any more, but the
+	// backend still resolves them, so the preview has to mirror that for
+	// templates that pre-date the token removal.
+	const PREVIEW_RE =
+		/<#(\d{17,20})>|<@&(\d{17,20})>|\{(applicant\.mention|applicant\.tag|applicant\.display|guild\.name)\}/g;
+
 	const previewHtml = $derived.by(() => {
 		const escape = (s: string) =>
 			s.replace(/[&<>"']/g, (c) => ({
@@ -292,11 +300,11 @@
 
 		let html = '';
 		let last = 0;
-		PARSE_RE.lastIndex = 0;
+		PREVIEW_RE.lastIndex = 0;
 		let m: RegExpExecArray | null;
-		while ((m = PARSE_RE.exec(value))) {
+		while ((m = PREVIEW_RE.exec(value))) {
 			if (m.index > last) html += escape(value.slice(last, m.index));
-			const [full, chId, roleId] = m;
+			const [full, chId, roleId, tokenName] = m;
 			if (chId) {
 				const ch = channelById.get(chId);
 				html += `<span class="m m-channel">#${escape(ch?.name ?? 'unknown-channel')}</span>`;
@@ -308,6 +316,14 @@
 				} else {
 					html += `<span class="m m-role">@${escape(r?.name ?? 'unknown-role')}</span>`;
 				}
+			} else if (tokenName === 'applicant.mention') {
+				html += `<span class="m m-user">@NewMember</span>`;
+			} else if (tokenName === 'applicant.tag') {
+				html += `newmember`;
+			} else if (tokenName === 'applicant.display') {
+				html += `NewMember`;
+			} else if (tokenName === 'guild.name') {
+				html += `Pawtropolis`;
 			}
 			last = m.index + full.length;
 		}
@@ -477,6 +493,11 @@
 	:global(.preview .m-role) {
 		background: #4c4f57;
 		color: #dbdee1;
+	}
+
+	:global(.preview .m-user) {
+		background: #3c4270;
+		color: #c9cdfb;
 	}
 
 	.autocomplete {
