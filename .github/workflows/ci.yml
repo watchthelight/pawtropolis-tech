@@ -36,6 +36,7 @@ jobs:
       DISCORD_TOKEN: test_token_for_ci
       CLIENT_ID: 123456789012345678
       RESET_PASSWORD: test_password
+      DB_PATH: ./data/data.db
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -43,6 +44,14 @@ jobs:
           node-version: "20"
           cache: "npm"
       - run: npm ci
+      - name: Prepare test database
+        # Tests assume ./data/data.db has the production schema. Apply
+        # tests/fixtures/schema.sql (a dump of the live schema) directly.
+        # No migrations — the fixture already includes every applied migration.
+        # Regenerate the fixture if schema changes: see scripts/init-test-db.ts.
+        run: |
+          mkdir -p data
+          npx tsx scripts/init-test-db.ts
       - name: Run tests
         # HARD GATE — promoted 2026-05-04 after fixing the two pre-existing
         # failures (artistRotation handlers + roles rename). See

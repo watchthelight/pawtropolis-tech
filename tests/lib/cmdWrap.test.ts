@@ -20,6 +20,7 @@ const loggerMock = vi.hoisted(() => ({
   info: vi.fn(),
   warn: vi.fn(),
   error: vi.fn(),
+  debug: vi.fn(),
 }));
 
 vi.mock("../../src/lib/logger.js", () => ({
