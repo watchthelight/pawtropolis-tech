@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { prefersReducedMotion } from '$lib/motion';
 
-	let { value, label, trend, invertColors = false }: {
+	let { value, label, suffix, trend, invertColors = false }: {
 		value: number;
 		label: string;
+		suffix?: string;
 		trend?: 'up' | 'down' | 'neutral';
 		invertColors?: boolean;
 	} = $props();
@@ -62,6 +63,7 @@
 					<span class="sep">{d.char}</span>
 				{/if}
 			{/each}
+			{#if suffix}<span class="suffix">{suffix}</span>{/if}
 		</span>
 		{#if trend}
 			<span class="text-sm font-medium" style:color={trendColor[trend]}>
@@ -123,5 +125,13 @@
 	.sep {
 		line-height: 1.2;
 		opacity: 0.4;
+	}
+
+	.suffix {
+		font-size: 0.7em;
+		font-weight: 600;
+		color: var(--text-secondary);
+		margin-left: 0.1em;
+		line-height: 1.2;
 	}
 </style>
