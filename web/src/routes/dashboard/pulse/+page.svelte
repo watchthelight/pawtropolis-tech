@@ -44,11 +44,11 @@
 		return `${sign}${diff.toFixed(0)}% vs prev`;
 	}
 	let pendingTrend = $derived<'up' | 'down' | undefined>(
-		metrics.submittedToday === 0 && metrics.decisionsToday === 0
+		metrics.submittedInWindow === 0 && metrics.decisionsInWindow === 0
 			? undefined
-			: metrics.submittedToday > metrics.decisionsToday
+			: metrics.submittedInWindow > metrics.decisionsInWindow
 				? 'up'
-				: metrics.decisionsToday > metrics.submittedToday
+				: metrics.decisionsInWindow > metrics.submittedInWindow
 					? 'down'
 					: undefined
 	);
@@ -62,16 +62,21 @@
 		if (metrics.behavioralFlags > 0) parts.push(`${metrics.behavioralFlags} behavioral`);
 		return parts.join(' \u00b7 ');
 	});
-	let activityTrend = $derived<'up' | 'down' | undefined>(
-		metrics.messagesToday === 0 || metrics.messagesAvg7d === 0
-			? undefined
-			: metrics.messagesToday > metrics.messagesAvg7d * 1.2
-				? 'up'
-				: metrics.messagesToday < metrics.messagesAvg7d * 0.8
-					? 'down'
-					: undefined
-	);
-	let maxHour = $derived(Math.max(...metrics.hourlyDistribution, 1));
+	// Compare current per-day rate vs prior-period per-day rate. messagesPrev is window-
+	// total over the same span, so dividing both by windowDays cancels out \u2014 equivalent to
+	// comparing totals when window lengths match. \u00b120% threshold.
+	let activityTrend = $derived.by<'up' | 'down' | undefined>(() => {
+		const cur = metrics.messagesInWindow;
+		const prev = engagement.messagesPrev;
+		if (cur === 0 || prev == null || prev === 0) return undefined;
+		if (cur > prev * 1.2) return 'up';
+		if (cur < prev * 0.8) return 'down';
+		return undefined;
+	});
+	let useDailyBars = $derived(metrics.windowDays > 1);
+	let barData = $derived(useDailyBars ? metrics.dailyDistribution : metrics.hourlyDistribution);
+	let maxBar = $derived(Math.max(...barData, 1));
+	let barLabel = $derived(useDailyBars ? `${metrics.windowDays}-day breakdown` : 'last 24h');
 
 	// Live pulse updates — review/modmail/flag events refresh metrics (debounced)
 	let invalidateTimer: ReturnType<typeof setTimeout> | undefined;
@@ -95,7 +100,7 @@
 	});
 </script>
 
-{#if $navigating?.to?.url.pathname?.startsWith('/dashboard/pulse')}
+{#if $navigating?.to?.url.pathname?.startsWith('/dashboard/pulse') && $navigating?.from?.url.pathname !== $navigating?.to?.url.pathname}
 	<PulseSkeleton />
 {:else}
 <SpringReveal stagger={30}>
@@ -104,6 +109,7 @@
 		<TimeWindowSelector value={data.spec} />
 	</div>
 
+	<h3 class="section-title">Status now</h3>
 	<div class="pulse-grid">
 		<a href="/dashboard/reviews" class="card clickable" class:card-accent={metrics.pendingApps > 0}>
 			<div class="card-icon-row">
@@ -134,14 +140,26 @@
 			<StatNumber value={totalFlags} label="" />
 			<span class="card-sub">{totalFlags === 0 ? 'No active flags' : flagBreakdown}</span>
 		</a>
+	</div>
 
+	<h3 class="section-title">Activity ({windowLabel})</h3>
+	<div class="pulse-grid">
 		<div class="card">
 			<div class="card-icon-row">
 				<CheckCircle size={16} color="var(--text-tertiary)" />
 			</div>
-			<span class="card-label">Decisions Today</span>
-			<StatNumber value={metrics.decisionsToday} label="" />
-			<span class="card-sub">{metrics.decisionsToday === 0 ? 'No decisions yet' : 'team actions today'}</span>
+			<span class="card-label">Decisions</span>
+			<StatNumber value={metrics.decisionsInWindow} label="" />
+			<span class="card-sub">{metrics.decisionsInWindow === 0 ? 'No decisions in window' : 'team actions in window'}</span>
+		</div>
+
+		<div class="card">
+			<div class="card-icon-row">
+				<UserCheck size={16} color="var(--text-tertiary)" />
+			</div>
+			<span class="card-label">Approvals</span>
+			<StatNumber value={metrics.approvalsInWindow} label="" />
+			<span class="card-sub">{metrics.approvalsInWindow === 0 ? 'No approvals yet' : 'members verified in window'}</span>
 		</div>
 
 		<div class="card" class:card-accent={activityTrend !== undefined}>
@@ -149,23 +167,23 @@
 				<MessageSquare size={16} color={activityTrend !== undefined ? 'var(--accent)' : 'var(--text-tertiary)'} />
 				<span class="status-dot" class:status-green={activityTrend === undefined} class:status-amber={activityTrend !== undefined}></span>
 			</div>
-			<span class="card-label">Activity Today</span>
-			<StatNumber value={metrics.messagesToday} label="" trend={activityTrend} />
-			{#if metrics.messagesToday > 0}
-				<svg class="hourly-bars" viewBox="0 0 96 32" preserveAspectRatio="none" aria-hidden="true">
-					{#each metrics.hourlyDistribution as count, i}
+			<span class="card-label">Messages</span>
+			<StatNumber value={metrics.messagesInWindow} label="" trend={activityTrend} />
+			{#if metrics.messagesInWindow > 0}
+				<svg class="activity-bars" viewBox="0 0 96 32" preserveAspectRatio="none" aria-hidden="true" aria-label={barLabel}>
+					{#each barData as count, i}
 						<rect
-							x={i * 4}
-							y={32 - (count / maxHour) * 32}
-							width="3"
-							height={(count / maxHour) * 32}
+							x={i * (96 / barData.length)}
+							y={32 - (count / maxBar) * 32}
+							width={Math.max(1, (96 / barData.length) - 1)}
+							height={(count / maxBar) * 32}
 							fill="var(--accent)"
 							opacity="0.7"
 						/>
 					{/each}
 				</svg>
 			{/if}
-			<span class="card-sub">{metrics.messagesToday === 0 ? 'No activity data' : `avg: ${metrics.messagesAvg7d}/day`}</span>
+			<span class="card-sub">{metrics.messagesInWindow === 0 ? 'No activity data' : `avg: ${metrics.messagesAvgPerDay.toLocaleString()}/day · ${barLabel}`}</span>
 		</div>
 	</div>
 
@@ -215,7 +233,7 @@
 				<Zap size={16} color="var(--text-tertiary)" />
 			</div>
 			<span class="card-label">Retention</span>
-			<StatNumber value={Math.round(engagement.retentionPct)} label="%" />
+			<StatNumber value={Math.round(engagement.retentionPct)} label="" suffix="%" />
 			<span class="card-sub">new members who sent a message</span>
 		</div>
 	</div>
@@ -497,7 +515,7 @@
 		flex-shrink: 0;
 	}
 
-	.hourly-bars {
+	.activity-bars {
 		width: 100%;
 		height: 32px;
 		margin-top: 0.25rem;

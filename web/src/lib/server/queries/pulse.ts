@@ -8,11 +8,14 @@ export interface PulseMetrics {
 	latestModmailAt: string | null;
 	activeFlags: number;
 	behavioralFlags: number;
-	decisionsToday: number;
-	submittedToday: number;
-	messagesToday: number;
-	messagesAvg7d: number;
+	decisionsInWindow: number;
+	submittedInWindow: number;
+	approvalsInWindow: number;
+	messagesInWindow: number;
+	messagesAvgPerDay: number;
+	windowDays: number;
 	hourlyDistribution: number[];
+	dailyDistribution: number[];
 	totalMembers: number;
 	allTimeMembers: number;
 	membersLeft: number;
@@ -38,20 +41,15 @@ const excludedChannelCache = new Map<string, { ids: string[]; expiresAt: number 
  * Aggregates pending apps, open modmail, NSFW flags, and today's decision count.
  */
 /**
- * getPulseMetrics — window-aware. All time-bound counts now scope to the
- * provided range (or "today" if range is omitted, for backwards compat).
- *
- * Field names retain their historical "Today"/"7d" naming for API stability,
- * but the values are window-relative:
- *   - decisionsToday    → decisions inside the window
- *   - submittedToday    → applications submitted inside the window
- *   - messagesToday     → messages inside the window
- *   - messagesAvg7d     → messages-per-day mean across the window
- *   - hourlyDistribution → 24-bucket histogram of the most recent 24h IN window
- *   - activeRealUsers   → users with ≥ activeUserMsgThreshold(window) messages
+ * getPulseMetrics — window-aware. All time-bound counts scope to the
+ * provided range (or "today" if range is omitted).
  *
  * Counts that are state-of-now (pendingApps, modmail, flags, member totals)
  * stay range-independent.
+ *
+ * hourlyDistribution covers the last 24h ending at endS (24 buckets).
+ * dailyDistribution covers each day in the window (windowDays buckets), summing
+ * to messagesInWindow. Callers should pick the right one based on windowDays.
  */
 export function getPulseMetrics(guildId: string, range?: ResolvedRange): PulseMetrics {
 	const nowS = Math.floor(Date.now() / 1000);
@@ -70,7 +68,7 @@ export function getPulseMetrics(guildId: string, range?: ResolvedRange): PulseMe
 		FROM application WHERE guild_id = ?`
 	).get(startISO, endISO, guildId) as { pending: number | null; submitted: number | null };
 	const pendingApps = appRow.pending ?? 0;
-	const submittedToday = appRow.submitted ?? 0;
+	const submittedInWindow = appRow.submitted ?? 0;
 
 	const openModmail = count(
 		"SELECT COUNT(*) as count FROM modmail_ticket WHERE guild_id = ? AND status = 'open'",
@@ -92,16 +90,16 @@ export function getPulseMetrics(guildId: string, range?: ResolvedRange): PulseMe
 		guildId
 	);
 
-	const decisionsToday = count(
-		`SELECT COUNT(*) as count FROM action_log
-		 WHERE guild_id = ? AND action IN ('approve', 'reject', 'perm_reject', 'kick')
-		 AND created_at_s >= ? AND created_at_s < ?`,
-		guildId,
-		startS,
-		endS
-	);
-
-	// (pendingApps + submittedToday batched into appRow above.)
+	// Decisions + approvals in window — single scan, two SUM(CASE) aggregates
+	const decisionRow = db().prepare(
+		`SELECT
+			SUM(CASE WHEN action IN ('approve','reject','perm_reject','kick') THEN 1 ELSE 0 END) AS decisions,
+			SUM(CASE WHEN action = 'approve' THEN 1 ELSE 0 END) AS approvals
+		FROM action_log
+		WHERE guild_id = ? AND created_at_s >= ? AND created_at_s < ?`
+	).get(guildId, startS, endS) as { decisions: number | null; approvals: number | null };
+	const decisionsInWindow = decisionRow.decisions ?? 0;
+	const approvalsInWindow = decisionRow.approvals ?? 0;
 
 	// Hourly distribution: last 24h leading up to endS, bucketed by hour
 	const hourlyStartS = endS - 24 * 3600;
@@ -119,13 +117,27 @@ export function getPulseMetrics(guildId: string, range?: ResolvedRange): PulseMe
 		if (idx >= 0 && idx < 24) hourlyDistribution[idx] = row.count;
 	}
 
-	// Total messages in window + per-day mean
+	// Daily distribution: one bucket per day across the window. Sums to messagesInWindow.
+	const dailyDistribution = new Array(windowDays).fill(0);
+	const dayRows = db().prepare(
+		`SELECT (created_at_s - ?) / 86400 AS day_idx, COUNT(*) AS count
+		 FROM message_activity
+		 WHERE guild_id = ? AND created_at_s >= ? AND created_at_s < ?
+		 GROUP BY day_idx`
+	).all(startS, guildId, startS, endS) as { day_idx: number; count: number }[];
+	for (const row of dayRows) {
+		const idx = Math.floor(row.day_idx);
+		if (idx >= 0 && idx < windowDays) dailyDistribution[idx] = row.count;
+	}
+
+	// Total messages in window + per-day mean (denominator = windowDays, not unique
+	// days with activity — otherwise low-activity days shrink to nothing)
 	const winStats = db().prepare(
-		`SELECT COUNT(*) as total, COUNT(DISTINCT(created_at_s / 86400)) as days
-		 FROM message_activity WHERE guild_id = ? AND created_at_s >= ? AND created_at_s < ?`
-	).get(guildId, startS, endS) as { total: number; days: number };
-	const messagesToday = winStats.total;
-	const messagesAvg7d = winStats.days > 0 ? Math.round(winStats.total / winStats.days) : 0;
+		`SELECT COUNT(*) as total FROM message_activity
+		 WHERE guild_id = ? AND created_at_s >= ? AND created_at_s < ?`
+	).get(guildId, startS, endS) as { total: number };
+	const messagesInWindow = winStats.total;
+	const messagesAvgPerDay = windowDays > 0 ? Math.round(winStats.total / windowDays) : 0;
 
 	// Member counts (range-independent). Three SUM(CASE) over a single user_activity
 	// scan instead of three separate COUNT(*) queries — saves 2 prepared-statement
@@ -159,7 +171,14 @@ export function getPulseMetrics(guildId: string, range?: ResolvedRange): PulseMe
 		activeUserThreshold
 	);
 
-	return { pendingApps, openModmail, latestModmailAt, activeFlags, behavioralFlags, decisionsToday, submittedToday, messagesToday, messagesAvg7d, hourlyDistribution, totalMembers, allTimeMembers, membersLeft, estimatedBots, estimatedRealUsers, activeRealUsers };
+	return {
+		pendingApps, openModmail, latestModmailAt, activeFlags, behavioralFlags,
+		decisionsInWindow, submittedInWindow, approvalsInWindow,
+		messagesInWindow, messagesAvgPerDay, windowDays,
+		hourlyDistribution, dailyDistribution,
+		totalMembers, allTimeMembers, membersLeft,
+		estimatedBots, estimatedRealUsers, activeRealUsers
+	};
 }
 
 // ─── Newsletter Stats ──────────────────────────────────────────────────────────
