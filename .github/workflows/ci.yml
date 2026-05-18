@@ -52,6 +52,10 @@ jobs:
         run: |
           mkdir -p data
           npx tsx scripts/init-test-db.ts
+      - name: Sync SvelteKit (generates web/.svelte-kit/tsconfig.json)
+        # tests/web/*.test.ts depends on web/tsconfig.json extending
+        # web/.svelte-kit/tsconfig.json which only exists after svelte-kit sync.
+        run: cd web && npx svelte-kit sync
       - name: Run tests
         # HARD GATE — promoted 2026-05-04 after fixing the two pre-existing
         # failures (artistRotation handlers + roles rename). See
