@@ -12,6 +12,12 @@
 
 	let { value = $bindable(''), channels, roles }: Props = $props();
 
+	// Mirrors src/features/review/welcome.ts DEFAULT_WELCOME_TEMPLATE.
+	// When the saved value is empty, the bot falls back to this string at send
+	// time. The preview surface uses it as a fallback so the empty state is
+	// not a confusing blank box.
+	const DEFAULT_WELCOME_TEMPLATE = 'Welcome {applicant.mention} to {guild.name}! 👋';
+
 	const channelById = $derived(new Map(channels.map((c) => [c.id, c])));
 	const roleById = $derived(new Map(roles.map((r) => [r.id, r])));
 
@@ -298,12 +304,14 @@
 				'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
 			})[c]!);
 
+		const source = value.trim().length > 0 ? value : DEFAULT_WELCOME_TEMPLATE;
+
 		let html = '';
 		let last = 0;
 		PREVIEW_RE.lastIndex = 0;
 		let m: RegExpExecArray | null;
-		while ((m = PREVIEW_RE.exec(value))) {
-			if (m.index > last) html += escape(value.slice(last, m.index));
+		while ((m = PREVIEW_RE.exec(source))) {
+			if (m.index > last) html += escape(source.slice(last, m.index));
 			const [full, chId, roleId, tokenName] = m;
 			if (chId) {
 				const ch = channelById.get(chId);
@@ -327,9 +335,11 @@
 			}
 			last = m.index + full.length;
 		}
-		if (last < value.length) html += escape(value.slice(last));
+		if (last < source.length) html += escape(source.slice(last));
 		return html.replace(/\n/g, '<br />');
 	});
+
+	const isUsingDefault = $derived(value.trim().length === 0);
 </script>
 
 <div class="wrap">
@@ -384,13 +394,12 @@
 		</div>
 	{/if}
 
-	<label class="lbl" for="welcome-preview">Preview</label>
+	<label class="lbl" for="welcome-preview">
+		Preview
+		{#if isUsingDefault}<span class="lbl-hint">(showing default — editor empty)</span>{/if}
+	</label>
 	<div id="welcome-preview" class="preview">
-		{#if value.trim() === ''}
-			<span class="preview-empty">Empty — default Discord embed will be used.</span>
-		{:else}
-			{@html previewHtml}
-		{/if}
+		{@html previewHtml}
 	</div>
 </div>
 
@@ -451,10 +460,14 @@
 		word-break: break-word;
 	}
 
-	.preview-empty {
+	.lbl-hint {
+		font-weight: 400;
+		text-transform: none;
+		letter-spacing: 0;
 		color: var(--text-secondary);
-		font-style: italic;
-		opacity: 0.6;
+		font-size: 0.7rem;
+		opacity: 0.7;
+		margin-left: 0.4rem;
 	}
 
 	:global(.editor .mention) {
