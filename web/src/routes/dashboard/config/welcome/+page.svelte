@@ -66,7 +66,7 @@
 <SpringReveal stagger={30}>
 	<PageHeader
 		title="Welcome message"
-		subtitle="Set the message new members see when they're approved. Type # for channels, @ for roles, or use a token."
+		subtitle="Set the message new members see when they're approved. Type # to pick a channel, @ to ping a role."
 	/>
 
 	{#if loading}
@@ -83,15 +83,6 @@
 			</button>
 		</div>
 
-		<details class="tokens">
-			<summary>Available tokens</summary>
-			<ul>
-				<li><code>{'{applicant.mention}'}</code> — pings the new member</li>
-				<li><code>{'{applicant.tag}'}</code> — username#0000</li>
-				<li><code>{'{applicant.display}'}</code> — nickname or username</li>
-				<li><code>{'{guild.name}'}</code> — server name</li>
-			</ul>
-		</details>
 	{/if}
 </SpringReveal>
 
@@ -145,33 +136,4 @@
 		filter: brightness(1.1);
 	}
 
-	.tokens {
-		margin-top: 1.5rem;
-		padding: 0.75rem 1rem;
-		background: var(--surface);
-		border: 1px solid var(--border-holdfast);
-		border-radius: var(--radius-md);
-		font-size: 0.8rem;
-		color: var(--text-secondary);
-	}
-
-	.tokens summary {
-		cursor: pointer;
-		font-weight: 500;
-		color: var(--text-primary);
-	}
-
-	.tokens ul {
-		margin: 0.75rem 0 0 0;
-		padding-left: 1.25rem;
-	}
-
-	.tokens code {
-		background: var(--bg);
-		padding: 0.05rem 0.3rem;
-		border-radius: var(--radius-sm);
-		font-family: 'SF Mono', 'Fira Code', monospace;
-		font-size: 0.75rem;
-		color: var(--accent);
-	}
 </style>
