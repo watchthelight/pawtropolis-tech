@@ -142,11 +142,18 @@ db.prepare(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     app_id TEXT NOT NULL,
     voter_id TEXT NOT NULL,
+    reason TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     UNIQUE(app_id, voter_id)
   )
 `
 ).run();
+
+// Idempotent backfill for older DBs that pre-date the reason column.
+const voteOutCols = db.prepare(`PRAGMA table_info(vote_out)`).all() as Array<{ name: string }>;
+if (!voteOutCols.some((c) => c.name === "reason")) {
+  db.prepare(`ALTER TABLE vote_out ADD COLUMN reason TEXT`).run();
+}
 
 db.prepare(
   `CREATE INDEX IF NOT EXISTS idx_vote_out_app ON vote_out(app_id)`

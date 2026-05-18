@@ -628,6 +628,7 @@ CREATE TABLE IF NOT EXISTS vote_out (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     app_id TEXT NOT NULL,
     voter_id TEXT NOT NULL,
+    reason TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     UNIQUE(app_id, voter_id)
   );
