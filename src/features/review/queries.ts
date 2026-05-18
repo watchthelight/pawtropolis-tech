@@ -117,11 +117,11 @@ const getVoteOutCountStmt = db.prepare(
 );
 
 const getVoteOutVotersStmt = db.prepare(
-  `SELECT voter_id FROM vote_out WHERE app_id = ? ORDER BY created_at ASC`
+  `SELECT voter_id, reason FROM vote_out WHERE app_id = ? ORDER BY created_at ASC`
 );
 
 const insertVoteOutStmt = db.prepare(
-  `INSERT OR IGNORE INTO vote_out (app_id, voter_id, created_at) VALUES (?, ?, datetime('now'))`
+  `INSERT OR IGNORE INTO vote_out (app_id, voter_id, reason, created_at) VALUES (?, ?, ?, datetime('now'))`
 );
 
 /**
@@ -138,16 +138,29 @@ export function getVoteOutCount(appId: string): number {
  * WHY: Format the public reply ("X and Y voted <@user> out.").
  */
 export function getVoteOutVoters(appId: string): string[] {
-  const rows = getVoteOutVotersStmt.all(appId) as Array<{ voter_id: string }>;
+  const rows = getVoteOutVotersStmt.all(appId) as Array<{ voter_id: string; reason: string | null }>;
   return rows.map((r) => r.voter_id);
+}
+
+export interface VoteOutEntry {
+  voter_id: string;
+  reason: string | null;
+}
+
+/**
+ * WHAT: Get ordered list of voter IDs + reasons.
+ * WHY: Surface per-voter rationale on the public message / dashboard.
+ */
+export function getVoteOutEntries(appId: string): VoteOutEntry[] {
+  return getVoteOutVotersStmt.all(appId) as VoteOutEntry[];
 }
 
 /**
  * WHAT: Insert a vote out vote (idempotent via UNIQUE constraint).
  * WHY: Track individual mod votes. Returns false on duplicate click.
  */
-export function insertVoteOut(appId: string, voterId: string): boolean {
-  const result = insertVoteOutStmt.run(appId, voterId);
+export function insertVoteOut(appId: string, voterId: string, reason: string | null = null): boolean {
+  const result = insertVoteOutStmt.run(appId, voterId, reason);
   return result.changes > 0;
 }
 
