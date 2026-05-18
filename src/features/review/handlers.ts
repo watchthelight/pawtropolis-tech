@@ -30,6 +30,7 @@ export {
   handlePermRejectModal,
   handleKickModal,
   handleUnclaimModal,
+  handleVoteOutModal,
   // Helpers (for internal use by other modules)
   isStaff,
   requireInteractionStaff,
@@ -48,6 +49,7 @@ export {
   runPermRejectAction,
   runKickAction,
   runVoteOutAction,
+  runVoteOutRetractAction,
   // Claim handlers (for internal use)
   handleClaimToggle,
   handleUnclaimAction,

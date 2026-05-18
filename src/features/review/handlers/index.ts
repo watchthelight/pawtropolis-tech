@@ -23,6 +23,7 @@ export {
   handlePermRejectModal,
   handleKickModal,
   handleUnclaimModal,
+  handleVoteOutModal,
 } from "./modals.js";
 
 // Re-export helpers for internal use
@@ -35,6 +36,7 @@ export {
   openPermRejectModal,
   openKickModal,
   openUnclaimModal,
+  openVoteOutModal,
   BUTTON_RE,
   MODAL_RE,
   ACCEPT_MODAL_RE,
@@ -47,6 +49,7 @@ export {
   runPermRejectAction,
   runKickAction,
   runVoteOutAction,
+  runVoteOutRetractAction,
 } from "./actionRunners.js";
 
 // Re-export claim handlers for internal use

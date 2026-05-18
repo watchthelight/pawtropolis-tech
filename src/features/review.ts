@@ -107,6 +107,7 @@ export {
   handlePingInUnverified,
   handleDeletePing,
   handleVoteOutButton,
+  handleVoteOutModal,
 } from "./review/handlers.js";
 
 // Re-export card functions

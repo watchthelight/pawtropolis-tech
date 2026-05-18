@@ -36,7 +36,7 @@ import type {
 } from "../types.js";
 
 import { getClaim, claimGuard } from "../claims.js";
-import { updateReviewActionMeta, insertVoteOut, getVoteOutVoters } from "../queries.js";
+import { updateReviewActionMeta, insertVoteOut, getVoteOutVoters, getVoteOutEntries, removeVoteOut } from "../queries.js";
 
 import {
   approveTx,
@@ -772,14 +772,50 @@ function formatVoterList(voterIds: string[]): string {
 }
 
 /**
+ * runVoteOutRetractAction
+ * WHAT: Removes a previously cast vote-out by the same moderator.
+ * WHY: Vote button toggles — second click withdraws the vote (no reason needed).
+ */
+export async function runVoteOutRetractAction(
+  interaction: ReviewActionInteraction,
+  app: ApplicationRow
+) {
+  if (app.status === "rejected" || app.status === "approved" || app.status === "kicked") {
+    await replyOrEdit(interaction, { content: "This application is already resolved." }).catch((err) => {
+      logger.debug({ err, appId: app.id, action: "vote_out" }, "[review] already-resolved reply failed");
+    });
+    return;
+  }
+
+  removeVoteOut(app.id, interaction.user.id);
+  const voters = getVoteOutVoters(app.id);
+  const cfg = getConfig(interaction.guildId!);
+  const threshold = cfg?.vote_out_threshold ?? 2;
+
+  try {
+    await ensureReviewMessage(interaction.client, app.id);
+  } catch (err) {
+    logger.warn({ err, appId: app.id }, "[review] failed to refresh card after vote retract");
+  }
+
+  await interaction
+    .followUp({ content: `Vote retracted (${voters.length}/${threshold}).`, flags: MessageFlags.Ephemeral })
+    .catch((err) => {
+      logger.debug({ err, appId: app.id, action: "vote_out" }, "[review] vote-retracted reply failed");
+    });
+}
+
+/**
  * runVoteOutAction
- * WHAT: Handles a single vote-out click from a moderator.
+ * WHAT: Handles a single vote-out from a moderator (after reason is collected).
  * WHY: Accumulates votes; triggers rejection when configurable threshold is met.
  * DESIGN: No claim guard — any Gatekeeper can vote regardless of claim status.
+ *         Retract path lives in runVoteOutRetractAction.
  */
 export async function runVoteOutAction(
   interaction: ReviewActionInteraction,
-  app: ApplicationRow
+  app: ApplicationRow,
+  reason: string
 ) {
   // Terminal guard
   if (app.status === "rejected" || app.status === "approved" || app.status === "kicked") {
@@ -789,38 +825,35 @@ export async function runVoteOutAction(
     return;
   }
 
-  // Toggle vote: insert if new, remove if already voted
-  const isNew = insertVoteOut(app.id, interaction.user.id);
+  const trimmedReason = reason.trim().slice(0, 300);
+  if (!trimmedReason) {
+    await replyOrEdit(interaction, {
+      content: "Vote out requires a reason.",
+      flags: MessageFlags.Ephemeral,
+    }).catch((err) => {
+      logger.debug({ err, appId: app.id, action: "vote_out" }, "[review] missing-reason reply failed");
+    });
+    return;
+  }
+
+  // Insert vote. If row already exists for this voter, treat as a no-op to
+  // keep the action idempotent (retract is the button path now, not here).
+  const isNew = insertVoteOut(app.id, interaction.user.id, trimmedReason);
   if (!isNew) {
-    // Already voted — retract the vote
-    const { removeVoteOut } = await import("../queries.js");
-    removeVoteOut(app.id, interaction.user.id);
-
-    const voters = getVoteOutVoters(app.id);
-    const cfg = getConfig(interaction.guildId!);
-    const threshold = cfg?.vote_out_threshold ?? 2;
-
-    // Refresh card to update vote count
-    try {
-      await ensureReviewMessage(interaction.client, app.id);
-    } catch (err) {
-      logger.warn({ err, appId: app.id }, "[review] failed to refresh card after vote retract");
-    }
-
     await interaction
-      .followUp({ content: `Vote retracted (${voters.length}/${threshold}).`, flags: MessageFlags.Ephemeral })
+      .followUp({ content: "You have already voted on this application.", flags: MessageFlags.Ephemeral })
       .catch((err) => {
-        logger.debug({ err, appId: app.id, action: "vote_out" }, "[review] vote-retracted reply failed");
+        logger.debug({ err, appId: app.id, action: "vote_out" }, "[review] duplicate-vote reply failed");
       });
     return;
   }
 
-  // Log vote action in review_action audit trail
+  // Log vote action in review_action audit trail (reason included).
   try {
     db.prepare(
       `INSERT INTO review_action (app_id, moderator_id, action, created_at, reason, message_link, meta)
-       VALUES (?, ?, 'vote_out', ?, NULL, NULL, NULL)`
-    ).run(app.id, interaction.user.id, nowUtc());
+       VALUES (?, ?, 'vote_out', ?, ?, NULL, NULL)`
+    ).run(app.id, interaction.user.id, nowUtc(), trimmedReason);
   } catch (err) {
     logger.error({ err, appId: app.id }, "[review] failed to log vote_out action");
   }
@@ -845,19 +878,30 @@ export async function runVoteOutAction(
     cacheUser(interaction.user, interaction.guild.id, member);
   }
 
-  // Threshold not yet met — refresh card and confirm vote
+  // Threshold not yet met — repost card at channel bottom so it's obvious another vote is pending
   if (voters.length < threshold) {
     try {
+      const mapping = db
+        .prepare("SELECT channel_id, message_id FROM review_card WHERE app_id = ?")
+        .get(app.id) as { channel_id: string; message_id: string } | undefined;
+      if (mapping) {
+        const ch = await interaction.client.channels.fetch(mapping.channel_id).catch(() => null);
+        if (ch && ch.isTextBased() && "messages" in ch) {
+          const oldMsg = await ch.messages.fetch(mapping.message_id).catch(() => null);
+          await oldMsg?.delete().catch(() => {});
+        }
+        db.prepare("DELETE FROM review_card WHERE app_id = ?").run(app.id);
+      }
       await ensureReviewMessage(interaction.client, app.id);
     } catch (err) {
-      logger.warn({ err, appId: app.id }, "[review] failed to refresh card after vote_out");
+      logger.warn({ err, appId: app.id }, "[review] failed to repost card after vote_out");
     }
     await interaction
       .followUp({ content: `Vote recorded (${voters.length}/${threshold}).`, flags: MessageFlags.Ephemeral })
       .catch((err) => {
         logger.debug({ err, appId: app.id, action: "vote_out" }, "[review] vote-recorded reply failed");
       });
-    notifyDashboard("review:vote_out", { appId: app.id, reviewerId: interaction.user.id, voteCount: voters.length, threshold });
+    notifyDashboard("review:vote_out", { appId: app.id, reviewerId: interaction.user.id, voteCount: voters.length, threshold, reason: trimmedReason });
     return;
   }
 
@@ -966,9 +1010,16 @@ export async function runVoteOutAction(
     captureException(err, { area: "voteout:ensureReviewMessage", appId: app.id });
   }
 
-  // Post public reply: "X and Y voted <@user> out."
+  // Post public reply: "X and Y voted <@user> out." with per-voter reasons.
   const voterList = formatVoterList(voters);
-  const publicContent = `${voterList} voted <@${app.user_id}> out.`;
+  const entries = getVoteOutEntries(app.id);
+  const reasonLines = entries
+    .filter((e) => e.reason && e.reason.trim().length > 0)
+    .map((e) => `- <@${e.voter_id}>: ${e.reason}`)
+    .join("\n");
+  const publicContent = reasonLines
+    ? `${voterList} voted <@${app.user_id}> out.\n${reasonLines}`
+    : `${voterList} voted <@${app.user_id}> out.`;
 
   if (interaction.channel && "send" in interaction.channel) {
     try {

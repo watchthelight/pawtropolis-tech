@@ -14,7 +14,7 @@ import {
 import { logger } from "../../../lib/logger.js";
 import { captureException } from "../../../lib/sentry.js";
 import { replyOrEdit } from "../../../lib/cmdWrap.js";
-import { MODAL_PERM_REJECT_RE, MODAL_KICK_RE, MODAL_UNCLAIM_RE } from "../../../lib/modalPatterns.js";
+import { MODAL_PERM_REJECT_RE, MODAL_KICK_RE, MODAL_UNCLAIM_RE, MODAL_VOTE_OUT_RE } from "../../../lib/modalPatterns.js";
 import { newTraceId, ctx } from "../../../lib/reqctx.js";
 
 import {
@@ -29,6 +29,7 @@ import {
   runRejectAction,
   runPermRejectAction,
   runKickAction,
+  runVoteOutAction,
 } from "./actionRunners.js";
 
 // ===== Exported Modal Handlers =====
@@ -185,6 +186,44 @@ export async function handleKickModal(interaction: ModalSubmitInteraction) {
       content: `Failed to process kick (trace: ${traceId}).`,
     }).catch((replyErr) => {
       logger.debug({ err: replyErr, code, traceId }, "[review] kick-modal error-reply failed");
+    });
+  }
+}
+
+/**
+ * handleVoteOutModal
+ * WHAT: Handles vote-out reason modal submission.
+ * WHY: Captures the moderator's rationale before recording the vote.
+ */
+export async function handleVoteOutModal(interaction: ModalSubmitInteraction) {
+  const match = MODAL_VOTE_OUT_RE.exec(interaction.customId);
+  if (!match) return;
+  if (!requireInteractionStaff(interaction)) return;
+
+  if (!interaction.deferred && !interaction.replied) {
+    await interaction.deferUpdate().catch((err) => {
+      logger.debug({ err, interactionId: interaction.id }, "[review] vote-out-modal deferUpdate failed");
+    });
+  }
+
+  const code = match[1];
+
+  try {
+    const app = await resolveApplication(interaction, code);
+    if (!app) return;
+
+    const reasonRaw = interaction.fields.getTextInputValue("v1:modal:vote_out:reason") ?? "";
+    const reason = reasonRaw.trim().slice(0, 300);
+
+    await runVoteOutAction(interaction, app, reason);
+  } catch (err) {
+    const traceId = ctx().traceId ?? newTraceId();
+    logger.error({ err, code, traceId }, "Vote out modal handling failed");
+    captureException(err, { area: "handleVoteOutModal", code, traceId });
+    await replyOrEdit(interaction, {
+      content: `Failed to process vote out (trace: ${traceId}).`,
+    }).catch((replyErr) => {
+      logger.debug({ err: replyErr, code, traceId }, "[review] vote-out-modal error-reply failed");
     });
   }
 }

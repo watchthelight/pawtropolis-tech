@@ -315,6 +315,38 @@ export async function openKickModal(interaction: ButtonInteraction, app: Applica
 }
 
 /**
+ * openVoteOutModal
+ * WHAT: Shows the vote-out reason modal.
+ * WHY: Each vote requires a short justification so consensus rejections
+ *      leave a per-voter rationale, not just a count.
+ */
+export async function openVoteOutModal(interaction: ButtonInteraction, app: ApplicationRow) {
+  if (app.status === "rejected" || app.status === "approved" || app.status === "kicked") {
+    await replyOrEdit(interaction, { content: "This application is already resolved.", flags: MessageFlags.Ephemeral }).catch((err) => {
+      logger.debug({ err, appId: app.id, action: "vote_out" }, "[review] already-resolved reply failed");
+    });
+    return;
+  }
+
+  const code = shortCode(app.id);
+  const modal = new ModalBuilder()
+    .setCustomId(`v1:modal:vote_out:code${code}`)
+    .setTitle("Vote Out — Reason");
+  const reasonInput = new TextInputBuilder()
+    .setCustomId("v1:modal:vote_out:reason")
+    .setLabel("Reason (max 300 chars)")
+    .setPlaceholder("Why are you voting to reject this applicant?")
+    .setRequired(true)
+    .setMinLength(3)
+    .setMaxLength(300)
+    .setStyle(TextInputStyle.Paragraph);
+  const row = new ActionRowBuilder<TextInputBuilder>().addComponents(reasonInput);
+  modal.addComponents(row);
+
+  await safeShowModal(interaction, modal, { appId: app.id, action: "vote_out" });
+}
+
+/**
  * openUnclaimModal
  * WHAT: Shows the unclaim confirmation modal.
  * WHY: Prevents accidental unclaims by requiring explicit confirmation.

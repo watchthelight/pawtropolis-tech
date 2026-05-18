@@ -44,9 +44,11 @@ import {
   openPermRejectModal,
   openKickModal,
   openUnclaimModal,
+  openVoteOutModal,
 } from "./helpers.js";
 
-import { runRejectAction, runKickAction, runVoteOutAction } from "./actionRunners.js";
+import { runRejectAction, runKickAction, runVoteOutAction, runVoteOutRetractAction } from "./actionRunners.js";
+import { getVoteOutVoters } from "../queries.js";
 import { handleClaimToggle, handleUnclaimAction } from "./claimHandlers.js";
 
 // ===== Button Rate Limiting =====
@@ -635,17 +637,27 @@ export async function handleVoteOutButton(interaction: ButtonInteraction) {
 
   const code = match[1];
 
-  // Defer update to acknowledge button (no modal, no visible loading)
-  if (!interaction.deferred && !interaction.replied) {
-    await interaction.deferUpdate().catch((err) => {
-      logger.debug({ err, code, interactionId: interaction.id }, "[review] vote-out-button deferUpdate failed");
-    });
-  }
-
   try {
-    const app = await resolveApplication(interaction, code);
-    if (!app) return;
-    await runVoteOutAction(interaction, app);
+    // Peek voter list before opening a modal — if this mod already voted,
+    // a click is a retract (no reason needed) and showing a modal would be
+    // confusing UX.
+    const appRow = await resolveApplicationLight(interaction, code);
+    if (!appRow) return;
+
+    const existingVoters = getVoteOutVoters(appRow.id);
+    if (existingVoters.includes(interaction.user.id)) {
+      // Retract path: ack with deferUpdate then run the existing flow.
+      if (!interaction.deferred && !interaction.replied) {
+        await interaction.deferUpdate().catch((err) => {
+          logger.debug({ err, code, interactionId: interaction.id }, "[review] vote-out-button deferUpdate failed");
+        });
+      }
+      await runVoteOutRetractAction(interaction, appRow);
+      return;
+    }
+
+    // New vote path: collect a reason via modal.
+    await openVoteOutModal(interaction, appRow);
   } catch (err) {
     const traceId = ctx().traceId ?? newTraceId();
     logger.error({ err, code, traceId }, "Vote out button handling failed");
@@ -656,4 +668,17 @@ export async function handleVoteOutButton(interaction: ButtonInteraction) {
       logger.debug({ err: replyErr, code, traceId }, "[review] vote-out error-reply failed");
     });
   }
+}
+
+// resolveApplication uses replyOrEdit on failure, which itself acks — fine
+// when the next step is also a reply. But before showModal we must NOT have
+// acked the interaction, so we need a variant that delegates ack errors back
+// to the caller. resolveApplication already only replies on the *failure*
+// path, so reusing it is safe — the success path leaves the interaction
+// untouched.
+async function resolveApplicationLight(
+  interaction: ButtonInteraction,
+  code: string
+) {
+  return resolveApplication(interaction, code);
 }

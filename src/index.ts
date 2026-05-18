@@ -97,6 +97,7 @@ import {
   handlePingInUnverified,
   handleDeletePing,
   handleVoteOutButton,
+  handleVoteOutModal,
 } from "./features/review.js";
 import {
   handleModmailOpenButton,
@@ -2195,6 +2196,29 @@ client.on("interactionCreate", wrapEvent("interactionCreate", async (interaction
                 "review_kick",
                 async (commandCtx) => {
                   await handleKickModal(commandCtx.interaction);
+                }
+              );
+              await executor(interaction);
+              succeeded = true;
+              return;
+            }
+
+            if (route?.type === "review_vote_out") {
+              logger.info(
+                {
+                  evt: "ix_route_match",
+                  kind: "modal",
+                  route: "review_vote_out",
+                  id: customId,
+                  code: route.code,
+                  traceId,
+                },
+                "route: vote out modal"
+              );
+              const executor = wrapCommand<ModalSubmitInteraction>(
+                "review_vote_out",
+                async (commandCtx) => {
+                  await handleVoteOutModal(commandCtx.interaction);
                 }
               );
               await executor(interaction);
