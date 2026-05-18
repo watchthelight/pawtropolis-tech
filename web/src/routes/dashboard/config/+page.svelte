@@ -73,6 +73,19 @@
 <SpringReveal stagger={30}>
 	<PageHeader title="Config" subtitle="Bot and guild settings" />
 
+	<a class="editor-link" href="/dashboard/config/welcome">
+		<span class="editor-link-icon" aria-hidden="true">
+			<svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+				<path d="M11.5 1.5l3 3L5 14H2v-3L11.5 1.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+			</svg>
+		</span>
+		<span class="editor-link-body">
+			<span class="editor-link-title">Welcome message editor</span>
+			<span class="editor-link-sub">Visual editor with channel and role autocomplete, live Discord preview</span>
+		</span>
+		<span class="editor-link-arrow" aria-hidden="true">→</span>
+	</a>
+
 	{#if sections.length === 0}
 		<EmptyState
 			message="No configuration found"
@@ -189,5 +202,61 @@
 
 	.section-body {
 		border-top: 1px solid var(--border);
+	}
+
+	.editor-link {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.75rem 1rem;
+		margin-bottom: 0.75rem;
+		background: var(--surface);
+		border: 1px solid var(--border-holdfast);
+		border-radius: var(--radius-md);
+		color: var(--text-primary);
+		text-decoration: none;
+		transition: background 150ms var(--ease-smooth), border-color 150ms var(--ease-smooth);
+	}
+
+	@media (hover: hover) {
+		.editor-link:hover {
+			background: var(--surface-raised);
+			border-color: var(--accent);
+		}
+	}
+
+	.editor-link-icon {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 2rem;
+		height: 2rem;
+		border-radius: var(--radius-sm);
+		background: var(--accent-dim);
+		color: var(--accent);
+		flex-shrink: 0;
+	}
+
+	.editor-link-body {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+		flex: 1;
+		min-width: 0;
+	}
+
+	.editor-link-title {
+		font-size: 0.85rem;
+		font-weight: 600;
+	}
+
+	.editor-link-sub {
+		font-size: 0.7rem;
+		color: var(--text-secondary);
+	}
+
+	.editor-link-arrow {
+		color: var(--text-secondary);
+		font-size: 1rem;
 	}
 </style>
