@@ -9,6 +9,13 @@ export default defineConfig({
     clearMocks: true,
     unstubGlobals: true,
 
+    // 5s default is too tight under parallel worker load: tests that do a
+    // dynamic `await import(...)` of a fat module (modmail/index, review/reject)
+    // can spend most of the budget on transform + module resolution before the
+    // assertion runs. Raise to 15s so worker contention isn't a flake source.
+    testTimeout: 15000,
+    hookTimeout: 15000,
+
     // Pretty reporters: dots while running, nice summary at the end
     reporters: ["dot", "default"],
 

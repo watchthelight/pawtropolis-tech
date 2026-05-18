@@ -35,6 +35,12 @@ _bmad-output/implementation-artifacts/
 _bug-reply.md
 _announcement-*.md
 _perf-*.md
+_charts_data.json
+_charts_out/
+_retention.json
+_retention.png
+_retention_plot.py
+_situation_message.md
 
 # Test fixtures with potential secrets
 tests/**/fixtures/**
