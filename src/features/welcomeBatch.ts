@@ -156,6 +156,68 @@ export async function flushSession(
   }
 }
 
+/**
+ * isMemberBuffered
+ * WHAT: Returns true if the given member is currently in the active batch.
+ * WHY: Lets the right-click context menu decide between "add" and "send".
+ */
+export function isMemberBuffered(guildId: string, memberId: string): boolean {
+  const s = sessions.get(guildId);
+  if (!s) return false;
+  return s.members.some((m) => m.id === memberId);
+}
+
+export type AddMemberResult =
+  | { kind: "started"; bufferedCount: number }
+  | { kind: "added"; bufferedCount: number }
+  | { kind: "already_buffered"; bufferedCount: number }
+  | { kind: "full"; bufferedCount: number }
+  | { kind: "denied_other_opener"; openedBy: string };
+
+/**
+ * addMember
+ * WHAT: Auto-starts a session if none is open, then enqueues the member.
+ * WHY: Single entry point for the right-click "Welcome Batch" context menu so
+ *      the caller does not need to know whether a session already exists.
+ * RULES:
+ *  - If no session: start one owned by openedBy, then enqueue.
+ *  - If session belongs to a different mod: deny (avoids stomping their queue).
+ *  - If session is at the cap: report full so the caller can fall back.
+ */
+export function addMember(
+  member: GuildMember,
+  openedBy: string,
+  onExpire: (session: { openedBy: string; memberIds: string[] }) => void
+): AddMemberResult {
+  const guildId = member.guild.id;
+  let s = sessions.get(guildId);
+  let started = false;
+  if (!s) {
+    startSession(guildId, openedBy, onExpire);
+    s = sessions.get(guildId);
+    started = true;
+  }
+  if (!s) {
+    // Defensive: startSession should always populate. Treat as full to fall back.
+    return { kind: "full", bufferedCount: 0 };
+  }
+  if (s.openedBy !== openedBy) {
+    return { kind: "denied_other_opener", openedBy: s.openedBy };
+  }
+  if (s.members.some((m) => m.id === member.id)) {
+    return { kind: "already_buffered", bufferedCount: s.members.length };
+  }
+  if (s.members.length >= WELCOME_BATCH_MAX_USERS) {
+    return { kind: "full", bufferedCount: s.members.length };
+  }
+  s.members.push(member);
+  logger.info(
+    { guildId, userId: member.id, bufferedCount: s.members.length, viaContext: true },
+    "[welcomeBatch] member added via context menu"
+  );
+  return { kind: started ? "started" : "added", bufferedCount: s.members.length };
+}
+
 export function cancelSession(guildId: string): { cancelled: boolean; bufferedCount: number; openedBy?: string } {
   const s = sessions.get(guildId);
   if (!s) return { cancelled: false, bufferedCount: 0 };
