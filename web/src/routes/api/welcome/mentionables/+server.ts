@@ -25,11 +25,20 @@ export const GET: RequestHandler = async ({ locals }) => {
 
 	const guildId = process.env.GUILD_ID;
 
+	// Only surface channel types that can actually be linked in a welcome
+	// message: text (0), announcement/news (5), forum (15), media (16).
+	// Excludes categories, voice, stage, threads, directory entries which
+	// either can't be referenced with <#id> or render as garbage.
+	const LINKABLE_CHANNEL_TYPES = [0, 5, 15, 16];
+
+	const placeholders = LINKABLE_CHANNEL_TYPES.map(() => '?').join(',');
 	const channelRows = db()
 		.prepare(
-			`SELECT channel_id, name, type, parent_id FROM channel_cache WHERE guild_id = ? ORDER BY name`
+			`SELECT channel_id, name, type, parent_id FROM channel_cache
+			 WHERE guild_id = ? AND type IN (${placeholders})
+			 ORDER BY name`
 		)
-		.all(guildId) as ChannelRow[];
+		.all(guildId, ...LINKABLE_CHANNEL_TYPES) as ChannelRow[];
 
 	const roleRows = db()
 		.prepare(
