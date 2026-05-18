@@ -438,6 +438,16 @@ client.once(Events.ClientReady, async () => {
     logger.error({ err }, "[startup] Channel cache sync failed");
   }
 
+  // Sync role names to role_cache table for web dashboard (welcome editor)
+  try {
+    const { syncAllRoles } = await import("./features/roleCacheSync.js");
+    for (const [, guild] of client.guilds.cache) {
+      syncAllRoles(guild);
+    }
+  } catch (err) {
+    logger.error({ err }, "[startup] Role cache sync failed");
+  }
+
   // One-time sweep: strip stacked Patreon donor roles (retroactive fix)
   try {
     const { sweepPatreonRoleStacks } = await import("./features/patreonRoleDedup.js");
@@ -1253,6 +1263,21 @@ client.on("channelUpdate", wrapEvent("channelUpdate", async (_old, channel) => {
 
 client.on("channelDelete", wrapEvent("channelDelete", async (channel) => {
   removeChannel(channel);
+}));
+
+// Role cache sync: keep role_cache table up to date for web dashboard
+import { syncRole, removeRole } from "./features/roleCacheSync.js";
+
+client.on("roleCreate", wrapEvent("roleCreate", async (role) => {
+  syncRole(role);
+}));
+
+client.on("roleUpdate", wrapEvent("roleUpdate", async (_old, role) => {
+  syncRole(role);
+}));
+
+client.on("roleDelete", wrapEvent("roleDelete", async (role) => {
+  removeRole(role);
 }));
 
 // Ticket transcript capture — mirror messages in tickets channels + staff threads
