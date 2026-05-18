@@ -25,6 +25,7 @@ import { data as databaseData } from "./database.js";
 // Not ideal, but refactoring it would be a three-hour yak shave.
 import { modmailCommand, modmailContextMenu } from "../features/modmail.js";
 import { isitRealContextMenu } from "./isitreal.js";
+import { welcomeBatchContextMenu } from "./welcomeBatchContext.js";
 import { data as statsData } from "./stats/index.js";
 import { data as eventData } from "./event/index.js";
 import { data as sendData } from "./send.js";
@@ -162,5 +163,6 @@ export function buildCommands() {
      */
     isitRealContextMenu.toJSON(),
     modmailContextMenu.toJSON(),
+    welcomeBatchContextMenu.toJSON(),
   ];
 }

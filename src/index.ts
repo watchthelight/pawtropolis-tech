@@ -2357,7 +2357,27 @@ client.on("interactionCreate", wrapEvent("interactionCreate", async (interaction
           succeeded = true;
         }
 
-        // Context menu commands
+        // Context menu commands — USER targets
+        if (kind === "contextMenu" && interaction.isUserContextMenuCommand()) {
+          if (interaction.commandName === "Welcome Batch") {
+            logger.info(
+              {
+                evt: "ix_route_match",
+                kind: "contextMenu",
+                route: "welcome_batch",
+                commandName: interaction.commandName,
+                traceId,
+              },
+              "route: welcome batch context menu"
+            );
+            const { handleWelcomeBatchContextMenu } = await import("./commands/welcomeBatchContext.js");
+            await handleWelcomeBatchContextMenu(interaction);
+            succeeded = true;
+            return;
+          }
+        }
+
+        // Context menu commands — MESSAGE targets
         if (kind === "contextMenu" && interaction.isMessageContextMenuCommand()) {
           if (interaction.commandName === "Is It Real?") {
             logger.info(
