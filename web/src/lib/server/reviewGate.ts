@@ -10,35 +10,35 @@
  *   owner tier (bot owner / server dev) bypasses everything.
  */
 
-import { ROLE_IDS, type DashboardTier, hasMinTier, isGatekeeper } from './roles';
+import { ROLE_IDS, type DashboardTier, hasMinTier, isGatekeeper } from "./roles";
 
 export type ReviewAction =
-	| 'claim'
-	| 'unclaim'
-	| 'approve'
-	| 'reject'
-	| 'wrong_password'
-	| 'stale_modmail'
-	| 'kick'
-	| 'permreject'
-	| 'vote_out';
+  | "claim"
+  | "unclaim"
+  | "approve"
+  | "reject"
+  | "wrong_password"
+  | "stale_modmail"
+  | "kick"
+  | "permreject"
+  | "vote_out";
 
 export function canPerformReviewAction(
-	tier: DashboardTier,
-	roles: string[],
-	action: ReviewAction
+  tier: DashboardTier,
+  roles: string[],
+  action: ReviewAction
 ): boolean {
-	if (tier === 'owner') return true;
+  if (tier === "owner") return true;
 
-	if (action === 'permreject') {
-		return hasMinTier(tier, 'admin');
-	}
+  if (action === "permreject") {
+    return hasMinTier(tier, "admin");
+  }
 
-	if (action === 'unclaim') {
-		return isGatekeeper(roles) || hasMinTier(tier, 'admin');
-	}
+  if (action === "unclaim") {
+    return isGatekeeper(roles) || hasMinTier(tier, "admin");
+  }
 
-	return isGatekeeper(roles);
+  return isGatekeeper(roles);
 }
 
 export const ROLE_GATEKEEPER = ROLE_IDS.GATEKEEPER;

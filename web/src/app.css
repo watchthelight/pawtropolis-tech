@@ -1,5 +1,5 @@
-@import '@fontsource-variable/inter';
-@import 'tailwindcss';
+@import "@fontsource-variable/inter";
+@import "tailwindcss";
 
 /*
  * Pawtropolis Dashboard — Cozy Holdfast Design System
@@ -11,203 +11,209 @@
  */
 
 :root {
-	/* ── Hue seeds (adaptive natural palette) ──
+  /* ── Hue seeds (adaptive natural palette) ──
 	   --hue:        from Discord accentColor (e.g. forest green)
 	   --hue-warm:   earth/amber companion (~50° target, bark/sand)
 	   --hue-cool:   stone/slate companion (~235° target, granite/sky)
 	   --hue-complement: direct complement (+180°) for pop accents
 	   All set dynamically by theme.ts generateCompanionHues(). */
-	--hue: 250;
-	--hue-warm: 50;
-	--hue-cool: 235;
-	--hue-complement: calc(var(--hue) + 180);
+  --hue: 250;
+  --hue-warm: 50;
+  --hue-cool: 235;
+  --hue-complement: calc(var(--hue) + 180);
 
-	/* ── Surfaces (true neutral, subtly tinted by user accent) ── */
-	--bg: oklch(10% 0.003 var(--hue));
-	--surface: oklch(18% 0.005 var(--hue));
-	--surface-raised: oklch(23% 0.007 var(--hue));
-	--surface-overlay: oklch(28% 0.008 var(--hue));
+  /* ── Surfaces (true neutral, subtly tinted by user accent) ── */
+  --bg: oklch(10% 0.003 var(--hue));
+  --surface: oklch(18% 0.005 var(--hue));
+  --surface-raised: oklch(23% 0.007 var(--hue));
+  --surface-overlay: oklch(28% 0.008 var(--hue));
 
-	/* ── Borders (near-neutral, faint hue tint for identity) ── */
-	--border: oklch(25% 0.004 var(--hue));
-	--border-holdfast: oklch(30% 0.012 var(--hue));
-	--border-strong: oklch(40% 0.02 var(--hue));
+  /* ── Borders (near-neutral, faint hue tint for identity) ── */
+  --border: oklch(25% 0.004 var(--hue));
+  --border-holdfast: oklch(30% 0.012 var(--hue));
+  --border-strong: oklch(40% 0.02 var(--hue));
 
-	/* ── Text (near-white primary, neutral secondary for clarity) ── */
-	--text-primary: oklch(92% 0.004 var(--hue));
-	--text-secondary: oklch(72% 0.008 var(--hue));
-	--text-tertiary: oklch(54% 0.006 var(--hue));
-	--text-muted: oklch(42% 0.004 var(--hue));
-	--text-on-accent: oklch(12% 0.01 var(--hue));
+  /* ── Text (near-white primary, neutral secondary for clarity) ── */
+  --text-primary: oklch(92% 0.004 var(--hue));
+  --text-secondary: oklch(72% 0.008 var(--hue));
+  --text-tertiary: oklch(54% 0.006 var(--hue));
+  --text-muted: oklch(42% 0.004 var(--hue));
+  --text-on-accent: oklch(12% 0.01 var(--hue));
 
-	/* ── Primary accent — user's Discord identity color ── */
-	--accent: oklch(72% 0.18 var(--hue));
-	--accent-dim: oklch(40% 0.10 var(--hue));
-	--accent-soft: oklch(25% 0.06 var(--hue));
-	--accent-strong: oklch(80% 0.22 var(--hue));
-	--accent-muted: oklch(55% 0.08 var(--hue));
+  /* ── Primary accent — user's Discord identity color ── */
+  --accent: oklch(72% 0.18 var(--hue));
+  --accent-dim: oklch(40% 0.1 var(--hue));
+  --accent-soft: oklch(25% 0.06 var(--hue));
+  --accent-strong: oklch(80% 0.22 var(--hue));
+  --accent-muted: oklch(55% 0.08 var(--hue));
 
-	/* ── Warm accent — earth/amber tones (borders, badges, secondary highlights) ── */
-	--secondary: oklch(68% 0.12 var(--hue-warm));
-	--secondary-dim: oklch(38% 0.06 var(--hue-warm));
-	--secondary-soft: oklch(23% 0.04 var(--hue-warm));
-	--secondary-strong: oklch(76% 0.16 var(--hue-warm));
+  /* ── Warm accent — earth/amber tones (borders, badges, secondary highlights) ── */
+  --secondary: oklch(68% 0.12 var(--hue-warm));
+  --secondary-dim: oklch(38% 0.06 var(--hue-warm));
+  --secondary-soft: oklch(23% 0.04 var(--hue-warm));
+  --secondary-strong: oklch(76% 0.16 var(--hue-warm));
 
-	/* ── Cool accent — stone/slate tones (info, metadata, subtle structure) ── */
-	--tertiary: oklch(65% 0.10 var(--hue-cool));
-	--tertiary-dim: oklch(36% 0.05 var(--hue-cool));
-	--tertiary-soft: oklch(22% 0.03 var(--hue-cool));
+  /* ── Cool accent — stone/slate tones (info, metadata, subtle structure) ── */
+  --tertiary: oklch(65% 0.1 var(--hue-cool));
+  --tertiary-dim: oklch(36% 0.05 var(--hue-cool));
+  --tertiary-soft: oklch(22% 0.03 var(--hue-cool));
 
-	/* ── Complement accent (pop moments — direct opposite of seed) ── */
-	--complement: oklch(65% 0.14 var(--hue-complement));
-	--complement-dim: oklch(35% 0.07 var(--hue-complement));
+  /* ── Complement accent (pop moments — direct opposite of seed) ── */
+  --complement: oklch(65% 0.14 var(--hue-complement));
+  --complement-dim: oklch(35% 0.07 var(--hue-complement));
 
-	/* ── Accent surface — highlighted cards, active elements ── */
-	--accent-glow-bg: oklch(20% 0.05 var(--hue));
+  /* ── Accent surface — highlighted cards, active elements ── */
+  --accent-glow-bg: oklch(20% 0.05 var(--hue));
 
-	/* ── Interactive states (accent-tinted) ── */
-	--hover-bg: oklch(22% 0.02 var(--hue));
-	--active-bg: oklch(26% 0.03 var(--hue));
-	--selected-bg: oklch(24% 0.03 var(--hue));
+  /* ── Interactive states (accent-tinted) ── */
+  --hover-bg: oklch(22% 0.02 var(--hue));
+  --active-bg: oklch(26% 0.03 var(--hue));
+  --selected-bg: oklch(24% 0.03 var(--hue));
 
-	/* ── Shadows (compound: inset top highlight + tight + diffuse) ── */
-	--shadow-sm:
-		inset 0 1px 0 oklch(100% 0 0 / 0.04),
-		0 1px 2px oklch(0% 0 0 / 0.2),
-		0 2px 4px oklch(0% 0 0 / 0.1);
-	--shadow-md:
-		inset 0 1px 0 oklch(100% 0 0 / 0.04),
-		0 2px 4px oklch(0% 0 0 / 0.2),
-		0 8px 16px oklch(0% 0 0 / 0.15);
-	--shadow-lg:
-		inset 0 1px 0 oklch(100% 0 0 / 0.04),
-		0 4px 8px oklch(0% 0 0 / 0.25),
-		0 16px 32px oklch(0% 0 0 / 0.2);
+  /* ── Shadows (compound: inset top highlight + tight + diffuse) ── */
+  --shadow-sm:
+    inset 0 1px 0 oklch(100% 0 0 / 0.04), 0 1px 2px oklch(0% 0 0 / 0.2),
+    0 2px 4px oklch(0% 0 0 / 0.1);
+  --shadow-md:
+    inset 0 1px 0 oklch(100% 0 0 / 0.04), 0 2px 4px oklch(0% 0 0 / 0.2),
+    0 8px 16px oklch(0% 0 0 / 0.15);
+  --shadow-lg:
+    inset 0 1px 0 oklch(100% 0 0 / 0.04), 0 4px 8px oklch(0% 0 0 / 0.25),
+    0 16px 32px oklch(0% 0 0 / 0.2);
 
+  /* ── Constrained radii — pixel art discipline, exactly 3 values ── */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
 
-	/* ── Constrained radii — pixel art discipline, exactly 3 values ── */
-	--radius-sm: 6px;
-	--radius-md: 12px;
-	--radius-lg: 16px;
+  /* ── Spacing (viewport-scaled) ── */
+  --space-card: clamp(14px, 2.5vw, 24px);
+  --space-section: clamp(16px, 3vw, 28px);
 
-	/* ── Spacing (viewport-scaled) ── */
-	--space-card: clamp(14px, 2.5vw, 24px);
-	--space-section: clamp(16px, 3vw, 28px);
+  /* ── Status colors (fixed — not themed) ── */
+  --status-success: oklch(65% 0.15 145);
+  --status-warning: oklch(70% 0.15 85);
+  --status-danger: oklch(60% 0.15 25);
+  --status-info: oklch(65% 0.12 250);
 
-	/* ── Status colors (fixed — not themed) ── */
-	--status-success: oklch(65% 0.15 145);
-	--status-warning: oklch(70% 0.15 85);
-	--status-danger: oklch(60% 0.15 25);
-	--status-info: oklch(65% 0.12 250);
+  /* ── Brand colors — Pawtropolis paw logo (magenta pads, cyan drips) ── */
+  --brand-magenta: oklch(65% 0.25 330);
+  --brand-cyan: oklch(70% 0.15 200);
 
-	/* ── Brand colors — Pawtropolis paw logo (magenta pads, cyan drips) ── */
-	--brand-magenta: oklch(65% 0.25 330);
-	--brand-cyan: oklch(70% 0.15 200);
+  /* ── Animation ── */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
 
-	/* ── Animation ── */
-	--ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-	--ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-	--ease-out:    cubic-bezier(0.22, 0.61, 0.36, 1);
-	--duration-fast: 150ms;
-	--duration-normal: 250ms;
-	--duration-slow: 400ms;
-
-	/* ── Motion vocabulary (use these on every animated element) ──
+  /* ── Motion vocabulary (use these on every animated element) ──
 	   enter:  fade/slide-in for elements arriving on screen
 	   exit:   fade-out for elements leaving
 	   hover:  hover state changes
 	   focus:  focus / press state changes
 	*/
-	--motion-enter: opacity var(--duration-normal) var(--ease-out), transform var(--duration-normal) var(--ease-out);
-	--motion-exit:  opacity var(--duration-fast)   var(--ease-smooth);
-	--motion-hover: background var(--duration-fast) var(--ease-smooth), border-color var(--duration-fast) var(--ease-smooth), color var(--duration-fast) var(--ease-smooth), box-shadow var(--duration-fast) var(--ease-smooth);
-	--motion-focus: transform var(--duration-fast) var(--ease-spring), box-shadow var(--duration-fast) var(--ease-spring);
+  --motion-enter:
+    opacity var(--duration-normal) var(--ease-out), transform var(--duration-normal) var(--ease-out);
+  --motion-exit: opacity var(--duration-fast) var(--ease-smooth);
+  --motion-hover:
+    background var(--duration-fast) var(--ease-smooth),
+    border-color var(--duration-fast) var(--ease-smooth),
+    color var(--duration-fast) var(--ease-smooth),
+    box-shadow var(--duration-fast) var(--ease-smooth);
+  --motion-focus:
+    transform var(--duration-fast) var(--ease-spring),
+    box-shadow var(--duration-fast) var(--ease-spring);
 
-	/* ── Mobile ── */
-	--vh-full: 100dvh;
-	--mobile-header-h: 3.25rem;
-	--mobile-pad: 1rem;
+  /* ── Mobile ── */
+  --vh-full: 100dvh;
+  --mobile-header-h: 3.25rem;
+  --mobile-pad: 1rem;
 
-	/* ── EDEX-UI terminal aesthetic (stats page — uses cool slate + warm accents) ── */
-	--terminal-grid: oklch(32% 0.015 var(--hue-cool) / 0.3);
-	--terminal-border: oklch(50% 0.06 var(--hue-warm) / 0.5);
-	--terminal-font: 'Courier New', 'Courier', monospace;
+  /* ── EDEX-UI terminal aesthetic (stats page — uses cool slate + warm accents) ── */
+  --terminal-grid: oklch(32% 0.015 var(--hue-cool) / 0.3);
+  --terminal-border: oklch(50% 0.06 var(--hue-warm) / 0.5);
+  --terminal-font: "Courier New", "Courier", monospace;
 }
 
 /* Base styles */
 body {
-	background-color: var(--bg);
-	color: var(--text-primary);
-	font-family: 'Inter Variable', system-ui, -apple-system, sans-serif;
-	font-size: 0.9375rem; /* 15px — comfortable for long sessions */
-	line-height: 1.6;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg);
+  color: var(--text-primary);
+  font-family:
+    "Inter Variable",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  font-size: 0.9375rem; /* 15px — comfortable for long sessions */
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
-
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
-	width: 6px;
-	height: 6px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-	background: transparent;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-	background: var(--border);
-	border-radius: 3px;
+  background: var(--border);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-	background: var(--text-secondary);
+  background: var(--text-secondary);
 }
 
 /* Focus ring — accent-colored, keyboard-only via :focus-visible */
 :focus-visible {
-	outline: 2px solid var(--accent);
-	outline-offset: 2px;
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* dvh fallback for older browsers */
 @supports not (height: 100dvh) {
-	:root {
-		--vh-full: 100vh;
-	}
+  :root {
+    --vh-full: 100vh;
+  }
 }
 
 /* Mobile drawer scroll lock */
 body.drawer-open {
-	overflow: hidden;
+  overflow: hidden;
 }
 
 /* Prevent iOS auto-zoom on input focus + prevent horizontal scroll */
 @media (max-width: 767px) {
-	html,
-	body {
-		overflow-x: hidden;
-		-webkit-text-size-adjust: 100%;
-	}
-	input,
-	textarea,
-	select {
-		font-size: 16px;
-	}
+  html,
+  body {
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+  }
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
 }
 
 /* Respect prefers-reduced-motion — disable all transitions and animations */
 @media (prefers-reduced-motion: reduce) {
-	*,
-	*::before,
-	*::after {
-		transition-duration: 0s !important;
-		animation-duration: 0s !important;
-	}
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0s !important;
+    animation-duration: 0s !important;
+  }
 }
 
 /* ── Design style themes (must come AFTER :root for cascade override) ── */
-@import '$lib/styles/neumorphism.css';
-@import '$lib/styles/glassmorphism.css';
-@import '$lib/styles/skeuomorphism.css';
+@import "$lib/styles/neumorphism.css";
+@import "$lib/styles/glassmorphism.css";
+@import "$lib/styles/skeuomorphism.css";

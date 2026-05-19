@@ -9,23 +9,23 @@
  * is not a dead bot.
  */
 
-import { subscribe, unsubscribe, onReconnect, offReconnect } from '$lib/stores/sse.svelte';
-import type { SSEEvent } from '$lib/types/events';
+import { subscribe, unsubscribe, onReconnect, offReconnect } from "$lib/stores/sse.svelte";
+import type { SSEEvent } from "$lib/types/events";
 
 let _botOnline = $state(true);
 
 export function getBotOnline(): boolean {
-	return _botOnline;
+  return _botOnline;
 }
 
 /** Mark bot offline (called by mutation code on connection failure). */
 export function setBotOffline(): void {
-	_botOnline = false;
+  _botOnline = false;
 }
 
 /** Mark bot online (called by mutation code on success). */
 export function setBotOnline(): void {
-	_botOnline = true;
+  _botOnline = true;
 }
 
 // ---------------------------------------------------------------------------
@@ -33,16 +33,16 @@ export function setBotOnline(): void {
 // ---------------------------------------------------------------------------
 
 function handleEvent(_event: SSEEvent): void {
-	if (!_botOnline) {
-		_botOnline = true;
-	}
+  if (!_botOnline) {
+    _botOnline = true;
+  }
 }
 
 function handleReconnect(): void {
-	// SSE reconnect means the web server is reachable; bot likely is too
-	if (!_botOnline) {
-		_botOnline = true;
-	}
+  // SSE reconnect means the web server is reachable; bot likely is too
+  if (!_botOnline) {
+    _botOnline = true;
+  }
 }
 
 /**
@@ -51,11 +51,11 @@ function handleReconnect(): void {
  * Any SSE event brings it back online.
  */
 export function startMonitoring(): void {
-	subscribe('*', handleEvent);
-	onReconnect(handleReconnect);
+  subscribe("*", handleEvent);
+  onReconnect(handleReconnect);
 }
 
 export function stopMonitoring(): void {
-	unsubscribe('*', handleEvent);
-	offReconnect(handleReconnect);
+  unsubscribe("*", handleEvent);
+  offReconnect(handleReconnect);
 }

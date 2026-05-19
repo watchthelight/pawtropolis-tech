@@ -1,61 +1,61 @@
-import { db } from '$lib/server/db';
-import type { ResolvedRange } from '$lib/shared/timeWindow';
-import { comparisonLabel } from '$lib/shared/timeWindow';
+import { db } from "$lib/server/db";
+import type { ResolvedRange } from "$lib/shared/timeWindow";
+import { comparisonLabel } from "$lib/shared/timeWindow";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 export interface PersonalStats {
-	total: number;
-	approvals: number;
-	rejections: number;
-	permRejects: number;
-	kicks: number;
-	modmail: number;
-	avgClaimToDecisionS: number | null;
-	avgSubmitToClaimS: number | null;
+  total: number;
+  approvals: number;
+  rejections: number;
+  permRejects: number;
+  kicks: number;
+  modmail: number;
+  avgClaimToDecisionS: number | null;
+  avgSubmitToClaimS: number | null;
 }
 
 export interface StatTrend {
-	direction: 'up' | 'down' | 'neutral';
-	delta: number;
-	label: string;
+  direction: "up" | "down" | "neutral";
+  delta: number;
+  label: string;
 }
 
 export interface PersonalStatsTrend {
-	total: StatTrend;
-	approvals: StatTrend;
-	rejections: StatTrend;
-	avgClaimToDecision: StatTrend;
-	avgSubmitToClaim: StatTrend;
+  total: StatTrend;
+  approvals: StatTrend;
+  rejections: StatTrend;
+  avgClaimToDecision: StatTrend;
+  avgSubmitToClaim: StatTrend;
 }
 
 export interface ReviewerStats {
-	actorId: string;
-	displayName: string;
-	total: number;
-	approvals: number;
-	rejections: number;
-	permRejects: number;
-	kicks: number;
-	modmail: number;
+  actorId: string;
+  displayName: string;
+  total: number;
+  approvals: number;
+  rejections: number;
+  permRejects: number;
+  kicks: number;
+  modmail: number;
 }
 
 export interface TeamSummary {
-	totalDecisions: number;
-	activeReviewers: number;
-	avgTeamResponseTimeS: number | null;
+  totalDecisions: number;
+  activeReviewers: number;
+  avgTeamResponseTimeS: number | null;
 }
 
 export interface DailyCount {
-	day: string; // "YYYY-MM-DD"
-	count: number;
+  day: string; // "YYYY-MM-DD"
+  count: number;
 }
 
 export interface DailyAvgSeconds {
-	day: string;
-	avg_seconds: number;
+  day: string;
+  avg_seconds: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -68,20 +68,20 @@ export interface DailyAvgSeconds {
  * `col < ?` for the end. We always pass both.
  */
 function rangeBounds(r: ResolvedRange): { startS: number; endS: number } {
-	return { startS: r.startS, endS: r.endS };
+  return { startS: r.startS, endS: r.endS };
 }
 
 function fillGaps(rows: DailyCount[], endS: number): DailyCount[] {
-	if (rows.length === 0) return rows;
-	const map = new Map(rows.map((r) => [r.day, r.count]));
-	const start = new Date(rows[0].day + 'T00:00:00Z');
-	const end = new Date(endS * 1000);
-	const result: DailyCount[] = [];
-	for (const d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
-		const key = d.toISOString().slice(0, 10);
-		result.push({ day: key, count: map.get(key) ?? 0 });
-	}
-	return result;
+  if (rows.length === 0) return rows;
+  const map = new Map(rows.map((r) => [r.day, r.count]));
+  const start = new Date(rows[0].day + "T00:00:00Z");
+  const end = new Date(endS * 1000);
+  const result: DailyCount[] = [];
+  for (const d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
+    const key = d.toISOString().slice(0, 10);
+    result.push({ day: key, count: map.get(key) ?? 0 });
+  }
+  return result;
 }
 
 // ---------------------------------------------------------------------------
@@ -93,15 +93,15 @@ function fillGaps(rows: DailyCount[], endS: number): DailyCount[] {
  * Uses actor_id (NOT moderator_id — that's review_action's column).
  */
 export function getPersonalStats(
-	userId: string,
-	guildId: string,
-	range: ResolvedRange
+  userId: string,
+  guildId: string,
+  range: ResolvedRange
 ): PersonalStats {
-	const { startS, endS } = rangeBounds(range);
+  const { startS, endS } = rangeBounds(range);
 
-	const row = db()
-		.prepare(
-			`SELECT COUNT(*) as total,
+  const row = db()
+    .prepare(
+      `SELECT COUNT(*) as total,
 				SUM(CASE WHEN action = 'approve' THEN 1 ELSE 0 END) as approvals,
 				SUM(CASE WHEN action = 'reject' THEN 1 ELSE 0 END) as rejections,
 				SUM(CASE WHEN action = 'perm_reject' THEN 1 ELSE 0 END) as perm_reject,
@@ -112,40 +112,42 @@ export function getPersonalStats(
 				AND action IN ('approve', 'reject', 'perm_reject', 'kick', 'modmail_open')
 				AND (? = 0 OR created_at_s >= ?)
 				AND created_at_s < ?`
-		)
-		.get(guildId, userId, startS, startS, endS) as {
-		total: number;
-		approvals: number;
-		rejections: number;
-		perm_reject: number;
-		kicks: number;
-		modmail: number;
-	} | undefined;
+    )
+    .get(guildId, userId, startS, startS, endS) as
+    | {
+        total: number;
+        approvals: number;
+        rejections: number;
+        perm_reject: number;
+        kicks: number;
+        modmail: number;
+      }
+    | undefined;
 
-	const avgClaimToDecisionS = getClaimToDecisionAvg(userId, guildId, startS, endS);
-	const avgSubmitToClaimS = getSubmitToFirstClaimAvg(guildId, startS, endS);
+  const avgClaimToDecisionS = getClaimToDecisionAvg(userId, guildId, startS, endS);
+  const avgSubmitToClaimS = getSubmitToFirstClaimAvg(guildId, startS, endS);
 
-	return {
-		total: row?.total ?? 0,
-		approvals: row?.approvals ?? 0,
-		rejections: row?.rejections ?? 0,
-		permRejects: row?.perm_reject ?? 0,
-		kicks: row?.kicks ?? 0,
-		modmail: row?.modmail ?? 0,
-		avgClaimToDecisionS,
-		avgSubmitToClaimS
-	};
+  return {
+    total: row?.total ?? 0,
+    approvals: row?.approvals ?? 0,
+    rejections: row?.rejections ?? 0,
+    permRejects: row?.perm_reject ?? 0,
+    kicks: row?.kicks ?? 0,
+    modmail: row?.modmail ?? 0,
+    avgClaimToDecisionS,
+    avgSubmitToClaimS,
+  };
 }
 
 export function getClaimToDecisionAvg(
-	userId: string,
-	guildId: string,
-	startS: number,
-	endS: number
+  userId: string,
+  guildId: string,
+  startS: number,
+  endS: number
 ): number | null {
-	const row = db()
-		.prepare(
-			`WITH decisions AS (
+  const row = db()
+    .prepare(
+      `WITH decisions AS (
 				SELECT app_id, created_at_s as decision_time
 				FROM action_log
 				WHERE guild_id = ? AND actor_id = ?
@@ -162,22 +164,24 @@ export function getClaimToDecisionAvg(
 			FROM decisions d
 			INNER JOIN claims c ON d.app_id = c.app_id
 			WHERE c.claim_time < d.decision_time`
-		)
-		.get(guildId, userId, startS, startS, endS, guildId, userId) as {
-		avg_time: number | null;
-	} | undefined;
+    )
+    .get(guildId, userId, startS, startS, endS, guildId, userId) as
+    | {
+        avg_time: number | null;
+      }
+    | undefined;
 
-	return row?.avg_time ?? null;
+  return row?.avg_time ?? null;
 }
 
 export function getSubmitToFirstClaimAvg(
-	guildId: string,
-	startS: number,
-	endS: number
+  guildId: string,
+  startS: number,
+  endS: number
 ): number | null {
-	const row = db()
-		.prepare(
-			`WITH submissions AS (
+  const row = db()
+    .prepare(
+      `WITH submissions AS (
 				SELECT app_id, created_at_s as submit_time
 				FROM action_log
 				WHERE guild_id = ? AND action = 'app_submitted'
@@ -194,10 +198,10 @@ export function getSubmitToFirstClaimAvg(
 			FROM submissions s
 			INNER JOIN first_claims c ON s.app_id = c.app_id
 			WHERE c.claim_time > s.submit_time`
-		)
-		.get(guildId, startS, startS, endS, guildId) as { avg_time: number | null } | undefined;
+    )
+    .get(guildId, startS, startS, endS, guildId) as { avg_time: number | null } | undefined;
 
-	return row?.avg_time ?? null;
+  return row?.avg_time ?? null;
 }
 
 // ---------------------------------------------------------------------------
@@ -205,35 +209,35 @@ export function getSubmitToFirstClaimAvg(
 // ---------------------------------------------------------------------------
 
 export function getActivityTimeline(
-	userId: string,
-	guildId: string,
-	range: ResolvedRange
+  userId: string,
+  guildId: string,
+  range: ResolvedRange
 ): DailyCount[] {
-	const { startS, endS } = rangeBounds(range);
-	const rows = db()
-		.prepare(
-			`SELECT date(created_at_s, 'unixepoch') AS day, COUNT(*) AS count
+  const { startS, endS } = rangeBounds(range);
+  const rows = db()
+    .prepare(
+      `SELECT date(created_at_s, 'unixepoch') AS day, COUNT(*) AS count
 			FROM action_log
 			WHERE guild_id = ? AND actor_id = ?
 				AND action IN ('approve', 'reject', 'perm_reject', 'kick', 'modmail_open')
 				AND (? = 0 OR created_at_s >= ?) AND created_at_s < ?
 			GROUP BY day
 			ORDER BY day ASC`
-		)
-		.all(guildId, userId, startS, startS, endS) as DailyCount[];
+    )
+    .all(guildId, userId, startS, startS, endS) as DailyCount[];
 
-	return fillGaps(rows, endS);
+  return fillGaps(rows, endS);
 }
 
 export function getResponseTrend(
-	userId: string,
-	guildId: string,
-	range: ResolvedRange
+  userId: string,
+  guildId: string,
+  range: ResolvedRange
 ): DailyAvgSeconds[] {
-	const { startS, endS } = rangeBounds(range);
-	return db()
-		.prepare(
-			`WITH decisions AS (
+  const { startS, endS } = rangeBounds(range);
+  return db()
+    .prepare(
+      `WITH decisions AS (
 				SELECT app_id, date(created_at_s, 'unixepoch') AS day, created_at_s AS decision_time
 				FROM action_log
 				WHERE guild_id = ? AND actor_id = ?
@@ -253,8 +257,8 @@ export function getResponseTrend(
 			WHERE c.claim_time < d.decision_time
 			GROUP BY d.day
 			ORDER BY d.day ASC`
-		)
-		.all(guildId, userId, startS, startS, endS, guildId, userId) as DailyAvgSeconds[];
+    )
+    .all(guildId, userId, startS, startS, endS, guildId, userId) as DailyAvgSeconds[];
 }
 
 // ---------------------------------------------------------------------------
@@ -262,14 +266,14 @@ export function getResponseTrend(
 // ---------------------------------------------------------------------------
 
 export function getTeamStats(
-	guildId: string,
-	range: ResolvedRange
+  guildId: string,
+  range: ResolvedRange
 ): { summary: TeamSummary; reviewers: ReviewerStats[] } {
-	const { startS, endS } = rangeBounds(range);
+  const { startS, endS } = rangeBounds(range);
 
-	const reviewers = db()
-		.prepare(
-			`SELECT
+  const reviewers = db()
+    .prepare(
+      `SELECT
 				a.actor_id,
 				COALESCE(u.display_name, u.global_name, u.username, 'User ' || substr(a.actor_id, -6)) as display_name,
 				COUNT(*) as total,
@@ -286,50 +290,52 @@ export function getTeamStats(
 			GROUP BY a.actor_id
 			ORDER BY total DESC, approvals DESC
 			LIMIT 20`
-		)
-		.all(guildId, guildId, startS, startS, endS) as {
-		actor_id: string;
-		display_name: string;
-		total: number;
-		approvals: number;
-		rejections: number;
-		perm_reject: number;
-		kicks: number;
-		modmail: number;
-	}[];
+    )
+    .all(guildId, guildId, startS, startS, endS) as {
+    actor_id: string;
+    display_name: string;
+    total: number;
+    approvals: number;
+    rejections: number;
+    perm_reject: number;
+    kicks: number;
+    modmail: number;
+  }[];
 
-	const mapped: ReviewerStats[] = reviewers.map((r) => ({
-		actorId: r.actor_id,
-		displayName: r.display_name,
-		total: r.total,
-		approvals: r.approvals,
-		rejections: r.rejections,
-		permRejects: r.perm_reject,
-		kicks: r.kicks,
-		modmail: r.modmail
-	}));
+  const mapped: ReviewerStats[] = reviewers.map((r) => ({
+    actorId: r.actor_id,
+    displayName: r.display_name,
+    total: r.total,
+    approvals: r.approvals,
+    rejections: r.rejections,
+    permRejects: r.perm_reject,
+    kicks: r.kicks,
+    modmail: r.modmail,
+  }));
 
-	const summaryRow = db()
-		.prepare(
-			`SELECT
+  const summaryRow = db()
+    .prepare(
+      `SELECT
 				SUM(CASE WHEN action IN ('approve', 'reject', 'perm_reject', 'kick') THEN 1 ELSE 0 END) as total_decisions,
 				COUNT(DISTINCT CASE WHEN action IN ('approve', 'reject', 'perm_reject', 'kick') THEN actor_id END) as active_reviewers
 			FROM action_log
 			WHERE guild_id = ?
 				AND action IN ('approve', 'reject', 'perm_reject', 'kick', 'modmail_open')
 				AND (? = 0 OR created_at_s >= ?) AND created_at_s < ?`
-		)
-		.get(guildId, startS, startS, endS) as {
-		total_decisions: number;
-		active_reviewers: number;
-	} | undefined;
+    )
+    .get(guildId, startS, startS, endS) as
+    | {
+        total_decisions: number;
+        active_reviewers: number;
+      }
+    | undefined;
 
-	const totalDecisions = summaryRow?.total_decisions ?? 0;
-	const activeReviewers = summaryRow?.active_reviewers ?? 0;
+  const totalDecisions = summaryRow?.total_decisions ?? 0;
+  const activeReviewers = summaryRow?.active_reviewers ?? 0;
 
-	const avgRow = db()
-		.prepare(
-			`WITH decisions AS (
+  const avgRow = db()
+    .prepare(
+      `WITH decisions AS (
 				SELECT app_id, created_at_s as decision_time
 				FROM action_log
 				WHERE guild_id = ?
@@ -347,17 +353,17 @@ export function getTeamStats(
 			FROM decisions d
 			INNER JOIN claims c ON d.app_id = c.app_id
 			WHERE c.claim_time < d.decision_time`
-		)
-		.get(guildId, startS, startS, endS, guildId) as { avg_time: number | null } | undefined;
+    )
+    .get(guildId, startS, startS, endS, guildId) as { avg_time: number | null } | undefined;
 
-	return {
-		summary: {
-			totalDecisions,
-			activeReviewers,
-			avgTeamResponseTimeS: avgRow?.avg_time ?? null
-		},
-		reviewers: mapped
-	};
+  return {
+    summary: {
+      totalDecisions,
+      activeReviewers,
+      avgTeamResponseTimeS: avgRow?.avg_time ?? null,
+    },
+    reviewers: mapped,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -365,71 +371,70 @@ export function getTeamStats(
 // ---------------------------------------------------------------------------
 
 function countTrend(current: number, previous: number, periodLabel: string): StatTrend {
-	const delta = current - previous;
-	const direction: StatTrend['direction'] = delta > 0 ? 'up' : delta < 0 ? 'down' : 'neutral';
-	let label: string;
-	if (previous === 0 && current === 0) label = '';
-	else if (previous === 0) label = 'Not enough data yet';
-	else if (delta === 0) label = `No change vs ${periodLabel}`;
-	else label = `${Math.abs(delta)} ${delta > 0 ? 'more' : 'fewer'} than ${periodLabel}`;
-	return { direction, delta, label };
+  const delta = current - previous;
+  const direction: StatTrend["direction"] = delta > 0 ? "up" : delta < 0 ? "down" : "neutral";
+  let label: string;
+  if (previous === 0 && current === 0) label = "";
+  else if (previous === 0) label = "Not enough data yet";
+  else if (delta === 0) label = `No change vs ${periodLabel}`;
+  else label = `${Math.abs(delta)} ${delta > 0 ? "more" : "fewer"} than ${periodLabel}`;
+  return { direction, delta, label };
 }
 
 function timeTrend(
-	currentS: number | null,
-	previousS: number | null,
-	periodLabel: string
+  currentS: number | null,
+  previousS: number | null,
+  periodLabel: string
 ): StatTrend {
-	if (currentS == null || previousS == null) {
-		return {
-			direction: 'neutral',
-			delta: 0,
-			label: previousS == null ? 'Not enough data yet' : ''
-		};
-	}
-	const deltaS = currentS - previousS;
-	const direction: StatTrend['direction'] =
-		deltaS < -30 ? 'up' : deltaS > 30 ? 'down' : 'neutral';
-	const absDelta = Math.abs(deltaS);
-	const hours = Math.floor(absDelta / 3600);
-	const mins = Math.floor((absDelta % 3600) / 60);
-	const fmt = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-	let label: string;
-	if (Math.abs(deltaS) <= 30) label = `No change vs ${periodLabel}`;
-	else if (deltaS < 0) label = `${fmt} faster than ${periodLabel}`;
-	else label = `${fmt} slower than ${periodLabel}`;
-	return { direction, delta: deltaS, label };
+  if (currentS == null || previousS == null) {
+    return {
+      direction: "neutral",
+      delta: 0,
+      label: previousS == null ? "Not enough data yet" : "",
+    };
+  }
+  const deltaS = currentS - previousS;
+  const direction: StatTrend["direction"] = deltaS < -30 ? "up" : deltaS > 30 ? "down" : "neutral";
+  const absDelta = Math.abs(deltaS);
+  const hours = Math.floor(absDelta / 3600);
+  const mins = Math.floor((absDelta % 3600) / 60);
+  const fmt = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+  let label: string;
+  if (Math.abs(deltaS) <= 30) label = `No change vs ${periodLabel}`;
+  else if (deltaS < 0) label = `${fmt} faster than ${periodLabel}`;
+  else label = `${fmt} slower than ${periodLabel}`;
+  return { direction, delta: deltaS, label };
 }
 
-const NEUTRAL_TREND: StatTrend = { direction: 'neutral', delta: 0, label: '' };
+const NEUTRAL_TREND: StatTrend = { direction: "neutral", delta: 0, label: "" };
 
 export function getPersonalStatsTrend(
-	userId: string,
-	guildId: string,
-	range: ResolvedRange,
-	currentStats?: PersonalStats
+  userId: string,
+  guildId: string,
+  range: ResolvedRange,
+  currentStats?: PersonalStats
 ): PersonalStatsTrend {
-	if (range.prevStartS == null) {
-		return {
-			total: NEUTRAL_TREND,
-			approvals: NEUTRAL_TREND,
-			rejections: NEUTRAL_TREND,
-			avgClaimToDecision: NEUTRAL_TREND,
-			avgSubmitToClaim: NEUTRAL_TREND
-		};
-	}
+  if (range.prevStartS == null) {
+    return {
+      total: NEUTRAL_TREND,
+      approvals: NEUTRAL_TREND,
+      rejections: NEUTRAL_TREND,
+      avgClaimToDecision: NEUTRAL_TREND,
+      avgSubmitToClaim: NEUTRAL_TREND,
+    };
+  }
 
-	const currentFrom = range.startS;
-	const currentTo = range.endS;
-	const previousFrom = range.prevStartS;
-	const previousTo = currentFrom;
-	const periodLabel = comparisonLabel(range.spec);
+  const currentFrom = range.startS;
+  const currentTo = range.endS;
+  const previousFrom = range.prevStartS;
+  const previousTo = currentFrom;
+  const periodLabel = comparisonLabel(range.spec);
 
-	const current = currentStats ?? getPersonalStats(userId, guildId, range);
+  const current = currentStats ?? getPersonalStats(userId, guildId, range);
 
-	const prevRow = db()
-		.prepare(
-			`SELECT COUNT(*) as total,
+  const prevRow = db()
+    .prepare(
+      `SELECT COUNT(*) as total,
 				SUM(CASE WHEN action = 'approve' THEN 1 ELSE 0 END) as approvals,
 				SUM(CASE WHEN action = 'reject' THEN 1 ELSE 0 END) as rejections,
 				SUM(CASE WHEN action = 'perm_reject' THEN 1 ELSE 0 END) as perm_reject,
@@ -439,25 +444,27 @@ export function getPersonalStatsTrend(
 			WHERE guild_id = ? AND actor_id = ?
 				AND action IN ('approve', 'reject', 'perm_reject', 'kick', 'modmail_open')
 				AND created_at_s >= ? AND created_at_s < ?`
-		)
-		.get(guildId, userId, previousFrom, previousTo) as {
-		total: number;
-		approvals: number;
-		rejections: number;
-		perm_reject: number;
-		kicks: number;
-		modmail: number;
-	} | undefined;
+    )
+    .get(guildId, userId, previousFrom, previousTo) as
+    | {
+        total: number;
+        approvals: number;
+        rejections: number;
+        perm_reject: number;
+        kicks: number;
+        modmail: number;
+      }
+    | undefined;
 
-	const prevTotal = prevRow?.total ?? 0;
-	const prevApprovals = prevRow?.approvals ?? 0;
-	const prevRejections =
-		(prevRow?.rejections ?? 0) + (prevRow?.perm_reject ?? 0) + (prevRow?.kicks ?? 0);
-	const currentRejections = current.rejections + current.permRejects + current.kicks;
+  const prevTotal = prevRow?.total ?? 0;
+  const prevApprovals = prevRow?.approvals ?? 0;
+  const prevRejections =
+    (prevRow?.rejections ?? 0) + (prevRow?.perm_reject ?? 0) + (prevRow?.kicks ?? 0);
+  const currentRejections = current.rejections + current.permRejects + current.kicks;
 
-	const prevClaimToDecisionRow = db()
-		.prepare(
-			`WITH decisions AS (
+  const prevClaimToDecisionRow = db()
+    .prepare(
+      `WITH decisions AS (
 				SELECT app_id, created_at_s as decision_time
 				FROM action_log
 				WHERE guild_id = ? AND actor_id = ?
@@ -474,15 +481,17 @@ export function getPersonalStatsTrend(
 			FROM decisions d
 			INNER JOIN claims c ON d.app_id = c.app_id
 			WHERE c.claim_time < d.decision_time`
-		)
-		.get(guildId, userId, previousFrom, previousTo, guildId, userId) as {
-		avg_time: number | null;
-	} | undefined;
-	const prevClaimToDecision = prevClaimToDecisionRow?.avg_time ?? null;
+    )
+    .get(guildId, userId, previousFrom, previousTo, guildId, userId) as
+    | {
+        avg_time: number | null;
+      }
+    | undefined;
+  const prevClaimToDecision = prevClaimToDecisionRow?.avg_time ?? null;
 
-	const prevSubmitToClaimRow = db()
-		.prepare(
-			`WITH submissions AS (
+  const prevSubmitToClaimRow = db()
+    .prepare(
+      `WITH submissions AS (
 				SELECT app_id, created_at_s as submit_time
 				FROM action_log
 				WHERE guild_id = ? AND action = 'app_submitted'
@@ -498,21 +507,21 @@ export function getPersonalStatsTrend(
 			FROM submissions s
 			INNER JOIN first_claims c ON s.app_id = c.app_id
 			WHERE c.claim_time > s.submit_time`
-		)
-		.get(guildId, previousFrom, previousTo, guildId) as { avg_time: number | null } | undefined;
-	const prevSubmitToClaim = prevSubmitToClaimRow?.avg_time ?? null;
+    )
+    .get(guildId, previousFrom, previousTo, guildId) as { avg_time: number | null } | undefined;
+  const prevSubmitToClaim = prevSubmitToClaimRow?.avg_time ?? null;
 
-	// currentFrom/currentTo unused here — suppress lint
-	void currentFrom;
-	void currentTo;
+  // currentFrom/currentTo unused here — suppress lint
+  void currentFrom;
+  void currentTo;
 
-	return {
-		total: countTrend(current.total, prevTotal, periodLabel),
-		approvals: countTrend(current.approvals, prevApprovals, periodLabel),
-		rejections: countTrend(currentRejections, prevRejections, periodLabel),
-		avgClaimToDecision: timeTrend(current.avgClaimToDecisionS, prevClaimToDecision, periodLabel),
-		avgSubmitToClaim: timeTrend(current.avgSubmitToClaimS, prevSubmitToClaim, periodLabel)
-	};
+  return {
+    total: countTrend(current.total, prevTotal, periodLabel),
+    approvals: countTrend(current.approvals, prevApprovals, periodLabel),
+    rejections: countTrend(currentRejections, prevRejections, periodLabel),
+    avgClaimToDecision: timeTrend(current.avgClaimToDecisionS, prevClaimToDecision, periodLabel),
+    avgSubmitToClaim: timeTrend(current.avgSubmitToClaimS, prevSubmitToClaim, periodLabel),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -520,20 +529,20 @@ export function getPersonalStatsTrend(
 // ---------------------------------------------------------------------------
 
 export interface ModBreakdown {
-	modId: string;
-	total: number;
-	approvals: number;
-	rejections: number;
-	kicks: number;
-	approvalRate: number;
-	avgDecisionTimeS: number | null;
+  modId: string;
+  total: number;
+  approvals: number;
+  rejections: number;
+  kicks: number;
+  approvalRate: number;
+  avgDecisionTimeS: number | null;
 }
 
 export function getModBreakdowns(guildId: string, range: ResolvedRange): ModBreakdown[] {
-	const { startS, endS } = rangeBounds(range);
-	const rows = db()
-		.prepare(
-			`SELECT
+  const { startS, endS } = rangeBounds(range);
+  const rows = db()
+    .prepare(
+      `SELECT
 				actor_id as mod_id,
 				COUNT(*) as total,
 				SUM(CASE WHEN action = 'approve' THEN 1 ELSE 0 END) as approvals,
@@ -555,25 +564,25 @@ export function getModBreakdowns(guildId: string, range: ResolvedRange): ModBrea
 			GROUP BY actor_id
 			ORDER BY total DESC
 			LIMIT 20`
-		)
-		.all(guildId, startS, startS, endS) as Array<{
-		mod_id: string;
-		total: number;
-		approvals: number;
-		rejections: number;
-		kicks: number;
-		avg_decision_time_s: number | null;
-	}>;
+    )
+    .all(guildId, startS, startS, endS) as Array<{
+    mod_id: string;
+    total: number;
+    approvals: number;
+    rejections: number;
+    kicks: number;
+    avg_decision_time_s: number | null;
+  }>;
 
-	return rows.map((r) => ({
-		modId: r.mod_id,
-		total: r.total,
-		approvals: r.approvals,
-		rejections: r.rejections,
-		kicks: r.kicks,
-		approvalRate: r.total > 0 ? Math.round((r.approvals / r.total) * 100) : 0,
-		avgDecisionTimeS: r.avg_decision_time_s ? Math.round(r.avg_decision_time_s) : null
-	}));
+  return rows.map((r) => ({
+    modId: r.mod_id,
+    total: r.total,
+    approvals: r.approvals,
+    rejections: r.rejections,
+    kicks: r.kicks,
+    approvalRate: r.total > 0 ? Math.round((r.approvals / r.total) * 100) : 0,
+    avgDecisionTimeS: r.avg_decision_time_s ? Math.round(r.avg_decision_time_s) : null,
+  }));
 }
 
 // ---------------------------------------------------------------------------
@@ -581,21 +590,21 @@ export function getModBreakdowns(guildId: string, range: ResolvedRange): ModBrea
 // ---------------------------------------------------------------------------
 
 export interface DecisionPercentiles {
-	p50: number | null;
-	p75: number | null;
-	p95: number | null;
-	count: number;
+  p50: number | null;
+  p75: number | null;
+  p95: number | null;
+  count: number;
 }
 
 export function getDecisionPercentiles(guildId: string, range: ResolvedRange): DecisionPercentiles {
-	const { startS, endS } = rangeBounds(range);
-	// Compute percentiles in SQL via ROW_NUMBER() + COUNT() OVER () so we never
-	// fetch the full decision set into JS. The previous implementation pulled
-	// every decision row across the range and sorted in JS — unbounded memory
-	// + sort, which is brutal on the all-time window.
-	const row = db()
-		.prepare(
-			`WITH d AS (
+  const { startS, endS } = rangeBounds(range);
+  // Compute percentiles in SQL via ROW_NUMBER() + COUNT() OVER () so we never
+  // fetch the full decision set into JS. The previous implementation pulled
+  // every decision row across the range and sorted in JS — unbounded memory
+  // + sort, which is brutal on the all-time window.
+  const row = db()
+    .prepare(
+      `WITH d AS (
 				SELECT
 					a.created_at_s - COALESCE(
 						(SELECT MIN(c.created_at_s) FROM action_log c
@@ -621,17 +630,22 @@ export function getDecisionPercentiles(guildId: string, range: ResolvedRange): D
 				MAX(CASE WHEN rn = MAX(1, CAST(total * 0.75 AS INTEGER)) THEN decision_time_s END) AS p75,
 				MAX(CASE WHEN rn = MAX(1, CAST(total * 0.95 AS INTEGER)) THEN decision_time_s END) AS p95
 			FROM ranked`
-		)
-		.get(guildId, startS, startS, endS) as { total: number | null; p50: number | null; p75: number | null; p95: number | null };
+    )
+    .get(guildId, startS, startS, endS) as {
+    total: number | null;
+    p50: number | null;
+    p75: number | null;
+    p95: number | null;
+  };
 
-	const count = row?.total ?? 0;
-	if (count === 0) return { p50: null, p75: null, p95: null, count: 0 };
-	return {
-		p50: row.p50 != null ? Math.round(row.p50) : null,
-		p75: row.p75 != null ? Math.round(row.p75) : null,
-		p95: row.p95 != null ? Math.round(row.p95) : null,
-		count
-	};
+  const count = row?.total ?? 0;
+  if (count === 0) return { p50: null, p75: null, p95: null, count: 0 };
+  return {
+    p50: row.p50 != null ? Math.round(row.p50) : null,
+    p75: row.p75 != null ? Math.round(row.p75) : null,
+    p95: row.p95 != null ? Math.round(row.p95) : null,
+    count,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -639,20 +653,20 @@ export function getDecisionPercentiles(guildId: string, range: ResolvedRange): D
 // ---------------------------------------------------------------------------
 
 export interface InviteSourceStat {
-	code: string;
-	label: string | null;
-	inviterId: string | null;
-	count: number;
+  code: string;
+  label: string | null;
+  inviterId: string | null;
+  count: number;
 }
 
 export function getInviteSourceBreakdown(
-	guildId: string,
-	range: ResolvedRange
+  guildId: string,
+  range: ResolvedRange
 ): InviteSourceStat[] {
-	const { startS, endS } = rangeBounds(range);
-	return db()
-		.prepare(
-			`SELECT
+  const { startS, endS } = rangeBounds(range);
+  return db()
+    .prepare(
+      `SELECT
 				COALESCE(u.invite_code, 'unknown') as code,
 				il.label,
 				u.inviter_id,
@@ -664,8 +678,8 @@ export function getInviteSourceBreakdown(
 			GROUP BY u.invite_code
 			ORDER BY count DESC
 			LIMIT 20`
-		)
-		.all(guildId, startS, startS, endS) as InviteSourceStat[];
+    )
+    .all(guildId, startS, startS, endS) as InviteSourceStat[];
 }
 
 // ---------------------------------------------------------------------------
@@ -673,20 +687,20 @@ export function getInviteSourceBreakdown(
 // ---------------------------------------------------------------------------
 
 export interface FunnelMetrics {
-	drafts: number;
-	submitted: number;
-	approved: number;
-	rejected: number;
-	kicked: number;
-	permRejected: number;
-	reapplications: number;
+  drafts: number;
+  submitted: number;
+  approved: number;
+  rejected: number;
+  kicked: number;
+  permRejected: number;
+  reapplications: number;
 }
 
 export function getApplicationFunnel(guildId: string, range: ResolvedRange): FunnelMetrics {
-	const { startS, endS } = rangeBounds(range);
-	const row = db()
-		.prepare(
-			`SELECT
+  const { startS, endS } = rangeBounds(range);
+  const row = db()
+    .prepare(
+      `SELECT
 				SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) as drafts,
 				SUM(CASE WHEN status IN ('submitted', 'needs_info', 'approved', 'rejected', 'kicked', 'perm_rejected') THEN 1 ELSE 0 END) as submitted,
 				SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
@@ -697,35 +711,37 @@ export function getApplicationFunnel(guildId: string, range: ResolvedRange): Fun
 			WHERE guild_id = ?
 				AND (? = 0 OR created_at >= datetime(?, 'unixepoch'))
 				AND created_at < datetime(?, 'unixepoch')`
-		)
-		.get(guildId, startS, startS, endS) as {
-		drafts: number;
-		submitted: number;
-		approved: number;
-		rejected: number;
-		kicked: number;
-		perm_rejected: number;
-	} | undefined;
+    )
+    .get(guildId, startS, startS, endS) as
+    | {
+        drafts: number;
+        submitted: number;
+        approved: number;
+        rejected: number;
+        kicked: number;
+        perm_rejected: number;
+      }
+    | undefined;
 
-	const reapps = db()
-		.prepare(
-			`SELECT COUNT(DISTINCT user_id) as count
+  const reapps = db()
+    .prepare(
+      `SELECT COUNT(DISTINCT user_id) as count
 			FROM application
 			WHERE guild_id = ?
 				AND (? = 0 OR created_at >= datetime(?, 'unixepoch'))
 				AND created_at < datetime(?, 'unixepoch')
 			GROUP BY user_id
 			HAVING COUNT(*) > 1`
-		)
-		.all(guildId, startS, startS, endS) as Array<{ count: number }>;
+    )
+    .all(guildId, startS, startS, endS) as Array<{ count: number }>;
 
-	return {
-		drafts: row?.drafts ?? 0,
-		submitted: row?.submitted ?? 0,
-		approved: row?.approved ?? 0,
-		rejected: row?.rejected ?? 0,
-		kicked: row?.kicked ?? 0,
-		permRejected: row?.perm_rejected ?? 0,
-		reapplications: reapps.length
-	};
+  return {
+    drafts: row?.drafts ?? 0,
+    submitted: row?.submitted ?? 0,
+    approved: row?.approved ?? 0,
+    rejected: row?.rejected ?? 0,
+    kicked: row?.kicked ?? 0,
+    permRejected: row?.perm_rejected ?? 0,
+    reapplications: reapps.length,
+  };
 }

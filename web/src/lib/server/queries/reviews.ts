@@ -1,36 +1,36 @@
-import { db } from '$lib/server/db';
-import { normalizeTimestamp } from './shared';
+import { db } from "$lib/server/db";
+import { normalizeTimestamp } from "./shared";
 
 export interface ReviewQueueItem {
-	id: string;
-	userId: string;
-	applicantName: string;
-	avatarUrl: string | null;
-	status: string;
-	submittedAt: number | null;
-	claimedBy: string | null;
-	claimedByName: string | null;
-	claimedByAvatar: string | null;
-	claimedAt: number | null;
-	riskScore: number;
-	hasUnreadModmail: boolean;
-	modmailAwaitingSince: number | null;
+  id: string;
+  userId: string;
+  applicantName: string;
+  avatarUrl: string | null;
+  status: string;
+  submittedAt: number | null;
+  claimedBy: string | null;
+  claimedByName: string | null;
+  claimedByAvatar: string | null;
+  claimedAt: number | null;
+  riskScore: number;
+  hasUnreadModmail: boolean;
+  modmailAwaitingSince: number | null;
 }
 
 interface ReviewQueueRow {
-	id: string;
-	user_id: string;
-	applicant_name: string;
-	avatar_url: string | null;
-	status: string;
-	submitted_at: string | null;
-	reviewer_id: string | null;
-	reviewer_name: string | null;
-	reviewer_avatar_url: string | null;
-	claimed_at: string | number | null;
-	risk_score: number;
-	has_unread_modmail: number;
-	modmail_awaiting_since: string | number | null;
+  id: string;
+  user_id: string;
+  applicant_name: string;
+  avatar_url: string | null;
+  status: string;
+  submitted_at: string | null;
+  reviewer_id: string | null;
+  reviewer_name: string | null;
+  reviewer_avatar_url: string | null;
+  claimed_at: string | number | null;
+  risk_score: number;
+  has_unread_modmail: number;
+  modmail_awaiting_since: string | number | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -38,94 +38,98 @@ interface ReviewQueueRow {
 // ---------------------------------------------------------------------------
 
 export interface ApplicationAnswer {
-	question: string;
-	answer: string;
+  question: string;
+  answer: string;
 }
 
 export interface EvidenceEntry {
-	tag: string;
-	p: number;
+  tag: string;
+  p: number;
 }
 
 export interface AvatarScanDetail {
-	reason: string;
-	evidenceHard: EvidenceEntry[];
-	evidenceSoft: EvidenceEntry[];
-	evidenceSafe: EvidenceEntry[];
+  reason: string;
+  evidenceHard: EvidenceEntry[];
+  evidenceSoft: EvidenceEntry[];
+  evidenceSafe: EvidenceEntry[];
 }
 
 export interface ApplicationDetail {
-	id: string;
-	userId: string;
-	applicantName: string;
-	avatarUrl: string | null;
-	status: string;
-	submittedAt: number | null;
-	claimedBy: string | null;
-	claimedByName: string | null;
-	claimedByAvatar: string | null;
-	claimedAt: number | null;
-	riskScore: number;
-	scan: AvatarScanDetail | null;
-	scanScores: ScanScores | null;
-	answers: ApplicationAnswer[];
+  id: string;
+  userId: string;
+  applicantName: string;
+  avatarUrl: string | null;
+  status: string;
+  submittedAt: number | null;
+  claimedBy: string | null;
+  claimedByName: string | null;
+  claimedByAvatar: string | null;
+  claimedAt: number | null;
+  riskScore: number;
+  scan: AvatarScanDetail | null;
+  scanScores: ScanScores | null;
+  answers: ApplicationAnswer[];
 }
 
 export interface ScanScores {
-	avatarNsfwPct: number;
-	bannerNsfwPct: number;
-	avatarAiPct: number | null;
-	bannerAiPct: number | null;
-	bannerReason: string | null;
-	bannerEvidenceHard: EvidenceEntry[];
-	bannerEvidenceSoft: EvidenceEntry[];
-	bannerEvidenceSafe: EvidenceEntry[];
+  avatarNsfwPct: number;
+  bannerNsfwPct: number;
+  avatarAiPct: number | null;
+  bannerAiPct: number | null;
+  bannerReason: string | null;
+  bannerEvidenceHard: EvidenceEntry[];
+  bannerEvidenceSoft: EvidenceEntry[];
+  bannerEvidenceSafe: EvidenceEntry[];
 }
 
 interface AppDetailRow {
-	id: string;
-	user_id: string;
-	applicant_name: string;
-	avatar_url: string | null;
-	status: string;
-	submitted_at: string | null;
-	reviewer_id: string | null;
-	reviewer_name: string | null;
-	reviewer_avatar_url: string | null;
-	claimed_at: string | number | null;
-	risk_score: number;
-	scan_reason: string | null;
-	scan_evidence_hard: string | null;
-	scan_evidence_soft: string | null;
-	scan_evidence_safe: string | null;
-	banner_final_pct: number | null;
-	banner_reason: string | null;
-	banner_evidence_hard: string | null;
-	banner_evidence_soft: string | null;
-	banner_evidence_safe: string | null;
-	avatar_ai_score: number | null;
-	banner_ai_score: number | null;
+  id: string;
+  user_id: string;
+  applicant_name: string;
+  avatar_url: string | null;
+  status: string;
+  submitted_at: string | null;
+  reviewer_id: string | null;
+  reviewer_name: string | null;
+  reviewer_avatar_url: string | null;
+  claimed_at: string | number | null;
+  risk_score: number;
+  scan_reason: string | null;
+  scan_evidence_hard: string | null;
+  scan_evidence_soft: string | null;
+  scan_evidence_safe: string | null;
+  banner_final_pct: number | null;
+  banner_reason: string | null;
+  banner_evidence_hard: string | null;
+  banner_evidence_soft: string | null;
+  banner_evidence_safe: string | null;
+  avatar_ai_score: number | null;
+  banner_ai_score: number | null;
 }
 
 interface AppResponseRow {
-	question: string;
-	answer: string;
+  question: string;
+  answer: string;
 }
 
 function parseEvidence(json: string | null): EvidenceEntry[] {
-	if (!json) return [];
-	try {
-		const parsed = JSON.parse(json);
-		if (!Array.isArray(parsed)) return [];
-		return parsed.filter(
-			(e): e is EvidenceEntry =>
-				typeof e === 'object' && e !== null && typeof e.tag === 'string' && typeof e.p === 'number'
-		);
-	} catch { return []; }
+  if (!json) return [];
+  try {
+    const parsed = JSON.parse(json);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (e): e is EvidenceEntry =>
+        typeof e === "object" && e !== null && typeof e.tag === "string" && typeof e.p === "number"
+    );
+  } catch {
+    return [];
+  }
 }
 
 export function getApplicationDetail(appId: string, guildId: string): ApplicationDetail | null {
-	const row = db().prepare(`
+  const row = db()
+    .prepare(
+      `
 		SELECT
 			a.id,
 			a.user_id,
@@ -155,51 +159,63 @@ export function getApplicationDetail(appId: string, guildId: string): Applicatio
 		LEFT JOIN user_cache ru ON ru.guild_id = a.guild_id AND ru.user_id = c.reviewer_id
 		LEFT JOIN avatar_scan s ON a.id = s.application_id
 		WHERE a.id = ? AND a.guild_id = ?
-	`).get(appId, guildId) as AppDetailRow | undefined;
+	`
+    )
+    .get(appId, guildId) as AppDetailRow | undefined;
 
-	if (!row) return null;
+  if (!row) return null;
 
-	const responses = db().prepare(`
+  const responses = db()
+    .prepare(
+      `
 		SELECT question, answer
 		FROM application_response
 		WHERE app_id = ?
 		ORDER BY q_index ASC
-	`).all(appId) as AppResponseRow[];
+	`
+    )
+    .all(appId) as AppResponseRow[];
 
-	return {
-		id: row.id,
-		userId: row.user_id,
-		applicantName: row.applicant_name,
-		avatarUrl: row.avatar_url,
-		status: row.status,
-		submittedAt: normalizeTimestamp(row.submitted_at),
-		claimedBy: row.reviewer_id,
-		claimedByName: row.reviewer_name ?? null,
-		claimedByAvatar: row.reviewer_avatar_url ?? null,
-		claimedAt: normalizeTimestamp(row.claimed_at),
-		riskScore: row.risk_score,
-		scan: row.scan_reason
-			? {
-				reason: row.scan_reason,
-				evidenceHard: parseEvidence(row.scan_evidence_hard),
-				evidenceSoft: parseEvidence(row.scan_evidence_soft),
-				evidenceSafe: parseEvidence(row.scan_evidence_safe)
-			}
-			: null,
-		scanScores: (row.scan_reason || row.banner_reason || row.avatar_ai_score !== null || row.banner_ai_score !== null)
-			? {
-				avatarNsfwPct: row.risk_score,
-				bannerNsfwPct: row.banner_final_pct ?? 0,
-				avatarAiPct: row.avatar_ai_score !== null ? Math.round(row.avatar_ai_score * 100) : null,
-				bannerAiPct: row.banner_ai_score !== null ? Math.round(row.banner_ai_score * 100) : null,
-				bannerReason: row.banner_reason,
-				bannerEvidenceHard: parseEvidence(row.banner_evidence_hard),
-				bannerEvidenceSoft: parseEvidence(row.banner_evidence_soft),
-				bannerEvidenceSafe: parseEvidence(row.banner_evidence_safe)
-			}
-			: null,
-		answers: responses
-	};
+  return {
+    id: row.id,
+    userId: row.user_id,
+    applicantName: row.applicant_name,
+    avatarUrl: row.avatar_url,
+    status: row.status,
+    submittedAt: normalizeTimestamp(row.submitted_at),
+    claimedBy: row.reviewer_id,
+    claimedByName: row.reviewer_name ?? null,
+    claimedByAvatar: row.reviewer_avatar_url ?? null,
+    claimedAt: normalizeTimestamp(row.claimed_at),
+    riskScore: row.risk_score,
+    scan: row.scan_reason
+      ? {
+          reason: row.scan_reason,
+          evidenceHard: parseEvidence(row.scan_evidence_hard),
+          evidenceSoft: parseEvidence(row.scan_evidence_soft),
+          evidenceSafe: parseEvidence(row.scan_evidence_safe),
+        }
+      : null,
+    scanScores:
+      row.scan_reason ||
+      row.banner_reason ||
+      row.avatar_ai_score !== null ||
+      row.banner_ai_score !== null
+        ? {
+            avatarNsfwPct: row.risk_score,
+            bannerNsfwPct: row.banner_final_pct ?? 0,
+            avatarAiPct:
+              row.avatar_ai_score !== null ? Math.round(row.avatar_ai_score * 100) : null,
+            bannerAiPct:
+              row.banner_ai_score !== null ? Math.round(row.banner_ai_score * 100) : null,
+            bannerReason: row.banner_reason,
+            bannerEvidenceHard: parseEvidence(row.banner_evidence_hard),
+            bannerEvidenceSoft: parseEvidence(row.banner_evidence_soft),
+            bannerEvidenceSafe: parseEvidence(row.banner_evidence_safe),
+          }
+        : null,
+    answers: responses,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -207,25 +223,31 @@ export function getApplicationDetail(appId: string, guildId: string): Applicatio
 // ---------------------------------------------------------------------------
 
 export interface PriorDecision {
-	appId: string;
-	status: string;
-	action: string;
-	reason: string | null;
-	moderatorName: string | null;
-	decidedAt: number | null;
+  appId: string;
+  status: string;
+  action: string;
+  reason: string | null;
+  moderatorName: string | null;
+  decidedAt: number | null;
 }
 
 interface PriorDecisionRow {
-	app_id: string;
-	status: string;
-	action: string;
-	reason: string | null;
-	moderator_name: string | null;
-	decided_at: number | null;
+  app_id: string;
+  status: string;
+  action: string;
+  reason: string | null;
+  moderator_name: string | null;
+  decided_at: number | null;
 }
 
-export function getUserPriorDecisions(userId: string, guildId: string, excludeAppId?: string): PriorDecision[] {
-	const rows = db().prepare(`
+export function getUserPriorDecisions(
+  userId: string,
+  guildId: string,
+  excludeAppId?: string
+): PriorDecision[] {
+  const rows = db()
+    .prepare(
+      `
 		SELECT
 			a.id as app_id,
 			a.status,
@@ -240,16 +262,18 @@ export function getUserPriorDecisions(userId: string, guildId: string, excludeAp
 			AND a.id != ?
 			AND ra.action IN ('reject', 'perm_reject', 'kick', 'approve')
 		ORDER BY ra.created_at DESC
-	`).all(guildId, userId, excludeAppId ?? '') as PriorDecisionRow[];
+	`
+    )
+    .all(guildId, userId, excludeAppId ?? "") as PriorDecisionRow[];
 
-	return rows.map((row) => ({
-		appId: row.app_id,
-		status: row.status,
-		action: row.action,
-		reason: row.reason,
-		moderatorName: row.moderator_name ?? null,
-		decidedAt: row.decided_at ? row.decided_at * 1000 : null
-	}));
+  return rows.map((row) => ({
+    appId: row.app_id,
+    status: row.status,
+    action: row.action,
+    reason: row.reason,
+    moderatorName: row.moderator_name ?? null,
+    decidedAt: row.decided_at ? row.decided_at * 1000 : null,
+  }));
 }
 
 // ---------------------------------------------------------------------------
@@ -257,26 +281,37 @@ export function getUserPriorDecisions(userId: string, guildId: string, excludeAp
 // ---------------------------------------------------------------------------
 
 export interface CachedProfile {
-	bannerUrl: string | null;
-	accentColor: number | null;
-	joinedAt: number | null;
-	createdAt: number | null;
+  bannerUrl: string | null;
+  accentColor: number | null;
+  joinedAt: number | null;
+  createdAt: number | null;
 }
 
 export function getCachedProfile(userId: string, guildId: string): CachedProfile | null {
-	const row = db().prepare(`
+  const row = db()
+    .prepare(
+      `
 		SELECT banner_url, accent_color, joined_at, created_at
 		FROM user_cache
 		WHERE user_id = ? AND guild_id = ?
-	`).get(userId, guildId) as { banner_url: string | null; accent_color: number | null; joined_at: number | null; created_at: number | null } | undefined;
+	`
+    )
+    .get(userId, guildId) as
+    | {
+        banner_url: string | null;
+        accent_color: number | null;
+        joined_at: number | null;
+        created_at: number | null;
+      }
+    | undefined;
 
-	if (!row) return null;
-	return {
-		bannerUrl: row.banner_url,
-		accentColor: row.accent_color,
-		joinedAt: row.joined_at ? row.joined_at * 1000 : null,
-		createdAt: row.created_at ? row.created_at * 1000 : null,
-	};
+  if (!row) return null;
+  return {
+    bannerUrl: row.banner_url,
+    accentColor: row.accent_color,
+    joinedAt: row.joined_at ? row.joined_at * 1000 : null,
+    createdAt: row.created_at ? row.created_at * 1000 : null,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -284,29 +319,31 @@ export function getCachedProfile(userId: string, guildId: string): CachedProfile
 // ---------------------------------------------------------------------------
 
 export interface ReviewHistoryItem {
-	id: string;
-	applicantName: string;
-	avatarUrl: string | null;
-	status: string;
-	resolvedAt: number | null;
-	resolverId: string | null;
-	resolverName: string | null;
-	reason: string | null;
+  id: string;
+  applicantName: string;
+  avatarUrl: string | null;
+  status: string;
+  resolvedAt: number | null;
+  resolverId: string | null;
+  resolverName: string | null;
+  reason: string | null;
 }
 
 interface HistoryRow {
-	id: string;
-	applicant_name: string;
-	avatar_url: string | null;
-	status: string;
-	resolved_at: string | null;
-	resolver_id: string | null;
-	resolver_name: string | null;
-	reason: string | null;
+  id: string;
+  applicant_name: string;
+  avatar_url: string | null;
+  status: string;
+  resolved_at: string | null;
+  resolver_id: string | null;
+  resolver_name: string | null;
+  reason: string | null;
 }
 
 export function getReviewHistory(guildId: string, limit: number = 50): ReviewHistoryItem[] {
-	const rows = db().prepare(`
+  const rows = db()
+    .prepare(
+      `
 		SELECT
 			a.id,
 			a.status,
@@ -328,18 +365,20 @@ export function getReviewHistory(guildId: string, limit: number = 50): ReviewHis
 		WHERE a.guild_id = ? AND a.status IN ('approved', 'rejected', 'kicked')
 		ORDER BY a.resolved_at DESC
 		LIMIT ?
-	`).all(guildId, limit) as HistoryRow[];
+	`
+    )
+    .all(guildId, limit) as HistoryRow[];
 
-	return rows.map((row) => ({
-		id: row.id,
-		applicantName: row.applicant_name,
-		avatarUrl: row.avatar_url,
-		status: row.status,
-		resolvedAt: normalizeTimestamp(row.resolved_at),
-		resolverId: row.resolver_id,
-		resolverName: row.resolver_name ?? null,
-		reason: row.reason
-	}));
+  return rows.map((row) => ({
+    id: row.id,
+    applicantName: row.applicant_name,
+    avatarUrl: row.avatar_url,
+    status: row.status,
+    resolvedAt: normalizeTimestamp(row.resolved_at),
+    resolverId: row.resolver_id,
+    resolverName: row.resolver_name ?? null,
+    reason: row.reason,
+  }));
 }
 
 // ---------------------------------------------------------------------------
@@ -347,7 +386,9 @@ export function getReviewHistory(guildId: string, limit: number = 50): ReviewHis
 // ---------------------------------------------------------------------------
 
 export function getReviewQueue(guildId: string): ReviewQueueItem[] {
-	const rows = db().prepare(`
+  const rows = db()
+    .prepare(
+      `
 		SELECT
 			a.id,
 			a.user_id,
@@ -398,23 +439,25 @@ export function getReviewQueue(guildId: string): ReviewQueueItem[] {
 			) THEN 0 ELSE 1 END ASC,
 			-- Oldest first within each priority group
 			a.submitted_at ASC
-	`).all(guildId) as ReviewQueueRow[];
+	`
+    )
+    .all(guildId) as ReviewQueueRow[];
 
-	return rows.map((row) => ({
-		id: row.id,
-		userId: row.user_id,
-		applicantName: row.applicant_name,
-		avatarUrl: row.avatar_url,
-		status: row.status,
-		submittedAt: normalizeTimestamp(row.submitted_at),
-		claimedBy: row.reviewer_id,
-		claimedByName: row.reviewer_name ?? null,
-		claimedByAvatar: row.reviewer_avatar_url ?? null,
-		claimedAt: normalizeTimestamp(row.claimed_at),
-		riskScore: row.risk_score,
-		hasUnreadModmail: Boolean(row.has_unread_modmail),
-		modmailAwaitingSince: normalizeTimestamp(row.modmail_awaiting_since)
-	}));
+  return rows.map((row) => ({
+    id: row.id,
+    userId: row.user_id,
+    applicantName: row.applicant_name,
+    avatarUrl: row.avatar_url,
+    status: row.status,
+    submittedAt: normalizeTimestamp(row.submitted_at),
+    claimedBy: row.reviewer_id,
+    claimedByName: row.reviewer_name ?? null,
+    claimedByAvatar: row.reviewer_avatar_url ?? null,
+    claimedAt: normalizeTimestamp(row.claimed_at),
+    riskScore: row.risk_score,
+    hasUnreadModmail: Boolean(row.has_unread_modmail),
+    modmailAwaitingSince: normalizeTimestamp(row.modmail_awaiting_since),
+  }));
 }
 
 // ---------------------------------------------------------------------------
@@ -422,24 +465,26 @@ export function getReviewQueue(guildId: string): ReviewQueueItem[] {
 // ---------------------------------------------------------------------------
 
 export interface VoteOutVoter {
-	id: string;
-	name: string;
-	reason: string | null;
+  id: string;
+  name: string;
+  reason: string | null;
 }
 
 export interface VoteOutInfo {
-	count: number;
-	threshold: number;
-	voters: VoteOutVoter[];
+  count: number;
+  threshold: number;
+  voters: VoteOutVoter[];
 }
 
 export function getVoteOutInfo(appId: string, guildId: string): VoteOutInfo {
-	const cfgRow = db().prepare(
-		'SELECT vote_out_threshold FROM guild_config WHERE guild_id = ?'
-	).get(guildId) as { vote_out_threshold: number | null } | undefined;
-	const threshold = cfgRow?.vote_out_threshold ?? 2;
+  const cfgRow = db()
+    .prepare("SELECT vote_out_threshold FROM guild_config WHERE guild_id = ?")
+    .get(guildId) as { vote_out_threshold: number | null } | undefined;
+  const threshold = cfgRow?.vote_out_threshold ?? 2;
 
-	const voters = db().prepare(`
+  const voters = db()
+    .prepare(
+      `
 		SELECT
 			vo.voter_id as id,
 			COALESCE(u.display_name, u.global_name, u.username, 'User ' || substr(vo.voter_id, -6)) as name,
@@ -448,7 +493,9 @@ export function getVoteOutInfo(appId: string, guildId: string): VoteOutInfo {
 		LEFT JOIN user_cache u ON u.user_id = vo.voter_id AND u.guild_id = ?
 		WHERE vo.app_id = ?
 		ORDER BY vo.created_at ASC
-	`).all(guildId, appId) as VoteOutVoter[];
+	`
+    )
+    .all(guildId, appId) as VoteOutVoter[];
 
-	return { count: voters.length, threshold, voters };
+  return { count: voters.length, threshold, voters };
 }

@@ -4,19 +4,19 @@
  * All mutations flow through here — the dashboard never writes to SQLite directly.
  */
 
-const BOT_API_URL = process.env.BOT_API_URL || 'http://localhost:3003';
-const BOT_API_SECRET = process.env.BOT_API_SECRET || '';
+const BOT_API_URL = process.env.BOT_API_URL || "http://localhost:3003";
+const BOT_API_SECRET = process.env.BOT_API_SECRET || "";
 
 const REQUEST_TIMEOUT_MS = 10_000;
 
 export interface BotApiSuccess<T = Record<string, unknown>> {
-	success: true;
-	data: T;
+  success: true;
+  data: T;
 }
 
 export interface BotApiError {
-	success: false;
-	error: string;
+  success: false;
+  error: string;
 }
 
 export type BotApiResponse<T = Record<string, unknown>> = BotApiSuccess<T> | BotApiError;
@@ -29,48 +29,48 @@ export type BotApiResponse<T = Record<string, unknown>> = BotApiSuccess<T> | Bot
  * @returns Typed bot API response
  */
 export async function callBotApi<T = Record<string, unknown>>(
-	path: string,
-	body: Record<string, unknown>,
-	timeoutMs: number = REQUEST_TIMEOUT_MS
+  path: string,
+  body: Record<string, unknown>,
+  timeoutMs: number = REQUEST_TIMEOUT_MS
 ): Promise<BotApiResponse<T>> {
-	if (!BOT_API_SECRET) {
-		return { success: false, error: 'BOT_API_SECRET not configured' };
-	}
+  if (!BOT_API_SECRET) {
+    return { success: false, error: "BOT_API_SECRET not configured" };
+  }
 
-	const url = `${BOT_API_URL}${path}`;
+  const url = `${BOT_API_URL}${path}`;
 
-	try {
-		const controller = new AbortController();
-		const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
-		const res = await fetch(url, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'X-Dashboard-Secret': BOT_API_SECRET
-			},
-			body: JSON.stringify(body),
-			signal: controller.signal
-		});
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Dashboard-Secret": BOT_API_SECRET,
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
 
-		clearTimeout(timeout);
+    clearTimeout(timeout);
 
-		if (res.status === 401) {
-			return { success: false, error: 'Bot API authentication failed' };
-		}
+    if (res.status === 401) {
+      return { success: false, error: "Bot API authentication failed" };
+    }
 
-		let json: unknown;
-		try {
-			json = await res.json();
-		} catch {
-			return { success: false, error: `Bot API returned non-JSON response (HTTP ${res.status})` };
-		}
+    let json: unknown;
+    try {
+      json = await res.json();
+    } catch {
+      return { success: false, error: `Bot API returned non-JSON response (HTTP ${res.status})` };
+    }
 
-		return json as BotApiResponse<T>;
-	} catch (err) {
-		if (err instanceof DOMException && err.name === 'AbortError') {
-			return { success: false, error: 'Bot API request timed out' };
-		}
-		return { success: false, error: 'Bot API unreachable' };
-	}
+    return json as BotApiResponse<T>;
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") {
+      return { success: false, error: "Bot API request timed out" };
+    }
+    return { success: false, error: "Bot API unreachable" };
+  }
 }

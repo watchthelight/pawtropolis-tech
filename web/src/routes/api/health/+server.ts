@@ -1,5 +1,5 @@
-import { json } from '@sveltejs/kit';
-import { db } from '$lib/server/db';
+import { json } from "@sveltejs/kit";
+import { db } from "$lib/server/db";
 
 /**
  * Dashboard liveness endpoint for external uptime monitoring.
@@ -18,28 +18,25 @@ import { db } from '$lib/server/db';
  *   503 Service Unavailable
  */
 export async function GET() {
-	const startedAt = Date.now();
-	let dbOk = false;
-	let dbError: string | undefined;
+  const startedAt = Date.now();
+  let dbOk = false;
+  let dbError: string | undefined;
 
-	try {
-		const row = db().prepare('SELECT 1 AS ok').get() as { ok?: number } | undefined;
-		dbOk = row?.ok === 1;
-	} catch (err) {
-		dbOk = false;
-		dbError = err instanceof Error ? err.message : 'unknown_db_error';
-	}
+  try {
+    const row = db().prepare("SELECT 1 AS ok").get() as { ok?: number } | undefined;
+    dbOk = row?.ok === 1;
+  } catch (err) {
+    dbOk = false;
+    dbError = err instanceof Error ? err.message : "unknown_db_error";
+  }
 
-	const latencyMs = Date.now() - startedAt;
-	const ts = new Date().toISOString();
-	const version = process.env.BUILD_GIT_SHA || null;
+  const latencyMs = Date.now() - startedAt;
+  const ts = new Date().toISOString();
+  const version = process.env.BUILD_GIT_SHA || null;
 
-	if (dbOk) {
-		return json({ status: 'ok', db: true, version, latencyMs, ts }, { status: 200 });
-	}
+  if (dbOk) {
+    return json({ status: "ok", db: true, version, latencyMs, ts }, { status: 200 });
+  }
 
-	return json(
-		{ status: 'degraded', db: false, dbError, version, latencyMs, ts },
-		{ status: 503 }
-	);
+  return json({ status: "degraded", db: false, dbError, version, latencyMs, ts }, { status: 503 });
 }

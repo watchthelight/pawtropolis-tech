@@ -1,3 +1,17 @@
 dist
 node_modules
 .env
+
+# Build artifacts
+**/.svelte-kit
+**/build
+coverage
+data
+_archive
+_bmad-output
+_charts_out
+_concepts
+_recon
+.playwright-mcp
+docs/badges/svg
+package-lock.json

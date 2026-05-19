@@ -4,11 +4,11 @@
  */
 
 function getRequired(name: string): string {
-	const value = process.env[name];
-	if (!value) {
-		throw new Error(`Missing required environment variable: ${name}`);
-	}
-	return value;
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
 }
 
 let _guildId: string | undefined;
@@ -16,13 +16,13 @@ let _sessionSecret: string | undefined;
 let _oauthRedirect: string | undefined;
 
 export function getGuildId(): string {
-	return (_guildId ??= getRequired('GUILD_ID'));
+  return (_guildId ??= getRequired("GUILD_ID"));
 }
 
 export function getSessionSecret(): string {
-	return (_sessionSecret ??= getRequired('SESSION_SECRET'));
+  return (_sessionSecret ??= getRequired("SESSION_SECRET"));
 }
 
 export function getOAuth2RedirectUri(): string {
-	return (_oauthRedirect ??= getRequired('OAUTH2_REDIRECT_URI'));
+  return (_oauthRedirect ??= getRequired("OAUTH2_REDIRECT_URI"));
 }

@@ -5,18 +5,18 @@
  * connect/disconnect, event subscriptions, and reconnect callbacks.
  */
 
-import type { SSEEvent } from '$lib/types/events';
+import type { SSEEvent } from "$lib/types/events";
 
 // ---------------------------------------------------------------------------
 // Connection status
 // ---------------------------------------------------------------------------
 
-export type ConnectionStatus = 'connected' | 'connecting' | 'reconnecting' | 'disconnected';
+export type ConnectionStatus = "connected" | "connecting" | "reconnecting" | "disconnected";
 
-let _connectionStatus = $state<ConnectionStatus>('disconnected');
+let _connectionStatus = $state<ConnectionStatus>("disconnected");
 
 export function getConnectionStatus(): ConnectionStatus {
-	return _connectionStatus;
+  return _connectionStatus;
 }
 
 // ---------------------------------------------------------------------------
@@ -45,31 +45,31 @@ const reconnectCallbacks = new Set<() => void>();
  * - `'review:claimed'` — exact: matches only `review:claimed`
  */
 export function subscribe(pattern: string, callback: EventCallback): void {
-	let set = subscribers.get(pattern);
-	if (!set) {
-		set = new Set();
-		subscribers.set(pattern, set);
-	}
-	set.add(callback);
+  let set = subscribers.get(pattern);
+  if (!set) {
+    set = new Set();
+    subscribers.set(pattern, set);
+  }
+  set.add(callback);
 }
 
 /** Remove a previously registered subscription. */
 export function unsubscribe(pattern: string, callback: EventCallback): void {
-	const set = subscribers.get(pattern);
-	if (set) {
-		set.delete(callback);
-		if (set.size === 0) subscribers.delete(pattern);
-	}
+  const set = subscribers.get(pattern);
+  if (set) {
+    set.delete(callback);
+    if (set.size === 0) subscribers.delete(pattern);
+  }
 }
 
 /** Register a callback invoked after successful reconnection. */
 export function onReconnect(callback: () => void): void {
-	reconnectCallbacks.add(callback);
+  reconnectCallbacks.add(callback);
 }
 
 /** Remove a reconnect callback. */
 export function offReconnect(callback: () => void): void {
-	reconnectCallbacks.delete(callback);
+  reconnectCallbacks.delete(callback);
 }
 
 // ---------------------------------------------------------------------------
@@ -77,21 +77,21 @@ export function offReconnect(callback: () => void): void {
 // ---------------------------------------------------------------------------
 
 function matchesPattern(pattern: string, eventType: string): boolean {
-	if (pattern === '*') return true; // global wildcard — matches all events
-	if (pattern.endsWith(':*')) {
-		return eventType.startsWith(pattern.slice(0, -1)); // 'review:*' → startsWith('review:')
-	}
-	return pattern === eventType;
+  if (pattern === "*") return true; // global wildcard — matches all events
+  if (pattern.endsWith(":*")) {
+    return eventType.startsWith(pattern.slice(0, -1)); // 'review:*' → startsWith('review:')
+  }
+  return pattern === eventType;
 }
 
 function dispatch(event: SSEEvent): void {
-	for (const [pattern, callbacks] of subscribers) {
-		if (matchesPattern(pattern, event.type)) {
-			for (const cb of callbacks) {
-				cb(event);
-			}
-		}
-	}
+  for (const [pattern, callbacks] of subscribers) {
+    if (matchesPattern(pattern, event.type)) {
+      for (const cb of callbacks) {
+        cb(event);
+      }
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -99,81 +99,81 @@ function dispatch(event: SSEEvent): void {
 // ---------------------------------------------------------------------------
 
 function scheduleReconnect(): void {
-	if (reconnectTimer) return; // already scheduled
+  if (reconnectTimer) return; // already scheduled
 
-	reconnectTimer = setTimeout(() => {
-		reconnectTimer = null;
-		createConnection();
-	}, backoffMs);
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = null;
+    createConnection();
+  }, backoffMs);
 
-	// Exponential backoff: double each time, cap at MAX_BACKOFF
-	backoffMs = Math.min(backoffMs * 2, MAX_BACKOFF);
+  // Exponential backoff: double each time, cap at MAX_BACKOFF
+  backoffMs = Math.min(backoffMs * 2, MAX_BACKOFF);
 }
 
 function createConnection(): void {
-	// Clean up any existing connection
-	if (eventSource) {
-		eventSource.close();
-		eventSource = null;
-	}
+  // Clean up any existing connection
+  if (eventSource) {
+    eventSource.close();
+    eventSource = null;
+  }
 
-	_connectionStatus = hasConnectedBefore ? 'reconnecting' : 'connecting';
+  _connectionStatus = hasConnectedBefore ? "reconnecting" : "connecting";
 
-	const source = new EventSource('/api/sse');
+  const source = new EventSource("/api/sse");
 
-	source.onopen = () => {
-		_connectionStatus = 'connected';
-		backoffMs = MIN_BACKOFF; // reset backoff on success
+  source.onopen = () => {
+    _connectionStatus = "connected";
+    backoffMs = MIN_BACKOFF; // reset backoff on success
 
-		if (hasConnectedBefore) {
-			// Fire reconnect callbacks for full state refresh
-			for (const cb of reconnectCallbacks) {
-				cb();
-			}
-		}
-		hasConnectedBefore = true;
-	};
+    if (hasConnectedBefore) {
+      // Fire reconnect callbacks for full state refresh
+      for (const cb of reconnectCallbacks) {
+        cb();
+      }
+    }
+    hasConnectedBefore = true;
+  };
 
-	source.onmessage = (event) => {
-		try {
-			const parsed = JSON.parse(event.data) as SSEEvent;
-			dispatch(parsed);
-		} catch {
-			// Malformed event data — silently ignore
-		}
-	};
+  source.onmessage = (event) => {
+    try {
+      const parsed = JSON.parse(event.data) as SSEEvent;
+      dispatch(parsed);
+    } catch {
+      // Malformed event data — silently ignore
+    }
+  };
 
-	source.onerror = () => {
-		// Connection lost — close and schedule reconnect with backoff
-		source.close();
-		eventSource = null;
-		_connectionStatus = 'reconnecting';
-		scheduleReconnect();
-	};
+  source.onerror = () => {
+    // Connection lost — close and schedule reconnect with backoff
+    source.close();
+    eventSource = null;
+    _connectionStatus = "reconnecting";
+    scheduleReconnect();
+  };
 
-	eventSource = source;
+  eventSource = source;
 }
 
 /** Open the SSE connection. Safe to call multiple times. */
 export function connect(): void {
-	if (eventSource || reconnectTimer) return; // already connected, connecting, or reconnect pending
-	createConnection();
+  if (eventSource || reconnectTimer) return; // already connected, connecting, or reconnect pending
+  createConnection();
 }
 
 /** Close the SSE connection and clean up all state. */
 export function disconnect(): void {
-	if (reconnectTimer) {
-		clearTimeout(reconnectTimer);
-		reconnectTimer = null;
-	}
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer);
+    reconnectTimer = null;
+  }
 
-	if (eventSource) {
-		eventSource.close();
-		eventSource = null;
-	}
+  if (eventSource) {
+    eventSource.close();
+    eventSource = null;
+  }
 
-	_connectionStatus = 'disconnected';
-	backoffMs = MIN_BACKOFF;
-	hasConnectedBefore = false;
-	reconnectCallbacks.clear();
+  _connectionStatus = "disconnected";
+  backoffMs = MIN_BACKOFF;
+  hasConnectedBefore = false;
+  reconnectCallbacks.clear();
 }

@@ -1,6 +1,6 @@
-import type { HandleClientError } from '@sveltejs/kit';
-import * as Sentry from '@sentry/sveltekit';
-import { env } from '$env/dynamic/public';
+import type { HandleClientError } from "@sveltejs/kit";
+import * as Sentry from "@sentry/sveltekit";
+import { env } from "$env/dynamic/public";
 
 // Sentry browser-side init runs once per page load. Skipped silently if
 // PUBLIC_SENTRY_DSN is unset, so dev/test environments without a configured
@@ -21,20 +21,20 @@ import { env } from '$env/dynamic/public';
 // staff-only (tier-gated). Replay payloads only get sent when an error is
 // already firing.
 if (env.PUBLIC_SENTRY_DSN) {
-	Sentry.init({
-		dsn: env.PUBLIC_SENTRY_DSN,
-		tracesSampleRate: 0.1,
-		environment: import.meta.env.MODE,
-		integrations: [
-			Sentry.browserTracingIntegration(),
-			Sentry.replayIntegration({
-				maskAllText: false,
-				blockAllMedia: false
-			})
-		],
-		replaysSessionSampleRate: 0,
-		replaysOnErrorSampleRate: 1.0
-	});
+  Sentry.init({
+    dsn: env.PUBLIC_SENTRY_DSN,
+    tracesSampleRate: 0.1,
+    environment: import.meta.env.MODE,
+    integrations: [
+      Sentry.browserTracingIntegration(),
+      Sentry.replayIntegration({
+        maskAllText: false,
+        blockAllMedia: false,
+      }),
+    ],
+    replaysSessionSampleRate: 0,
+    replaysOnErrorSampleRate: 1.0,
+  });
 }
 
 // Capture client-side errors (uncaught exceptions, errors thrown in load

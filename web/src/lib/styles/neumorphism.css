@@ -21,54 +21,44 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 [data-style="neumorphism"] {
-	/* ── Monochrome surface — everything shares the base color ── */
-	--bg: oklch(18% 0.006 var(--hue));
-	--surface: oklch(18% 0.006 var(--hue));
-	--surface-raised: oklch(20% 0.007 var(--hue));
-	--surface-overlay: oklch(22% 0.008 var(--hue));
+  /* ── Monochrome surface — everything shares the base color ── */
+  --bg: oklch(18% 0.006 var(--hue));
+  --surface: oklch(18% 0.006 var(--hue));
+  --surface-raised: oklch(20% 0.007 var(--hue));
+  --surface-overlay: oklch(22% 0.008 var(--hue));
 
-	/* ── Zero borders — depth is shadow-only ── */
-	--border: transparent;
-	--border-holdfast: transparent;
-	--border-strong: transparent;
+  /* ── Zero borders — depth is shadow-only ── */
+  --border: transparent;
+  --border-holdfast: transparent;
+  --border-strong: transparent;
 
-	/* ── Neumorphic shadow system (mapped to existing --shadow-* tokens) ── */
-	--shadow-sm:
-		3px 3px 8px rgba(0, 0, 0, 0.4),
-		-3px -3px 8px rgba(255, 255, 255, 0.03);
-	--shadow-md:
-		6px 6px 14px rgba(0, 0, 0, 0.45),
-		-6px -6px 14px rgba(255, 255, 255, 0.035);
-	--shadow-lg:
-		8px 8px 18px rgba(0, 0, 0, 0.5),
-		-8px -8px 18px rgba(255, 255, 255, 0.04);
+  /* ── Neumorphic shadow system (mapped to existing --shadow-* tokens) ── */
+  --shadow-sm: 3px 3px 8px rgba(0, 0, 0, 0.4), -3px -3px 8px rgba(255, 255, 255, 0.03);
+  --shadow-md: 6px 6px 14px rgba(0, 0, 0, 0.45), -6px -6px 14px rgba(255, 255, 255, 0.035);
+  --shadow-lg: 8px 8px 18px rgba(0, 0, 0, 0.5), -8px -8px 18px rgba(255, 255, 255, 0.04);
 
-	/* ── Additional neumorphic shadow tokens ── */
-	--neu-flat:
-		1px 1px 3px rgba(0, 0, 0, 0.3),
-		-1px -1px 3px rgba(255, 255, 255, 0.02);
-	--neu-inset:
-		inset 4px 4px 10px rgba(0, 0, 0, 0.45),
-		inset -4px -4px 10px rgba(255, 255, 255, 0.03);
-	--neu-inset-sm:
-		inset 2px 2px 6px rgba(0, 0, 0, 0.4),
-		inset -2px -2px 6px rgba(255, 255, 255, 0.025);
+  /* ── Additional neumorphic shadow tokens ── */
+  --neu-flat: 1px 1px 3px rgba(0, 0, 0, 0.3), -1px -1px 3px rgba(255, 255, 255, 0.02);
+  --neu-inset:
+    inset 4px 4px 10px rgba(0, 0, 0, 0.45), inset -4px -4px 10px rgba(255, 255, 255, 0.03);
+  --neu-inset-sm:
+    inset 2px 2px 6px rgba(0, 0, 0, 0.4), inset -2px -2px 6px rgba(255, 255, 255, 0.025);
 
-	/* ── Muted accent ── */
-	--accent: oklch(68% 0.14 var(--hue));
-	--accent-dim: oklch(38% 0.08 var(--hue));
-	--accent-soft: oklch(22% 0.04 var(--hue));
-	--accent-glow-bg: oklch(20% 0.03 var(--hue));
+  /* ── Muted accent ── */
+  --accent: oklch(68% 0.14 var(--hue));
+  --accent-dim: oklch(38% 0.08 var(--hue));
+  --accent-soft: oklch(22% 0.04 var(--hue));
+  --accent-glow-bg: oklch(20% 0.03 var(--hue));
 
-	/* ── Softer, rounder radii ── */
-	--radius-sm: 10px;
-	--radius-md: 16px;
-	--radius-lg: 20px;
+  /* ── Softer, rounder radii ── */
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
 
-	/* ── Interactive states — keep monochrome ── */
-	--hover-bg: oklch(20% 0.007 var(--hue));
-	--active-bg: oklch(17% 0.005 var(--hue));
-	--selected-bg: oklch(17% 0.005 var(--hue));
+  /* ── Interactive states — keep monochrome ── */
+  --hover-bg: oklch(20% 0.007 var(--hue));
+  --active-bg: oklch(17% 0.005 var(--hue));
+  --selected-bg: oklch(17% 0.005 var(--hue));
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -76,18 +66,18 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 [data-style="neumorphism"] .sidebar {
-	border-right: none !important;
-	box-shadow: 5px 0 14px rgba(0, 0, 0, 0.25) !important;
-	background: oklch(18% 0.006 var(--hue)) !important;
+  border-right: none !important;
+  box-shadow: 5px 0 14px rgba(0, 0, 0, 0.25) !important;
+  background: oklch(18% 0.006 var(--hue)) !important;
 }
 
 [data-style="neumorphism"] .identity {
-	border-bottom: none !important;
-	border-top: none !important;
+  border-bottom: none !important;
+  border-top: none !important;
 }
 
 [data-style="neumorphism"] .footer {
-	border-top: none !important;
+  border-top: none !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -95,27 +85,27 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 [data-style="neumorphism"] .nav-item {
-	border-radius: 999px !important;
-	border: none !important;
-	box-shadow: var(--neu-flat) !important;
-	transition: all 180ms ease !important;
+  border-radius: 999px !important;
+  border: none !important;
+  box-shadow: var(--neu-flat) !important;
+  transition: all 180ms ease !important;
 }
 
 [data-style="neumorphism"] .nav-inactive:hover {
-	box-shadow: var(--shadow-sm) !important;
-	background: oklch(18% 0.006 var(--hue)) !important;
-	transform: none !important;
+  box-shadow: var(--shadow-sm) !important;
+  background: oklch(18% 0.006 var(--hue)) !important;
+  transform: none !important;
 }
 
 [data-style="neumorphism"] .nav-active {
-	box-shadow: var(--neu-inset-sm) !important;
-	background: oklch(18% 0.006 var(--hue)) !important;
-	border: none !important;
+  box-shadow: var(--neu-inset-sm) !important;
+  background: oklch(18% 0.006 var(--hue)) !important;
+  border: none !important;
 }
 
 [data-style="neumorphism"] .nav-divider {
-	background: transparent !important;
-	box-shadow: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -123,17 +113,17 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 [data-style="neumorphism"] .avatar {
-	outline: none !important;
-	box-shadow: var(--neu-inset-sm) !important;
+  outline: none !important;
+  box-shadow: var(--neu-inset-sm) !important;
 }
 
 [data-style="neumorphism"] .welcome-avatar {
-	outline: none !important;
-	box-shadow: var(--neu-inset) !important;
+  outline: none !important;
+  box-shadow: var(--neu-inset) !important;
 }
 
 [data-style="neumorphism"] .review-card-avatar {
-	border-radius: 10px !important;
+  border-radius: 10px !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -142,30 +132,32 @@
 
 [data-style="neumorphism"] .card,
 [data-style="neumorphism"] .data-card {
-	border: none !important;
-	box-shadow: var(--shadow-md) !important;
-	background: oklch(18% 0.006 var(--hue)) !important;
-	transition: box-shadow 200ms ease, transform 200ms ease !important;
+  border: none !important;
+  box-shadow: var(--shadow-md) !important;
+  background: oklch(18% 0.006 var(--hue)) !important;
+  transition:
+    box-shadow 200ms ease,
+    transform 200ms ease !important;
 }
 
 [data-style="neumorphism"] .card:hover,
 [data-style="neumorphism"] .data-card:hover {
-	box-shadow: var(--shadow-lg) !important;
+  box-shadow: var(--shadow-lg) !important;
 }
 
 /* Accent cards — same neumorphic form, with subtle accent tint */
 [data-style="neumorphism"] .card-accent {
-	border: none !important;
-	border-top: none !important;
-	background: oklch(19% 0.012 var(--hue)) !important;
-	box-shadow: var(--shadow-md) !important;
+  border: none !important;
+  border-top: none !important;
+  background: oklch(19% 0.012 var(--hue)) !important;
+  box-shadow: var(--shadow-md) !important;
 }
 
 /* Selected card — pressed inward */
 [data-style="neumorphism"] .card-selected {
-	border: none !important;
-	border-left: none !important;
-	box-shadow: var(--neu-inset) !important;
+  border: none !important;
+  border-left: none !important;
+  box-shadow: var(--neu-inset) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -173,13 +165,13 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 [data-style="neumorphism"] .insight-card {
-	border: none !important;
-	box-shadow: var(--shadow-sm) !important;
-	background: oklch(18% 0.006 var(--hue)) !important;
+  border: none !important;
+  box-shadow: var(--shadow-sm) !important;
+  background: oklch(18% 0.006 var(--hue)) !important;
 }
 
 [data-style="neumorphism"] .insight-card:hover {
-	box-shadow: var(--shadow-md) !important;
+  box-shadow: var(--shadow-md) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -187,25 +179,29 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 [data-style="neumorphism"] .heatmap-card {
-	border: none !important;
-	box-shadow: var(--shadow-md) !important;
-	background: oklch(18% 0.006 var(--hue)) !important;
+  border: none !important;
+  box-shadow: var(--shadow-md) !important;
+  background: oklch(18% 0.006 var(--hue)) !important;
 }
 
 /* Heatmap cells — each cell feels like a tiny raised tile */
 [data-style="neumorphism"] .cell {
-	border-radius: 4px !important;
-	box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.25), -1px -1px 2px rgba(255, 255, 255, 0.015) !important;
+  border-radius: 4px !important;
+  box-shadow:
+    1px 1px 2px rgba(0, 0, 0, 0.25),
+    -1px -1px 2px rgba(255, 255, 255, 0.015) !important;
 }
 
 [data-style="neumorphism"] .cell:hover {
-	box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.4), -2px -2px 5px rgba(255, 255, 255, 0.03) !important;
-	transform: scale(1.15) !important;
+  box-shadow:
+    2px 2px 5px rgba(0, 0, 0, 0.4),
+    -2px -2px 5px rgba(255, 255, 255, 0.03) !important;
+  transform: scale(1.15) !important;
 }
 
 [data-style="neumorphism"] .week-divider {
-	border-color: transparent !important;
-	opacity: 0 !important;
+  border-color: transparent !important;
+  opacity: 0 !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -213,30 +209,30 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 [data-style="neumorphism"] .selector {
-	box-shadow: var(--neu-inset-sm) !important;
-	border: none !important;
-	padding: 4px !important;
-	border-radius: 999px !important;
-	background: oklch(18% 0.006 var(--hue)) !important;
+  box-shadow: var(--neu-inset-sm) !important;
+  border: none !important;
+  padding: 4px !important;
+  border-radius: 999px !important;
+  background: oklch(18% 0.006 var(--hue)) !important;
 }
 
 [data-style="neumorphism"] .chip {
-	border: none !important;
-	border-color: transparent !important;
-	border-radius: 999px !important;
-	background: transparent !important;
-	box-shadow: none !important;
+  border: none !important;
+  border-color: transparent !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 [data-style="neumorphism"] .chip:hover {
-	color: var(--text-primary) !important;
+  color: var(--text-primary) !important;
 }
 
 [data-style="neumorphism"] .chip.active {
-	box-shadow: var(--shadow-sm) !important;
-	background: oklch(20% 0.007 var(--hue)) !important;
-	border: none !important;
-	border-color: transparent !important;
+  box-shadow: var(--shadow-sm) !important;
+  background: oklch(20% 0.007 var(--hue)) !important;
+  border: none !important;
+  border-color: transparent !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -244,28 +240,28 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 [data-style="neumorphism"] .tab-bar {
-	border-bottom: none !important;
+  border-bottom: none !important;
 }
 
 [data-style="neumorphism"] .tab {
-	border: none !important;
-	border-radius: 999px !important;
+  border: none !important;
+  border-radius: 999px !important;
 }
 
 [data-style="neumorphism"] .tab:hover {
-	background: oklch(19% 0.006 var(--hue)) !important;
-	box-shadow: var(--neu-flat) !important;
+  background: oklch(19% 0.006 var(--hue)) !important;
+  box-shadow: var(--neu-flat) !important;
 }
 
 [data-style="neumorphism"] .tab-active {
-	box-shadow: var(--shadow-sm) !important;
-	border: none !important;
-	background: oklch(20% 0.007 var(--hue)) !important;
+  box-shadow: var(--shadow-sm) !important;
+  border: none !important;
+  background: oklch(20% 0.007 var(--hue)) !important;
 }
 
 [data-style="neumorphism"] .tab-badge {
-	border-radius: 999px !important;
-	box-shadow: var(--neu-flat) !important;
+  border-radius: 999px !important;
+  box-shadow: var(--neu-flat) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -273,29 +269,29 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 [data-style="neumorphism"] .review-card {
-	border: none !important;
-	box-shadow: var(--shadow-sm) !important;
-	border-radius: var(--radius-md) !important;
-	background: oklch(18% 0.006 var(--hue)) !important;
+  border: none !important;
+  box-shadow: var(--shadow-sm) !important;
+  border-radius: var(--radius-md) !important;
+  background: oklch(18% 0.006 var(--hue)) !important;
 }
 
 [data-style="neumorphism"] .review-card:hover {
-	box-shadow: var(--shadow-md) !important;
-	transform: translateY(-1px) !important;
-	background: oklch(18% 0.006 var(--hue)) !important;
+  box-shadow: var(--shadow-md) !important;
+  transform: translateY(-1px) !important;
+  background: oklch(18% 0.006 var(--hue)) !important;
 }
 
 [data-style="neumorphism"] .review-card:active {
-	box-shadow: var(--neu-inset-sm) !important;
-	transform: none !important;
+  box-shadow: var(--neu-inset-sm) !important;
+  transform: none !important;
 }
 
 /* Selected — pressed inward */
 [data-style="neumorphism"] .review-card-selected {
-	box-shadow: var(--neu-inset-sm) !important;
-	border: none !important;
-	border-left: none !important;
-	background: oklch(17% 0.005 var(--hue)) !important;
+  box-shadow: var(--neu-inset-sm) !important;
+  border: none !important;
+  border-left: none !important;
+  background: oklch(17% 0.005 var(--hue)) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -303,18 +299,18 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 [data-style="neumorphism"] .tier-badge {
-	border: none !important;
-	border-radius: 999px !important;
-	box-shadow: var(--neu-flat) !important;
-	background: oklch(20% 0.02 var(--hue)) !important;
+  border: none !important;
+  border-radius: 999px !important;
+  box-shadow: var(--neu-flat) !important;
+  background: oklch(20% 0.02 var(--hue)) !important;
 }
 
 [data-style="neumorphism"] .section-heading {
-	border-bottom: none !important;
+  border-bottom: none !important;
 }
 
 [data-style="neumorphism"] .section-heading::before {
-	box-shadow: var(--neu-flat) !important;
+  box-shadow: var(--neu-flat) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -322,31 +318,31 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 [data-style="neumorphism"] .leaderboard {
-	border: none !important;
-	box-shadow: var(--shadow-md) !important;
-	background: oklch(18% 0.006 var(--hue)) !important;
+  border: none !important;
+  box-shadow: var(--shadow-md) !important;
+  background: oklch(18% 0.006 var(--hue)) !important;
 }
 
 [data-style="neumorphism"] .lb-header {
-	border-bottom: none !important;
-	box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15) !important;
+  border-bottom: none !important;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15) !important;
 }
 
 [data-style="neumorphism"] .lb-row {
-	border-bottom: none !important;
+  border-bottom: none !important;
 }
 
 [data-style="neumorphism"] .lb-row:hover {
-	background: oklch(20% 0.007 var(--hue)) !important;
-	box-shadow: var(--neu-flat) !important;
-	border-radius: 8px !important;
+  background: oklch(20% 0.007 var(--hue)) !important;
+  box-shadow: var(--neu-flat) !important;
+  border-radius: 8px !important;
 }
 
 [data-style="neumorphism"] .breakdown-tag {
-	border: none !important;
-	border-radius: 999px !important;
-	box-shadow: var(--neu-flat) !important;
-	background: oklch(20% 0.007 var(--hue)) !important;
+  border: none !important;
+  border-radius: 999px !important;
+  box-shadow: var(--neu-flat) !important;
+  background: oklch(20% 0.007 var(--hue)) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -354,24 +350,24 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 [data-style="neumorphism"] .bar-track {
-	box-shadow: var(--neu-inset-sm) !important;
-	background: oklch(16% 0.005 var(--hue)) !important;
-	border-radius: 6px !important;
+  box-shadow: var(--neu-inset-sm) !important;
+  background: oklch(16% 0.005 var(--hue)) !important;
+  border-radius: 6px !important;
 }
 
 [data-style="neumorphism"] .bar-fill {
-	border-radius: 6px !important;
-	box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2) !important;
+  border-radius: 6px !important;
+  box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2) !important;
 }
 
 /* Level role table — borderless rows */
 [data-style="neumorphism"] .level-role-table th {
-	border-bottom: none !important;
-	box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15) !important;
+  border-bottom: none !important;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15) !important;
 }
 
 [data-style="neumorphism"] .level-role-table td {
-	border-bottom: none !important;
+  border-bottom: none !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -381,16 +377,18 @@
 [data-style="neumorphism"] input,
 [data-style="neumorphism"] textarea,
 [data-style="neumorphism"] select {
-	border: none !important;
-	box-shadow: var(--neu-inset-sm) !important;
-	background: oklch(17% 0.005 var(--hue)) !important;
-	border-radius: var(--radius-sm) !important;
+  border: none !important;
+  box-shadow: var(--neu-inset-sm) !important;
+  background: oklch(17% 0.005 var(--hue)) !important;
+  border-radius: var(--radius-sm) !important;
 }
 
 [data-style="neumorphism"] input:focus,
 [data-style="neumorphism"] textarea:focus,
 [data-style="neumorphism"] select:focus {
-	box-shadow: var(--neu-inset), 0 0 0 2px oklch(68% 0.14 var(--hue) / 0.3) !important;
+  box-shadow:
+    var(--neu-inset),
+    0 0 0 2px oklch(68% 0.14 var(--hue) / 0.3) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -399,19 +397,19 @@
 
 [data-style="neumorphism"] .btn-neu,
 [data-style="neumorphism"] .consent-btn {
-	border: none !important;
-	box-shadow: var(--shadow-sm) !important;
-	border-radius: 999px !important;
-	background: oklch(18% 0.006 var(--hue)) !important;
+  border: none !important;
+  box-shadow: var(--shadow-sm) !important;
+  border-radius: 999px !important;
+  background: oklch(18% 0.006 var(--hue)) !important;
 }
 
 [data-style="neumorphism"] .btn-neu:hover,
 [data-style="neumorphism"] .consent-btn:hover {
-	box-shadow: var(--shadow-md) !important;
+  box-shadow: var(--shadow-md) !important;
 }
 
 [data-style="neumorphism"] button:active {
-	box-shadow: var(--neu-inset-sm) !important;
+  box-shadow: var(--neu-inset-sm) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -419,13 +417,13 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 [data-style="neumorphism"] .edge-toggle {
-	border: none !important;
-	box-shadow: var(--shadow-sm) !important;
-	background: oklch(18% 0.006 var(--hue)) !important;
+  border: none !important;
+  box-shadow: var(--shadow-sm) !important;
+  background: oklch(18% 0.006 var(--hue)) !important;
 }
 
 [data-style="neumorphism"] .edge-toggle:hover {
-	box-shadow: var(--shadow-md) !important;
+  box-shadow: var(--shadow-md) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -433,9 +431,9 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 [data-style="neumorphism"] .mobile-header {
-	border-bottom: none !important;
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-	background: oklch(18% 0.006 var(--hue)) !important;
+  border-bottom: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  background: oklch(18% 0.006 var(--hue)) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -443,12 +441,14 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 [data-style="neumorphism"] .status-dot {
-	box-shadow: 0 0 4px currentColor, var(--neu-flat) !important;
+  box-shadow:
+    0 0 4px currentColor,
+    var(--neu-flat) !important;
 }
 
 [data-style="neumorphism"] .status-green,
 [data-style="neumorphism"] .status-amber {
-	box-shadow: 0 0 6px currentColor !important;
+  box-shadow: 0 0 6px currentColor !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -456,26 +456,26 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 [data-style="neumorphism"] .style-chip {
-	border: none !important;
-	border-color: transparent !important;
-	border-radius: 999px !important;
+  border: none !important;
+  border-color: transparent !important;
+  border-radius: 999px !important;
 }
 
 [data-style="neumorphism"] .style-chip.active {
-	box-shadow: var(--shadow-sm) !important;
-	background: oklch(20% 0.007 var(--hue)) !important;
-	border: none !important;
-	border-color: transparent !important;
+  box-shadow: var(--shadow-sm) !important;
+  background: oklch(20% 0.007 var(--hue)) !important;
+  border: none !important;
+  border-color: transparent !important;
 }
 
 [data-style="neumorphism"] .icon-btn {
-	border: none !important;
-	border-radius: var(--radius-sm) !important;
-	box-shadow: var(--neu-flat) !important;
+  border: none !important;
+  border-radius: var(--radius-sm) !important;
+  box-shadow: var(--neu-flat) !important;
 }
 
 [data-style="neumorphism"] .icon-btn:hover {
-	box-shadow: var(--shadow-sm) !important;
+  box-shadow: var(--shadow-sm) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -483,9 +483,9 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 [data-style="neumorphism"] .nav-badge {
-	border: none !important;
-	border-radius: 999px !important;
-	box-shadow: var(--neu-flat) !important;
+  border: none !important;
+  border-radius: 999px !important;
+  box-shadow: var(--neu-flat) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -493,10 +493,10 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 [data-style="neumorphism"] .consent-banner {
-	border: none !important;
-	box-shadow: var(--shadow-lg) !important;
-	background: oklch(18% 0.006 var(--hue)) !important;
-	border-radius: var(--radius-lg) !important;
+  border: none !important;
+  box-shadow: var(--shadow-lg) !important;
+  background: oklch(18% 0.006 var(--hue)) !important;
+  border-radius: var(--radius-lg) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -504,9 +504,9 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 [data-style="neumorphism"] .toast {
-	border: none !important;
-	box-shadow: var(--shadow-md) !important;
-	border-radius: var(--radius-md) !important;
+  border: none !important;
+  box-shadow: var(--shadow-md) !important;
+  border-radius: var(--radius-md) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -514,12 +514,12 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 [data-style="neumorphism"] ::-webkit-scrollbar-thumb {
-	background: oklch(24% 0.008 var(--hue)) !important;
-	border-radius: 6px !important;
+  background: oklch(24% 0.008 var(--hue)) !important;
+  border-radius: 6px !important;
 }
 
 [data-style="neumorphism"] ::-webkit-scrollbar-thumb:hover {
-	background: oklch(28% 0.01 var(--hue)) !important;
+  background: oklch(28% 0.01 var(--hue)) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -527,8 +527,8 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 [data-style="neumorphism"] .empty-state {
-	border: none !important;
-	box-shadow: var(--shadow-sm) !important;
+  border: none !important;
+  box-shadow: var(--shadow-sm) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -536,9 +536,9 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 [data-style="neumorphism"] .drawer-backdrop {
-	background: rgba(0, 0, 0, 0.5) !important;
-	backdrop-filter: blur(4px) !important;
-	-webkit-backdrop-filter: blur(4px) !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -546,7 +546,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 [data-style="neumorphism"] .lightbox-content {
-	border: none !important;
-	box-shadow: var(--shadow-lg) !important;
-	border-radius: var(--radius-lg) !important;
+  border: none !important;
+  box-shadow: var(--shadow-lg) !important;
+  border-radius: var(--radius-lg) !important;
 }
