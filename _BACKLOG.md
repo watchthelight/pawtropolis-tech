@@ -50,7 +50,6 @@ _(none)_
 - [ ] [Run prettier format on web/ (925 drifts)](todo/00022.md) `Medium`
 - [ ] [Configure eslint env for scripts/ and workers/](todo/00023.md) `Medium`
 - [ ] [Enable tsconfig noUncheckedIndexedAccess and unused checks](todo/00024.md) `Medium`
-- [ ] [Add Discord webhook for cron workflow failures](todo/00027.md) `Medium`
 - [ ] [Add CI smoke test for built artifact](todo/00030.md) `Medium`
 - [ ] [Upgrade Vitest to 4.x (major)](todo/00032.md) `Medium`
 - [ ] [Upgrade TypeScript to 6.x (major)](todo/00033.md) `Medium`
