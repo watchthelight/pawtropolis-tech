@@ -6,6 +6,7 @@ Reverse chronological by completion date.
 
 ## 2026-05-19
 
+- [x] [Resolve TODO in art.ts (circular dep workaround)](done/00035.md) `Low` Replaced vague TODO with deliberate-choice comment.
 - [x] [Add SSH host validation to deploy.sh](done/00039.md) `Low` Checks ~/.ssh/config + known_hosts before deploy; fails fast with clear error if alias missing.
 - [x] [Sync .env.example with runtime variables](done/00041.md) `Low` Added 15 missing vars across NSFW/GitHub/SSH/Anthropic sections. Diff now empty.
 - [x] [Upgrade typescript-eslint to ^8.59.4](done/00034.md) `Low` 13 patches integrated cleanly. Typecheck green.
