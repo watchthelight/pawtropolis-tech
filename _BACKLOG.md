@@ -67,4 +67,3 @@ _(none)_
 - [ ] [Add SSH host validation to deploy.sh](todo/00039.md) `Low`
 - [ ] [Validate Litestream configuration in CI / pre-deploy](todo/00040.md) `Low`
 - [ ] [Sync .env.example with runtime variables](todo/00041.md) `Low`
-- [ ] [Clean up stale .env backup files](todo/00042.md) `Low`

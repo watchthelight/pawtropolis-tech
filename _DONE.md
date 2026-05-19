@@ -6,6 +6,7 @@ Reverse chronological by completion date.
 
 ## 2026-05-19
 
+- [x] [Clean stale .env backups](done/00042.md) `Low` Deleted 3 local files (.env.build, .env.migration-backup, .env.pre-new-bot.bak). Already gitignored via `.env.*` pattern.
 - [x] [Remove 5 unused exports](done/00026.md) `Low` No-op close: 4 of 5 already absent from source (stale audit), 5th (OAUTH_RATE_LIMIT_MAX_REQUESTS) actually in use.
 - [x] [Fix empty block in build-overlay-weekly.mjs](done/00037.md) `Low` Annotated intentional empty catch with inline comment.
 - [x] [Move @anthropic-ai/sdk to devDeps](done/00038.md) `Low` Used by scripts/llm-label.mjs (offline tool). Moved out of prod install footprint instead of removing.
