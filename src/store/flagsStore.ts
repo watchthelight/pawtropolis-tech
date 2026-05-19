@@ -11,6 +11,7 @@
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
+import type { Statement } from "better-sqlite3";
 import { db } from "../db/db.js";
 import { logger } from "../lib/logger.js";
 import { FLAG_REASON_MAX_LENGTH } from "../lib/constants.js";
@@ -20,50 +21,63 @@ import { FLAG_REASON_MAX_LENGTH } from "../lib/constants.js";
 // ============================================================================
 
 /*
- * GOTCHA: These statements are prepared at module load time, which means
- * if the db connection dies and gets recreated, you'll have stale statements
- * pointing at a dead handle. In practice this never happens because we just
- * crash and restart, but future-you should know this if you ever add
- * connection pooling or reconnection logic.
+ * GOTCHA: Statements are lazily prepared on first call (memoized) so the
+ * module can be imported under test harnesses that mock the `db` symbol via
+ * vi.mock. The old eager pattern called db.prepare at module load, before
+ * vi.mock could intercept (broke tests/flag.store.test.ts).
+ *
+ * Performance impact is negligible: each statement is prepared once on first
+ * use and reused thereafter. If you ever add db reconnection logic, the
+ * cache should be invalidated then.
  */
+type PreparedStmt = Statement<unknown[], unknown>;
+const _stmtCache = new Map<string, PreparedStmt>();
+function lazyStmt(sql: string): PreparedStmt {
+  let s = _stmtCache.get(sql);
+  if (!s) {
+    s = db.prepare(sql) as PreparedStmt;
+    _stmtCache.set(sql, s);
+  }
+  return s;
+}
 
-const getExistingFlagStmt = db.prepare(
-  `SELECT guild_id, user_id, joined_at, flagged_at, flagged_reason, manual_flag, flagged_by
+function getExistingFlagStmt(): PreparedStmt {
+  return lazyStmt(`SELECT guild_id, user_id, joined_at, flagged_at, flagged_reason, manual_flag, flagged_by
    FROM user_activity
-   WHERE guild_id = ? AND user_id = ? AND flagged_at IS NOT NULL`
-);
+   WHERE guild_id = ? AND user_id = ? AND flagged_at IS NOT NULL`);
+}
 
 // No index on flagged_at, so this is a full table scan. Fine for now since
 // guilds rarely exceed 50k users, but if this becomes a hot path, add an index.
 // LIMIT 10000 is a safety valve - no guild should have more than 10k flagged users.
 // If they do, something is very wrong and we should cap it anyway.
-const getFlaggedUserIdsStmt = db.prepare(
-  `SELECT user_id FROM user_activity WHERE guild_id = ? AND flagged_at IS NOT NULL LIMIT 10000`
-);
+function getFlaggedUserIdsStmt(): PreparedStmt {
+  return lazyStmt(`SELECT user_id FROM user_activity WHERE guild_id = ? AND flagged_at IS NOT NULL LIMIT 10000`);
+}
 
-const checkExistingRowStmt = db.prepare(
-  `SELECT 1 FROM user_activity WHERE guild_id = ? AND user_id = ?`
-);
+function checkExistingRowStmt(): PreparedStmt {
+  return lazyStmt(`SELECT 1 FROM user_activity WHERE guild_id = ? AND user_id = ?`);
+}
 
-const updateManualFlagStmt = db.prepare(
-  `UPDATE user_activity
+function updateManualFlagStmt(): PreparedStmt {
+  return lazyStmt(`UPDATE user_activity
    SET flagged_at = ?,
        flagged_reason = ?,
        manual_flag = 1,
        flagged_by = ?
-   WHERE guild_id = ? AND user_id = ?`
-);
+   WHERE guild_id = ? AND user_id = ?`);
+}
 
-const insertManualFlagStmt = db.prepare(
-  `INSERT INTO user_activity (guild_id, user_id, joined_at, flagged_at, flagged_reason, manual_flag, flagged_by)
-   VALUES (?, ?, ?, ?, ?, 1, ?)`
-);
+function insertManualFlagStmt(): PreparedStmt {
+  return lazyStmt(`INSERT INTO user_activity (guild_id, user_id, joined_at, flagged_at, flagged_reason, manual_flag, flagged_by)
+   VALUES (?, ?, ?, ?, ?, 1, ?)`);
+}
 
-const getResultRowStmt = db.prepare(
-  `SELECT guild_id, user_id, joined_at, flagged_at, flagged_reason, manual_flag, flagged_by
+function getResultRowStmt(): PreparedStmt {
+  return lazyStmt(`SELECT guild_id, user_id, joined_at, flagged_at, flagged_reason, manual_flag, flagged_by
    FROM user_activity
-   WHERE guild_id = ? AND user_id = ?`
-);
+   WHERE guild_id = ? AND user_id = ?`);
+}
 
 // WHY manual_flag is a number: SQLite doesn't have a boolean type, so we use
 // 0/1 like it's 1995. TypeScript gets number, consumers do truthiness checks.
@@ -93,7 +107,7 @@ export interface FlagRow {
 export function getExistingFlag(guildId: string, userId: string): FlagRow | null {
   try {
     // Cast to FlagRow | undefined because better-sqlite3's .get() types are worthless
-    const row = getExistingFlagStmt.get(guildId, userId) as FlagRow | undefined;
+    const row = getExistingFlagStmt().get(guildId, userId) as FlagRow | undefined;
     return row || null;
   } catch (err) {
     logger.error({ err, guildId, userId }, "[flagsStore] Failed to get existing flag");
@@ -126,7 +140,7 @@ export function isAlreadyFlagged(guildId: string, userId: string): boolean {
  */
 export function getFlaggedUserIds(guildId: string): string[] {
   try {
-    const rows = getFlaggedUserIdsStmt.all(guildId) as Array<{ user_id: string }>;
+    const rows = getFlaggedUserIdsStmt().all(guildId) as Array<{ user_id: string }>;
     return rows.map((row) => row.user_id);
   } catch (err) {
     // Returning empty array on error instead of throwing - deliberate choice.
@@ -187,24 +201,24 @@ export function upsertManualFlag(params: {
      * the whole user_activity row. Not a race condition concern - this runs
      * synchronously and SQLite has a write lock anyway.
      */
-    const existing = checkExistingRowStmt.get(guildId, userId) as FlagRow | undefined;
+    const existing = checkExistingRowStmt().get(guildId, userId) as FlagRow | undefined;
 
     if (existing) {
       // UPDATE existing row with manual flag data
-      updateManualFlagStmt.run(now, sanitizedReason, flaggedBy, guildId, userId);
+      updateManualFlagStmt().run(now, sanitizedReason, flaggedBy, guildId, userId);
       logger.info({ guildId, userId, flaggedBy }, "[flagsStore] Updated existing row with manual flag");
     } else {
       // INSERT new row with manual flag
       // If we don't know when they joined, just use now. Better than null.
       const finalJoinedAt = joinedAt ?? now;
-      insertManualFlagStmt.run(guildId, userId, finalJoinedAt, now, sanitizedReason, flaggedBy);
+      insertManualFlagStmt().run(guildId, userId, finalJoinedAt, now, sanitizedReason, flaggedBy);
       logger.info({ guildId, userId, flaggedBy }, "[flagsStore] Inserted new manual flag row");
     }
 
     // Re-fetch to return the final state. Yes, this is an extra query.
     // No, I don't care. The alternative is reconstructing the row manually
     // which is more code and more places to get out of sync with the schema.
-    const result = getResultRowStmt.get(guildId, userId) as FlagRow;
+    const result = getResultRowStmt().get(guildId, userId) as FlagRow;
     return result;
   } catch (err) {
     logger.error({ err, guildId, userId, flaggedBy }, "[flagsStore] Failed to upsert manual flag");
