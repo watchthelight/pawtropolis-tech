@@ -44,7 +44,6 @@ _(none)_
 - [ ] [Add tests for src/features/avatarScan.ts](todo/00016.md) `Medium`
 - [ ] [Add tests for auditRunner.ts and securityDiff.ts](todo/00017.md) `Medium`
 - [ ] [Add tests for 5 untested schedulers](todo/00018.md) `Medium`
-- [ ] [Replace lazy any types in scripts/commands.ts](todo/00020.md) `Medium`
 - [ ] [Run prettier format on web/ (925 drifts)](todo/00022.md) `Medium`
 - [ ] [Enable tsconfig noUncheckedIndexedAccess and unused checks](todo/00024.md) `Medium`
 - [ ] [Upgrade Vitest to 4.x (major)](todo/00032.md) `Medium`
