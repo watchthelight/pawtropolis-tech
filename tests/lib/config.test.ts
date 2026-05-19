@@ -353,18 +353,59 @@ describe("canRunAllCommands", () => {
 });
 
 // ===== hasStaffPermissions Tests =====
-// Note: hasStaffPermissions uses require() internally which bypasses mocks.
-// These tests are skipped in unit tests but would work in integration tests.
+// Previously skipped under the assumption that hasStaffPermissions used
+// require() internally. That was incorrect: the function only calls
+// isOwner/isGuildMember/hasManageGuild/isReviewer, all of which work with
+// the mocked db. Tests restored.
 
-describe.skip("hasStaffPermissions", () => {
-  // These tests are skipped because hasStaffPermissions uses require() internally
-  // which cannot be properly mocked with vi.mock(). In a real scenario, these
-  // would be covered by integration tests with a real database.
-  it.todo("returns true for bot owner");
-  it.todo("returns true for member with ManageGuild");
-  it.todo("returns true for reviewer");
-  it.todo("returns false for non-staff member");
-  it.todo("returns false for null member");
+describe("hasStaffPermissions", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(isOwner).mockImplementation((id) => id === "owner-1");
+  });
+
+  it("returns true for bot owner", () => {
+    const member = createMockMember({ userId: "owner-1", permissions: [] });
+    expect(hasStaffPermissions(member, "guild-123")).toBe(true);
+  });
+
+  it("returns true for member with ManageGuild", () => {
+    setupMockConfig(undefined);
+    const member = createMockMember({ userId: "user-1", permissions: ["ManageGuild"] });
+    expect(hasStaffPermissions(member, "guild-123")).toBe(true);
+  });
+
+  it("returns true for reviewer (via configured role)", () => {
+    setupMockConfig({
+      guild_id: "guild-123",
+      reviewer_role_id: "reviewer-role-1",
+      review_channel_id: null,
+    });
+    const member = createMockMember({
+      userId: "user-2",
+      permissions: [],
+      roleIds: ["reviewer-role-1"],
+    });
+    expect(hasStaffPermissions(member, "guild-123")).toBe(true);
+  });
+
+  it("returns false for non-staff member", () => {
+    setupMockConfig({
+      guild_id: "guild-123",
+      reviewer_role_id: "reviewer-role-1",
+      review_channel_id: null,
+    });
+    const member = createMockMember({
+      userId: "user-3",
+      permissions: [],
+      roleIds: ["random-role"],
+    });
+    expect(hasStaffPermissions(member, "guild-123")).toBe(false);
+  });
+
+  it("returns false for null member", () => {
+    expect(hasStaffPermissions(null, "guild-123")).toBe(false);
+  });
 });
 
 // ===== Focused Permission Tests =====
