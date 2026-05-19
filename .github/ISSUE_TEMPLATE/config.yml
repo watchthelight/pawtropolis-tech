@@ -1,0 +1,12 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: Open a todo (preferred)
+    url: https://github.com/watchthelight/pawtropolis-tech/blob/main/docs/issue-system.md
+    about: Use `/issue` in Claude Code or create `todo/NNNNN.md` then run `/sync-tasks`. Files are source of truth; this issue list is the mirror.
+  - name: Report a security issue
+    url: https://github.com/watchthelight/pawtropolis-tech/security/advisories/new
+    about: Private vulnerability reporting. Do not open a public issue for security problems.
+  - name: Read the issue system docs
+    url: https://github.com/watchthelight/pawtropolis-tech/blob/main/docs/issue-system.md
+    about: File format, label vocabulary, skill list, workflow.

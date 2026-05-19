@@ -1,0 +1,61 @@
+# Pawtropolis label taxonomy
+# Source: docs/issue-system.md
+# Apply via: scripts/ops/sync-labels.sh
+#
+# Sixteen labels: 8 type + 5 priority + 3 status.
+# Every managed issue gets one type label and one priority label.
+# Status is added only when relevant (set by /issue-update or /sync-tasks).
+
+# Type labels
+- name: TODO
+  color: "1f6feb"
+  description: Managed issue (mirrored from todo/NNNNN.md)
+- name: bug
+  color: "d73a4a"
+  description: Defect in shipped behavior
+- name: feat
+  color: "a2eeef"
+  description: New feature or capability
+- name: chore
+  color: "cfd3d7"
+  description: Maintenance, deps, CI, infra
+- name: audit
+  color: "e99695"
+  description: Came from an audit finding
+- name: security
+  color: "b60205"
+  description: Security or abuse-surface issue
+- name: question
+  color: "d876e3"
+  description: Decision needed before progress
+- name: refactor
+  color: "fbca04"
+  description: Code shape change with no behavior change
+
+# Priority labels
+- name: Critical
+  color: "b60205"
+  description: P0 - urgent
+- name: High
+  color: "d93f0b"
+  description: P1
+- name: Medium
+  color: "fbca04"
+  description: P2
+- name: Low
+  color: "0e8a16"
+  description: P3
+- name: Nominal
+  color: "bfd4f2"
+  description: Background work
+
+# Status labels
+- name: IP
+  color: "0e8a16"
+  description: In progress (commit activity detected)
+- name: Blocked (Internal)
+  color: "5319e7"
+  description: Blocked on a decision or upstream todo
+- name: Blocked (External)
+  color: "b60205"
+  description: Blocked on a vendor or external party
