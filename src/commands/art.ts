@@ -939,9 +939,9 @@ async function handleAssign(
     }
   }
 
-  // Dynamic import here to avoid a circular dependency nightmare.
-  // artJobs/index.js imports config stuff that imports... you get the idea.
-  // TODO: Might be worth refactoring this out, but it works for now.
+  // Dynamic import: artJobs/index.js transitively imports config which
+  // imports this file. Static import would create a cycle. The deferral
+  // is intentional; do not flatten without untangling the config graph.
   const job = await withStep(ctx, "create_job", async () => {
     const { createJob } = await import("../features/artJobs/index.js");
 
