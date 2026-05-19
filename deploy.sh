@@ -57,7 +57,7 @@ SCP_OPTS=(
 
 # Lockfile path on the remote. mkdir is atomic so concurrent deploys can race
 # safely: the second one fails to create and exits.
-DEPLOY_LOCK_DIR="${DEPLOY_LOCK_DIR:-/tmp/pawtropolis-deploy.lock}"
+DEPLOY_LOCK_DIR="${DEPLOY_LOCK_DIR:-/home/ubuntu/pawtropolis-deploy.lock}"
 
 # Pre-deploy DB backup. On every deploy the script copies the current DB to
 # data/backups/data.db.<utc_ts> on the remote before the new tarball lands.
@@ -159,7 +159,7 @@ for arg in "$@"; do
       echo "  REMOTE_USER, REMOTE_HOST, REMOTE_PATH"
       echo "  PM2_PROCESS_BOT, PM2_PROCESS_WEB"
       echo "  BACKUP_BEFORE_DEPLOY=1   take a remote DB backup before deploy"
-      echo "  DEPLOY_LOCK_DIR          override the lock path (default /tmp/pawtropolis-deploy.lock)"
+      echo "  DEPLOY_LOCK_DIR          override the lock path (default /home/ubuntu/pawtropolis-deploy.lock)"
       exit 1
       ;;
   esac
