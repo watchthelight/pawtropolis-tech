@@ -1,0 +1,147 @@
+# Dependency / Build / Ops Findings (2026-05-19)
+
+## Executive Summary
+
+CI/CD pipeline has appropriate gate tiering (hard: typecheck/tests/build; soft: lint/format), recent deploy hardening (lock, backup option, health check). Three issues need attention: HIGH npm vulnerabilities including a possibly unused @xenova/transformers package, outdated dependencies (Sentry 26 patches behind, Vitest 2 majors behind, TypeScript 1 major behind), and deploy lock at /tmp (world-writable directory).
+
+False positive corrected: agent flagged secrets in .env as "Critical". Verified: .env is properly gitignored (root .gitignore lines 11-13: .env, .env.*, .env.local). Only .env.example is tracked. No secrets committed.
+
+---
+
+## Finding 1: @xenova/transformers may be an unused HIGH-vuln dependency
+- Severity: High
+- Type: chore
+- File(s): package.json:56
+- Evidence: npm audit flags @xenova/transformers >=2.0.2 HIGH via onnxruntime-web. No grep results for "@xenova" in src/ or web/src/. Current version 2.17.2.
+- Proposed action: Confirm unused by grepping for any dynamic import. If unused, remove from package.json and run npm ci. If actually used (perhaps via runtime path not detected by grep), downgrade to 2.0.1 or isolate to a worker process.
+
+## Finding 2: 13 HIGH npm vulnerabilities reported
+- Severity: High
+- Type: chore
+- File(s): package.json, web/package.json, package-lock.json
+- Evidence: npm audit (2026-05-19) reports 13 HIGH: Vite path traversal (<=6.4.1), undici CRLF injection via @discordjs/rest, fastify validation bypass, jws HMAC bypass, lodash code injection, minimatch ReDoS, fast-uri path traversal. Most fixable via npm audit fix.
+- Proposed action: Run npm audit fix on root and web/. For discord.js, upgrade to latest 14.x. Test via npm run test && npm run build. Commit as chore(deps): npm audit fix for HIGH severity.
+
+## Finding 3: Outdated dependencies (24+ versions behind)
+- Severity: High
+- Type: chore
+- File(s): package.json, web/package.json
+- Evidence: @sentry/node 10.27.0 -> 10.53.1 (26 patches behind), @sentry/profiling-node same, @typescript-eslint/* 8.46.x -> 8.59.4 (13 patches), vitest 3.2.4 -> 4.1.6 (2 majors), @vitest/coverage-v8 same, typescript 5.9.3 -> 6.0.3 (1 major), zod 3.25.76 -> 4.4.3 (2 majors). Sentry missing potential security patches.
+- Proposed action: Separate PRs in waves: (1) Sentry to 10.53.1 + patches (low risk), (2) typescript-eslint (low risk), (3) Vitest major (medium, may break tests), (4) TypeScript major (medium, type compat).
+
+## Finding 4: Unused dependency @anthropic-ai/sdk
+- Severity: Low
+- Type: chore
+- File(s): package.json:51
+- Evidence: @anthropic-ai/sdk ^0.91.1 in dependencies, zero imports found.
+- Proposed action: Remove from package.json, run npm ci. Re-add later if needed for Claude integration.
+
+## Finding 5: Lint soft gate with 3500+ backlog (intentional)
+- Severity: Medium
+- Type: refactor
+- File(s): .github/workflows/ci.yml:24-26, docs/operations/ci-policy.md
+- Evidence: CI lint is continue-on-error. Most warnings in web/ (Svelte runes, browser globals) and workers/discord-proxy/ (Cloudflare globals). Documented as intentional with promotion conditions.
+- Proposed action: Follow documented path: add Svelte runes + browser globals to web eslint config, add Cloudflare Workers globals to workers config. Drop continue-on-error when backlog cleared.
+
+## Finding 6: Format soft gate with ~1000 web/ drifts (intentional)
+- Severity: Medium
+- Type: refactor
+- File(s): .github/workflows/ci.yml:27-29, docs/operations/ci-policy.md
+- Evidence: continue-on-error on format:check. Most drift in web/. Tracked.
+- Proposed action: Coordinate with any open PRs, run npm run format globally, commit. Then drop continue-on-error from Format Check.
+
+## Finding 7: tsconfig.json missing noUncheckedIndexedAccess
+- Severity: Medium
+- Type: refactor
+- File(s): tsconfig.json:1-21
+- Evidence: noUncheckedIndexedAccess: false explicitly disabled. noUnusedLocals / noUnusedParameters commented out with TODO. strict: true incomplete.
+- Proposed action: Enable noUncheckedIndexedAccess: true (catches arr[i] without bounds check). Audit current state for noUnusedLocals/Params, fix any real unused vars in src/, then enable. Update comment with date and PR link.
+
+## Finding 8: Vite dev server vulnerability in web/
+- Severity: High
+- Type: bug
+- File(s): web/vite.config.ts:1-14, web/package.json:26 (vite 7.3.1)
+- Evidence: web/ uses vite 7.3.1. npm audit reports unfixed path traversal CVEs. Dev server can read arbitrary files. Impact local dev only, but exposes source tree if dev server binds non-localhost.
+- Proposed action: Upgrade vite to latest 7.x or 8.x. Test npm run dev for Svelte integration breaks.
+
+## Finding 9: Stale .env backup files
+- Severity: Low
+- Type: chore
+- File(s): .env.build (May 15), .env.migration-backup (Mar 1), .env.pre-new-bot.bak (Apr 8)
+- Evidence: Three .env backups in working tree. Some 2.5+ months old. Add noise. .env.build auto-generated by deploy.
+- Proposed action: Confirm none committed (verify via git ls-files), delete locally. Add .env.*.bak, .env.backup*, .env.build to .gitignore if not already covered.
+
+## Finding 10: CI cron workflows lack failure notifications
+- Severity: Medium
+- Type: chore
+- File(s): .github/workflows/refresh-discord-badges.yml:4-6 (daily 06:00 UTC), update-badges.yml:10-12 (every 6h)
+- Evidence: Scheduled badge workflows. Failures silently produce stale badges with no alert.
+- Proposed action: Add post-job step with if: failure() that POSTs a Discord webhook. Document webhook URL in CREDENTIALS.md (gitignored).
+
+## Finding 11: Deploy lock in /tmp is world-writable
+- Severity: Medium
+- Type: chore
+- File(s): deploy.sh:47 (DEPLOY_LOCK_DIR="/tmp/pawtropolis-deploy.lock")
+- Evidence: /tmp world-writable on Unix. Any user on EC2 could rm -rf the lock and hijack a concurrent deploy.
+- Proposed action: Move lock to ${REMOTE_PATH}/.deploy.lock (app dir, restricted perms) or /home/ubuntu/pawtropolis-deploy.lock. Update mkdir/rm logic.
+
+## Finding 12: PM2 kill_timeout too low
+- Severity: Medium
+- Type: chore
+- File(s): ecosystem.config.cjs:12-13 (bot 5000ms), line 31 (pawtropolis-web default)
+- Evidence: 5-second grace before SIGKILL. Risk of partial-write data corruption if bot is mid-migration or mid-bulk-fetch when restart fires.
+- Proposed action: Increase to 15000 (15s) for bot, 10000 for web. Add comment explaining drain reason. Test pm2 restart under load.
+
+## Finding 13: No CI smoke test
+- Severity: Medium
+- Type: chore
+- File(s): .github/workflows/ci.yml
+- Evidence: CI runs unit tests and build but does not boot the built artifact. A broken import would pass CI and fail at runtime.
+- Proposed action: Add optional smoke step: node dist/index.js --health-check. Or document reliance on deploy.sh health checks. Update ci-policy.md.
+
+## Finding 14: @anthropic-ai/sdk version mismatch (related to Finding 4)
+- Severity: Low
+- Type: chore
+- File(s): package.json:51
+- Evidence: ^0.91.1 in package.json, latest 0.97.0. Unused per Finding 4.
+- Proposed action: Remove entirely (Finding 4 action).
+
+## Finding 15: No integration test in CI
+- Severity: Low
+- Type: chore
+- File(s): .github/workflows/ci.yml:3-7
+- Evidence: CI runs unit only. Long-running issues (import loop, module not found) caught at deploy.
+- Proposed action: Optional: add npm run test:integration that boots bot with mock Discord. For now, document in ci-policy.md.
+
+## Finding 16: Hardcoded SSH host alias in deploy.sh
+- Severity: Low
+- Type: chore
+- File(s): deploy.sh:20 (REMOTE_HOST="${REMOTE_HOST:-bash-ec2}")
+- Evidence: Defaults to local SSH alias. Run from a machine without that alias and deploy fails with unclear error.
+- Proposed action: Add early validation: ssh-keygen -F "$REMOTE_HOST" >/dev/null 2>&1; warn or exit with clear instructions. Or document in README.
+
+## Finding 17: No backup automation default before deploy
+- Severity: Medium
+- Type: chore
+- File(s): deploy.sh:49-52 (BACKUP_BEFORE_DEPLOY=0)
+- Evidence: Optional auto-backup defaults OFF. Botched migrations could lose data with no rollback path.
+- Proposed action: Change default to 1 (auto-backup ON). Document override in help text.
+
+## Finding 18: Litestream config not validated in CI
+- Severity: Low
+- Type: chore
+- File(s): .env.example:155-162, docs/operations/deployment-config.md
+- Evidence: Litestream R2 credentials in .env.example. CI does not check presence. Missing env var on prod silently fails replication.
+- Proposed action: Add CI step or pre-deploy validation that required Litestream vars are set. Log warning if not configured.
+
+## Finding 19: .env.example out of sync with runtime
+- Severity: Low
+- Type: chore
+- File(s): .env.example (lines 145-163 cover Litestream + VAPID)
+- Evidence: GOOGLE_VISION_API_KEY, HIVE_API_KEY, SIGHTENGINE_API_SECRET, OPTIC_API_KEY, GITHUB_BOT_TOKEN required at runtime but missing from .env.example.
+- Proposed action: Add these placeholder entries with descriptions to .env.example. Diff actual vs example via grep + comm to find gaps.
+
+## Finding 20 (FALSE POSITIVE from agent): secrets supposedly committed to .env
+- Severity: N/A (verified not an issue)
+- Evidence: Agent claimed .env tracked. Verified .gitignore lines 11-13 properly exclude .env and .env.*. git ls-files | grep ^\.env returns only .env.example. Local .env file is not in repo.
+- Proposed action: No action; finding is invalid.
