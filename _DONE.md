@@ -6,6 +6,7 @@ Reverse chronological by completion date.
 
 ## 2026-05-19
 
+- [x] [CI smoke check on built artifact](done/00030.md) `Medium` Added node --check dist/index.js to build job.
 - [x] [/listopen rate limit](done/00019.md) `Medium` LISTOPEN_MS=60s per guild. Ephemeral cooldown reply on hit.
 - [x] [Eslint env for scripts/workers/web/svelte](done/00023.md) `Medium` 1038 -> 95 no-undef (-91%). Added Node18 web globals + browser globals + Svelte 5 runes + Workers runtime.
 - [x] [Discord webhook for cron failures](done/00027.md) `Medium` Failure step added to both badge workflows; gracefully no-ops if webhook secret unset.
