@@ -54,7 +54,6 @@ _(none)_
 - [ ] [Move deploy lock out of /tmp](todo/00028.md) `Medium`
 - [ ] [Increase PM2 kill_timeout for graceful shutdown](todo/00029.md) `Medium`
 - [ ] [Add CI smoke test for built artifact](todo/00030.md) `Medium`
-- [ ] [Default BACKUP_BEFORE_DEPLOY to 1 in deploy.sh](todo/00031.md) `Medium`
 - [ ] [Upgrade Vitest to 4.x (major)](todo/00032.md) `Medium`
 - [ ] [Upgrade TypeScript to 6.x (major)](todo/00033.md) `Medium`
 
