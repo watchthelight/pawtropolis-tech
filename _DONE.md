@@ -6,6 +6,7 @@ Reverse chronological by completion date.
 
 ## 2026-05-19
 
+- [x] [PM2 kill_timeout raised for graceful shutdown](done/00029.md) `Medium` Bot 5s -> 15s, web default -> 10s. Lets in-flight work drain.
 - [x] [Default BACKUP_BEFORE_DEPLOY=1](done/00031.md) `Medium` Production deploys now auto-backup DB; override with =0.
 - [x] [Resolve TODO in activityTracker (JSON fallback)](done/00036.md) `Low` Replaced with Pino-covers-it note; feature redundant.
 - [x] [Resolve TODO in art.ts (circular dep workaround)](done/00035.md) `Low` Replaced vague TODO with deliberate-choice comment.
