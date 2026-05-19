@@ -82,6 +82,28 @@ export async function startDashboardApi(client: Client): Promise<void> {
     }
   });
 
+  // CSRF defense: validate Origin header on state-changing methods. The
+  // secret alone is enough for server-to-server calls (no browser Origin),
+  // but a logged-in dashboard user could be tricked into POSTing from a
+  // malicious origin that still carries the cookie. Block by allowlist.
+  //
+  // Allowlist source: DASHBOARD_ALLOWED_ORIGINS (comma-separated env var).
+  // Defaults to https://pawtropolis.tech for production safety.
+  const allowedOrigins = (process.env.DASHBOARD_ALLOWED_ORIGINS ?? "https://pawtropolis.tech")
+    .split(",")
+    .map((o) => o.trim())
+    .filter((o) => o.length > 0);
+  const stateChanging = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+  server.addHook("onRequest", async (request, reply) => {
+    if (!stateChanging.has(request.method.toUpperCase())) return;
+    const origin = request.headers.origin;
+    if (origin === undefined) return; // server-to-server (no browser context), secret already authenticated
+    if (!allowedOrigins.includes(origin)) {
+      logger.warn({ origin, method: request.method, url: request.url }, "[dashboardApi] blocked cross-origin state change");
+      return reply.code(403).send({ success: false, error: "Origin not allowed" } satisfies ApiError);
+    }
+  });
+
   // Error handler — no stack traces
   server.setErrorHandler(async (error, _request, reply) => {
     logger.error({ err: error }, "[dashboardApi] Unhandled error");
