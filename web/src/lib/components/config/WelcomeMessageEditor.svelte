@@ -10,8 +10,10 @@
 		roles: Role[];
 		infoChannelId?: string | null;
 		rulesChannelId?: string | null;
+		welcomePingRoleId?: string | null;
 		memberCount?: number;
 		guildName?: string;
+		guildIconUrl?: string | null;
 	}
 
 	let {
@@ -20,8 +22,10 @@
 		roles,
 		infoChannelId = null,
 		rulesChannelId = null,
+		welcomePingRoleId = null,
 		memberCount = 0,
-		guildName = 'Pawtropolis'
+		guildName = 'Pawtropolis',
+		guildIconUrl = null
 	}: Props = $props();
 
 	// Default greeting the bot renders when welcome_template is empty. Stored
@@ -394,6 +398,14 @@
 		}
 		return out;
 	});
+
+	type PingRole = { id: string; name: string; color: number };
+	const welcomePingRole = $derived.by<PingRole | null>(() => {
+		if (!welcomePingRoleId) return null;
+		const r = roleById.get(welcomePingRoleId);
+		if (!r) return { id: welcomePingRoleId, name: 'welcome-ping', color: 0 };
+		return { id: r.id, name: r.name, color: r.color };
+	});
 </script>
 
 <div class="wrap">
@@ -452,34 +464,59 @@
 		Preview
 		{#if isUsingDefault}<span class="lbl-hint">(showing default greeting — editor empty)</span>{/if}
 	</label>
-	<div id="welcome-preview" class="preview-embed">
-		<div class="embed-bar"></div>
-		<div class="embed-body">
-			<div class="embed-author">
-				<span class="embed-author-name">{guildName}</span>
-			</div>
-			<div class="embed-title">Welcome to Pawtropolis 🐾</div>
-			<div class="embed-description">
-				<div class="embed-line">{@html greetingHtml}</div>
-				<div class="embed-line">
-					This server now has <strong>{memberCountText} Users!</strong>
-				</div>
-				{#if channelLinks.length > 0}
-					<div class="embed-line embed-spacer"></div>
-					<div class="embed-line">🔗 Be sure to check out:</div>
-					{#each channelLinks as link (link.id)}
-						<div class="embed-line embed-bullet">
-							• <span class="m m-channel">#{link.name}</span>
-						</div>
-					{/each}
+	<div id="welcome-preview" class="preview-message">
+		<div class="msg-content">
+			<span class="m m-user">@NewMember</span>
+			{#if welcomePingRole}
+				{#if welcomePingRole.color !== 0}
+					<span
+						class="m m-role"
+						style="color:#{welcomePingRole.color.toString(16).padStart(6, '0')};background:#{welcomePingRole.color.toString(16).padStart(6, '0')}22"
+					>@{welcomePingRole.name}</span>
+				{:else}
+					<span class="m m-role">@{welcomePingRole.name}</span>
 				{/if}
-				<div class="embed-line embed-spacer"></div>
-				<div class="embed-line">✅ Enjoy your stay!</div>
-				<div class="embed-line embed-spacer"></div>
-				<div class="embed-line embed-italic">Bot by watchthelight.</div>
+			{/if}
+		</div>
+		<div class="preview-embed">
+			<div class="embed-bar"></div>
+			<div class="embed-body">
+				<div class="embed-author">
+					{#if guildIconUrl}
+						<img class="embed-author-icon" src={guildIconUrl} alt="" />
+					{:else}
+						<span class="embed-author-icon embed-author-icon-fallback">🐾</span>
+					{/if}
+					<span class="embed-author-name">{guildName}</span>
+				</div>
+				<div class="embed-main">
+					<div class="embed-text">
+						<div class="embed-title">Welcome to Pawtropolis 🐾</div>
+						<div class="embed-description">
+							<div class="embed-line">{@html greetingHtml}</div>
+							<div class="embed-line">
+								This server now has <strong>{memberCountText} Users!</strong>
+							</div>
+							{#if channelLinks.length > 0}
+								<div class="embed-line embed-spacer"></div>
+								<div class="embed-line">🔗 Be sure to check out:</div>
+								{#each channelLinks as link (link.id)}
+									<div class="embed-line embed-bullet">
+										• <span class="m m-channel">#{link.name}</span>
+									</div>
+								{/each}
+							{/if}
+							<div class="embed-line embed-spacer"></div>
+							<div class="embed-line">✅ Enjoy your stay!</div>
+							<div class="embed-line embed-spacer"></div>
+							<div class="embed-line embed-italic">Bot by watchthelight.</div>
+						</div>
+					</div>
+					<div class="embed-thumb">NewMember avatar</div>
+				</div>
+				<div class="embed-banner">Pawtropolis banner</div>
+				<div class="embed-footer">Pawtropolis Moderation Team</div>
 			</div>
-			<div class="embed-banner">Pawtropolis banner</div>
-			<div class="embed-footer">Pawtropolis Moderation Team</div>
 		</div>
 	</div>
 </div>
@@ -527,16 +564,77 @@
 		opacity: 0.4;
 	}
 
+	.preview-message {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		font-family: 'gg sans', 'Inter', system-ui, sans-serif;
+		color: #dbdee1;
+		font-size: 0.9rem;
+		line-height: 1.4;
+		max-width: 560px;
+	}
+
+	.msg-content {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.3rem;
+		padding: 0.1rem 0;
+	}
+
 	.preview-embed {
 		display: flex;
 		background: #2b2d31;
 		border-radius: var(--radius-md);
 		overflow: hidden;
-		max-width: 520px;
-		font-family: 'gg sans', 'Inter', system-ui, sans-serif;
-		color: #dbdee1;
-		font-size: 0.9rem;
-		line-height: 1.4;
+	}
+
+	.embed-main {
+		display: flex;
+		gap: 0.75rem;
+		align-items: flex-start;
+	}
+
+	.embed-text {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.embed-thumb {
+		flex-shrink: 0;
+		width: 72px;
+		height: 72px;
+		margin-top: 0.1rem;
+		border-radius: var(--radius-sm);
+		background:
+			repeating-linear-gradient(
+				45deg,
+				oklch(28% 0.02 var(--hue)) 0 6px,
+				oklch(32% 0.02 var(--hue)) 6px 12px
+			);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 0.55rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		text-align: center;
+		color: oklch(65% 0.02 var(--hue));
+	}
+
+	.embed-author-icon {
+		width: 22px;
+		height: 22px;
+		border-radius: 50%;
+		flex-shrink: 0;
+		object-fit: cover;
+	}
+
+	.embed-author-icon-fallback {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		background: oklch(30% 0.02 var(--hue));
 	}
 
 	.embed-bar {

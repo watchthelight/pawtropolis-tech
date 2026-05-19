@@ -78,6 +78,7 @@
 			{roles}
 			infoChannelId={data.infoChannelId}
 			rulesChannelId={data.rulesChannelId}
+			welcomePingRoleId={data.welcomePingRoleId}
 			memberCount={data.memberCount}
 		/>
 
