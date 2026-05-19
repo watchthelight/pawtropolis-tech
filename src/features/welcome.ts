@@ -13,6 +13,7 @@ import {
 import { logger } from "../lib/logger.js";
 import type { GuildConfig } from "../lib/config.js";
 import { sleep } from "../lib/retry.js";
+import { renderWelcomeTemplate } from "./review/welcome.js";
 
 /**
  * postWelcomeCard
@@ -90,9 +91,29 @@ export async function postWelcomeCard(opts: {
   }
   const content = contentParts.join(" ");
 
-  // 5) Build description with optional Info/Rules channel links
+  // 5) Build description.
+  // The first line ("greeting") is admin-controlled via config.welcome_template
+  // when set. Token substitution lets legacy {applicant.mention}/{guild.name}
+  // resolve; raw <@&id>/<#id> from the dashboard editor pass through Discord
+  // as real role pings and channel chips. Bot still owns the structural
+  // bits (member count, channel link list, signoff, footer) so admins can't
+  // accidentally strip the moderation-required information.
+  const trimmedTemplate =
+    typeof config.welcome_template === "string" ? config.welcome_template.trim() : "";
+  const greeting = trimmedTemplate.length > 0
+    ? renderWelcomeTemplate({
+        template: config.welcome_template,
+        guildName: guild.name,
+        applicant: {
+          id: user.id,
+          tag: user.user?.tag ?? user.user.username,
+          display: user.displayName,
+        },
+      })
+    : `👋 Welcome <@${user.id}>!`;
+
   const descriptionLines: string[] = [
-    `👋 Welcome <@${user.id}>!`,
+    greeting,
     `This server now has **${memberCount.toLocaleString()} Users!**`,
   ];
 
@@ -251,8 +272,28 @@ export async function postBatchWelcomeCard(opts: {
   }
   const content = contentParts.join(" ");
 
+  // Batch greeting: render the admin's template once per user and join, or
+  // fall back to the canonical multi-mention line.
+  const trimmedTemplate =
+    typeof config.welcome_template === "string" ? config.welcome_template.trim() : "";
+  const greeting = trimmedTemplate.length > 0
+    ? cappedUsers
+        .map((u) =>
+          renderWelcomeTemplate({
+            template: config.welcome_template,
+            guildName: guild.name,
+            applicant: {
+              id: u.id,
+              tag: u.user?.tag ?? u.user.username,
+              display: u.displayName,
+            },
+          })
+        )
+        .join("\n")
+    : `👋 Welcome ${userMentions.join(", ")}!`;
+
   const descriptionLines: string[] = [
-    `👋 Welcome ${userMentions.join(", ")}!`,
+    greeting,
     `This server now has **${memberCount.toLocaleString()} Users!**`,
   ];
 
