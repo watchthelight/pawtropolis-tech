@@ -93,6 +93,31 @@ release_deploy_lock() {
   ssh_remote "rm -rf ${DEPLOY_LOCK_DIR}" >/dev/null 2>&1 || true
 }
 
+# Check that Litestream is configured and running on the remote. Non-fatal
+# warning only - Litestream is a separate concern from the bot deploy itself,
+# but the warning surfaces drift between intended replication topology and
+# actual running services. If Litestream is not configured at all (no systemd
+# unit), skip the check silently.
+check_litestream_status() {
+  local status
+  status=$(ssh_remote "systemctl is-active litestream 2>/dev/null || systemctl is-active litestream.service 2>/dev/null || echo 'not-configured'") || status="ssh-failed"
+  case "${status}" in
+    active)
+      echo "  Litestream: active (continuous SQLite replication healthy)"
+      ;;
+    not-configured)
+      echo "  Litestream: not configured on remote (no systemd unit; data/backups/ is the only safety net)"
+      ;;
+    ssh-failed)
+      echo "  Litestream: status check failed (ssh error); skipping"
+      ;;
+    *)
+      echo "  WARNING: Litestream systemd unit reports '${status}' (expected 'active'). Replication may be stalled."
+      echo "  Inspect on remote: ssh ${REMOTE_HOST} sudo systemctl status litestream"
+      ;;
+  esac
+}
+
 # Optional pre-deploy DB backup on remote. Copies data/data.db to a timestamped
 # file so a botched migration can be reverted by hand.
 maybe_backup_remote_db() {
@@ -289,6 +314,7 @@ fi
 if [ "$DEPLOY_BOT" = true ]; then
   echo "Starting BOT-ONLY deployment to ${REMOTE_HOST}..."
   acquire_deploy_lock
+  check_litestream_status
   maybe_backup_remote_db
   TARBALL="deploy-bot.tar.gz"
 
@@ -343,6 +369,7 @@ fi
 # ═══════════════════════════════════════════════════════════════════════════════
 echo "Starting FULL deployment to ${REMOTE_HOST}..."
 acquire_deploy_lock
+check_litestream_status
 maybe_backup_remote_db
 
 # Step 1: Run tests (unless --fast)
