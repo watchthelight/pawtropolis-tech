@@ -28,7 +28,6 @@ _(none)_
 
 ### High
 
-- [ ] [Upgrade Sentry packages (26 patches behind)](todo/00005.md) `High`
 - [ ] [Refactor src/index.ts (2705 lines) into event modules](todo/00007.md) `High`
 - [ ] [Refactor src/web/dashboardApi.ts (1792 lines) into route modules](todo/00008.md) `High`
 - [ ] [Refactor src/commands/audit.ts (1760 lines) into subcommand modules](todo/00009.md) `High`
