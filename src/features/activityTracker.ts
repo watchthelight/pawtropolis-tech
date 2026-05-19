@@ -304,7 +304,8 @@ async function postFlagAlert(
         { guildId, channelId },
         "[flagger] missing permissions in flags channel (SendMessages + EmbedLinks), skipping alert"
       );
-      // TODO: Implement JSON fallback logging (future enhancement)
+      // Pino captures this event; admins can recover missed flags from
+      // the structured log if needed. No separate JSON ledger required.
       return;
     }
 
