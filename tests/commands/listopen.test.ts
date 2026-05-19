@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import { clearCooldown } from "../../src/lib/rateLimiter.js";
 import { execute, data } from "../../src/commands/listopen.js";
 import { createTestCommandContext } from "../utils/contextFactory.js";
 import { createMockInteraction, createMockGuild, createMockMember, createMockUser } from "../utils/discordMocks.js";
@@ -62,6 +63,10 @@ vi.mock("../../src/lib/lruCache.js", () => ({
 describe("/listopen command", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Rate limiter is module-level state; clear the test guild cooldown between cases.
+    clearCooldown("listopen", "guild-123");
+    clearCooldown("listopen", "test-guild-id");
+    clearCooldown("listopen", "guild-1");
   });
 
   describe("data (slash command builder)", () => {
