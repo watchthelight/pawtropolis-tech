@@ -118,7 +118,11 @@ docs/DEPLOY_CHECKLIST.md
 docs/DEPLOYMENT_VERIFICATION_2025-11-12.md
 .playwright-mcp/
 _bmad-output
-.claude
+.claude/*
+!.claude/skills/
+!.claude/state/
+.claude/state/*
+!.claude/state/sync-tasks-sidecar/
 concept-1-neumorphism.png
 concept-2-glassmorphism.png
 pawtropolis-final.png
