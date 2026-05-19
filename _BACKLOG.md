@@ -65,4 +65,3 @@ _(none)_
 - [ ] [Resolve TODO comment in activityTracker.ts:288](todo/00036.md) `Low`
 - [ ] [Add SSH host validation to deploy.sh](todo/00039.md) `Low`
 - [ ] [Validate Litestream configuration in CI / pre-deploy](todo/00040.md) `Low`
-- [ ] [Sync .env.example with runtime variables](todo/00041.md) `Low`
