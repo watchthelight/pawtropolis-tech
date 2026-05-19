@@ -47,3 +47,16 @@ jobs:
           add-paths: |
             docs/badges/svg
             docs/badges/manifest.json
+
+      - name: Notify Discord on failure
+        if: failure()
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_CI_WEBHOOK }}
+        run: |
+          if [ -z "$WEBHOOK" ]; then
+            echo "DISCORD_CI_WEBHOOK not configured; skipping notification"
+            exit 0
+          fi
+          curl -sS -X POST "$WEBHOOK" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\": \"Workflow failed: refresh-discord-badges (run ${{ github.run_id }}) - https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
