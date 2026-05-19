@@ -72,7 +72,14 @@
 	{#if loading}
 		<div class="loading">Loading channels and roles…</div>
 	{:else}
-		<WelcomeMessageEditor bind:value={template} {channels} {roles} />
+		<WelcomeMessageEditor
+			bind:value={template}
+			{channels}
+			{roles}
+			infoChannelId={data.infoChannelId}
+			rulesChannelId={data.rulesChannelId}
+			memberCount={data.memberCount}
+		/>
 
 		<div class="actions">
 			<button class="btn btn-secondary" onclick={reset} disabled={!isDirty || saving}>

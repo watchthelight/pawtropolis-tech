@@ -8,15 +8,25 @@
 		value: string;
 		channels: Channel[];
 		roles: Role[];
+		infoChannelId?: string | null;
+		rulesChannelId?: string | null;
+		memberCount?: number;
+		guildName?: string;
 	}
 
-	let { value = $bindable(''), channels, roles }: Props = $props();
+	let {
+		value = $bindable(''),
+		channels,
+		roles,
+		infoChannelId = null,
+		rulesChannelId = null,
+		memberCount = 0,
+		guildName = 'Pawtropolis'
+	}: Props = $props();
 
-	// Mirrors src/features/review/welcome.ts DEFAULT_WELCOME_TEMPLATE.
-	// When the saved value is empty, the bot falls back to this string at send
-	// time. The preview surface uses it as a fallback so the empty state is
-	// not a confusing blank box.
-	const DEFAULT_WELCOME_TEMPLATE = 'Welcome {applicant.mention} to {guild.name}! 👋';
+	// Default greeting line the bot uses when welcome_template is empty.
+	// Kept in sync with src/features/welcome.ts.
+	const DEFAULT_GREETING = '👋 Welcome @NewMember!';
 
 	const channelById = $derived(new Map(channels.map((c) => [c.id, c])));
 	const roleById = $derived(new Map(roles.map((r) => [r.id, r])));
@@ -289,29 +299,23 @@
 		sel?.addRange(range);
 	}
 
-	// Preview must show what the welcome message will *actually look like* once
-	// the bot renders it for a new member: real role pings, real channel chips,
-	// and any legacy {applicant.*}/{guild.name} tokens resolved to stand-in
-	// placeholders. The editor itself doesn't surface tokens any more, but the
-	// backend still resolves them, so the preview has to mirror that for
-	// templates that pre-date the token removal.
+	// Renders a raw template/string into HTML with real mention chips + legacy
+	// token stand-ins. Returns escaped HTML safe to drop into the preview.
 	const PREVIEW_RE =
 		/<#(\d{17,20})>|<@&(\d{17,20})>|\{(applicant\.mention|applicant\.tag|applicant\.display|guild\.name)\}/g;
 
-	const previewHtml = $derived.by(() => {
+	function renderPreview(raw: string): string {
 		const escape = (s: string) =>
 			s.replace(/[&<>"']/g, (c) => ({
 				'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
 			})[c]!);
 
-		const source = value.trim().length > 0 ? value : DEFAULT_WELCOME_TEMPLATE;
-
 		let html = '';
 		let last = 0;
 		PREVIEW_RE.lastIndex = 0;
 		let m: RegExpExecArray | null;
-		while ((m = PREVIEW_RE.exec(source))) {
-			if (m.index > last) html += escape(source.slice(last, m.index));
+		while ((m = PREVIEW_RE.exec(raw))) {
+			if (m.index > last) html += escape(raw.slice(last, m.index));
 			const [full, chId, roleId, tokenName] = m;
 			if (chId) {
 				const ch = channelById.get(chId);
@@ -331,15 +335,36 @@
 			} else if (tokenName === 'applicant.display') {
 				html += `NewMember`;
 			} else if (tokenName === 'guild.name') {
-				html += `Pawtropolis`;
+				html += escape(guildName);
 			}
 			last = m.index + full.length;
 		}
-		if (last < source.length) html += escape(source.slice(last));
+		if (last < raw.length) html += escape(raw.slice(last));
 		return html.replace(/\n/g, '<br />');
-	});
+	}
+
+	// Greeting (admin-controlled). Empty editor => bot's default greeting line.
+	const greetingHtml = $derived(
+		value.trim().length > 0 ? renderPreview(value) : renderPreview(DEFAULT_GREETING)
+	);
 
 	const isUsingDefault = $derived(value.trim().length === 0);
+	const memberCountText = $derived((memberCount || 0).toLocaleString());
+
+	// Channel link list mirrors postWelcomeCard in src/features/welcome.ts.
+	type ChannelLink = { id: string; name: string };
+	const channelLinks = $derived.by<ChannelLink[]>(() => {
+		const out: ChannelLink[] = [];
+		if (infoChannelId) {
+			const ch = channelById.get(infoChannelId);
+			out.push({ id: infoChannelId, name: ch?.name ?? 'info' });
+		}
+		if (rulesChannelId) {
+			const ch = channelById.get(rulesChannelId);
+			out.push({ id: rulesChannelId, name: ch?.name ?? 'rules' });
+		}
+		return out;
+	});
 </script>
 
 <div class="wrap">
@@ -396,10 +421,37 @@
 
 	<label class="lbl" for="welcome-preview">
 		Preview
-		{#if isUsingDefault}<span class="lbl-hint">(showing default — editor empty)</span>{/if}
+		{#if isUsingDefault}<span class="lbl-hint">(showing default greeting — editor empty)</span>{/if}
 	</label>
-	<div id="welcome-preview" class="preview">
-		{@html previewHtml}
+	<div id="welcome-preview" class="preview-embed">
+		<div class="embed-bar"></div>
+		<div class="embed-body">
+			<div class="embed-author">
+				<span class="embed-author-name">{guildName}</span>
+			</div>
+			<div class="embed-title">Welcome to Pawtropolis 🐾</div>
+			<div class="embed-description">
+				<div class="embed-line">{@html greetingHtml}</div>
+				<div class="embed-line">
+					This server now has <strong>{memberCountText} Users!</strong>
+				</div>
+				{#if channelLinks.length > 0}
+					<div class="embed-line embed-spacer"></div>
+					<div class="embed-line">🔗 Be sure to check out:</div>
+					{#each channelLinks as link (link.id)}
+						<div class="embed-line embed-bullet">
+							• <span class="m m-channel">#{link.name}</span>
+						</div>
+					{/each}
+				{/if}
+				<div class="embed-line embed-spacer"></div>
+				<div class="embed-line">✅ Enjoy your stay!</div>
+				<div class="embed-line embed-spacer"></div>
+				<div class="embed-line embed-italic">Bot by watchthelight.</div>
+			</div>
+			<div class="embed-banner">Pawtropolis banner</div>
+			<div class="embed-footer">Pawtropolis Moderation Team</div>
+		</div>
 	</div>
 </div>
 
@@ -446,18 +498,98 @@
 		opacity: 0.4;
 	}
 
-	.preview {
-		padding: 0.75rem 0.9rem;
-		font-size: 0.9rem;
-		line-height: 1.5;
-		font-family: 'gg sans', 'Inter', system-ui, sans-serif;
-		background: oklch(20% 0.01 var(--hue));
-		color: #dbdee1;
-		border: 1px solid var(--border-holdfast);
+	.preview-embed {
+		display: flex;
+		background: #2b2d31;
 		border-radius: var(--radius-md);
-		min-height: 3rem;
-		white-space: pre-wrap;
+		overflow: hidden;
+		max-width: 520px;
+		font-family: 'gg sans', 'Inter', system-ui, sans-serif;
+		color: #dbdee1;
+		font-size: 0.9rem;
+		line-height: 1.4;
+	}
+
+	.embed-bar {
+		width: 4px;
+		flex-shrink: 0;
+		background: #00c2ff;
+	}
+
+	.embed-body {
+		flex: 1;
+		padding: 0.5rem 0.85rem 0.65rem;
+		min-width: 0;
+	}
+
+	.embed-author {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: 0.82rem;
+		font-weight: 600;
+		color: #f2f3f5;
+		margin-bottom: 0.25rem;
+	}
+
+	.embed-author-name {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.embed-title {
+		font-size: 1rem;
+		font-weight: 700;
+		color: #f2f3f5;
+		margin-bottom: 0.4rem;
+	}
+
+	.embed-description {
+		display: flex;
+		flex-direction: column;
+		gap: 0.05rem;
 		word-break: break-word;
+	}
+
+	.embed-line {
+		min-height: 1.1em;
+	}
+
+	.embed-bullet {
+		padding-left: 0.25rem;
+	}
+
+	.embed-spacer {
+		height: 0.4rem;
+	}
+
+	.embed-italic {
+		font-style: italic;
+		color: #b5bac1;
+	}
+
+	.embed-banner {
+		margin-top: 0.6rem;
+		padding: 1.5rem 0;
+		text-align: center;
+		font-size: 0.7rem;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: oklch(60% 0.02 var(--hue));
+		background:
+			repeating-linear-gradient(
+				45deg,
+				oklch(20% 0.02 var(--hue)) 0 8px,
+				oklch(22% 0.02 var(--hue)) 8px 16px
+			);
+		border-radius: var(--radius-sm);
+	}
+
+	.embed-footer {
+		margin-top: 0.5rem;
+		font-size: 0.72rem;
+		color: #b5bac1;
 	}
 
 	.lbl-hint {
@@ -491,24 +623,24 @@
 		color: oklch(80% 0.15 200);
 	}
 
-	:global(.preview .m) {
+	:global(.preview-embed .m) {
 		display: inline-block;
 		padding: 0 0.25rem;
 		border-radius: 4px;
 		font-weight: 500;
 	}
 
-	:global(.preview .m-channel) {
+	:global(.preview-embed .m-channel) {
 		background: #404875;
 		color: #c9cdfb;
 	}
 
-	:global(.preview .m-role) {
+	:global(.preview-embed .m-role) {
 		background: #4c4f57;
 		color: #dbdee1;
 	}
 
-	:global(.preview .m-user) {
+	:global(.preview-embed .m-user) {
 		background: #3c4270;
 		color: #c9cdfb;
 	}
