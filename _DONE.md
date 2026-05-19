@@ -6,6 +6,7 @@ Reverse chronological by completion date.
 
 ## 2026-05-19
 
+- [x] [avatarScan helper tests](done/00016.md) `Medium` 8 tests for googleReverseImageUrl + getScan. scanAvatar deeper coverage deferred.
 - [x] [Scheduler smoke tests x5](done/00018.md) `Medium` 5 new test files (19 tests) covering start/stop/disable for byteMultiplier, diskSpace, eventTimeout, guildSnapshot, securityAudit.
 - [x] [TypeScript 6.0.3 upgrade](done/00033.md) `Medium` Clean: 0 typecheck errors, all 4927 tests pass.
 - [x] [Litestream pre-deploy status check](done/00040.md) `Low` deploy.sh now verifies systemctl is-active litestream before bot/full deploys.

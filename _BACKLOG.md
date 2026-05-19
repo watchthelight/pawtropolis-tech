@@ -37,7 +37,6 @@ _(none)_
 
 ### Medium
 
-- [ ] [Add tests for src/features/avatarScan.ts](todo/00016.md) `Medium`
 - [ ] [Add tests for auditRunner.ts and securityDiff.ts](todo/00017.md) `Medium`
 - [ ] [Enable tsconfig noUncheckedIndexedAccess and unused checks](todo/00024.md) `Medium`
 - [ ] [Upgrade Vitest to 4.x (major)](todo/00032.md) `Medium`
