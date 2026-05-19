@@ -66,7 +66,6 @@ _(none)_
 - [ ] [Resolve TODO comment in src/commands/art.ts:869](todo/00035.md) `Low`
 - [ ] [Resolve TODO comment in activityTracker.ts:288](todo/00036.md) `Low`
 - [ ] [Fix empty block in scripts/build-overlay-weekly.mjs:100](todo/00037.md) `Low`
-- [ ] [Remove unused @anthropic-ai/sdk dependency](todo/00038.md) `Low`
 - [ ] [Add SSH host validation to deploy.sh](todo/00039.md) `Low`
 - [ ] [Validate Litestream configuration in CI / pre-deploy](todo/00040.md) `Low`
 - [ ] [Sync .env.example with runtime variables](todo/00041.md) `Low`
