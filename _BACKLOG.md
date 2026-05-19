@@ -37,7 +37,6 @@ _(none)_
 
 ### Medium
 
-- [ ] [Re-enable health.ts timeout test](todo/00015.md) `Medium`
 - [ ] [Add tests for src/features/avatarScan.ts](todo/00016.md) `Medium`
 - [ ] [Add tests for auditRunner.ts and securityDiff.ts](todo/00017.md) `Medium`
 - [ ] [Add tests for 5 untested schedulers](todo/00018.md) `Medium`

@@ -6,6 +6,7 @@ Reverse chronological by completion date.
 
 ## 2026-05-19
 
+- [x] [health.ts timeout test re-enabled](done/00015.md) `Medium` Fixed stale .ephemeral assertion to MessageFlags pattern. All 7 tests pass.
 - [x] [hasStaffPermissions tests restored](done/00014.md) `Medium` Skip premise was wrong (no require() in function). Implemented 5 tests, all pass.
 - [x] [Origin CSRF check on dashboardApi](done/00006.md) `Medium` State-changing routes now require Origin in allowlist (env DASHBOARD_ALLOWED_ORIGINS).
 - [x] [Refactor flagsStore.ts for testability](done/00013.md) `Medium` Lazy-prepare statements via memoized lazyStmt factory; unblocks vi.mock interception.
