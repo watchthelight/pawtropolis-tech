@@ -42,7 +42,6 @@ _(none)_
 - [ ] [Add tests for 5 untested schedulers](todo/00018.md) `Medium`
 - [ ] [Enable tsconfig noUncheckedIndexedAccess and unused checks](todo/00024.md) `Medium`
 - [ ] [Upgrade Vitest to 4.x (major)](todo/00032.md) `Medium`
-- [ ] [Upgrade TypeScript to 6.x (major)](todo/00033.md) `Medium`
 
 ### Low
 

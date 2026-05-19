@@ -6,6 +6,7 @@ Reverse chronological by completion date.
 
 ## 2026-05-19
 
+- [x] [TypeScript 6.0.3 upgrade](done/00033.md) `Medium` Clean: 0 typecheck errors, all 4927 tests pass.
 - [x] [Litestream pre-deploy status check](done/00040.md) `Low` deploy.sh now verifies systemctl is-active litestream before bot/full deploys.
 - [x] [setDMPermission(false) on guild commands](done/00025.md) `Low` 16 commands now hide in DMs. Discord deploy:cmds still required.
 - [x] [health.ts timeout test re-enabled](done/00015.md) `Medium` Fixed stale .ephemeral assertion to MessageFlags pattern. All 7 tests pass.
