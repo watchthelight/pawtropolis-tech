@@ -46,5 +46,4 @@ _(none)_
 
 ### Low
 
-- [ ] [Add setDMPermission(false) to guild-only commands](todo/00025.md) `Low`
 - [ ] [Validate Litestream configuration in CI / pre-deploy](todo/00040.md) `Low`
