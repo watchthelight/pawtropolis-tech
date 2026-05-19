@@ -63,5 +63,4 @@ _(none)_
 - [ ] [Add setDMPermission(false) to guild-only commands](todo/00025.md) `Low`
 - [ ] [Resolve TODO comment in src/commands/art.ts:869](todo/00035.md) `Low`
 - [ ] [Resolve TODO comment in activityTracker.ts:288](todo/00036.md) `Low`
-- [ ] [Add SSH host validation to deploy.sh](todo/00039.md) `Low`
 - [ ] [Validate Litestream configuration in CI / pre-deploy](todo/00040.md) `Low`
