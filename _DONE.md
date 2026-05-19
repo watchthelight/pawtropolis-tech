@@ -6,6 +6,7 @@ Reverse chronological by completion date.
 
 ## 2026-05-19
 
+- [x] [Eslint env for scripts/workers/web/svelte](done/00023.md) `Medium` 1038 -> 95 no-undef (-91%). Added Node18 web globals + browser globals + Svelte 5 runes + Workers runtime.
 - [x] [Discord webhook for cron failures](done/00027.md) `Medium` Failure step added to both badge workflows; gracefully no-ops if webhook secret unset.
 - [x] [Deploy lock moved out of /tmp](done/00028.md) `Medium` Lock now lives in /home/ubuntu (user-owned), not /tmp (world-writable).
 - [x] [PM2 kill_timeout raised for graceful shutdown](done/00029.md) `Medium` Bot 5s -> 15s, web default -> 10s. Lets in-flight work drain.
