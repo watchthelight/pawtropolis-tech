@@ -187,4 +187,6 @@ export const COOLDOWNS = {
   STATS_EXPORT_MS: 5 * 60 * 1000,
   /** Unblock: 30 seconds per user (prevents spam unblock operations) */
   UNBLOCK_MS: 30 * 1000,
+  /** Listopen: 60 seconds per guild (db query spam guard for staff-only command) */
+  LISTOPEN_MS: 60 * 1000,
 } as const;

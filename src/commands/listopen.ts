@@ -37,6 +37,7 @@ import {
   GATEKEEPER_ONLY,
 } from "../lib/config.js";
 import { LRUCache } from "../lib/lruCache.js";
+import { checkCooldown, formatCooldown, COOLDOWNS } from "../lib/rateLimiter.js";
 
 /*
  * FINAL_STATUSES defines terminal application states. Once an app reaches one of
@@ -498,6 +499,16 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   if (!interaction.guildId || !interaction.guild) {
     await interaction.reply({
       content: "❌ This command can only be used in a server.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  // Rate limit per guild: cheap LRU read but still db-touching; cap spam.
+  const cooldownResult = checkCooldown("listopen", interaction.guildId, COOLDOWNS.LISTOPEN_MS);
+  if (!cooldownResult.allowed) {
+    await interaction.reply({
+      content: `⏱️ /listopen on cooldown for this server. Try again in ${formatCooldown(cooldownResult.remainingMs!)}.`,
       flags: MessageFlags.Ephemeral,
     });
     return;
