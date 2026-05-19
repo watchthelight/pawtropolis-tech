@@ -46,4 +46,3 @@ _(none)_
 
 ### Low
 
-- [ ] [Validate Litestream configuration in CI / pre-deploy](todo/00040.md) `Low`
