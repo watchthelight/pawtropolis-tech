@@ -100,6 +100,7 @@ export const SLASH_COMMAND_NAMES = [
 export const CONTEXT_MENU_NAMES = [
   "Is It Real?",
   "Modmail: Open",
+  "Welcome Batch",
 ] as const;
 
 export type SlashCommandName = (typeof SLASH_COMMAND_NAMES)[number];
