@@ -6,6 +6,7 @@ Reverse chronological by completion date.
 
 ## 2026-05-19
 
+- [x] [Upgrade typescript-eslint to ^8.59.4](done/00034.md) `Low` 13 patches integrated cleanly. Typecheck green.
 - [x] [Clean stale .env backups](done/00042.md) `Low` Deleted 3 local files (.env.build, .env.migration-backup, .env.pre-new-bot.bak). Already gitignored via `.env.*` pattern.
 - [x] [Remove 5 unused exports](done/00026.md) `Low` No-op close: 4 of 5 already absent from source (stale audit), 5th (OAUTH_RATE_LIMIT_MAX_REQUESTS) actually in use.
 - [x] [Fix empty block in build-overlay-weekly.mjs](done/00037.md) `Low` Annotated intentional empty catch with inline comment.

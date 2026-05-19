@@ -61,7 +61,6 @@ _(none)_
 ### Low
 
 - [ ] [Add setDMPermission(false) to guild-only commands](todo/00025.md) `Low`
-- [ ] [Upgrade typescript-eslint to 8.59.4 (13 patches)](todo/00034.md) `Low`
 - [ ] [Resolve TODO comment in src/commands/art.ts:869](todo/00035.md) `Low`
 - [ ] [Resolve TODO comment in activityTracker.ts:288](todo/00036.md) `Low`
 - [ ] [Add SSH host validation to deploy.sh](todo/00039.md) `Low`
