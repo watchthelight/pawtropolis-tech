@@ -59,10 +59,12 @@ SCP_OPTS=(
 # safely: the second one fails to create and exits.
 DEPLOY_LOCK_DIR="${DEPLOY_LOCK_DIR:-/tmp/pawtropolis-deploy.lock}"
 
-# Optional pre-deploy DB backup. When BACKUP_BEFORE_DEPLOY=1 the script copies
-# the current DB to data/backups/data.db.<utc_ts> on the remote before the new
-# tarball lands. Default off to preserve current behavior.
-BACKUP_BEFORE_DEPLOY="${BACKUP_BEFORE_DEPLOY:-0}"
+# Pre-deploy DB backup. On every deploy the script copies the current DB to
+# data/backups/data.db.<utc_ts> on the remote before the new tarball lands.
+# Default on; set BACKUP_BEFORE_DEPLOY=0 to skip (e.g. for known-safe deploys
+# that only touch web assets). Litestream replication runs continuously and
+# is a separate safety net.
+BACKUP_BEFORE_DEPLOY="${BACKUP_BEFORE_DEPLOY:-1}"
 
 # Helper: a single ssh invocation with the standard timeout options.
 ssh_remote() {
