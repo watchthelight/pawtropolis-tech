@@ -24,6 +24,7 @@ import { checkCooldown, formatCooldown, COOLDOWNS } from '../lib/rateLimiter.js'
 export const data = new SlashCommandBuilder()
   .setName('backfill')
   .setDescription('Backfill message activity data for heatmap (staff only)')
+  .setDMPermission(false)
   .addIntegerOption((option) =>
     option
       .setName('weeks')

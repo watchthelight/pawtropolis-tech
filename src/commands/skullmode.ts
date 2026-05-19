@@ -20,6 +20,7 @@ import { logger } from "../lib/logger.js";
 export const data = new SlashCommandBuilder()
   .setName("skullmode")
   .setDescription("Set the skull emoji reaction chance (1-1000)")
+  .setDMPermission(false)
   .addIntegerOption((option) =>
     option
       .setName("chance")

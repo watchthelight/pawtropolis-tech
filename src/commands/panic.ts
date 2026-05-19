@@ -55,6 +55,7 @@ import { requireMinRole, ROLE_IDS } from "../lib/config.js";
 export const data = new SlashCommandBuilder()
   .setName("panic")
   .setDescription("Emergency shutoff for role automation")
+  .setDMPermission(false)
   .addSubcommand((sub) =>
     sub
       .setName("on")

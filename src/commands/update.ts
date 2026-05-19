@@ -104,6 +104,7 @@ async function commitAndPushAssets(assetType: "banner" | "avatar"): Promise<{ su
 export const data = new SlashCommandBuilder()
   .setName("update")
   .setDescription("Update bot activity, status, banner, or avatar")
+  .setDMPermission(false)
   .addSubcommand((sub) =>
     sub
       .setName("activity")

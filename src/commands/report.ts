@@ -26,6 +26,7 @@ import { createReportThread, generateReportCode } from "../features/report/index
 export const data = new SlashCommandBuilder()
   .setName("report")
   .setDescription("Report a content violation with evidence")
+  .setDMPermission(false)
   .addUserOption((option) =>
     option
       .setName("user")

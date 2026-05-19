@@ -29,6 +29,7 @@ import { checkCooldown, formatCooldown, COOLDOWNS } from "../lib/rateLimiter.js"
 export const data = new SlashCommandBuilder()
   .setName("resetdata")
   .setDescription("Reset metrics data from now forward (requires password)")
+  .setDMPermission(false)
   .addStringOption((option) =>
     option
       .setName("password")

@@ -25,6 +25,7 @@ import type { WideEvent, PhaseRecord, QueryRecord, EntityRef } from "../lib/wide
 export const data = new SlashCommandBuilder()
   .setName("developer")
   .setDescription("Developer tools for debugging")
+  .setDMPermission(false)
   .addSubcommand((sub) =>
     sub
       .setName("trace")

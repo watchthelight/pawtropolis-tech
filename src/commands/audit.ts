@@ -85,6 +85,7 @@ function generateNonce(): string {
 export const data = new SlashCommandBuilder()
   .setName("audit")
   .setDescription("Server audit commands")
+  .setDMPermission(false)
   .addSubcommand((sub) =>
     sub.setName("members").setDescription("Scan for bot-like accounts")
   )

@@ -48,7 +48,8 @@ import { getBuildInfo, getBuildAge } from "../lib/buildInfo.js";
 
 export const data = new SlashCommandBuilder()
   .setName("health")
-  .setDescription("Bot health (uptime and latency).");
+  .setDescription("Bot health (uptime and latency).")
+  .setDMPermission(false);
 
 /**
  * Formats uptime for human consumption. The "|| parts.length === 0" check

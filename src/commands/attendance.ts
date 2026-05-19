@@ -20,6 +20,7 @@ import { type CommandContext, withStep, withSql } from "../lib/cmdWrap.js";
 export const data = new SlashCommandBuilder()
   .setName("attendance")
   .setDescription("View event attendance stats and leaderboards")
+  .setDMPermission(false)
   .addSubcommand((sub) =>
     sub
       .setName("user")

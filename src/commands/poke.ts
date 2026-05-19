@@ -24,6 +24,7 @@ import { checkCooldown, formatCooldown, COOLDOWNS } from "../lib/rateLimiter.js"
 export const data = new SlashCommandBuilder()
   .setName("poke")
   .setDescription("Ping a user across multiple category channels (owner only)")
+  .setDMPermission(false)
   .addUserOption((option) =>
     option.setName("user").setDescription("The user to poke").setRequired(true)
   );

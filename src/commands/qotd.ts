@@ -32,6 +32,7 @@ import {
 export const data = new SlashCommandBuilder()
   .setName("qotd")
   .setDescription("Question of the Day suggestion system")
+  .setDMPermission(false)
   .addSubcommand((sub) =>
     sub
       .setName("suggest")

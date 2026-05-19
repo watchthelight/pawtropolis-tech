@@ -188,6 +188,7 @@ function isRunningOnRemote(): boolean {
 export const data = new SlashCommandBuilder()
   .setName("database")
   .setDescription("Database management commands")
+  .setDMPermission(false)
   .addSubcommand((sc) =>
     sc.setName("check").setDescription("Check database health and integrity (local and remote)")
   )

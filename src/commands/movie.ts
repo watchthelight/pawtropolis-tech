@@ -81,6 +81,7 @@ const DEPRECATION_FOOTER = "⚠️ /movie is deprecated. Please use /event movie
 export const data = new SlashCommandBuilder()
   .setName("movie")
   .setDescription("Movie night attendance tracking commands")
+  .setDMPermission(false)
   .addSubcommand((sub) =>
     sub
       .setName("start")
