@@ -37,8 +37,6 @@ _(none)_
 
 ### Medium
 
-- [ ] [Add Origin header CSRF check on dashboard API](todo/00006.md) `Medium`
-- [ ] [Refactor src/features/flagsStore.ts for testability](todo/00013.md) `Medium`
 - [ ] [Refactor hasStaffPermissions for testability](todo/00014.md) `Medium`
 - [ ] [Re-enable health.ts timeout test](todo/00015.md) `Medium`
 - [ ] [Add tests for src/features/avatarScan.ts](todo/00016.md) `Medium`

@@ -6,6 +6,7 @@ Reverse chronological by completion date.
 
 ## 2026-05-19
 
+- [x] [Origin CSRF check on dashboardApi](done/00006.md) `Medium` State-changing routes now require Origin in allowlist (env DASHBOARD_ALLOWED_ORIGINS).
 - [x] [Refactor flagsStore.ts for testability](done/00013.md) `Medium` Lazy-prepare statements via memoized lazyStmt factory; unblocks vi.mock interception.
 - [x] [Prettier format web/](done/00022.md) `Medium` 139 files reformatted. .prettierignore expanded for build artifacts.
 - [x] [Replace any in scripts/commands.ts](done/00020.md) `Medium` 16 any -> CmdOption/CommandSpec + unknown catches. Typecheck clean.
