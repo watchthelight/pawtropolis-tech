@@ -40,11 +40,11 @@ module.exports = {
       // autorestart:false — exits cleanly when done; resume cursor in DB means
       // a manual `pm2 restart pawtropolis-backfill` picks up where it left off.
       name: 'pawtropolis-backfill',
-      script: 'node_modules/.bin/tsx',
-      args: 'scripts/backfill/run.ts',
+      script: 'scripts/backfill/run.ts',
       cwd: '/home/ubuntu/pawtropolis-tech',
-      interpreter: 'none',
-      node_args: '--env-file=.env',
+      interpreter: 'node',
+      interpreter_args: '--env-file=.env --import=tsx',
+      exec_mode: 'fork',
       instances: 1,
       autorestart: false,
       max_restarts: 3,
