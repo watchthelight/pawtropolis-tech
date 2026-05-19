@@ -44,17 +44,13 @@ LABELS=(
   "Blocked (External)|b60205|Blocked on a vendor or external party"
 )
 
-created=0
-updated=0
+count=0
 
 for entry in "${LABELS[@]}"; do
   IFS='|' read -r name color desc <<< "$entry"
   if gh label create "$name" --color "$color" --description "$desc" --force >/dev/null 2>&1; then
-    # --force creates or updates; gh does not distinguish in exit code
-    if gh label list --search "$name" --json name -q '.[].name' | grep -Fxq "$name"; then
-      echo "ok: $name"
-      ((updated++))
-    fi
+    echo "ok: $name"
+    count=$((count + 1))
   else
     echo "ERROR: failed to create/update label: $name" >&2
     exit 1
@@ -62,4 +58,4 @@ for entry in "${LABELS[@]}"; do
 done
 
 echo ""
-echo "Done. $updated labels created or updated."
+echo "Done. $count labels processed."
