@@ -10,7 +10,9 @@ module.exports = {
       autorestart: true,
       max_restarts: 10,
       restart_delay: 5000,
-      kill_timeout: 5000,
+      // 15s grace before SIGKILL. Lets in-flight interactions, db migrations,
+      // and bulk fetches drain on restart instead of being truncated.
+      kill_timeout: 15000,
       env: {
         NODE_ENV: 'production',
         DB_HEALTHCHECK_MODE: 'full'
@@ -25,6 +27,8 @@ module.exports = {
       autorestart: true,
       max_restarts: 10,
       restart_delay: 5000,
+      // 10s grace for in-flight HTTP requests to drain on restart.
+      kill_timeout: 10000,
       env: {
         NODE_ENV: 'production',
         PORT: '3000',
