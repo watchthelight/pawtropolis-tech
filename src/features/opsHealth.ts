@@ -20,6 +20,11 @@ import { getPM2Status, type PM2ProcessStatus } from "../lib/pm2.js";
 import { env } from "../lib/env.js";
 import { logActionPretty } from "../logging/pretty.js";
 
+/** Extract a string message from an unknown thrown value. Pattern mirrors src/lib/dbHealthCheck.ts. */
+function errMsg(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
+}
+
 /**
  * Database integrity check result
  */
@@ -53,7 +58,7 @@ export interface HealthAlert {
   acknowledged_at: number | null;
   resolved_by: string | null;
   resolved_at: number | null;
-  meta: Record<string, any> | null;
+  meta: Record<string, unknown> | null;
 }
 
 /**
@@ -126,11 +131,11 @@ function checkDbIntegrity(): DbIntegrity {
       message: ok ? "ok" : result,
       checkedAt: Math.floor(Date.now() / 1000),
     };
-  } catch (err: any) {
-    logger.error({ err: err.message }, "[opshealth] DB integrity check failed");
+  } catch (err) {
+    logger.error({ err: errMsg(err) }, "[opshealth] DB integrity check failed");
     return {
       ok: false,
-      message: err.message || "DB check failed",
+      message: errMsg(err) || "DB check failed",
       checkedAt: Math.floor(Date.now() / 1000),
     };
   }
@@ -222,8 +227,8 @@ function computeQueueMetrics(guildId: string): QueueMetrics {
       throughputPerHour: Math.round(throughputPerHour * 10) / 10,
       timeseries,
     };
-  } catch (err: any) {
-    logger.error({ err: err.message, guildId }, "[opshealth] failed to compute queue metrics");
+  } catch (err) {
+    logger.error({ err: errMsg(err), guildId }, "[opshealth] failed to compute queue metrics");
     return {
       backlog: 0,
       p50Ms: 0,
@@ -253,8 +258,8 @@ function getRecentActions(guildId: string, limit: number = 10): ActionLogRow[] {
       .all(guildId, limit) as ActionLogRow[];
 
     return rows;
-  } catch (err: any) {
-    logger.error({ err: err.message, guildId }, "[opshealth] failed to fetch recent actions");
+  } catch (err) {
+    logger.error({ err: errMsg(err), guildId }, "[opshealth] failed to fetch recent actions");
     return [];
   }
 }
@@ -294,8 +299,8 @@ function getActiveAlerts(): HealthAlert[] {
       severity: row.severity as "warn" | "critical",
       meta: row.meta ? JSON.parse(row.meta) : null,
     }));
-  } catch (err: any) {
-    logger.error({ err: err.message }, "[opshealth] failed to fetch active alerts");
+  } catch (err) {
+    logger.error({ err: errMsg(err) }, "[opshealth] failed to fetch active alerts");
     return [];
   }
 }
@@ -473,8 +478,8 @@ export async function runCheck(guildId: string, client: Client): Promise<HealthC
         await notifyAlert(guildId, alert, client);
       }
     }
-  } catch (err: any) {
-    logger.warn({ err: err.message, guildId }, "[opshealth] orphaned ticket check failed");
+  } catch (err) {
+    logger.warn({ err: errMsg(err), guildId }, "[opshealth] orphaned ticket check failed");
   }
 
   logger.info(
@@ -497,7 +502,7 @@ export async function runCheck(guildId: string, client: Client): Promise<HealthC
 function upsertAlert(
   alertType: string,
   severity: "warn" | "critical",
-  meta: Record<string, any>
+  meta: Record<string, unknown>
 ): HealthAlert | null {
   const now = Math.floor(Date.now() / 1000);
 
@@ -558,8 +563,8 @@ function upsertAlert(
       resolved_at: null,
       meta,
     };
-  } catch (err: any) {
-    logger.error({ err: err.message, alertType }, "[opshealth] failed to upsert alert");
+  } catch (err) {
+    logger.error({ err: errMsg(err), alertType }, "[opshealth] failed to upsert alert");
     return null;
   }
 }
@@ -672,16 +677,16 @@ async function notifyAlert(guildId: string, alert: HealthAlert, client: Client):
             "[opshealth] webhook notification sent"
           );
         }
-      } catch (err: any) {
+      } catch (err) {
         logger.error(
-          { err: err.message, alertId: alert.id },
+          { err: errMsg(err), alertId: alert.id },
           "[opshealth] webhook notification error"
         );
       }
     }
-  } catch (err: any) {
+  } catch (err) {
     // Don't throw - notification failure shouldn't break health checks
-    logger.error({ err: err.message, alertId: alert.id }, "[opshealth] failed to notify alert");
+    logger.error({ err: errMsg(err), alertId: alert.id }, "[opshealth] failed to notify alert");
   }
 }
 
@@ -712,8 +717,8 @@ export async function ackAlert(alertId: number, actorId: string, guildId: string
         meta: { alert_id: alertId },
       });
     }
-  } catch (err: any) {
-    logger.error({ err: err.message, alertId }, "[opshealth] failed to acknowledge alert");
+  } catch (err) {
+    logger.error({ err: errMsg(err), alertId }, "[opshealth] failed to acknowledge alert");
     throw err;
   }
 }
@@ -745,8 +750,8 @@ export async function resolveAlert(alertId: number, actorId: string, guildId: st
         meta: { alert_id: alertId },
       });
     }
-  } catch (err: any) {
-    logger.error({ err: err.message, alertId }, "[opshealth] failed to resolve alert");
+  } catch (err) {
+    logger.error({ err: errMsg(err), alertId }, "[opshealth] failed to resolve alert");
     throw err;
   }
 }
