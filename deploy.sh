@@ -25,6 +25,19 @@ PM2_PROCESS_WEB="${PM2_PROCESS_WEB:-pawtropolis-web}"
 PM2_PROCESS="${PM2_PROCESS_BOT}"
 TARBALL="deploy.tar.gz"
 
+# SSH host validation. Exit early with a clear message if the host alias
+# is not configured. Fixes hard-to-diagnose "Could not resolve hostname"
+# failures when running from a machine without ~/.ssh/config set up.
+if ! grep -qE "^[[:space:]]*Host[[:space:]]+([[:graph:]]+[[:space:]]+)*${REMOTE_HOST}([[:space:]]|$)" "${HOME}/.ssh/config" 2>/dev/null; then
+  # Fall back to ssh-keygen -F (known_hosts entry). If neither present, abort.
+  if ! ssh-keygen -F "${REMOTE_HOST}" >/dev/null 2>&1; then
+    echo "ERROR: SSH host '${REMOTE_HOST}' is not in ~/.ssh/config or known_hosts." >&2
+    echo "       Set REMOTE_HOST=<your-alias> or configure ~/.ssh/config first." >&2
+    echo "       See docs/operations/deployment-hardening.md." >&2
+    exit 1
+  fi
+fi
+
 # SSH options applied to every remote call. ConnectTimeout fails fast if the
 # host is unreachable; ServerAliveInterval+CountMax detect a dropped connection
 # during a long step (e.g., npm ci on a slow link) instead of waiting for TCP.
