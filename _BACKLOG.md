@@ -24,12 +24,10 @@ Findings from [audit/2026-05-19/](./audit/2026-05-19/) converted to tracked todo
 
 ### Critical
 
-- [ ] [Patch HIGH and CRITICAL npm vulnerabilities](todo/00002.md) `Critical`
-- [ ] [Remove or isolate @xenova/transformers (protobufjs RCE)](todo/00003.md) `Critical`
+_(none)_
 
 ### High
 
-- [ ] [Upgrade Vite in web/ to patch dev-server path traversal](todo/00004.md) `High`
 - [ ] [Upgrade Sentry packages (26 patches behind)](todo/00005.md) `High`
 - [ ] [Refactor src/index.ts (2705 lines) into event modules](todo/00007.md) `High`
 - [ ] [Refactor src/web/dashboardApi.ts (1792 lines) into route modules](todo/00008.md) `High`
