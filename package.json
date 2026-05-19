@@ -50,8 +50,8 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.91.1",
     "@google-cloud/vision": "^5.3.4",
-    "@sentry/node": "^10.20.0",
-    "@sentry/profiling-node": "^10.20.0",
+    "@sentry/node": "^10.53.1",
+    "@sentry/profiling-node": "^10.53.1",
     "@types/node": "^24.10.1",
     "better-sqlite3": "^12.4.1",
     "canvas": "^3.2.0",
