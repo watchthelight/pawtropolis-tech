@@ -44,7 +44,6 @@ _(none)_
 - [ ] [Add tests for src/features/avatarScan.ts](todo/00016.md) `Medium`
 - [ ] [Add tests for auditRunner.ts and securityDiff.ts](todo/00017.md) `Medium`
 - [ ] [Add tests for 5 untested schedulers](todo/00018.md) `Medium`
-- [ ] [Add /listopen rate limit](todo/00019.md) `Medium`
 - [ ] [Replace lazy any types in scripts/commands.ts](todo/00020.md) `Medium`
 - [ ] [Replace lazy any types in src/features/opsHealth.ts](todo/00021.md) `Medium`
 - [ ] [Run prettier format on web/ (925 drifts)](todo/00022.md) `Medium`
