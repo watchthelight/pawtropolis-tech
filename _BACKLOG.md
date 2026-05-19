@@ -8,7 +8,7 @@ This file is a parallel index for the new file-first issue system. The legacy na
 
 ## Active
 
-- [ ] [Smoke test the new issue system](todo/00001.md) `Nominal` `WIP`
+_(empty)_
 
 ## Blocked
 
