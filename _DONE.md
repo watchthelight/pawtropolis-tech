@@ -6,6 +6,7 @@ Reverse chronological by completion date.
 
 ## 2026-05-19
 
+- [x] [Fix empty block in build-overlay-weekly.mjs](done/00037.md) `Low` Annotated intentional empty catch with inline comment.
 - [x] [Move @anthropic-ai/sdk to devDeps](done/00038.md) `Low` Used by scripts/llm-label.mjs (offline tool). Moved out of prod install footprint instead of removing.
 - [x] [Upgrade Sentry packages (26 patches behind)](done/00005.md) `High` Bumped @sentry/node + @sentry/profiling-node ^10.20.0 -> ^10.53.1. No API changes, typecheck clean.
 - [x] [Patch HIGH and CRITICAL npm vulnerabilities](done/00002.md) `Critical` Root + web/ npm audit clean of HIGH/CRITICAL in production. Five commits: removed @xenova, upgraded fastify, upgraded discord.js, added root overrides for protobufjs+fast-uri+jws+minimatch+ws, upgraded web vite/sveltekit/svelte.
