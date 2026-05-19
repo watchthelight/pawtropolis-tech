@@ -6,6 +6,7 @@ Reverse chronological by completion date.
 
 ## 2026-05-19
 
+- [x] [setDMPermission(false) on guild commands](done/00025.md) `Low` 16 commands now hide in DMs. Discord deploy:cmds still required.
 - [x] [health.ts timeout test re-enabled](done/00015.md) `Medium` Fixed stale .ephemeral assertion to MessageFlags pattern. All 7 tests pass.
 - [x] [hasStaffPermissions tests restored](done/00014.md) `Medium` Skip premise was wrong (no require() in function). Implemented 5 tests, all pass.
 - [x] [Origin CSRF check on dashboardApi](done/00006.md) `Medium` State-changing routes now require Origin in allowlist (env DASHBOARD_ALLOWED_ORIGINS).
