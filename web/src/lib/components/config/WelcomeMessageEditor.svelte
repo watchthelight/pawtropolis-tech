@@ -24,9 +24,11 @@
 		guildName = 'Pawtropolis'
 	}: Props = $props();
 
-	// Default greeting line the bot uses when welcome_template is empty.
-	// Kept in sync with src/features/welcome.ts.
-	const DEFAULT_GREETING = '👋 Welcome @NewMember!';
+	// Default greeting the bot renders when welcome_template is empty. Stored
+	// in the raw {applicant.mention} form so the chip parser turns it into a
+	// real "@NewMember" chip on mount; the bot resolves the same token at
+	// send time. Keep this string in sync with src/features/welcome.ts.
+	const DEFAULT_GREETING_RAW = '👋 Welcome {applicant.mention}!';
 
 	const channelById = $derived(new Map(channels.map((c) => [c.id, c])));
 	const roleById = $derived(new Map(roles.map((r) => [r.id, r])));
@@ -62,10 +64,17 @@
 		return [];
 	});
 
-	// Match only real Discord mention syntax — channels and role pings.
-	const PARSE_RE = /<#(\d{17,20})>|<@&(\d{17,20})>/g;
+	// Editor parses real Discord mention syntax (channels and role pings) plus
+	// one universal applicant placeholder. The {applicant.mention} string never
+	// appears literally in the editor — it always renders as an @NewMember chip.
+	const PARSE_RE = /<#(\d{17,20})>|<@&(\d{17,20})>|(\{applicant\.mention\})/g;
 
-	function buildChip(kind: 'channel' | 'role', label: string, raw: string, color?: number): HTMLSpanElement {
+	function buildChip(
+		kind: 'channel' | 'role' | 'applicant',
+		label: string,
+		raw: string,
+		color?: number
+	): HTMLSpanElement {
 		const chip = document.createElement('span');
 		chip.className = `mention mention-${kind}`;
 		chip.setAttribute('contenteditable', 'false');
@@ -89,13 +98,15 @@
 		let m: RegExpExecArray | null;
 		while ((m = PARSE_RE.exec(raw))) {
 			if (m.index > last) out.push(document.createTextNode(raw.slice(last, m.index)));
-			const [full, chId, roleId] = m;
+			const [full, chId, roleId, applicantToken] = m;
 			if (chId) {
 				const ch = channelById.get(chId);
 				out.push(buildChip('channel', ch?.name ?? 'unknown-channel', full));
 			} else if (roleId) {
 				const r = roleById.get(roleId);
 				out.push(buildChip('role', r?.name ?? 'unknown-role', full, r?.color));
+			} else if (applicantToken) {
+				out.push(buildChip('applicant', 'NewMember', '{applicant.mention}'));
 			}
 			last = m.index + full.length;
 		}
@@ -136,21 +147,33 @@
 		return out;
 	}
 
+	// True while the editor is displaying the default greeting as a starting
+	// point, but the parent's `value` state is still empty. Lets admins type
+	// over a pre-filled default without forcing the page into a dirty state
+	// before any real edit happens.
+	let placeholderActive = $state(false);
+
 	// Keep the editor synced with the parent-supplied value. Skips while the
-	// user is typing so we never clobber an in-progress edit.
+	// user is typing so we never clobber an in-progress edit. Also skips while
+	// the editor is pre-filled with the default greeting and value is still
+	// empty, so the placeholder isn't wiped before the admin can edit it.
 	$effect(() => {
 		if (!mounted) return;
 		const isFocused = editorEl && document.activeElement === editorEl;
 		if (isFocused) return;
+		if (placeholderActive && value.trim().length === 0) return;
 		const current = readEditor();
 		if (current !== value) renderEditor(value);
 	});
 
 	onMount(() => {
 		mounted = true;
-		// Pre-fill with whatever the parent currently has saved so admins can
-		// make small edits instead of retyping from scratch.
-		renderEditor(value);
+		if (value.trim().length === 0) {
+			renderEditor(DEFAULT_GREETING_RAW);
+			placeholderActive = true;
+		} else {
+			renderEditor(value);
+		}
 	});
 
 	function getCaretRect(): DOMRect | null {
@@ -242,7 +265,13 @@
 	}
 
 	function emitChange() {
-		value = readEditor();
+		const next = readEditor();
+		value = next;
+		// Once the admin has typed anything, the placeholder no longer applies.
+		// Future re-renders should reflect actual saved state.
+		if (placeholderActive && next.trim().length > 0) {
+			placeholderActive = false;
+		}
 	}
 
 	function onInput() {
@@ -345,7 +374,7 @@
 
 	// Greeting (admin-controlled). Empty editor => bot's default greeting line.
 	const greetingHtml = $derived(
-		value.trim().length > 0 ? renderPreview(value) : renderPreview(DEFAULT_GREETING)
+		value.trim().length > 0 ? renderPreview(value) : renderPreview(DEFAULT_GREETING_RAW)
 	);
 
 	const isUsingDefault = $derived(value.trim().length === 0);
@@ -621,6 +650,11 @@
 	:global(.editor .mention-role) {
 		background: oklch(40% 0.12 200 / 0.25);
 		color: oklch(80% 0.15 200);
+	}
+
+	:global(.editor .mention-applicant) {
+		background: oklch(40% 0.12 280 / 0.35);
+		color: oklch(85% 0.15 280);
 	}
 
 	:global(.preview-embed .m) {
