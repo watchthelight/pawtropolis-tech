@@ -6,6 +6,7 @@ Reverse chronological by completion date.
 
 ## 2026-05-19
 
+- [x] [Prettier format web/](done/00022.md) `Medium` 139 files reformatted. .prettierignore expanded for build artifacts.
 - [x] [Replace any in scripts/commands.ts](done/00020.md) `Medium` 16 any -> CmdOption/CommandSpec + unknown catches. Typecheck clean.
 - [x] [Replace any in opsHealth.ts](done/00021.md) `Medium` 12 any -> unknown + errMsg helper. Typecheck clean.
 - [x] [CI smoke check on built artifact](done/00030.md) `Medium` Added node --check dist/index.js to build job.
