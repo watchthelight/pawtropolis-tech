@@ -77,13 +77,13 @@ Application logic shows strong security baseline: parameterized SQL queries, rat
 
 ## Note: confirmed-resolved findings from January 2026 audit
 
-- /stats export has STATS_EXPORT_MS cooldown (rateLimiter.ts:187) — RESOLVED
-- /poke has POKE_MS cooldown (rateLimiter.ts:185) — RESOLVED
-- /send has SEND_MS cooldown — RESOLVED
-- All password verification uses secureCompare (crypto.timingSafeEqual) — IN PLACE
-- Session encryption with AES-256-GCM, httpOnly secure sameSite cookies — IN PLACE
-- OAuth2 state token validated against secure 10-minute cookie — IN PLACE
-- Server-side guild member + tier check at OAuth callback — IN PLACE
-- WelcomeMessageEditor preview properly HTML-escapes user input — IN PLACE
-- DDL identifier validation in src/db/columnUtil.ts:46-80 — IN PLACE
-- All SQL queries use parameter binding (sample audit, no template-literal interpolation found) — IN PLACE
+- /stats export has STATS_EXPORT_MS cooldown (rateLimiter.ts:187) - RESOLVED
+- /poke has POKE_MS cooldown (rateLimiter.ts:185) - RESOLVED
+- /send has SEND_MS cooldown - RESOLVED
+- All password verification uses secureCompare (crypto.timingSafeEqual) - IN PLACE
+- Session encryption with AES-256-GCM, httpOnly secure sameSite cookies - IN PLACE
+- OAuth2 state token validated against secure 10-minute cookie - IN PLACE
+- Server-side guild member + tier check at OAuth callback - IN PLACE
+- WelcomeMessageEditor preview properly HTML-escapes user input - IN PLACE
+- DDL identifier validation in src/db/columnUtil.ts:46-80 - IN PLACE
+- All SQL queries use parameter binding (sample audit, no template-literal interpolation found) - IN PLACE
