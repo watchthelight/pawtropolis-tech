@@ -47,19 +47,20 @@ function ensureWelcomeGroup(spec: CommandSpec) {
   }
 }
 
-function formatOptionList(options: any[] | undefined): string {
+function formatOptionList(options: CmdOption[] | undefined): string {
   if (!options || options.length === 0) return "";
   return `(${options.map((opt) => opt.name).join(", ")})`;
 }
 
-function formatSubcommand(sub: any): string {
-  return `${sub.name}${formatOptionList(sub.options)}`;
+function formatSubcommand(sub: CmdOption): string {
+  const subOptions = "options" in sub ? sub.options : undefined;
+  return `${sub.name}${formatOptionList(subOptions)}`;
 }
 
 export function formatCommandTree(commands: CommandSpec): string[] {
   const lines: string[] = [];
   for (const command of commands) {
-    const optionNames = (command.options ?? []).map((opt: any) => opt.name);
+    const optionNames = (command.options ?? []).map((opt: CmdOption) => opt.name);
     lines.push(`/${command.name} — options:[${optionNames.join(", ")}]`);
     const groups = (command.options ?? []).filter((opt) => opt.type === OPTION.SubcommandGroup);
     for (const group of groups) {
@@ -79,25 +80,25 @@ export function formatCommandTree(commands: CommandSpec): string[] {
 }
 
 // Dead code. Keeping it because removing things always breaks something else.
-function collectGroupNames(command: any): string[] {
+function collectGroupNames(command: CommandSpec[number]): string[] {
   return (command.options ?? [])
-    .filter((opt: any) => opt.type === OPTION.SubcommandGroup)
-    .map((opt: any) => opt.name);
+    .filter((opt: CmdOption) => opt.type === OPTION.SubcommandGroup)
+    .map((opt: CmdOption) => opt.name);
 }
 
-export function summarizeGate(commands: any[]) {
+export function summarizeGate(commands: CommandSpec) {
   const gate = commands.find((cmd) => cmd.name === "gate");
   if (!gate) {
     return { options: [] as string[], welcomeSubs: [] as string[] };
   }
-  const options = (gate.options ?? []).map((opt: any) => opt.name);
+  const options = (gate.options ?? []).map((opt: CmdOption) => opt.name);
   const welcomeGroup = (gate.options ?? []).find(
-    (opt: any) => opt.type === OPTION.SubcommandGroup && opt.name === "welcome"
+    (opt: CmdOption) => opt.type === OPTION.SubcommandGroup && opt.name === "welcome"
   );
-  const welcomeSubs =
-    (welcomeGroup?.options ?? [])
-      .filter((opt: any) => opt.type === OPTION.Subcommand)
-      .map(formatSubcommand) ?? [];
+  const welcomeOptions = welcomeGroup && "options" in welcomeGroup ? welcomeGroup.options ?? [] : [];
+  const welcomeSubs = welcomeOptions
+    .filter((opt: CmdOption) => opt.type === OPTION.Subcommand)
+    .map(formatSubcommand);
   return { options, welcomeSubs };
 }
 
@@ -118,10 +119,10 @@ export async function purgeGlobal(appId: string, token: string) {
   console.info("[sync] purging global commands...");
   try {
     await rest.put(Routes.applicationCommands(appId), { body: [] });
-    const after: any[] = (await rest.get(Routes.applicationCommands(appId))) as any[];
+    const after = (await rest.get(Routes.applicationCommands(appId))) as CmdOption[];
     console.info("[sync] global after purge:", after.length);
-  } catch (err: any) {
-    if (err.status === 401) {
+  } catch (err: unknown) {
+    if ((err as { status?: number })?.status === 401) {
       console.warn("[sync] global purge skipped (401 Unauthorized - requires app owner token)");
     } else {
       throw err;
@@ -140,8 +141,9 @@ function logPayloadTree(guildId: string, spec: CommandSpec) {
  * If someone invited the bot before slash commands existed (or without the scope),
  * command registration silently fails with 403. This is the most common support ticket.
  */
-function handleMissingScope(err: any, guildId: string) {
-  if (err?.code === 50001 || err?.status === 403) {
+function handleMissingScope(err: unknown, guildId: string) {
+  const e = err as { code?: number; status?: number } | null;
+  if (e?.code === 50001 || e?.status === 403) {
     console.warn(
       `[sync] guild ${guildId} missing applications.commands scope — reinvite the bot with the "applications.commands" permission`
     );
@@ -170,25 +172,26 @@ export async function syncAllGuilds(appId: string, token: string) {
     try {
       const updated = (await rest.put(Routes.applicationGuildCommands(appId, gid), {
         body: spec,
-      })) as any[];
+      })) as CommandSpec;
       const { options, welcomeSubs } = summarizeGate(updated);
       const optionList = options.length > 0 ? options.join(",") : "—";
       const welcomeList = welcomeSubs.length > 0 ? welcomeSubs.join(", ") : "—";
       console.info(
         `[sync] guild ${gid} ok – commands=${updated.length} /gate groups: ${optionList} … welcome subcommands: ${welcomeList}`
       );
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (handleMissingScope(err, gid)) {
         continue;
       }
-      if (err?.status === 401) {
+      if ((err as { status?: number })?.status === 401) {
         console.error("[sync] unauthorized (401) – check DISCORD_TOKEN");
         throw err;
       }
+      const e = err as { status?: number; code?: number } | null;
       console.error("[sync] guild sync failed", {
         guildId: gid,
-        status: err?.status,
-        code: err?.code,
+        status: e?.status,
+        code: e?.code,
       });
       throw err;
     }
