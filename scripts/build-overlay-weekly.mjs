@@ -97,7 +97,7 @@ db.exec(`
 // Idempotent add for substantiveness columns. SQLite has no ALTER IF NOT EXISTS;
 // swallow the duplicate-column error per column.
 for (const col of ['substantiveness', 'novelty', 'not_filler', 'lex_density']) {
-	try { db.exec(`ALTER TABLE general_messages_overlay_weekly ADD COLUMN ${col} REAL DEFAULT 0`); } catch {}
+	try { db.exec(`ALTER TABLE general_messages_overlay_weekly ADD COLUMN ${col} REAL DEFAULT 0`); } catch { /* column already exists */ }
 }
 
 let sinceS;
