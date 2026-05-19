@@ -83,6 +83,11 @@ jobs:
           cache: "npm"
       - run: npm ci
       - run: npm run build
+      # Smoke test: verify the built artifact has no syntax errors and all
+      # transitive imports resolve. node --check parses but does not execute,
+      # so it does not need Discord credentials or a real DB.
+      - name: Smoke check built artifact
+        run: node --check dist/index.js
       - uses: actions/upload-artifact@v4
         with:
           name: dist
