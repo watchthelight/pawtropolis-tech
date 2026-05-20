@@ -77,7 +77,7 @@ export const MISSING_DDL = {
 
   // migrations/060_config_audit_log.ts
   // Note: the production query in api/export references columns
-  // (changed_at_s) that this DDL does NOT define. See todo #00044.
+  // (changed_at_s) that this DDL does NOT define. See done/00044.
   config_audit_log: `
     CREATE TABLE IF NOT EXISTS config_audit_log (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -88,6 +88,51 @@ export const MISSING_DDL = {
       new_value TEXT,
       source TEXT NOT NULL DEFAULT 'dashboard',
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `,
+
+  // migrations/067_ticket_system.ts -- redefines `ticket` from its
+  // pre-067 5-column shape (still present in schema.sql) to the current
+  // 16-column shape. Tests that touch the post-067 ticket subsystem
+  // must DROP the stale table first, hence the prepended DROP. FK
+  // constraints are dropped relative to production DDL to keep the
+  // in-memory test DB free of seed-row requirements. See todo #00045
+  // for the long-term fix (regenerate schema.sql from a post-067 dump).
+  ticket_v067: `
+    DROP TABLE IF EXISTS ticket;
+    CREATE TABLE ticket (
+      id                    TEXT PRIMARY KEY,
+      type_key              TEXT NOT NULL,
+      number                INTEGER NOT NULL,
+      channel_id            TEXT NOT NULL,
+      staff_thread_id       TEXT,
+      guild_id              TEXT NOT NULL,
+      opener_user_id        TEXT NOT NULL,
+      claimed_by_user_id    TEXT,
+      status                TEXT NOT NULL,
+      close_reason          TEXT,
+      closed_by_user_id     TEXT,
+      archive_path          TEXT,
+      legacy_source         TEXT,
+      opened_at             INTEGER NOT NULL,
+      claimed_at            INTEGER,
+      closed_at             INTEGER
+    );
+  `,
+
+  // migrations/067_ticket_system.ts -- absent from schema.sql.
+  ticket_attachment: `
+    CREATE TABLE IF NOT EXISTS ticket_attachment (
+      id              TEXT PRIMARY KEY,
+      message_id      TEXT NOT NULL,
+      ticket_id       TEXT NOT NULL,
+      filename        TEXT NOT NULL,
+      mime            TEXT,
+      size_bytes      INTEGER NOT NULL,
+      local_path      TEXT,
+      sha256          TEXT,
+      original_url    TEXT NOT NULL,
+      created_at      INTEGER NOT NULL DEFAULT (unixepoch())
     )
   `,
 } as const;
