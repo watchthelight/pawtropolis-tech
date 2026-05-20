@@ -6,6 +6,7 @@ Reverse chronological by completion date.
 
 ## 2026-05-20
 
+- [x] [SSE handler tests](done/00043.md) `Medium` 7 tests covering auth, fan-out registration, heartbeat cadence, and cancel cleanup. Sibling slice covered backfill/stream with the same fake-timer pattern.
 - [x] [api/export: drop broken audit + config_audit branches](done/00044.md) `High` Both queries referenced nonexistent identifiers (`audit_results` table; `config_audit_log.changed_at_s` column) and threw 500 in production. No UI consumers found, so removed rather than guessing intent. Spawn feat todos if anyone wants the exports back.
 
 ## 2026-05-19
