@@ -4,10 +4,14 @@ import { db } from "$lib/server/db";
 import { parseTimeWindowSpec, resolveRange, formatWindowLabel } from "$lib/shared/timeWindow";
 
 /**
- * GET /api/export?type=stats|audit|config_audit
+ * GET /api/export?type=stats
  *   [&window=7d|30d|90d|all|custom][&from=YYYY-MM-DD&to=YYYY-MM-DD]
  *
  * Streams CSV export for dashboard data. Requires gk tier minimum.
+ *
+ * Audit and config_audit exports were removed: their queries referenced
+ * a non-existent table (audit_results) and a non-existent column
+ * (config_audit_log.changed_at_s). They had no UI consumers. See done/00044.
  */
 export const GET: RequestHandler = async ({ locals, url }) => {
   if (!locals.user || !hasMinTier(locals.user.tier, "gk")) {
@@ -49,41 +53,8 @@ export const GET: RequestHandler = async ({ locals, url }) => {
       filename = `review-actions-${label}.csv`;
       break;
     }
-    case "audit": {
-      if (!hasMinTier(locals.user.tier, "admin")) error(403, "Admin required for audit export");
-      rows = db()
-        .prepare(
-          `SELECT * FROM audit_results
-					WHERE guild_id = ?
-						AND (? = 0 OR strftime('%s', created_at) >= ?)
-						AND strftime('%s', created_at) < ?
-					ORDER BY created_at DESC
-					LIMIT 10000`
-        )
-        .all(guildId, range.startS, String(range.startS), String(range.endS)) as Record<
-        string,
-        unknown
-      >[];
-      filename = `audit-results-${label}.csv`;
-      break;
-    }
-    case "config_audit": {
-      if (!hasMinTier(locals.user.tier, "admin")) error(403, "Admin required for config export");
-      rows = db()
-        .prepare(
-          `SELECT * FROM config_audit_log
-					WHERE guild_id = ?
-						AND (? = 0 OR changed_at_s >= ?)
-						AND changed_at_s < ?
-					ORDER BY changed_at_s DESC
-					LIMIT 5000`
-        )
-        .all(guildId, range.startS, range.startS, range.endS) as Record<string, unknown>[];
-      filename = `config-audit-${label}.csv`;
-      break;
-    }
     default:
-      error(400, "Invalid export type. Use: stats, audit, config_audit");
+      error(400, "Invalid export type. Use: stats");
   }
 
   if (rows.length === 0) {

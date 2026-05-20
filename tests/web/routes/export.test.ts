@@ -2,16 +2,14 @@
 /**
  * Pawtropolis Tech -- tests/web/routes/export.test.ts
  * WHAT: Unit tests for the /api/export GET handler.
- * WHY: This is the dashboard's only data egress endpoint. Tier escalation
- *      between `stats` (gk) and `audit`/`config_audit` (admin) is enforced
- *      twice; tests pin both gates. CSV escaping is hand-rolled (no library)
- *      and easy to break in subtle ways for commas/quotes/newlines, so each
- *      escape case gets its own assertion.
+ * WHY: This is the dashboard's only data egress endpoint. CSV escaping is
+ *      hand-rolled (no library) and easy to break in subtle ways for
+ *      commas/quotes/newlines, so each escape case gets its own assertion.
+ *      Tier gate (gk) is enforced once; tests pin it.
  *
- *      The audit and config_audit branches reference table/column names
- *      that do not exist in production. Those cases are pinned to their
- *      current throwing behavior, linked to todo #00044 -- fixing that
- *      bug must also update these tests.
+ *      audit + config_audit cases were removed in done/00044 (queries
+ *      referenced nonexistent identifiers). Two assertions remain to lock
+ *      those former types as plain 400 invalid-type rejections.
  */
 
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -30,7 +28,6 @@ const { makeDb, MISSING_DDL } = await import("../_helpers/db.js");
 const { GET } = await import("../../../web/src/routes/api/export/+server.js");
 
 const gkUser = { id: "u1", tier: "gk" as const, roles: [] };
-const adminUser = { id: "u1", tier: "admin" as const, roles: [] };
 
 const ORIG_GUILD_ID = process.env.GUILD_ID;
 
@@ -52,7 +49,7 @@ afterAll(() => {
 
 function evt(
   type: string | null,
-  user: typeof gkUser | typeof adminUser | null = gkUser,
+  user: typeof gkUser | null = gkUser,
 ) {
   const search = type === null ? "" : `?type=${encodeURIComponent(type)}`;
   return makeEvent({
@@ -88,15 +85,15 @@ describe("GET /api/export", () => {
     await expect(GET(evt(null))).rejects.toMatchObject({ status: 400 });
   });
 
-  it("403 when gk requests audit (admin required)", async () => {
+  it("400 when type=audit (branch removed; see done/00044)", async () => {
     await expect(GET(evt("audit", gkUser))).rejects.toMatchObject({
-      status: 403,
+      status: 400,
     });
   });
 
-  it("403 when gk requests config_audit (admin required)", async () => {
+  it("400 when type=config_audit (branch removed; see done/00044)", async () => {
     await expect(GET(evt("config_audit", gkUser))).rejects.toMatchObject({
-      status: 403,
+      status: 400,
     });
   });
 
@@ -159,16 +156,4 @@ describe("GET /api/export", () => {
     expect(disposition).toMatch(/review-actions-all-time\.csv/);
   });
 
-  // BUG PINS (#00044): audit branch selects from `audit_results` (table
-  // does not exist), config_audit branch references `changed_at_s` column
-  // (does not exist on config_audit_log). Both throw at the prepare step.
-  // When #00044 is fixed, update these tests to assert the happy paths
-  // instead of the throws.
-  it("audit branch currently throws -- pinned to #00044", async () => {
-    await expect(GET(evt("audit", adminUser))).rejects.toThrow();
-  });
-
-  it("config_audit branch currently throws -- pinned to #00044", async () => {
-    await expect(GET(evt("config_audit", adminUser))).rejects.toThrow();
-  });
 });

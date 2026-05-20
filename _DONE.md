@@ -4,6 +4,10 @@ One-line dated ledger. Detail in [`done/`](./done/). Pair of [`_BACKLOG.md`](./_
 
 Reverse chronological by completion date.
 
+## 2026-05-20
+
+- [x] [api/export: drop broken audit + config_audit branches](done/00044.md) `High` Both queries referenced nonexistent identifiers (`audit_results` table; `config_audit_log.changed_at_s` column) and threw 500 in production. No UI consumers found, so removed rather than guessing intent. Spawn feat todos if anyone wants the exports back.
+
 ## 2026-05-19
 
 - [x] [securityDiff tests](done/00017.md) `Medium` 8 tests covering computeSnapshotDiff + hasMeaningfulChanges + getDangerousChanges. auditRunner deferred (orchestration; mock-heavy).
