@@ -27,6 +27,7 @@ export interface MakeEventOptions {
   url?: string;
   method?: string;
   headers?: Record<string, string>;
+  params?: Record<string, string>;
 }
 
 /**
@@ -66,7 +67,7 @@ export function makeEvent(opts: MakeEventOptions = {}): RequestEvent {
     locals,
     request,
     url,
-    params: {},
+    params: opts.params ?? {},
     route: { id: null },
     cookies: makeStubCookies(),
     fetch: globalThis.fetch as RequestEvent["fetch"],
