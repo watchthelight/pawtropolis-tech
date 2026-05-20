@@ -8,16 +8,35 @@
  *      throwaway `:memory:` instance with the real schema loaded, so
  *      handlers behave the same against it as against prod.
  *
- * Usage:
- *   vi.mock("$lib/server/db", async () => {
- *     const { makeDb } = await import("../_helpers/db.js");
- *     const instance = makeDb();
- *     return { db: () => instance };
- *   });
+ * Per-test fresh-instance pattern (preferred):
  *
- * Each call returns a fresh, isolated instance. Tests that need
- * cross-test seeded state should call makeDb() inside their own
- * beforeEach + a closure-scoped mock factory.
+ *   import { vi } from "vitest";
+ *
+ *   const { dbRef } = vi.hoisted(() => ({
+ *     dbRef: { current: null as null | import("better-sqlite3").Database },
+ *   }));
+ *   vi.mock("$lib/server/db", () => ({ db: () => dbRef.current! }));
+ *
+ *   const { makeDb } = await import("../_helpers/db.js");
+ *
+ *   beforeEach(() => {
+ *     dbRef.current?.close();
+ *     dbRef.current = makeDb();
+ *   });
+ *   afterAll(() => dbRef.current?.close());
+ *
+ * The vi.hoisted ref is required because vi.mock is hoisted above all
+ * imports -- the factory captures the ref's identity once but reads
+ * dbRef.current lazily on every call to db().
+ *
+ * For tables that aren't in the dumped schema (channel_cache,
+ * config_audit_log -- these get added by later migrations and may not be
+ * present in tests/fixtures/schema.sql), use MISSING_DDL below:
+ *
+ *   beforeEach(() => {
+ *     dbRef.current = makeDb();
+ *     dbRef.current.exec(MISSING_DDL.channel_cache);
+ *   });
  */
 
 import Database from "better-sqlite3";
@@ -34,6 +53,44 @@ function loadSchema(): string {
   }
   return cachedSchema;
 }
+
+/**
+ * CREATE TABLE statements copied verbatim from migrations for tables that
+ * are missing from `tests/fixtures/schema.sql`. Apply via `db.exec(...)` in
+ * a test's beforeEach when the route under test needs them.
+ *
+ * Keep these in sync with the migration files if their DDL changes.
+ */
+export const MISSING_DDL = {
+  // migrations/053_api_enrichment_tables.ts
+  channel_cache: `
+    CREATE TABLE IF NOT EXISTS channel_cache (
+      guild_id TEXT NOT NULL,
+      channel_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      type INTEGER NOT NULL,
+      parent_id TEXT,
+      updated_at_s INTEGER NOT NULL,
+      PRIMARY KEY (guild_id, channel_id)
+    )
+  `,
+
+  // migrations/060_config_audit_log.ts
+  // Note: the production query in api/export references columns
+  // (changed_at_s) that this DDL does NOT define. See todo #00044.
+  config_audit_log: `
+    CREATE TABLE IF NOT EXISTS config_audit_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      guild_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      field_key TEXT NOT NULL,
+      old_value TEXT,
+      new_value TEXT,
+      source TEXT NOT NULL DEFAULT 'dashboard',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `,
+} as const;
 
 export function makeDb(): Database.Database {
   const db = new Database(":memory:");
