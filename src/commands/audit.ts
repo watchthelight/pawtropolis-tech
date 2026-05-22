@@ -11,7 +11,6 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import {
-  SlashCommandBuilder,
   type ChatInputCommandInteraction,
   type ButtonInteraction,
   EmbedBuilder,
@@ -26,7 +25,9 @@ import {
 import { logger } from "../lib/logger.js";
 import { postPermissionDenied } from "../lib/permissionCard.js";
 import { type CommandContext, withStep, withSql } from "../lib/cmdWrap.js";
-import { ROLE_IDS, shouldBypass } from "../lib/roles.js";
+import { shouldBypass } from "../lib/roles.js";
+import { ALLOWED_ROLES, generateNonce } from "./audit/shared.js";
+export { data } from "./audit/data.js";
 import {
   analyzeMember,
   renderProgressBar,
@@ -64,118 +65,6 @@ import {
   hasMeaningfulChanges,
 } from "../features/securityDiff.js";
 import { notifyDashboard } from "../web/notifyDashboard.js";
-
-// Allowed role IDs (Admin+ and Server Dev)
-// Uses centralized ROLE_IDS from roles.ts for consistency
-const ALLOWED_ROLES = [
-  ROLE_IDS.ADMINISTRATOR,
-  ROLE_IDS.SENIOR_ADMIN,
-  ROLE_IDS.COMMUNITY_MANAGER,
-  ROLE_IDS.SERVER_DEV,
-];
-
-// Nonce generation for button security
-// WHY: Without this, anyone could craft a button customId and trigger audits.
-// The nonce ties the button to the specific command invocation. Not cryptographically
-// secure (Math.random is PRNG), but good enough to prevent casual button spoofing.
-function generateNonce(): string {
-  return Math.random().toString(16).slice(2, 10);
-}
-
-export const data = new SlashCommandBuilder()
-  .setName("audit")
-  .setDescription("Server audit commands")
-  .setDMPermission(false)
-  .addSubcommand((sub) =>
-    sub.setName("members").setDescription("Scan for bot-like accounts")
-  )
-  .addSubcommand((sub) =>
-    sub
-      .setName("nsfw")
-      .setDescription("Scan member avatars for NSFW content")
-      .addStringOption((opt) =>
-        opt
-          .setName("scope")
-          .setDescription("Which members to scan")
-          .setRequired(true)
-          .addChoices(
-            { name: "All members", value: "all" },
-            { name: "Flagged members only", value: "flagged" }
-          )
-      )
-  )
-  .addSubcommand((sub) =>
-    sub.setName("security").setDescription("Generate server permission/security documentation")
-  )
-  .addSubcommand((sub) =>
-    sub
-      .setName("acknowledge")
-      .setDescription("Acknowledge a security warning as intentional")
-      .addStringOption((opt) =>
-        opt
-          .setName("issue")
-          .setDescription("Issue ID from the audit (e.g., CRIT-001 or LOW-008)")
-          .setRequired(true)
-      )
-      .addStringOption((opt) =>
-        opt
-          .setName("reason")
-          .setDescription("Why this is intentional/acceptable")
-          .setRequired(false)
-      )
-  )
-  .addSubcommand((sub) =>
-    sub
-      .setName("unacknowledge")
-      .setDescription("Remove acknowledgment from a security warning")
-      .addStringOption((opt) =>
-        opt
-          .setName("issue")
-          .setDescription("Issue ID to unacknowledge (e.g., CRIT-001 or LOW-008)")
-          .setRequired(true)
-      )
-  )
-  .addSubcommand((sub) =>
-    sub
-      .setName("trends")
-      .setDescription("Show security issue trends over time")
-      .addIntegerOption((opt) =>
-        opt
-          .setName("days")
-          .setDescription("Number of days to show (default: 7)")
-          .setRequired(false)
-          .setMinValue(1)
-          .setMaxValue(30)
-      )
-  )
-  .addSubcommand((sub) =>
-    sub
-      .setName("diff")
-      .setDescription("Show permission changes since last audit")
-  )
-  .addSubcommand((sub) =>
-    sub
-      .setName("acknowledge-all")
-      .setDescription("Acknowledge all security warnings of a given severity")
-      .addStringOption((opt) =>
-        opt
-          .setName("severity")
-          .setDescription("Which severity level to acknowledge")
-          .setRequired(true)
-          .addChoices(
-            { name: "High only", value: "high" },
-            { name: "Medium only", value: "medium" },
-            { name: "Low only", value: "low" },
-            { name: "All severities", value: "all" }
-          )
-      )
-      .addStringOption((opt) =>
-        opt
-          .setName("reason")
-          .setDescription("Why these are intentional/acceptable")
-          .setRequired(false)
-      )
-  );
 
 export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) {
   const { interaction } = ctx;
