@@ -1,0 +1,856 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - region
+    - generic [ref=e3]:
+      - link "Skip to content" [ref=e4] [cursor=pointer]:
+        - /url: "#start-of-content"
+      - banner [ref=e6]:
+        - heading "Navigation Menu" [level=2] [ref=e7]
+        - generic [ref=e8]:
+          - link "Homepage" [ref=e10] [cursor=pointer]:
+            - /url: /
+            - img [ref=e11]
+          - generic [ref=e13]:
+            - navigation "Global" [ref=e16]:
+              - list [ref=e17]:
+                - listitem [ref=e18]:
+                  - button "Platform" [ref=e20] [cursor=pointer]:
+                    - text: Platform
+                    - img [ref=e21]
+                - listitem [ref=e23]:
+                  - button "Solutions" [ref=e25] [cursor=pointer]:
+                    - text: Solutions
+                    - img [ref=e26]
+                - listitem [ref=e28]:
+                  - button "Resources" [ref=e30] [cursor=pointer]:
+                    - text: Resources
+                    - img [ref=e31]
+                - listitem [ref=e33]:
+                  - button "Open Source" [ref=e35] [cursor=pointer]:
+                    - text: Open Source
+                    - img [ref=e36]
+                - listitem [ref=e38]:
+                  - button "Enterprise" [ref=e40] [cursor=pointer]:
+                    - text: Enterprise
+                    - img [ref=e41]
+                - listitem [ref=e43]:
+                  - link "Pricing" [ref=e44] [cursor=pointer]:
+                    - /url: https://github.com/pricing
+                    - generic [ref=e45]: Pricing
+            - generic [ref=e46]:
+              - button "Search or jump to…" [ref=e49] [cursor=pointer]:
+                - img [ref=e51]
+              - link "Sign in" [ref=e54] [cursor=pointer]:
+                - /url: /login?return_to=https%3A%2F%2Fgithub.com%2Fwatchthelight%2Fpawtropolis-tech%2Fblob%2Fmain%2Fdocs%2Freference%2Fgithub-discord-badges.md
+              - link "Sign up" [ref=e55] [cursor=pointer]:
+                - /url: /signup?ref_cta=Sign+up&ref_loc=header+logged+out&ref_page=%2F%3Cuser-name%3E%2F%3Crepo-name%3E%2Fblob%2Fshow&source=header-repo&source_repo=watchthelight%2Fpawtropolis-tech
+              - button "Appearance settings" [ref=e58] [cursor=pointer]:
+                - img
+    - main [ref=e62]:
+      - generic [ref=e63]:
+        - generic [ref=e64]:
+          - generic [ref=e66]:
+            - img [ref=e67]
+            - link "watchthelight" [ref=e70] [cursor=pointer]:
+              - /url: /watchthelight
+            - generic [ref=e71]: /
+            - strong [ref=e72]:
+              - link "pawtropolis-tech" [ref=e73] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech
+            - generic [ref=e74]: Public
+          - generic [ref=e75]:
+            - list:
+              - listitem [ref=e76]:
+                - link "You must be signed in to change notification settings" [ref=e77] [cursor=pointer]:
+                  - /url: /login?return_to=%2Fwatchthelight%2Fpawtropolis-tech
+                  - img [ref=e78]
+                  - text: Notifications
+              - listitem [ref=e80]:
+                - link "Fork 1" [ref=e81] [cursor=pointer]:
+                  - /url: /login?return_to=%2Fwatchthelight%2Fpawtropolis-tech
+                  - img [ref=e82]
+                  - text: Fork
+                  - generic "1" [ref=e84]
+              - listitem [ref=e85]:
+                - link "You must be signed in to star a repository" [ref=e87] [cursor=pointer]:
+                  - /url: /login?return_to=%2Fwatchthelight%2Fpawtropolis-tech
+                  - img [ref=e88]
+                  - text: Star
+                  - generic "1 user starred this repository" [ref=e90]: "1"
+        - navigation "Repository" [ref=e91]:
+          - list [ref=e92]:
+            - listitem [ref=e93]:
+              - link "Code" [ref=e94] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech
+                - img [ref=e95]
+                - generic [ref=e97]: Code
+            - listitem [ref=e98]:
+              - link "Issues" [ref=e99] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/issues
+                - img [ref=e100]
+                - generic [ref=e103]: Issues
+            - listitem [ref=e104]:
+              - link "Pull requests" [ref=e105] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/pulls
+                - img [ref=e106]
+                - generic [ref=e108]: Pull requests
+            - listitem [ref=e109]:
+              - link "Discussions" [ref=e110] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/discussions
+                - img [ref=e111]
+                - generic [ref=e113]: Discussions
+            - listitem [ref=e114]:
+              - link "Actions" [ref=e115] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/actions
+                - img [ref=e116]
+                - generic [ref=e118]: Actions
+            - listitem [ref=e119]:
+              - link "Projects" [ref=e120] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/projects
+                - img [ref=e121]
+                - generic [ref=e123]: Projects
+            - listitem [ref=e124]:
+              - link "Security and quality" [ref=e125] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/security
+                - img [ref=e126]
+                - generic [ref=e128]: Security and quality
+            - listitem [ref=e129]:
+              - link "Insights" [ref=e130] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/pulse
+                - img [ref=e131]
+                - generic [ref=e133]: Insights
+      - generic [ref=e141]:
+        - generic [ref=e143]:
+          - generic [ref=e146]:
+            - generic [ref=e147]:
+              - generic [ref=e148]:
+                - heading "Collapse file tree" [level=2] [ref=e149]:
+                  - button "Collapse file tree" [expanded] [ref=e150] [cursor=pointer]:
+                    - img [ref=e151]
+                - heading "Files" [level=2] [ref=e154]
+              - generic [ref=e155]:
+                - button "main branch" [ref=e157] [cursor=pointer]:
+                  - generic [ref=e158]:
+                    - generic [ref=e160]:
+                      - img [ref=e162]
+                      - generic [ref=e165]: main
+                    - generic:
+                      - img
+                - button "Search this repository (forward slash)" [ref=e167] [cursor=pointer]:
+                  - img [ref=e168]
+            - generic [ref=e171]:
+              - img [ref=e173]
+              - combobox "Go to file" [ref=e175]
+            - navigation "File Tree Navigation" [ref=e181]:
+              - tree "Files" [ref=e183]:
+                - treeitem ".github" [level=1] [ref=e184]:
+                  - generic [ref=e185] [cursor=pointer]:
+                    - img [ref=e187]
+                    - generic [ref=e189]:
+                      - img [ref=e193]
+                      - generic [ref=e195]: .github
+                - treeitem "assets" [level=1] [ref=e196]:
+                  - generic [ref=e197] [cursor=pointer]:
+                    - img [ref=e199]
+                    - generic [ref=e201]:
+                      - img [ref=e205]
+                      - generic [ref=e207]: assets
+                - treeitem "audit" [level=1] [ref=e208]:
+                  - generic [ref=e209] [cursor=pointer]:
+                    - img [ref=e211]
+                    - generic [ref=e213]:
+                      - img [ref=e217]
+                      - generic [ref=e219]: audit
+                - treeitem "charts" [level=1] [ref=e220]:
+                  - generic [ref=e221] [cursor=pointer]:
+                    - img [ref=e223]
+                    - generic [ref=e225]:
+                      - img [ref=e229]
+                      - generic [ref=e231]: charts
+                - treeitem "docs-audit" [level=1] [ref=e232]:
+                  - generic [ref=e233] [cursor=pointer]:
+                    - img [ref=e235]
+                    - generic [ref=e237]:
+                      - img [ref=e241]
+                      - generic [ref=e243]: docs-audit
+                - treeitem "docs" [expanded] [level=1] [ref=e244]:
+                  - generic [ref=e245] [cursor=pointer]:
+                    - img [ref=e247]
+                    - generic [ref=e249]:
+                      - img [ref=e253]
+                      - generic [ref=e255]: docs
+                  - group "docs" [ref=e256]:
+                    - treeitem "_archive" [level=2] [ref=e257]:
+                      - generic [ref=e258] [cursor=pointer]:
+                        - img [ref=e263]
+                        - generic [ref=e265]:
+                          - img [ref=e269]
+                          - generic [ref=e271]: _archive
+                    - treeitem "architecture" [level=2] [ref=e272]:
+                      - generic [ref=e273] [cursor=pointer]:
+                        - img [ref=e278]
+                        - generic [ref=e280]:
+                          - img [ref=e284]
+                          - generic [ref=e286]: architecture
+                    - treeitem "audits" [level=2] [ref=e287]:
+                      - generic [ref=e288] [cursor=pointer]:
+                        - img [ref=e293]
+                        - generic [ref=e295]:
+                          - img [ref=e299]
+                          - generic [ref=e301]: audits
+                    - treeitem "badges" [level=2] [ref=e302]:
+                      - generic [ref=e303] [cursor=pointer]:
+                        - img [ref=e308]
+                        - generic [ref=e310]:
+                          - img [ref=e314]
+                          - generic [ref=e316]: badges
+                    - treeitem "how-to" [level=2] [ref=e317]:
+                      - generic [ref=e318] [cursor=pointer]:
+                        - img [ref=e323]
+                        - generic [ref=e325]:
+                          - img [ref=e329]
+                          - generic [ref=e331]: how-to
+                    - treeitem "internal-info" [level=2] [ref=e332]:
+                      - generic [ref=e333] [cursor=pointer]:
+                        - img [ref=e338]
+                        - generic [ref=e340]:
+                          - img [ref=e344]
+                          - generic [ref=e346]: internal-info
+                    - treeitem "operations" [level=2] [ref=e347]:
+                      - generic [ref=e348] [cursor=pointer]:
+                        - img [ref=e353]
+                        - generic [ref=e355]:
+                          - img [ref=e359]
+                          - generic [ref=e361]: operations
+                    - treeitem "overview" [level=2] [ref=e362]:
+                      - generic [ref=e363] [cursor=pointer]:
+                        - img [ref=e368]
+                        - generic [ref=e370]:
+                          - img [ref=e374]
+                          - generic [ref=e376]: overview
+                    - treeitem "reference" [expanded] [level=2] [ref=e377]:
+                      - generic [ref=e378] [cursor=pointer]:
+                        - img [ref=e383]
+                        - generic [ref=e385]:
+                          - img [ref=e389]
+                          - generic [ref=e391]: reference
+                      - group "reference" [ref=e392]:
+                        - treeitem "README.md" [level=3] [ref=e393]:
+                          - generic [ref=e399] [cursor=pointer]:
+                            - img [ref=e402]
+                            - generic [ref=e404]: README.md
+                        - treeitem "command-checklist.md" [level=3] [ref=e405]:
+                          - generic [ref=e411] [cursor=pointer]:
+                            - img [ref=e414]
+                            - generic [ref=e416]: command-checklist.md
+                        - treeitem "command-patterns.md" [level=3] [ref=e417]:
+                          - generic [ref=e423] [cursor=pointer]:
+                            - img [ref=e426]
+                            - generic [ref=e428]: command-patterns.md
+                        - treeitem "command-refactor-checklist.md" [level=3] [ref=e429]:
+                          - generic [ref=e435] [cursor=pointer]:
+                            - img [ref=e438]
+                            - generic [ref=e440]: command-refactor-checklist.md
+                        - treeitem "command-registration-invariants.md" [level=3] [ref=e441]:
+                          - generic [ref=e447] [cursor=pointer]:
+                            - img [ref=e450]
+                            - generic [ref=e452]: command-registration-invariants.md
+                        - treeitem "dashboard-api-security.md" [level=3] [ref=e453]:
+                          - generic [ref=e459] [cursor=pointer]:
+                            - img [ref=e462]
+                            - generic [ref=e464]: dashboard-api-security.md
+                        - treeitem "database-schema-safety.md" [level=3] [ref=e465]:
+                          - generic [ref=e471] [cursor=pointer]:
+                            - img [ref=e474]
+                            - generic [ref=e476]: database-schema-safety.md
+                        - treeitem "database-schema.md" [level=3] [ref=e477]:
+                          - generic [ref=e483] [cursor=pointer]:
+                            - img [ref=e486]
+                            - generic [ref=e488]: database-schema.md
+                        - treeitem "documentation-badge-style-guide.md" [level=3] [ref=e489]:
+                          - generic [ref=e495] [cursor=pointer]:
+                            - img [ref=e498]
+                            - generic [ref=e500]: documentation-badge-style-guide.md
+                        - treeitem "gate-review-flow.md" [level=3] [ref=e501]:
+                          - generic [ref=e507] [cursor=pointer]:
+                            - img [ref=e510]
+                            - generic [ref=e512]: gate-review-flow.md
+                        - treeitem "github-discord-badges.md" [level=3] [ref=e513]:
+                          - generic [ref=e519] [cursor=pointer]:
+                            - img [ref=e522]
+                            - generic [ref=e524]: github-discord-badges.md
+                        - treeitem "logging-and-modstats.md" [level=3] [ref=e525]:
+                          - generic [ref=e531] [cursor=pointer]:
+                            - img [ref=e534]
+                            - generic [ref=e536]: logging-and-modstats.md
+                        - treeitem "modmail-system.md" [level=3] [ref=e537]:
+                          - generic [ref=e543] [cursor=pointer]:
+                            - img [ref=e546]
+                            - generic [ref=e548]: modmail-system.md
+                        - treeitem "observability-and-error-cards.md" [level=3] [ref=e549]:
+                          - generic [ref=e555] [cursor=pointer]:
+                            - img [ref=e558]
+                            - generic [ref=e560]: observability-and-error-cards.md
+                        - treeitem "send-command.md" [level=3] [ref=e561]:
+                          - generic [ref=e567] [cursor=pointer]:
+                            - img [ref=e570]
+                            - generic [ref=e572]: send-command.md
+                        - treeitem "slash-commands.md" [level=3] [ref=e573]:
+                          - generic [ref=e579] [cursor=pointer]:
+                            - img [ref=e582]
+                            - generic [ref=e584]: slash-commands.md
+                    - treeitem "roadmap" [level=2] [ref=e585]:
+                      - generic [ref=e586] [cursor=pointer]:
+                        - img [ref=e591]
+                        - generic [ref=e593]:
+                          - img [ref=e597]
+                          - generic [ref=e599]: roadmap
+                    - treeitem "ADMIN-GUIDE.md" [level=2] [ref=e600]:
+                      - generic [ref=e605] [cursor=pointer]:
+                        - img [ref=e608]
+                        - generic [ref=e610]: ADMIN-GUIDE.md
+                    - treeitem "BOT-HANDBOOK.md" [level=2] [ref=e611]:
+                      - generic [ref=e616] [cursor=pointer]:
+                        - img [ref=e619]
+                        - generic [ref=e621]: BOT-HANDBOOK.md
+                    - treeitem "DEVNOTES.md" [level=2] [ref=e622]:
+                      - generic [ref=e627] [cursor=pointer]:
+                        - img [ref=e630]
+                        - generic [ref=e632]: DEVNOTES.md
+                    - treeitem "GATEKEEPER-GUIDE.md" [level=2] [ref=e633]:
+                      - generic [ref=e638] [cursor=pointer]:
+                        - img [ref=e641]
+                        - generic [ref=e643]: GATEKEEPER-GUIDE.md
+                    - treeitem "INCIDENTS.md" [level=2] [ref=e644]:
+                      - generic [ref=e649] [cursor=pointer]:
+                        - img [ref=e652]
+                        - generic [ref=e654]: INCIDENTS.md
+                    - treeitem "LEADERSHIP-GUIDE.md" [level=2] [ref=e655]:
+                      - generic [ref=e660] [cursor=pointer]:
+                        - img [ref=e663]
+                        - generic [ref=e665]: LEADERSHIP-GUIDE.md
+                    - treeitem "MEMBER-REWARDS.md" [level=2] [ref=e666]:
+                      - generic [ref=e671] [cursor=pointer]:
+                        - img [ref=e674]
+                        - generic [ref=e676]: MEMBER-REWARDS.md
+                    - treeitem "MOD-HANDBOOK.md" [level=2] [ref=e677]:
+                      - generic [ref=e682] [cursor=pointer]:
+                        - img [ref=e685]
+                        - generic [ref=e687]: MOD-HANDBOOK.md
+                    - treeitem "MOD-QUICKREF.md" [level=2] [ref=e688]:
+                      - generic [ref=e693] [cursor=pointer]:
+                        - img [ref=e696]
+                        - generic [ref=e698]: MOD-QUICKREF.md
+                    - treeitem "MODERATOR-GUIDE.md" [level=2] [ref=e699]:
+                      - generic [ref=e704] [cursor=pointer]:
+                        - img [ref=e707]
+                        - generic [ref=e709]: MODERATOR-GUIDE.md
+                    - treeitem "PERMS-MATRIX.md" [level=2] [ref=e710]:
+                      - generic [ref=e715] [cursor=pointer]:
+                        - img [ref=e718]
+                        - generic [ref=e720]: PERMS-MATRIX.md
+                    - treeitem "README.md" [level=2] [ref=e721]:
+                      - generic [ref=e726] [cursor=pointer]:
+                        - img [ref=e729]
+                        - generic [ref=e731]: README.md
+                    - treeitem "SLASH-COMMANDS.md" [level=2] [ref=e732]:
+                      - generic [ref=e737] [cursor=pointer]:
+                        - img [ref=e740]
+                        - generic [ref=e742]: SLASH-COMMANDS.md
+                    - treeitem "TICKET-SYSTEM-CUTOVER.md" [level=2] [ref=e743]:
+                      - generic [ref=e748] [cursor=pointer]:
+                        - img [ref=e751]
+                        - generic [ref=e753]: TICKET-SYSTEM-CUTOVER.md
+                    - treeitem "api-contracts.md" [level=2] [ref=e754]:
+                      - generic [ref=e759] [cursor=pointer]:
+                        - img [ref=e762]
+                        - generic [ref=e764]: api-contracts.md
+                    - treeitem "architecture.md" [level=2] [ref=e765]:
+                      - generic [ref=e770] [cursor=pointer]:
+                        - img [ref=e773]
+                        - generic [ref=e775]: architecture.md
+                    - treeitem "audit-security-flow.md" [level=2] [ref=e776]:
+                      - generic [ref=e781] [cursor=pointer]:
+                        - img [ref=e784]
+                        - generic [ref=e786]: audit-security-flow.md
+                    - treeitem "data-models.md" [level=2] [ref=e787]:
+                      - generic [ref=e792] [cursor=pointer]:
+                        - img [ref=e795]
+                        - generic [ref=e797]: data-models.md
+                    - treeitem "development-guide.md" [level=2] [ref=e798]:
+                      - generic [ref=e803] [cursor=pointer]:
+                        - img [ref=e806]
+                        - generic [ref=e808]: development-guide.md
+                    - treeitem "index.md" [level=2] [ref=e809]:
+                      - generic [ref=e814] [cursor=pointer]:
+                        - img [ref=e817]
+                        - generic [ref=e819]: index.md
+                    - treeitem "project-overview.md" [level=2] [ref=e820]:
+                      - generic [ref=e825] [cursor=pointer]:
+                        - img [ref=e828]
+                        - generic [ref=e830]: project-overview.md
+                    - treeitem "project-scan-report.json" [level=2] [ref=e831]:
+                      - generic [ref=e836] [cursor=pointer]:
+                        - img [ref=e839]
+                        - generic [ref=e841]: project-scan-report.json
+                    - treeitem "source-tree-analysis.md" [level=2] [ref=e842]:
+                      - generic [ref=e847] [cursor=pointer]:
+                        - img [ref=e850]
+                        - generic [ref=e852]: source-tree-analysis.md
+                - treeitem "migrations" [level=1] [ref=e853]:
+                  - generic [ref=e854] [cursor=pointer]:
+                    - img [ref=e856]
+                    - generic [ref=e858]:
+                      - img [ref=e862]
+                      - generic [ref=e864]: migrations
+                - treeitem "models" [level=1] [ref=e865]:
+                  - generic [ref=e866] [cursor=pointer]:
+                    - img [ref=e868]
+                    - generic [ref=e870]:
+                      - img [ref=e874]
+                      - generic [ref=e876]: models
+                - treeitem "nginx" [level=1] [ref=e877]:
+                  - generic [ref=e878] [cursor=pointer]:
+                    - img [ref=e880]
+                    - generic [ref=e882]:
+                      - img [ref=e886]
+                      - generic [ref=e888]: nginx
+                - treeitem "scripts" [level=1] [ref=e889]:
+                  - generic [ref=e890] [cursor=pointer]:
+                    - img [ref=e892]
+                    - generic [ref=e894]:
+                      - img [ref=e898]
+                      - generic [ref=e900]: scripts
+                - treeitem "src" [level=1] [ref=e901]:
+                  - generic [ref=e902] [cursor=pointer]:
+                    - img [ref=e904]
+                    - generic [ref=e906]:
+                      - img [ref=e910]
+                      - generic [ref=e912]: src
+                - treeitem "tests" [level=1] [ref=e913]:
+                  - generic [ref=e914] [cursor=pointer]:
+                    - img [ref=e916]
+                    - generic [ref=e918]:
+                      - img [ref=e922]
+                      - generic [ref=e924]: tests
+                - treeitem "web" [level=1] [ref=e925]:
+                  - generic [ref=e926] [cursor=pointer]:
+                    - img [ref=e928]
+                    - generic [ref=e930]:
+                      - img [ref=e934]
+                      - generic [ref=e936]: web
+                - treeitem "workers" [level=1] [ref=e937]:
+                  - generic [ref=e938] [cursor=pointer]:
+                    - img [ref=e940]
+                    - generic [ref=e942]:
+                      - img [ref=e946]
+                      - generic [ref=e948]: workers
+                - treeitem ".editorconfig" [level=1] [ref=e949]:
+                  - generic [ref=e951] [cursor=pointer]:
+                    - img [ref=e954]
+                    - generic [ref=e956]: .editorconfig
+                - treeitem ".env.example" [level=1] [ref=e957]:
+                  - generic [ref=e959] [cursor=pointer]:
+                    - img [ref=e962]
+                    - generic [ref=e964]: .env.example
+                - treeitem ".gitattributes" [level=1] [ref=e965]:
+                  - generic [ref=e967] [cursor=pointer]:
+                    - img [ref=e970]
+                    - generic [ref=e972]: .gitattributes
+                - treeitem ".gitignore" [level=1] [ref=e973]:
+                  - generic [ref=e975] [cursor=pointer]:
+                    - img [ref=e978]
+                    - generic [ref=e980]: .gitignore
+                - treeitem ".prettierignore" [level=1] [ref=e981]:
+                  - generic [ref=e983] [cursor=pointer]:
+                    - img [ref=e986]
+                    - generic [ref=e988]: .prettierignore
+                - treeitem ".prettierrc" [level=1] [ref=e989]:
+                  - generic [ref=e991] [cursor=pointer]:
+                    - img [ref=e994]
+                    - generic [ref=e996]: .prettierrc
+                - treeitem "CHANGELOG.md" [level=1] [ref=e997]:
+                  - generic [ref=e999] [cursor=pointer]:
+                    - img [ref=e1002]
+                    - generic [ref=e1004]: CHANGELOG.md
+                - treeitem "LICENSE" [level=1] [ref=e1005]:
+                  - generic [ref=e1007] [cursor=pointer]:
+                    - img [ref=e1010]
+                    - generic [ref=e1012]: LICENSE
+                - treeitem "README.md" [level=1] [ref=e1013]:
+                  - generic [ref=e1015] [cursor=pointer]:
+                    - img [ref=e1018]
+                    - generic [ref=e1020]: README.md
+                - treeitem "TODO.md" [level=1] [ref=e1021]:
+                  - generic [ref=e1023] [cursor=pointer]:
+                    - img [ref=e1026]
+                    - generic [ref=e1028]: TODO.md
+                - treeitem "deploy-no-tests.sh" [level=1] [ref=e1029]:
+                  - generic [ref=e1031] [cursor=pointer]:
+                    - img [ref=e1034]
+                    - generic [ref=e1036]: deploy-no-tests.sh
+                - treeitem "deploy.sh" [level=1] [ref=e1037]:
+                  - generic [ref=e1039] [cursor=pointer]:
+                    - img [ref=e1042]
+                    - generic [ref=e1044]: deploy.sh
+                - treeitem "ecosystem.config.cjs" [level=1] [ref=e1045]:
+                  - generic [ref=e1047] [cursor=pointer]:
+                    - img [ref=e1050]
+                    - generic [ref=e1052]: ecosystem.config.cjs
+                - treeitem "effort-over-time.png" [level=1] [ref=e1053]:
+                  - generic [ref=e1055] [cursor=pointer]:
+                    - img [ref=e1058]
+                    - generic [ref=e1060]: effort-over-time.png
+                - treeitem "eslint.config.js" [level=1] [ref=e1061]:
+                  - generic [ref=e1063] [cursor=pointer]:
+                    - img [ref=e1066]
+                    - generic [ref=e1068]: eslint.config.js
+                - treeitem "package-lock.json" [level=1] [ref=e1069]:
+                  - generic [ref=e1071] [cursor=pointer]:
+                    - img [ref=e1074]
+                    - generic [ref=e1076]: package-lock.json
+                - treeitem "package.json" [level=1] [ref=e1077]:
+                  - generic [ref=e1079] [cursor=pointer]:
+                    - img [ref=e1082]
+                    - generic [ref=e1084]: package.json
+                - treeitem "tsconfig.json" [level=1] [ref=e1085]:
+                  - generic [ref=e1087] [cursor=pointer]:
+                    - img [ref=e1090]
+                    - generic [ref=e1092]: tsconfig.json
+                - treeitem "tsup.config.ts" [level=1] [ref=e1093]:
+                  - generic [ref=e1095] [cursor=pointer]:
+                    - img [ref=e1098]
+                    - generic [ref=e1100]: tsup.config.ts
+                - treeitem "vitest.config.ts" [level=1] [ref=e1101]:
+                  - generic [ref=e1103] [cursor=pointer]:
+                    - img [ref=e1106]
+                    - generic [ref=e1108]: vitest.config.ts
+          - slider "Draggable pane splitter" [ref=e1110]
+        - generic [ref=e1113]:
+          - generic [ref=e1117]:
+            - generic [ref=e1119]:
+              - navigation "Breadcrumbs" [ref=e1120]:
+                - heading "Breadcrumbs" [level=2] [ref=e1121]
+                - list [ref=e1122]:
+                  - listitem [ref=e1123]:
+                    - link "pawtropolis-tech" [ref=e1124] [cursor=pointer]:
+                      - /url: /watchthelight/pawtropolis-tech/tree/main
+                  - listitem [ref=e1125]:
+                    - text: /
+                    - link "docs" [ref=e1126] [cursor=pointer]:
+                      - /url: /watchthelight/pawtropolis-tech/tree/main/docs
+                  - listitem [ref=e1127]:
+                    - text: /
+                    - link "reference" [ref=e1128] [cursor=pointer]:
+                      - /url: /watchthelight/pawtropolis-tech/tree/main/docs/reference
+              - generic [ref=e1129]:
+                - text: /
+                - heading "github-discord-badges.md" [level=1] [ref=e1130]
+              - button "Copy path" [ref=e1131] [cursor=pointer]:
+                - img [ref=e1132]
+            - button "More file actions" [ref=e1138] [cursor=pointer]:
+              - img [ref=e1139]
+          - generic [ref=e1141]:
+            - generic [ref=e1143]:
+              - heading "Latest commit" [level=2] [ref=e1144]
+              - generic [ref=e1145]:
+                - generic [ref=e1147]:
+                  - link "watchthelight" [ref=e1148] [cursor=pointer]:
+                    - /url: /watchthelight
+                    - img "watchthelight" [ref=e1149]
+                  - link "commits by watchthelight" [ref=e1150] [cursor=pointer]:
+                    - /url: /watchthelight/pawtropolis-tech/commits?author=watchthelight
+                    - text: watchthelight
+                - generic [ref=e1151]:
+                  - 'link "docs(badges): demonstrate Holographic gradient + animation in referen…" [ref=e1154] [cursor=pointer]':
+                    - /url: /watchthelight/pawtropolis-tech/commit/d52c28f388ce9bcfb760ec1e03560e574bd45166
+                  - button "Open commit details" [ref=e1155] [cursor=pointer]:
+                    - img [ref=e1156]
+                  - button "failure" [ref=e1158] [cursor=pointer]:
+                    - img [ref=e1159]
+              - generic [ref=e1161]:
+                - generic [ref=e1163]:
+                  - link "Commit d52c28f" [ref=e1164] [cursor=pointer]:
+                    - /url: /watchthelight/pawtropolis-tech/commit/d52c28f388ce9bcfb760ec1e03560e574bd45166
+                    - text: d52c28f
+                  - text: ·
+                  - generic "May 2, 2026, 10:42 AM CDT" [ref=e1165]: May 2, 20263 minutes ago
+                - generic [ref=e1166]:
+                  - heading "History" [level=2] [ref=e1167]
+                  - link "History" [ref=e1168] [cursor=pointer]:
+                    - /url: /watchthelight/pawtropolis-tech/commits/main/docs/reference/github-discord-badges.md
+                    - generic [ref=e1169]:
+                      - generic:
+                        - img
+                      - generic [ref=e1170]: History
+            - generic [ref=e1172]:
+              - generic [ref=e1174]:
+                - heading "File metadata and controls" [level=2] [ref=e1175]
+                - list "File view" [ref=e1177]:
+                  - listitem [ref=e1178]:
+                    - button "Preview" [ref=e1179] [cursor=pointer]:
+                      - generic [ref=e1181]: Preview
+                  - listitem [ref=e1182]:
+                    - button "Code" [ref=e1183] [cursor=pointer]:
+                      - generic [ref=e1185]: Code
+                  - listitem [ref=e1186]:
+                    - button "Blame" [ref=e1187] [cursor=pointer]:
+                      - generic [ref=e1189]: Blame
+                - generic [ref=e1190]:
+                  - generic [ref=e1191]:
+                    - generic [ref=e1192]:
+                      - link "Raw" [ref=e1194] [cursor=pointer]:
+                        - /url: https://github.com/watchthelight/pawtropolis-tech/raw/refs/heads/main/docs/reference/github-discord-badges.md
+                        - generic [ref=e1196]: Raw
+                      - button "Copy raw file" [ref=e1198] [cursor=pointer]:
+                        - img [ref=e1199]
+                      - button "Download raw file" [ref=e1203] [cursor=pointer]:
+                        - img [ref=e1204]
+                    - generic [ref=e1207]:
+                      - button "You must be signed in to make or propose changes" [disabled] [ref=e1209]:
+                        - img [ref=e1210]
+                      - button "More edit options" [ref=e1213] [cursor=pointer]:
+                        - img [ref=e1214]
+                  - button "Outline" [ref=e1216] [cursor=pointer]:
+                    - img [ref=e1217]
+              - region "github-discord-badges.md" [ref=e1220]:
+                - article [ref=e1222]:
+                  - generic [ref=e1223]:
+                    - heading "GitHub Discord Badges" [level=1] [ref=e1224]
+                    - 'link "Permalink: GitHub Discord Badges" [ref=e1225] [cursor=pointer]':
+                      - /url: "#github-discord-badges"
+                      - img [ref=e1226]
+                  - paragraph [ref=e1228]: Pawtropolis Tech renders Discord roles, channels, and users as GitHub-compatible Markdown badges. They look like Discord mention pills, use the real role color, and refresh daily from the live server.
+                  - generic [ref=e1229]:
+                    - heading "Why we need them" [level=2] [ref=e1230]
+                    - 'link "Permalink: Why we need them" [ref=e1231] [cursor=pointer]':
+                      - /url: "#why-we-need-them"
+                      - img [ref=e1232]
+                  - paragraph [ref=e1234]:
+                    - text: GitHub Markdown does not understand Discord mention syntax. Strings like
+                    - code [ref=e1235]: <@&1388676461657063505>
+                    - text: ","
+                    - code [ref=e1236]: <#1446602187655610461>
+                    - text: ", and"
+                    - code [ref=e1237]: <@123>
+                    - text: show up as raw text. Worse, they leak Discord IDs and hide the actual name. The badge system replaces them with
+                    - code [ref=e1238]: "![alt](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/<id>.svg)"
+                    - text: .
+                  - generic [ref=e1239]:
+                    - heading "How it works" [level=2] [ref=e1240]
+                    - 'link "Permalink: How it works" [ref=e1241] [cursor=pointer]':
+                      - /url: "#how-it-works"
+                      - img [ref=e1242]
+                  - generic [ref=e1244]:
+                    - code [ref=e1246]: "Live server snapshot (docs/internal-info/ROLES.md, CHANNELS.md) -> scripts/generate-badges.ts --from-snapshot -> features/badges/snapshotResolve.ts (resolve names + colors offline) -> features/badges/renderSvg.ts (render pill SVG) -> docs/badges/svg/<id>.svg (committed to repo) -> GitHub Markdown (![alt](raw URL)) In parallel, the running bot: -> features/badges/resolve.ts (live Discord lookup) -> features/badges/liveUpdates.ts (event-driven refresh) -> data/badges/generated/<id>.svg (runtime cache) -> web/badgeEndpoint.ts (serves status.pawtropolis.tech)"
+                    - button "Copy" [ref=e1248] [cursor=pointer]:
+                      - img [ref=e1249]
+                  - paragraph [ref=e1252]: "Two URLs serve the same content:"
+                  - list [ref=e1253]:
+                    - listitem [ref=e1254]:
+                      - strong [ref=e1255]: "Canonical for docs (recommended):"
+                      - code [ref=e1256]: https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/<id>.svg
+                      - text: Renders on GitHub immediately when committed; no infra required.
+                    - listitem [ref=e1257]:
+                      - strong [ref=e1258]: "Live fallback for non-GitHub consumers:"
+                      - code [ref=e1259]: https://status.pawtropolis.tech/badges/<id>.svg
+                      - text: Served by the bot's HTTP endpoint; reflects the bot's runtime cache.
+                  - generic [ref=e1260]:
+                    - heading "Embedding a badge" [level=2] [ref=e1261]
+                    - 'link "Permalink: Embedding a badge" [ref=e1262] [cursor=pointer]':
+                      - /url: "#embedding-a-badge"
+                      - img [ref=e1263]
+                  - paragraph [ref=e1265]: "Use the registry id as the file name:"
+                  - generic [ref=e1266]:
+                    - generic [ref=e1267]:
+                      - text: "!["
+                      - generic [ref=e1268]: "@Red"
+                      - text: Carpet Guest - 1+ movies](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/movie-tier-1.svg)
+                    - button "Copy" [ref=e1270] [cursor=pointer]:
+                      - img [ref=e1271]
+                  - paragraph [ref=e1274]: "Examples:"
+                  - list [ref=e1275]:
+                    - listitem [ref=e1276]:
+                      - link "@Red Carpet Guest - 1+ movies" [ref=e1277] [cursor=pointer]:
+                        - /url: https://camo.githubusercontent.com/3eaebc3df252db5761f4fc50e2d340c2d9f363105cb1c5eb5bab61fe6a5cdee7/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f6d6f7669652d746965722d312e737667
+                        - img "@Red Carpet Guest - 1+ movies" [ref=e1278]
+                    - listitem [ref=e1279]:
+                      - link "@Popcorn Club - 5+ movies" [ref=e1280] [cursor=pointer]:
+                        - /url: https://camo.githubusercontent.com/b4b454753c237a4a3857f0e8339e33661b13609460d60d13e45c0cfc1cfc31de/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f6d6f7669652d746965722d322e737667
+                        - img "@Popcorn Club - 5+ movies" [ref=e1281]
+                    - listitem [ref=e1282]:
+                      - link "@Director's Cut - 10+ movies" [ref=e1283] [cursor=pointer]:
+                        - /url: https://camo.githubusercontent.com/78efb9fd064a9d01e0fbbc9e797bb0d747edad7f039c512bc8490f68d8b60214/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f6d6f7669652d746965722d332e737667
+                        - img "@Director's Cut - 10+ movies" [ref=e1284]
+                    - listitem [ref=e1285]:
+                      - link "@Cinematic Royalty - 20+ movies" [ref=e1286] [cursor=pointer]:
+                        - /url: https://camo.githubusercontent.com/37e5a295a9ab7c4435b995fdb7f5f2f580975f8c02971ecb3b3ff32682e69180/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f6d6f7669652d746965722d342e737667
+                        - img "@Cinematic Royalty - 20+ movies" [ref=e1287]
+                    - listitem [ref=e1288]:
+                      - link "@Server Artist" [ref=e1289] [cursor=pointer]:
+                        - /url: https://camo.githubusercontent.com/6ddc663941462ae0550b012d8fc216ac988fcd4efb7333dba48e1ce6ccd3d6b9/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d7365727665722d6172746973742e737667
+                        - img "@Server Artist" [ref=e1290]
+                    - listitem [ref=e1291]:
+                      - link "#「✍️」writing" [ref=e1292] [cursor=pointer]:
+                        - /url: https://camo.githubusercontent.com/bafa296c67acd69a9449ca6724256e83f01e549851972802d124f5ab6bd115b6/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f6368616e6e656c2d77726974696e672e737667
+                        - img "#「✍️」writing" [ref=e1293]
+                    - listitem [ref=e1294]:
+                      - link "@Holographic" [ref=e1295] [cursor=pointer]:
+                        - /url: https://camo.githubusercontent.com/b9c2345d295092906e03dbc9f824ac2591becfd4d35297981ed2fdb24de18aa6/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d686f6c6f677261706869632e737667
+                        - img "@Holographic" [ref=e1296]
+                      - text: (animated gradient shimmer)
+                  - generic [ref=e1297]:
+                    - heading "Gradient + holographic roles" [level=2] [ref=e1298]
+                    - 'link "Permalink: Gradient + holographic roles" [ref=e1299] [cursor=pointer]':
+                      - /url: "#gradient--holographic-roles"
+                      - img [ref=e1300]
+                  - paragraph [ref=e1302]: "Discord 2024 added two/three-stop gradient roles (Nitro feature) and the \"Holographic\" role effect. The renderer supports both:"
+                  - list [ref=e1303]:
+                    - listitem [ref=e1304]:
+                      - strong [ref=e1305]: Gradient roles
+                      - text: ":"
+                      - code [ref=e1306]: "BadgeDefinition.gradient = { primary, secondary, tertiary? }"
+                      - text: . The pill background and text use a
+                      - code [ref=e1307]: <linearGradient>
+                      - text: with the role's configured stops. Live refresh reads
+                      - code [ref=e1308]: "role.colors.{primary,secondary,tertiary}"
+                      - text: from discord.js when the API exposes them.
+                    - listitem [ref=e1309]:
+                      - strong [ref=e1310]: Holographic shimmer
+                      - text: ": set"
+                      - code [ref=e1311]: "holographic: true"
+                      - text: on the definition. The SVG embeds SMIL
+                      - code [ref=e1312]: <animate>
+                      - text: elements that pan the gradient endpoints, producing a continuous iridescent shimmer. No scripts; safe under GitHub's image proxy.
+                  - generic [ref=e1313]:
+                    - heading "URL scheme" [level=2] [ref=e1314]
+                    - 'link "Permalink: URL scheme" [ref=e1315] [cursor=pointer]':
+                      - /url: "#url-scheme"
+                      - img [ref=e1316]
+                  - table [ref=e1319]:
+                    - rowgroup [ref=e1320]:
+                      - row "Route Purpose Notes" [ref=e1321]:
+                        - columnheader "Route" [ref=e1322]
+                        - columnheader "Purpose" [ref=e1323]
+                        - columnheader "Notes" [ref=e1324]
+                    - rowgroup [ref=e1325]:
+                      - row "GET /badges/<id>.svg Registry-driven badge Public, cacheable" [ref=e1326]:
+                        - cell "GET /badges/<id>.svg" [ref=e1327]:
+                          - code [ref=e1328]: GET /badges/<id>.svg
+                        - cell "Registry-driven badge" [ref=e1329]
+                        - cell "Public, cacheable" [ref=e1330]
+                      - row "GET /api/badges/manifest.json All known badges Public JSON" [ref=e1331]:
+                        - cell "GET /api/badges/manifest.json" [ref=e1332]:
+                          - code [ref=e1333]: GET /api/badges/manifest.json
+                        - cell "All known badges" [ref=e1334]
+                        - cell "Public JSON" [ref=e1335]
+                      - row "GET /api/badges/health Liveness check Public JSON" [ref=e1336]:
+                        - cell "GET /api/badges/health" [ref=e1337]:
+                          - code [ref=e1338]: GET /api/badges/health
+                        - cell "Liveness check" [ref=e1339]
+                        - cell "Public JSON" [ref=e1340]
+                      - row "GET /badges/roles/<roleId>.svg Direct role lookup Off by default" [ref=e1341]:
+                        - cell "GET /badges/roles/<roleId>.svg" [ref=e1342]:
+                          - code [ref=e1343]: GET /badges/roles/<roleId>.svg
+                        - cell "Direct role lookup" [ref=e1344]
+                        - cell "Off by default" [ref=e1345]
+                      - row "GET /badges/channels/<channelId>.svg Direct channel lookup Off by default" [ref=e1346]:
+                        - cell "GET /badges/channels/<channelId>.svg" [ref=e1347]:
+                          - code [ref=e1348]: GET /badges/channels/<channelId>.svg
+                        - cell "Direct channel lookup" [ref=e1349]
+                        - cell "Off by default" [ref=e1350]
+                      - row "GET /badges/users/<userId>.svg Direct user lookup Off by default" [ref=e1351]:
+                        - cell "GET /badges/users/<userId>.svg" [ref=e1352]:
+                          - code [ref=e1353]: GET /badges/users/<userId>.svg
+                        - cell "Direct user lookup" [ref=e1354]
+                        - cell "Off by default" [ref=e1355]
+                  - paragraph [ref=e1356]:
+                    - text: Direct ID routes are off unless
+                    - code [ref=e1357]: BADGE_ALLOW_DIRECT_DISCORD_ID_ROUTES=true
+                    - text: so the public cannot enumerate guild roles by guessing IDs.
+                  - generic [ref=e1358]:
+                    - heading "Refresh cadence" [level=2] [ref=e1359]
+                    - 'link "Permalink: Refresh cadence" [ref=e1360] [cursor=pointer]':
+                      - /url: "#refresh-cadence"
+                      - img [ref=e1361]
+                  - paragraph [ref=e1363]:
+                    - text: The badge refresh scheduler runs every
+                    - code [ref=e1364]: BADGE_REFRESH_INTERVAL_HOURS
+                    - text: (default 24). On boot, an initial refresh is delayed 60 seconds so we do not block startup. If a Discord fetch fails, the prior cached value is kept and the badge is marked
+                    - code [ref=e1365]: stale
+                    - text: ; the SVG renders in muted gray instead of the role color.
+                  - generic [ref=e1366]:
+                    - heading "Adding a new badge" [level=2] [ref=e1367]
+                    - 'link "Permalink: Adding a new badge" [ref=e1368] [cursor=pointer]':
+                      - /url: "#adding-a-new-badge"
+                      - img [ref=e1369]
+                  - list [ref=e1371]:
+                    - listitem [ref=e1372]:
+                      - text: Open
+                      - code [ref=e1373]: src/features/badges/registry.ts
+                      - text: .
+                    - listitem [ref=e1374]:
+                      - text: Add a
+                      - code [ref=e1375]: BadgeDefinition
+                      - text: to the relevant block (movie tier, channel, etc.).
+                    - listitem [ref=e1376]:
+                      - text: Pick a stable kebab-style id (matches
+                      - code [ref=e1377]: "^[a-z0-9][a-z0-9_-]{0,63}$"
+                      - text: ).
+                    - listitem [ref=e1378]:
+                      - text: Run
+                      - code [ref=e1379]: npx tsx scripts/generate-badges.ts --list
+                      - text: to confirm it shows up.
+                    - listitem [ref=e1380]:
+                      - text: Reference the badge in docs as
+                      - code [ref=e1381]: "![alt](https://cdn.jsdelivr.net/gh/watchthelight/pawtropolis-tech@main/docs/badges/svg/<id>.svg)"
+                      - text: .
+                  - generic [ref=e1382]:
+                    - heading "Regenerating badges manually" [level=2] [ref=e1383]
+                    - 'link "Permalink: Regenerating badges manually" [ref=e1384] [cursor=pointer]':
+                      - /url: "#regenerating-badges-manually"
+                      - img [ref=e1385]
+                  - paragraph [ref=e1387]: "Daily refresh is automatic (bot scheduler, GitHub Actions). To force a refresh from a workstation:"
+                  - generic [ref=e1388]:
+                    - generic [ref=e1389]:
+                      - generic [ref=e1390]: "# offline; reads docs/internal-info/ROLES.md + CHANNELS.md, no Discord login"
+                      - text: npx tsx scripts/generate-badges.ts --from-snapshot
+                      - generic [ref=e1391]: "# live; requires DISCORD_TOKEN + GUILD_ID, refreshes runtime cache"
+                      - text: npx tsx scripts/generate-badges.ts
+                      - generic [ref=e1392]: "# inspection-only"
+                      - text: npx tsx scripts/generate-badges.ts --list npx tsx scripts/generate-badges.ts --id movie-tier-1
+                    - button "Copy" [ref=e1394] [cursor=pointer]:
+                      - img [ref=e1395]
+                  - paragraph [ref=e1398]:
+                    - text: After
+                    - code [ref=e1399]: "--from-snapshot"
+                    - text: ", commit"
+                    - code [ref=e1400]: docs/badges/svg/*.svg
+                    - text: and push; jsdelivr picks up the change within minutes.
+                  - generic [ref=e1401]:
+                    - heading "Troubleshooting" [level=2] [ref=e1402]
+                    - 'link "Permalink: Troubleshooting" [ref=e1403] [cursor=pointer]':
+                      - /url: "#troubleshooting"
+                      - img [ref=e1404]
+                  - list [ref=e1406]:
+                    - listitem [ref=e1407]:
+                      - strong [ref=e1408]: Badge shows in muted gray
+                      - text: ": marked stale; the last Discord fetch failed. Check bot logs for"
+                      - code [ref=e1409]: badge_resolve_fallback
+                      - text: .
+                    - listitem [ref=e1410]:
+                      - strong [ref=e1411]: Wrong name or color
+                      - text: ": the role was renamed or recolored. Wait for the next daily refresh, or run"
+                      - code [ref=e1412]: scripts/generate-badges.ts
+                      - text: .
+                    - listitem [ref=e1413]:
+                      - strong [ref=e1414]: Image not loading on GitHub
+                      - text: ": GitHub proxies images through Camo and caches aggressively. Force a refresh by appending a query string in your Markdown ("
+                      - code [ref=e1415]: "?v=2"
+                      - text: ).
+                    - listitem [ref=e1416]:
+                      - strong [ref=e1417]: 404 on a direct ID route
+                      - text: ": the gate is off by default. Enable with"
+                      - code [ref=e1418]: BADGE_ALLOW_DIRECT_DISCORD_ID_ROUTES=true
+                      - text: only if you know what you are exposing.
+  - alert [ref=e1422]

@@ -1,0 +1,1674 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - region
+    - generic [ref=e3]:
+      - link "Skip to content" [ref=e4] [cursor=pointer]:
+        - /url: "#start-of-content"
+      - banner [ref=e6]:
+        - heading "Navigation Menu" [level=2] [ref=e7]
+        - generic [ref=e8]:
+          - link "Homepage" [ref=e10] [cursor=pointer]:
+            - /url: /
+            - img [ref=e11]
+          - generic [ref=e13]:
+            - navigation "Global" [ref=e16]:
+              - list [ref=e17]:
+                - listitem [ref=e18]:
+                  - button "Platform" [ref=e20] [cursor=pointer]:
+                    - text: Platform
+                    - img [ref=e21]
+                - listitem [ref=e23]:
+                  - button "Solutions" [ref=e25] [cursor=pointer]:
+                    - text: Solutions
+                    - img [ref=e26]
+                - listitem [ref=e28]:
+                  - button "Resources" [ref=e30] [cursor=pointer]:
+                    - text: Resources
+                    - img [ref=e31]
+                - listitem [ref=e33]:
+                  - button "Open Source" [ref=e35] [cursor=pointer]:
+                    - text: Open Source
+                    - img [ref=e36]
+                - listitem [ref=e38]:
+                  - button "Enterprise" [ref=e40] [cursor=pointer]:
+                    - text: Enterprise
+                    - img [ref=e41]
+                - listitem [ref=e43]:
+                  - link "Pricing" [ref=e44] [cursor=pointer]:
+                    - /url: https://github.com/pricing
+                    - generic [ref=e45]: Pricing
+            - generic [ref=e46]:
+              - button "Search or jump to…" [ref=e49] [cursor=pointer]:
+                - img [ref=e51]
+              - link "Sign in" [ref=e54] [cursor=pointer]:
+                - /url: /login?return_to=https%3A%2F%2Fgithub.com%2Fwatchthelight%2Fpawtropolis-tech%2Fblob%2Fmain%2Fdocs%2FPERMS-MATRIX.md
+              - link "Sign up" [ref=e55] [cursor=pointer]:
+                - /url: /signup?ref_cta=Sign+up&ref_loc=header+logged+out&ref_page=%2F%3Cuser-name%3E%2F%3Crepo-name%3E%2Fblob%2Fshow&source=header-repo&source_repo=watchthelight%2Fpawtropolis-tech
+              - button "Appearance settings" [ref=e58] [cursor=pointer]:
+                - img
+    - main [ref=e62]:
+      - generic [ref=e63]:
+        - generic [ref=e64]:
+          - generic [ref=e66]:
+            - img [ref=e67]
+            - link "watchthelight" [ref=e70] [cursor=pointer]:
+              - /url: /watchthelight
+            - generic [ref=e71]: /
+            - strong [ref=e72]:
+              - link "pawtropolis-tech" [ref=e73] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech
+            - generic [ref=e74]: Public
+          - generic [ref=e75]:
+            - list:
+              - listitem [ref=e76]:
+                - link "You must be signed in to change notification settings" [ref=e77] [cursor=pointer]:
+                  - /url: /login?return_to=%2Fwatchthelight%2Fpawtropolis-tech
+                  - img [ref=e78]
+                  - text: Notifications
+              - listitem [ref=e80]:
+                - link "Fork 1" [ref=e81] [cursor=pointer]:
+                  - /url: /login?return_to=%2Fwatchthelight%2Fpawtropolis-tech
+                  - img [ref=e82]
+                  - text: Fork
+                  - generic "1" [ref=e84]
+              - listitem [ref=e85]:
+                - link "You must be signed in to star a repository" [ref=e87] [cursor=pointer]:
+                  - /url: /login?return_to=%2Fwatchthelight%2Fpawtropolis-tech
+                  - img [ref=e88]
+                  - text: Star
+                  - generic "1 user starred this repository" [ref=e90]: "1"
+        - navigation "Repository" [ref=e91]:
+          - list [ref=e92]:
+            - listitem [ref=e93]:
+              - link "Code" [ref=e94] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech
+                - img [ref=e95]
+                - generic [ref=e97]: Code
+            - listitem [ref=e98]:
+              - link "Issues" [ref=e99] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/issues
+                - img [ref=e100]
+                - generic [ref=e103]: Issues
+            - listitem [ref=e104]:
+              - link "Pull requests" [ref=e105] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/pulls
+                - img [ref=e106]
+                - generic [ref=e108]: Pull requests
+            - listitem [ref=e109]:
+              - link "Discussions" [ref=e110] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/discussions
+                - img [ref=e111]
+                - generic [ref=e113]: Discussions
+            - listitem [ref=e114]:
+              - link "Actions" [ref=e115] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/actions
+                - img [ref=e116]
+                - generic [ref=e118]: Actions
+            - listitem [ref=e119]:
+              - link "Projects" [ref=e120] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/projects
+                - img [ref=e121]
+                - generic [ref=e123]: Projects
+            - listitem [ref=e124]:
+              - link "Security and quality" [ref=e125] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/security
+                - img [ref=e126]
+                - generic [ref=e128]: Security and quality
+            - listitem [ref=e129]:
+              - link "Insights" [ref=e130] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/pulse
+                - img [ref=e131]
+                - generic [ref=e133]: Insights
+      - generic [ref=e141]:
+        - generic [ref=e143]:
+          - generic [ref=e146]:
+            - generic [ref=e147]:
+              - generic [ref=e148]:
+                - heading "Collapse file tree" [level=2] [ref=e149]:
+                  - button "Collapse file tree" [expanded] [ref=e150] [cursor=pointer]:
+                    - img [ref=e151]
+                - heading "Files" [level=2] [ref=e154]
+              - generic [ref=e155]:
+                - button "main branch" [ref=e157] [cursor=pointer]:
+                  - generic [ref=e158]:
+                    - generic [ref=e160]:
+                      - img [ref=e162]
+                      - generic [ref=e165]: main
+                    - generic:
+                      - img
+                - button "Search this repository (forward slash)" [ref=e167] [cursor=pointer]:
+                  - img [ref=e168]
+            - generic [ref=e171]:
+              - img [ref=e173]
+              - combobox "Go to file" [ref=e175]
+            - navigation "File Tree Navigation" [ref=e181]:
+              - tree "Files" [ref=e183]:
+                - treeitem ".github" [level=1] [ref=e184]:
+                  - generic [ref=e185] [cursor=pointer]:
+                    - img [ref=e187]
+                    - generic [ref=e189]:
+                      - img [ref=e193]
+                      - generic [ref=e195]: .github
+                - treeitem "assets" [level=1] [ref=e196]:
+                  - generic [ref=e197] [cursor=pointer]:
+                    - img [ref=e199]
+                    - generic [ref=e201]:
+                      - img [ref=e205]
+                      - generic [ref=e207]: assets
+                - treeitem "audit" [level=1] [ref=e208]:
+                  - generic [ref=e209] [cursor=pointer]:
+                    - img [ref=e211]
+                    - generic [ref=e213]:
+                      - img [ref=e217]
+                      - generic [ref=e219]: audit
+                - treeitem "charts" [level=1] [ref=e220]:
+                  - generic [ref=e221] [cursor=pointer]:
+                    - img [ref=e223]
+                    - generic [ref=e225]:
+                      - img [ref=e229]
+                      - generic [ref=e231]: charts
+                - treeitem "docs-audit" [level=1] [ref=e232]:
+                  - generic [ref=e233] [cursor=pointer]:
+                    - img [ref=e235]
+                    - generic [ref=e237]:
+                      - img [ref=e241]
+                      - generic [ref=e243]: docs-audit
+                - treeitem "docs" [expanded] [level=1] [ref=e244]:
+                  - generic [ref=e245] [cursor=pointer]:
+                    - img [ref=e247]
+                    - generic [ref=e249]:
+                      - img [ref=e253]
+                      - generic [ref=e255]: docs
+                  - group "docs" [ref=e256]:
+                    - treeitem "_archive" [level=2] [ref=e257]:
+                      - generic [ref=e258] [cursor=pointer]:
+                        - img [ref=e263]
+                        - generic [ref=e265]:
+                          - img [ref=e269]
+                          - generic [ref=e271]: _archive
+                    - treeitem "architecture" [level=2] [ref=e272]:
+                      - generic [ref=e273] [cursor=pointer]:
+                        - img [ref=e278]
+                        - generic [ref=e280]:
+                          - img [ref=e284]
+                          - generic [ref=e286]: architecture
+                    - treeitem "audits" [level=2] [ref=e287]:
+                      - generic [ref=e288] [cursor=pointer]:
+                        - img [ref=e293]
+                        - generic [ref=e295]:
+                          - img [ref=e299]
+                          - generic [ref=e301]: audits
+                    - treeitem "badges" [level=2] [ref=e302]:
+                      - generic [ref=e303] [cursor=pointer]:
+                        - img [ref=e308]
+                        - generic [ref=e310]:
+                          - img [ref=e314]
+                          - generic [ref=e316]: badges
+                    - treeitem "how-to" [level=2] [ref=e317]:
+                      - generic [ref=e318] [cursor=pointer]:
+                        - img [ref=e323]
+                        - generic [ref=e325]:
+                          - img [ref=e329]
+                          - generic [ref=e331]: how-to
+                    - treeitem "internal-info" [level=2] [ref=e332]:
+                      - generic [ref=e333] [cursor=pointer]:
+                        - img [ref=e338]
+                        - generic [ref=e340]:
+                          - img [ref=e344]
+                          - generic [ref=e346]: internal-info
+                    - treeitem "operations" [level=2] [ref=e347]:
+                      - generic [ref=e348] [cursor=pointer]:
+                        - img [ref=e353]
+                        - generic [ref=e355]:
+                          - img [ref=e359]
+                          - generic [ref=e361]: operations
+                    - treeitem "overview" [level=2] [ref=e362]:
+                      - generic [ref=e363] [cursor=pointer]:
+                        - img [ref=e368]
+                        - generic [ref=e370]:
+                          - img [ref=e374]
+                          - generic [ref=e376]: overview
+                    - treeitem "reference" [level=2] [ref=e377]:
+                      - generic [ref=e378] [cursor=pointer]:
+                        - img [ref=e383]
+                        - generic [ref=e385]:
+                          - img [ref=e389]
+                          - generic [ref=e391]: reference
+                    - treeitem "roadmap" [level=2] [ref=e392]:
+                      - generic [ref=e393] [cursor=pointer]:
+                        - img [ref=e398]
+                        - generic [ref=e400]:
+                          - img [ref=e404]
+                          - generic [ref=e406]: roadmap
+                    - treeitem "ADMIN-GUIDE.md" [level=2] [ref=e407]:
+                      - generic [ref=e412] [cursor=pointer]:
+                        - img [ref=e415]
+                        - generic [ref=e417]: ADMIN-GUIDE.md
+                    - treeitem "BOT-HANDBOOK.md" [level=2] [ref=e418]:
+                      - generic [ref=e423] [cursor=pointer]:
+                        - img [ref=e426]
+                        - generic [ref=e428]: BOT-HANDBOOK.md
+                    - treeitem "DEVNOTES.md" [level=2] [ref=e429]:
+                      - generic [ref=e434] [cursor=pointer]:
+                        - img [ref=e437]
+                        - generic [ref=e439]: DEVNOTES.md
+                    - treeitem "GATEKEEPER-GUIDE.md" [level=2] [ref=e440]:
+                      - generic [ref=e445] [cursor=pointer]:
+                        - img [ref=e448]
+                        - generic [ref=e450]: GATEKEEPER-GUIDE.md
+                    - treeitem "INCIDENTS.md" [level=2] [ref=e451]:
+                      - generic [ref=e456] [cursor=pointer]:
+                        - img [ref=e459]
+                        - generic [ref=e461]: INCIDENTS.md
+                    - treeitem "LEADERSHIP-GUIDE.md" [level=2] [ref=e462]:
+                      - generic [ref=e467] [cursor=pointer]:
+                        - img [ref=e470]
+                        - generic [ref=e472]: LEADERSHIP-GUIDE.md
+                    - treeitem "MEMBER-REWARDS.md" [level=2] [ref=e473]:
+                      - generic [ref=e478] [cursor=pointer]:
+                        - img [ref=e481]
+                        - generic [ref=e483]: MEMBER-REWARDS.md
+                    - treeitem "MOD-HANDBOOK.md" [level=2] [ref=e484]:
+                      - generic [ref=e489] [cursor=pointer]:
+                        - img [ref=e492]
+                        - generic [ref=e494]: MOD-HANDBOOK.md
+                    - treeitem "MOD-QUICKREF.md" [level=2] [ref=e495]:
+                      - generic [ref=e500] [cursor=pointer]:
+                        - img [ref=e503]
+                        - generic [ref=e505]: MOD-QUICKREF.md
+                    - treeitem "MODERATOR-GUIDE.md" [level=2] [ref=e506]:
+                      - generic [ref=e511] [cursor=pointer]:
+                        - img [ref=e514]
+                        - generic [ref=e516]: MODERATOR-GUIDE.md
+                    - treeitem "PERMS-MATRIX.md" [level=2] [ref=e517]:
+                      - generic [ref=e522] [cursor=pointer]:
+                        - img [ref=e525]
+                        - generic [ref=e527]: PERMS-MATRIX.md
+                    - treeitem "README.md" [level=2] [ref=e528]:
+                      - generic [ref=e533] [cursor=pointer]:
+                        - img [ref=e536]
+                        - generic [ref=e538]: README.md
+                    - treeitem "SLASH-COMMANDS.md" [level=2] [ref=e539]:
+                      - generic [ref=e544] [cursor=pointer]:
+                        - img [ref=e547]
+                        - generic [ref=e549]: SLASH-COMMANDS.md
+                    - treeitem "TICKET-SYSTEM-CUTOVER.md" [level=2] [ref=e550]:
+                      - generic [ref=e555] [cursor=pointer]:
+                        - img [ref=e558]
+                        - generic [ref=e560]: TICKET-SYSTEM-CUTOVER.md
+                    - treeitem "api-contracts.md" [level=2] [ref=e561]:
+                      - generic [ref=e566] [cursor=pointer]:
+                        - img [ref=e569]
+                        - generic [ref=e571]: api-contracts.md
+                    - treeitem "architecture.md" [level=2] [ref=e572]:
+                      - generic [ref=e577] [cursor=pointer]:
+                        - img [ref=e580]
+                        - generic [ref=e582]: architecture.md
+                    - treeitem "audit-security-flow.md" [level=2] [ref=e583]:
+                      - generic [ref=e588] [cursor=pointer]:
+                        - img [ref=e591]
+                        - generic [ref=e593]: audit-security-flow.md
+                    - treeitem "data-models.md" [level=2] [ref=e594]:
+                      - generic [ref=e599] [cursor=pointer]:
+                        - img [ref=e602]
+                        - generic [ref=e604]: data-models.md
+                    - treeitem "development-guide.md" [level=2] [ref=e605]:
+                      - generic [ref=e610] [cursor=pointer]:
+                        - img [ref=e613]
+                        - generic [ref=e615]: development-guide.md
+                    - treeitem "index.md" [level=2] [ref=e616]:
+                      - generic [ref=e621] [cursor=pointer]:
+                        - img [ref=e624]
+                        - generic [ref=e626]: index.md
+                    - treeitem "project-overview.md" [level=2] [ref=e627]:
+                      - generic [ref=e632] [cursor=pointer]:
+                        - img [ref=e635]
+                        - generic [ref=e637]: project-overview.md
+                    - treeitem "project-scan-report.json" [level=2] [ref=e638]:
+                      - generic [ref=e643] [cursor=pointer]:
+                        - img [ref=e646]
+                        - generic [ref=e648]: project-scan-report.json
+                    - treeitem "source-tree-analysis.md" [level=2] [ref=e649]:
+                      - generic [ref=e654] [cursor=pointer]:
+                        - img [ref=e657]
+                        - generic [ref=e659]: source-tree-analysis.md
+                - treeitem "migrations" [level=1] [ref=e660]:
+                  - generic [ref=e661] [cursor=pointer]:
+                    - img [ref=e663]
+                    - generic [ref=e665]:
+                      - img [ref=e669]
+                      - generic [ref=e671]: migrations
+                - treeitem "models" [level=1] [ref=e672]:
+                  - generic [ref=e673] [cursor=pointer]:
+                    - img [ref=e675]
+                    - generic [ref=e677]:
+                      - img [ref=e681]
+                      - generic [ref=e683]: models
+                - treeitem "nginx" [level=1] [ref=e684]:
+                  - generic [ref=e685] [cursor=pointer]:
+                    - img [ref=e687]
+                    - generic [ref=e689]:
+                      - img [ref=e693]
+                      - generic [ref=e695]: nginx
+                - treeitem "scripts" [level=1] [ref=e696]:
+                  - generic [ref=e697] [cursor=pointer]:
+                    - img [ref=e699]
+                    - generic [ref=e701]:
+                      - img [ref=e705]
+                      - generic [ref=e707]: scripts
+                - treeitem "src" [level=1] [ref=e708]:
+                  - generic [ref=e709] [cursor=pointer]:
+                    - img [ref=e711]
+                    - generic [ref=e713]:
+                      - img [ref=e717]
+                      - generic [ref=e719]: src
+                - treeitem "tests" [level=1] [ref=e720]:
+                  - generic [ref=e721] [cursor=pointer]:
+                    - img [ref=e723]
+                    - generic [ref=e725]:
+                      - img [ref=e729]
+                      - generic [ref=e731]: tests
+                - treeitem "web" [level=1] [ref=e732]:
+                  - generic [ref=e733] [cursor=pointer]:
+                    - img [ref=e735]
+                    - generic [ref=e737]:
+                      - img [ref=e741]
+                      - generic [ref=e743]: web
+                - treeitem "workers" [level=1] [ref=e744]:
+                  - generic [ref=e745] [cursor=pointer]:
+                    - img [ref=e747]
+                    - generic [ref=e749]:
+                      - img [ref=e753]
+                      - generic [ref=e755]: workers
+                - treeitem ".editorconfig" [level=1] [ref=e756]:
+                  - generic [ref=e758] [cursor=pointer]:
+                    - img [ref=e761]
+                    - generic [ref=e763]: .editorconfig
+                - treeitem ".env.example" [level=1] [ref=e764]:
+                  - generic [ref=e766] [cursor=pointer]:
+                    - img [ref=e769]
+                    - generic [ref=e771]: .env.example
+                - treeitem ".gitattributes" [level=1] [ref=e772]:
+                  - generic [ref=e774] [cursor=pointer]:
+                    - img [ref=e777]
+                    - generic [ref=e779]: .gitattributes
+                - treeitem ".gitignore" [level=1] [ref=e780]:
+                  - generic [ref=e782] [cursor=pointer]:
+                    - img [ref=e785]
+                    - generic [ref=e787]: .gitignore
+                - treeitem ".prettierignore" [level=1] [ref=e788]:
+                  - generic [ref=e790] [cursor=pointer]:
+                    - img [ref=e793]
+                    - generic [ref=e795]: .prettierignore
+                - treeitem ".prettierrc" [level=1] [ref=e796]:
+                  - generic [ref=e798] [cursor=pointer]:
+                    - img [ref=e801]
+                    - generic [ref=e803]: .prettierrc
+                - treeitem "CHANGELOG.md" [level=1] [ref=e804]:
+                  - generic [ref=e806] [cursor=pointer]:
+                    - img [ref=e809]
+                    - generic [ref=e811]: CHANGELOG.md
+                - treeitem "LICENSE" [level=1] [ref=e812]:
+                  - generic [ref=e814] [cursor=pointer]:
+                    - img [ref=e817]
+                    - generic [ref=e819]: LICENSE
+                - treeitem "README.md" [level=1] [ref=e820]:
+                  - generic [ref=e822] [cursor=pointer]:
+                    - img [ref=e825]
+                    - generic [ref=e827]: README.md
+                - treeitem "TODO.md" [level=1] [ref=e828]:
+                  - generic [ref=e830] [cursor=pointer]:
+                    - img [ref=e833]
+                    - generic [ref=e835]: TODO.md
+                - treeitem "deploy-no-tests.sh" [level=1] [ref=e836]:
+                  - generic [ref=e838] [cursor=pointer]:
+                    - img [ref=e841]
+                    - generic [ref=e843]: deploy-no-tests.sh
+                - treeitem "deploy.sh" [level=1] [ref=e844]:
+                  - generic [ref=e846] [cursor=pointer]:
+                    - img [ref=e849]
+                    - generic [ref=e851]: deploy.sh
+                - treeitem "ecosystem.config.cjs" [level=1] [ref=e852]:
+                  - generic [ref=e854] [cursor=pointer]:
+                    - img [ref=e857]
+                    - generic [ref=e859]: ecosystem.config.cjs
+                - treeitem "effort-over-time.png" [level=1] [ref=e860]:
+                  - generic [ref=e862] [cursor=pointer]:
+                    - img [ref=e865]
+                    - generic [ref=e867]: effort-over-time.png
+                - treeitem "eslint.config.js" [level=1] [ref=e868]:
+                  - generic [ref=e870] [cursor=pointer]:
+                    - img [ref=e873]
+                    - generic [ref=e875]: eslint.config.js
+                - treeitem "package-lock.json" [level=1] [ref=e876]:
+                  - generic [ref=e878] [cursor=pointer]:
+                    - img [ref=e881]
+                    - generic [ref=e883]: package-lock.json
+                - treeitem "package.json" [level=1] [ref=e884]:
+                  - generic [ref=e886] [cursor=pointer]:
+                    - img [ref=e889]
+                    - generic [ref=e891]: package.json
+                - treeitem "tsconfig.json" [level=1] [ref=e892]:
+                  - generic [ref=e894] [cursor=pointer]:
+                    - img [ref=e897]
+                    - generic [ref=e899]: tsconfig.json
+                - treeitem "tsup.config.ts" [level=1] [ref=e900]:
+                  - generic [ref=e902] [cursor=pointer]:
+                    - img [ref=e905]
+                    - generic [ref=e907]: tsup.config.ts
+                - treeitem "vitest.config.ts" [level=1] [ref=e908]:
+                  - generic [ref=e910] [cursor=pointer]:
+                    - img [ref=e913]
+                    - generic [ref=e915]: vitest.config.ts
+          - slider "Draggable pane splitter" [ref=e917]
+        - generic [ref=e920]:
+          - generic [ref=e924]:
+            - generic [ref=e926]:
+              - navigation "Breadcrumbs" [ref=e927]:
+                - heading "Breadcrumbs" [level=2] [ref=e928]
+                - list [ref=e929]:
+                  - listitem [ref=e930]:
+                    - link "pawtropolis-tech" [ref=e931] [cursor=pointer]:
+                      - /url: /watchthelight/pawtropolis-tech/tree/main
+                  - listitem [ref=e932]:
+                    - text: /
+                    - link "docs" [ref=e933] [cursor=pointer]:
+                      - /url: /watchthelight/pawtropolis-tech/tree/main/docs
+              - generic [ref=e934]:
+                - text: /
+                - heading "PERMS-MATRIX.md" [level=1] [ref=e935]
+              - button "Copy path" [ref=e936] [cursor=pointer]:
+                - img [ref=e937]
+            - button "More file actions" [ref=e943] [cursor=pointer]:
+              - img [ref=e944]
+          - generic [ref=e946]:
+            - generic [ref=e948]:
+              - heading "Latest commit" [level=2] [ref=e949]
+              - generic [ref=e950]:
+                - generic [ref=e952]:
+                  - link "watchthelight" [ref=e953] [cursor=pointer]:
+                    - /url: /watchthelight
+                    - img "watchthelight" [ref=e954]
+                  - link "commits by watchthelight" [ref=e955] [cursor=pointer]:
+                    - /url: /watchthelight/pawtropolis-tech/commits?author=watchthelight
+                    - text: watchthelight
+                - generic [ref=e956]:
+                  - 'link "fix(badges): cache-bust badge URLs with ?v=3 to bypass Camo stale cache" [ref=e959] [cursor=pointer]':
+                    - /url: /watchthelight/pawtropolis-tech/commit/0bb5abf5c14a576d69101dcf2019c36840a6370c
+                  - button "pending" [ref=e960] [cursor=pointer]:
+                    - img [ref=e961]
+              - generic [ref=e963]:
+                - generic [ref=e965]:
+                  - link "Commit 0bb5abf" [ref=e966] [cursor=pointer]:
+                    - /url: /watchthelight/pawtropolis-tech/commit/0bb5abf5c14a576d69101dcf2019c36840a6370c
+                    - text: 0bb5abf
+                  - text: ·
+                  - generic "May 2, 2026, 10:52 AM CDT" [ref=e967]: May 2, 2026now
+                - generic [ref=e968]:
+                  - heading "History" [level=2] [ref=e969]
+                  - link "History" [ref=e970] [cursor=pointer]:
+                    - /url: /watchthelight/pawtropolis-tech/commits/main/docs/PERMS-MATRIX.md
+                    - generic [ref=e971]:
+                      - generic:
+                        - img
+                      - generic [ref=e972]: History
+            - generic [ref=e974]:
+              - generic [ref=e976]:
+                - heading "File metadata and controls" [level=2] [ref=e977]
+                - list "File view" [ref=e979]:
+                  - listitem [ref=e980]:
+                    - button "Preview" [ref=e981] [cursor=pointer]:
+                      - generic [ref=e983]: Preview
+                  - listitem [ref=e984]:
+                    - button "Code" [ref=e985] [cursor=pointer]:
+                      - generic [ref=e987]: Code
+                  - listitem [ref=e988]:
+                    - button "Blame" [ref=e989] [cursor=pointer]:
+                      - generic [ref=e991]: Blame
+                - generic [ref=e992]:
+                  - generic [ref=e993]:
+                    - generic [ref=e994]:
+                      - link "Raw" [ref=e996] [cursor=pointer]:
+                        - /url: https://github.com/watchthelight/pawtropolis-tech/raw/refs/heads/main/docs/PERMS-MATRIX.md
+                        - generic [ref=e998]: Raw
+                      - button "Copy raw file" [ref=e1000] [cursor=pointer]:
+                        - img [ref=e1001]
+                      - button "Download raw file" [ref=e1005] [cursor=pointer]:
+                        - img [ref=e1006]
+                    - generic [ref=e1009]:
+                      - button "You must be signed in to make or propose changes" [disabled] [ref=e1011]:
+                        - img [ref=e1012]
+                      - button "More edit options" [ref=e1015] [cursor=pointer]:
+                        - img [ref=e1016]
+                  - button "Outline" [ref=e1018] [cursor=pointer]:
+                    - img [ref=e1019]
+              - region "PERMS-MATRIX.md" [ref=e1022]:
+                - article [ref=e1024]:
+                  - generic [ref=e1025]:
+                    - heading "Permission Matrix" [level=1] [ref=e1026]
+                    - 'link "Permalink: Permission Matrix" [ref=e1027] [cursor=pointer]':
+                      - /url: "#permission-matrix"
+                      - img [ref=e1028]
+                  - paragraph [ref=e1030]: Who can use what commands.
+                  - separator [ref=e1031]
+                  - generic [ref=e1032]:
+                    - heading "Contents" [level=2] [ref=e1033]
+                    - 'link "Permalink: Contents" [ref=e1034] [cursor=pointer]':
+                      - /url: "#contents"
+                      - img [ref=e1035]
+                  - list [ref=e1037]:
+                    - listitem [ref=e1038]:
+                      - link "Role Hierarchy" [ref=e1039] [cursor=pointer]:
+                        - /url: "#role-hierarchy"
+                      - text: ": Staff ranks"
+                    - listitem [ref=e1040]:
+                      - link "Commands by Level" [ref=e1041] [cursor=pointer]:
+                        - /url: "#commands-by-permission-level"
+                      - text: ": What each role can do"
+                    - listitem [ref=e1042]:
+                      - link "Quick Reference" [ref=e1043] [cursor=pointer]:
+                        - /url: "#quick-reference-card"
+                      - text: ": One-page summary"
+                  - separator [ref=e1044]
+                  - generic [ref=e1045]:
+                    - heading "Role Hierarchy" [level=2] [ref=e1046]
+                    - 'link "Permalink: Role Hierarchy" [ref=e1047] [cursor=pointer]':
+                      - /url: "#role-hierarchy"
+                      - img [ref=e1048]
+                  - paragraph [ref=e1050]: Roles follow a strict hierarchy. When a permission level says "X+", that means the listed role and every role above it.
+                  - table [ref=e1052]:
+                    - rowgroup [ref=e1053]:
+                      - row "Rank Role Role ID Abbreviation" [ref=e1054]:
+                        - columnheader "Rank" [ref=e1055]
+                        - columnheader "Role" [ref=e1056]
+                        - columnheader "Role ID" [ref=e1057]
+                        - columnheader "Abbreviation" [ref=e1058]
+                    - rowgroup [ref=e1059]:
+                      - row "1 @Community Founder 896070888779317254 CF" [ref=e1060]:
+                        - cell "1" [ref=e1061]
+                        - cell "@Community Founder" [ref=e1062]:
+                          - link "@Community Founder" [ref=e1063] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/798f344594edc77550b63c713ba5eb4cab4440cd23ff7ef61da395006814e468/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d636f6d6d756e6974792d666f756e6465722e7376673f763d33
+                            - img "@Community Founder" [ref=e1064]
+                        - cell "896070888779317254" [ref=e1065]:
+                          - code [ref=e1066]: "896070888779317254"
+                        - cell "CF" [ref=e1067]
+                      - row "2 @Community Manager 1190093021170114680 CM" [ref=e1068]:
+                        - cell "2" [ref=e1069]
+                        - cell "@Community Manager" [ref=e1070]:
+                          - link "@Community Manager" [ref=e1071] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/a5f1478ea26455b0074d7f7c6558e564bd18998ed8758f109d503488cae36596/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d636f6d6d756e6974792d6d616e616765722e7376673f763d33
+                            - img "@Community Manager" [ref=e1072]
+                        - cell "1190093021170114680" [ref=e1073]:
+                          - code [ref=e1074]: "1190093021170114680"
+                        - cell "CM" [ref=e1075]
+                      - row "3 @Community Development Lead 1382242769468260352 CDL" [ref=e1076]:
+                        - cell "3" [ref=e1077]
+                        - cell "@Community Development Lead" [ref=e1078]:
+                          - link "@Community Development Lead" [ref=e1079] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/ff6cc67f35466a35900d09312068b1812929d87665b86a53f5765ab9b62d78eb/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d636f6d6d756e6974792d6465762d6c6561642e7376673f763d33
+                            - img "@Community Development Lead" [ref=e1080]
+                        - cell "1382242769468260352" [ref=e1081]:
+                          - code [ref=e1082]: "1382242769468260352"
+                        - cell "CDL" [ref=e1083]
+                      - row "4 @Senior Administrator 1420440472169746623 SA" [ref=e1084]:
+                        - cell "4" [ref=e1085]
+                        - cell "@Senior Administrator" [ref=e1086]:
+                          - link "@Senior Administrator" [ref=e1087] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/2b8a9980e7a8d4963a91ec1824d9567fa6c7d32e124792e9bbcbf42f9d5813b2/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d73656e696f722d61646d696e2e7376673f763d33
+                            - img "@Senior Administrator" [ref=e1088]
+                        - cell "1420440472169746623" [ref=e1089]:
+                          - code [ref=e1090]: "1420440472169746623"
+                        - cell "SA" [ref=e1091]
+                      - row "5 @Administrator 896070888779317248 A" [ref=e1092]:
+                        - cell "5" [ref=e1093]
+                        - cell "@Administrator" [ref=e1094]:
+                          - link "@Administrator" [ref=e1095] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/a7bbacd0c495b0efa3861d47b99799089b232713ffcca58fb30b61275bbf7049/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d61646d696e6973747261746f722e7376673f763d33
+                            - img "@Administrator" [ref=e1096]
+                        - cell "896070888779317248" [ref=e1097]:
+                          - code [ref=e1098]: "896070888779317248"
+                        - cell "A" [ref=e1099]
+                      - row "6 @Senior Moderator 1095757038899953774 SM" [ref=e1100]:
+                        - cell "6" [ref=e1101]
+                        - cell "@Senior Moderator" [ref=e1102]:
+                          - link "@Senior Moderator" [ref=e1103] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/0275f3d79557ff4980427a734794ea22cfbbef781e07838de697842f6acd8082/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d73656e696f722d6d6f642e7376673f763d33
+                            - img "@Senior Moderator" [ref=e1104]
+                        - cell "1095757038899953774" [ref=e1105]:
+                          - code [ref=e1106]: "1095757038899953774"
+                        - cell "SM" [ref=e1107]
+                      - row "7 @Moderator 896070888762535975 M" [ref=e1108]:
+                        - cell "7" [ref=e1109]
+                        - cell "@Moderator" [ref=e1110]:
+                          - link "@Moderator" [ref=e1111] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/401b09deb3a9f52003689ccce964a0dabe3bd70d18a1391681fd0d384b7ed18e/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d6d6f64657261746f722e7376673f763d33
+                            - img "@Moderator" [ref=e1112]
+                        - cell "896070888762535975" [ref=e1113]:
+                          - code [ref=e1114]: "896070888762535975"
+                        - cell "M" [ref=e1115]
+                      - row "8 @Junior Moderator 896070888762535966 JM" [ref=e1116]:
+                        - cell "8" [ref=e1117]
+                        - cell "@Junior Moderator" [ref=e1118]:
+                          - link "@Junior Moderator" [ref=e1119] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/95d617fa1df1a0dbc48b51fac410b38d9f9a8e16fd5c5cfcc7f5668e0767da69/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d6a756e696f722d6d6f642e7376673f763d33
+                            - img "@Junior Moderator" [ref=e1120]
+                        - cell "896070888762535966" [ref=e1121]:
+                          - code [ref=e1122]: "896070888762535966"
+                        - cell "JM" [ref=e1123]
+                      - row "9 @Gatekeeper 896070888762535969 GK" [ref=e1124]:
+                        - cell "9" [ref=e1125]
+                        - cell "@Gatekeeper" [ref=e1126]:
+                          - link "@Gatekeeper" [ref=e1127] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/2cbe33b66424e8a0830792c68be5bb01b43e91873f448c35562ce71d6d8de53a/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d676174656b65657065722e7376673f763d33
+                            - img "@Gatekeeper" [ref=e1128]
+                        - cell "896070888762535969" [ref=e1129]:
+                          - code [ref=e1130]: "896070888762535969"
+                        - cell "GK" [ref=e1131]
+                      - row "10 @Community Staff 987662057069482024 CS" [ref=e1132]:
+                        - cell "10" [ref=e1133]
+                        - cell "@Community Staff" [ref=e1134]:
+                          - link "@Community Staff" [ref=e1135] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/e41ef01d0b0ec03a9828a94455e0d81850f1218bf502d9f27efea34629e1e0b6/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d636f6d6d756e6974792d73746166662e7376673f763d33
+                            - img "@Community Staff" [ref=e1136]
+                        - cell "987662057069482024" [ref=e1137]:
+                          - code [ref=e1138]: "987662057069482024"
+                        - cell "CS" [ref=e1139]
+                  - paragraph [ref=e1140]:
+                    - strong [ref=e1141]: "Note:"
+                    - text: Community Staff (CS) is the broad mod-perm role (ManageMessages, MentionEveryone, ModerateMembers) attached to most staff roles. On its own it does not unlock the gatekeeping commands, which require the Gatekeeper role specifically. The role is named "Community Staff" in Discord. Older code constants and docs may refer to it as
+                    - code [ref=e1142]: MOD_TEAM
+                    - text: or "Moderation Team"; same role.
+                  - paragraph [ref=e1143]:
+                    - text: The rank-1 role is named
+                    - strong [ref=e1144]: Community Founder
+                    - text: in Discord. It is the role currently held by the server owner (
+                    - code [ref=e1145]: wwerew0lf
+                    - text: ). Older docs called this rank "Server Owner"; the live label is what permission-denied embeds and role mentions render.
+                  - separator [ref=e1146]
+                  - generic [ref=e1147]:
+                    - heading "Special Bypass Roles" [level=2] [ref=e1148]
+                    - 'link "Permalink: Special Bypass Roles" [ref=e1149] [cursor=pointer]':
+                      - /url: "#special-bypass-roles"
+                      - img [ref=e1150]
+                  - paragraph [ref=e1152]: "These roles bypass all permission checks and have full access to every command:"
+                  - table [ref=e1154]:
+                    - rowgroup [ref=e1155]:
+                      - row "Role ID Notes" [ref=e1156]:
+                        - columnheader "Role" [ref=e1157]
+                        - columnheader "ID" [ref=e1158]
+                        - columnheader "Notes" [ref=e1159]
+                    - rowgroup [ref=e1160]:
+                      - row "@Server Dev 1120074045883420753 Staff role with full access" [ref=e1161]:
+                        - cell "@Server Dev" [ref=e1162]:
+                          - link "@Server Dev" [ref=e1163] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/32884e095e08dc5c0a2ff07e7192e5e68d5b6d2d9aa9f8b8c20a0c051fc83177/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d7365727665722d6465762e7376673f763d33
+                            - img "@Server Dev" [ref=e1164]
+                        - cell "1120074045883420753" [ref=e1165]:
+                          - code [ref=e1166]: "1120074045883420753"
+                        - cell "Staff role with full access" [ref=e1167]
+                      - 'row "Bot Owner User ID: 697169405422862417 Hardcoded user ID" [ref=e1168]':
+                        - cell "Bot Owner" [ref=e1169]
+                        - 'cell "User ID: 697169405422862417" [ref=e1170]':
+                          - text: "User ID:"
+                          - code [ref=e1171]: "697169405422862417"
+                        - cell "Hardcoded user ID" [ref=e1172]
+                  - separator [ref=e1173]
+                  - generic [ref=e1174]:
+                    - heading "Permission Types" [level=2] [ref=e1175]
+                    - 'link "Permalink: Permission Types" [ref=e1176] [cursor=pointer]':
+                      - /url: "#permission-types"
+                      - img [ref=e1177]
+                  - paragraph [ref=e1179]: "Three permission systems are in use:"
+                  - generic [ref=e1180]:
+                    - heading "Role-Based Hierarchical (\"X+\")" [level=3] [ref=e1181]
+                    - 'link "Permalink: Role-Based Hierarchical (\"X+\")" [ref=e1182] [cursor=pointer]':
+                      - /url: "#role-based-hierarchical-x"
+                      - img [ref=e1183]
+                  - paragraph [ref=e1185]:
+                    - strong [ref=e1186]: "\"X+\""
+                    - text: means the specified role and all roles above it in the hierarchy.
+                  - paragraph [ref=e1187]:
+                    - text: "Example:"
+                    - strong [ref=e1188]: "\"Senior Mod+\""
+                    - text: "(SM+) includes:"
+                  - list [ref=e1189]:
+                    - listitem [ref=e1190]: Senior Moderator, Administrator, Senior Administrator, CDL, Community Manager, Community Founder
+                    - listitem [ref=e1191]: Plus Server Dev and Bot Owner bypass
+                  - generic [ref=e1192]:
+                    - heading "Role-Based Explicit (\"[X]\")" [level=3] [ref=e1193]
+                    - 'link "Permalink: Role-Based Explicit (\"[X]\")" [ref=e1194] [cursor=pointer]':
+                      - /url: "#role-based-explicit-x"
+                      - img [ref=e1195]
+                  - paragraph [ref=e1197]:
+                    - strong [ref=e1198]: "\"[X]\""
+                    - text: means only that specific role, regardless of hierarchy.
+                  - paragraph [ref=e1199]:
+                    - text: "Example:"
+                    - strong [ref=e1200]: "\"[GK]\""
+                    - text: means only the Gatekeeper role can use the command.
+                  - generic [ref=e1201]:
+                    - heading "Discord Permission Based" [level=3] [ref=e1202]
+                    - 'link "Permalink: Discord Permission Based" [ref=e1203] [cursor=pointer]':
+                      - /url: "#discord-permission-based"
+                      - img [ref=e1204]
+                  - paragraph [ref=e1206]: Some commands check Discord's built-in permissions (ManageMessages, ManageRoles, etc.) instead of role hierarchy. These are labeled with the Discord permission name.
+                  - separator [ref=e1207]
+                  - generic [ref=e1208]:
+                    - heading "Commands by Permission Level" [level=2] [ref=e1209]
+                    - 'link "Permalink: Commands by Permission Level" [ref=e1210] [cursor=pointer]':
+                      - /url: "#commands-by-permission-level"
+                      - img [ref=e1211]
+                  - generic [ref=e1213]:
+                    - heading "Public Commands (Anyone)" [level=3] [ref=e1214]
+                    - 'link "Permalink: Public Commands (Anyone)" [ref=e1215] [cursor=pointer]':
+                      - /url: "#public-commands-anyone"
+                      - img [ref=e1216]
+                  - paragraph [ref=e1218]: "Commands available to all server members:"
+                  - table [ref=e1220]:
+                    - rowgroup [ref=e1221]:
+                      - row "Command Description" [ref=e1222]:
+                        - columnheader "Command" [ref=e1223]
+                        - columnheader "Description" [ref=e1224]
+                    - rowgroup [ref=e1225]:
+                      - row "/help Interactive help system with category browsing and search" [ref=e1226]:
+                        - cell "/help" [ref=e1227]:
+                          - code [ref=e1228]: /help
+                        - cell "Interactive help system with category browsing and search" [ref=e1229]
+                      - row "/health Check bot status, uptime, and connection health" [ref=e1230]:
+                        - cell "/health" [ref=e1231]:
+                          - code [ref=e1232]: /health
+                        - cell "Check bot status, uptime, and connection health" [ref=e1233]
+                      - row "/art getstatus Check progress of your personal art reward" [ref=e1234]:
+                        - cell "/art getstatus" [ref=e1235]:
+                          - code [ref=e1236]: /art getstatus
+                        - cell "Check progress of your personal art reward" [ref=e1237]
+                      - row "/qotd suggest Submit a QOTD question for staff review (1/hour, max 5 pending)" [ref=e1238]:
+                        - cell "/qotd suggest" [ref=e1239]:
+                          - code [ref=e1240]: /qotd suggest
+                        - cell "Submit a QOTD question for staff review (1/hour, max 5 pending)" [ref=e1241]
+                      - row "/sample Preview UI components for training purposes" [ref=e1242]:
+                        - cell "/sample" [ref=e1243]:
+                          - code [ref=e1244]: /sample
+                        - cell "Preview UI components for training purposes" [ref=e1245]
+                  - separator [ref=e1246]
+                  - generic [ref=e1247]:
+                    - heading "Gatekeeper Only [GK]" [level=3] [ref=e1248]
+                    - 'link "Permalink: Gatekeeper Only [GK]" [ref=e1249] [cursor=pointer]':
+                      - /url: "#gatekeeper-only-gk"
+                      - img [ref=e1250]
+                  - paragraph [ref=e1252]: Commands restricted to the Gatekeeper role specifically. Higher roles do NOT automatically have access.
+                  - table [ref=e1254]:
+                    - rowgroup [ref=e1255]:
+                      - row "Command Description" [ref=e1256]:
+                        - columnheader "Command" [ref=e1257]
+                        - columnheader "Description" [ref=e1258]
+                    - rowgroup [ref=e1259]:
+                      - row "/accept Accept an application by short code, user mention, or user ID" [ref=e1260]:
+                        - cell "/accept" [ref=e1261]:
+                          - code [ref=e1262]: /accept
+                        - cell "Accept an application by short code, user mention, or user ID" [ref=e1263]
+                      - row "/reject Reject an application with a reason" [ref=e1264]:
+                        - cell "/reject" [ref=e1265]:
+                          - code [ref=e1266]: /reject
+                        - cell "Reject an application with a reason" [ref=e1267]
+                      - row "/kick Kick an applicant from the server" [ref=e1268]:
+                        - cell "/kick" [ref=e1269]:
+                          - code [ref=e1270]: /kick
+                        - cell "Kick an applicant from the server" [ref=e1271]
+                      - row "/unclaim Release your claim on an application (Admin+ can unclaim anyone's)" [ref=e1272]:
+                        - cell "/unclaim" [ref=e1273]:
+                          - code [ref=e1274]: /unclaim
+                        - cell "Release your claim on an application (Admin+ can unclaim anyone's)" [ref=e1275]
+                      - row "/listopen View your currently claimed applications" [ref=e1276]:
+                        - cell "/listopen" [ref=e1277]:
+                          - code [ref=e1278]: /listopen
+                        - cell "View your currently claimed applications" [ref=e1279]
+                      - row "/unblock Remove a permanent rejection from a user" [ref=e1280]:
+                        - cell "/unblock" [ref=e1281]:
+                          - code [ref=e1282]: /unblock
+                        - cell "Remove a permanent rejection from a user" [ref=e1283]
+                  - paragraph [ref=e1284]: These are locked to Gatekeeper specifically because higher-ranked staff who don't handle applications shouldn't accidentally process them.
+                  - separator [ref=e1285]
+                  - generic [ref=e1286]:
+                    - heading "Gatekeeper+ (GK and above)" [level=3] [ref=e1287]
+                    - 'link "Permalink: Gatekeeper+ (GK and above)" [ref=e1288] [cursor=pointer]':
+                      - /url: "#gatekeeper-gk-and-above"
+                      - img [ref=e1289]
+                  - table [ref=e1292]:
+                    - rowgroup [ref=e1293]:
+                      - row "Command Description" [ref=e1294]:
+                        - columnheader "Command" [ref=e1295]
+                        - columnheader "Description" [ref=e1296]
+                    - rowgroup [ref=e1297]:
+                      - row "/search Search application history by user (also available to all Staff)" [ref=e1298]:
+                        - cell "/search" [ref=e1299]:
+                          - code [ref=e1300]: /search
+                        - cell "Search application history by user (also available to all Staff)" [ref=e1301]
+                      - row "/stats leaderboard View ranked list of moderators by application decisions" [ref=e1302]:
+                        - cell "/stats leaderboard" [ref=e1303]:
+                          - code [ref=e1304]: /stats leaderboard
+                        - cell "View ranked list of moderators by application decisions" [ref=e1305]
+                      - row "/stats user @moderator View detailed stats for a specific moderator" [ref=e1306]:
+                        - cell "/stats user @moderator" [ref=e1307]:
+                          - code [ref=e1308]: /stats user @moderator
+                        - cell "View detailed stats for a specific moderator" [ref=e1309]
+                      - row "/qotd queue View count of approved and pending QOTD suggestions" [ref=e1310]:
+                        - cell "/qotd queue" [ref=e1311]:
+                          - code [ref=e1312]: /qotd queue
+                        - cell "View count of approved and pending QOTD suggestions" [ref=e1313]
+                      - row "/qotd pull Pull a random approved QOTD suggestion (marks as used)" [ref=e1314]:
+                        - cell "/qotd pull" [ref=e1315]:
+                          - code [ref=e1316]: /qotd pull
+                        - cell "Pull a random approved QOTD suggestion (marks as used)" [ref=e1317]
+                  - separator [ref=e1318]
+                  - generic [ref=e1319]:
+                    - heading "Junior Moderator+ (JM+)" [level=3] [ref=e1320]
+                    - 'link "Permalink: Junior Moderator+ (JM+)" [ref=e1321] [cursor=pointer]':
+                      - /url: "#junior-moderator-jm"
+                      - img [ref=e1322]
+                  - table [ref=e1325]:
+                    - rowgroup [ref=e1326]:
+                      - row "Command Description" [ref=e1327]:
+                        - columnheader "Command" [ref=e1328]
+                        - columnheader "Description" [ref=e1329]
+                    - rowgroup [ref=e1330]:
+                      - row "/flag @user [reason] Flag a user as suspicious for staff review" [ref=e1331]:
+                        - cell "/flag @user [reason]" [ref=e1332]:
+                          - code [ref=e1333]: /flag @user [reason]
+                        - cell "Flag a user as suspicious for staff review" [ref=e1334]
+                      - row "/isitreal Analyze images in a message for AI generation" [ref=e1335]:
+                        - cell "/isitreal" [ref=e1336]:
+                          - code [ref=e1337]: /isitreal
+                        - cell "Analyze images in a message for AI generation" [ref=e1338]
+                      - row "\"Is It Real?\" context menu Right-click any message to check for AI images" [ref=e1339]:
+                        - cell "\"Is It Real?\" context menu" [ref=e1340]
+                        - cell "Right-click any message to check for AI images" [ref=e1341]
+                  - separator [ref=e1342]
+                  - generic [ref=e1343]:
+                    - heading "Moderator+ (M+)" [level=3] [ref=e1344]
+                    - 'link "Permalink: Moderator+ (M+)" [ref=e1345] [cursor=pointer]':
+                      - /url: "#moderator-m"
+                      - img [ref=e1346]
+                  - table [ref=e1349]:
+                    - rowgroup [ref=e1350]:
+                      - row "Command Description" [ref=e1351]:
+                        - columnheader "Command" [ref=e1352]
+                        - columnheader "Description" [ref=e1353]
+                    - rowgroup [ref=e1354]:
+                      - row "/movie start Start a movie night session" [ref=e1355]:
+                        - cell "/movie start" [ref=e1356]:
+                          - code [ref=e1357]: /movie start
+                        - cell "Start a movie night session" [ref=e1358]
+                      - row "/movie end End the current movie night" [ref=e1359]:
+                        - cell "/movie end" [ref=e1360]:
+                          - code [ref=e1361]: /movie end
+                        - cell "End the current movie night" [ref=e1362]
+                      - row "/movie attendance View current attendance for active session" [ref=e1363]:
+                        - cell "/movie attendance" [ref=e1364]:
+                          - code [ref=e1365]: /movie attendance
+                        - cell "View current attendance for active session" [ref=e1366]
+                      - row "/movie add @user <minutes> Add minutes to a user's attendance" [ref=e1367]:
+                        - cell "/movie add @user <minutes>" [ref=e1368]:
+                          - code [ref=e1369]: /movie add @user <minutes>
+                        - cell "Add minutes to a user's attendance" [ref=e1370]
+                      - row "/movie credit @user <date> <minutes> Credit attendance to a past event" [ref=e1371]:
+                        - cell "/movie credit @user <date> <minutes>" [ref=e1372]:
+                          - code [ref=e1373]: /movie credit @user <date> <minutes>
+                        - cell "Credit attendance to a past event" [ref=e1374]
+                      - row "/movie bump @user Give a user full qualified credit" [ref=e1375]:
+                        - cell "/movie bump @user" [ref=e1376]:
+                          - code [ref=e1377]: /movie bump @user
+                        - cell "Give a user full qualified credit" [ref=e1378]
+                      - row "/movie resume Check status of recovered session after restart" [ref=e1379]:
+                        - cell "/movie resume" [ref=e1380]:
+                          - code [ref=e1381]: /movie resume
+                        - cell "Check status of recovered session after restart" [ref=e1382]
+                  - separator [ref=e1383]
+                  - generic [ref=e1384]:
+                    - heading "Senior Moderator+ (SM+)" [level=3] [ref=e1385]
+                    - 'link "Permalink: Senior Moderator+ (SM+)" [ref=e1386] [cursor=pointer]':
+                      - /url: "#senior-moderator-sm"
+                      - img [ref=e1387]
+                  - table [ref=e1390]:
+                    - rowgroup [ref=e1391]:
+                      - row "Command Description" [ref=e1392]:
+                        - columnheader "Command" [ref=e1393]
+                        - columnheader "Description" [ref=e1394]
+                    - rowgroup [ref=e1395]:
+                      - row "/stats activity View server activity heatmap with message trends" [ref=e1396]:
+                        - cell "/stats activity" [ref=e1397]:
+                          - code [ref=e1398]: /stats activity
+                        - cell "View server activity heatmap with message trends" [ref=e1399]
+                      - row "/skullmode chance:<N> Set the odds (1-1000) for random skull reactions" [ref=e1400]:
+                        - cell "/skullmode chance:<N>" [ref=e1401]:
+                          - code [ref=e1402]: /skullmode chance:<N>
+                        - cell "Set the odds (1-1000) for random skull reactions" [ref=e1403]
+                      - row "/update activity Set bot's Discord activity (Playing, Watching, etc.)" [ref=e1404]:
+                        - cell "/update activity" [ref=e1405]:
+                          - code [ref=e1406]: /update activity
+                        - cell "Set bot's Discord activity (Playing, Watching, etc.)" [ref=e1407]
+                      - row "/update status Set bot's custom status text" [ref=e1408]:
+                        - cell "/update status" [ref=e1409]:
+                          - code [ref=e1410]: /update status
+                        - cell "Set bot's custom status text" [ref=e1411]
+                      - row "/art all View all active artist jobs in the system" [ref=e1412]:
+                        - cell "/art all" [ref=e1413]:
+                          - code [ref=e1414]: /art all
+                        - cell "View all active artist jobs in the system" [ref=e1415]
+                      - row "/art assign @user Assign an art job to a specific artist" [ref=e1416]:
+                        - cell "/art assign @user" [ref=e1417]:
+                          - code [ref=e1418]: /art assign @user
+                        - cell "Assign an art job to a specific artist" [ref=e1419]
+                  - separator [ref=e1420]
+                  - generic [ref=e1421]:
+                    - heading "Administrator+ (A+)" [level=3] [ref=e1422]
+                    - 'link "Permalink: Administrator+ (A+)" [ref=e1423] [cursor=pointer]':
+                      - /url: "#administrator-a"
+                      - img [ref=e1424]
+                  - table [ref=e1427]:
+                    - rowgroup [ref=e1428]:
+                      - row "Command Subcommands Description" [ref=e1429]:
+                        - columnheader "Command" [ref=e1430]
+                        - columnheader "Subcommands" [ref=e1431]
+                        - columnheader "Description" [ref=e1432]
+                    - rowgroup [ref=e1433]:
+                      - row "/config set mod_roles, gatekeeper, logging, flags_channel, dadmode, skullmode, etc. Configure server settings" [ref=e1434]:
+                        - cell "/config set" [ref=e1435]:
+                          - code [ref=e1436]: /config set
+                        - cell "mod_roles, gatekeeper, logging, flags_channel, dadmode, skullmode, etc." [ref=e1437]:
+                          - code [ref=e1438]: mod_roles
+                          - text: ","
+                          - code [ref=e1439]: gatekeeper
+                          - text: ","
+                          - code [ref=e1440]: logging
+                          - text: ","
+                          - code [ref=e1441]: flags_channel
+                          - text: ","
+                          - code [ref=e1442]: dadmode
+                          - text: ","
+                          - code [ref=e1443]: skullmode
+                          - text: ", etc."
+                        - cell "Configure server settings" [ref=e1444]
+                      - row "/config get logging, flags, movie_config, artist_rotation View current configuration" [ref=e1445]:
+                        - cell "/config get" [ref=e1446]:
+                          - code [ref=e1447]: /config get
+                        - cell "logging, flags, movie_config, artist_rotation" [ref=e1448]:
+                          - code [ref=e1449]: logging
+                          - text: ","
+                          - code [ref=e1450]: flags
+                          - text: ","
+                          - code [ref=e1451]: movie_config
+                          - text: ","
+                          - code [ref=e1452]: artist_rotation
+                        - cell "View current configuration" [ref=e1453]
+                      - row "/config view Overview of all settings" [ref=e1454]:
+                        - cell "/config view" [ref=e1455]:
+                          - code [ref=e1456]: /config view
+                        - cell [ref=e1457]
+                        - cell "Overview of all settings" [ref=e1458]
+                      - row "/config set-advanced flags_threshold, reapply_cooldown, min_account_age, etc. Advanced configuration" [ref=e1459]:
+                        - cell "/config set-advanced" [ref=e1460]:
+                          - code [ref=e1461]: /config set-advanced
+                        - cell "flags_threshold, reapply_cooldown, min_account_age, etc." [ref=e1462]:
+                          - code [ref=e1463]: flags_threshold
+                          - text: ","
+                          - code [ref=e1464]: reapply_cooldown
+                          - text: ","
+                          - code [ref=e1465]: min_account_age
+                          - text: ", etc."
+                        - cell "Advanced configuration" [ref=e1466]
+                      - row "/config artist rotation, ignored_users Artist rotation configuration" [ref=e1467]:
+                        - cell "/config artist" [ref=e1468]:
+                          - code [ref=e1469]: /config artist
+                        - cell "rotation, ignored_users" [ref=e1470]:
+                          - code [ref=e1471]: rotation
+                          - text: ","
+                          - code [ref=e1472]: ignored_users
+                        - cell "Artist rotation configuration" [ref=e1473]
+                      - row "/config movie threshold Movie night settings" [ref=e1474]:
+                        - cell "/config movie" [ref=e1475]:
+                          - code [ref=e1476]: /config movie
+                        - cell "threshold" [ref=e1477]:
+                          - code [ref=e1478]: threshold
+                        - cell "Movie night settings" [ref=e1479]
+                      - row "/config poke add-category, remove-category, list Poke system config" [ref=e1480]:
+                        - cell "/config poke" [ref=e1481]:
+                          - code [ref=e1482]: /config poke
+                        - cell "add-category, remove-category, list" [ref=e1483]:
+                          - code [ref=e1484]: add-category
+                          - text: ","
+                          - code [ref=e1485]: remove-category
+                          - text: ","
+                          - code [ref=e1486]: list
+                        - cell "Poke system config" [ref=e1487]
+                      - row "/art leaderboard View artist statistics" [ref=e1488]:
+                        - cell "/art leaderboard" [ref=e1489]:
+                          - code [ref=e1490]: /art leaderboard
+                        - cell [ref=e1491]
+                        - cell "View artist statistics" [ref=e1492]
+                      - row "/audit members Scan server for suspicious bot accounts" [ref=e1493]:
+                        - cell "/audit members" [ref=e1494]:
+                          - code [ref=e1495]: /audit members
+                        - cell [ref=e1496]
+                        - cell "Scan server for suspicious bot accounts" [ref=e1497]
+                      - row "/audit nsfw Scan all member avatars for NSFW content" [ref=e1498]:
+                        - cell "/audit nsfw" [ref=e1499]:
+                          - code [ref=e1500]: /audit nsfw
+                        - cell [ref=e1501]
+                        - cell "Scan all member avatars for NSFW content" [ref=e1502]
+                      - row "/audit security Generate server permission/security documentation" [ref=e1503]:
+                        - cell "/audit security" [ref=e1504]:
+                          - code [ref=e1505]: /audit security
+                        - cell [ref=e1506]
+                        - cell "Generate server permission/security documentation" [ref=e1507]
+                      - row "/audit acknowledge Acknowledge a security finding" [ref=e1508]:
+                        - cell "/audit acknowledge" [ref=e1509]:
+                          - code [ref=e1510]: /audit acknowledge
+                        - cell [ref=e1511]
+                        - cell "Acknowledge a security finding" [ref=e1512]
+                      - row "/audit unacknowledge Remove acknowledgment from a finding" [ref=e1513]:
+                        - cell "/audit unacknowledge" [ref=e1514]:
+                          - code [ref=e1515]: /audit unacknowledge
+                        - cell [ref=e1516]
+                        - cell "Remove acknowledgment from a finding" [ref=e1517]
+                  - separator [ref=e1518]
+                  - generic [ref=e1519]:
+                    - heading "Senior Administrator+ (SA+)" [level=3] [ref=e1520]
+                    - 'link "Permalink: Senior Administrator+ (SA+)" [ref=e1521] [cursor=pointer]':
+                      - /url: "#senior-administrator-sa"
+                      - img [ref=e1522]
+                  - table [ref=e1525]:
+                    - rowgroup [ref=e1526]:
+                      - row "Command Description" [ref=e1527]:
+                        - columnheader "Command" [ref=e1528]
+                        - columnheader "Description" [ref=e1529]
+                    - rowgroup [ref=e1530]:
+                      - row "/panic on Enable emergency mode (stops all role automation)" [ref=e1531]:
+                        - cell "/panic on" [ref=e1532]:
+                          - code [ref=e1533]: /panic on
+                        - cell "Enable emergency mode (stops all role automation)" [ref=e1534]
+                      - row "/panic off Disable emergency mode" [ref=e1535]:
+                        - cell "/panic off" [ref=e1536]:
+                          - code [ref=e1537]: /panic off
+                        - cell "Disable emergency mode" [ref=e1538]
+                      - row "/panic status Check current panic mode state" [ref=e1539]:
+                        - cell "/panic status" [ref=e1540]:
+                          - code [ref=e1541]: /panic status
+                        - cell "Check current panic mode state" [ref=e1542]
+                      - row "/stats export Export all moderator metrics as CSV" [ref=e1543]:
+                        - cell "/stats export" [ref=e1544]:
+                          - code [ref=e1545]: /stats export
+                        - cell "Export all moderator metrics as CSV" [ref=e1546]
+                      - row "/stats reset Clear and rebuild statistics (password required)" [ref=e1547]:
+                        - cell "/stats reset" [ref=e1548]:
+                          - code [ref=e1549]: /stats reset
+                        - cell "Clear and rebuild statistics (password required)" [ref=e1550]
+                      - row "/config isitreal Configure AI detection API keys" [ref=e1551]:
+                        - cell "/config isitreal" [ref=e1552]:
+                          - code [ref=e1553]: /config isitreal
+                        - cell "Configure AI detection API keys" [ref=e1554]
+                      - row "/config toggleapis Toggle API services on/off" [ref=e1555]:
+                        - cell "/config toggleapis" [ref=e1556]:
+                          - code [ref=e1557]: /config toggleapis
+                        - cell "Toggle API services on/off" [ref=e1558]
+                      - row "/review-set-notify-config Configure forum notifications" [ref=e1559]:
+                        - cell "/review-set-notify-config" [ref=e1560]:
+                          - code [ref=e1561]: /review-set-notify-config
+                        - cell "Configure forum notifications" [ref=e1562]
+                      - row "/review-get-notify-config View notification settings" [ref=e1563]:
+                        - cell "/review-get-notify-config" [ref=e1564]:
+                          - code [ref=e1565]: /review-get-notify-config
+                        - cell "View notification settings" [ref=e1566]
+                  - separator [ref=e1567]
+                  - generic [ref=e1568]:
+                    - heading "Community Manager+ (CM+)" [level=3] [ref=e1569]
+                    - 'link "Permalink: Community Manager+ (CM+)" [ref=e1570] [cursor=pointer]':
+                      - /url: "#community-manager-cm"
+                      - img [ref=e1571]
+                  - table [ref=e1574]:
+                    - rowgroup [ref=e1575]:
+                      - row "Command Description" [ref=e1576]:
+                        - columnheader "Command" [ref=e1577]
+                        - columnheader "Description" [ref=e1578]
+                    - rowgroup [ref=e1579]:
+                      - row "/gate setup Initialize guild gate configuration" [ref=e1580]:
+                        - cell "/gate setup" [ref=e1581]:
+                          - code [ref=e1582]: /gate setup
+                        - cell "Initialize guild gate configuration" [ref=e1583]
+                      - row "/gate reset Reset ALL application data (destructive)" [ref=e1584]:
+                        - cell "/gate reset" [ref=e1585]:
+                          - code [ref=e1586]: /gate reset
+                        - cell "Reset ALL application data (destructive)" [ref=e1587]
+                      - row "/gate status View application statistics" [ref=e1588]:
+                        - cell "/gate status" [ref=e1589]:
+                          - code [ref=e1590]: /gate status
+                        - cell "View application statistics" [ref=e1591]
+                      - row "/gate config View gate configuration" [ref=e1592]:
+                        - cell "/gate config" [ref=e1593]:
+                          - code [ref=e1594]: /gate config
+                        - cell "View gate configuration" [ref=e1595]
+                      - row "/gate welcome Configure welcome messages" [ref=e1596]:
+                        - cell "/gate welcome" [ref=e1597]:
+                          - code [ref=e1598]: /gate welcome
+                        - cell "Configure welcome messages" [ref=e1599]
+                      - row "/gate set-questions Set application questions" [ref=e1600]:
+                        - cell "/gate set-questions" [ref=e1601]:
+                          - code [ref=e1602]: /gate set-questions
+                        - cell "Set application questions" [ref=e1603]
+                      - row "/update banner Update bot's profile banner" [ref=e1604]:
+                        - cell "/update banner" [ref=e1605]:
+                          - code [ref=e1606]: /update banner
+                        - cell "Update bot's profile banner" [ref=e1607]
+                      - row "/update avatar Update bot's avatar image" [ref=e1608]:
+                        - cell "/update avatar" [ref=e1609]:
+                          - code [ref=e1610]: /update avatar
+                        - cell "Update bot's avatar image" [ref=e1611]
+                      - row "/backfill Rebuild historical activity data" [ref=e1612]:
+                        - cell "/backfill" [ref=e1613]:
+                          - code [ref=e1614]: /backfill
+                        - cell "Rebuild historical activity data" [ref=e1615]
+                  - separator [ref=e1616]
+                  - generic [ref=e1617]:
+                    - heading "Bot Owner / Server Dev Only" [level=3] [ref=e1618]
+                    - 'link "Permalink: Bot Owner / Server Dev Only" [ref=e1619] [cursor=pointer]':
+                      - /url: "#bot-owner--server-dev-only"
+                      - img [ref=e1620]
+                  - paragraph [ref=e1622]: "Commands restricted to Server Dev role or Bot Owner user ID only:"
+                  - table [ref=e1624]:
+                    - rowgroup [ref=e1625]:
+                      - row "Command Description" [ref=e1626]:
+                        - columnheader "Command" [ref=e1627]
+                        - columnheader "Description" [ref=e1628]
+                    - rowgroup [ref=e1629]:
+                      - row "/database check Run database integrity checks" [ref=e1630]:
+                        - cell "/database check" [ref=e1631]:
+                          - code [ref=e1632]: /database check
+                        - cell "Run database integrity checks" [ref=e1633]
+                      - row "/database recover Attempt to recover corrupted data" [ref=e1634]:
+                        - cell "/database recover" [ref=e1635]:
+                          - code [ref=e1636]: /database recover
+                        - cell "Attempt to recover corrupted data" [ref=e1637]
+                      - row "/sync Sync slash commands to Discord" [ref=e1638]:
+                        - cell "/sync" [ref=e1639]:
+                          - code [ref=e1640]: /sync
+                        - cell "Sync slash commands to Discord" [ref=e1641]
+                      - row "/poke @user Ping a user across multiple category channels" [ref=e1642]:
+                        - cell "/poke @user" [ref=e1643]:
+                          - code [ref=e1644]: /poke @user
+                        - cell "Ping a user across multiple category channels" [ref=e1645]
+                  - separator [ref=e1646]
+                  - generic [ref=e1647]:
+                    - heading "Discord Permission Based" [level=3] [ref=e1648]
+                    - 'link "Permalink: Discord Permission Based" [ref=e1649] [cursor=pointer]':
+                      - /url: "#discord-permission-based-1"
+                      - img [ref=e1650]
+                  - paragraph [ref=e1652]: "These check Discord's built-in permissions instead of role hierarchy:"
+                  - table [ref=e1654]:
+                    - rowgroup [ref=e1655]:
+                      - row "Command Discord Permission Description" [ref=e1656]:
+                        - columnheader "Command" [ref=e1657]
+                        - columnheader "Discord Permission" [ref=e1658]
+                        - columnheader "Description" [ref=e1659]
+                    - rowgroup [ref=e1660]:
+                      - row "/send ManageMessages Post an anonymous message as the bot" [ref=e1661]:
+                        - cell "/send" [ref=e1662]:
+                          - code [ref=e1663]: /send
+                        - cell "ManageMessages" [ref=e1664]
+                        - cell "Post an anonymous message as the bot" [ref=e1665]
+                      - row "/purge ManageMessages + Password Bulk delete messages (up to 100, max 14 days old)" [ref=e1666]:
+                        - cell "/purge" [ref=e1667]:
+                          - code [ref=e1668]: /purge
+                        - cell "ManageMessages + Password" [ref=e1669]
+                        - cell "Bulk delete messages (up to 100, max 14 days old)" [ref=e1670]
+                      - row "/roles ManageRoles Configure role automation mappings" [ref=e1671]:
+                        - cell "/roles" [ref=e1672]:
+                          - code [ref=e1673]: /roles
+                        - cell "ManageRoles" [ref=e1674]
+                        - cell "Configure role automation mappings" [ref=e1675]
+                      - row "/artistqueue ManageRoles Manage the artist rotation queue" [ref=e1676]:
+                        - cell "/artistqueue" [ref=e1677]:
+                          - code [ref=e1678]: /artistqueue
+                        - cell "ManageRoles" [ref=e1679]
+                        - cell "Manage the artist rotation queue" [ref=e1680]
+                      - row "/redeemreward ManageRoles OR Ambassador Role Assign an art reward to a user" [ref=e1681]:
+                        - cell "/redeemreward" [ref=e1682]:
+                          - code [ref=e1683]: /redeemreward
+                        - cell "ManageRoles OR Ambassador Role" [ref=e1684]
+                        - cell "Assign an art reward to a user" [ref=e1685]
+                      - row "/report Ambassador Role OR Gatekeeper+ Report content violations with evidence" [ref=e1686]:
+                        - cell "/report" [ref=e1687]:
+                          - code [ref=e1688]: /report
+                        - cell "Ambassador Role OR Gatekeeper+" [ref=e1689]
+                        - cell "Report content violations with evidence" [ref=e1690]
+                      - row "/resetdata ManageGuild + Password Reset metrics data from now forward" [ref=e1691]:
+                        - cell "/resetdata" [ref=e1692]:
+                          - code [ref=e1693]: /resetdata
+                        - cell "ManageGuild + Password" [ref=e1694]
+                        - cell "Reset metrics data from now forward" [ref=e1695]
+                      - row "/review-set-listopen-output ManageGuild Configure listopen visibility" [ref=e1696]:
+                        - cell "/review-set-listopen-output" [ref=e1697]:
+                          - code [ref=e1698]: /review-set-listopen-output
+                        - cell "ManageGuild" [ref=e1699]
+                        - cell "Configure listopen visibility" [ref=e1700]
+                      - row "/stats history Administrator View detailed mod action history" [ref=e1701]:
+                        - cell "/stats history" [ref=e1702]:
+                          - code [ref=e1703]: /stats history
+                        - cell "Administrator" [ref=e1704]
+                        - cell "View detailed mod action history" [ref=e1705]
+                      - row "/stats approval-rate Staff Server-wide approval analytics" [ref=e1706]:
+                        - cell "/stats approval-rate" [ref=e1707]:
+                          - code [ref=e1708]: /stats approval-rate
+                        - cell "Staff" [ref=e1709]
+                        - cell "Server-wide approval analytics" [ref=e1710]
+                  - separator [ref=e1711]
+                  - generic [ref=e1712]:
+                    - heading "Server Artist Role" [level=3] [ref=e1713]
+                    - 'link "Permalink: Server Artist Role" [ref=e1714] [cursor=pointer]':
+                      - /url: "#server-artist-role"
+                      - img [ref=e1715]
+                  - paragraph [ref=e1717]:
+                    - text: Commands for the Server Artist functional role (
+                    - code [ref=e1718]: "896070888749940770"
+                    - text: "):"
+                  - table [ref=e1720]:
+                    - rowgroup [ref=e1721]:
+                      - row "Command Description" [ref=e1722]:
+                        - columnheader "Command" [ref=e1723]
+                        - columnheader "Description" [ref=e1724]
+                    - rowgroup [ref=e1725]:
+                      - row "/art jobs View your active art jobs" [ref=e1726]:
+                        - cell "/art jobs" [ref=e1727]:
+                          - code [ref=e1728]: /art jobs
+                        - cell "View your active art jobs" [ref=e1729]
+                      - row "/art bump @recipient Update job status/progress" [ref=e1730]:
+                        - cell "/art bump @recipient" [ref=e1731]:
+                          - code [ref=e1732]: /art bump @recipient
+                        - cell "Update job status/progress" [ref=e1733]
+                      - row "/art finish @recipient Mark a job as complete" [ref=e1734]:
+                        - cell "/art finish @recipient" [ref=e1735]:
+                          - code [ref=e1736]: /art finish @recipient
+                        - cell "Mark a job as complete" [ref=e1737]
+                      - row "/art view @recipient View details of a specific job" [ref=e1738]:
+                        - cell "/art view @recipient" [ref=e1739]:
+                          - code [ref=e1740]: /art view @recipient
+                        - cell "View details of a specific job" [ref=e1741]
+                  - paragraph [ref=e1742]:
+                    - strong [ref=e1743]: "Note:"
+                    - text: Administrator+ can also access these commands for management purposes. Server Artists also receive dashboard "viewer" tier access.
+                  - separator [ref=e1744]
+                  - generic [ref=e1745]:
+                    - heading "Event Roles" [level=3] [ref=e1746]
+                    - 'link "Permalink: Event Roles" [ref=e1747] [cursor=pointer]':
+                      - /url: "#event-roles"
+                      - img [ref=e1748]
+                  - paragraph [ref=e1750]:
+                    - text: The
+                    - code [ref=e1751]: /event
+                    - text: "command accepts two special roles in addition to the Moderator+ hierarchy:"
+                  - table [ref=e1753]:
+                    - rowgroup [ref=e1754]:
+                      - row "Role ID Access" [ref=e1755]:
+                        - columnheader "Role" [ref=e1756]
+                        - columnheader "ID" [ref=e1757]
+                        - columnheader "Access" [ref=e1758]
+                    - rowgroup [ref=e1759]:
+                      - row "@Event Host 1243805450835853383 /event movie, /event game" [ref=e1760]:
+                        - cell "@Event Host" [ref=e1761]:
+                          - link "@Event Host" [ref=e1762] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/46ae9e4e5a7a36157b5c215ca7c9752d777e03b3b36c155f1cef8e3c7742c8d9/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d6576656e742d686f73742e7376673f763d33
+                            - img "@Event Host" [ref=e1763]
+                        - cell "1243805450835853383" [ref=e1764]:
+                          - code [ref=e1765]: "1243805450835853383"
+                        - cell "/event movie, /event game" [ref=e1766]:
+                          - code [ref=e1767]: /event movie
+                          - text: ","
+                          - code [ref=e1768]: /event game
+                      - row "@Events Manager 1243805681904259124 /event movie, /event game" [ref=e1769]:
+                        - cell "@Events Manager" [ref=e1770]:
+                          - link "@Events Manager" [ref=e1771] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/31ec02aeddeed1146c26200d6138997c7938da0a7cbbef3482879b3b91cbd4ca/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d6576656e74732d6d616e616765722e7376673f763d33
+                            - img "@Events Manager" [ref=e1772]
+                        - cell "1243805681904259124" [ref=e1773]:
+                          - code [ref=e1774]: "1243805681904259124"
+                        - cell "/event movie, /event game" [ref=e1775]:
+                          - code [ref=e1776]: /event movie
+                          - text: ","
+                          - code [ref=e1777]: /event game
+                  - separator [ref=e1778]
+                  - generic [ref=e1779]:
+                    - heading "Review Card Buttons" [level=2] [ref=e1780]
+                    - 'link "Permalink: Review Card Buttons" [ref=e1781] [cursor=pointer]':
+                      - /url: "#review-card-buttons"
+                      - img [ref=e1782]
+                  - paragraph [ref=e1784]:
+                    - text: All application review card buttons require
+                    - strong [ref=e1785]: Gatekeeper [GK]
+                    - text: "role specifically:"
+                  - table [ref=e1787]:
+                    - rowgroup [ref=e1788]:
+                      - row "Button Action" [ref=e1789]:
+                        - columnheader "Button" [ref=e1790]
+                        - columnheader "Action" [ref=e1791]
+                    - rowgroup [ref=e1792]:
+                      - row "Claim Application Claim the application for review" [ref=e1793]:
+                        - cell "Claim Application" [ref=e1794]
+                        - cell "Claim the application for review" [ref=e1795]
+                      - row "Accept Accept and grant member role" [ref=e1796]:
+                        - cell "Accept" [ref=e1797]
+                        - cell "Accept and grant member role" [ref=e1798]
+                      - row "Reject Reject with reason (opens modal)" [ref=e1799]:
+                        - cell "Reject" [ref=e1800]
+                        - cell "Reject with reason (opens modal)" [ref=e1801]
+                      - row "Perm Reject Permanently reject (opens modal)" [ref=e1802]:
+                        - cell "Perm Reject" [ref=e1803]
+                        - cell "Permanently reject (opens modal)" [ref=e1804]
+                      - row "Kick Remove from server (opens modal)" [ref=e1805]:
+                        - cell "Kick" [ref=e1806]
+                        - cell "Remove from server (opens modal)" [ref=e1807]
+                      - row "Unclaim Release your claim (requires confirmation)" [ref=e1808]:
+                        - cell "Unclaim" [ref=e1809]
+                        - cell "Release your claim (requires confirmation)" [ref=e1810]
+                      - row "Modmail Open modmail thread with applicant" [ref=e1811]:
+                        - cell "Modmail" [ref=e1812]
+                        - cell "Open modmail thread with applicant" [ref=e1813]
+                      - row "Copy UID Copy user ID to clipboard" [ref=e1814]:
+                        - cell "Copy UID" [ref=e1815]
+                        - cell "Copy user ID to clipboard" [ref=e1816]
+                      - row "Ping Mention the applicant in channel" [ref=e1817]:
+                        - cell "Ping" [ref=e1818]
+                        - cell "Mention the applicant in channel" [ref=e1819]
+                  - generic [ref=e1820]:
+                    - heading "QOTD Review Buttons" [level=3] [ref=e1821]
+                    - 'link "Permalink: QOTD Review Buttons" [ref=e1822] [cursor=pointer]':
+                      - /url: "#qotd-review-buttons"
+                      - img [ref=e1823]
+                  - paragraph [ref=e1825]:
+                    - text: QOTD suggestion review buttons require
+                    - strong [ref=e1826]: Gatekeeper+ (GK+)
+                    - text: ":"
+                  - table [ref=e1828]:
+                    - rowgroup [ref=e1829]:
+                      - row "Button Action" [ref=e1830]:
+                        - columnheader "Button" [ref=e1831]
+                        - columnheader "Action" [ref=e1832]
+                    - rowgroup [ref=e1833]:
+                      - row "Approve Approve the QOTD suggestion (DMs the suggester)" [ref=e1834]:
+                        - cell "Approve" [ref=e1835]
+                        - cell "Approve the QOTD suggestion (DMs the suggester)" [ref=e1836]
+                      - row "Reject Reject with reason (opens modal, DMs the suggester)" [ref=e1837]:
+                        - cell "Reject" [ref=e1838]
+                        - cell "Reject with reason (opens modal, DMs the suggester)" [ref=e1839]
+                  - separator [ref=e1840]
+                  - generic [ref=e1841]:
+                    - heading "Permission Denied Messages" [level=2] [ref=e1842]
+                    - 'link "Permalink: Permission Denied Messages" [ref=e1843] [cursor=pointer]':
+                      - /url: "#permission-denied-messages"
+                      - img [ref=e1844]
+                  - paragraph [ref=e1846]: "When a user lacks permission, they see an ephemeral embed showing what role they need:"
+                  - generic [ref=e1847]:
+                    - 'heading "Example: Command requires hierarchy (SM+)" [level=3] [ref=e1848]'
+                    - 'link "Permalink: Example: Command requires hierarchy (SM+)" [ref=e1849] [cursor=pointer]':
+                      - /url: "#example-command-requires-hierarchy-sm"
+                      - img [ref=e1850]
+                  - generic [ref=e1852]:
+                    - code [ref=e1854]: "Permission Denied Command: /stats activity This command views the server activity heatmap with message trends. You need one of: Senior Moderator or above @Senior Moderator @Administrator @Senior Administrator @Community Development Lead @Community Manager @Community Founder Trace: A1B2C3D4"
+                    - button "Copy" [ref=e1856] [cursor=pointer]:
+                      - img [ref=e1857]
+                  - generic [ref=e1860]:
+                    - 'heading "Example: Command requires specific role [GK]" [level=3] [ref=e1861]'
+                    - 'link "Permalink: Example: Command requires specific role [GK]" [ref=e1862] [cursor=pointer]':
+                      - /url: "#example-command-requires-specific-role-gk"
+                      - img [ref=e1863]
+                  - generic [ref=e1865]:
+                    - code [ref=e1867]: "Permission Denied Command: /accept This command approves an application by short code, user mention, or user ID. You need one of: @Gatekeeper (Gatekeeper) Trace: E5F6G7H8"
+                    - button "Copy" [ref=e1869] [cursor=pointer]:
+                      - img [ref=e1870]
+                  - generic [ref=e1873]:
+                    - 'heading "Example: Owner-only command" [level=3] [ref=e1874]'
+                    - 'link "Permalink: Example: Owner-only command" [ref=e1875] [cursor=pointer]':
+                      - /url: "#example-owner-only-command"
+                      - img [ref=e1876]
+                  - generic [ref=e1878]:
+                    - code [ref=e1880]: "Permission Denied Command: /database This command performs database diagnostics and recovery. You need one of: Bot Owner or Server Dev Trace: I9J0K1L2"
+                    - button "Copy" [ref=e1882] [cursor=pointer]:
+                      - img [ref=e1883]
+                  - separator [ref=e1886]
+                  - generic [ref=e1887]:
+                    - heading "Technical Reference" [level=2] [ref=e1888]
+                    - 'link "Permalink: Technical Reference" [ref=e1889] [cursor=pointer]':
+                      - /url: "#technical-reference"
+                      - img [ref=e1890]
+                  - generic [ref=e1892]:
+                    - heading "Source Files" [level=3] [ref=e1893]
+                    - 'link "Permalink: Source Files" [ref=e1894] [cursor=pointer]':
+                      - /url: "#source-files"
+                      - img [ref=e1895]
+                  - table [ref=e1898]:
+                    - rowgroup [ref=e1899]:
+                      - row "File Purpose" [ref=e1900]:
+                        - columnheader "File" [ref=e1901]
+                        - columnheader "Purpose" [ref=e1902]
+                    - rowgroup [ref=e1903]:
+                      - row "src/lib/roles.ts Role constants, hierarchy, and permission helpers" [ref=e1904]:
+                        - cell "src/lib/roles.ts" [ref=e1905]:
+                          - code [ref=e1906]: src/lib/roles.ts
+                        - cell "Role constants, hierarchy, and permission helpers" [ref=e1907]
+                      - row "src/lib/config.ts Permission check functions (requireMinRole, requireGatekeeper, etc.)" [ref=e1908]:
+                        - cell "src/lib/config.ts" [ref=e1909]:
+                          - code [ref=e1910]: src/lib/config.ts
+                        - cell "Permission check functions (requireMinRole, requireGatekeeper, etc.)" [ref=e1911]:
+                          - text: Permission check functions (
+                          - code [ref=e1912]: requireMinRole
+                          - text: ","
+                          - code [ref=e1913]: requireGatekeeper
+                          - text: ", etc.)"
+                      - row "src/lib/permissionCard.ts Permission denied embed generation" [ref=e1914]:
+                        - cell "src/lib/permissionCard.ts" [ref=e1915]:
+                          - code [ref=e1916]: src/lib/permissionCard.ts
+                        - cell "Permission denied embed generation" [ref=e1917]
+                  - generic [ref=e1918]:
+                    - heading "Permission Check Functions" [level=3] [ref=e1919]
+                    - 'link "Permalink: Permission Check Functions" [ref=e1920] [cursor=pointer]':
+                      - /url: "#permission-check-functions"
+                      - img [ref=e1921]
+                  - generic [ref=e1923]:
+                    - generic [ref=e1924]: // Hierarchical check - requires role X or higher requireMinRole(interaction, ROLE_IDS.SENIOR_MOD, options) // Exact role check - requires specific role(s) only requireExactRoles(interaction, [ROLE_IDS.GATEKEEPER], options) // Convenience functions requireGatekeeper(interaction, commandName, description) requireOwnerOnly(interaction, commandName, description) requireArtist(interaction, commandName, description)
+                    - button "Copy" [ref=e1926] [cursor=pointer]:
+                      - img [ref=e1927]
+                  - generic [ref=e1930]:
+                    - heading "Bypass Logic" [level=3] [ref=e1931]
+                    - 'link "Permalink: Bypass Logic" [ref=e1932] [cursor=pointer]':
+                      - /url: "#bypass-logic"
+                      - img [ref=e1933]
+                  - paragraph [ref=e1935]: "Bypass conditions are checked before anything else:"
+                  - list [ref=e1936]:
+                    - listitem [ref=e1937]:
+                      - strong [ref=e1938]: Bot Owner check
+                      - text: ": If"
+                      - code [ref=e1939]: userId === "697169405422862417"
+                      - text: ", always pass"
+                    - listitem [ref=e1940]:
+                      - strong [ref=e1941]: Server Dev check
+                      - text: ": If member has role"
+                      - code [ref=e1942]: "1120074045883420753"
+                      - text: ", always pass"
+                    - listitem [ref=e1943]:
+                      - strong [ref=e1944]: Then
+                      - text: apply the specific permission check
+                  - separator [ref=e1945]
+                  - generic [ref=e1946]:
+                    - heading "Quick Reference Card" [level=2] [ref=e1947]
+                    - 'link "Permalink: Quick Reference Card" [ref=e1948] [cursor=pointer]':
+                      - /url: "#quick-reference-card"
+                      - img [ref=e1949]
+                  - table [ref=e1952]:
+                    - rowgroup [ref=e1953]:
+                      - row "Level Notation Example Commands" [ref=e1954]:
+                        - columnheader "Level" [ref=e1955]
+                        - columnheader "Notation" [ref=e1956]
+                        - columnheader "Example Commands" [ref=e1957]
+                    - rowgroup [ref=e1958]:
+                      - row "Public Anyone /help, /health, /qotd suggest" [ref=e1959]:
+                        - cell "Public" [ref=e1960]
+                        - cell "Anyone" [ref=e1961]
+                        - cell "/help, /health, /qotd suggest" [ref=e1962]:
+                          - code [ref=e1963]: /help
+                          - text: ","
+                          - code [ref=e1964]: /health
+                          - text: ","
+                          - code [ref=e1965]: /qotd suggest
+                      - row "Gatekeeper [GK] /accept, /reject, /kick" [ref=e1966]:
+                        - cell "Gatekeeper" [ref=e1967]
+                        - cell "[GK]" [ref=e1968]
+                        - cell "/accept, /reject, /kick" [ref=e1969]:
+                          - code [ref=e1970]: /accept
+                          - text: ","
+                          - code [ref=e1971]: /reject
+                          - text: ","
+                          - code [ref=e1972]: /kick
+                      - row "Gatekeeper+ GK+ /search, /stats leaderboard, /qotd queue, /qotd pull" [ref=e1973]:
+                        - cell "Gatekeeper+" [ref=e1974]
+                        - cell "GK+" [ref=e1975]
+                        - cell "/search, /stats leaderboard, /qotd queue, /qotd pull" [ref=e1976]:
+                          - code [ref=e1977]: /search
+                          - text: ","
+                          - code [ref=e1978]: /stats leaderboard
+                          - text: ","
+                          - code [ref=e1979]: /qotd queue
+                          - text: ","
+                          - code [ref=e1980]: /qotd pull
+                      - row "Junior Mod+ JM+ /flag, /isitreal" [ref=e1981]:
+                        - cell "Junior Mod+" [ref=e1982]
+                        - cell "JM+" [ref=e1983]
+                        - cell "/flag, /isitreal" [ref=e1984]:
+                          - code [ref=e1985]: /flag
+                          - text: ","
+                          - code [ref=e1986]: /isitreal
+                      - row "Moderator+ M+ /movie, /event" [ref=e1987]:
+                        - cell "Moderator+" [ref=e1988]
+                        - cell "M+" [ref=e1989]
+                        - cell "/movie, /event" [ref=e1990]:
+                          - code [ref=e1991]: /movie
+                          - text: ","
+                          - code [ref=e1992]: /event
+                      - row "Senior Mod+ SM+ /stats activity, /skullmode" [ref=e1993]:
+                        - cell "Senior Mod+" [ref=e1994]
+                        - cell "SM+" [ref=e1995]
+                        - cell "/stats activity, /skullmode" [ref=e1996]:
+                          - code [ref=e1997]: /stats activity
+                          - text: ","
+                          - code [ref=e1998]: /skullmode
+                      - row "Administrator+ A+ /config, /audit" [ref=e1999]:
+                        - cell "Administrator+" [ref=e2000]
+                        - cell "A+" [ref=e2001]
+                        - cell "/config, /audit" [ref=e2002]:
+                          - code [ref=e2003]: /config
+                          - text: ","
+                          - code [ref=e2004]: /audit
+                      - row "Senior Admin+ SA+ /panic, /stats export/reset" [ref=e2005]:
+                        - cell "Senior Admin+" [ref=e2006]
+                        - cell "SA+" [ref=e2007]
+                        - cell "/panic, /stats export/reset" [ref=e2008]:
+                          - code [ref=e2009]: /panic
+                          - text: ","
+                          - code [ref=e2010]: /stats export/reset
+                      - row "Community Manager+ CM+ /backfill, /gate setup" [ref=e2011]:
+                        - cell "Community Manager+" [ref=e2012]
+                        - cell "CM+" [ref=e2013]
+                        - cell "/backfill, /gate setup" [ref=e2014]:
+                          - code [ref=e2015]: /backfill
+                          - text: ","
+                          - code [ref=e2016]: /gate setup
+                      - row "Bot Owner / Server Dev [BO/SD] /database, /poke" [ref=e2017]:
+                        - cell "Bot Owner / Server Dev" [ref=e2018]
+                        - cell "[BO/SD]" [ref=e2019]
+                        - cell "/database, /poke" [ref=e2020]:
+                          - code [ref=e2021]: /database
+                          - text: ","
+                          - code [ref=e2022]: /poke
+                      - row "Discord Perm ManageMessages /send, /purge" [ref=e2023]:
+                        - cell "Discord Perm" [ref=e2024]
+                        - cell "ManageMessages" [ref=e2025]
+                        - cell "/send, /purge" [ref=e2026]:
+                          - code [ref=e2027]: /send
+                          - text: ","
+                          - code [ref=e2028]: /purge
+                      - row "Discord Perm ManageRoles /roles, /artistqueue" [ref=e2029]:
+                        - cell "Discord Perm" [ref=e2030]
+                        - cell "ManageRoles" [ref=e2031]
+                        - cell "/roles, /artistqueue" [ref=e2032]:
+                          - code [ref=e2033]: /roles
+                          - text: ","
+                          - code [ref=e2034]: /artistqueue
+                      - row "Hybrid ManageRoles OR Ambassador /redeemreward" [ref=e2035]:
+                        - cell "Hybrid" [ref=e2036]
+                        - cell "ManageRoles OR Ambassador" [ref=e2037]
+                        - cell "/redeemreward" [ref=e2038]:
+                          - code [ref=e2039]: /redeemreward
+                      - row "Hybrid Ambassador OR Gatekeeper+ /report" [ref=e2040]:
+                        - cell "Hybrid" [ref=e2041]
+                        - cell "Ambassador OR Gatekeeper+" [ref=e2042]
+                        - cell "/report" [ref=e2043]:
+                          - code [ref=e2044]: /report
+                  - separator [ref=e2045]
+                  - generic [ref=e2046]:
+                    - heading "See Also" [level=2] [ref=e2047]
+                    - 'link "Permalink: See Also" [ref=e2048] [cursor=pointer]':
+                      - /url: "#see-also"
+                      - img [ref=e2049]
+                  - generic [ref=e2051]:
+                    - heading "Tier-Specific Guides" [level=3] [ref=e2052]
+                    - 'link "Permalink: Tier-Specific Guides" [ref=e2053] [cursor=pointer]':
+                      - /url: "#tier-specific-guides"
+                      - img [ref=e2054]
+                  - list [ref=e2056]:
+                    - listitem [ref=e2057]:
+                      - link "Gatekeeper Guide" [ref=e2058] [cursor=pointer]:
+                        - /url: /watchthelight/pawtropolis-tech/blob/main/docs/GATEKEEPER-GUIDE.md
+                      - text: ": Gate system permissions"
+                    - listitem [ref=e2059]:
+                      - link "Moderator Guide" [ref=e2060] [cursor=pointer]:
+                        - /url: /watchthelight/pawtropolis-tech/blob/main/docs/MODERATOR-GUIDE.md
+                      - text: ": Event management permissions"
+                    - listitem [ref=e2061]:
+                      - link "Admin Guide" [ref=e2062] [cursor=pointer]:
+                        - /url: /watchthelight/pawtropolis-tech/blob/main/docs/ADMIN-GUIDE.md
+                      - text: ": Configuration and audit permissions"
+                    - listitem [ref=e2063]:
+                      - link "Leadership Guide" [ref=e2064] [cursor=pointer]:
+                        - /url: /watchthelight/pawtropolis-tech/blob/main/docs/LEADERSHIP-GUIDE.md
+                      - text: ": Server-wide management permissions"
+                  - generic [ref=e2065]:
+                    - heading "Reference Documentation" [level=3] [ref=e2066]
+                    - 'link "Permalink: Reference Documentation" [ref=e2067] [cursor=pointer]':
+                      - /url: "#reference-documentation"
+                      - img [ref=e2068]
+                  - list [ref=e2070]:
+                    - listitem [ref=e2071]:
+                      - link "BOT-HANDBOOK.md" [ref=e2072] [cursor=pointer]:
+                        - /url: /watchthelight/pawtropolis-tech/blob/main/docs/BOT-HANDBOOK.md
+                      - text: ": Complete command reference"
+                    - listitem [ref=e2073]:
+                      - link "MOD-HANDBOOK.md" [ref=e2074] [cursor=pointer]:
+                        - /url: /watchthelight/pawtropolis-tech/blob/main/docs/MOD-HANDBOOK.md
+                      - text: ": Staff policies and escalation"
+                    - listitem [ref=e2075]:
+                      - link "ROLES.md" [ref=e2076] [cursor=pointer]:
+                        - /url: /watchthelight/pawtropolis-tech/blob/main/docs/internal-info/ROLES.md
+                      - text: ": Server role IDs"
+                  - generic [ref=e2077]:
+                    - heading "Navigation" [level=3] [ref=e2078]
+                    - 'link "Permalink: Navigation" [ref=e2079] [cursor=pointer]':
+                      - /url: "#navigation"
+                      - img [ref=e2080]
+                  - list [ref=e2082]:
+                    - listitem [ref=e2083]:
+                      - link "Bot Handbook" [ref=e2084] [cursor=pointer]:
+                        - /url: /watchthelight/pawtropolis-tech/blob/main/docs/BOT-HANDBOOK.md
+                      - text: ": Start here for all docs"
+                    - listitem [ref=e2085]:
+                      - link "CHANGELOG.md" [ref=e2086] [cursor=pointer]:
+                        - /url: /watchthelight/pawtropolis-tech/blob/main/CHANGELOG.md
+                      - text: ": Version history"
+  - alert [ref=e2090]

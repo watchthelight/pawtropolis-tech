@@ -1,0 +1,1094 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - region
+    - generic [ref=e3]:
+      - link "Skip to content" [ref=e4] [cursor=pointer]:
+        - /url: "#start-of-content"
+      - banner [ref=e6]:
+        - heading "Navigation Menu" [level=2] [ref=e7]
+        - generic [ref=e8]:
+          - link "Homepage" [ref=e10] [cursor=pointer]:
+            - /url: /
+            - img [ref=e11]
+          - generic [ref=e13]:
+            - navigation "Global" [ref=e16]:
+              - list [ref=e17]:
+                - listitem [ref=e18]:
+                  - button "Platform" [ref=e20] [cursor=pointer]:
+                    - text: Platform
+                    - img [ref=e21]
+                - listitem [ref=e23]:
+                  - button "Solutions" [ref=e25] [cursor=pointer]:
+                    - text: Solutions
+                    - img [ref=e26]
+                - listitem [ref=e28]:
+                  - button "Resources" [ref=e30] [cursor=pointer]:
+                    - text: Resources
+                    - img [ref=e31]
+                - listitem [ref=e33]:
+                  - button "Open Source" [ref=e35] [cursor=pointer]:
+                    - text: Open Source
+                    - img [ref=e36]
+                - listitem [ref=e38]:
+                  - button "Enterprise" [ref=e40] [cursor=pointer]:
+                    - text: Enterprise
+                    - img [ref=e41]
+                - listitem [ref=e43]:
+                  - link "Pricing" [ref=e44] [cursor=pointer]:
+                    - /url: https://github.com/pricing
+                    - generic [ref=e45]: Pricing
+            - generic [ref=e46]:
+              - button "Search or jump to…" [ref=e49] [cursor=pointer]:
+                - img [ref=e51]
+              - link "Sign in" [ref=e54] [cursor=pointer]:
+                - /url: /login?return_to=https%3A%2F%2Fgithub.com%2Fwatchthelight%2Fpawtropolis-tech%2Fblob%2Fmain%2Fdocs%2FMEMBER-REWARDS.md
+              - link "Sign up" [ref=e55] [cursor=pointer]:
+                - /url: /signup?ref_cta=Sign+up&ref_loc=header+logged+out&ref_page=%2F%3Cuser-name%3E%2F%3Crepo-name%3E%2Fblob%2Fshow&source=header-repo&source_repo=watchthelight%2Fpawtropolis-tech
+              - button "Appearance settings" [ref=e58] [cursor=pointer]:
+                - img
+    - main [ref=e62]:
+      - generic [ref=e63]:
+        - generic [ref=e64]:
+          - generic [ref=e66]:
+            - img [ref=e67]
+            - link "watchthelight" [ref=e70] [cursor=pointer]:
+              - /url: /watchthelight
+            - generic [ref=e71]: /
+            - strong [ref=e72]:
+              - link "pawtropolis-tech" [ref=e73] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech
+            - generic [ref=e74]: Public
+          - generic [ref=e75]:
+            - list:
+              - listitem [ref=e76]:
+                - link "You must be signed in to change notification settings" [ref=e77] [cursor=pointer]:
+                  - /url: /login?return_to=%2Fwatchthelight%2Fpawtropolis-tech
+                  - img [ref=e78]
+                  - text: Notifications
+              - listitem [ref=e80]:
+                - link "Fork 1" [ref=e81] [cursor=pointer]:
+                  - /url: /login?return_to=%2Fwatchthelight%2Fpawtropolis-tech
+                  - img [ref=e82]
+                  - text: Fork
+                  - generic "1" [ref=e84]
+              - listitem [ref=e85]:
+                - link "You must be signed in to star a repository" [ref=e87] [cursor=pointer]:
+                  - /url: /login?return_to=%2Fwatchthelight%2Fpawtropolis-tech
+                  - img [ref=e88]
+                  - text: Star
+                  - generic "1 user starred this repository" [ref=e90]: "1"
+        - navigation "Repository" [ref=e91]:
+          - list [ref=e92]:
+            - listitem [ref=e93]:
+              - link "Code" [ref=e94] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech
+                - img [ref=e95]
+                - generic [ref=e97]: Code
+            - listitem [ref=e98]:
+              - link "Issues" [ref=e99] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/issues
+                - img [ref=e100]
+                - generic [ref=e103]: Issues
+            - listitem [ref=e104]:
+              - link "Pull requests" [ref=e105] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/pulls
+                - img [ref=e106]
+                - generic [ref=e108]: Pull requests
+            - listitem [ref=e109]:
+              - link "Discussions" [ref=e110] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/discussions
+                - img [ref=e111]
+                - generic [ref=e113]: Discussions
+            - listitem [ref=e114]:
+              - link "Actions" [ref=e115] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/actions
+                - img [ref=e116]
+                - generic [ref=e118]: Actions
+            - listitem [ref=e119]:
+              - link "Projects" [ref=e120] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/projects
+                - img [ref=e121]
+                - generic [ref=e123]: Projects
+            - listitem [ref=e124]:
+              - link "Security and quality" [ref=e125] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/security
+                - img [ref=e126]
+                - generic [ref=e128]: Security and quality
+            - listitem [ref=e129]:
+              - link "Insights" [ref=e130] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/pulse
+                - img [ref=e131]
+                - generic [ref=e133]: Insights
+      - generic [ref=e141]:
+        - generic [ref=e143]:
+          - generic [ref=e146]:
+            - generic [ref=e147]:
+              - generic [ref=e148]:
+                - heading "Collapse file tree" [level=2] [ref=e149]:
+                  - button "Collapse file tree" [expanded] [ref=e150] [cursor=pointer]:
+                    - img [ref=e151]
+                - heading "Files" [level=2] [ref=e154]
+              - generic [ref=e155]:
+                - button "main branch" [ref=e157] [cursor=pointer]:
+                  - generic [ref=e158]:
+                    - generic [ref=e160]:
+                      - img [ref=e162]
+                      - generic [ref=e165]: main
+                    - generic:
+                      - img
+                - button "Search this repository (forward slash)" [ref=e167] [cursor=pointer]:
+                  - img [ref=e168]
+            - generic [ref=e171]:
+              - img [ref=e173]
+              - combobox "Go to file" [ref=e175]
+            - navigation "File Tree Navigation" [ref=e181]:
+              - tree "Files" [ref=e183]:
+                - treeitem ".github" [level=1] [ref=e184]:
+                  - generic [ref=e185] [cursor=pointer]:
+                    - img [ref=e187]
+                    - generic [ref=e189]:
+                      - img [ref=e193]
+                      - generic [ref=e195]: .github
+                - treeitem "assets" [level=1] [ref=e196]:
+                  - generic [ref=e197] [cursor=pointer]:
+                    - img [ref=e199]
+                    - generic [ref=e201]:
+                      - img [ref=e205]
+                      - generic [ref=e207]: assets
+                - treeitem "audit" [level=1] [ref=e208]:
+                  - generic [ref=e209] [cursor=pointer]:
+                    - img [ref=e211]
+                    - generic [ref=e213]:
+                      - img [ref=e217]
+                      - generic [ref=e219]: audit
+                - treeitem "charts" [level=1] [ref=e220]:
+                  - generic [ref=e221] [cursor=pointer]:
+                    - img [ref=e223]
+                    - generic [ref=e225]:
+                      - img [ref=e229]
+                      - generic [ref=e231]: charts
+                - treeitem "docs-audit" [level=1] [ref=e232]:
+                  - generic [ref=e233] [cursor=pointer]:
+                    - img [ref=e235]
+                    - generic [ref=e237]:
+                      - img [ref=e241]
+                      - generic [ref=e243]: docs-audit
+                - treeitem "docs" [expanded] [level=1] [ref=e244]:
+                  - generic [ref=e245] [cursor=pointer]:
+                    - img [ref=e247]
+                    - generic [ref=e249]:
+                      - img [ref=e253]
+                      - generic [ref=e255]: docs
+                  - group "docs" [ref=e256]:
+                    - treeitem "_archive" [level=2] [ref=e257]:
+                      - generic [ref=e258] [cursor=pointer]:
+                        - img [ref=e263]
+                        - generic [ref=e265]:
+                          - img [ref=e269]
+                          - generic [ref=e271]: _archive
+                    - treeitem "architecture" [level=2] [ref=e272]:
+                      - generic [ref=e273] [cursor=pointer]:
+                        - img [ref=e278]
+                        - generic [ref=e280]:
+                          - img [ref=e284]
+                          - generic [ref=e286]: architecture
+                    - treeitem "audits" [level=2] [ref=e287]:
+                      - generic [ref=e288] [cursor=pointer]:
+                        - img [ref=e293]
+                        - generic [ref=e295]:
+                          - img [ref=e299]
+                          - generic [ref=e301]: audits
+                    - treeitem "badges" [level=2] [ref=e302]:
+                      - generic [ref=e303] [cursor=pointer]:
+                        - img [ref=e308]
+                        - generic [ref=e310]:
+                          - img [ref=e314]
+                          - generic [ref=e316]: badges
+                    - treeitem "how-to" [level=2] [ref=e317]:
+                      - generic [ref=e318] [cursor=pointer]:
+                        - img [ref=e323]
+                        - generic [ref=e325]:
+                          - img [ref=e329]
+                          - generic [ref=e331]: how-to
+                    - treeitem "internal-info" [level=2] [ref=e332]:
+                      - generic [ref=e333] [cursor=pointer]:
+                        - img [ref=e338]
+                        - generic [ref=e340]:
+                          - img [ref=e344]
+                          - generic [ref=e346]: internal-info
+                    - treeitem "operations" [level=2] [ref=e347]:
+                      - generic [ref=e348] [cursor=pointer]:
+                        - img [ref=e353]
+                        - generic [ref=e355]:
+                          - img [ref=e359]
+                          - generic [ref=e361]: operations
+                    - treeitem "overview" [level=2] [ref=e362]:
+                      - generic [ref=e363] [cursor=pointer]:
+                        - img [ref=e368]
+                        - generic [ref=e370]:
+                          - img [ref=e374]
+                          - generic [ref=e376]: overview
+                    - treeitem "reference" [level=2] [ref=e377]:
+                      - generic [ref=e378] [cursor=pointer]:
+                        - img [ref=e383]
+                        - generic [ref=e385]:
+                          - img [ref=e389]
+                          - generic [ref=e391]: reference
+                    - treeitem "roadmap" [level=2] [ref=e392]:
+                      - generic [ref=e393] [cursor=pointer]:
+                        - img [ref=e398]
+                        - generic [ref=e400]:
+                          - img [ref=e404]
+                          - generic [ref=e406]: roadmap
+                    - treeitem "ADMIN-GUIDE.md" [level=2] [ref=e407]:
+                      - generic [ref=e412] [cursor=pointer]:
+                        - img [ref=e415]
+                        - generic [ref=e417]: ADMIN-GUIDE.md
+                    - treeitem "BOT-HANDBOOK.md" [level=2] [ref=e418]:
+                      - generic [ref=e423] [cursor=pointer]:
+                        - img [ref=e426]
+                        - generic [ref=e428]: BOT-HANDBOOK.md
+                    - treeitem "DEVNOTES.md" [level=2] [ref=e429]:
+                      - generic [ref=e434] [cursor=pointer]:
+                        - img [ref=e437]
+                        - generic [ref=e439]: DEVNOTES.md
+                    - treeitem "GATEKEEPER-GUIDE.md" [level=2] [ref=e440]:
+                      - generic [ref=e445] [cursor=pointer]:
+                        - img [ref=e448]
+                        - generic [ref=e450]: GATEKEEPER-GUIDE.md
+                    - treeitem "INCIDENTS.md" [level=2] [ref=e451]:
+                      - generic [ref=e456] [cursor=pointer]:
+                        - img [ref=e459]
+                        - generic [ref=e461]: INCIDENTS.md
+                    - treeitem "LEADERSHIP-GUIDE.md" [level=2] [ref=e462]:
+                      - generic [ref=e467] [cursor=pointer]:
+                        - img [ref=e470]
+                        - generic [ref=e472]: LEADERSHIP-GUIDE.md
+                    - treeitem "MEMBER-REWARDS.md" [level=2] [ref=e473]:
+                      - generic [ref=e478] [cursor=pointer]:
+                        - img [ref=e481]
+                        - generic [ref=e483]: MEMBER-REWARDS.md
+                    - treeitem "MOD-HANDBOOK.md" [level=2] [ref=e484]:
+                      - generic [ref=e489] [cursor=pointer]:
+                        - img [ref=e492]
+                        - generic [ref=e494]: MOD-HANDBOOK.md
+                    - treeitem "MOD-QUICKREF.md" [level=2] [ref=e495]:
+                      - generic [ref=e500] [cursor=pointer]:
+                        - img [ref=e503]
+                        - generic [ref=e505]: MOD-QUICKREF.md
+                    - treeitem "MODERATOR-GUIDE.md" [level=2] [ref=e506]:
+                      - generic [ref=e511] [cursor=pointer]:
+                        - img [ref=e514]
+                        - generic [ref=e516]: MODERATOR-GUIDE.md
+                    - treeitem "PERMS-MATRIX.md" [level=2] [ref=e517]:
+                      - generic [ref=e522] [cursor=pointer]:
+                        - img [ref=e525]
+                        - generic [ref=e527]: PERMS-MATRIX.md
+                    - treeitem "README.md" [level=2] [ref=e528]:
+                      - generic [ref=e533] [cursor=pointer]:
+                        - img [ref=e536]
+                        - generic [ref=e538]: README.md
+                    - treeitem "SLASH-COMMANDS.md" [level=2] [ref=e539]:
+                      - generic [ref=e544] [cursor=pointer]:
+                        - img [ref=e547]
+                        - generic [ref=e549]: SLASH-COMMANDS.md
+                    - treeitem "TICKET-SYSTEM-CUTOVER.md" [level=2] [ref=e550]:
+                      - generic [ref=e555] [cursor=pointer]:
+                        - img [ref=e558]
+                        - generic [ref=e560]: TICKET-SYSTEM-CUTOVER.md
+                    - treeitem "api-contracts.md" [level=2] [ref=e561]:
+                      - generic [ref=e566] [cursor=pointer]:
+                        - img [ref=e569]
+                        - generic [ref=e571]: api-contracts.md
+                    - treeitem "architecture.md" [level=2] [ref=e572]:
+                      - generic [ref=e577] [cursor=pointer]:
+                        - img [ref=e580]
+                        - generic [ref=e582]: architecture.md
+                    - treeitem "audit-security-flow.md" [level=2] [ref=e583]:
+                      - generic [ref=e588] [cursor=pointer]:
+                        - img [ref=e591]
+                        - generic [ref=e593]: audit-security-flow.md
+                    - treeitem "data-models.md" [level=2] [ref=e594]:
+                      - generic [ref=e599] [cursor=pointer]:
+                        - img [ref=e602]
+                        - generic [ref=e604]: data-models.md
+                    - treeitem "development-guide.md" [level=2] [ref=e605]:
+                      - generic [ref=e610] [cursor=pointer]:
+                        - img [ref=e613]
+                        - generic [ref=e615]: development-guide.md
+                    - treeitem "index.md" [level=2] [ref=e616]:
+                      - generic [ref=e621] [cursor=pointer]:
+                        - img [ref=e624]
+                        - generic [ref=e626]: index.md
+                    - treeitem "project-overview.md" [level=2] [ref=e627]:
+                      - generic [ref=e632] [cursor=pointer]:
+                        - img [ref=e635]
+                        - generic [ref=e637]: project-overview.md
+                    - treeitem "project-scan-report.json" [level=2] [ref=e638]:
+                      - generic [ref=e643] [cursor=pointer]:
+                        - img [ref=e646]
+                        - generic [ref=e648]: project-scan-report.json
+                    - treeitem "source-tree-analysis.md" [level=2] [ref=e649]:
+                      - generic [ref=e654] [cursor=pointer]:
+                        - img [ref=e657]
+                        - generic [ref=e659]: source-tree-analysis.md
+                - treeitem "migrations" [level=1] [ref=e660]:
+                  - generic [ref=e661] [cursor=pointer]:
+                    - img [ref=e663]
+                    - generic [ref=e665]:
+                      - img [ref=e669]
+                      - generic [ref=e671]: migrations
+                - treeitem "models" [level=1] [ref=e672]:
+                  - generic [ref=e673] [cursor=pointer]:
+                    - img [ref=e675]
+                    - generic [ref=e677]:
+                      - img [ref=e681]
+                      - generic [ref=e683]: models
+                - treeitem "nginx" [level=1] [ref=e684]:
+                  - generic [ref=e685] [cursor=pointer]:
+                    - img [ref=e687]
+                    - generic [ref=e689]:
+                      - img [ref=e693]
+                      - generic [ref=e695]: nginx
+                - treeitem "scripts" [level=1] [ref=e696]:
+                  - generic [ref=e697] [cursor=pointer]:
+                    - img [ref=e699]
+                    - generic [ref=e701]:
+                      - img [ref=e705]
+                      - generic [ref=e707]: scripts
+                - treeitem "src" [level=1] [ref=e708]:
+                  - generic [ref=e709] [cursor=pointer]:
+                    - img [ref=e711]
+                    - generic [ref=e713]:
+                      - img [ref=e717]
+                      - generic [ref=e719]: src
+                - treeitem "tests" [level=1] [ref=e720]:
+                  - generic [ref=e721] [cursor=pointer]:
+                    - img [ref=e723]
+                    - generic [ref=e725]:
+                      - img [ref=e729]
+                      - generic [ref=e731]: tests
+                - treeitem "web" [level=1] [ref=e732]:
+                  - generic [ref=e733] [cursor=pointer]:
+                    - img [ref=e735]
+                    - generic [ref=e737]:
+                      - img [ref=e741]
+                      - generic [ref=e743]: web
+                - treeitem "workers" [level=1] [ref=e744]:
+                  - generic [ref=e745] [cursor=pointer]:
+                    - img [ref=e747]
+                    - generic [ref=e749]:
+                      - img [ref=e753]
+                      - generic [ref=e755]: workers
+                - treeitem ".editorconfig" [level=1] [ref=e756]:
+                  - generic [ref=e758] [cursor=pointer]:
+                    - img [ref=e761]
+                    - generic [ref=e763]: .editorconfig
+                - treeitem ".env.example" [level=1] [ref=e764]:
+                  - generic [ref=e766] [cursor=pointer]:
+                    - img [ref=e769]
+                    - generic [ref=e771]: .env.example
+                - treeitem ".gitattributes" [level=1] [ref=e772]:
+                  - generic [ref=e774] [cursor=pointer]:
+                    - img [ref=e777]
+                    - generic [ref=e779]: .gitattributes
+                - treeitem ".gitignore" [level=1] [ref=e780]:
+                  - generic [ref=e782] [cursor=pointer]:
+                    - img [ref=e785]
+                    - generic [ref=e787]: .gitignore
+                - treeitem ".prettierignore" [level=1] [ref=e788]:
+                  - generic [ref=e790] [cursor=pointer]:
+                    - img [ref=e793]
+                    - generic [ref=e795]: .prettierignore
+                - treeitem ".prettierrc" [level=1] [ref=e796]:
+                  - generic [ref=e798] [cursor=pointer]:
+                    - img [ref=e801]
+                    - generic [ref=e803]: .prettierrc
+                - treeitem "CHANGELOG.md" [level=1] [ref=e804]:
+                  - generic [ref=e806] [cursor=pointer]:
+                    - img [ref=e809]
+                    - generic [ref=e811]: CHANGELOG.md
+                - treeitem "LICENSE" [level=1] [ref=e812]:
+                  - generic [ref=e814] [cursor=pointer]:
+                    - img [ref=e817]
+                    - generic [ref=e819]: LICENSE
+                - treeitem "README.md" [level=1] [ref=e820]:
+                  - generic [ref=e822] [cursor=pointer]:
+                    - img [ref=e825]
+                    - generic [ref=e827]: README.md
+                - treeitem "TODO.md" [level=1] [ref=e828]:
+                  - generic [ref=e830] [cursor=pointer]:
+                    - img [ref=e833]
+                    - generic [ref=e835]: TODO.md
+                - treeitem "deploy-no-tests.sh" [level=1] [ref=e836]:
+                  - generic [ref=e838] [cursor=pointer]:
+                    - img [ref=e841]
+                    - generic [ref=e843]: deploy-no-tests.sh
+                - treeitem "deploy.sh" [level=1] [ref=e844]:
+                  - generic [ref=e846] [cursor=pointer]:
+                    - img [ref=e849]
+                    - generic [ref=e851]: deploy.sh
+                - treeitem "ecosystem.config.cjs" [level=1] [ref=e852]:
+                  - generic [ref=e854] [cursor=pointer]:
+                    - img [ref=e857]
+                    - generic [ref=e859]: ecosystem.config.cjs
+                - treeitem "effort-over-time.png" [level=1] [ref=e860]:
+                  - generic [ref=e862] [cursor=pointer]:
+                    - img [ref=e865]
+                    - generic [ref=e867]: effort-over-time.png
+                - treeitem "eslint.config.js" [level=1] [ref=e868]:
+                  - generic [ref=e870] [cursor=pointer]:
+                    - img [ref=e873]
+                    - generic [ref=e875]: eslint.config.js
+                - treeitem "package-lock.json" [level=1] [ref=e876]:
+                  - generic [ref=e878] [cursor=pointer]:
+                    - img [ref=e881]
+                    - generic [ref=e883]: package-lock.json
+                - treeitem "package.json" [level=1] [ref=e884]:
+                  - generic [ref=e886] [cursor=pointer]:
+                    - img [ref=e889]
+                    - generic [ref=e891]: package.json
+                - treeitem "tsconfig.json" [level=1] [ref=e892]:
+                  - generic [ref=e894] [cursor=pointer]:
+                    - img [ref=e897]
+                    - generic [ref=e899]: tsconfig.json
+                - treeitem "tsup.config.ts" [level=1] [ref=e900]:
+                  - generic [ref=e902] [cursor=pointer]:
+                    - img [ref=e905]
+                    - generic [ref=e907]: tsup.config.ts
+                - treeitem "vitest.config.ts" [level=1] [ref=e908]:
+                  - generic [ref=e910] [cursor=pointer]:
+                    - img [ref=e913]
+                    - generic [ref=e915]: vitest.config.ts
+          - slider "Draggable pane splitter" [ref=e917]
+        - generic [ref=e920]:
+          - generic [ref=e924]:
+            - generic [ref=e926]:
+              - navigation "Breadcrumbs" [ref=e927]:
+                - heading "Breadcrumbs" [level=2] [ref=e928]
+                - list [ref=e929]:
+                  - listitem [ref=e930]:
+                    - link "pawtropolis-tech" [ref=e931] [cursor=pointer]:
+                      - /url: /watchthelight/pawtropolis-tech/tree/main
+                  - listitem [ref=e932]:
+                    - text: /
+                    - link "docs" [ref=e933] [cursor=pointer]:
+                      - /url: /watchthelight/pawtropolis-tech/tree/main/docs
+              - generic [ref=e934]:
+                - text: /
+                - heading "MEMBER-REWARDS.md" [level=1] [ref=e935]
+              - button "Copy path" [ref=e936] [cursor=pointer]:
+                - img [ref=e937]
+            - button "More file actions" [ref=e943] [cursor=pointer]:
+              - img [ref=e944]
+          - generic [ref=e946]:
+            - generic [ref=e948]:
+              - heading "Latest commit" [level=2] [ref=e949]
+              - generic [ref=e950]:
+                - generic [ref=e952]:
+                  - link "watchthelight" [ref=e953] [cursor=pointer]:
+                    - /url: /watchthelight
+                    - img "watchthelight" [ref=e954]
+                  - link "commits by watchthelight" [ref=e955] [cursor=pointer]:
+                    - /url: /watchthelight/pawtropolis-tech/commits?author=watchthelight
+                    - text: watchthelight
+                - generic [ref=e956]:
+                  - 'link "docs(member-rewards): badge level + movie tier tables and Server Arti…" [ref=e959] [cursor=pointer]':
+                    - /url: /watchthelight/pawtropolis-tech/commit/7ba4b0234366b767431b1a139488458ca9741686
+                  - button "Open commit details" [ref=e960] [cursor=pointer]:
+                    - img [ref=e961]
+              - generic [ref=e963]:
+                - generic [ref=e965]:
+                  - link "Commit 7ba4b02" [ref=e966] [cursor=pointer]:
+                    - /url: /watchthelight/pawtropolis-tech/commit/7ba4b0234366b767431b1a139488458ca9741686
+                    - text: 7ba4b02
+                  - text: ·
+                  - generic "May 2, 2026, 10:33 AM CDT" [ref=e967]: May 2, 20263 minutes ago
+                - generic [ref=e968]:
+                  - heading "History" [level=2] [ref=e969]
+                  - link "History" [ref=e970] [cursor=pointer]:
+                    - /url: /watchthelight/pawtropolis-tech/commits/main/docs/MEMBER-REWARDS.md
+                    - generic [ref=e971]:
+                      - generic:
+                        - img
+                      - generic [ref=e972]: History
+            - generic [ref=e974]:
+              - generic [ref=e976]:
+                - heading "File metadata and controls" [level=2] [ref=e977]
+                - list "File view" [ref=e979]:
+                  - listitem [ref=e980]:
+                    - button "Preview" [ref=e981] [cursor=pointer]:
+                      - generic [ref=e983]: Preview
+                  - listitem [ref=e984]:
+                    - button "Code" [ref=e985] [cursor=pointer]:
+                      - generic [ref=e987]: Code
+                  - listitem [ref=e988]:
+                    - button "Blame" [ref=e989] [cursor=pointer]:
+                      - generic [ref=e991]: Blame
+                - generic [ref=e992]:
+                  - generic [ref=e993]:
+                    - generic [ref=e994]:
+                      - link "Raw" [ref=e996] [cursor=pointer]:
+                        - /url: https://github.com/watchthelight/pawtropolis-tech/raw/refs/heads/main/docs/MEMBER-REWARDS.md
+                        - generic [ref=e998]: Raw
+                      - button "Copy raw file" [ref=e1000] [cursor=pointer]:
+                        - img [ref=e1001]
+                      - button "Download raw file" [ref=e1005] [cursor=pointer]:
+                        - img [ref=e1006]
+                    - generic [ref=e1009]:
+                      - button "You must be signed in to make or propose changes" [disabled] [ref=e1011]:
+                        - img [ref=e1012]
+                      - button "More edit options" [ref=e1015] [cursor=pointer]:
+                        - img [ref=e1016]
+                  - button "Outline" [ref=e1018] [cursor=pointer]:
+                    - img [ref=e1019]
+              - region "MEMBER-REWARDS.md" [ref=e1022]:
+                - article [ref=e1024]:
+                  - generic [ref=e1025]:
+                    - heading "Member Rewards" [level=1] [ref=e1026]
+                    - 'link "Permalink: Member Rewards" [ref=e1027] [cursor=pointer]':
+                      - /url: "#member-rewards"
+                      - img [ref=e1028]
+                  - paragraph [ref=e1030]: Everything you can earn by being active in Pawtropolis.
+                  - paragraph [ref=e1031]:
+                    - text: Sourced from the
+                    - code [ref=e1032]: "#server-info"
+                    - text: forum (canonical, maintained by the Owner). If this doc drifts from the forum, the forum wins.
+                  - separator [ref=e1033]
+                  - generic [ref=e1034]:
+                    - heading "Table of Contents" [level=2] [ref=e1035]
+                    - 'link "Permalink: Table of Contents" [ref=e1036] [cursor=pointer]':
+                      - /url: "#table-of-contents"
+                      - img [ref=e1037]
+                  - list [ref=e1039]:
+                    - listitem [ref=e1040]:
+                      - link "Level Rewards" [ref=e1041] [cursor=pointer]:
+                        - /url: "#level-rewards"
+                    - listitem [ref=e1042]:
+                      - link "Activity Rewards (Weekly Newsletter)" [ref=e1043] [cursor=pointer]:
+                        - /url: "#activity-rewards-weekly-newsletter"
+                    - listitem [ref=e1044]:
+                      - link "Credit System (Monthly)" [ref=e1045] [cursor=pointer]:
+                        - /url: "#credit-system-monthly"
+                    - listitem [ref=e1046]:
+                      - link "Byte Tokens" [ref=e1047] [cursor=pointer]:
+                        - /url: "#byte-tokens"
+                    - listitem [ref=e1048]:
+                      - link "Movie Night Reward Tiers" [ref=e1049] [cursor=pointer]:
+                        - /url: "#movie-night-reward-tiers"
+                    - listitem [ref=e1050]:
+                      - link "Server Shop & Economy" [ref=e1051] [cursor=pointer]:
+                        - /url: "#server-shop--economy"
+                  - separator [ref=e1052]
+                  - generic [ref=e1053]:
+                    - heading "Level Rewards" [level=2] [ref=e1054]
+                    - 'link "Permalink: Level Rewards" [ref=e1055] [cursor=pointer]':
+                      - /url: "#level-rewards"
+                      - img [ref=e1056]
+                  - paragraph [ref=e1058]: Roles unlock as you level up. Each level adds perks on top of the previous one.
+                  - table [ref=e1060]:
+                    - rowgroup [ref=e1061]:
+                      - row "Level Role Unlocks" [ref=e1062]:
+                        - columnheader "Level Role" [ref=e1063]
+                        - columnheader "Unlocks" [ref=e1064]
+                    - rowgroup [ref=e1065]:
+                      - row "@Newcomer Fur Media posting in most media channels; video + streaming in voice channels" [ref=e1066]:
+                        - cell "@Newcomer Fur" [ref=e1067]:
+                          - link "@Newcomer Fur" [ref=e1068] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/404a44a23dd90a217a607c2ba18a67173f892c13f16760c53490839121536d5e/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d6e6577636f6d65722d6675722d6c766c312e737667
+                            - img "@Newcomer Fur" [ref=e1069]
+                        - cell "Media posting in most media channels; video + streaming in voice channels" [ref=e1070]
+                      - row "@Beginner Fur Embed links in most media channels; message history in art channels" [ref=e1071]:
+                        - cell "@Beginner Fur" [ref=e1072]:
+                          - link "@Beginner Fur" [ref=e1073] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/340251b0c3aafc3c1ab2699d592db2b90e108481ad93ad9643dc24ecc5e1fff8/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d626567696e6e65722d6675722d6c766c352e737667
+                            - img "@Beginner Fur" [ref=e1074]
+                        - cell "Embed links in most media channels; message history in art channels" [ref=e1075]
+                      - row "@Chatty Fur Next level tier role" [ref=e1076]:
+                        - cell "@Chatty Fur" [ref=e1077]:
+                          - link "@Chatty Fur" [ref=e1078] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/f727a8e83164f7fce721568c5a6b5332a3097eebb0ca098451ba957c9bc15232/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d6368617474792d6675722d6c766c31302e737667
+                            - img "@Chatty Fur" [ref=e1079]
+                        - cell "Next level tier role" [ref=e1080]
+                      - 'row "@Engaged Fur Soundboards in voice channels; @Byte Token Common; media posting in #main-chat" [ref=e1081]':
+                        - cell "@Engaged Fur" [ref=e1082]:
+                          - link "@Engaged Fur" [ref=e1083] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/16676d6a67f95cedebd94b2b0351478691dca7496b498213739470a46b31eeda/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d656e67616765642d6675722d6c766c31352e737667
+                            - img "@Engaged Fur" [ref=e1084]
+                        - 'cell "Soundboards in voice channels; @Byte Token Common; media posting in #main-chat" [ref=e1085]':
+                          - text: Soundboards in voice channels;
+                          - link "@Byte Token Common" [ref=e1086] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/5a7ec9605afd21ce4273d643f9973e7eb0522ab10ef93ec8715429ba65ca3842/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d627974652d746f6b656e2d636f6d6d6f6e2e737667
+                            - img "@Byte Token Common" [ref=e1087]
+                          - text: ; media posting in
+                          - link "#main-chat" [ref=e1088] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/5bc6420ce2bce5285d1608628c03473c06a9f9d92a664f688d2c425b9cb21122/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f6368616e6e656c2d67656e6572616c2e737667
+                            - img "#main-chat" [ref=e1089]
+                      - 'row "@Active Fur Link embed posting in #main-chat; poll creation" [ref=e1090]':
+                        - cell "@Active Fur" [ref=e1091]:
+                          - link "@Active Fur" [ref=e1092] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/5e0183b034041dd9a40d0d56ad5104b55b8e992371e6cc4be40d0b42a6e11ac7/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d6163746976652d6675722d6c766c32302e737667
+                            - img "@Active Fur" [ref=e1093]
+                        - 'cell "Link embed posting in #main-chat; poll creation" [ref=e1094]':
+                          - text: Link embed posting in
+                          - link "#main-chat" [ref=e1095] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/5bc6420ce2bce5285d1608628c03473c06a9f9d92a664f688d2c425b9cb21122/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f6368616e6e656c2d67656e6572616c2e737667
+                            - img "#main-chat" [ref=e1096]
+                          - text: ; poll creation
+                      - row "@Known Fur @Byte Token Rare; access to known-chat" [ref=e1097]:
+                        - cell "@Known Fur" [ref=e1098]:
+                          - link "@Known Fur" [ref=e1099] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/afe8392ff409a986f3f7de0af803739af7311926ae5fbff5ab39087a09fc384a/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d6b6e6f776e2d6675722d6c766c33302e737667
+                            - img "@Known Fur" [ref=e1100]
+                        - cell "@Byte Token Rare; access to known-chat" [ref=e1101]:
+                          - link "@Byte Token Rare" [ref=e1102] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/3f5b9fe770270f72fff1f0cef9e03950229069c4fbcc3afa1f9e476bdc2e6c4d/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d627974652d746f6b656e2d726172652e737667
+                            - img "@Byte Token Rare" [ref=e1103]
+                          - text: ; access to known-chat
+                      - row "@Noble Fur @Byte Token Epic, @Byte Token Legendary" [ref=e1104]:
+                        - cell "@Noble Fur" [ref=e1105]:
+                          - link "@Noble Fur" [ref=e1106] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/297412d9205820645c7f7b0c5acb86b7aba8b2805f99004f18420361cc339b3c/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d6e6f626c652d6675722d6c766c35302e737667
+                            - img "@Noble Fur" [ref=e1107]
+                        - cell "@Byte Token Epic, @Byte Token Legendary" [ref=e1108]:
+                          - link "@Byte Token Epic" [ref=e1109] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/ca74a8691c846df338e939daa05f32638e36c1d69a30b3d7d36d56520a8bcf6a/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d627974652d746f6b656e2d657069632e737667
+                            - img "@Byte Token Epic" [ref=e1110]
+                          - text: ","
+                          - link "@Byte Token Legendary" [ref=e1111] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/6863efa620a77d07810fbf6e6f6cd08893a0310b3f35d6ee7a446e64d496c454/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d627974652d746f6b656e2d6c6567656e646172792e737667
+                            - img "@Byte Token Legendary" [ref=e1112]
+                      - row "@Veteran Fur @Byte Token Mythic" [ref=e1113]:
+                        - cell "@Veteran Fur" [ref=e1114]:
+                          - link "@Veteran Fur" [ref=e1115] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/61ef17105383c3a7a37a1ed2bf4f633646bb4150339ca53e0a1ffaa417f65501/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d7665746572616e2d6675722d6c766c36302e737667
+                            - img "@Veteran Fur" [ref=e1116]
+                        - cell "@Byte Token Mythic" [ref=e1117]:
+                          - link "@Byte Token Mythic" [ref=e1118] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/07ff16f82748fee61560cb865ffcc8a5e75de185906c0f41d241f1e65f848554/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d627974652d746f6b656e2d6d79746869632e737667
+                            - img "@Byte Token Mythic" [ref=e1119]
+                      - row "@Elite Fur (base unlock)" [ref=e1120]:
+                        - cell "@Elite Fur" [ref=e1121]:
+                          - link "@Elite Fur" [ref=e1122] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/11887c3b9a829b99decc9dfb505ea54e3c61e26fe44f70f5b8a7544e382dc3c8/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d656c6974652d6675722d6c766c37302e737667
+                            - img "@Elite Fur" [ref=e1123]
+                        - cell "(base unlock)" [ref=e1124]
+                      - row "@Legendary Fur @AllByte Token Legendary" [ref=e1125]:
+                        - cell "@Legendary Fur" [ref=e1126]:
+                          - link "@Legendary Fur" [ref=e1127] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/732a463186841697af6775dd37a74c72364c05252f660df00f326f8179734588/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d6c6567656e646172792d6675722d6c766c38302e737667
+                            - img "@Legendary Fur" [ref=e1128]
+                        - cell "@AllByte Token Legendary" [ref=e1129]:
+                          - link "@AllByte Token Legendary" [ref=e1130] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/d5f01ba645ec566cc8f1f1008c53032f4fbe3889cae2a07b9789a2b65f571df5/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d616c6c627974652d746f6b656e2d6c6567656e646172792e737667
+                            - img "@AllByte Token Legendary" [ref=e1131]
+                      - row "@Mythic Fur @AllByte Token Mythic" [ref=e1132]:
+                        - cell "@Mythic Fur" [ref=e1133]:
+                          - link "@Mythic Fur" [ref=e1134] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/23137ef96365db599601fb79949d6073960345f29403a12a311b5e854f1dba7b/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d6d79746869632d6675722d6c766c39302e737667
+                            - img "@Mythic Fur" [ref=e1135]
+                        - cell "@AllByte Token Mythic" [ref=e1136]:
+                          - link "@AllByte Token Mythic" [ref=e1137] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/6499078aa1fa779c8fc31f180ad65c19b62fec35e2b772383d2951f41b43a9ad/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d616c6c627974652d746f6b656e2d6d79746869632e737667
+                            - img "@AllByte Token Mythic" [ref=e1138]
+                      - row "@Eternal Fur All @AllByte Mythic + @Byte Mythic" [ref=e1139]:
+                        - cell "@Eternal Fur" [ref=e1140]:
+                          - link "@Eternal Fur" [ref=e1141] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/e0e41dd1f1f6d85dc7aa70214605cec131cc230e3cf39be0dca0bbd863936e72/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d657465726e616c2d6675722d6c766c3130302e737667
+                            - img "@Eternal Fur" [ref=e1142]
+                        - cell "All @AllByte Mythic + @Byte Mythic" [ref=e1143]:
+                          - text: All
+                          - link "@AllByte Mythic" [ref=e1144] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/6499078aa1fa779c8fc31f180ad65c19b62fec35e2b772383d2951f41b43a9ad/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d616c6c627974652d746f6b656e2d6d79746869632e737667
+                            - img "@AllByte Mythic" [ref=e1145]
+                          - text: +
+                          - link "@Byte Mythic" [ref=e1146] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/07ff16f82748fee61560cb865ffcc8a5e75de185906c0f41d241f1e65f848554/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d627974652d746f6b656e2d6d79746869632e737667
+                            - img "@Byte Mythic" [ref=e1147]
+                  - paragraph [ref=e1148]:
+                    - text: Byte tokens are redeemable through
+                    - code [ref=e1149]: /byte
+                    - text: in channel
+                    - code [ref=e1150]: "896070890457018384"
+                    - text: . AllByte tokens need to be in a ticket.
+                  - separator [ref=e1151]
+                  - generic [ref=e1152]:
+                    - heading "Activity Rewards (Weekly Newsletter)" [level=2] [ref=e1153]
+                    - 'link "Permalink: Activity Rewards (Weekly Newsletter)" [ref=e1154] [cursor=pointer]':
+                      - /url: "#activity-rewards-weekly-newsletter"
+                      - img [ref=e1155]
+                  - paragraph [ref=e1157]:
+                    - text: The top three most active users each week get announced in a weekly newsletter post. The exact role names and reward amounts can shift over time; the in-Discord newsletter thread is the canonical source. Find it linked from the
+                    - strong [ref=e1158]: City Hall
+                    - text: post inside
+                    - code [ref=e1159]: 「🔍」server-info
+                    - text: (the message describing reward systems lists the newsletter channel).
+                  - paragraph [ref=e1160]: "The current shape of the reward (subject to change in the newsletter thread):"
+                  - generic [ref=e1161]:
+                    - heading "1st Place" [level=3] [ref=e1162]
+                    - 'link "Permalink: 1st Place" [ref=e1163] [cursor=pointer]':
+                      - /url: "#1st-place"
+                      - img [ref=e1164]
+                  - list [ref=e1166]:
+                    - listitem [ref=e1167]: The active "weekly winner" role tied to that week's newsletter
+                    - listitem [ref=e1168]: A bonus XP grant
+                    - listitem [ref=e1169]: A currency grant
+                    - listitem [ref=e1170]: One monthly credit (counts toward the credit-redemption tiers below)
+                  - paragraph [ref=e1171]: If the 1st-place user is on a streak, the reward pool doubles. The pool resets when the streak breaks.
+                  - generic [ref=e1172]:
+                    - heading "2nd and 3rd Place" [level=3] [ref=e1173]
+                    - 'link "Permalink: 2nd and 3rd Place" [ref=e1174] [cursor=pointer]':
+                      - /url: "#2nd-and-3rd-place"
+                      - img [ref=e1175]
+                  - list [ref=e1177]:
+                    - listitem [ref=e1178]: A "runner-up" role for that week
+                    - listitem [ref=e1179]: A smaller XP grant
+                    - listitem [ref=e1180]: A smaller currency grant
+                  - blockquote [ref=e1181]:
+                    - paragraph [ref=e1182]:
+                      - strong [ref=e1183]: Why no exact role IDs here?
+                      - text: The role IDs that previously appeared in this section no longer match the current live "weekly winner" / "runner-up" roles, and the canonical reward breakdown lives in the newsletter post inside
+                      - code [ref=e1184]: 「🔍」server-info
+                      - text: rather than this doc. Refer to the live thread for the current numbers.
+                  - separator [ref=e1185]
+                  - generic [ref=e1186]:
+                    - heading "Credit System (Monthly)" [level=2] [ref=e1187]
+                    - 'link "Permalink: Credit System (Monthly)" [ref=e1188] [cursor=pointer]':
+                      - /url: "#credit-system-monthly"
+                      - img [ref=e1189]
+                  - paragraph [ref=e1191]: 1st-place weekly winners earn 1 credit per week. Credits accumulate over the four weeks of a month and reset at the start of each month. Only one reward can be redeemed per month.
+                  - table [ref=e1193]:
+                    - rowgroup [ref=e1194]:
+                      - row "Credits Reward" [ref=e1195]:
+                        - columnheader "Credits" [ref=e1196]
+                        - columnheader "Reward" [ref=e1197]
+                    - rowgroup [ref=e1198]:
+                      - row "1 Headshot art piece from a @Server Artist" [ref=e1199]:
+                        - cell "1" [ref=e1200]
+                        - cell "Headshot art piece from a @Server Artist" [ref=e1201]:
+                          - text: Headshot art piece from a
+                          - link "@Server Artist" [ref=e1202] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/6ddc663941462ae0550b012d8fc216ac988fcd4efb7333dba48e1ce6ccd3d6b9/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d7365727665722d6172746973742e737667
+                            - img "@Server Artist" [ref=e1203]
+                      - row "2 Half-body art piece from a @Server Artist" [ref=e1204]:
+                        - cell "2" [ref=e1205]
+                        - cell "Half-body art piece from a @Server Artist" [ref=e1206]:
+                          - text: Half-body art piece from a
+                          - link "@Server Artist" [ref=e1207] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/6ddc663941462ae0550b012d8fc216ac988fcd4efb7333dba48e1ce6ccd3d6b9/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d7365727665722d6172746973742e737667
+                            - img "@Server Artist" [ref=e1208]
+                      - row "3 Two $5 Discord shop items" [ref=e1209]:
+                        - cell "3" [ref=e1210]
+                        - cell "Two $5 Discord shop items" [ref=e1211]
+                      - row "4 One $9.99 Nitro 2x Boost" [ref=e1212]:
+                        - cell "4" [ref=e1213]
+                        - cell "One $9.99 Nitro 2x Boost" [ref=e1214]
+                  - paragraph [ref=e1215]: "At the end of each month the server also picks two winners from the ambassador pool: the most active text-chat user and the most active voice-chat user. Rewards rotate each month depending on which side was more active. The top slot usually includes art, a Nitro boost, a few Byte tokens, and bulk currency; the runner-up gets a smaller version of the same mix."
+                  - separator [ref=e1216]
+                  - generic [ref=e1217]:
+                    - heading "Byte Tokens" [level=2] [ref=e1218]
+                    - 'link "Permalink: Byte Tokens" [ref=e1219] [cursor=pointer]':
+                      - /url: "#byte-tokens"
+                      - img [ref=e1220]
+                  - paragraph [ref=e1222]: A Byte is a consumable that multiplies your leveling XP for a set duration. Bytes are obtained through giveaways, events, drops, level rewards, and the shop.
+                  - generic [ref=e1223]:
+                    - heading "Types" [level=3] [ref=e1224]
+                    - 'link "Permalink: Types" [ref=e1225] [cursor=pointer]':
+                      - /url: "#types"
+                      - img [ref=e1226]
+                  - list [ref=e1228]:
+                    - listitem [ref=e1229]:
+                      - strong [ref=e1230]: Byte
+                      - text: is a personal token that applies only to your profile.
+                    - listitem [ref=e1231]:
+                      - strong [ref=e1232]: AllByte
+                      - text: is a global token. A staff member activates it, and the multiplier applies to everyone in the server.
+                  - paragraph [ref=e1233]: AllBytes only come in Epic rarity or higher.
+                  - generic [ref=e1234]:
+                    - heading "Rarity" [level=3] [ref=e1235]
+                    - 'link "Permalink: Rarity" [ref=e1236] [cursor=pointer]':
+                      - /url: "#rarity"
+                      - img [ref=e1237]
+                  - table [ref=e1240]:
+                    - rowgroup [ref=e1241]:
+                      - row "Rarity Multiplier Duration" [ref=e1242]:
+                        - columnheader "Rarity" [ref=e1243]
+                        - columnheader "Multiplier" [ref=e1244]
+                        - columnheader "Duration" [ref=e1245]
+                    - rowgroup [ref=e1246]:
+                      - row "Common 2x 2 hours" [ref=e1247]:
+                        - cell "Common" [ref=e1248]
+                        - cell "2x" [ref=e1249]
+                        - cell "2 hours" [ref=e1250]
+                      - row "Rare 3x 6 hours" [ref=e1251]:
+                        - cell "Rare" [ref=e1252]
+                        - cell "3x" [ref=e1253]
+                        - cell "6 hours" [ref=e1254]
+                      - row "Epic 4x 12 hours" [ref=e1255]:
+                        - cell "Epic" [ref=e1256]
+                        - cell "4x" [ref=e1257]
+                        - cell "12 hours" [ref=e1258]
+                      - row "Legendary 4x 24 hours" [ref=e1259]:
+                        - cell "Legendary" [ref=e1260]
+                        - cell "4x" [ref=e1261]
+                        - cell "24 hours" [ref=e1262]
+                      - row "Mythic 6x up to 3 days" [ref=e1263]:
+                        - cell "Mythic" [ref=e1264]
+                        - cell "6x" [ref=e1265]
+                        - cell "up to 3 days" [ref=e1266]
+                  - generic [ref=e1267]:
+                    - heading "How to Redeem" [level=3] [ref=e1268]
+                    - 'link "Permalink: How to Redeem" [ref=e1269] [cursor=pointer]':
+                      - /url: "#how-to-redeem"
+                      - img [ref=e1270]
+                  - list [ref=e1272]:
+                    - listitem [ref=e1273]:
+                      - text: Check your inventory with
+                      - code [ref=e1274]: /inventory
+                      - text: to confirm the Byte is there.
+                    - listitem [ref=e1275]:
+                      - text: Run
+                      - code [ref=e1276]: /shop use <item>
+                      - text: to consume it. This adds a role to your profile matching the Byte's level and duration.
+                    - listitem [ref=e1277]:
+                      - text: With the role applied, run
+                      - code [ref=e1278]: /byte
+                      - text: in channel
+                      - code [ref=e1279]: "896070890457018384"
+                      - text: to activate it.
+                    - listitem [ref=e1280]:
+                      - text: For AllBytes, a staff member activates it; the global XP boost is announced in the staff-managed AllByte announcement thread (link in the live
+                      - code [ref=e1281]: 「🔍」server-info
+                      - text: Reward System post).
+                  - paragraph [ref=e1282]: Only one role of each rarity can be attached at a time. You can't stack another Byte of the same rarity until the first one is consumed, but different rarities can coexist.
+                  - separator [ref=e1283]
+                  - generic [ref=e1284]:
+                    - heading "Movie Night Reward Tiers" [level=2] [ref=e1285]
+                    - 'link "Permalink: Movie Night Reward Tiers" [ref=e1286] [cursor=pointer]':
+                      - /url: "#movie-night-reward-tiers"
+                      - img [ref=e1287]
+                  - paragraph [ref=e1289]: Attend movie nights in the voice channel for at least 30 minutes each to earn credit toward a tier. You can earn at most one movie-night point per day regardless of how many movies are playing.
+                  - table [ref=e1291]:
+                    - rowgroup [ref=e1292]:
+                      - row "Tier Role Requirement Perks" [ref=e1293]:
+                        - columnheader "Tier" [ref=e1294]
+                        - columnheader "Role" [ref=e1295]
+                        - columnheader "Requirement" [ref=e1296]
+                        - columnheader "Perks" [ref=e1297]
+                    - rowgroup [ref=e1298]:
+                      - row "Tier 1 @Red Carpet Guest Attend 1 movie night Tier 1 role" [ref=e1299]:
+                        - cell "Tier 1" [ref=e1300]
+                        - cell "@Red Carpet Guest" [ref=e1301]:
+                          - link "@Red Carpet Guest" [ref=e1302] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/3eaebc3df252db5761f4fc50e2d340c2d9f363105cb1c5eb5bab61fe6a5cdee7/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f6d6f7669652d746965722d312e737667
+                            - img "@Red Carpet Guest" [ref=e1303]
+                        - cell "Attend 1 movie night" [ref=e1304]
+                        - cell "Tier 1 role" [ref=e1305]
+                      - row "Tier 2 @Popcorn Club Attend 5 movie nights 2x chat XP" [ref=e1306]:
+                        - cell "Tier 2" [ref=e1307]
+                        - cell "@Popcorn Club" [ref=e1308]:
+                          - link "@Popcorn Club" [ref=e1309] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/b4b454753c237a4a3857f0e8339e33661b13609460d60d13e45c0cfc1cfc31de/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f6d6f7669652d746965722d322e737667
+                            - img "@Popcorn Club" [ref=e1310]
+                        - cell "Attend 5 movie nights" [ref=e1311]
+                        - cell "2x chat XP" [ref=e1312]
+                      - row "Tier 3 @Director's Cut Attend 10 movie nights 3x chat XP" [ref=e1313]:
+                        - cell "Tier 3" [ref=e1314]
+                        - cell "@Director's Cut" [ref=e1315]:
+                          - link "@Director's Cut" [ref=e1316] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/78efb9fd064a9d01e0fbbc9e797bb0d747edad7f039c512bc8490f68d8b60214/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f6d6f7669652d746965722d332e737667
+                            - img "@Director's Cut" [ref=e1317]
+                        - cell "Attend 10 movie nights" [ref=e1318]
+                        - cell "3x chat XP" [ref=e1319]
+                      - row "Tier 4 @Cinematic Royalty Attend 20+ movie nights 5x chat XP + one movie-themed art piece by a @Server Artist" [ref=e1320]:
+                        - cell "Tier 4" [ref=e1321]
+                        - cell "@Cinematic Royalty" [ref=e1322]:
+                          - link "@Cinematic Royalty" [ref=e1323] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/37e5a295a9ab7c4435b995fdb7f5f2f580975f8c02971ecb3b3ff32682e69180/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f6d6f7669652d746965722d342e737667
+                            - img "@Cinematic Royalty" [ref=e1324]
+                        - cell "Attend 20+ movie nights" [ref=e1325]
+                        - cell "5x chat XP + one movie-themed art piece by a @Server Artist" [ref=e1326]:
+                          - text: 5x chat XP + one movie-themed art piece by a
+                          - link "@Server Artist" [ref=e1327] [cursor=pointer]:
+                            - /url: https://camo.githubusercontent.com/6ddc663941462ae0550b012d8fc216ac988fcd4efb7333dba48e1ce6ccd3d6b9/68747470733a2f2f63646e2e6a7364656c6976722e6e65742f67682f77617463687468656c696768742f70617774726f706f6c69732d74656368406d61696e2f646f63732f6261646765732f7376672f726f6c652d7365727665722d6172746973742e737667
+                            - img "@Server Artist" [ref=e1328]
+                  - paragraph [ref=e1329]: Staff verify attendance before awarding.
+                  - separator [ref=e1330]
+                  - generic [ref=e1331]:
+                    - heading "Server Shop & Economy" [level=2] [ref=e1332]
+                    - 'link "Permalink: Server Shop & Economy" [ref=e1333] [cursor=pointer]':
+                      - /url: "#server-shop--economy"
+                      - img [ref=e1334]
+                  - paragraph [ref=e1336]:
+                    - text: The server economy runs on UnbelievaBoat (bot ID
+                    - code [ref=e1337]: "493716749342998541"
+                    - text: ). Currency is gems.
+                  - generic [ref=e1338]:
+                    - heading "Shop Contents" [level=3] [ref=e1339]
+                    - 'link "Permalink: Shop Contents" [ref=e1340] [cursor=pointer]':
+                      - /url: "#shop-contents"
+                      - img [ref=e1341]
+                  - list [ref=e1343]:
+                    - listitem [ref=e1344]: Color roles
+                    - listitem [ref=e1345]: Cosmetic roles
+                    - listitem [ref=e1346]: Redemption tickets (art, Nitro, etc.)
+                    - listitem [ref=e1347]: Byte tokens
+                    - listitem [ref=e1348]: VIP access
+                    - listitem [ref=e1349]: Plus other rotating items
+                  - generic [ref=e1350]:
+                    - heading "Profile Commands" [level=3] [ref=e1351]
+                    - 'link "Permalink: Profile Commands" [ref=e1352] [cursor=pointer]':
+                      - /url: "#profile-commands"
+                      - img [ref=e1353]
+                  - table [ref=e1356]:
+                    - rowgroup [ref=e1357]:
+                      - row "Command What it does" [ref=e1358]:
+                        - columnheader "Command" [ref=e1359]
+                        - columnheader "What it does" [ref=e1360]
+                    - rowgroup [ref=e1361]:
+                      - row "/balance Check your balance, or tag someone to check theirs" [ref=e1362]:
+                        - cell "/balance" [ref=e1363]:
+                          - code [ref=e1364]: /balance
+                        - cell "Check your balance, or tag someone to check theirs" [ref=e1365]
+                      - row "/leaderboard View the currency leaderboard (paginated)" [ref=e1366]:
+                        - cell "/leaderboard" [ref=e1367]:
+                          - code [ref=e1368]: /leaderboard
+                        - cell "View the currency leaderboard (paginated)" [ref=e1369]
+                      - row "/inventory List the items you currently hold" [ref=e1370]:
+                        - cell "/inventory" [ref=e1371]:
+                          - code [ref=e1372]: /inventory
+                        - cell "List the items you currently hold" [ref=e1373]
+                  - generic [ref=e1374]:
+                    - heading "Earning Commands" [level=3] [ref=e1375]
+                    - 'link "Permalink: Earning Commands" [ref=e1376] [cursor=pointer]':
+                      - /url: "#earning-commands"
+                      - img [ref=e1377]
+                  - table [ref=e1380]:
+                    - rowgroup [ref=e1381]:
+                      - row "Command Cooldown Reward" [ref=e1382]:
+                        - columnheader "Command" [ref=e1383]
+                        - columnheader "Cooldown" [ref=e1384]
+                        - columnheader "Reward" [ref=e1385]
+                    - rowgroup [ref=e1386]:
+                      - row "/pet every 3 minutes 1 to 100 gems" [ref=e1387]:
+                        - cell "/pet" [ref=e1388]:
+                          - code [ref=e1389]: /pet
+                        - cell "every 3 minutes" [ref=e1390]
+                        - cell "1 to 100 gems" [ref=e1391]
+                      - row "/snuggle every 24 hours 1000 to 7800 gems" [ref=e1392]:
+                        - cell "/snuggle" [ref=e1393]:
+                          - code [ref=e1394]: /snuggle
+                        - cell "every 24 hours" [ref=e1395]
+                        - cell "1000 to 7800 gems" [ref=e1396]
+                      - row "/clickcake every 20 minutes 18 gems per click" [ref=e1397]:
+                        - cell "/clickcake" [ref=e1398]:
+                          - code [ref=e1399]: /clickcake
+                        - cell "every 20 minutes" [ref=e1400]
+                        - cell "18 gems per click" [ref=e1401]
+                  - paragraph [ref=e1402]: You also passively earn 5-10 gems per 30 seconds of chatting.
+                  - generic [ref=e1403]:
+                    - heading "Gambling Commands" [level=3] [ref=e1404]
+                    - 'link "Permalink: Gambling Commands" [ref=e1405] [cursor=pointer]':
+                      - /url: "#gambling-commands"
+                      - img [ref=e1406]
+                  - paragraph [ref=e1408]: Bets must be 5000 gems or higher.
+                  - table [ref=e1410]:
+                    - rowgroup [ref=e1411]:
+                      - row "Command How it resolves" [ref=e1412]:
+                        - columnheader "Command" [ref=e1413]
+                        - columnheader "How it resolves" [ref=e1414]
+                    - rowgroup [ref=e1415]:
+                      - row "/rolldice bet:<amount> Over 64 wins the bet back; over 90 triples it; a 100 gives 9x. Anything less loses." [ref=e1416]:
+                        - cell "/rolldice bet:<amount>" [ref=e1417]:
+                          - code [ref=e1418]: /rolldice bet:<amount>
+                        - cell "Over 64 wins the bet back; over 90 triples it; a 100 gives 9x. Anything less loses." [ref=e1419]
+                      - row "/slots bet:<amount> Pays out based on matches." [ref=e1420]:
+                        - cell "/slots bet:<amount>" [ref=e1421]:
+                          - code [ref=e1422]: /slots bet:<amount>
+                        - cell "Pays out based on matches." [ref=e1423]
+                      - row "/coinflip guess:<heads|tails> bet:<amount> Double or nothing." [ref=e1424]:
+                        - cell "/coinflip guess:<heads|tails> bet:<amount>" [ref=e1425]:
+                          - code [ref=e1426]: /coinflip guess:<heads|tails> bet:<amount>
+                        - cell "Double or nothing." [ref=e1427]
+                  - generic [ref=e1428]:
+                    - heading "Utilities" [level=3] [ref=e1429]
+                    - 'link "Permalink: Utilities" [ref=e1430] [cursor=pointer]':
+                      - /url: "#utilities"
+                      - img [ref=e1431]
+                  - table [ref=e1434]:
+                    - rowgroup [ref=e1435]:
+                      - row "Command What it does" [ref=e1436]:
+                        - columnheader "Command" [ref=e1437]
+                        - columnheader "What it does" [ref=e1438]
+                    - rowgroup [ref=e1439]:
+                      - row "/give currency [@user] [amount] Transfer gems to someone" [ref=e1440]:
+                        - cell "/give currency [@user] [amount]" [ref=e1441]:
+                          - code [ref=e1442]: /give currency [@user] [amount]
+                        - cell "Transfer gems to someone" [ref=e1443]
+                      - row "/give item [@user] [item] Transfer a giftable item" [ref=e1444]:
+                        - cell "/give item [@user] [item]" [ref=e1445]:
+                          - code [ref=e1446]: /give item [@user] [item]
+                        - cell "Transfer a giftable item" [ref=e1447]
+                      - row "/shop view Browse the shop" [ref=e1448]:
+                        - cell "/shop view" [ref=e1449]:
+                          - code [ref=e1450]: /shop view
+                        - cell "Browse the shop" [ref=e1451]
+                      - row "/shop buy [item] <amount> Purchase an item" [ref=e1452]:
+                        - cell "/shop buy [item] <amount>" [ref=e1453]:
+                          - code [ref=e1454]: /shop buy [item] <amount>
+                        - cell "Purchase an item" [ref=e1455]
+                      - row "/shop item [item] Use an item from your inventory (applies the attached role if any)" [ref=e1456]:
+                        - cell "/shop item [item]" [ref=e1457]:
+                          - code [ref=e1458]: /shop item [item]
+                        - cell "Use an item from your inventory (applies the attached role if any)" [ref=e1459]
+                  - generic [ref=e1460]:
+                    - heading "Pick Drops" [level=3] [ref=e1461]
+                    - 'link "Permalink: Pick Drops" [ref=e1462] [cursor=pointer]':
+                      - /url: "#pick-drops"
+                      - img [ref=e1463]
+                  - paragraph [ref=e1465]:
+                    - text: "Random gem drops appear in these channels:"
+                    - code [ref=e1466]: 「🧰」bot-stuff
+                    - text: (
+                    - code [ref=e1467]: "896070890457018384"
+                    - text: ),
+                    - code [ref=e1468]: 「🎹」music
+                    - text: (
+                    - code [ref=e1469]: "896070889798508599"
+                    - text: ),
+                    - code [ref=e1470]: 「😂」memes
+                    - text: (
+                    - code [ref=e1471]: "896070889462976610"
+                    - text: ),
+                    - code [ref=e1472]: 「💭」main-chat
+                    - text: (
+                    - code [ref=e1473]: "896070889462976608"
+                    - text: ),
+                    - code [ref=e1474]: 「📷」media
+                    - text: (
+                    - code [ref=e1475]: "1121191510642274354"
+                    - text: ),
+                    - code [ref=e1476]: 「❓」qotd
+                    - text: (
+                    - code [ref=e1477]: "896070889198731288"
+                    - text: ).
+                  - paragraph [ref=e1478]: Giveaways and events also hand out currency; keep an eye on the announcements.
+                  - separator [ref=e1479]
+                  - generic [ref=e1480]:
+                    - heading "See Also" [level=2] [ref=e1481]
+                    - 'link "Permalink: See Also" [ref=e1482] [cursor=pointer]':
+                      - /url: "#see-also"
+                      - img [ref=e1483]
+                  - list [ref=e1485]:
+                    - listitem [ref=e1486]:
+                      - code [ref=e1487]: "#server-info"
+                      - text: forum in Discord (canonical source)
+                    - listitem [ref=e1488]:
+                      - link "MOD-HANDBOOK.md" [ref=e1489] [cursor=pointer]:
+                        - /url: /watchthelight/pawtropolis-tech/blob/main/docs/MOD-HANDBOOK.md
+                      - text: "- staff side of these systems"
+                    - listitem [ref=e1490]:
+                      - link "BOT-HANDBOOK.md" [ref=e1491] [cursor=pointer]:
+                        - /url: /watchthelight/pawtropolis-tech/blob/main/docs/BOT-HANDBOOK.md
+                      - text: "- command reference"
+  - alert [ref=e1495]

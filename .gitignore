@@ -31,17 +31,6 @@ changelog-qotd.md
 _bmad-output/implementation-artifacts/
 .claude/commands/
 
-# Skill-generated output files (ephemeral, regenerated per invocation)
-_bug-reply.md
-_announcement-*.md
-_perf-*.md
-_charts_data.json
-_charts_out/
-_retention.json
-_retention.png
-_retention_plot.py
-_situation_message.md
-
 # Test fixtures with potential secrets
 tests/**/fixtures/**
 # Exception: schema.sql is auto-generated DDL only, required by CI
@@ -96,53 +85,3 @@ docs/moderation/
 .claude/avatar-nsfw-roadmap.md
 .claude/avatar-nsfw-implementation-summary.md
 
-# Legacy one-off ignores (files that were deleted but kept in gitignore for safety)
-context/03_Slash_Commands_and_UX.md
-context/07_Database_Schema_and_Migrations.md
-context/06_Logging_Auditing_and_ModStats.md
-DATABASE_PROTECTION.md
-DATABASE_CHECK_COMMAND.md
-GOOGLE_VISION_SETUP.md
-SEARCH_FIX_VERIFICATION.md
-SEARCH_DATABASE_FIX_SUMMARY.md
-assets/testing-nsfw-e621
-assets/testing-safe
-assets/testing
-assets/e621-nsfw-sample.json
-docs/AVATAR_SCANNING_ADMIN.md
-docs/AVATAR_SCANNING.md
-docs/DEPLOYMENT_VERIFICATION_2025-11-11.md
-docs/APP_DETAILS_DEPLOYMENT_VERIFICATION.md
-docs/DEPLOYMENT_ISSUES_AND_SOLUTIONS.md
-docs/DEPLOY_CHECKLIST.md
-docs/DEPLOYMENT_VERIFICATION_2025-11-12.md
-.playwright-mcp/
-_bmad-output
-.claude/*
-!.claude/skills/
-!.claude/state/
-.claude/state/*
-!.claude/state/sync-tasks-sidecar/
-concept-1-neumorphism.png
-concept-2-glassmorphism.png
-pawtropolis-final.png
-concept-3-skeuomorphism.png
-pawtropolis-showcase-full.png
-pawtropolis-stats-1080p.png
-pawtropolis-stats-final.png
-pawtropolis-stats-vw.png
-.gitignore
-_concepts/skeuomorphism.html
-_concepts/neumorphism.html
-_concepts/glassmorphism.html
-.gitignore
-_concepts/prompts/03-skeuomorphism.md
-_concepts/prompts/02-glassmorphism.md
-_concepts/prompts/01-infrastructure-and-neumorphism.md
-.gitignore
-dev-update-2026-03-27.md
-dev-update-2026-03-30-technical-1.md
-dev-update-2026-03-30-technical-2.md
-dev-update-2026-03-30-technical-3.md
-dev-update-2026-03-30-technical.md
-dev-update-2026-03-30.md

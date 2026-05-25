@@ -1,0 +1,795 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - region
+    - generic [ref=e3]:
+      - link "Skip to content" [ref=e4] [cursor=pointer]:
+        - /url: "#start-of-content"
+      - banner [ref=e6]:
+        - heading "Navigation Menu" [level=2] [ref=e7]
+        - generic [ref=e8]:
+          - link "Homepage" [ref=e10] [cursor=pointer]:
+            - /url: /
+            - img [ref=e11]
+          - generic [ref=e13]:
+            - navigation "Global" [ref=e16]:
+              - list [ref=e17]:
+                - listitem [ref=e18]:
+                  - button "Platform" [ref=e20] [cursor=pointer]:
+                    - text: Platform
+                    - img [ref=e21]
+                - listitem [ref=e23]:
+                  - button "Solutions" [ref=e25] [cursor=pointer]:
+                    - text: Solutions
+                    - img [ref=e26]
+                - listitem [ref=e28]:
+                  - button "Resources" [ref=e30] [cursor=pointer]:
+                    - text: Resources
+                    - img [ref=e31]
+                - listitem [ref=e33]:
+                  - button "Open Source" [ref=e35] [cursor=pointer]:
+                    - text: Open Source
+                    - img [ref=e36]
+                - listitem [ref=e38]:
+                  - button "Enterprise" [ref=e40] [cursor=pointer]:
+                    - text: Enterprise
+                    - img [ref=e41]
+                - listitem [ref=e43]:
+                  - link "Pricing" [ref=e44] [cursor=pointer]:
+                    - /url: https://github.com/pricing
+                    - generic [ref=e45]: Pricing
+            - generic [ref=e46]:
+              - button "Search or jump to…" [ref=e49] [cursor=pointer]:
+                - img [ref=e51]
+              - link "Sign in" [ref=e54] [cursor=pointer]:
+                - /url: /login?return_to=https%3A%2F%2Fgithub.com%2Fwatchthelight%2Fpawtropolis-tech%2Fblob%2Ffeat%2Fbadges-repo-served-and-expansion%2Fdocs%2FMOD-QUICKREF.md
+              - link "Sign up" [ref=e55] [cursor=pointer]:
+                - /url: /signup?ref_cta=Sign+up&ref_loc=header+logged+out&ref_page=%2F%3Cuser-name%3E%2F%3Crepo-name%3E%2Fblob%2Fshow&source=header-repo&source_repo=watchthelight%2Fpawtropolis-tech
+              - button "Appearance settings" [ref=e58] [cursor=pointer]:
+                - img
+    - main [ref=e62]:
+      - generic [ref=e63]:
+        - generic [ref=e64]:
+          - generic [ref=e66]:
+            - img [ref=e67]
+            - link "watchthelight" [ref=e70] [cursor=pointer]:
+              - /url: /watchthelight
+            - generic [ref=e71]: /
+            - strong [ref=e72]:
+              - link "pawtropolis-tech" [ref=e73] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech
+            - generic [ref=e74]: Public
+          - generic [ref=e75]:
+            - list:
+              - listitem [ref=e76]:
+                - link "You must be signed in to change notification settings" [ref=e77] [cursor=pointer]:
+                  - /url: /login?return_to=%2Fwatchthelight%2Fpawtropolis-tech
+                  - img [ref=e78]
+                  - text: Notifications
+              - listitem [ref=e80]:
+                - link "Fork 1" [ref=e81] [cursor=pointer]:
+                  - /url: /login?return_to=%2Fwatchthelight%2Fpawtropolis-tech
+                  - img [ref=e82]
+                  - text: Fork
+                  - generic "1" [ref=e84]
+              - listitem [ref=e85]:
+                - link "You must be signed in to star a repository" [ref=e87] [cursor=pointer]:
+                  - /url: /login?return_to=%2Fwatchthelight%2Fpawtropolis-tech
+                  - img [ref=e88]
+                  - text: Star
+                  - generic "1 user starred this repository" [ref=e90]: "1"
+        - navigation "Repository" [ref=e91]:
+          - list [ref=e92]:
+            - listitem [ref=e93]:
+              - link "Code" [ref=e94] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/tree/feat/badges-repo-served-and-expansion
+                - img [ref=e95]
+                - generic [ref=e97]: Code
+            - listitem [ref=e98]:
+              - link "Issues" [ref=e99] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/issues
+                - img [ref=e100]
+                - generic [ref=e103]: Issues
+            - listitem [ref=e104]:
+              - link "Pull requests" [ref=e105] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/pulls
+                - img [ref=e106]
+                - generic [ref=e108]: Pull requests
+            - listitem [ref=e109]:
+              - link "Discussions" [ref=e110] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/discussions
+                - img [ref=e111]
+                - generic [ref=e113]: Discussions
+            - listitem [ref=e114]:
+              - link "Actions" [ref=e115] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/actions
+                - img [ref=e116]
+                - generic [ref=e118]: Actions
+            - listitem [ref=e119]:
+              - link "Projects" [ref=e120] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/projects
+                - img [ref=e121]
+                - generic [ref=e123]: Projects
+            - listitem [ref=e124]:
+              - link "Security and quality" [ref=e125] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/security
+                - img [ref=e126]
+                - generic [ref=e128]: Security and quality
+            - listitem [ref=e129]:
+              - link "Insights" [ref=e130] [cursor=pointer]:
+                - /url: /watchthelight/pawtropolis-tech/pulse
+                - img [ref=e131]
+                - generic [ref=e133]: Insights
+      - generic [ref=e141]:
+        - generic [ref=e143]:
+          - generic [ref=e146]:
+            - generic [ref=e147]:
+              - generic [ref=e148]:
+                - heading "Collapse file tree" [level=2] [ref=e149]:
+                  - button "Collapse file tree" [expanded] [ref=e150] [cursor=pointer]:
+                    - img [ref=e151]
+                - heading "Files" [level=2] [ref=e154]
+              - generic [ref=e155]:
+                - generic [ref=e157]:
+                  - link "View file on default branch" [ref=e159] [cursor=pointer]:
+                    - /url: /watchthelight/pawtropolis-tech/blob/main/docs/MOD-QUICKREF.md
+                    - img [ref=e160]
+                  - button "feat/badges-repo-served-and-expansion branch" [ref=e163] [cursor=pointer]:
+                    - generic [ref=e164]:
+                      - generic [ref=e166]:
+                        - img [ref=e168]
+                        - generic [ref=e171]: feat/badges-repo-served-and-expansion
+                      - generic:
+                        - img
+                - button "Search this repository (forward slash)" [ref=e173] [cursor=pointer]:
+                  - img [ref=e174]
+            - generic [ref=e177]:
+              - img [ref=e179]
+              - combobox "Go to file" [ref=e181]
+            - navigation "File Tree Navigation" [ref=e187]:
+              - tree "Files" [ref=e189]:
+                - treeitem ".github" [level=1] [ref=e190]:
+                  - generic [ref=e191] [cursor=pointer]:
+                    - img [ref=e193]
+                    - generic [ref=e195]:
+                      - img [ref=e199]
+                      - generic [ref=e201]: .github
+                - treeitem "assets" [level=1] [ref=e202]:
+                  - generic [ref=e203] [cursor=pointer]:
+                    - img [ref=e205]
+                    - generic [ref=e207]:
+                      - img [ref=e211]
+                      - generic [ref=e213]: assets
+                - treeitem "audit" [level=1] [ref=e214]:
+                  - generic [ref=e215] [cursor=pointer]:
+                    - img [ref=e217]
+                    - generic [ref=e219]:
+                      - img [ref=e223]
+                      - generic [ref=e225]: audit
+                - treeitem "charts" [level=1] [ref=e226]:
+                  - generic [ref=e227] [cursor=pointer]:
+                    - img [ref=e229]
+                    - generic [ref=e231]:
+                      - img [ref=e235]
+                      - generic [ref=e237]: charts
+                - treeitem "docs-audit" [level=1] [ref=e238]:
+                  - generic [ref=e239] [cursor=pointer]:
+                    - img [ref=e241]
+                    - generic [ref=e243]:
+                      - img [ref=e247]
+                      - generic [ref=e249]: docs-audit
+                - treeitem "docs" [expanded] [level=1] [ref=e250]:
+                  - generic [ref=e251] [cursor=pointer]:
+                    - img [ref=e253]
+                    - generic [ref=e255]:
+                      - img [ref=e259]
+                      - generic [ref=e261]: docs
+                  - group "docs" [ref=e262]:
+                    - treeitem "_archive" [level=2] [ref=e263]:
+                      - generic [ref=e264] [cursor=pointer]:
+                        - img [ref=e269]
+                        - generic [ref=e271]:
+                          - img [ref=e275]
+                          - generic [ref=e277]: _archive
+                    - treeitem "architecture" [level=2] [ref=e278]:
+                      - generic [ref=e279] [cursor=pointer]:
+                        - img [ref=e284]
+                        - generic [ref=e286]:
+                          - img [ref=e290]
+                          - generic [ref=e292]: architecture
+                    - treeitem "audits" [level=2] [ref=e293]:
+                      - generic [ref=e294] [cursor=pointer]:
+                        - img [ref=e299]
+                        - generic [ref=e301]:
+                          - img [ref=e305]
+                          - generic [ref=e307]: audits
+                    - treeitem "badges" [level=2] [ref=e308]:
+                      - generic [ref=e309] [cursor=pointer]:
+                        - img [ref=e314]
+                        - generic [ref=e316]:
+                          - img [ref=e320]
+                          - generic [ref=e322]: badges
+                    - treeitem "how-to" [level=2] [ref=e323]:
+                      - generic [ref=e324] [cursor=pointer]:
+                        - img [ref=e329]
+                        - generic [ref=e331]:
+                          - img [ref=e335]
+                          - generic [ref=e337]: how-to
+                    - treeitem "internal-info" [level=2] [ref=e338]:
+                      - generic [ref=e339] [cursor=pointer]:
+                        - img [ref=e344]
+                        - generic [ref=e346]:
+                          - img [ref=e350]
+                          - generic [ref=e352]: internal-info
+                    - treeitem "operations" [level=2] [ref=e353]:
+                      - generic [ref=e354] [cursor=pointer]:
+                        - img [ref=e359]
+                        - generic [ref=e361]:
+                          - img [ref=e365]
+                          - generic [ref=e367]: operations
+                    - treeitem "overview" [level=2] [ref=e368]:
+                      - generic [ref=e369] [cursor=pointer]:
+                        - img [ref=e374]
+                        - generic [ref=e376]:
+                          - img [ref=e380]
+                          - generic [ref=e382]: overview
+                    - treeitem "reference" [level=2] [ref=e383]:
+                      - generic [ref=e384] [cursor=pointer]:
+                        - img [ref=e389]
+                        - generic [ref=e391]:
+                          - img [ref=e395]
+                          - generic [ref=e397]: reference
+                    - treeitem "roadmap" [level=2] [ref=e398]:
+                      - generic [ref=e399] [cursor=pointer]:
+                        - img [ref=e404]
+                        - generic [ref=e406]:
+                          - img [ref=e410]
+                          - generic [ref=e412]: roadmap
+                    - treeitem "ADMIN-GUIDE.md" [level=2] [ref=e413]:
+                      - generic [ref=e418] [cursor=pointer]:
+                        - img [ref=e421]
+                        - generic [ref=e423]: ADMIN-GUIDE.md
+                    - treeitem "BOT-HANDBOOK.md" [level=2] [ref=e424]:
+                      - generic [ref=e429] [cursor=pointer]:
+                        - img [ref=e432]
+                        - generic [ref=e434]: BOT-HANDBOOK.md
+                    - treeitem "DEVNOTES.md" [level=2] [ref=e435]:
+                      - generic [ref=e440] [cursor=pointer]:
+                        - img [ref=e443]
+                        - generic [ref=e445]: DEVNOTES.md
+                    - treeitem "GATEKEEPER-GUIDE.md" [level=2] [ref=e446]:
+                      - generic [ref=e451] [cursor=pointer]:
+                        - img [ref=e454]
+                        - generic [ref=e456]: GATEKEEPER-GUIDE.md
+                    - treeitem "INCIDENTS.md" [level=2] [ref=e457]:
+                      - generic [ref=e462] [cursor=pointer]:
+                        - img [ref=e465]
+                        - generic [ref=e467]: INCIDENTS.md
+                    - treeitem "LEADERSHIP-GUIDE.md" [level=2] [ref=e468]:
+                      - generic [ref=e473] [cursor=pointer]:
+                        - img [ref=e476]
+                        - generic [ref=e478]: LEADERSHIP-GUIDE.md
+                    - treeitem "MEMBER-REWARDS.md" [level=2] [ref=e479]:
+                      - generic [ref=e484] [cursor=pointer]:
+                        - img [ref=e487]
+                        - generic [ref=e489]: MEMBER-REWARDS.md
+                    - treeitem "MOD-HANDBOOK.md" [level=2] [ref=e490]:
+                      - generic [ref=e495] [cursor=pointer]:
+                        - img [ref=e498]
+                        - generic [ref=e500]: MOD-HANDBOOK.md
+                    - treeitem "MOD-QUICKREF.md" [level=2] [ref=e501]:
+                      - generic [ref=e506] [cursor=pointer]:
+                        - img [ref=e509]
+                        - generic [ref=e511]: MOD-QUICKREF.md
+                    - treeitem "MODERATOR-GUIDE.md" [level=2] [ref=e512]:
+                      - generic [ref=e517] [cursor=pointer]:
+                        - img [ref=e520]
+                        - generic [ref=e522]: MODERATOR-GUIDE.md
+                    - treeitem "PERMS-MATRIX.md" [level=2] [ref=e523]:
+                      - generic [ref=e528] [cursor=pointer]:
+                        - img [ref=e531]
+                        - generic [ref=e533]: PERMS-MATRIX.md
+                    - treeitem "README.md" [level=2] [ref=e534]:
+                      - generic [ref=e539] [cursor=pointer]:
+                        - img [ref=e542]
+                        - generic [ref=e544]: README.md
+                    - treeitem "SLASH-COMMANDS.md" [level=2] [ref=e545]:
+                      - generic [ref=e550] [cursor=pointer]:
+                        - img [ref=e553]
+                        - generic [ref=e555]: SLASH-COMMANDS.md
+                    - treeitem "TICKET-SYSTEM-CUTOVER.md" [level=2] [ref=e556]:
+                      - generic [ref=e561] [cursor=pointer]:
+                        - img [ref=e564]
+                        - generic [ref=e566]: TICKET-SYSTEM-CUTOVER.md
+                    - treeitem "api-contracts.md" [level=2] [ref=e567]:
+                      - generic [ref=e572] [cursor=pointer]:
+                        - img [ref=e575]
+                        - generic [ref=e577]: api-contracts.md
+                    - treeitem "architecture.md" [level=2] [ref=e578]:
+                      - generic [ref=e583] [cursor=pointer]:
+                        - img [ref=e586]
+                        - generic [ref=e588]: architecture.md
+                    - treeitem "audit-security-flow.md" [level=2] [ref=e589]:
+                      - generic [ref=e594] [cursor=pointer]:
+                        - img [ref=e597]
+                        - generic [ref=e599]: audit-security-flow.md
+                    - treeitem "data-models.md" [level=2] [ref=e600]:
+                      - generic [ref=e605] [cursor=pointer]:
+                        - img [ref=e608]
+                        - generic [ref=e610]: data-models.md
+                    - treeitem "development-guide.md" [level=2] [ref=e611]:
+                      - generic [ref=e616] [cursor=pointer]:
+                        - img [ref=e619]
+                        - generic [ref=e621]: development-guide.md
+                    - treeitem "index.md" [level=2] [ref=e622]:
+                      - generic [ref=e627] [cursor=pointer]:
+                        - img [ref=e630]
+                        - generic [ref=e632]: index.md
+                    - treeitem "project-overview.md" [level=2] [ref=e633]:
+                      - generic [ref=e638] [cursor=pointer]:
+                        - img [ref=e641]
+                        - generic [ref=e643]: project-overview.md
+                    - treeitem "project-scan-report.json" [level=2] [ref=e644]:
+                      - generic [ref=e649] [cursor=pointer]:
+                        - img [ref=e652]
+                        - generic [ref=e654]: project-scan-report.json
+                    - treeitem "source-tree-analysis.md" [level=2] [ref=e655]:
+                      - generic [ref=e660] [cursor=pointer]:
+                        - img [ref=e663]
+                        - generic [ref=e665]: source-tree-analysis.md
+                - treeitem "migrations" [level=1] [ref=e666]:
+                  - generic [ref=e667] [cursor=pointer]:
+                    - img [ref=e669]
+                    - generic [ref=e671]:
+                      - img [ref=e675]
+                      - generic [ref=e677]: migrations
+                - treeitem "models" [level=1] [ref=e678]:
+                  - generic [ref=e679] [cursor=pointer]:
+                    - img [ref=e681]
+                    - generic [ref=e683]:
+                      - img [ref=e687]
+                      - generic [ref=e689]: models
+                - treeitem "nginx" [level=1] [ref=e690]:
+                  - generic [ref=e691] [cursor=pointer]:
+                    - img [ref=e693]
+                    - generic [ref=e695]:
+                      - img [ref=e699]
+                      - generic [ref=e701]: nginx
+                - treeitem "scripts" [level=1] [ref=e702]:
+                  - generic [ref=e703] [cursor=pointer]:
+                    - img [ref=e705]
+                    - generic [ref=e707]:
+                      - img [ref=e711]
+                      - generic [ref=e713]: scripts
+                - treeitem "src" [level=1] [ref=e714]:
+                  - generic [ref=e715] [cursor=pointer]:
+                    - img [ref=e717]
+                    - generic [ref=e719]:
+                      - img [ref=e723]
+                      - generic [ref=e725]: src
+                - treeitem "tests" [level=1] [ref=e726]:
+                  - generic [ref=e727] [cursor=pointer]:
+                    - img [ref=e729]
+                    - generic [ref=e731]:
+                      - img [ref=e735]
+                      - generic [ref=e737]: tests
+                - treeitem "web" [level=1] [ref=e738]:
+                  - generic [ref=e739] [cursor=pointer]:
+                    - img [ref=e741]
+                    - generic [ref=e743]:
+                      - img [ref=e747]
+                      - generic [ref=e749]: web
+                - treeitem "workers" [level=1] [ref=e750]:
+                  - generic [ref=e751] [cursor=pointer]:
+                    - img [ref=e753]
+                    - generic [ref=e755]:
+                      - img [ref=e759]
+                      - generic [ref=e761]: workers
+                - treeitem ".editorconfig" [level=1] [ref=e762]:
+                  - generic [ref=e764] [cursor=pointer]:
+                    - img [ref=e767]
+                    - generic [ref=e769]: .editorconfig
+                - treeitem ".env.example" [level=1] [ref=e770]:
+                  - generic [ref=e772] [cursor=pointer]:
+                    - img [ref=e775]
+                    - generic [ref=e777]: .env.example
+                - treeitem ".gitattributes" [level=1] [ref=e778]:
+                  - generic [ref=e780] [cursor=pointer]:
+                    - img [ref=e783]
+                    - generic [ref=e785]: .gitattributes
+                - treeitem ".gitignore" [level=1] [ref=e786]:
+                  - generic [ref=e788] [cursor=pointer]:
+                    - img [ref=e791]
+                    - generic [ref=e793]: .gitignore
+                - treeitem ".prettierignore" [level=1] [ref=e794]:
+                  - generic [ref=e796] [cursor=pointer]:
+                    - img [ref=e799]
+                    - generic [ref=e801]: .prettierignore
+                - treeitem ".prettierrc" [level=1] [ref=e802]:
+                  - generic [ref=e804] [cursor=pointer]:
+                    - img [ref=e807]
+                    - generic [ref=e809]: .prettierrc
+                - treeitem "CHANGELOG.md" [level=1] [ref=e810]:
+                  - generic [ref=e812] [cursor=pointer]:
+                    - img [ref=e815]
+                    - generic [ref=e817]: CHANGELOG.md
+                - treeitem "LICENSE" [level=1] [ref=e818]:
+                  - generic [ref=e820] [cursor=pointer]:
+                    - img [ref=e823]
+                    - generic [ref=e825]: LICENSE
+                - treeitem "README.md" [level=1] [ref=e826]:
+                  - generic [ref=e828] [cursor=pointer]:
+                    - img [ref=e831]
+                    - generic [ref=e833]: README.md
+                - treeitem "TODO.md" [level=1] [ref=e834]:
+                  - generic [ref=e836] [cursor=pointer]:
+                    - img [ref=e839]
+                    - generic [ref=e841]: TODO.md
+                - treeitem "deploy-no-tests.sh" [level=1] [ref=e842]:
+                  - generic [ref=e844] [cursor=pointer]:
+                    - img [ref=e847]
+                    - generic [ref=e849]: deploy-no-tests.sh
+                - treeitem "deploy.sh" [level=1] [ref=e850]:
+                  - generic [ref=e852] [cursor=pointer]:
+                    - img [ref=e855]
+                    - generic [ref=e857]: deploy.sh
+                - treeitem "ecosystem.config.cjs" [level=1] [ref=e858]:
+                  - generic [ref=e860] [cursor=pointer]:
+                    - img [ref=e863]
+                    - generic [ref=e865]: ecosystem.config.cjs
+                - treeitem "effort-over-time.png" [level=1] [ref=e866]:
+                  - generic [ref=e868] [cursor=pointer]:
+                    - img [ref=e871]
+                    - generic [ref=e873]: effort-over-time.png
+                - treeitem "eslint.config.js" [level=1] [ref=e874]:
+                  - generic [ref=e876] [cursor=pointer]:
+                    - img [ref=e879]
+                    - generic [ref=e881]: eslint.config.js
+                - treeitem "package-lock.json" [level=1] [ref=e882]:
+                  - generic [ref=e884] [cursor=pointer]:
+                    - img [ref=e887]
+                    - generic [ref=e889]: package-lock.json
+                - treeitem "package.json" [level=1] [ref=e890]:
+                  - generic [ref=e892] [cursor=pointer]:
+                    - img [ref=e895]
+                    - generic [ref=e897]: package.json
+                - treeitem "tsconfig.json" [level=1] [ref=e898]:
+                  - generic [ref=e900] [cursor=pointer]:
+                    - img [ref=e903]
+                    - generic [ref=e905]: tsconfig.json
+                - treeitem "tsup.config.ts" [level=1] [ref=e906]:
+                  - generic [ref=e908] [cursor=pointer]:
+                    - img [ref=e911]
+                    - generic [ref=e913]: tsup.config.ts
+                - treeitem "vitest.config.ts" [level=1] [ref=e914]:
+                  - generic [ref=e916] [cursor=pointer]:
+                    - img [ref=e919]
+                    - generic [ref=e921]: vitest.config.ts
+          - slider "Draggable pane splitter" [ref=e923]
+        - generic [ref=e926]:
+          - generic [ref=e930]:
+            - generic [ref=e932]:
+              - navigation "Breadcrumbs" [ref=e933]:
+                - heading "Breadcrumbs" [level=2] [ref=e934]
+                - list [ref=e935]:
+                  - listitem [ref=e936]:
+                    - link "pawtropolis-tech" [ref=e937] [cursor=pointer]:
+                      - /url: /watchthelight/pawtropolis-tech/tree/feat/badges-repo-served-and-expansion
+                  - listitem [ref=e938]:
+                    - text: /
+                    - link "docs" [ref=e939] [cursor=pointer]:
+                      - /url: /watchthelight/pawtropolis-tech/tree/feat/badges-repo-served-and-expansion/docs
+              - generic [ref=e940]:
+                - text: /
+                - heading "MOD-QUICKREF.md" [level=1] [ref=e941]
+              - button "Copy path" [ref=e942] [cursor=pointer]:
+                - img [ref=e943]
+            - button "More file actions" [ref=e949] [cursor=pointer]:
+              - img [ref=e950]
+          - generic [ref=e952]:
+            - generic [ref=e954]:
+              - heading "Latest commit" [level=2] [ref=e955]
+              - generic [ref=e956]:
+                - generic [ref=e958]:
+                  - link "watchthelight" [ref=e959] [cursor=pointer]:
+                    - /url: /watchthelight
+                    - img "watchthelight" [ref=e960]
+                  - link "commits by watchthelight" [ref=e961] [cursor=pointer]:
+                    - /url: /watchthelight/pawtropolis-tech/commits?author=watchthelight
+                    - text: watchthelight
+                - generic [ref=e962]:
+                  - 'link "fix(badges): serve from repo via raw GitHub URL + offline snapshot ge…" [ref=e965] [cursor=pointer]':
+                    - /url: /watchthelight/pawtropolis-tech/commit/e6187c683aee06212781beebe07baac196464c33
+                  - button "Open commit details" [ref=e966] [cursor=pointer]:
+                    - img [ref=e967]
+              - generic [ref=e969]:
+                - generic [ref=e971]:
+                  - link "Commit e6187c6" [ref=e972] [cursor=pointer]:
+                    - /url: /watchthelight/pawtropolis-tech/commit/e6187c683aee06212781beebe07baac196464c33
+                    - text: e6187c6
+                  - text: ·
+                  - generic "May 2, 2026, 10:26 AM CDT" [ref=e973]: May 2, 2026now
+                - generic [ref=e974]:
+                  - heading "History" [level=2] [ref=e975]
+                  - link "History" [ref=e976] [cursor=pointer]:
+                    - /url: /watchthelight/pawtropolis-tech/commits/feat/badges-repo-served-and-expansion/docs/MOD-QUICKREF.md
+                    - generic [ref=e977]:
+                      - generic:
+                        - img
+                      - generic [ref=e978]: History
+            - generic [ref=e980]:
+              - generic [ref=e982]:
+                - heading "File metadata and controls" [level=2] [ref=e983]
+                - list "File view" [ref=e985]:
+                  - listitem [ref=e986]:
+                    - button "Preview" [ref=e987] [cursor=pointer]:
+                      - generic [ref=e989]: Preview
+                  - listitem [ref=e990]:
+                    - button "Code" [ref=e991] [cursor=pointer]:
+                      - generic [ref=e993]: Code
+                  - listitem [ref=e994]:
+                    - button "Blame" [ref=e995] [cursor=pointer]:
+                      - generic [ref=e997]: Blame
+                - generic [ref=e998]:
+                  - generic [ref=e999]:
+                    - generic [ref=e1000]:
+                      - link "Raw" [ref=e1002] [cursor=pointer]:
+                        - /url: https://github.com/watchthelight/pawtropolis-tech/raw/refs/heads/feat/badges-repo-served-and-expansion/docs/MOD-QUICKREF.md
+                        - generic [ref=e1004]: Raw
+                      - button "Copy raw file" [ref=e1006] [cursor=pointer]:
+                        - img [ref=e1007]
+                      - button "Download raw file" [ref=e1011] [cursor=pointer]:
+                        - img [ref=e1012]
+                    - generic [ref=e1015]:
+                      - button "You must be signed in to make or propose changes" [disabled] [ref=e1017]:
+                        - img [ref=e1018]
+                      - button "More edit options" [ref=e1021] [cursor=pointer]:
+                        - img [ref=e1022]
+                  - button "Outline" [ref=e1024] [cursor=pointer]:
+                    - img [ref=e1025]
+              - region "MOD-QUICKREF.md" [ref=e1028]:
+                - article [ref=e1030]:
+                  - generic [ref=e1031]:
+                    - heading "Pawtech Quick Reference" [level=1] [ref=e1032]
+                    - 'link "Permalink: Pawtech Quick Reference" [ref=e1033] [cursor=pointer]':
+                      - /url: "#pawtech-quick-reference"
+                      - img [ref=e1034]
+                  - blockquote [ref=e1036]:
+                    - paragraph [ref=e1037]:
+                      - text: For full documentation, see
+                      - link "BOT-HANDBOOK.md" [ref=e1038] [cursor=pointer]:
+                        - /url: /watchthelight/pawtropolis-tech/blob/feat/badges-repo-served-and-expansion/docs/BOT-HANDBOOK.md
+                      - text: and
+                      - link "MOD-HANDBOOK.md" [ref=e1039] [cursor=pointer]:
+                        - /url: /watchthelight/pawtropolis-tech/blob/feat/badges-repo-served-and-expansion/docs/MOD-HANDBOOK.md
+                  - separator [ref=e1040]
+                  - generic [ref=e1041]:
+                    - heading "Reviewing Applications" [level=2] [ref=e1042]
+                    - 'link "Permalink: Reviewing Applications" [ref=e1043] [cursor=pointer]':
+                      - /url: "#reviewing-applications"
+                      - img [ref=e1044]
+                  - paragraph [ref=e1046]:
+                    - text: When a new application comes in, click the
+                    - strong [ref=e1047]: Claim
+                    - text: button first so other mods know you're handling it. Then use the
+                    - strong [ref=e1048]: Accept
+                    - text: ","
+                    - strong [ref=e1049]: Reject
+                    - text: ", or"
+                    - strong [ref=e1050]: Kick
+                    - text: buttons to take action.
+                  - paragraph [ref=e1051]: "If an application is bugged and you can't use the buttons, use these commands instead:"
+                  - list [ref=e1052]:
+                    - listitem [ref=e1053]:
+                      - code [ref=e1054]: /accept
+                      - text: ": approve the application"
+                    - listitem [ref=e1055]:
+                      - code [ref=e1056]: /reject reason:Your reason here
+                      - text: ": reject with explanation"
+                    - listitem [ref=e1057]:
+                      - code [ref=e1058]: /kick reason:Your reason here
+                      - text: ": kick from server"
+                    - listitem [ref=e1059]:
+                      - code [ref=e1060]: /unclaim
+                      - text: ": release so someone else can review it"
+                  - paragraph [ref=e1061]: "Each command accepts one of these to identify the application:"
+                  - list [ref=e1062]:
+                    - listitem [ref=e1063]:
+                      - code [ref=e1064]: app:A1B2C3
+                      - text: ": the short code shown on the embed"
+                    - listitem [ref=e1065]:
+                      - code [ref=e1066]: user:@Username
+                      - text: ": mention or pick from the list"
+                    - listitem [ref=e1067]:
+                      - code [ref=e1068]: uid:123456789
+                      - text: ": their Discord ID if they already left"
+                  - paragraph [ref=e1069]:
+                    - text: For rejections, add
+                    - code [ref=e1070]: perm:true
+                    - text: if they should never be allowed to re-apply.
+                  - paragraph [ref=e1071]:
+                    - text: To see what's waiting for review, run
+                    - code [ref=e1072]: /listopen
+                    - text: . Use
+                    - code [ref=e1073]: scope:all
+                    - text: to see everything or
+                    - code [ref=e1074]: scope:drafts
+                    - text: for incomplete applications.
+                  - paragraph [ref=e1075]:
+                    - text: Need to look up someone's history?
+                    - code [ref=e1076]: /search user:@Username
+                    - text: pulls up all their past applications and decisions.
+                  - paragraph [ref=e1077]:
+                    - text: Made a mistake with a permanent rejection?
+                    - code [ref=e1078]: /unblock target:@Username
+                    - text: lets them apply again.
+                  - generic [ref=e1079]:
+                    - heading "Checking Your Stats" [level=2] [ref=e1080]
+                    - 'link "Permalink: Checking Your Stats" [ref=e1081] [cursor=pointer]':
+                      - /url: "#checking-your-stats"
+                      - img [ref=e1082]
+                  - paragraph [ref=e1084]:
+                    - text: Run
+                    - code [ref=e1085]: /stats user moderator:@YourName
+                    - text: to see your approval rate, response times, and activity breakdown. You can adjust the time range with
+                    - code [ref=e1086]: days:30
+                    - text: or whatever period you want.
+                  - paragraph [ref=e1087]:
+                    - code [ref=e1088]: /stats leaderboard
+                    - text: shows rankings by review count, so you can see who's been most active.
+                  - paragraph [ref=e1089]:
+                    - text: For server-wide numbers,
+                    - code [ref=e1090]: /stats approval-rate
+                    - text: shows the overall approve vs reject breakdown.
+                  - generic [ref=e1091]:
+                    - heading "Server Activity" [level=2] [ref=e1092]
+                    - 'link "Permalink: Server Activity" [ref=e1093] [cursor=pointer]':
+                      - /url: "#server-activity"
+                      - img [ref=e1094]
+                  - paragraph [ref=e1096]:
+                    - code [ref=e1097]: /stats activity
+                    - text: shows a heatmap of message activity by day and hour. You can look back up to 8 weeks with
+                    - code [ref=e1098]: weeks:8
+                    - text: .
+                  - paragraph [ref=e1099]:
+                    - code [ref=e1100]: /health
+                    - text: shows bot uptime and response latency.
+                  - generic [ref=e1101]:
+                    - heading "Events (Movie & Game Night)" [level=2] [ref=e1102]
+                    - 'link "Permalink: Events (Movie & Game Night)" [ref=e1103] [cursor=pointer]':
+                      - /url: "#events-movie--game-night"
+                      - img [ref=e1104]
+                  - paragraph [ref=e1106]:
+                    - strong [ref=e1107]: "Movie Night:"
+                    - text: Use
+                    - code [ref=e1108]: /movie start channel:#movie-vc
+                    - text: to begin tracking. When done,
+                    - code [ref=e1109]: /movie end
+                    - text: finalizes attendance and assigns tier roles to anyone who stayed 30+ minutes.
+                  - paragraph [ref=e1110]:
+                    - strong [ref=e1111]: "Game Night:"
+                    - text: Use
+                    - code [ref=e1112]: /event game start channel:#game-vc
+                    - text: to begin tracking. When done,
+                    - code [ref=e1113]: /event game end
+                    - text: calculates qualification based on percentage of event attended (default 50%).
+                  - paragraph [ref=e1114]:
+                    - text: Check attendance with
+                    - code [ref=e1115]: /movie attendance
+                    - text: or
+                    - code [ref=e1116]: /event game attendance
+                    - text: . Add
+                    - code [ref=e1117]: user:@Username
+                    - text: to look up someone's progress.
+                  - paragraph [ref=e1118]:
+                    - strong [ref=e1119]: Movie Tier Roles
+                    - text: "(30+ min per event):"
+                  - list [ref=e1120]:
+                    - listitem [ref=e1121]:
+                      - link "@Red Carpet Guest - 1+ movies" [ref=e1122] [cursor=pointer]:
+                        - /url: https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-1.svg
+                        - img "@Red Carpet Guest - 1+ movies" [ref=e1123]
+                    - listitem [ref=e1124]:
+                      - link "@Popcorn Club - 5+ movies" [ref=e1125] [cursor=pointer]:
+                        - /url: https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-2.svg
+                        - img "@Popcorn Club - 5+ movies" [ref=e1126]
+                    - listitem [ref=e1127]:
+                      - link "@Director's Cut - 10+ movies" [ref=e1128] [cursor=pointer]:
+                        - /url: https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-3.svg
+                        - img "@Director's Cut - 10+ movies" [ref=e1129]
+                    - listitem [ref=e1130]:
+                      - link "@Cinematic Royalty - 20+ movies" [ref=e1131] [cursor=pointer]:
+                        - /url: https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-4.svg
+                        - img "@Cinematic Royalty - 20+ movies" [ref=e1132]
+                  - paragraph [ref=e1133]:
+                    - strong [ref=e1134]: Game Tier Roles
+                    - text: "(50%+ of event duration): Configured via"
+                    - code [ref=e1135]: /roles add-game-tier
+                    - text: . Use
+                    - code [ref=e1136]: /roles list type:game_night
+                    - text: to see current tiers.
+                  - generic [ref=e1137]:
+                    - heading "Utility Commands" [level=2] [ref=e1138]
+                    - 'link "Permalink: Utility Commands" [ref=e1139] [cursor=pointer]':
+                      - /url: "#utility-commands"
+                      - img [ref=e1140]
+                  - paragraph [ref=e1142]:
+                    - text: To post something as the bot, use
+                    - code [ref=e1143]: /send message:Your text here
+                    - text: . Add
+                    - code [ref=e1144]: embed:true
+                    - text: for a nicer format, or
+                    - code [ref=e1145]: "reply_to:"
+                    - text: with a message ID to reply to something specific.
+                  - paragraph [ref=e1146]:
+                    - text: If someone seems suspicious,
+                    - code [ref=e1147]: /flag user:@Username reason:Alt account
+                    - text: flags them for other staff to see.
+                  - generic [ref=e1148]:
+                    - heading "Audit & Detection Tools" [level=2] [ref=e1149]
+                    - 'link "Permalink: Audit & Detection Tools" [ref=e1150] [cursor=pointer]':
+                      - /url: "#audit--detection-tools"
+                      - img [ref=e1151]
+                  - paragraph [ref=e1153]: "Check if an image is AI-generated:"
+                  - list [ref=e1154]:
+                    - listitem [ref=e1155]:
+                      - code [ref=e1156]: /isitreal message:<message_id_or_link>
+                      - text: ": scans all images in a message"
+                  - paragraph [ref=e1157]: "Flag suspicious users:"
+                  - list [ref=e1158]:
+                    - listitem [ref=e1159]:
+                      - code [ref=e1160]: /flag user:@Username reason:Alt account
+                      - text: ": marks user for extra review"
+                  - paragraph [ref=e1161]: "Server audits (leadership only):"
+                  - list [ref=e1162]:
+                    - listitem [ref=e1163]:
+                      - code [ref=e1164]: /audit members
+                      - text: ": scan for bot accounts"
+                    - listitem [ref=e1165]:
+                      - code [ref=e1166]: /audit nsfw
+                      - text: ": scan avatars for NSFW content"
+                  - generic [ref=e1167]:
+                    - heading "Tips" [level=2] [ref=e1168]
+                    - 'link "Permalink: Tips" [ref=e1169] [cursor=pointer]':
+                      - /url: "#tips"
+                      - img [ref=e1170]
+                  - list [ref=e1172]:
+                    - listitem [ref=e1173]: "Only use ONE identifier per command (app code, user mention, OR user ID: not multiple)"
+                    - listitem [ref=e1174]: Always claim before reviewing to avoid stepping on someone else's work
+                    - listitem [ref=e1175]:
+                      - text: The
+                      - code [ref=e1176]: perm:true
+                      - text: "option is permanent: use it sparingly"
+                    - listitem [ref=e1177]:
+                      - text: User left the server? Their Discord ID still works with the
+                      - code [ref=e1178]: "uid:"
+                      - text: option
+                  - separator [ref=e1179]
+                  - generic [ref=e1180]:
+                    - heading "See Also" [level=2] [ref=e1181]
+                    - 'link "Permalink: See Also" [ref=e1182] [cursor=pointer]':
+                      - /url: "#see-also"
+                      - img [ref=e1183]
+                  - paragraph [ref=e1185]:
+                    - strong [ref=e1186]: "Main docs:"
+                    - link "Bot Handbook" [ref=e1187] [cursor=pointer]:
+                      - /url: /watchthelight/pawtropolis-tech/blob/feat/badges-repo-served-and-expansion/docs/BOT-HANDBOOK.md
+                    - text: "|"
+                    - link "Staff Policies" [ref=e1188] [cursor=pointer]:
+                      - /url: /watchthelight/pawtropolis-tech/blob/feat/badges-repo-served-and-expansion/docs/MOD-HANDBOOK.md
+                    - text: "|"
+                    - link "Permissions" [ref=e1189] [cursor=pointer]:
+                      - /url: /watchthelight/pawtropolis-tech/blob/feat/badges-repo-served-and-expansion/docs/PERMS-MATRIX.md
+                  - paragraph [ref=e1190]:
+                    - strong [ref=e1191]: "By role:"
+                    - link "Gatekeeper" [ref=e1192] [cursor=pointer]:
+                      - /url: /watchthelight/pawtropolis-tech/blob/feat/badges-repo-served-and-expansion/docs/GATEKEEPER-GUIDE.md
+                    - text: "|"
+                    - link "Moderator" [ref=e1193] [cursor=pointer]:
+                      - /url: /watchthelight/pawtropolis-tech/blob/feat/badges-repo-served-and-expansion/docs/MODERATOR-GUIDE.md
+                    - text: "|"
+                    - link "Admin" [ref=e1194] [cursor=pointer]:
+                      - /url: /watchthelight/pawtropolis-tech/blob/feat/badges-repo-served-and-expansion/docs/ADMIN-GUIDE.md
+                    - text: "|"
+                    - link "Leadership" [ref=e1195] [cursor=pointer]:
+                      - /url: /watchthelight/pawtropolis-tech/blob/feat/badges-repo-served-and-expansion/docs/LEADERSHIP-GUIDE.md
+  - alert [ref=e1199]
