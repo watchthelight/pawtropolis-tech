@@ -27,6 +27,12 @@ import { postPermissionDenied } from "../lib/permissionCard.js";
 import { type CommandContext, withStep, withSql } from "../lib/cmdWrap.js";
 import { shouldBypass } from "../lib/roles.js";
 import { ALLOWED_ROLES, generateNonce } from "./audit/shared.js";
+import { executeSecurity } from "./audit/security.js";
+import { executeAcknowledge } from "./audit/acknowledge.js";
+import { executeUnacknowledge } from "./audit/unacknowledge.js";
+import { executeAcknowledgeAll } from "./audit/acknowledgeAll.js";
+import { executeTrends } from "./audit/trends.js";
+import { executeDiff } from "./audit/diff.js";
 export { data } from "./audit/data.js";
 import {
   analyzeMember,
