@@ -85,3 +85,6 @@ docs/moderation/
 .claude/avatar-nsfw-roadmap.md
 .claude/avatar-nsfw-implementation-summary.md
 
+
+# graphify export exceeding GitHub 100MB limit (regenerated locally; do not commit)
+graphify-out/exports/graph-connectome-fa2-raw-24000.png
