@@ -13,8 +13,6 @@ import { logger } from "../lib/logger.js";
 import { getConfig } from "../lib/config.js";
 import { getRoleTiers } from "../features/roleAutomation.js";
 import { loadApplication } from "../features/review/queries.js";
-import { logActionPretty } from "../logging/pretty.js";
-import { dashboardSendMessage, dashboardOpenThread, dashboardCloseThread, dashboardReopenThread } from "../features/modmail.js";
 
 // ===== Tier Check =====
 // Tier ordering and the hasMinTier comparator live in src/web/dashboardAuth.ts
@@ -26,6 +24,9 @@ import { registerAuditRoutes } from "./routes/audit.js";
 import { createRouteContext } from "./routes/context.js";
 import { registerReviewRoutes } from "./routes/review.js";
 import { registerArtRoutes } from "./routes/art.js";
+import { registerModmailRoutes } from "./routes/modmail.js";
+import { registerQotdRoutes } from "./routes/qotd.js";
+import { registerFlagRoutes } from "./routes/flag.js";
 
 // ===== Types =====
 
@@ -95,225 +96,10 @@ export async function startDashboardApi(client: Client): Promise<void> {
 
   registerReviewRoutes(server, ctx);
 
-  // ===== Modmail Routes =====
-
-  // POST /api/modmail/send — send a message to a user via modmail
-  server.post<{ Body: { userId: string; tier: string; ticketId: number; content: string } }>("/api/modmail/send", async (request, reply) => {
-    const { userId, tier, ticketId, content } = request.body ?? {};
-    if (!userId || !tier || !ticketId || !content) return reply.code(400).send({ success: false, error: "Missing userId, tier, ticketId, or content" } satisfies ApiError);
-    if (!hasMinTier(tier, "gk")) return reply.code(403).send({ success: false, error: "Insufficient permissions" } satisfies ApiError);
-    if (content.length > 2000) return reply.code(400).send({ success: false, error: "Message too long (max 2000 characters)" } satisfies ApiError);
-
-    const guild = getGuild();
-    if (!guild) return reply.code(500).send({ success: false, error: "Guild not available" } satisfies ApiError);
-
-    const result = await dashboardSendMessage({ client, guild, staffUserId: userId, ticketId, content });
-    if (!result.success) {
-      return reply.code(400).send({ success: false, error: result.error ?? "Failed to send" } satisfies ApiError);
-    }
-
-    notifyDashboard("modmail:message_sent", { ticketId, staffUserId: userId });
-    return { success: true, data: { ticketId } } satisfies ApiSuccess;
-  });
-
-  // POST /api/modmail/open — open a new modmail thread
-  server.post<{ Body: { userId: string; tier: string; targetUserId: string; appCode?: string } }>("/api/modmail/open", async (request, reply) => {
-    const { userId, tier, targetUserId, appCode } = request.body ?? {};
-    if (!userId || !tier || !targetUserId) return reply.code(400).send({ success: false, error: "Missing userId, tier, or targetUserId" } satisfies ApiError);
-    if (!hasMinTier(tier, "gk")) return reply.code(403).send({ success: false, error: "Insufficient permissions" } satisfies ApiError);
-
-    const guild = getGuild();
-    if (!guild) return reply.code(500).send({ success: false, error: "Guild not available" } satisfies ApiError);
-
-    const result = await dashboardOpenThread({ client, guild, staffUserId: userId, targetUserId, appCode });
-    if (!result.success) {
-      const status = result.error?.includes("already has") ? 409 : 400;
-      return reply.code(status).send({ success: false, error: result.error ?? "Failed to open" } satisfies ApiError);
-    }
-
-    notifyDashboard("modmail:thread_opened", { ticketId: result.ticketId, threadId: result.threadId, targetUserId, staffUserId: userId });
-    return { success: true, data: { ticketId: result.ticketId, threadId: result.threadId } } satisfies ApiSuccess;
-  });
-
-  // POST /api/modmail/close — close an open modmail thread
-  server.post<{ Body: { userId: string; tier: string; ticketId: number } }>("/api/modmail/close", async (request, reply) => {
-    const { userId, tier, ticketId } = request.body ?? {};
-    if (!userId || !tier || !ticketId) return reply.code(400).send({ success: false, error: "Missing userId, tier, or ticketId" } satisfies ApiError);
-    if (!hasMinTier(tier, "gk")) return reply.code(403).send({ success: false, error: "Insufficient permissions" } satisfies ApiError);
-
-    const guild = getGuild();
-    if (!guild) return reply.code(500).send({ success: false, error: "Guild not available" } satisfies ApiError);
-
-    const result = await dashboardCloseThread({ client, guild, staffUserId: userId, ticketId });
-    if (!result.success) {
-      const status = result.error?.includes("not found") ? 404 : result.error?.includes("already closed") ? 409 : 400;
-      return reply.code(status).send({ success: false, error: result.error ?? "Failed to close" } satisfies ApiError);
-    }
-
-    notifyDashboard("modmail:thread_closed", { ticketId, staffUserId: userId });
-    return { success: true, data: { ticketId, logUrl: result.logUrl } } satisfies ApiSuccess;
-  });
-
-  // POST /api/modmail/reopen — reopen a closed modmail thread
-  server.post<{ Body: { userId: string; tier: string; ticketId: number } }>("/api/modmail/reopen", async (request, reply) => {
-    const { userId, tier, ticketId } = request.body ?? {};
-    if (!userId || !tier || !ticketId) return reply.code(400).send({ success: false, error: "Missing userId, tier, or ticketId" } satisfies ApiError);
-    if (!hasMinTier(tier, "gk")) return reply.code(403).send({ success: false, error: "Insufficient permissions" } satisfies ApiError);
-
-    const guild = getGuild();
-    if (!guild) return reply.code(500).send({ success: false, error: "Guild not available" } satisfies ApiError);
-
-    const result = await dashboardReopenThread({ client, guild, staffUserId: userId, ticketId });
-    if (!result.success) {
-      const status = result.error?.includes("not found") ? 404 : result.error?.includes("already open") ? 409 : 400;
-      return reply.code(status).send({ success: false, error: result.error ?? "Failed to reopen" } satisfies ApiError);
-    }
-
-    notifyDashboard("modmail:thread_reopened", { ticketId, threadId: result.threadId, staffUserId: userId });
-    return { success: true, data: { ticketId, threadId: result.threadId } } satisfies ApiSuccess;
-  });
-
-  // ───────────────────────────────────────────────────────────────────────
-  // QOTD endpoints — dashboard QOTD page actions (approve/reject/use/restore/edit)
-  // ───────────────────────────────────────────────────────────────────────
-
-  // POST /api/qotd/approve — approve a pending suggestion
-  server.post<{ Body: { userId: string; tier: string; suggestionId: number } }>("/api/qotd/approve", async (request, reply) => {
-    const { userId, tier, suggestionId } = request.body ?? {};
-    if (!userId || !tier || !suggestionId) return reply.code(400).send({ success: false, error: "Missing required fields" } satisfies ApiError);
-    if (!hasMinTier(tier, "gk")) return reply.code(403).send({ success: false, error: "Insufficient permissions" } satisfies ApiError);
-
-    const { approveSuggestion, getSuggestionById } = await import("../features/qotd/db.js");
-    const ok = approveSuggestion(suggestionId, userId);
-    if (!ok) return reply.code(409).send({ success: false, error: "Suggestion not pending or not found" } satisfies ApiError);
-
-    notifyDashboard("qotd:approved", { suggestionId, reviewerId: userId });
-    const after = getSuggestionById(suggestionId);
-    return { success: true, data: { suggestion: after as unknown as Record<string, unknown> } } satisfies ApiSuccess;
-  });
-
-  // POST /api/qotd/reject — reject a pending suggestion (reason required)
-  server.post<{ Body: { userId: string; tier: string; suggestionId: number; reason?: string } }>("/api/qotd/reject", async (request, reply) => {
-    const { userId, tier, suggestionId, reason } = request.body ?? {};
-    if (!userId || !tier || !suggestionId) return reply.code(400).send({ success: false, error: "Missing required fields" } satisfies ApiError);
-    if (!hasMinTier(tier, "gk")) return reply.code(403).send({ success: false, error: "Insufficient permissions" } satisfies ApiError);
-
-    const safeReason = (reason ?? "Rejected via dashboard").slice(0, 500);
-    const { rejectSuggestion, getSuggestionById } = await import("../features/qotd/db.js");
-    const ok = rejectSuggestion(suggestionId, userId, safeReason);
-    if (!ok) return reply.code(409).send({ success: false, error: "Suggestion not pending or not found" } satisfies ApiError);
-
-    notifyDashboard("qotd:rejected", { suggestionId, reviewerId: userId });
-    const after = getSuggestionById(suggestionId);
-    return { success: true, data: { suggestion: after as unknown as Record<string, unknown> } } satisfies ApiSuccess;
-  });
-
-  // POST /api/qotd/use — mark an approved suggestion as used (records who pulled it)
-  server.post<{ Body: { userId: string; tier: string; suggestionId: number } }>("/api/qotd/use", async (request, reply) => {
-    const { userId, tier, suggestionId } = request.body ?? {};
-    if (!userId || !tier || !suggestionId) return reply.code(400).send({ success: false, error: "Missing required fields" } satisfies ApiError);
-    if (!hasMinTier(tier, "gk")) return reply.code(403).send({ success: false, error: "Insufficient permissions" } satisfies ApiError);
-
-    const { markSuggestionUsed, getSuggestionById } = await import("../features/qotd/db.js");
-    const ok = markSuggestionUsed(suggestionId, userId);
-    if (!ok) return reply.code(409).send({ success: false, error: "Suggestion not approved or not found" } satisfies ApiError);
-
-    notifyDashboard("qotd:used", { suggestionId, usedBy: userId });
-    const after = getSuggestionById(suggestionId);
-    return { success: true, data: { suggestion: after as unknown as Record<string, unknown> } } satisfies ApiSuccess;
-  });
-
-  // POST /api/qotd/restore — move a rejected/used suggestion back to approved
-  server.post<{ Body: { userId: string; tier: string; suggestionId: number } }>("/api/qotd/restore", async (request, reply) => {
-    const { userId, tier, suggestionId } = request.body ?? {};
-    if (!userId || !tier || !suggestionId) return reply.code(400).send({ success: false, error: "Missing required fields" } satisfies ApiError);
-    if (!hasMinTier(tier, "sm")) return reply.code(403).send({ success: false, error: "Insufficient permissions" } satisfies ApiError);
-
-    const { restoreSuggestion, getSuggestionById } = await import("../features/qotd/db.js");
-    const ok = restoreSuggestion(suggestionId, userId);
-    if (!ok) return reply.code(409).send({ success: false, error: "Suggestion not in a restorable state" } satisfies ApiError);
-
-    notifyDashboard("qotd:restored", { suggestionId, reviewerId: userId });
-    const after = getSuggestionById(suggestionId);
-    return { success: true, data: { suggestion: after as unknown as Record<string, unknown> } } satisfies ApiSuccess;
-  });
-
-  // POST /api/qotd/edit — edit pending question text before approval
-  server.post<{ Body: { userId: string; tier: string; suggestionId: number; question: string } }>("/api/qotd/edit", async (request, reply) => {
-    const { userId, tier, suggestionId, question } = request.body ?? {};
-    if (!userId || !tier || !suggestionId || !question) return reply.code(400).send({ success: false, error: "Missing required fields" } satisfies ApiError);
-    if (!hasMinTier(tier, "gk")) return reply.code(403).send({ success: false, error: "Insufficient permissions" } satisfies ApiError);
-
-    const trimmed = question.trim().slice(0, 500);
-    if (trimmed.length < 4) return reply.code(400).send({ success: false, error: "Question too short (min 4 chars)" } satisfies ApiError);
-
-    const { editSuggestionQuestion, getSuggestionById } = await import("../features/qotd/db.js");
-    const ok = editSuggestionQuestion(suggestionId, trimmed);
-    if (!ok) return reply.code(409).send({ success: false, error: "Only pending suggestions can be edited" } satisfies ApiError);
-
-    notifyDashboard("qotd:edited", { suggestionId, editorId: userId });
-    const after = getSuggestionById(suggestionId);
-    return { success: true, data: { suggestion: after as unknown as Record<string, unknown> } } satisfies ApiSuccess;
-  });
-
-  // POST /api/flag/kick — kick a flagged user from the guild
-  server.post<{ Body: { userId: string; tier: string; targetUserId: string; reason?: string } }>("/api/flag/kick", async (request, reply) => {
-    const { userId, tier, targetUserId, reason } = request.body ?? {};
-    if (!userId || !tier || !targetUserId) return reply.code(400).send({ success: false, error: "Missing required fields" } satisfies ApiError);
-    if (!hasMinTier(tier, "sm")) return reply.code(403).send({ success: false, error: "Insufficient permissions" } satisfies ApiError);
-
-    const guild = getGuild();
-    if (!guild) return reply.code(500).send({ success: false, error: "Guild not available" } satisfies ApiError);
-
-    try {
-      const member = await guild.members.fetch(targetUserId).catch(() => null);
-      if (!member) return reply.code(404).send({ success: false, error: "Member not found in guild" } satisfies ApiError);
-
-      await member.kick(reason ?? "Kicked via dashboard flag triage");
-      logger.info({ moderatorId: userId, targetUserId, reason }, "[dashboardApi] Flagged user kicked");
-      notifyDashboard("flag:kicked", { userId: targetUserId, kickedBy: userId });
-      return { success: true, data: { targetUserId } } satisfies ApiSuccess;
-    } catch (err) {
-      logger.warn({ err, targetUserId }, "[dashboardApi] flag kick failed");
-      return reply.code(500).send({ success: false, error: "Failed to kick member" } satisfies ApiError);
-    }
-  });
-
-  // POST /api/flag/dismiss — dismiss a flag (NSFW or behavioral)
-  server.post<{ Body: { userId: string; tier: string; targetUserId: string; flagType: 'nsfw' | 'behavioral' } }>("/api/flag/dismiss", async (request, reply) => {
-    const { userId, tier, targetUserId, flagType } = request.body ?? {};
-    if (!userId || !tier || !targetUserId || !flagType) return reply.code(400).send({ success: false, error: "Missing required fields" } satisfies ApiError);
-    if (!hasMinTier(tier, "sm")) return reply.code(403).send({ success: false, error: "Insufficient permissions" } satisfies ApiError);
-
-    const guild = getGuild();
-    if (!guild) return reply.code(500).send({ success: false, error: "Guild not available" } satisfies ApiError);
-
-    try {
-      if (flagType === "nsfw") {
-        const result = db.prepare("UPDATE nsfw_flags SET reviewed = 1, reviewed_by = ?, reviewed_at = datetime('now') WHERE guild_id = ? AND user_id = ?").run(userId, guild.id, targetUserId);
-        if (result.changes === 0) return reply.code(404).send({ success: false, error: "NSFW flag not found" } satisfies ApiError);
-      } else {
-        const result = db.prepare("UPDATE user_activity SET flagged_at = NULL, flagged_reason = NULL, manual_flag = 0, flagged_by = NULL WHERE guild_id = ? AND user_id = ? AND flagged_at IS NOT NULL").run(guild.id, targetUserId);
-        if (result.changes === 0) return reply.code(404).send({ success: false, error: "Behavioral flag not found" } satisfies ApiError);
-      }
-    } catch (err) {
-      logger.warn({ err, targetUserId, flagType }, "[dashboardApi] flag dismiss failed");
-      return reply.code(500).send({ success: false, error: "Database error" } satisfies ApiError);
-    }
-
-    logger.info({ moderatorId: userId, targetUserId, flagType }, "[dashboardApi] Flag dismissed");
-
-    // Audit trail — every other action logs, dismiss should too
-    logActionPretty(guild, {
-      actorId: userId,
-      subjectId: targetUserId,
-      action: "flag_dismissed",
-      meta: { flagType },
-    }).catch((err) => logger.warn({ err, targetUserId }, "[dashboardApi] failed to log flag dismiss"));
-
-    notifyDashboard("flag:dismissed", { userId: targetUserId, flagType });
-    return { success: true, data: { targetUserId, flagType } } satisfies ApiSuccess;
-  });
+  // ===== Modmail / QOTD / Flag routes =====
+  registerModmailRoutes(server, ctx);
+  registerQotdRoutes(server, ctx);
+  registerFlagRoutes(server, ctx);
 
   registerAuditRoutes(server, client);
 
