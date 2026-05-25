@@ -18,9 +18,7 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 import {
   ActionRowBuilder,
-  ButtonBuilder,
   ButtonInteraction,
-  ButtonStyle,
   Client,
   MessageFlags,
   ModalBuilder,
@@ -51,6 +49,7 @@ import { touchSyncMarker } from "../lib/syncMarker.js";
 import { notifyDashboard } from "../web/notifyDashboard.js";
 import { isPanicMode } from "./panicStore.js";
 import { buildGateEntryPayload, findExistingGateEntry } from "./gate/entryPanel.js";
+import { parsePage, toAnswerMap, buildNavRow, buildFixRow, buildDoneRow } from "./gate/ui.js";
 export { BRAND_COLOR } from "./gate/constants.js";
 export { buildGateEntryPayload };
 export { ensureGateEntryStartup, refreshGateEntry } from "./gate/entryPanel.js";
@@ -583,72 +582,6 @@ export function queueAvatarScan(params: {
 // Parses "v1:start:p2" -> 2, "v1:start" -> 0. Falls back to page 0 if parsing fails.
 // The "v1:" prefix is for versioning - if we ever need to change the format,
 // we can add v2: handlers without breaking existing button interactions.
-function parsePage(customId: string): number {
-  const match = customId.match(/^v1:start(?::p(\d+))?/);
-  if (match && match[1]) return Number.parseInt(match[1], 10);
-  return 0;
-}
-
-function toAnswerMap(responses: Array<{ q_index: number; answer: string }>) {
-  return new Map(responses.map((row) => [row.q_index, row.answer] as const));
-}
-
-/**
- * Build navigation buttons for multi-page forms. Shows Back/Next as appropriate.
- * The "Retry" button appears only on single-page forms or the last page when
- * something goes wrong - gives users a way to try again without starting over.
- *
- * Button customIds encode the target page (v1:start:p0, v1:start:p1, etc.)
- * so the button handler knows which modal to show next.
- */
-function buildNavRow(pageIndex: number, pageCount: number) {
-  const buttons: ButtonBuilder[] = [];
-  if (pageCount > 1 && pageIndex > 0) {
-    buttons.push(
-      new ButtonBuilder()
-        .setCustomId(`v1:start:p${pageIndex - 1}`)
-        .setLabel("Back")
-        .setStyle(ButtonStyle.Secondary)
-    );
-  }
-  if (pageIndex < pageCount - 1) {
-    buttons.push(
-      new ButtonBuilder()
-        .setCustomId(`v1:start:p${pageIndex + 1}`)
-        .setLabel("Next")
-        .setStyle(ButtonStyle.Primary)
-    );
-  }
-  if (buttons.length === 0) {
-    buttons.push(
-      new ButtonBuilder()
-        .setCustomId(`v1:start:p${pageIndex}`)
-        .setLabel("Retry")
-        .setStyle(ButtonStyle.Primary)
-    );
-  }
-  return [new ActionRowBuilder<ButtonBuilder>().addComponents(...buttons)];
-}
-
-function buildFixRow(pageIndex: number) {
-  return [
-    new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder()
-        .setCustomId(`v1:start:p${pageIndex}`)
-        .setLabel(`Go to page ${pageIndex + 1}`)
-        .setStyle(ButtonStyle.Primary)
-    ),
-  ];
-}
-
-function buildDoneRow() {
-  return [
-    new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder().setCustomId("v1:done").setLabel("Done").setStyle(ButtonStyle.Secondary)
-    ),
-  ];
-}
-
 
 function logPhase(ctx: CmdCtx, phase: string, extras: Record<string, unknown> = {}) {
   logger.info({
