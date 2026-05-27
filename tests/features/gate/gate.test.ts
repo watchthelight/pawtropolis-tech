@@ -106,6 +106,7 @@ vi.mock("../../../src/lib/ids.js", () => ({
 
 // Import after mocks
 import { buildGateEntryPayload } from "../../../src/features/gate.js";
+import { isDraft, isSubmitted, classifyDraftStatus } from "../../../src/features/gate/flow.js";
 
 describe("features/gate", () => {
   beforeEach(() => {
@@ -447,21 +448,18 @@ describe("features/gate validation", () => {
 
   describe("draft validation", () => {
     it("rejects already submitted applications", () => {
-      const status = "submitted";
-      const isSubmitted = status === "submitted";
-      expect(isSubmitted).toBe(true);
+      expect(isSubmitted("submitted")).toBe(true);
+      expect(classifyDraftStatus("submitted")).toBe("submitted");
     });
 
     it("allows draft status", () => {
-      const status = "draft";
-      const isDraft = status === "draft";
-      expect(isDraft).toBe(true);
+      expect(isDraft("draft")).toBe(true);
+      expect(classifyDraftStatus("draft")).toBe("open");
     });
 
     it("rejects non-draft statuses", () => {
-      const status = "approved";
-      const allowedStatuses = ["draft"];
-      expect(allowedStatuses.includes(status)).toBe(false);
+      expect(isDraft("approved")).toBe(false);
+      expect(classifyDraftStatus("approved")).toBe("closed");
     });
   });
 

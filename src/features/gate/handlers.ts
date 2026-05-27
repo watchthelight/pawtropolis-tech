@@ -23,6 +23,7 @@ import { isPanicMode } from "../panicStore.js";
 import { getQuestions, paginate, buildModalForPage, getOrCreateDraft, getDraft, upsertAnswer, submitApplication } from "./drafts.js";
 import { parsePage, toAnswerMap, buildNavRow, buildFixRow, buildDoneRow } from "./ui.js";
 import { queueAvatarScan } from "./scan.js";
+import { classifyDraftStatus } from "./flow.js";
 
 export async function handleStartButton(interaction: ButtonInteraction) {
   try {
@@ -203,7 +204,8 @@ export async function handleGateModalSubmit(
     return;
   }
 
-  if (draftRow.status === "submitted") {
+  const disposition = classifyDraftStatus(draftRow.status);
+  if (disposition === "submitted") {
     ctx.step("already_submitted");
     await replyOrEdit(interaction, {
       content: "Application submitted. Review will happen in the staff channel.",
@@ -213,7 +215,7 @@ export async function handleGateModalSubmit(
     return;
   }
 
-  if (draftRow.status !== "draft") {
+  if (disposition === "closed") {
     ctx.step("validate_fail");
     await replyOrEdit(interaction, {
       content: "This application was already submitted or closed. Press Start to begin again.",
