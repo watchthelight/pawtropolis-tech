@@ -7,6 +7,7 @@ Reverse chronological by completion date.
 ## 2026-05-27
 
 - [x] [Refactor index.ts into event modules](done/00007.md) `High` 2705 -> 341 lines. Handlers extracted to src/events/ + ClientReady to startup/ready.ts; index.ts now registration + lifecycle wiring only.
+- [x] [Refactor dashboardApi.ts into route modules](done/00008.md) `High` 1792 -> 114 lines. Routes to src/web/routes/ (11 modules) + shared context.ts; tests per route group also satisfied #00012.
 
 ## 2026-05-22
 
