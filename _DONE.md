@@ -9,6 +9,7 @@ Reverse chronological by completion date.
 - [x] [Refactor index.ts into event modules](done/00007.md) `High` 2705 -> 341 lines. Handlers extracted to src/events/ + ClientReady to startup/ready.ts; index.ts now registration + lifecycle wiring only.
 - [x] [Refactor dashboardApi.ts into route modules](done/00008.md) `High` 1792 -> 114 lines. Routes to src/web/routes/ (11 modules) + shared context.ts; tests per route group also satisfied #00012.
 - [x] [Refactor audit.ts into subcommand modules](done/00009.md) `High` 1760 -> 115 lines. Dispatcher routes to src/commands/audit/ (12 modules) + shared.ts + buttonRouter.ts.
+- [x] [Refactor serverAuditDocs.ts into 3 modules](done/00010.md) `High` 1740 -> 373 lines. Split to src/features/serverAudit/{analyze,docs,types}.ts; analyzer API now reused by scheduler + subcommands. Gap: no dedicated analyzer unit test (covered indirectly by suite).
 
 ## 2026-05-22
 
