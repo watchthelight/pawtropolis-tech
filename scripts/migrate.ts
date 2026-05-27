@@ -287,11 +287,22 @@ async function runMigrations(): Promise<void> {
       .prepare(`SELECT version, name, applied_at FROM schema_migrations ORDER BY version`)
       .all() as Array<{ version: string; name: string; applied_at: number }>;
 
+    // applied_at is stored as unix seconds, but a few legacy rows hold
+    // milliseconds. Without this normalization a ms value overflows the valid
+    // Date range and console.table throws RangeError: Invalid time value.
+    const formatAppliedAt = (value: number): string => {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return String(value);
+      const ms = n > 1e12 ? n : n * 1000;
+      const d = new Date(ms);
+      return Number.isNaN(d.getTime()) ? String(value) : d.toISOString();
+    };
+
     console.table(
       rows.map((r) => ({
         version: r.version,
         name: r.name,
-        applied_at: new Date(r.applied_at * 1000).toISOString(),
+        applied_at: formatAppliedAt(r.applied_at),
       }))
     );
   } catch (err) {
