@@ -23,8 +23,18 @@ import {
 import path from "node:path";
 import { logger } from "../../lib/logger.js";
 import { getConfig, type GuildConfig } from "../../lib/config.js";
+import type { CmdCtx } from "../../lib/cmdWrap.js";
 import { getQuestions as getQuestionsShared } from "./questions.js";
 import { BRAND_COLOR, GATE_ENTRY_FOOTER, GATE_ENTRY_FOOTER_MATCHES } from "./constants.js";
+
+export type EnsureGateEntryResult = {
+  created: boolean;
+  edited: boolean;
+  pinned: boolean;
+  channelId?: string;
+  messageId?: string;
+  reason?: string;
+};
 
 type GateEntryPayload = {
   embeds: Array<EmbedBuilder>;
@@ -362,5 +372,253 @@ export async function refreshGateEntry(client: Client, guildId: string): Promise
     logger.info({ guildId, messageId: existing.id }, "[gate] Auto-refreshed gate entry embed");
   } catch (err) {
     logger.warn({ err, guildId, messageId: existing.id }, "[gate] Failed to auto-refresh gate entry");
+  }
+}
+
+function logPhase(ctx: CmdCtx, phase: string, extras: Record<string, unknown> = {}) {
+  logger.info({
+    evt: "gate_entry_step",
+    traceId: ctx.traceId,
+    phase,
+    ...extras,
+  });
+}
+
+function markSkippedPhase(ctx: CmdCtx, phase: string, extras: Record<string, unknown> = {}) {
+  ctx.step(phase);
+  logPhase(ctx, phase, { skipped: true, ...extras });
+}
+
+/**
+ * ensureGateEntry
+ * WHAT: Ensures there is a pinned Gate Entry message with a Start button in the configured gate channel.
+ * WHY: Applicants need a stable entry point; we refresh/edit/pin instead of duplicating.
+ * PARAMS:
+ *  - ctx: CommandContext for logging/tracing.
+ *  - guildId: Target guild id.
+ * RETURNS: EnsureGateEntryResult describing what happened (created/edited/pinned).
+ * THROWS: Propagates errors; callers typically log and continue.
+ * LINKS:
+ *  - Guild text channels API: https://discord.js.org/#/docs/discord.js/main/class/GuildTextBasedChannel
+ * PITFALLS:
+ *  - Requires SendMessages/ManageMessages to pin; fail-soft when missing permissions.
+ */
+export async function ensureGateEntry(
+  ctx: CmdCtx,
+  guildId: string
+): Promise<EnsureGateEntryResult> {
+  const result: EnsureGateEntryResult = { created: false, edited: false, pinned: false };
+
+  ctx.step("load_config");
+  const cfg = getConfig(guildId);
+  logPhase(ctx, "load_config", { guildId, hasGateChannel: Boolean(cfg?.gate_channel_id) });
+  if (!cfg?.gate_channel_id) {
+    markSkippedPhase(ctx, "open_channel", { guildId, reason: "gate channel not configured" });
+    markSkippedPhase(ctx, "find_existing", { reason: "gate channel not configured" });
+    markSkippedPhase(ctx, "send_or_edit", { reason: "gate channel not configured" });
+    markSkippedPhase(ctx, "maybe_pin", { reason: "gate channel not configured" });
+    result.reason = "gate channel not configured";
+    return result;
+  }
+
+  let channel: GuildTextBasedChannel | null = null;
+  ctx.step("open_channel");
+  try {
+    const fetched = await ctx.interaction.client.channels.fetch(cfg.gate_channel_id);
+    if (fetched && fetched.isTextBased() && !fetched.isDMBased()) {
+      channel = fetched as GuildTextBasedChannel;
+    }
+  } catch (err) {
+    logPhase(ctx, "open_channel", {
+      guildId,
+      channelId: cfg.gate_channel_id,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+  if (!channel) {
+    logPhase(ctx, "open_channel", {
+      guildId,
+      channelId: cfg.gate_channel_id,
+      reason: "channel unavailable",
+    });
+    markSkippedPhase(ctx, "find_existing", { reason: "channel unavailable" });
+    markSkippedPhase(ctx, "send_or_edit", { reason: "channel unavailable" });
+    markSkippedPhase(ctx, "maybe_pin", { reason: "channel unavailable" });
+    result.reason = "gate channel unavailable";
+    return result;
+  }
+
+  result.channelId = channel.id;
+
+  const botId = ctx.interaction.client.user?.id ?? null;
+  const me =
+    channel.guild.members.me ??
+    (botId ? await channel.guild.members.fetch(botId).catch(() => null) : null);
+  if (!me) {
+    logPhase(ctx, "open_channel", {
+      guildId,
+      channelId: channel.id,
+      reason: "bot member missing",
+    });
+    markSkippedPhase(ctx, "find_existing", { reason: "bot member missing" });
+    markSkippedPhase(ctx, "send_or_edit", { reason: "bot member missing" });
+    markSkippedPhase(ctx, "maybe_pin", { reason: "bot member missing" });
+    result.reason = "bot member missing";
+    return result;
+  }
+
+  const perms = channel.permissionsFor(me);
+  if (!perms) {
+    logPhase(ctx, "open_channel", {
+      guildId,
+      channelId: channel.id,
+      reason: "permissions unavailable",
+    });
+    markSkippedPhase(ctx, "find_existing", { reason: "permissions unavailable" });
+    markSkippedPhase(ctx, "send_or_edit", { reason: "permissions unavailable" });
+    markSkippedPhase(ctx, "maybe_pin", { reason: "permissions unavailable" });
+    result.reason = "unable to resolve permissions";
+    return result;
+  }
+
+  const hasView = perms.has(PermissionsBitField.Flags.ViewChannel);
+  const hasSend = perms.has(PermissionsBitField.Flags.SendMessages);
+  const hasManage = perms.has(PermissionsBitField.Flags.ManageMessages);
+  // Permissions check philosophy: fail-soft and explain what’s missing.
+  // Docs: https://discord.com/developers/docs/topics/permissions
+
+  logPhase(ctx, "open_channel", {
+    guildId,
+    channelId: channel.id,
+    hasView,
+    hasSend,
+    hasManageMessages: hasManage,
+  });
+
+  if (!hasView) {
+    markSkippedPhase(ctx, "find_existing", { reason: "missing ViewChannel" });
+    markSkippedPhase(ctx, "send_or_edit", { reason: "missing ViewChannel" });
+    markSkippedPhase(ctx, "maybe_pin", { reason: "missing ViewChannel" });
+    result.reason = "missing ViewChannel";
+    return result;
+  }
+
+  ctx.step("find_existing");
+  const existing = await findExistingGateEntry(channel, botId);
+  if (existing) {
+    result.messageId = existing.id;
+  }
+  logPhase(ctx, "find_existing", {
+    channelId: channel.id,
+    messageId: existing?.id ?? null,
+  });
+
+  if (!hasSend) {
+    markSkippedPhase(ctx, "send_or_edit", {
+      channelId: channel.id,
+      messageId: existing?.id ?? null,
+      reason: `missing SendMessages in #${channel.name}`,
+    });
+    markSkippedPhase(ctx, "maybe_pin", {
+      channelId: channel.id,
+      messageId: existing?.id ?? null,
+      hasManageMessages: hasManage,
+      reason: `missing SendMessages in #${channel.name}`,
+    });
+    result.reason = `missing SendMessages in #${channel.name}`;
+    return result;
+  }
+
+  ctx.step("send_or_edit");
+  let message: Message | null = existing ?? null;
+  let created = false;
+  let edited = false;
+
+  if (message) {
+    const editPayload = buildGateEntryPayload({ guild: channel.guild, config: cfg ?? null });
+    try {
+      await message.edit({
+        embeds: editPayload.embeds,
+        components: editPayload.components,
+        files: editPayload.files,
+        attachments: [],
+      });
+      edited = true;
+    } catch (err) {
+      const code = (err as { code?: unknown }).code;
+      if (code === 10008) {
+        message = null;
+      } else {
+        throw err;
+      }
+    }
+  }
+
+  if (!message) {
+    // Fresh send - this happens on first setup or if the old message was deleted
+    const createPayload = buildGateEntryPayload({ guild: channel.guild, config: cfg ?? null });
+    const sent = await channel.send(createPayload);
+    message = sent;
+    created = true;
+  }
+
+  result.messageId = message.id;
+  result.created = created;
+  result.edited = edited;
+  logger.info(
+    {
+      channelId: channel.id,
+      messageId: message.id,
+      created,
+      edited,
+    },
+    "[gate] entry posted"
+  );
+  logPhase(ctx, "send_or_edit", {
+    channelId: channel.id,
+    messageId: message.id,
+    created,
+    edited,
+  });
+
+  ctx.step("maybe_pin");
+  if (!hasManage) {
+    logPhase(ctx, "maybe_pin", {
+      channelId: channel.id,
+      messageId: message.id,
+      hasManageMessages: false,
+      reason: "missing ManageMessages",
+    });
+    result.reason = "missing ManageMessages";
+    return result;
+  }
+
+  try {
+    if (!message.pinned) {
+      await message.pin();
+    }
+    const pinnedResponse = await channel.messages.fetchPins();
+    // discord.js v14.16+ fetchPins() returns { items: Collection, hasMore: boolean }, not a bare Collection.
+    const pinnedItems = (pinnedResponse as unknown as { items?: { has: (id: string) => boolean } }).items;
+    const pinnedMatch = pinnedItems ? pinnedItems.has(message.id) : false;
+    result.pinned = pinnedMatch;
+    if (!pinnedMatch) {
+      result.reason = "pin verification failed";
+    }
+    logPhase(ctx, "maybe_pin", {
+      channelId: channel.id,
+      messageId: message.id,
+      hasManageMessages: true,
+      pinned: pinnedMatch,
+    });
+    return result;
+  } catch (err) {
+    logPhase(ctx, "maybe_pin", {
+      channelId: channel.id,
+      messageId: message.id,
+      hasManageMessages: true,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    throw err;
   }
 }
