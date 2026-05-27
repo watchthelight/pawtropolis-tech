@@ -38,8 +38,9 @@ TimeoutStopSec=30
 # Keeps secrets out of the unit file and out of journalctl output.
 EnvironmentFile=/etc/litestream.env
 
-# Sandboxing — Litestream only needs to read the SQLite WAL and write to R2.
-# No need for full system access.
+# Sandboxing — Litestream reads the SQLite WAL and writes a shadow WAL plus a
+# _litestream_seq table back into the data directory, so that dir must be
+# writable (see ReadWritePaths below). No other system access is needed.
 NoNewPrivileges=true
 ProtectSystem=full
 ProtectHome=read-only
@@ -50,9 +51,10 @@ PrivateTmp=true
 RestrictSUIDSGID=true
 LockPersonality=true
 
-# Allow read access to the bot's data directory specifically.
-# (ProtectHome=read-only already permits read; this is belt-and-suspenders.)
-ReadOnlyPaths=/home/ubuntu/pawtropolis-tech/data
+# Carve out write access to the bot's data directory. ProtectHome=read-only
+# locks down /home, but Litestream must write its shadow WAL and the
+# _litestream_seq table here, so this overrides for that path only.
+ReadWritePaths=/home/ubuntu/pawtropolis-tech/data
 
 [Install]
 WantedBy=multi-user.target
