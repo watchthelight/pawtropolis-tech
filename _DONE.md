@@ -13,6 +13,7 @@ Reverse chronological by completion date.
 - [x] [Refactor gate.ts into a state machine](done/00011.md) `High` 1602 -> 28 lines (barrel). Status lifecycle extracted to src/features/gate/flow.ts (predicates + GATE_TRANSITIONS + classifyDraftStatus, Discord-independent); ensureGateEntry moved to gate/entryPanel.ts. 20 new flow tests. Gap: handlers stayed in one handlers.ts rather than a per-handler subdir.
 - [x] [Regenerate schema.sql from post-077 dump](done/00045.md) `Medium` Fixture now reflects all migrations (88 tables vs 63; ticket 17-col post-067). Added scripts/gen-test-schema.ts + `npm run gen:test-schema` (was referenced but missing); dropped all 4 MISSING_DDL shims. Bonus: fixed 5 latent migration-runner bugs (046/055/058/062/063) blocking advance past 045. Note: prod may also be stuck at 045.
 - [x] [Un-skip flag.store.test.ts, cover flagsStore CRUD](done/00047.md) `Medium` 13 tests against in-memory DB (getExistingFlag, isAlreadyFlagged, getFlaggedUserIds, upsertManualFlag insert/update/override/truncate). Module was already lazy-init; only the skipped placeholder remained. Audit finding 7. 5425 tests, no skips.
+- [x] [Patch current npm audit vulnerabilities](done/00048.md) `High` npm audit fix: rollup 4.52.4 -> 4.60.4 (path-traversal HIGH) + ajv ReDoS (moderate). Transitive build-chain only, package.json unchanged. 0 vulnerabilities now. Security finding 2 (present-day form).
 
 ## 2026-05-22
 
