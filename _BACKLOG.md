@@ -19,7 +19,6 @@ _(none)_
 
 ### High
 
-- [ ] [Refactor src/commands/audit.ts (1760 lines) into subcommand modules](todo/00009.md) `High`
 - [ ] [Refactor src/features/serverAuditDocs.ts (1740 lines) into 3 modules](todo/00010.md) `High`
 - [ ] [Refactor src/features/gate.ts (1602 lines) into a state machine](todo/00011.md) `High`
 
