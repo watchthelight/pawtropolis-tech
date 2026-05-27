@@ -24,7 +24,7 @@ vi.mock("$lib/server/db", () => ({
   db: () => dbRef.current!,
 }));
 
-const { makeDb, MISSING_DDL } = await import("../_helpers/db.js");
+const { makeDb } = await import("../_helpers/db.js");
 const { GET } = await import("../../../web/src/routes/api/export/+server.js");
 
 const gkUser = { id: "u1", tier: "gk" as const, roles: [] };
@@ -34,7 +34,6 @@ const ORIG_GUILD_ID = process.env.GUILD_ID;
 beforeEach(() => {
   dbRef.current?.close();
   dbRef.current = makeDb();
-  dbRef.current.exec(MISSING_DDL.config_audit_log);
   process.env.GUILD_ID = "g1";
 });
 

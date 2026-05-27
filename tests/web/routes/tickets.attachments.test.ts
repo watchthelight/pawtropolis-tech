@@ -24,7 +24,7 @@ const { mockReadFile, dbRef } = vi.hoisted(() => ({
 vi.mock("node:fs/promises", () => ({ readFile: mockReadFile }));
 vi.mock("$lib/server/db", () => ({ db: () => dbRef.current! }));
 
-const { makeDb, MISSING_DDL } = await import("../_helpers/db.js");
+const { makeDb } = await import("../_helpers/db.js");
 const { GET } = await import(
   "../../../web/src/routes/api/tickets/[ticketId]/attachments/[attachmentId]/+server.js"
 );
@@ -35,8 +35,12 @@ const modUser = { id: "u2", tier: "mod" as const, roles: [] };
 beforeEach(() => {
   dbRef.current?.close();
   dbRef.current = makeDb();
-  dbRef.current.exec(MISSING_DDL.ticket_v067);
-  dbRef.current.exec(MISSING_DDL.ticket_attachment);
+  // This route is exercised in isolation: we insert ticket + ticket_attachment
+  // rows directly without seeding their FK parents (ticket_type, ticket_message),
+  // which are irrelevant to the auth/path-traversal logic under test. Disable FK
+  // enforcement so those minimal inserts succeed. (#00045 replaced the FK-free
+  // MISSING_DDL ticket shims with the real schema.)
+  dbRef.current.pragma("foreign_keys = OFF");
   mockReadFile.mockReset();
 });
 

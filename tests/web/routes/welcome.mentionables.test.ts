@@ -21,7 +21,7 @@ vi.mock("$lib/server/db", () => ({
   db: () => dbRef.current!,
 }));
 
-const { makeDb, MISSING_DDL } = await import("../_helpers/db.js");
+const { makeDb } = await import("../_helpers/db.js");
 const { GET } = await import(
   "../../../web/src/routes/api/welcome/mentionables/+server.js"
 );
@@ -37,8 +37,6 @@ const ORIG_GUILD_ID = process.env.GUILD_ID;
 beforeEach(() => {
   dbRef.current?.close();
   dbRef.current = makeDb();
-  // channel_cache is not in the dumped schema; apply its migration DDL.
-  dbRef.current.exec(MISSING_DDL.channel_cache);
   process.env.GUILD_ID = "g1";
 });
 
