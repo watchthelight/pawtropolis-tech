@@ -4,6 +4,10 @@ One-line dated ledger. Detail in [`done/`](./done/). Pair of [`_BACKLOG.md`](./_
 
 Reverse chronological by completion date.
 
+## 2026-05-27
+
+- [x] [Refactor index.ts into event modules](done/00007.md) `High` 2705 -> 341 lines. Handlers extracted to src/events/ + ClientReady to startup/ready.ts; index.ts now registration + lifecycle wiring only.
+
 ## 2026-05-22
 
 - [x] [Add web/ API route and dashboard page tests](done/00012.md) `High` 13 slices: routes 36/36 (slices 1-9), pages 22/22 (slices 10-13). Around 125 new tests. Established `tests/web/_helpers/{requestEvent,db}.ts` + `tests/web/pages/` directory. Spawned #00043 (sse), #00044 (closed export branches), #00045 (schema regen).

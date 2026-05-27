@@ -19,7 +19,6 @@ _(none)_
 
 ### High
 
-- [ ] [Refactor src/index.ts (2705 lines) into event modules](todo/00007.md) `High`
 - [ ] [Refactor src/web/dashboardApi.ts (1792 lines) into route modules](todo/00008.md) `High`
 - [ ] [Refactor src/commands/audit.ts (1760 lines) into subcommand modules](todo/00009.md) `High`
 - [ ] [Refactor src/features/serverAuditDocs.ts (1740 lines) into 3 modules](todo/00010.md) `High`
