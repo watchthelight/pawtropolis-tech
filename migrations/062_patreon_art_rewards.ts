@@ -48,6 +48,6 @@ export function migrate062PatreonArtRewards(db: Database): void {
     ON patreon_art_log(guild_id, user_id)
   `);
 
-  recordMigration(db, 62, "patreon_art_rewards");
+  recordMigration(db, "062", "patreon_art_rewards");
   logger.info("[migration 062] Complete: patreon_art_rewards");
 }

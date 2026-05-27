@@ -29,7 +29,7 @@ export function migrate055DeduplicateRoleTiers(db: Database): void {
 
   if (dupes.length === 0) {
     logger.info("[migration 055] No duplicate role_tiers found — nothing to do");
-    recordMigration(db, "055_deduplicate_role_tiers");
+    recordMigration(db, "055", "deduplicate_role_tiers");
     return;
   }
 
@@ -56,5 +56,5 @@ export function migrate055DeduplicateRoleTiers(db: Database): void {
   }
 
   logger.info(`[migration 055] Deleted ${deleted} duplicate role_tiers entries`);
-  recordMigration(db, "055_deduplicate_role_tiers");
+  recordMigration(db, "055", "deduplicate_role_tiers");
 }

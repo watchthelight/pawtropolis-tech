@@ -36,6 +36,6 @@ export function migrate058InviteLabels(db: Database): void {
     )
   `);
 
-  recordMigration(db, 58, "invite_labels");
+  recordMigration(db, "058", "invite_labels");
   logger.info("[migration 058] Complete");
 }

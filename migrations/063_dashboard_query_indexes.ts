@@ -38,6 +38,6 @@ export function migrate063DashboardQueryIndexes(db: Database): void {
     ON modmail_message(ticket_id, created_at DESC)
   `);
 
-  recordMigration(db, 63, "dashboard_query_indexes");
+  recordMigration(db, "063", "dashboard_query_indexes");
   logger.info("[migration 063] Complete: dashboard_query_indexes");
 }

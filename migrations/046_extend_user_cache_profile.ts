@@ -12,7 +12,7 @@
 import type { Database } from "better-sqlite3";
 import { columnExists, recordMigration, enableForeignKeys } from "./lib/helpers.js";
 
-export default function migrate(db: Database): void {
+export function migrate046ExtendUserCacheProfile(db: Database): void {
   enableForeignKeys(db);
 
   const columns = [
