@@ -4,6 +4,16 @@ One-line dated ledger. Detail in [`done/`](./done/). Pair of [`_BACKLOG.md`](./_
 
 Reverse chronological by completion date.
 
+## 2026-05-28
+
+- [x] [Stats Observatory: public no-JS stats page with isolated theme](done/00049.md) `High` Epic. Public zero-JS /observatory page, fixed Observatory night-sky theme, ten precomputed rollup tables (migration 078) refreshed via `npm run stats:refresh`. 3 requests (1 HTML + 2 CSS), LCP ~116ms, CLS 0. Prod deploy + 078 apply stay owner-triggered (gated on #00046).
+- [x] [Stats Observatory Phase 0: discovery and metric selection](done/00050.md) `High` 16-agent workflow verified schema, enumerated 56 metrics, chose 14 for v1. Brief at docs/stats-observatory/design-brief.md.
+- [x] [Stats Observatory Phase 1: isolated theme design](done/00051.md) `High` 11-agent judge-panel; owner picked Observatory. Hardcoded scoped tokens, no --hue, zero webfonts.
+- [x] [Stats Observatory Phase 2: rollup migration, refresh script, query module](done/00052.md) `High` Migration 078 + refreshPublicStats + stats:refresh CLI + rollup-only query module. 11 aggregation tests; 5453 total green.
+- [x] [Stats Observatory Phase 3: page build with server-rendered SVG charts](done/00053.md) `High` /observatory route (csr=false), 11 zero-JS SVG/CSS chart components, web check + build green.
+- [x] [Stats Observatory Phase 4: performance verification](done/00054.md) `High` Chrome DevTools: 0 JS/fonts/images, LCP ~116ms, CLS 0. 8 skeptic agents + contrast pass; donut/a11y/contrast/zero-JS fixes landed.
+- [x] [Stats Observatory Phase 5: code review, docs, ship](done/00055.md) `High` Triple-lens review clean; one-click update path documented at docs/operations/stats-observatory.md.
+
 ## 2026-05-27
 
 - [x] [Refactor index.ts into event modules](done/00007.md) `High` 2705 -> 341 lines. Handlers extracted to src/events/ + ClientReady to startup/ready.ts; index.ts now registration + lifecycle wiring only.
