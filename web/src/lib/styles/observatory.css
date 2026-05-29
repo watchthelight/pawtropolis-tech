@@ -1,0 +1,209 @@
+/* ============================================================================
+   OBSERVATORY  --  fixed, self-contained theme for the public /observatory page.
+   Loads ONLY on that route (imported by its +page.svelte), so the :global body
+   override and tokens never leak into the cozy dashboard. Does NOT read
+   var(--hue) or any site token: every value here is a literal.
+
+   Performance: zero JS, zero webfonts, zero raster images. The night sky is
+   three cheap CSS layers (sky gradient + two tiled star fields). Charts are
+   server-rendered SVG / pure CSS rendered by the components under
+   $lib/components/observatory.
+   ============================================================================ */
+
+.observatory {
+  /* ---- Night-sky surfaces (cool indigo -> black) ---- */
+  --obs-void: #05060e;
+  --obs-bg: #080a16;
+  --obs-surface: #0d1022;
+  --obs-surface-2: #131732;
+  --obs-surface-3: #1a1f44;
+
+  /* ---- Ink (faint blue-white starlight) ---- */
+  --obs-ink: #eef1ff;
+  --obs-ink-dim: #aab1d6;
+  --obs-ink-mute: #6b7299;
+  --obs-ink-faint: #3c4170;
+
+  /* ---- Accents: gold + cyan + violet on near-black ---- */
+  --obs-gold: #f4cf7a;
+  --obs-cyan: #6fe6ff;
+  --obs-violet: #b89cff;
+  --obs-rose: #ff8fb3;
+  --obs-green: #7be0a8;
+
+  /* ---- Ordered chart series ---- */
+  --obs-c1: #6fe6ff;
+  --obs-c2: #f4cf7a;
+  --obs-c3: #b89cff;
+  --obs-c4: #ff8fb3;
+  --obs-c5: #7be0a8;
+
+  /* ---- Heat scale (deep-sea blue core -> gold flare) ---- */
+  --obs-heat-lo: #142a4a;
+  --obs-heat-hi: #f4cf7a;
+
+  /* ---- Lines + grid (faint star-chart rules) ---- */
+  --obs-grid: rgba(120, 140, 210, 0.1);
+  --obs-grid-strong: rgba(120, 140, 210, 0.18);
+  --obs-border: rgba(143, 168, 255, 0.12);
+  --obs-border-strong: rgba(143, 168, 255, 0.22);
+
+  /* ---- Static glows ---- */
+  --obs-glow-cyan: 0 0 10px rgba(111, 230, 255, 0.45);
+  --obs-glow-gold: 0 0 12px rgba(244, 207, 122, 0.4);
+  --obs-glow-violet: 0 0 10px rgba(184, 156, 255, 0.4);
+
+  /* ---- Sharp instrument-panel radii (not the site 6/12/16) ---- */
+  --obs-r-sm: 3px;
+  --obs-r-md: 8px;
+  --obs-r-lg: 14px;
+
+  --obs-shadow: 0 1px 0 rgba(143, 168, 255, 0.06) inset, 0 8px 30px rgba(0, 2, 12, 0.55);
+  --obs-card-bg: linear-gradient(180deg, rgba(19, 23, 50, 0.72), rgba(13, 16, 34, 0.72));
+  --obs-focus: 0 0 0 2px #05060e, 0 0 0 4px #6fe6ff;
+
+  /* ---- Type: zero-webfont. Elegant system serif for display numerals, system
+     sans for body, mono for ids. Tabular figures so numbers never jitter. ---- */
+  --obs-font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman",
+    serif;
+  --obs-font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+  --obs-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  color: var(--obs-ink);
+  font-family: var(--obs-font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  font-variant-numeric: tabular-nums;
+  min-height: 100dvh;
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(140% 100% at 50% -10%, #0b1030 0%, #080a16 45%, #05060e 100%) fixed;
+}
+
+/* Body/html paint so no cozy-theme background peeks around the edges.
+   Scoped to this route because this file only loads here. */
+:global(html:has(.observatory)),
+:global(body:has(.observatory)) {
+  background: #05060e;
+}
+
+/* ---- Star field: two tiled layers of tiny dots, pure CSS, no images ---- */
+.observatory::before,
+.observatory::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.observatory::before {
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, rgba(238, 241, 255, 0.7), transparent),
+    radial-gradient(1px 1px at 75% 44%, rgba(238, 241, 255, 0.5), transparent),
+    radial-gradient(1.5px 1.5px at 50% 70%, rgba(184, 156, 255, 0.5), transparent),
+    radial-gradient(1px 1px at 88% 18%, rgba(111, 230, 255, 0.5), transparent),
+    radial-gradient(1px 1px at 12% 82%, rgba(244, 207, 122, 0.5), transparent);
+  background-repeat: repeat;
+  background-size: 320px 320px;
+  opacity: 0.6;
+  animation: obs-twinkle 6s ease-in-out infinite alternate;
+}
+.observatory::after {
+  background-image:
+    radial-gradient(1px 1px at 40% 12%, rgba(238, 241, 255, 0.4), transparent),
+    radial-gradient(1px 1px at 65% 88%, rgba(238, 241, 255, 0.35), transparent),
+    radial-gradient(1px 1px at 8% 50%, rgba(238, 241, 255, 0.3), transparent);
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  opacity: 0.4;
+}
+
+@keyframes obs-twinkle {
+  from {
+    opacity: 0.45;
+  }
+  to {
+    opacity: 0.7;
+  }
+}
+
+/* ---- Layout vocabulary shared by the page + components ---- */
+.observatory .obs-shell {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: clamp(1.5rem, 4vw, 3rem) clamp(1rem, 3vw, 2rem) 4rem;
+}
+.observatory .obs-section {
+  margin-top: clamp(2.5rem, 6vw, 4.5rem);
+}
+.observatory .obs-eyebrow {
+  font-family: var(--obs-font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.72rem;
+  color: var(--obs-gold);
+  margin: 0 0 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.observatory .obs-eyebrow::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--obs-gold);
+  box-shadow: var(--obs-glow-gold);
+}
+.observatory .obs-card {
+  background: var(--obs-card-bg);
+  border: 1px solid var(--obs-border);
+  border-radius: var(--obs-r-md);
+  box-shadow: var(--obs-shadow);
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+}
+.observatory .obs-grid {
+  display: grid;
+  gap: clamp(0.75rem, 2vw, 1.25rem);
+}
+.observatory .obs-chart-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--obs-ink-dim);
+  margin: 0 0 0.75rem;
+}
+.observatory .obs-num {
+  font-family: var(--obs-font-display);
+  font-variant-numeric: tabular-nums lining;
+  letter-spacing: -0.01em;
+}
+.observatory a {
+  color: var(--obs-cyan);
+}
+.observatory a:focus-visible,
+.observatory :focus-visible {
+  outline: none;
+  box-shadow: var(--obs-focus);
+  border-radius: var(--obs-r-sm);
+}
+
+/* Higher-contrast users: lift faint ink and grid, drop glow. */
+@media (prefers-contrast: more) {
+  .observatory {
+    --obs-ink-mute: #8a93c4;
+    --obs-ink-faint: #565d92;
+    --obs-grid: rgba(120, 140, 210, 0.2);
+    --obs-glow-cyan: none;
+    --obs-glow-gold: none;
+    --obs-glow-violet: none;
+  }
+}
+
+/* Respect reduced motion: no twinkle. */
+@media (prefers-reduced-motion: reduce) {
+  .observatory::before {
+    animation: none;
+  }
+}
