@@ -21,21 +21,21 @@
   /* ---- Ink (faint blue-white starlight) ---- */
   --obs-ink: #eef1ff;
   --obs-ink-dim: #aab1d6;
-  --obs-ink-mute: #6b7299;
-  --obs-ink-faint: #3c4170;
+  --obs-ink-mute: #8a93c4;
+  --obs-ink-faint: #5a6299;
 
   /* ---- Accents: gold + cyan + violet on near-black ---- */
   --obs-gold: #f4cf7a;
   --obs-cyan: #6fe6ff;
-  --obs-violet: #b89cff;
-  --obs-rose: #ff8fb3;
+  --obs-violet: #c9b3ff;
+  --obs-rose: #ff99c1;
   --obs-green: #7be0a8;
 
   /* ---- Ordered chart series ---- */
   --obs-c1: #6fe6ff;
   --obs-c2: #f4cf7a;
-  --obs-c3: #b89cff;
-  --obs-c4: #ff8fb3;
+  --obs-c3: #c9b3ff;
+  --obs-c4: #ff99c1;
   --obs-c5: #7be0a8;
 
   /* ---- Heat scale (deep-sea blue core -> gold flare) ---- */
@@ -192,8 +192,8 @@
 /* Higher-contrast users: lift faint ink and grid, drop glow. */
 @media (prefers-contrast: more) {
   .observatory {
-    --obs-ink-mute: #8a93c4;
-    --obs-ink-faint: #565d92;
+    --obs-ink-mute: #a8b0d6;
+    --obs-ink-faint: #828ab5;
     --obs-grid: rgba(120, 140, 210, 0.2);
     --obs-glow-cyan: none;
     --obs-glow-gold: none;
