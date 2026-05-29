@@ -45,9 +45,9 @@
 </script>
 
 {#if empty}
-  <p class="hbar-empty" role="img" aria-label={ariaLabel}>No data yet</p>
+  <p class="hbar-empty">No data yet</p>
 {:else}
-  <ul class="hbar-list" role="img" aria-label={ariaLabel}>
+  <ul class="hbar-list" aria-label={ariaLabel}>
     {#each rows as row}
       <li class="hbar-row">
         <span class="hbar-label" title={row.label}>{row.label}</span>

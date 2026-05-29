@@ -51,9 +51,30 @@
 
   // Is there anything to show at all? (max>0 implies at least one positive cell.)
   const hasData = denom > 0;
+
+  // Accessible summary: the visual grid is aria-hidden, so describe where the
+  // peak falls for screen-reader users in the figure's label.
+  let peakR = 0;
+  let peakH = 0;
+  let peakV = 0;
+  for (let r = 0; r < 7; r++) {
+    const row = Array.isArray(grid?.[r]) ? grid[r] : [];
+    for (let h = 0; h < 24; h++) {
+      const raw = row[h];
+      const v = typeof raw === "number" && Number.isFinite(raw) ? raw : 0;
+      if (v > peakV) {
+        peakV = v;
+        peakR = r;
+        peakH = h;
+      }
+    }
+  }
+  const summary = hasData
+    ? `${ariaLabel}. Busiest around ${String(peakH).padStart(2, "0")}:00 UTC on ${days[peakR]}. Brighter cells are busier hours.`
+    : ariaLabel;
 </script>
 
-<figure class="heat" role="img" aria-label={ariaLabel}>
+<figure class="heat" role="img" aria-label={summary}>
   {#if hasData}
     <div class="heat-grid" aria-hidden="true">
       <!-- Header row: empty corner + 24 hour slots (only ticks are labelled). -->

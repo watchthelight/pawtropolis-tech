@@ -26,9 +26,9 @@
   const PAD_TOP = 12;
   const PAD_BOTTOM = 10;
 
-  // Unique gradient id per instance so multiple charts on one page don't collide.
-  const uid = Math.random().toString(36).slice(2, 9);
-  const fillId = `area-fill-${uid}`;
+  // Deterministic id from the (page-unique) aria-label so the server-rendered
+  // HTML is byte-stable and hard-cacheable. No randomness.
+  const fillId = `area-fill-${ariaLabel.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")}`;
 
   const H = Math.max(40, Math.round(height));
   const plotTop = PAD_TOP;

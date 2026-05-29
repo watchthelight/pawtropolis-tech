@@ -143,7 +143,7 @@
       </span>
     </figcaption>
   {:else}
-    <p class="empty" role="img" aria-label={ariaLabel}>No data yet</p>
+    <p class="empty">No data yet</p>
   {/if}
 </figure>
 

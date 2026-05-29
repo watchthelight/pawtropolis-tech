@@ -76,7 +76,6 @@
         fill="none"
         stroke="var(--obs-surface-2)"
         stroke-width={STROKE}
-        vector-effect="non-scaling-stroke"
       />
 
       {#if hasData}
@@ -93,7 +92,6 @@
               stroke-dasharray={`${s.dash} ${C - s.dash}`}
               stroke-dashoffset={s.offset}
               stroke-linecap="butt"
-              vector-effect="non-scaling-stroke"
             />
           {/each}
         </g>
