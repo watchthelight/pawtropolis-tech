@@ -34,6 +34,7 @@
     "scan:legacy": "tsx scripts/scan-legacy.ts",
     "migrate": "dotenvx run -- tsx scripts/migrate.ts",
     "migrate:dry": "dotenvx run -- tsx scripts/migrate.ts --dry-run",
+    "stats:refresh": "dotenvx run -- tsx scripts/refresh-public-stats.ts",
     "migrate:logging": "dotenvx run -- tsx scripts/migrate-logging-channel.ts",
     "gen:test-schema": "tsx scripts/gen-test-schema.ts",
     "backfill:app-mappings": "dotenvx run -- tsx scripts/backfill-app-mappings.ts",
