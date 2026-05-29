@@ -39,8 +39,16 @@ const appHandle: Handle = async ({ event, resolve }) => {
   // Read preference cookies for SSR theme injection (zero-flash)
   const prefs = getPreferences(event.cookies);
 
+  const isObservatory = event.url.pathname === "/observatory";
+
   return resolve(event, {
     transformPageChunk: ({ html }) => {
+      let out = html;
+      // The public /observatory page is intentionally zero-JS. Strip the
+      // site-wide inline theme-preference script so no JavaScript ships there.
+      if (isObservatory) {
+        out = out.replace(/<script>\s*\(function \(\)[\s\S]*?paw-style[\s\S]*?<\/script>/, "");
+      }
       const attrs: string[] = [];
       if (prefs.style && prefs.style !== "default") {
         attrs.push(`data-style="${prefs.style}"`);
@@ -49,9 +57,9 @@ const appHandle: Handle = async ({ event, resolve }) => {
         attrs.push(`style="--hue:${prefs.hue}"`);
       }
       if (attrs.length) {
-        return html.replace('<html lang="en">', `<html lang="en" ${attrs.join(" ")}>`);
+        out = out.replace('<html lang="en">', `<html lang="en" ${attrs.join(" ")}>`);
       }
-      return html;
+      return out;
     },
   });
 };

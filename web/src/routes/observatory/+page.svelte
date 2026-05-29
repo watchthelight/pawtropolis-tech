@@ -109,13 +109,13 @@
           />
           <KpiCard label="Active authors" value={fmtInt(obs.kpis.dauLatest)} delta={{ text: "latest day", dir: "flat" }} />
           <KpiCard label="Approval rate" value={fmtPct(obs.kpis.approvalRatePct)} delta={{ text: "last 30 days", dir: "flat" }} />
-          <KpiCard label="Median decision" value={fmtDurationS(obs.kpis.decisionP50S)} delta={{ text: "claim to verdict", dir: "flat" }} />
+          <KpiCard label="Typical response" value={fmtDurationS(obs.kpis.decisionP50S)} delta={{ text: "p50 across mods", dir: "flat" }} />
         </div>
       </section>
 
       <!-- DRILL 1: MEMBERSHIP & RETENTION -->
       <section class="obs-section" aria-label="Membership and retention">
-        <p class="obs-eyebrow">Membership and retention</p>
+        <h2 class="obs-eyebrow">Membership and retention</h2>
         <div class="grid-2">
           <div class="obs-card">
             <p class="obs-chart-title">Daily joins vs leaves</p>
@@ -138,7 +138,7 @@
 
       <!-- DRILL 2: ACTIVITY -->
       <section class="obs-section" aria-label="Activity">
-        <p class="obs-eyebrow">When the city is awake</p>
+        <h2 class="obs-eyebrow">When the city is awake</h2>
         <div class="obs-card heatmap-card">
           <p class="obs-chart-title">Hour of day by day of week</p>
           <HeatmapGrid grid={obs.heatmap} max={obs.heatmapMax} dowLabels={obs.dowLabels} ariaLabel="Message activity heatmap, hour of day by day of week" />
@@ -161,7 +161,7 @@
 
       <!-- DRILL 3: COMMUNITY LIFE -->
       <section class="obs-section" aria-label="Community life">
-        <p class="obs-eyebrow">Community life</p>
+        <h2 class="obs-eyebrow">Community life</h2>
         <div class="grid-2">
           <div class="obs-card">
             <p class="obs-chart-title">Daily voice minutes</p>
@@ -184,7 +184,7 @@
 
       <!-- DRILL 4: MODERATION TRANSPARENCY -->
       <section class="obs-section" aria-label="Moderation transparency">
-        <p class="obs-eyebrow">Who keeps the gate</p>
+        <h2 class="obs-eyebrow">Who keeps the gate</h2>
         <div class="grid-2">
           <div class="obs-card">
             <p class="obs-chart-title">Decision mix, last 90 days</p>

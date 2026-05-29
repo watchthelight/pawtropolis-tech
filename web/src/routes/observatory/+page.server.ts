@@ -30,8 +30,10 @@ export const load: PageServerLoad = async ({ setHeaders }) => {
       getObservatoryData(guildId)
     );
     return { observatory };
-  } catch {
-    // No DB present (e.g. preview build) or empty: render the graceful empty state.
+  } catch (err) {
+    // No DB present (e.g. preview build) or a read error: render the graceful
+    // empty state, but log so a real misconfiguration is not silent.
+    console.error("[observatory] failed to load rollups:", err);
     return { observatory: null };
   }
 };
