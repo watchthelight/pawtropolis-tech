@@ -444,13 +444,13 @@ Roles where a lower-positioned role has more dangerous permissions than a higher
   // Check for hierarchy inversions
   let inversionsFound = false;
   for (let i = 0; i < sortedRoles.length; i++) {
-    const higherRole = sortedRoles[i];
+    const higherRole = sortedRoles[i]!;
     if (higherRole.name === "@everyone" || higherRole.managed) continue;
 
     const higherDangerous = higherRole.permissions.filter((p) => DANGEROUS_PERMISSIONS.includes(p));
 
     for (let j = i + 1; j < sortedRoles.length; j++) {
-      const lowerRole = sortedRoles[j];
+      const lowerRole = sortedRoles[j]!;
       if (lowerRole.name === "@everyone" || lowerRole.managed) continue;
 
       const lowerDangerous = lowerRole.permissions.filter((p) => DANGEROUS_PERMISSIONS.includes(p));

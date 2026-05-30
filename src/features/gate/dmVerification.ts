@@ -213,6 +213,11 @@ export async function startDmVerification(
     required: q.required === 1,
   }));
 
+  if (questions.length === 0) {
+    await respond("No verification questions are configured. Please contact staff.");
+    return;
+  }
+
   // Create or reuse draft
   let appId: string;
   try {
@@ -260,7 +265,7 @@ export async function startDmVerification(
 
   // Try to send the first question
   const nonce = randomUUID().slice(0, 8);
-  const firstQuestion = questions[startIndex];
+  const firstQuestion = questions[startIndex]!;
   const embed = buildQuestionEmbed(firstQuestion, startIndex, questions.length);
 
   try {
@@ -297,7 +302,7 @@ export async function startDmVerification(
     // still complete verification in pages.
     try {
       const pages = paginate(questions);
-      const modal = buildModalForPage(pages[0], existingAnswers, appId);
+      const modal = buildModalForPage(pages[0]!, existingAnswers, appId);
       await interaction.showModal(modal);
     } catch (modalErr) {
       captureException(modalErr);
@@ -355,7 +360,7 @@ export async function handleDmAnswer(message: Message): Promise<void> {
     return;
   }
 
-  const question = session.questions[session.currentQuestionIndex];
+  const question = session.questions[session.currentQuestionIndex]!;
   const answer = message.content.trim();
 
   // Validate required questions
@@ -400,7 +405,7 @@ export async function handleDmAnswer(message: Message): Promise<void> {
   if (nextIndex < session.questions.length) {
     // Send next question
     session.currentQuestionIndex = nextIndex;
-    const nextQuestion = session.questions[nextIndex];
+    const nextQuestion = session.questions[nextIndex]!;
     const embed = buildQuestionEmbed(nextQuestion, nextIndex, session.questions.length);
 
     await message.channel.send({
