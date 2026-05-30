@@ -77,7 +77,8 @@ export async function handleReviewButton(interaction: ButtonInteraction) {
   if (!match) return;
   if (!requireInteractionStaff(interaction)) return;
 
-  const [, action, code] = match;
+  const action = match[1]!;
+  const code = match[2]!;
 
   // Rate limit: prevent spam-clicking the same button on the same app.
   const cooldownKey = cooldownKeyFor(interaction.user.id, code, action);
@@ -215,7 +216,7 @@ export async function handleModmailButton(interaction: ButtonInteraction) {
   if (!match) return;
   if (!requireInteractionStaff(interaction)) return;
 
-  const code = match[1];
+  const code = match[1]!;
 
   // Defer update to acknowledge button
   if (!interaction.deferred && !interaction.replied) {
@@ -285,7 +286,7 @@ export async function handlePermRejectButton(interaction: ButtonInteraction) {
   if (!match) return;
   if (!requireInteractionStaff(interaction)) return;
 
-  const code = match[2];
+  const code = match[2]!;
 
   try {
     const app = await resolveApplication(interaction, code);
@@ -413,8 +414,8 @@ export async function handlePingInUnverified(interaction: ButtonInteraction) {
     userId = modern[2] ?? null;
   } else {
     const [, payload] = legacy!;
-    const userMatch = /user([0-9]+)/.exec(payload);
-    userId = userMatch ? userMatch[1] : null;
+    const userMatch = /user([0-9]+)/.exec(payload!);
+    userId = userMatch ? userMatch[1]! : null;
   }
 
   if (!userId) {
@@ -635,7 +636,7 @@ export async function handleVoteOutButton(interaction: ButtonInteraction) {
   if (!match) return;
   if (!requireInteractionStaff(interaction)) return;
 
-  const code = match[1];
+  const code = match[1]!;
 
   try {
     // Peek voter list before opening a modal — if this mod already voted,
