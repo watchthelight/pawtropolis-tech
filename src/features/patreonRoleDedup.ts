@@ -67,7 +67,7 @@ export async function handlePatreonRoleDedup(
   if (memberPatreonRoles.length <= 1) return;
 
   // First entry is the highest tier (array is sorted highest → lowest)
-  const highest = memberPatreonRoles[0];
+  const highest = memberPatreonRoles[0]!;
   const lowerRoles = memberPatreonRoles.slice(1);
 
   const botId = guild.client.user?.id ?? "system";

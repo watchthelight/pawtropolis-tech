@@ -29,7 +29,7 @@ import { logActionPretty } from "../logging/pretty.js";
 function getOrdinal(n: number): string {
   const s = ["th", "st", "nd", "rd"];
   const v = n % 100;
-  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  return n + (s[(v - 20) % 10] || s[v] || s[0]!);
 }
 
 // ============================================================================
@@ -559,7 +559,7 @@ export function persistAllSessions(): void {
   `);
 
   for (const [key, session] of movieSessions) {
-    const [guildId, userId] = key.split(":");
+    const [guildId, userId] = key.split(":") as [string, string];
     const event = activeEvents.get(guildId);
     if (!event) continue;
 
@@ -692,7 +692,7 @@ export async function reconcileMovieVoiceSessions(guild: Guild): Promise<{ left:
 
   // Close phantom sessions (user has active session but left VC during restart)
   for (const [key, session] of movieSessions) {
-    const [sessionGuildId, userId] = key.split(":");
+    const [sessionGuildId, userId] = key.split(":") as [string, string];
     if (sessionGuildId !== guild.id) continue;
     if (session.currentSessionStart && !currentMembers.has(userId)) {
       handleMovieVoiceLeave(guild.id, userId);
@@ -798,7 +798,7 @@ export function getRecoveryStatus(): {
   }
 
   // Get first (typically only) active event
-  const [guildId, event] = [...activeEvents.entries()][0];
+  const [guildId, event] = [...activeEvents.entries()][0]!;
 
   let sessionCount = 0;
   let totalRecoveredMinutes = 0;

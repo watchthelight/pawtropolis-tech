@@ -1022,7 +1022,7 @@ export async function refreshAllPendingReviewCards(
   // Probe-then-skip: only refresh if the current bot doesn't already own these cards.
   const botId = client.user?.id;
   if (botId) {
-    const probe = rows[0];
+    const probe = rows[0]!;
     try {
       const channel = await client.channels.fetch(probe.channel_id);
       if (channel && channel.isTextBased() && !channel.isDMBased()) {
