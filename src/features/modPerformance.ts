@@ -116,7 +116,7 @@ function calculatePercentile(values: number[], percentile: number): number | nul
   const rank = Math.ceil((percentile / 100) * sorted.length);
   const index = Math.min(sorted.length - 1, Math.max(0, rank - 1));
 
-  return sorted[index];
+  return sorted[index] ?? null;
 }
 
 /**
@@ -178,7 +178,7 @@ function computeAllResponseTimes(
       // Handle resubmissions: only measure from the LATEST submission
       const submissions = events.filter((e) => e.action === "app_submitted");
       if (submissions.length === 0) continue;
-      const latestSubmission = submissions[submissions.length - 1];
+      const latestSubmission = submissions[submissions.length - 1]!;
 
       // Find first mod action AFTER latest submission
       const firstModAction = events.find(

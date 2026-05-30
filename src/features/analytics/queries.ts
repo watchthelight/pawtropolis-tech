@@ -234,8 +234,8 @@ export function getLeadTimeStats(opts: QueryOptions): LeadTimeStats {
     // Could probably just use leadTimes[Math.floor(n * 0.5)] but I've been burned before.
     const p50Index = Math.max(0, Math.min(Math.ceil(0.5 * n) - 1, n - 1));
     const p90Index = Math.max(0, Math.min(Math.ceil(0.9 * n) - 1, n - 1));
-    const p50 = leadTimes[p50Index];
-    const p90 = leadTimes[p90Index];
+    const p50 = leadTimes[p50Index]!;
+    const p90 = leadTimes[p90Index]!;
 
     const elapsed = Date.now() - start;
     logger.info(
@@ -501,11 +501,11 @@ export function getOpenQueueAge(guildId: string): QueueAgeStats {
     const ages = rows.map((r) => r.age_sec);
     const count = ages.length;
     // Query orders ASC, so last element is oldest (max age)
-    const max_age_sec = ages[ages.length - 1];
+    const max_age_sec = ages[ages.length - 1]!;
 
     // p50 (median)
     const p50Index = Math.max(0, Math.min(Math.ceil(0.5 * count) - 1, count - 1));
-    const p50_age_sec = ages[p50Index];
+    const p50_age_sec = ages[p50Index]!;
 
     const elapsed = Date.now() - start;
     logger.info(
