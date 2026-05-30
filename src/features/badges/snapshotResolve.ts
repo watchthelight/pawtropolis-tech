@@ -40,12 +40,12 @@ export function parseRolesSnapshot(markdown: string): Map<string, RoleSnapshotEn
   const colorByName = new Map<string, string>();
   const hierMatch = /## Role Hierarchy[^\n]*\n([\s\S]*?)(?:\n## |$)/.exec(markdown);
   if (hierMatch) {
-    const lines = hierMatch[1].split(/\r?\n/);
+    const lines = hierMatch[1]!.split(/\r?\n/);
     for (const line of lines) {
       const m = /^\|\s*\d+\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|/.exec(line);
       if (!m) continue;
-      const name = m[1].trim();
-      const color = m[2].trim();
+      const name = m[1]!.trim();
+      const color = m[2]!.trim();
       if (name && color && !colorByName.has(name)) {
         colorByName.set(name, color);
       }
@@ -55,11 +55,11 @@ export function parseRolesSnapshot(markdown: string): Map<string, RoleSnapshotEn
   const idByName = new Map<string, string>();
   const idsMatch = /## All Role IDs[^\n]*\n([\s\S]*?)(?:\n## |$)/.exec(markdown);
   if (idsMatch) {
-    const lines = idsMatch[1].split(/\r?\n/);
+    const lines = idsMatch[1]!.split(/\r?\n/);
     for (const line of lines) {
       const m = /^\|\s*([^|]+?)\s*\|\s*`(\d{5,30})`\s*\|/.exec(line);
       if (!m) continue;
-      idByName.set(m[1].trim(), m[2]);
+      idByName.set(m[1]!.trim(), m[2]!);
     }
   }
 
@@ -86,9 +86,9 @@ export function parseChannelsSnapshot(
   for (const line of lines) {
     const m = /^\|\s*([^|]+?)\s*\|\s*[^|]+?\s*\|\s*`(\d{5,30})`\s*\|/.exec(line);
     if (!m) continue;
-    const name = m[1].trim();
+    const name = m[1]!.trim();
     if (name === "Channel" || name === "------") continue;
-    const id = m[2];
+    const id = m[2]!;
     if (!out.has(id)) out.set(id, { name });
   }
   return out;

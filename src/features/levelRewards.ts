@@ -176,7 +176,7 @@ export async function handleLevelRoleAdded(
     const failedRewards: Array<{ name: string; id: string; error: string }> = [];
 
     for (let i = 0; i < rewards.length; i++) {
-      const reward = rewards[i];
+      const reward = rewards[i]!;
       const result = await assignRole(
         guild,
         member.id,
