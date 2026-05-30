@@ -48,11 +48,11 @@ function parseCustomId(customId: string) {
 
   if (action === "confirm" && parts.length >= 7) {
     return {
-      confirmId,
+      confirmId: confirmId!,
       action: "confirm" as const,
-      recipientId: parts[3],
+      recipientId: parts[3]!,
       artType: parts[4] as ArtType,
-      artistId: parts[5],
+      artistId: parts[5]!,
       isOverride: parts[6] === "1",
     };
   }

@@ -33,7 +33,7 @@ export async function handleModmailOpenButton(interaction: ButtonInteraction) {
   const match = /^v1:modmail:open:(.+)$/.exec(interaction.customId);
   if (!match) return;
 
-  const [, payload] = match;
+  const payload = match[1]!;
   /*
    * WHY this weird payload format: Discord button customIds have a 100 char limit.
    * We're cramming app code + message ID into a structured string that survives
