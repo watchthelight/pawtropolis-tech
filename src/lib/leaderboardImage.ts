@@ -335,7 +335,7 @@ export async function generateLeaderboardImage(stats: ModStats[]): Promise<Buffe
   ctx.textBaseline = "middle";
 
   CONFIG.columns.forEach((col, i) => {
-    const colX = colPositions[i];
+    const colX = colPositions[i]!;
     const colW = col.width * s;
 
     if (col.icon) {
@@ -370,7 +370,7 @@ export async function generateLeaderboardImage(stats: ModStats[]): Promise<Buffe
   const fontSize = CONFIG.baseFontSize * s;
 
   for (let rowIndex = 0; rowIndex < stats.length; rowIndex++) {
-    const stat = stats[rowIndex];
+    const stat = stats[rowIndex]!;
     const rowTop = paddingY + headerHeight + rowIndex * rowHeight;
     const rowCenterY = rowTop + rowHeight / 2;
 
@@ -390,25 +390,25 @@ export async function generateLeaderboardImage(stats: ModStats[]): Promise<Buffe
     ctx.font = `${fontSize}px "Consolas", "Monaco", monospace`;
     ctx.fillStyle = getRankColor(stat.rank);
     ctx.textAlign = "center";
-    ctx.fillText(`${stat.rank}.`, colPositions[0] + (CONFIG.columns[0].width * s) / 2, rowCenterY);
+    ctx.fillText(`${stat.rank}.`, colPositions[0]! + (CONFIG.columns[0]!.width * s) / 2, rowCenterY);
 
     // Name column - priority: Nitro gradient > role color > default white.
     // Black (#000000) role color is treated as "no color" since it's invisible on dark bg.
     ctx.font = `500 ${fontSize}px Arial, "Segoe UI", sans-serif`;
     ctx.textAlign = "left";
-    const maxNameWidth = CONFIG.columns[1].width * s - 8;
+    const maxNameWidth = CONFIG.columns[1]!.width * s - 8;
     const displayName = truncateText(ctx, stat.displayName, maxNameWidth);
 
     // Three rendering paths because Discord users are extra.
     // Nitro gradients are rare but make people happy, so we support them.
     if (stat.nameGradient && stat.nameGradient.colors.length >= 2) {
-      drawGradientText(ctx, displayName, colPositions[1], rowCenterY, stat.nameGradient);
+      drawGradientText(ctx, displayName, colPositions[1]!, rowCenterY, stat.nameGradient);
     } else if (stat.roleColor && stat.roleColor !== "#000000") {
       ctx.fillStyle = stat.roleColor;
-      ctx.fillText(displayName, colPositions[1], rowCenterY);
+      ctx.fillText(displayName, colPositions[1]!, rowCenterY);
     } else {
       ctx.fillStyle = COLORS.text;
-      ctx.fillText(displayName, colPositions[1], rowCenterY);
+      ctx.fillText(displayName, colPositions[1]!, rowCenterY);
     }
 
     // Stats columns
@@ -417,23 +417,23 @@ export async function generateLeaderboardImage(stats: ModStats[]): Promise<Buffe
     // Total
     ctx.fillStyle = stat.total === 0 ? COLORS.textDimmed : COLORS.text;
     ctx.textAlign = "right";
-    ctx.fillText(stat.total.toString(), colPositions[2] + CONFIG.columns[2].width * s, rowCenterY);
+    ctx.fillText(stat.total.toString(), colPositions[2]! + CONFIG.columns[2]!.width * s, rowCenterY);
 
     // Approvals (green)
     ctx.fillStyle = stat.approvals === 0 ? COLORS.textDimmed : COLORS.green;
-    ctx.fillText(stat.approvals.toString(), colPositions[3] + CONFIG.columns[3].width * s, rowCenterY);
+    ctx.fillText(stat.approvals.toString(), colPositions[3]! + CONFIG.columns[3]!.width * s, rowCenterY);
 
     // Rejections (red)
     ctx.fillStyle = stat.rejections === 0 ? COLORS.textDimmed : COLORS.red;
-    ctx.fillText(stat.rejections.toString(), colPositions[4] + CONFIG.columns[4].width * s, rowCenterY);
+    ctx.fillText(stat.rejections.toString(), colPositions[4]! + CONFIG.columns[4]!.width * s, rowCenterY);
 
     // Modmail (yellow)
     ctx.fillStyle = stat.modmail === 0 ? COLORS.textDimmed : COLORS.yellow;
-    ctx.fillText(stat.modmail.toString(), colPositions[5] + CONFIG.columns[5].width * s, rowCenterY);
+    ctx.fillText(stat.modmail.toString(), colPositions[5]! + CONFIG.columns[5]!.width * s, rowCenterY);
 
     // Time (muted)
     ctx.fillStyle = stat.avgTimeSeconds === 0 ? COLORS.textDimmed : COLORS.textMuted;
-    ctx.fillText(formatTime(stat.avgTimeSeconds), colPositions[6] + CONFIG.columns[6].width * s, rowCenterY);
+    ctx.fillText(formatTime(stat.avgTimeSeconds), colPositions[6]! + CONFIG.columns[6]!.width * s, rowCenterY);
   }
 
   // Square corners intentional - Discord embed already has rounded corners,

@@ -180,7 +180,7 @@ function getColor(value: number, maxValue: number): string {
   if (value === 0 || maxValue === 0) return COLORS.cellEmpty;
   const normalized = Math.min(1, value / maxValue);
   const index = Math.floor(normalized * (COLOR_GRADIENT.length - 1));
-  return COLOR_GRADIENT[index];
+  return COLOR_GRADIENT[index]!;
 }
 
 /**
@@ -197,7 +197,7 @@ function calculateTrends(data: ActivityData): TrendsData {
   for (const grid of allGrids) {
     for (let day = 0; day < 7; day++) {
       for (let hour = 0; hour < 24; hour++) {
-        const value = grid[day][hour];
+        const value = grid[day]![hour]!;
         hourlyTotals[hour] += value;
         dayTotals[day] += value;
         totalMessages += value;
@@ -264,8 +264,8 @@ function calculateTrends(data: ActivityData): TrendsData {
   // For servers with wildly variable weeks, might want rolling average instead.
   let weekOverWeekGrowth: number | undefined;
   if (data.weeks.length >= 2) {
-    const firstWeekTotal = data.weeks[0].grid.flat().reduce((a, b) => a + b, 0);
-    const lastWeekTotal = data.weeks[data.weeks.length - 1].grid.flat().reduce((a, b) => a + b, 0);
+    const firstWeekTotal = data.weeks[0]!.grid.flat().reduce((a, b) => a + b, 0);
+    const lastWeekTotal = data.weeks[data.weeks.length - 1]!.grid.flat().reduce((a, b) => a + b, 0);
 
     if (lastWeekTotal > 0) {
       weekOverWeekGrowth = ((firstWeekTotal - lastWeekTotal) / lastWeekTotal) * 100;
@@ -332,7 +332,7 @@ function drawWeekHeatmap(
 
   for (let day = 0; day < 7; day++) {
     const y = currentY + day * cfg.cellHeight + cfg.cellHeight / 2;
-    const dateStr = formatDate(week.dates[day]);
+    const dateStr = formatDate(week.dates[day]!);
     const label = `${DAY_LABELS[day]} (${dateStr})`;
     ctx.fillText(label, gridX - 15, y);
   }
@@ -342,7 +342,7 @@ function drawWeekHeatmap(
     for (let hour = 0; hour < 24; hour++) {
       const x = gridX + hour * cfg.cellWidth;
       const y = currentY + day * cfg.cellHeight;
-      const value = week.grid[day][hour];
+      const value = week.grid[day]![hour]!;
 
       // Draw cell with color
       ctx.fillStyle = getColor(value, maxValue);
@@ -408,7 +408,7 @@ export async function generateHeatmap(
 
   // Draw each week
   for (let i = 0; i < numWeeks; i++) {
-    const week = data.weeks[i];
+    const week = data.weeks[i]!;
     const endY = drawWeekHeatmap(ctx, week, data.maxValue, gridX, currentY, cfg, numWeeks > 1);
     currentY = endY + weekSpacing;
   }
@@ -438,7 +438,7 @@ export async function generateHeatmap(
   // Gradient bar
   const gradientStepWidth = legendWidth / COLOR_GRADIENT.length;
   for (let i = 0; i < COLOR_GRADIENT.length; i++) {
-    ctx.fillStyle = COLOR_GRADIENT[i];
+    ctx.fillStyle = COLOR_GRADIENT[i]!;
     ctx.fillRect(legendX + i * gradientStepWidth, legendY, gradientStepWidth, legendBarHeight);
   }
 
@@ -530,13 +530,13 @@ export function fetchActivityData(guildId: string, weeks: number = 1): ActivityD
       const dayOfWeek = date.getUTCDay();
       const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
       const hour = date.getUTCHours();
-      grid[dayIndex][hour] += 1;
+      grid[dayIndex]![hour] = (grid[dayIndex]![hour] ?? 0) + 1;
     }
 
     weeksData.push({
       grid,
-      startDate: dates[0],
-      endDate: dates[6],
+      startDate: dates[0]!,
+      endDate: dates[6]!,
       dates,
     });
   }
@@ -619,8 +619,8 @@ export function generateSampleData(weeks: number = 1): ActivityData {
 
     weeksData.push({
       grid,
-      startDate: dates[0],
-      endDate: dates[6],
+      startDate: dates[0]!,
+      endDate: dates[6]!,
       dates,
     });
   }

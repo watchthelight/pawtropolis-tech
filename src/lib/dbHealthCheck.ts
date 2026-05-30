@@ -59,7 +59,7 @@ export function checkDatabaseHealth(): HealthCheckResult {
     try {
       const integrityResults = db.prepare(pragma).all() as Array<Record<string, string>>;
 
-      if (integrityResults.length === 1 && integrityResults[0][columnKey] === "ok") {
+      if (integrityResults.length === 1 && integrityResults[0]![columnKey] === "ok") {
         result.integrity = "ok";
         logger.info({ mode }, "[healthcheck] ✓ Database integrity: OK");
       } else {

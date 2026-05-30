@@ -119,8 +119,8 @@ export function formatRelative(tsSec: number, nowSec = Math.floor(Date.now() / 1
   let i = 0;
 
   // Cascade through units until we find one that fits
-  for (; i < units.length - 1 && diff >= units[i][0]; i++) {
-    diff = diff / units[i][0];
+  for (; i < units.length - 1 && diff >= units[i]![0]; i++) {
+    diff = diff / units[i]![0];
   }
 
   // Floor to avoid "3.7d ago" - humans expect whole numbers here

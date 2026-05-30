@@ -113,7 +113,7 @@ export const logger = pino({
         typeof level === "number"
           ? level
           : (pino.levels.values[level as keyof typeof pino.levels.values] ?? 0);
-      if (levelValue >= pino.levels.values.error) {
+      if (levelValue >= (pino.levels.values.error ?? 50)) {
         const firstArg = args[0];
         const errorCandidate =
           firstArg instanceof Error

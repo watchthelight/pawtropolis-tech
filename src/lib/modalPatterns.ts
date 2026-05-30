@@ -113,47 +113,47 @@ export function identifyModalRoute(id: string): ModalRoute | null {
   // much - regex matching is fast. But it's nice to fail fast on the common case.
   const page = id.match(MODAL_PAGE_RE);
   if (page) {
-    return { type: "gate_submit_page", sessionId: page[1], pageIndex: Number(page[2]) };
+    return { type: "gate_submit_page", sessionId: page[1]!, pageIndex: Number(page[2]) };
   }
 
   const reject = id.match(MODAL_REJECT_RE);
   if (reject) {
-    return { type: "review_reject", code: reject[1] };
+    return { type: "review_reject", code: reject[1]! };
   }
 
   const permReject = id.match(MODAL_PERM_REJECT_RE);
   if (permReject) {
-    return { type: "review_perm_reject", code: permReject[1] };
+    return { type: "review_perm_reject", code: permReject[1]! };
   }
 
   const accept = id.match(MODAL_ACCEPT_RE);
   if (accept) {
-    return { type: "review_accept", code: accept[1] };
+    return { type: "review_accept", code: accept[1]! };
   }
 
   const kick = id.match(MODAL_KICK_RE);
   if (kick) {
-    return { type: "review_kick", code: kick[1] };
+    return { type: "review_kick", code: kick[1]! };
   }
 
   const unclaim = id.match(MODAL_UNCLAIM_RE);
   if (unclaim) {
-    return { type: "review_unclaim", code: unclaim[1] };
+    return { type: "review_unclaim", code: unclaim[1]! };
   }
 
   const voteOut = id.match(MODAL_VOTE_OUT_RE);
   if (voteOut) {
-    return { type: "review_vote_out", code: voteOut[1] };
+    return { type: "review_vote_out", code: voteOut[1]! };
   }
 
   const confirm18 = id.match(MODAL_18_RE);
   if (confirm18) {
-    return { type: "avatar_confirm18", code: confirm18[1] };
+    return { type: "avatar_confirm18", code: confirm18[1]! };
   }
 
   const reportResolve = id.match(MODAL_REPORT_RESOLVE_RE);
   if (reportResolve) {
-    return { type: "report_resolve", code: reportResolve[1] };
+    return { type: "report_resolve", code: reportResolve[1]! };
   }
 
   const qotdSuggest = id.match(MODAL_QOTD_SUGGEST_RE);
@@ -163,7 +163,7 @@ export function identifyModalRoute(id: string): ModalRoute | null {
 
   const qotdReject = id.match(MODAL_QOTD_REJECT_RE);
   if (qotdReject) {
-    return { type: "qotd_reject", code: qotdReject[1] };
+    return { type: "qotd_reject", code: qotdReject[1]! };
   }
 
   return null;

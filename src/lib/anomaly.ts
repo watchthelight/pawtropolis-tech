@@ -106,7 +106,7 @@ export function detectModeratorAnomalies(dailyCounts: number[], threshold: numbe
   }
 
   // Compare most recent day to historical baseline (everything except latest)
-  const mostRecent = dailyCounts[dailyCounts.length - 1];
+  const mostRecent = dailyCounts[dailyCounts.length - 1]!;
   const historical = dailyCounts.slice(0, -1);
 
   return detectAnomaly(mostRecent, historical, threshold);

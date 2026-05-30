@@ -45,7 +45,7 @@ export function computePercentiles(
 
   for (const p of percentiles) {
     const index = Math.ceil((p / 100) * sorted.length) - 1;
-    result.set(p, sorted[Math.max(0, Math.min(index, sorted.length - 1))]);
+    result.set(p, sorted[Math.max(0, Math.min(index, sorted.length - 1))]!);
   }
 
   return result;

@@ -51,7 +51,7 @@ export function newTraceId(): string {
   // Note: modulo bias exists here (256 % 62 != 0) but for trace IDs we don't
   // care about cryptographic uniformity - just uniqueness.
   for (let i = 0; i < length; i += 1) {
-    out += BASE62[bytes[i] % BASE62.length];
+    out += BASE62[bytes[i]! % BASE62.length];
   }
   return out;
 }
