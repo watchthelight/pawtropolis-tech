@@ -35,7 +35,7 @@ import { logActionPretty } from "../../logging/pretty.js";
 function getOrdinal(n: number): string {
   const s = ["th", "st", "nd", "rd"];
   const v = n % 100;
-  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  return n + (s[(v - 20) % 10] || s[v] || s[0]!);
 }
 
 // ============================================================================
@@ -254,7 +254,7 @@ export async function finalizeGameAttendance(guild: Guild): Promise<GameAttendan
 
   // Process each session
   for (const [key, session] of gameSessions) {
-    const [guildId, userId] = key.split(":");
+    const [guildId, userId] = key.split(":") as [string, string];
     if (guildId !== guild.id) continue;
 
     // Close any open session
@@ -414,7 +414,7 @@ export function persistAllGameSessions(): void {
   `);
 
   for (const [key, session] of gameSessions) {
-    const [guildId, userId] = key.split(":");
+    const [guildId, userId] = key.split(":") as [string, string];
     const event = activeGameEvents.get(guildId);
     if (!event) continue;
 
@@ -547,7 +547,7 @@ export async function reconcileGameVoiceSessions(guild: Guild): Promise<{ left: 
 
   // Close phantom sessions (user has active session but left VC during restart)
   for (const [key, session] of gameSessions) {
-    const [sessionGuildId, userId] = key.split(":");
+    const [sessionGuildId, userId] = key.split(":") as [string, string];
     if (sessionGuildId !== guild.id) continue;
     if (session.currentSessionStart && !currentMembers.has(userId)) {
       handleGameVoiceLeave(guild.id, userId);
@@ -648,7 +648,7 @@ export function getGameRecoveryStatus(): {
     };
   }
 
-  const [guildId, event] = [...activeGameEvents.entries()][0];
+  const [guildId, event] = [...activeGameEvents.entries()][0]!;
 
   let sessionCount = 0;
   let totalRecoveredMinutes = 0;
@@ -864,7 +864,7 @@ export function getAllGameSessions(guildId: string): Map<string, EventSession> {
   const result = new Map<string, EventSession>();
   for (const [key, session] of gameSessions) {
     if (key.startsWith(guildId + ":")) {
-      const userId = key.split(":")[1];
+      const userId = key.split(":")[1]!;
       result.set(userId, session);
     }
   }

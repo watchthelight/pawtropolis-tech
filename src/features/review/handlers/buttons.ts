@@ -319,7 +319,8 @@ export async function handleCopyUidButton(interaction: ButtonInteraction) {
   if (!match) return;
   if (!requireInteractionStaff(interaction)) return;
 
-  const [, code, userId] = match;
+  const code = match[1]!;
+  const userId = match[2]!;
 
   try {
     // Verify the application exists for security

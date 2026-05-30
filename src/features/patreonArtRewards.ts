@@ -173,7 +173,7 @@ export async function handlePatreonArtRewards(member: GuildMember): Promise<void
   const ROLE_ASSIGN_DELAY_MS = 1100;
 
   for (let i = 0; i < artTypes.length; i++) {
-    const artType = artTypes[i];
+    const artType = artTypes[i]!;
     const entitlement = ticketEntitlements[artType]!;
     const alreadyGranted = getGrantedQuantity(guild.id, fresh.id, artType);
 
