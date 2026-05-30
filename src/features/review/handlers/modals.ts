@@ -52,7 +52,7 @@ export async function handleRejectModal(interaction: ModalSubmitInteraction) {
     });
   }
 
-  const code = match[1];
+  const code = match[1]!;
 
   try {
     const app = await resolveApplication(interaction, code);
@@ -90,7 +90,7 @@ export async function handleAcceptModal(interaction: ModalSubmitInteraction) {
     });
   }
 
-  const code = match[1];
+  const code = match[1]!;
 
   try {
     const app = await resolveApplication(interaction, code);
@@ -129,7 +129,7 @@ export async function handlePermRejectModal(interaction: ModalSubmitInteraction)
     });
   }
 
-  const code = match[1];
+  const code = match[1]!;
 
   try {
     const app = await resolveApplication(interaction, code);
@@ -168,7 +168,7 @@ export async function handleKickModal(interaction: ModalSubmitInteraction) {
     });
   }
 
-  const code = match[1];
+  const code = match[1]!;
 
   try {
     const app = await resolveApplication(interaction, code);
@@ -206,7 +206,7 @@ export async function handleVoteOutModal(interaction: ModalSubmitInteraction) {
     });
   }
 
-  const code = match[1];
+  const code = match[1]!;
 
   try {
     const app = await resolveApplication(interaction, code);
@@ -245,7 +245,7 @@ export async function handleUnclaimModal(interaction: ModalSubmitInteraction) {
     });
   }
 
-  const code = match[1];
+  const code = match[1]!;
 
   try {
     const app = await resolveApplication(interaction, code);

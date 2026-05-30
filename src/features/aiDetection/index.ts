@@ -108,7 +108,7 @@ export async function detectAIForImage(
   const results = await Promise.allSettled(detectionPromises);
 
   const services: ServiceResult[] = enabledServices.map((svc, i) =>
-    processResult(results[i], svc)
+    processResult(results[i]!, svc)
   );
 
   /*
@@ -180,7 +180,7 @@ export function buildAIDetectionEmbed(results: AIDetectionResult[], message: Mes
   embed.setDescription(`[Jump to message](${message.url})`);
 
   for (let i = 0; i < results.length; i++) {
-    const result = results[i];
+    const result = results[i]!;
     const imageHeader = results.length > 1 ? `Image ${i + 1}` : "Image";
 
     // Build service breakdown with visual bars
