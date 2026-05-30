@@ -766,7 +766,7 @@ export async function runKickAction(
  */
 function formatVoterList(voterIds: string[]): string {
   const mentions = voterIds.map((id) => `<@${id}>`);
-  if (mentions.length === 1) return mentions[0];
+  if (mentions.length === 1) return mentions[0]!;
   if (mentions.length === 2) return `${mentions[0]} and ${mentions[1]}`;
   return `${mentions.slice(0, -1).join(", ")}, and ${mentions[mentions.length - 1]}`;
 }

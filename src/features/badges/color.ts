@@ -35,7 +35,7 @@ export function normalizeHex(hex: string | undefined | null): string {
   if (!hex) return DISCORD_BLURPLE;
   const m = /^#?([0-9a-fA-F]{6})$/.exec(hex);
   if (!m) return DISCORD_BLURPLE;
-  return "#" + m[1].toUpperCase();
+  return "#" + m[1]!.toUpperCase();
 }
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } {

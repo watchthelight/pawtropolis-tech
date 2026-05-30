@@ -217,7 +217,7 @@ export function getJobByRecipient(
   }
 
   if (rows.length === 1) {
-    return { status: "found", job: rows[0] };
+    return { status: "found", job: rows[0]! };
   }
 
   // Multiple matches - return them all so the caller can tell the user to be more specific

@@ -65,7 +65,7 @@ export async function handleStartButton(interaction: ButtonInteraction) {
     const draft = getOrCreateDraft(db, guildId, userId);
     const draftData = getDraft(db, draft.application_id);
     const answersMap = draftData ? toAnswerMap(draftData.responses) : new Map<number, string>();
-    const modal = buildModalForPage(pages[requestedPage], answersMap, draft.application_id);
+    const modal = buildModalForPage(pages[requestedPage]!, answersMap, draft.application_id);
     await interaction.showModal(modal);
   } catch (err) {
     captureException(err, {
@@ -277,7 +277,7 @@ export async function handleGateModalSubmit(
   if (missingRequired.length > 0) {
     ctx.step("validate_fail");
     const list = missingRequired.map((q) => q.q_index + 1).join(", ");
-    const firstMissing = missingRequired[0];
+    const firstMissing = missingRequired[0]!;
     const targetPage = pages.find((p) =>
       p.questions.some((q) => q.q_index === firstMissing.q_index)
     );

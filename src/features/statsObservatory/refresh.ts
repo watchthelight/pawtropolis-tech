@@ -295,11 +295,11 @@ function rebuildDailyMetrics(
   let running = joinsBefore - leavesBefore;
   let prevMember: number | null = null;
   for (let i = 0; i < dayList.length; i++) {
-    const day = dayList[i];
+    const day = dayList[i]!;
     const a = acc.get(day)!;
     running += a.joins - a.leaves;
     const memberDelta = a.member_count != null && prevMember != null ? a.member_count - prevMember : null;
-    const prev7 = i >= 7 ? acc.get(dayList[i - 7])!.message_count : null;
+    const prev7 = i >= 7 ? acc.get(dayList[i - 7]!)!.message_count : null;
     const dayStartS = windowStartS + i * DAY_S;
     const wau = num((wauStmt.get(guildId, dayStartS - 6 * DAY_S, dayStartS + DAY_S) as Row).n);
     upsert.run({
@@ -388,7 +388,7 @@ function rebuildTenure(db: Database, guildId: string, nowS: number): void {
   for (const m of members) {
     const tenure = nowS - num(m.joined_at);
     for (let i = 0; i < TENURE_BUCKETS.length; i++) {
-      const maxS = TENURE_BUCKETS[i].maxS;
+      const maxS = TENURE_BUCKETS[i]!.maxS;
       if (maxS == null || tenure < maxS) {
         counts[i]++;
         break;

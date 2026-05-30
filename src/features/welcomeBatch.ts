@@ -139,7 +139,7 @@ export async function flushSession(
   try {
     const message =
       usersToSend.length === 1
-        ? await postWelcomeCard({ guild, user: usersToSend[0], config, memberCount })
+        ? await postWelcomeCard({ guild, user: usersToSend[0]!, config, memberCount })
         : await postBatchWelcomeCard({ guild, users: usersToSend, config, memberCount });
     logger.info(
       { guildId: guild.id, userCount: usersToSend.length, messageId: message.id },

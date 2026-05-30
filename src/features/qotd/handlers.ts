@@ -84,7 +84,8 @@ export async function handleQotdButton(interaction: ButtonInteraction): Promise<
   const match = BTN_QOTD_RE.exec(interaction.customId);
   if (!match) return;
 
-  const [, action, code] = match;
+  const action = match[1]!;
+  const code = match[2]!;
 
   if (action === "reject") {
     // Reject opens a modal for reason — no defer before showModal

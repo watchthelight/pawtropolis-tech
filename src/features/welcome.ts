@@ -229,7 +229,7 @@ export async function postBatchWelcomeCard(opts: {
 
   if (users.length === 0) throw new Error("postBatchWelcomeCard: empty users");
   if (users.length === 1) {
-    return postWelcomeCard({ guild, user: users[0], config, memberCount });
+    return postWelcomeCard({ guild, user: users[0]!, config, memberCount });
   }
 
   const channelId = config.general_channel_id;

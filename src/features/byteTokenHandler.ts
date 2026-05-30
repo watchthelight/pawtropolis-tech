@@ -89,9 +89,9 @@ function parseByteButton(customId: string): ParsedByteButton | null {
   }
 
   return {
-    confirmId,
+    confirmId: confirmId!,
     action,
-    userId,
+    userId: userId!,
     rarity: rarity as TokenRarity | undefined,
   };
 }

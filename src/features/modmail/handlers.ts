@@ -151,7 +151,7 @@ export async function handleModmailCloseButton(interaction: ButtonInteraction) {
 
   // EDGE CASE: If someone manually edits the button payload to a non-numeric ticketId,
   // parseInt returns NaN and the query just returns nothing. Not a security hole, just weird.
-  const ticketId = parseInt(match[1], 10);
+  const ticketId = parseInt(match[1]!, 10);
 
   // Import from threads module
   const { closeModmailThread } = await import("./threads.js");

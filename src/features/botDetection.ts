@@ -139,7 +139,7 @@ export function hasLevelRole(member: GuildMember, minLevel: number = DETECTION_C
   for (const role of member.roles.cache.values()) {
     const match = role.name.match(levelPattern);
     if (match) {
-      const level = parseInt(match[1], 10);
+      const level = parseInt(match[1]!, 10);
       if (level >= minLevel) {
         return true;
       }

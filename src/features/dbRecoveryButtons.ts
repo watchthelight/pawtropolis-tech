@@ -47,7 +47,9 @@ export async function handleDbRecoveryButton(interaction: ButtonInteraction): Pr
     return;
   }
 
-  const [, action, candidateId, nonce] = match;
+  const action = match[1]!;
+  const candidateId = match[2]!;
+  const nonce = match[3]!;
 
   logger.info(
     { action, candidateId, nonce, userId: user.id, guildId: guild?.id },
