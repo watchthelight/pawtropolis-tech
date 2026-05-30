@@ -161,7 +161,7 @@ function evictOldestEntries<K, V extends { created?: number; resetAt?: number }>
 
   const toRemove = map.size - maxSize;
   for (let i = 0; i < toRemove; i++) {
-    map.delete(entries[i][0]);
+    map.delete(entries[i]![0]);
   }
 }
 

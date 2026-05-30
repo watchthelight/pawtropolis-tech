@@ -626,7 +626,7 @@ export function registerReviewRoutes(server: FastifyInstance, ctx: DashboardRout
 
     const mentions = voters.map((id) => `<@${id}>`);
     let voterList: string;
-    if (mentions.length === 1) voterList = mentions[0];
+    if (mentions.length === 1) voterList = mentions[0]!;
     else if (mentions.length === 2) voterList = `${mentions[0]} and ${mentions[1]}`;
     else voterList = `${mentions.slice(0, -1).join(", ")}, and ${mentions[mentions.length - 1]}`;
 

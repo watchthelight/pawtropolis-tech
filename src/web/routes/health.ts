@@ -47,9 +47,9 @@ export function registerHealthRoutes(server: FastifyInstance, _ctx: DashboardRou
         const { stdout: dfOutput } = await execFileAsync("df", ["-B1", "/"], { timeout: 3000 });
         const lines = dfOutput.trim().split("\n");
         if (lines.length >= 2) {
-          const parts = lines[1].split(/\s+/);
-          const totalBytes = parseInt(parts[1], 10);
-          const usedBytes = parseInt(parts[2], 10);
+          const parts = lines[1]!.split(/\s+/);
+          const totalBytes = parseInt(parts[1]!, 10);
+          const usedBytes = parseInt(parts[2]!, 10);
           disk = {
             totalGB: Math.round(totalBytes / 1024 / 1024 / 1024 * 10) / 10,
             usedGB: Math.round(usedBytes / 1024 / 1024 / 1024 * 10) / 10,

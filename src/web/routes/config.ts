@@ -49,7 +49,7 @@ export function registerConfigRoutes(server: FastifyInstance, ctx: DashboardRout
     // Validate all field values
     const validation = validateConfigUpdate(fieldEntries);
     if (!validation.valid) {
-      const firstError = Object.values(validation.errors)[0];
+      const firstError = Object.values(validation.errors)[0]!;
       return reply.code(400).send({ success: false, error: firstError } satisfies ApiError);
     }
 

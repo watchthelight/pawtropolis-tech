@@ -149,7 +149,7 @@ export function handleBadgeRequest(
 
   const registryMatch = /^\/badges\/([a-z0-9_-]+)\.svg$/.exec(pathname);
   if (registryMatch) {
-    const badgeId = registryMatch[1];
+    const badgeId = registryMatch[1]!;
     if (!isSafeBadgeId(badgeId)) {
       sendSvg(res, fallbackSvgFor("invalid id"), 200);
       return true;
@@ -183,7 +183,7 @@ export function handleBadgeRequest(
       sendSvg(res, renderBadgeSvg(entry), 200, ifNoneMatch);
       return true;
     }
-    sendSvg(res, fallbackSvgFor(`unknown ${kind.slice(0, -1)}`), 200);
+    sendSvg(res, fallbackSvgFor(`unknown ${kind!.slice(0, -1)}`), 200);
     return true;
   }
 
