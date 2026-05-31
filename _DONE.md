@@ -4,6 +4,10 @@ One-line dated ledger. Detail in [`done/`](./done/). Pair of [`_BACKLOG.md`](./_
 
 Reverse chronological by completion date.
 
+## 2026-05-31
+
+- [x] [Enable tsconfig noUncheckedIndexedAccess and unused checks](done/00024.md) `Medium` TypeScript strict mode completed. Cleared 354 noUncheckedIndexedAccess errors across 5 layers (src/lib, src/web, src/features, src/commands, scripts) then flipped the flag; enabled noUnusedLocals + noUnusedParameters and pruned 114 unused symbols (8-agent sweep). Two real bug-guards landed (gate/dmVerification zero-questions crash earlier; isitreal unknown-service). typecheck 0, 5455 tests, build green.
+
 ## 2026-05-28
 
 - [x] [Stats Observatory: public no-JS stats page with isolated theme](done/00049.md) `High` Epic. Public zero-JS /observatory page, fixed Observatory night-sky theme, ten precomputed rollup tables (migration 078) refreshed via `npm run stats:refresh`. 3 requests (1 HTML + 2 CSS), LCP ~116ms, CLS 0. Prod deploy + 078 apply stay owner-triggered (gated on #00046).
