@@ -52,14 +52,16 @@ export function getModmailThreads(
 			t.app_code,
 			t.status,
 			COUNT(m.id) as message_count,
-			(SELECT content FROM modmail_message
-			 WHERE ticket_id = t.id ORDER BY created_at DESC LIMIT 1) as latest_message,
-			(SELECT direction FROM modmail_message
-			 WHERE ticket_id = t.id ORDER BY created_at DESC LIMIT 1) as latest_direction,
+			lm.content as latest_message,
+			lm.direction as latest_direction,
 			t.created_at,
 			t.closed_at
 		FROM modmail_ticket t
 		LEFT JOIN modmail_message m ON m.ticket_id = t.id
+		LEFT JOIN modmail_message lm ON lm.id = (
+			SELECT id FROM modmail_message
+			WHERE ticket_id = t.id ORDER BY created_at DESC LIMIT 1
+		)
 		LEFT JOIN user_cache u ON u.guild_id = t.guild_id AND u.user_id = t.user_id
 		WHERE t.guild_id = ? ${statusClause}
 		GROUP BY t.id

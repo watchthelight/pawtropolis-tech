@@ -1,6 +1,7 @@
 import { error } from "@sveltejs/kit";
 import { hasMinTier } from "$lib/server/roles";
 import { getReviewQueue, getReviewHistory } from "$lib/server/queries/reviews";
+import { cached, cacheKey, CACHE_TTL } from "$lib/server/cache";
 import type { LayoutServerLoad } from "./$types";
 
 const GUILD_ID = process.env.GUILD_ID!;
@@ -11,7 +12,13 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
   }
 
   const historyLimit = Math.min(Math.max(Number(url.searchParams.get("limit")) || 25, 10), 100);
-  const queue = getReviewQueue(GUILD_ID);
+  // The queue payload is identical for every reviewer and recomputed on each
+  // /dashboard/reviews/* navigation; a short TTL collapses the repeated
+  // correlated-subquery scans. Review mutations bust pulse:/stats: via the SSE
+  // webhook, and the page re-loads after the short window.
+  const queue = await cached(cacheKey(["reviews:queue", GUILD_ID]), CACHE_TTL.short, () =>
+    getReviewQueue(GUILD_ID)
+  );
   const history = getReviewHistory(GUILD_ID, historyLimit);
 
   const userId = locals.user.id;

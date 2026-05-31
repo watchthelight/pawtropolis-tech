@@ -121,10 +121,14 @@ function calculateTrends(weeks: HeatmapWeekData[]): HeatmapTrends {
 function buildWeek(guildId: string, weekStartS: number, weekEndS: number): HeatmapWeekData {
   const rows = db()
     .prepare(
-      `SELECT created_at_s FROM message_activity
-			 WHERE guild_id = ? AND created_at_s >= ? AND created_at_s < ?`
+      `SELECT (CAST(strftime('%w', created_at_s, 'unixepoch') AS INTEGER) + 6) % 7 AS dow,
+              CAST(strftime('%H', created_at_s, 'unixepoch') AS INTEGER) AS hour,
+              COUNT(*) AS n
+       FROM message_activity
+       WHERE guild_id = ? AND created_at_s >= ? AND created_at_s < ?
+       GROUP BY dow, hour`
     )
-    .all(guildId, weekStartS, weekEndS) as { created_at_s: number }[];
+    .all(guildId, weekStartS, weekEndS) as { dow: number; hour: number; n: number }[];
 
   const grid: number[][] = Array.from({ length: 7 }, () => new Array(24).fill(0));
   const dates: string[] = [];
@@ -142,11 +146,7 @@ function buildWeek(guildId: string, weekStartS: number, weekEndS: number): Heatm
   }
 
   for (const row of rows) {
-    const date = new Date(row.created_at_s * 1000);
-    const dayOfWeek = date.getUTCDay();
-    const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-    const hour = date.getUTCHours();
-    grid[dayIndex][hour] += 1;
+    grid[row.dow][row.hour] = row.n;
   }
 
   return {

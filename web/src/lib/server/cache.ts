@@ -151,3 +151,17 @@ export async function invalidate(key: string): Promise<void> {
     }
   }
 }
+
+/**
+ * Drop every L1 entry whose key starts with `prefix`. Used by SSE mutation
+ * handlers so a review/modmail/flag/stats change immediately busts the cached
+ * pulse:/stats: payloads instead of waiting out the TTL. L2 (Valkey) entries
+ * are left to expire on their own TTL: prefix scanning a shared store is not
+ * worth the round-trips for best-effort freshness, and the default backend is
+ * L1-only.
+ */
+export function invalidatePrefix(prefix: string): void {
+  for (const key of memStore.keys()) {
+    if (key.startsWith(prefix)) memStore.delete(key);
+  }
+}

@@ -11,6 +11,7 @@ import crypto from "node:crypto";
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { eventBus } from "$lib/server/events/bus";
+import { invalidatePrefix } from "$lib/server/cache";
 import type { SSEEvent } from "$lib/types/events";
 
 const MAX_PAYLOAD_BYTES = 64 * 1024; // 64 KB max webhook payload
@@ -73,6 +74,25 @@ export const POST: RequestHandler = async ({ request }) => {
 
   // Publish to bus — fan-out handles distribution to SSE clients
   eventBus.publish(event);
+
+  // Bust the server-side TTL cache for pages whose counters this mutation
+  // moves, so the SSE-triggered reload reads fresh data instead of the stale
+  // pre-mutation L1 object. Keys embed the guild id; the small L1 map makes a
+  // coarse prefix drop cheap.
+  const guildId = process.env.GUILD_ID;
+  if (guildId) {
+    if (
+      event.type.startsWith("review:") ||
+      event.type.startsWith("modmail:") ||
+      event.type.startsWith("flag:")
+    ) {
+      invalidatePrefix(`pulse:guild:${guildId}`);
+      invalidatePrefix(`pulse:snapshot:${guildId}`);
+      invalidatePrefix("stats:");
+    } else if (event.type.startsWith("stats:")) {
+      invalidatePrefix("stats:");
+    }
+  }
 
   return json({ success: true });
 };

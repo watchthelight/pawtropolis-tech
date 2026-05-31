@@ -34,10 +34,20 @@ export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
   const rangeKey = rangeCacheKeyParts(range, 60);
   const guildKey = cacheKey(["pulse:guild", guildId, ...rangeKey]);
 
+  // getInsights() runs 18 detectors (~40-55 synchronous queries) and dominates
+  // this load. It is the most expensive piece and the least time-sensitive, so
+  // cache it on a longer TTL keyed by guild+range, separate from the lighter
+  // metrics below. The SSE webhook busts pulse:guild:* on review/modmail/flag
+  // mutations so a real change still refreshes promptly.
+  const insights = await cached(
+    cacheKey(["pulse:insights", guildId, ...rangeKey]),
+    CACHE_TTL.long,
+    () => getInsights(guildId, range)
+  );
+
   const guildData = await cached(guildKey, CACHE_TTL.medium, () => ({
     metrics: getPulseMetrics(guildId, range),
     newsletterStats: getNewsletterStats(guildId, range),
-    insights: getInsights(guildId, range),
     topVoiceChannels: getTopVoiceChannels(guildId, range),
     channelRanking: getChannelActivityRanking(guildId, range),
     engagement: getEngagementWindow(guildId, range),
@@ -57,6 +67,7 @@ export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
 
   return {
     ...guildData,
+    insights,
     guildSnapshot,
     levelRoleStats,
     spec,
