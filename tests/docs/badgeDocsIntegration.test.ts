@@ -92,7 +92,7 @@ describe("docs do not contain raw Discord mention syntax", () => {
       const realMatches = stripped.match(RAW_MENTION_RE) ?? [];
       expect(
         realMatches,
-        `Raw Discord mentions found in ${rel}: ${matches.join(", ")}. ` +
+        `Raw Discord mentions found in ${rel}: ${realMatches.join(", ")}. ` +
           "Replace them with generated badge image references " +
           "(see docs/reference/github-discord-badges.md), or add the file " +
           "to the docs guard allowlist.",

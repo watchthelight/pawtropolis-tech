@@ -215,10 +215,9 @@ describe("/health command", () => {
         (f: any) => f.name === "Schedulers"
       );
 
-      if (schedulersField) {
-        expect(schedulersField.value).toContain("modMetrics");
-        expect(schedulersField.value).toContain("opsHealth");
-      }
+      expect(schedulersField).toBeDefined();
+      expect(schedulersField.value).toContain("modMetrics");
+      expect(schedulersField.value).toContain("opsHealth");
     });
   });
 });

@@ -233,12 +233,12 @@ describe("classifyError", () => {
       expect(result.message).toBe("42");
     });
 
-    it("preserves cause for Error instances", () => {
-      const cause = new Error("root cause");
+    it("stores the original error as cause", () => {
       const err = new Error("wrapped error");
-      (err as { cause?: Error }).cause = cause;
 
       const result = classifyError(err);
+      // classifyError stores the passed-in error as .cause (errors.ts:234);
+      // it does not unwrap any nested err.cause.
       expect(result.cause).toBe(err);
     });
   });

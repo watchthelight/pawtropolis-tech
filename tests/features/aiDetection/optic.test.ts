@@ -5,7 +5,7 @@
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // Mock env with API key present
 vi.mock("../../../src/lib/env.js", () => ({
@@ -23,118 +23,80 @@ vi.mock("../../../src/lib/logger.js", () => ({
   },
 }));
 
+import { detectOptic } from "../../../src/features/aiDetection/optic.js";
+
+const originalFetch = global.fetch;
+
+function mockFetchJson(body: unknown, ok = true, status = 200) {
+  const fn = vi.fn().mockResolvedValue({
+    ok,
+    status,
+    json: async () => body,
+  });
+  global.fetch = fn as unknown as typeof fetch;
+  return fn;
+}
+
 describe("features/aiDetection/optic", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  describe("Optic response parsing", () => {
-    describe("successful response structure", () => {
-      it("extracts confidence from report.ai.confidence", () => {
-        const response = {
-          report: {
-            verdict: "ai",
-            ai: { confidence: 0.92 },
-          },
-        };
+  afterEach(() => {
+    global.fetch = originalFetch;
+  });
 
-        const confidence = response?.report?.ai?.confidence;
-        expect(confidence).toBe(0.92);
-      });
-
-      it("handles human verdict response", () => {
-        const response = {
-          report: {
-            verdict: "human",
-            ai: { confidence: 0.15 },
-          },
-        };
-
-        const confidence = response?.report?.ai?.confidence;
-        expect(confidence).toBe(0.15);
-      });
-
-      it("ignores verdict string, uses numeric confidence", () => {
-        // Verdict is just confidence > 0.5
-        const response = {
-          report: {
-            verdict: "ai",
-            ai: { confidence: 0.51 },
-          },
-        };
-
-        const confidence = response?.report?.ai?.confidence;
-        expect(typeof confidence).toBe("number");
-        expect(confidence).toBe(0.51);
-      });
+  describe("detectOptic response parsing", () => {
+    it("extracts confidence from report.ai.confidence", async () => {
+      mockFetchJson({ report: { verdict: "ai", ai: { confidence: 0.92 } } });
+      const result = await detectOptic("https://example.com/image.png");
+      expect(result).toBe(0.92);
     });
 
-    describe("malformed response handling", () => {
-      it("returns null for missing report", () => {
-        const response = {};
-        const confidence = (response as any)?.report?.ai?.confidence;
-        expect(confidence).toBeUndefined();
-      });
+    it("returns the human-verdict confidence unchanged", async () => {
+      mockFetchJson({ report: { verdict: "human", ai: { confidence: 0.15 } } });
+      const result = await detectOptic("https://example.com/image.png");
+      expect(result).toBe(0.15);
+    });
 
-      it("returns null for missing ai field", () => {
-        const response = { report: { verdict: "ai" } };
-        const confidence = (response as any)?.report?.ai?.confidence;
-        expect(confidence).toBeUndefined();
-      });
+    it("returns null when report is missing", async () => {
+      mockFetchJson({});
+      const result = await detectOptic("https://example.com/image.png");
+      expect(result).toBeNull();
+    });
 
-      it("returns null for missing confidence", () => {
-        const response = { report: { ai: {} } };
-        const confidence = (response as any)?.report?.ai?.confidence;
-        expect(confidence).toBeUndefined();
-      });
+    it("returns null when confidence is missing", async () => {
+      mockFetchJson({ report: { ai: {} } });
+      const result = await detectOptic("https://example.com/image.png");
+      expect(result).toBeNull();
+    });
 
-      it("handles non-numeric confidence gracefully", () => {
-        const response = {
-          report: {
-            ai: { confidence: "high" },
-          },
-        };
+    it("returns null when confidence is non-numeric", async () => {
+      mockFetchJson({ report: { ai: { confidence: "high" } } });
+      const result = await detectOptic("https://example.com/image.png");
+      expect(result).toBeNull();
+    });
 
-        const confidence = response?.report?.ai?.confidence;
-        const isNumber = typeof confidence === "number";
-        expect(isNumber).toBe(false);
-      });
+    it("returns null when the API responds non-ok", async () => {
+      mockFetchJson({}, false, 500);
+      const result = await detectOptic("https://example.com/image.png");
+      expect(result).toBeNull();
     });
   });
 
-  describe("Optic API configuration", () => {
-    it("uses Bearer authorization header format", () => {
-      const apiKey = "test-key";
-      const header = `Bearer ${apiKey}`;
-      expect(header).toBe("Bearer test-key");
-    });
+  describe("detectOptic request shape", () => {
+    it("sends a Bearer header and the image url under the 'object' key", async () => {
+      const fetchMock = mockFetchJson({ report: { ai: { confidence: 0.5 } } });
 
-    it("sends JSON content type", () => {
-      const contentType = "application/json";
-      expect(contentType).toBe("application/json");
-    });
+      await detectOptic("https://example.com/image.png");
 
-    it("sends URL as 'object' parameter (not 'url')", () => {
-      const imageUrl = "https://example.com/image.png";
-      const body = JSON.stringify({ object: imageUrl });
-      const parsed = JSON.parse(body);
-      expect(parsed.object).toBe(imageUrl);
-      expect(parsed.url).toBeUndefined();
-    });
-  });
-
-  describe("Optic timeout configuration", () => {
-    it("uses 15 second timeout", () => {
-      const TIMEOUT_MS = 15000;
-      expect(TIMEOUT_MS).toBe(15000);
-    });
-  });
-
-  describe("Optic API endpoint", () => {
-    it("uses correct endpoint URL", () => {
-      const endpoint = "https://api.aiornot.com/v1/reports/image";
-      expect(endpoint).toContain("aiornot.com");
-      expect(endpoint).toContain("/reports/image");
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      const [url, init] = fetchMock.mock.calls[0];
+      expect(url).toBe("https://api.aiornot.com/v1/reports/image");
+      expect((init.headers as Record<string, string>).Authorization).toBe("Bearer test-api-key");
+      const parsedBody = JSON.parse(init.body as string);
+      expect(parsedBody.object).toBe("https://example.com/image.png");
+      expect(parsedBody.url).toBeUndefined();
     });
   });
 });

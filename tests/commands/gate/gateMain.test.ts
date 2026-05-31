@@ -250,8 +250,9 @@ describe("commands/gate/gateMain", () => {
 
       await execute(ctx as any);
 
-      // Verifies route_subcommand step is called (welcome preview routing)
-      expect(ctx.step).toHaveBeenCalledWith("route_subcommand");
+      // Assert the preview-specific phase ran, not just the outer router step
+      // (which fires for every subcommand and proves nothing about routing).
+      expect(ctx.step).toHaveBeenCalledWith("render_preview");
     });
 
     it("routes to welcome channels subcommand", async () => {

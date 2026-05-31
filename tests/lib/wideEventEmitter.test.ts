@@ -185,24 +185,18 @@ describe("wideEventEmitter", () => {
         expect(logger.info).not.toHaveBeenCalled();
       });
 
-      it("uses default rate when not specified", () => {
+      it("uses default rate (0.1) for success events when not specified", () => {
         delete process.env.WIDE_EVENT_SAMPLE_RATE;
 
-        // Test that an error event is always kept even with default rate
-        const event = createMockEvent({ outcome: "error", error: {
-          kind: "unknown",
-          code: null,
-          message: "Test error",
-          phase: "handler",
-          lastSql: null,
-          isRetriable: false,
-          sentryEventId: null,
-          stack: null,
-        }});
-        emitWideEvent(event);
+        // hashTraceId("evt0") ~= 0.0015 < 0.1 -> kept (logger.info called).
+        emitWideEvent(createMockEvent({ outcome: "success", traceId: "evt0" }));
+        expect(logger.info).toHaveBeenCalledTimes(1);
 
-        // Errors are always kept regardless of sample rate
-        expect(logger.error).toHaveBeenCalled();
+        vi.clearAllMocks();
+
+        // hashTraceId("evt100") ~= 0.60 >= 0.1 -> dropped (no log).
+        emitWideEvent(createMockEvent({ outcome: "success", traceId: "evt100" }));
+        expect(logger.info).not.toHaveBeenCalled();
       });
 
       it("handles invalid sample rate gracefully", () => {

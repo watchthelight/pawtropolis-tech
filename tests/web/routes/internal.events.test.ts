@@ -122,6 +122,19 @@ describe("POST /api/internal/events", () => {
     expect(res.status).toBe(400);
   });
 
+  it("400 when timestamp is a non-finite number (Infinity)", async () => {
+    // Body path stringifies NaN/Infinity to null; send rawBody so 1e999
+    // survives JSON.parse as Infinity (a number) and reaches the
+    // !Number.isFinite(event.timestamp) guard rather than the typeof branch.
+    const res = await POST(
+      evt({
+        secret: SECRET,
+        rawBody: '{"type":"x:y","payload":{},"timestamp":1e999}',
+      }),
+    );
+    expect(res.status).toBe(400);
+  });
+
   it("400 when payload field is absent", async () => {
     const res = await POST(
       evt({

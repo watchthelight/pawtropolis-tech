@@ -52,6 +52,7 @@ import { replyOrEdit } from "../../../../src/lib/cmdWrap.js";
 import { findAppByShortCode } from "../../../../src/features/appLookup.js";
 import { getClaim, claimGuard } from "../../../../src/features/review/claims.js";
 import { loadApplication } from "../../../../src/features/review/queries.js";
+import { BUTTON_RE } from "../../../../src/features/review/handlers/helpers.js";
 
 describe("features/review/handlers/helpers", () => {
   beforeEach(() => {
@@ -189,8 +190,7 @@ describe("features/review/handlers/helpers", () => {
 });
 
 describe("BUTTON_RE pattern", () => {
-  const BUTTON_RE = /^v1:decide:(\w+):code([0-9A-F]{6})$/;
-
+  // BUTTON_RE is the real exported pattern (BTN_DECIDE_RE), not a local copy.
   describe("valid patterns", () => {
     it("matches approve button", () => {
       const customId = "v1:decide:approve:codeABCDEF";
@@ -198,6 +198,13 @@ describe("BUTTON_RE pattern", () => {
       expect(match).not.toBeNull();
       expect(match?.[1]).toBe("approve");
       expect(match?.[2]).toBe("ABCDEF");
+    });
+
+    it("matches the legacy review: prefix alias", () => {
+      const customId = "review:approve:codeABCDEF";
+      const match = BUTTON_RE.exec(customId);
+      expect(match).not.toBeNull();
+      expect(match?.[1]).toBe("approve");
     });
 
     it("matches reject button", () => {
@@ -251,6 +258,12 @@ describe("BUTTON_RE pattern", () => {
 
     it("rejects missing prefix", () => {
       const customId = "decide:approve:codeABCDEF";
+      const match = BUTTON_RE.exec(customId);
+      expect(match).toBeNull();
+    });
+
+    it("rejects actions outside the allowlist", () => {
+      const customId = "v1:decide:bogus:codeABCDEF";
       const match = BUTTON_RE.exec(customId);
       expect(match).toBeNull();
     });

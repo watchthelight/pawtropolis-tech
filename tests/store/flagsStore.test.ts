@@ -230,19 +230,21 @@ describe("flagsStore", () => {
     });
 
     it("uses current timestamp when joinedAt not provided", async () => {
+      // First get() -> no existing row (forces the INSERT branch);
+      // second get() -> the re-fetched result row.
       mockGet.mockReturnValueOnce(undefined);
       mockGet.mockReturnValueOnce({
         guild_id: "guild-123",
         user_id: "user-456",
-        joined_at: expect.any(Number),
-        flagged_at: expect.any(Number),
+        joined_at: 1700000000,
+        flagged_at: 1700000000,
         flagged_reason: "No join date",
         manual_flag: 1,
         flagged_by: "mod-789",
       });
 
       const { upsertManualFlag } = await import("../../src/store/flagsStore.js");
-      const result = upsertManualFlag({
+      upsertManualFlag({
         guildId: "guild-123",
         userId: "user-456",
         reason: "No join date",
@@ -250,7 +252,19 @@ describe("flagsStore", () => {
         // joinedAt not provided
       });
 
-      expect(mockRun).toHaveBeenCalled();
+      // insertManualFlagStmt().run(guildId, userId, finalJoinedAt, now, reason, flaggedBy)
+      expect(mockRun).toHaveBeenCalledWith(
+        "guild-123",
+        "user-456",
+        expect.any(Number),
+        expect.any(Number),
+        "No join date",
+        "mod-789"
+      );
+      const [, , joinedAt, flaggedAt] = mockRun.mock.calls[0];
+      // When joinedAt is omitted, the source falls back to now for both columns.
+      expect(joinedAt).toBe(flaggedAt);
+      expect(typeof joinedAt).toBe("number");
     });
 
     it("throws on database error during upsert", async () => {

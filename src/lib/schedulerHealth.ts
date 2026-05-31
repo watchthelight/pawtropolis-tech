@@ -111,7 +111,10 @@ export function recordSchedulerRun(name: string, success: boolean): void {
  * }
  */
 export function getSchedulerHealth(): Map<string, SchedulerHealth> {
-  return new Map(schedulerHealth);
+  // Deep-copy the value objects: recordSchedulerRun mutates the internal
+  // SchedulerHealth objects in place, so a shallow `new Map(schedulerHealth)`
+  // would hand callers references that change out from under them.
+  return new Map(Array.from(schedulerHealth, ([k, v]) => [k, { ...v }]));
 }
 
 /**

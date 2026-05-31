@@ -21,7 +21,7 @@ const {
   mockGet: vi.fn(),
   mockRun: vi.fn(),
   mockPrepare: vi.fn(),
-  mockTransaction: vi.fn((fn: Function) => fn()),
+  mockTransaction: vi.fn((fn: Function) => fn),
   mockGetTicketByThread: vi.fn(),
   mockReopenTicket: vi.fn(),
   mockAddOpenThread: vi.fn(),

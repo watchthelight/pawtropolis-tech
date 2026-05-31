@@ -130,6 +130,9 @@ describe("/accept command", () => {
       const { requireGatekeeper } = await import("../../../src/lib/config.js");
       (requireGatekeeper as any).mockReturnValue(false);
 
+      const { findAppByShortCode } = await import("../../../src/features/appLookup.js");
+      const { approveTx } = await import("../../../src/features/review.js");
+
       const guild = createMockGuild({ id: "guild-123" });
       const interaction = createMockInteraction({
         guild: guild as Guild,
@@ -143,6 +146,10 @@ describe("/accept command", () => {
       await executeAccept(ctx);
 
       expect(requireGatekeeper).toHaveBeenCalled();
+      // The command must abort before doing any privileged work. If the guard
+      // were inverted or its early return dropped, these would fail.
+      expect(findAppByShortCode).not.toHaveBeenCalled();
+      expect(approveTx).not.toHaveBeenCalled();
     });
 
     it("requires at least one identifier option", async () => {

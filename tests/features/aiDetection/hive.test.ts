@@ -26,6 +26,18 @@ vi.mock("../../../src/lib/logger.js", () => ({
 // Store original fetch
 const originalFetch = global.fetch;
 
+import { detectHive } from "../../../src/features/aiDetection/hive.js";
+
+function mockFetchJson(body: unknown, ok = true, status = 200) {
+  const fn = vi.fn().mockResolvedValue({
+    ok,
+    status,
+    json: async () => body,
+  });
+  global.fetch = fn as unknown as typeof fetch;
+  return fn;
+}
+
 describe("features/aiDetection/hive", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -35,190 +47,89 @@ describe("features/aiDetection/hive", () => {
     global.fetch = originalFetch;
   });
 
-  describe("Hive response parsing", () => {
-    describe("successful response structure", () => {
-      it("extracts ai_generated score from nested response", () => {
-        const response = {
-          status: [
-            {
-              response: {
-                output: [
-                  {
-                    classes: [
-                      { class: "ai_generated", score: 0.95 },
-                      { class: "not_ai_generated", score: 0.05 },
-                    ],
-                  },
-                ],
-              },
+  describe("detectHive response parsing", () => {
+    it("extracts the ai_generated score from the nested response", async () => {
+      mockFetchJson({
+        status: [
+          {
+            response: {
+              output: [
+                {
+                  classes: [
+                    { class: "ai_generated", score: 0.95 },
+                    { class: "not_ai_generated", score: 0.05 },
+                  ],
+                },
+              ],
             },
-          ],
-        };
-
-        const output = response?.status?.[0]?.response?.output;
-        expect(output).toBeDefined();
-
-        let score = null;
-        if (output && Array.isArray(output)) {
-          for (const item of output) {
-            if (item.classes && Array.isArray(item.classes)) {
-              for (const cls of item.classes) {
-                if (cls.class === "ai_generated" && typeof cls.score === "number") {
-                  score = cls.score;
-                  break;
-                }
-              }
-            }
-          }
-        }
-
-        expect(score).toBe(0.95);
+          },
+        ],
       });
 
-      it("handles multiple output items", () => {
-        const response = {
-          status: [
-            {
-              response: {
-                output: [
-                  { classes: [{ class: "other", score: 0.1 }] },
-                  { classes: [{ class: "ai_generated", score: 0.75 }] },
-                ],
-              },
-            },
-          ],
-        };
-
-        const output = response?.status?.[0]?.response?.output;
-        let score = null;
-        if (output && Array.isArray(output)) {
-          for (const item of output) {
-            if (item.classes && Array.isArray(item.classes)) {
-              for (const cls of item.classes) {
-                if (cls.class === "ai_generated" && typeof cls.score === "number") {
-                  score = cls.score;
-                  break;
-                }
-              }
-            }
-            if (score !== null) break;
-          }
-        }
-
-        expect(score).toBe(0.75);
-      });
+      const result = await detectHive("https://example.com/image.png");
+      expect(result).toBe(0.95);
     });
 
-    describe("malformed response handling", () => {
-      it("returns null for missing status array", () => {
-        const response = {};
-        const output = (response as any)?.status?.[0]?.response?.output;
-        expect(output).toBeUndefined();
-      });
-
-      it("returns null for empty status array", () => {
-        const response = { status: [] };
-        const output = response?.status?.[0]?.response?.output;
-        expect(output).toBeUndefined();
-      });
-
-      it("returns null for missing response field", () => {
-        const response = { status: [{}] };
-        const output = (response as any)?.status?.[0]?.response?.output;
-        expect(output).toBeUndefined();
-      });
-
-      it("returns null for missing output array", () => {
-        const response = { status: [{ response: {} }] };
-        const output = (response as any)?.status?.[0]?.response?.output;
-        expect(output).toBeUndefined();
-      });
-
-      it("returns null when ai_generated class not found", () => {
-        const response = {
-          status: [
-            {
-              response: {
-                output: [{ classes: [{ class: "other", score: 0.5 }] }],
-              },
+    it("scans multiple output items for the ai_generated class", async () => {
+      mockFetchJson({
+        status: [
+          {
+            response: {
+              output: [
+                { classes: [{ class: "other", score: 0.1 }] },
+                { classes: [{ class: "ai_generated", score: 0.75 }] },
+              ],
             },
-          ],
-        };
-
-        const output = response?.status?.[0]?.response?.output;
-        let score = null;
-        if (output && Array.isArray(output)) {
-          for (const item of output) {
-            if (item.classes && Array.isArray(item.classes)) {
-              for (const cls of item.classes) {
-                if (cls.class === "ai_generated" && typeof cls.score === "number") {
-                  score = cls.score;
-                }
-              }
-            }
-          }
-        }
-
-        expect(score).toBeNull();
+          },
+        ],
       });
 
-      it("handles non-numeric score gracefully", () => {
-        const response = {
-          status: [
-            {
-              response: {
-                output: [
-                  {
-                    classes: [{ class: "ai_generated", score: "high" }],
-                  },
-                ],
-              },
-            },
-          ],
-        };
+      const result = await detectHive("https://example.com/image.png");
+      expect(result).toBe(0.75);
+    });
 
-        const output = response?.status?.[0]?.response?.output;
-        let score = null;
-        if (output && Array.isArray(output)) {
-          for (const item of output) {
-            if (item.classes && Array.isArray(item.classes)) {
-              for (const cls of item.classes as any[]) {
-                if (cls.class === "ai_generated" && typeof cls.score === "number") {
-                  score = cls.score;
-                }
-              }
-            }
-          }
-        }
+    it("returns null when the output array is missing", async () => {
+      mockFetchJson({ status: [{ response: {} }] });
+      const result = await detectHive("https://example.com/image.png");
+      expect(result).toBeNull();
+    });
 
-        expect(score).toBeNull();
+    it("returns null when no ai_generated class is present", async () => {
+      mockFetchJson({
+        status: [{ response: { output: [{ classes: [{ class: "other", score: 0.5 }] }] } }],
       });
+      const result = await detectHive("https://example.com/image.png");
+      expect(result).toBeNull();
+    });
+
+    it("returns null when the score is non-numeric", async () => {
+      mockFetchJson({
+        status: [{ response: { output: [{ classes: [{ class: "ai_generated", score: "high" }] }] } }],
+      });
+      const result = await detectHive("https://example.com/image.png");
+      expect(result).toBeNull();
+    });
+
+    it("returns null when the API responds non-ok", async () => {
+      mockFetchJson({}, false, 500);
+      const result = await detectHive("https://example.com/image.png");
+      expect(result).toBeNull();
     });
   });
 
-  describe("Hive API configuration", () => {
-    it("uses Token authorization header format", () => {
-      const apiKey = "test-key";
-      const header = `Token ${apiKey}`;
-      expect(header).toBe("Token test-key");
-    });
+  describe("detectHive request shape", () => {
+    it("sends a Token authorization header and the url in the body", async () => {
+      const fetchMock = mockFetchJson({
+        status: [{ response: { output: [{ classes: [{ class: "ai_generated", score: 0.5 }] }] } }],
+      });
 
-    it("sends JSON content type", () => {
-      const contentType = "application/json";
-      expect(contentType).toBe("application/json");
-    });
+      await detectHive("https://example.com/image.png");
 
-    it("sends URL in request body", () => {
-      const imageUrl = "https://example.com/image.png";
-      const body = JSON.stringify({ url: imageUrl });
-      expect(JSON.parse(body).url).toBe(imageUrl);
-    });
-  });
-
-  describe("Hive timeout configuration", () => {
-    it("uses 15 second timeout", () => {
-      const TIMEOUT_MS = 15000;
-      expect(TIMEOUT_MS).toBe(15000);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      const [, init] = fetchMock.mock.calls[0];
+      expect((init.headers as Record<string, string>).Authorization).toBe("Token test-api-key");
+      expect((init.headers as Record<string, string>)["Content-Type"]).toBe("application/json");
+      expect(JSON.parse(init.body as string).url).toBe("https://example.com/image.png");
     });
   });
 });

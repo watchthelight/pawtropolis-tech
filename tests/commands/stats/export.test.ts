@@ -204,8 +204,12 @@ describe("stats/export", () => {
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       const attachment = call.files[0];
-      // AttachmentBuilder stores the data - need to access it
-      expect(attachment).toBeDefined();
+      const csv = (attachment.attachment as Buffer).toString("utf-8");
+      expect(csv.startsWith(
+        "Moderator ID,Total Decisions,Approvals,Rejections,Modmail,Perm Reject,Kicks,Avg Response Time (seconds),Avg Response Time (formatted)"
+      )).toBe(true);
+      // First seeded moderator row (mock returns mod-001 with these counts).
+      expect(csv).toContain("mod-001,150,120,20,5,3,2,");
     });
 
     it("includes moderator count in message", async () => {

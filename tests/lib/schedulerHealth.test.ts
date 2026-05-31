@@ -168,6 +168,20 @@ describe("schedulerHealth", () => {
 
       expect(health1).not.toBe(health2);
     });
+
+    it("returns an isolated snapshot whose value objects do not mutate", () => {
+      recordSchedulerRun("testScheduler", true);
+
+      const snapshot = getSchedulerHealth().get("testScheduler");
+      const totalRunsBefore = snapshot?.totalRuns;
+
+      // A subsequent run mutates the internal object; the captured snapshot
+      // must not change if getSchedulerHealth returned a real copy.
+      recordSchedulerRun("testScheduler", true);
+
+      expect(snapshot?.totalRuns).toBe(totalRunsBefore);
+      expect(getSchedulerHealthByName("testScheduler")?.totalRuns).toBe(2);
+    });
   });
 
   describe("getSchedulerHealthByName", () => {
