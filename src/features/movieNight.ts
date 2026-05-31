@@ -586,10 +586,13 @@ export function persistAllSessions(): void {
  * Should be called once on startup.
  */
 export function recoverPersistedSessions(): { events: number; sessions: number } {
-  // Recover active events
+  // Recover active events. These tables are shared with game nights (event_type
+  // 'game'); without this filter, game-night rows would be loaded into the movie
+  // maps and finalized as movie attendance. Mirror gameNight's 'game' filter.
   const eventRows = db.prepare(`
     SELECT guild_id, channel_id, event_date, started_at
     FROM active_movie_events
+    WHERE event_type = 'movie' OR event_type IS NULL
   `).all() as Array<{
     guild_id: string;
     channel_id: string;
@@ -612,6 +615,7 @@ export function recoverPersistedSessions(): { events: number; sessions: number }
     SELECT guild_id, user_id, event_date, current_session_start,
            accumulated_minutes, longest_session_minutes, last_persisted_at
     FROM active_movie_sessions
+    WHERE event_type = 'movie' OR event_type IS NULL
   `).all() as Array<{
     guild_id: string;
     user_id: string;
