@@ -367,9 +367,9 @@ export const handleResetModal = wrapCommand<ModalSubmitInteraction>("gate:reset"
 
   await withStep(ctx, "wipe_tables", async () => {
     const resetAll = db.transaction(() => {
-      const runDelete = (sql: string, optional = false) => {
+      const runDelete = (sql: string, params: unknown[] = [], optional = false) => {
         try {
-          withSql(ctx, sql, () => db.prepare(sql).run());
+          withSql(ctx, sql, () => db.prepare(sql).run(...params));
         } catch (err) {
           if (optional && err instanceof Error && /no such table/i.test(err.message ?? "")) {
             logger.warn(
@@ -382,13 +382,22 @@ export const handleResetModal = wrapCommand<ModalSubmitInteraction>("gate:reset"
         }
       };
 
-      runDelete("DELETE FROM application");
-      runDelete("DELETE FROM application_response");
-      runDelete("DELETE FROM review_action");
-      runDelete("DELETE FROM modmail_bridge");
-      runDelete("DELETE FROM review_card", true);
-      runDelete("DELETE FROM avatar_scan", true);
-      runDelete("DELETE FROM review_claim", true);
+      // Reset is per-guild (the confirmation modal is guild-scoped). Scope every
+      // delete by guild_id; unscoped DELETEs wiped EVERY guild's gate data sharing
+      // this SQLite file (#00091). Child tables key off app_id, so delete them via
+      // a subquery on this guild's applications BEFORE removing the applications.
+      const sub = "(SELECT id FROM application WHERE guild_id = ?)";
+      runDelete(`DELETE FROM application_response WHERE app_id IN ${sub}`, [guildId]);
+      runDelete(`DELETE FROM review_action WHERE app_id IN ${sub}`, [guildId]);
+      runDelete(`DELETE FROM review_card WHERE app_id IN ${sub}`, [guildId], true);
+      runDelete(
+        `DELETE FROM avatar_scan WHERE application_id IN ${sub} OR app_id IN ${sub}`,
+        [guildId, guildId],
+        true
+      );
+      runDelete(`DELETE FROM review_claim WHERE app_id IN ${sub}`, [guildId], true);
+      runDelete("DELETE FROM modmail_bridge WHERE guild_id = ?", [guildId]);
+      runDelete("DELETE FROM application WHERE guild_id = ?", [guildId]);
     });
 
     resetAll();
