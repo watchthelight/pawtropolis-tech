@@ -197,7 +197,7 @@ export async function syncAllGuilds(appId: string, token: string): Promise<void>
  * "only run this if I'm the main script, not if I'm being imported."
  * The backslash replacement handles Windows paths because of course it does.
  */
-if (import.meta.url === `file://${process.argv[1].replace(/\\/g, "/")}`) {
+if (import.meta.url === `file://${process.argv[1]!.replace(/\\/g, "/")}`) {
   // Supporting both because someone (me) couldn't decide on a naming convention
   // and now we're stuck supporting both forever.
   const appId = process.env.APP_ID || process.env.CLIENT_ID;

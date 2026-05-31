@@ -207,7 +207,7 @@ async function fetchAllMembers(rest: REST, guildId: string): Promise<GuildMember
     })) as GuildMember[];
     all.push(...page);
     if (page.length < 1000) break;
-    after = page[page.length - 1].user.id;
+    after = page[page.length - 1]!.user.id;
     // Pace ourselves on the per-guild rate limit
     await new Promise((r) => setTimeout(r, 1100));
   }
@@ -535,9 +535,9 @@ function rankAttackVectors(vectors: AttackVector[]): AttackVector[] {
   const statusOrder: Record<string, number> = { PRESENT: 0, UNKNOWN: 1, NOT_PRESENT: 2 };
   return [...vectors].sort((a, b) => {
     if (statusOrder[a.status] !== statusOrder[b.status]) {
-      return statusOrder[a.status] - statusOrder[b.status];
+      return statusOrder[a.status]! - statusOrder[b.status]!;
     }
-    return sevOrder[a.severity] - sevOrder[b.severity];
+    return sevOrder[a.severity]! - sevOrder[b.severity]!;
   });
 }
 

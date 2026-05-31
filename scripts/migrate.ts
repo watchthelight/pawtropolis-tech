@@ -121,8 +121,8 @@ function scanMigrations(): Array<{ version: string; name: string; path: string }
 
     const [, version, name] = match;
     return {
-      version,
-      name,
+      version: version!,
+      name: name!,
       path: join(migrationsDir, file),
     };
   });

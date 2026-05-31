@@ -44,7 +44,7 @@ type Args = {
 function parseArgs(argv: string[]): Args {
   const args: Args = { list: false, dryRun: false, fromSnapshot: false };
   for (let i = 2; i < argv.length; i++) {
-    const a = argv[i];
+    const a = argv[i]!;
     if (a === "--list") args.list = true;
     else if (a === "--dry-run") args.dryRun = true;
     else if (a === "--from-snapshot") args.fromSnapshot = true;

@@ -107,7 +107,7 @@ async function main() {
       } else {
         // Add all matches (there might be multiple Byte Token roles)
         found.forEach((role) => {
-          results[category][role.name] = roleToJson(role);
+          results[category]![role.name] = roleToJson(role);
         });
       }
     }
