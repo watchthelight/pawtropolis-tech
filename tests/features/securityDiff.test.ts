@@ -82,6 +82,32 @@ describe("computeSnapshotDiff", () => {
     expect(diff.rolesChanged).toEqual([]);
   });
 
+  it("diffs roles by named permissions without throwing (#00071)", () => {
+    // Snapshots store comma-separated permission NAMES, not numeric bitfields.
+    // The old BigInt() parse threw SyntaxError on names like "ViewChannel".
+    const before = makeSnap({
+      rolesSnapshot: [makeRole({ id: "r1", permissions: "ViewChannel,SendMessages" })],
+    });
+    const after = makeSnap({
+      rolesSnapshot: [makeRole({ id: "r1", permissions: "ViewChannel,ManageRoles" })],
+    });
+    const diff = computeSnapshotDiff(before, after);
+    expect(diff.rolesChanged).toHaveLength(1);
+    expect(diff.rolesChanged[0].permissionsAdded).toEqual(["ManageRoles"]);
+    expect(diff.rolesChanged[0].permissionsRemoved).toEqual(["SendMessages"]);
+  });
+
+  it("flags an added role with dangerous named permissions (#00071)", () => {
+    const after = makeSnap({
+      rolesSnapshot: [makeRole({ id: "admin", name: "Admin", permissions: "Administrator,ManageGuild" })],
+    });
+    const diff = computeSnapshotDiff(makeSnap(), after);
+    const dangerous = getDangerousChanges(diff);
+    expect(dangerous).toHaveLength(1);
+    expect(dangerous[0].severity).toBe("critical");
+    expect(dangerous[0].permissions).toContain("Administrator");
+  });
+
   it("detects new and resolved issues by key", () => {
     const before = makeSnap({
       issuesSnapshot: [

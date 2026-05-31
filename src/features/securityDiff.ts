@@ -11,7 +11,6 @@
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
-import { PermissionsBitField } from "discord.js";
 import type {
   SecuritySnapshot,
   RoleSnapshot,
@@ -250,36 +249,37 @@ export function computeSnapshotDiff(
 }
 
 /**
+ * Parse a stored permission field into a Set of permission names.
+ *
+ * Snapshots store permissions as comma-separated permission NAMES
+ * (see roleToSnapshot/channelToSnapshot in serverAudit/types.ts:
+ * `role.permissions.join(',')`), e.g. "Administrator,ManageRoles" - NOT a
+ * numeric bitfield. Parsing them with BigInt() throws on the first name.
+ */
+function parsePermNames(perms: string | null | undefined): Set<string> {
+  if (!perms) return new Set();
+  return new Set(
+    perms
+      .split(",")
+      .map((p) => p.trim())
+      .filter(Boolean)
+  );
+}
+
+/**
  * Compute detailed role permission changes.
  */
 function computeRoleChange(oldRole: RoleSnapshot, newRole: RoleSnapshot): RoleChange {
-  const oldPerms = new PermissionsBitField(BigInt(oldRole.permissions));
-  const newPerms = new PermissionsBitField(BigInt(newRole.permissions));
-
-  const permissionsAdded: string[] = [];
-  const permissionsRemoved: string[] = [];
-
-  // Check each permission flag
-  for (const perm of Object.keys(PermissionsBitField.Flags) as Array<
-    keyof typeof PermissionsBitField.Flags
-  >) {
-    const hadPerm = oldPerms.has(perm);
-    const hasPerm = newPerms.has(perm);
-
-    if (!hadPerm && hasPerm) {
-      permissionsAdded.push(perm);
-    } else if (hadPerm && !hasPerm) {
-      permissionsRemoved.push(perm);
-    }
-  }
+  const oldPerms = parsePermNames(oldRole.permissions);
+  const newPerms = parsePermNames(newRole.permissions);
 
   return {
     roleId: newRole.id,
     roleName: newRole.name,
     oldPosition: oldRole.position,
     newPosition: newRole.position,
-    permissionsAdded,
-    permissionsRemoved,
+    permissionsAdded: [...newPerms].filter((p) => !oldPerms.has(p)),
+    permissionsRemoved: [...oldPerms].filter((p) => !newPerms.has(p)),
   };
 }
 
@@ -343,44 +343,26 @@ function computeOverwriteModification(
   oldOw: PermissionOverwriteSnapshot,
   newOw: PermissionOverwriteSnapshot
 ): OverwriteModification {
-  const oldAllow = new PermissionsBitField(BigInt(oldOw.allow));
-  const newAllow = new PermissionsBitField(BigInt(newOw.allow));
-  const oldDeny = new PermissionsBitField(BigInt(oldOw.deny));
-  const newDeny = new PermissionsBitField(BigInt(newOw.deny));
-
-  const allowAdded: string[] = [];
-  const allowRemoved: string[] = [];
-  const denyAdded: string[] = [];
-  const denyRemoved: string[] = [];
-
-  for (const perm of Object.keys(PermissionsBitField.Flags) as Array<
-    keyof typeof PermissionsBitField.Flags
-  >) {
-    // Allow changes
-    if (!oldAllow.has(perm) && newAllow.has(perm)) allowAdded.push(perm);
-    if (oldAllow.has(perm) && !newAllow.has(perm)) allowRemoved.push(perm);
-
-    // Deny changes
-    if (!oldDeny.has(perm) && newDeny.has(perm)) denyAdded.push(perm);
-    if (oldDeny.has(perm) && !newDeny.has(perm)) denyRemoved.push(perm);
-  }
+  const oldAllow = parsePermNames(oldOw.allow);
+  const newAllow = parsePermNames(newOw.allow);
+  const oldDeny = parsePermNames(oldOw.deny);
+  const newDeny = parsePermNames(newOw.deny);
 
   return {
     targetId: newOw.id,
     targetType: newOw.type,
-    allowAdded,
-    allowRemoved,
-    denyAdded,
-    denyRemoved,
+    allowAdded: [...newAllow].filter((p) => !oldAllow.has(p)),
+    allowRemoved: [...oldAllow].filter((p) => !newAllow.has(p)),
+    denyAdded: [...newDeny].filter((p) => !oldDeny.has(p)),
+    denyRemoved: [...oldDeny].filter((p) => !newDeny.has(p)),
   };
 }
 
 /**
- * Convert a permission bitfield string to an array of permission names.
+ * Convert a stored permission field (comma-separated names) to an array of names.
  */
-function bitfieldToPermissionNames(bitfield: string): string[] {
-  const perms = new PermissionsBitField(BigInt(bitfield));
-  return perms.toArray();
+function bitfieldToPermissionNames(perms: string): string[] {
+  return [...parsePermNames(perms)];
 }
 
 // ============================================================================
@@ -411,10 +393,8 @@ export function getDangerousChanges(diff: SnapshotDiff): DangerousChange[] {
 
   // Check new roles with dangerous permissions
   for (const role of diff.rolesAdded) {
-    const perms = new PermissionsBitField(BigInt(role.permissions));
-    const dangerousPerms = DANGEROUS_PERMISSIONS.filter((p) =>
-      perms.has(p as keyof typeof PermissionsBitField.Flags)
-    );
+    const perms = parsePermNames(role.permissions);
+    const dangerousPerms = DANGEROUS_PERMISSIONS.filter((p) => perms.has(p));
     if (dangerousPerms.length > 0) {
       const isCritical = dangerousPerms.some((p) => CRITICAL_PERMISSIONS.includes(p));
       dangerous.push({
