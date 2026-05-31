@@ -85,9 +85,13 @@ const getAllTimeLeaderboardStmt = db.prepare(
    LIMIT ?`
 );
 
+// Boundary via SQLite datetime('now','start of month') so it matches the stored
+// completed_at format ('YYYY-MM-DD HH:MM:SS', UTC) exactly. A JS toISOString()
+// bound used 'T'/'Z' and local->UTC conversion, lexically excluding day-1 jobs (#00126).
 const getMonthlyCompletedStmt = db.prepare(
   `SELECT COUNT(*) as count FROM art_job
-   WHERE guild_id = ? AND artist_id = ? AND status = 'done' AND completed_at >= ?`
+   WHERE guild_id = ? AND artist_id = ? AND status = 'done'
+     AND completed_at >= datetime('now','start of month')`
 );
 
 const getAllTimeCompletedStmt = db.prepare(
@@ -447,23 +451,19 @@ export function reassignJob(oldJob: ArtJobRow, newArtistId: string): ReassignJob
  * user expectations in different timezones. Good enough for gamification.
  */
 export function getMonthlyLeaderboard(guildId: string, limit = 10): LeaderboardEntry[] {
-  // Note: This is server-local time, not UTC. Might matter if you care
-  // about exact month boundaries, which we don't, really.
-  const startOfMonth = new Date();
-  startOfMonth.setDate(1);
-  startOfMonth.setHours(0, 0, 0, 0);
-  const startIso = startOfMonth.toISOString();
-
+  // Boundary computed in SQLite (UTC, matching the stored completed_at format) so
+  // jobs completed on the 1st of the month aren't lexically excluded (#00126).
   return db
     .prepare(
       `SELECT artist_id as artistId, COUNT(*) as completedCount
        FROM art_job
-       WHERE guild_id = ? AND status = 'done' AND completed_at >= ?
+       WHERE guild_id = ? AND status = 'done'
+         AND completed_at >= datetime('now','start of month')
        GROUP BY artist_id
        ORDER BY completedCount DESC
        LIMIT ?`
     )
-    .all(guildId, startIso, limit) as LeaderboardEntry[];
+    .all(guildId, limit) as LeaderboardEntry[];
 }
 
 /**
@@ -479,12 +479,7 @@ export function getAllTimeLeaderboard(guildId: string, limit = 10): LeaderboardE
  * WHAT: Get monthly and all-time stats for a specific artist.
  */
 export function getArtistStats(guildId: string, artistId: string): ArtistMonthlyStats {
-  const startOfMonth = new Date();
-  startOfMonth.setDate(1);
-  startOfMonth.setHours(0, 0, 0, 0);
-  const startIso = startOfMonth.toISOString();
-
-  const monthly = getMonthlyCompletedStmt.get(guildId, artistId, startIso) as { count: number };
+  const monthly = getMonthlyCompletedStmt.get(guildId, artistId) as { count: number };
   const allTime = getAllTimeCompletedStmt.get(guildId, artistId) as { count: number };
 
   return {
