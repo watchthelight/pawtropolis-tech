@@ -233,7 +233,7 @@ async function handleActivityUpdate(
     interaction.options.getString("text", true)
   );
 
-  const activityType = ACTIVITY_TYPE_MAP[activityTypeStr];
+  const activityType = ACTIVITY_TYPE_MAP[activityTypeStr]!;
 
   await withStep(ctx, "update_presence", async () => {
     // Discord supports multiple activities simultaneously. We combine

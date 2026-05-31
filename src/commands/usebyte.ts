@@ -340,7 +340,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
     });
 
     await withStep(ctx, "show_confirmation", async () => {
-      await showConfirmation(interaction, member, userTokens[0], userTokens, wouldReplace, current);
+      await showConfirmation(interaction, member, userTokens[0]!, userTokens, wouldReplace, current);
     });
     return;
   }

@@ -362,7 +362,7 @@ async function handleLeaderboard(
     // Build leaderboard display
     const lines: string[] = [];
     for (let i = 0; i < leaderboard.length; i++) {
-      const entry = leaderboard[i];
+      const entry = leaderboard[i]!;
       const medal =
         i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}.`;
       const hours = Math.floor(entry.total_minutes / 60);

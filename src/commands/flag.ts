@@ -241,7 +241,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
           }
 
           const joinedAtDisplay = joinedAt
-            ? new Date(joinedAt * 1000).toISOString().split("T")[0]
+            ? new Date(joinedAt * 1000).toISOString().split("T")[0]!
             : "Unknown";
 
           const embed = new EmbedBuilder()

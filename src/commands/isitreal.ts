@@ -156,7 +156,7 @@ function parseMessageId(input: string): string | null {
   // Format: https://discord.com/channels/{guild}/{channel}/{message}
   const linkMatch = input.match(/discord\.com\/channels\/\d+\/\d+\/(\d+)/);
   if (linkMatch) {
-    return linkMatch[1];
+    return linkMatch[1]!;
   }
 
   return null;

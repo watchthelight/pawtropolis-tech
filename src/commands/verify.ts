@@ -134,7 +134,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
     return;
   }
 
-  const category = categoryInteraction.values[0];
+  const category = categoryInteraction.values[0]!;
   const categoryLabel = CATEGORIES.find((c) => c.value === category)?.label ?? category;
 
   // ── Step 2: Optional document upload ──
@@ -239,7 +239,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
 
       // Attach first uploaded image as the embed image if provided
       if (uploadedImages.length > 0) {
-        embed.setImage(uploadedImages[0].url);
+        embed.setImage(uploadedImages[0]!.url);
       }
 
       await logChannel.send({ embeds: [embed] });
@@ -249,7 +249,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
         const extraEmbed = new EmbedBuilder()
           .setTitle(`Document ${i + 1} — ${interaction.user.username}`)
           .setColor(0x2b5797)
-          .setImage(uploadedImages[i].url);
+          .setImage(uploadedImages[i]!.url);
         await logChannel.send({ embeds: [extraEmbed] });
       }
     }

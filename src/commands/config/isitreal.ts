@@ -178,7 +178,7 @@ function buildStatusEmbed(services: ServiceHealth[], hasDisabledServices: boolea
     .setTimestamp();
 
   for (const svc of services) {
-    const info = SERVICE_INFO[svc.service];
+    const info = SERVICE_INFO[svc.service]!;
     let status: string;
 
     if (!svc.configured) {
@@ -203,7 +203,7 @@ function buildStatusEmbed(services: ServiceHealth[], hasDisabledServices: boolea
 
 function buildSetupButtons(services: ServiceHealth[]): ActionRowBuilder<ButtonBuilder>[] {
   const buttons = services.map((svc) => {
-    const info = SERVICE_INFO[svc.service];
+    const info = SERVICE_INFO[svc.service]!;
     return new ButtonBuilder()
       .setCustomId(`${BUTTON_PREFIX}${svc.service}`)
       .setLabel(svc.configured ? `Update ${info.name}` : `Setup ${info.name}`)
@@ -285,6 +285,13 @@ export async function handleIsitRealButton(interaction: ButtonInteraction) {
   } else {
     // Single API key services
     const info = SERVICE_INFO[service];
+    if (!info) {
+      await interaction.reply({
+        content: "Unknown service.",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
     const modal = new ModalBuilder()
       .setCustomId(`${MODAL_PREFIX}${service}`)
       .setTitle(`Configure ${info.name}`)
@@ -326,6 +333,10 @@ export async function handleIsitRealModal(interaction: ModalSubmitInteraction) {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const info = SERVICE_INFO[service];
+  if (!info) {
+    await interaction.editReply({ content: "Unknown service." });
+    return;
+  }
   let testResult: { success: boolean; error?: string };
   let envVars: Record<string, string>;
 
@@ -470,6 +481,10 @@ export async function handleIsitRealSave(interaction: ButtonInteraction) {
     pendingSaves.delete(saveKey);
 
     const info = SERVICE_INFO[service];
+    if (!info) {
+      await interaction.editReply({ content: "Unknown service." });
+      return;
+    }
     const embed = new EmbedBuilder()
       .setTitle(`${info.name} Configured!`)
       .setDescription(

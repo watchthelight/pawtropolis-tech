@@ -139,8 +139,8 @@ function analyzeBackups(backupDir: string): BackupInfo {
   result.files.sort((a, b) => b.date.getTime() - a.date.getTime());
 
   if (result.files.length > 0) {
-    result.newestDate = result.files[0].date;
-    result.oldestDate = result.files[result.files.length - 1].date;
+    result.newestDate = result.files[0]!.date;
+    result.oldestDate = result.files[result.files.length - 1]!.date;
   }
 
   return result;
@@ -341,8 +341,8 @@ async function executeCheck(ctx: CommandContext<ChatInputCommandInteraction>) {
         remoteBackups.files.sort((a, b) => b.date.getTime() - a.date.getTime());
 
         if (remoteBackups.files.length > 0) {
-          remoteBackups.newestDate = remoteBackups.files[0].date;
-          remoteBackups.oldestDate = remoteBackups.files[remoteBackups.files.length - 1].date;
+          remoteBackups.newestDate = remoteBackups.files[0]!.date;
+          remoteBackups.oldestDate = remoteBackups.files[remoteBackups.files.length - 1]!.date;
         }
 
         remoteBackupFreq = calculateBackupFrequency(remoteBackups);
