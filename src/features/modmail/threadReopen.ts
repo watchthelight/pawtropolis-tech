@@ -85,6 +85,31 @@ export async function reopenModmailThread(params: {
   }
 
   try {
+    // Resolve the thread BEFORE mutating the DB or in-memory routing set. Threads
+    // are deleted on close by default, so reopening in place would leave the ticket
+    // marked 'open' pointing at a dead thread_id: the open_modmail guard then blocks
+    // the user from ever opening a new modmail, and their DMs route into the void.
+    // If the thread is gone, create a fresh one instead (same as the >7-day branch).
+    let thread: PrivateThreadChannel | null = null;
+    if (ticket.thread_id) {
+      thread = (await interaction.client.channels
+        .fetch(ticket.thread_id)
+        .catch(() => null)) as PrivateThreadChannel | null;
+    }
+
+    if (!thread) {
+      logger.info(
+        { ticketId: ticket.id, threadId: ticket.thread_id },
+        "[modmail] reopen target thread missing; creating a fresh thread"
+      );
+      return await openPublicModmailThreadFor({
+        interaction,
+        userId: ticket.user_id,
+        appCode: ticket.app_code ?? undefined,
+        reviewMessageId: ticket.review_message_id ?? undefined,
+      });
+    }
+
     // Reopen in DB and restore guard table in single transaction
     db.transaction(() => {
       reopenTicket(ticket.id);
@@ -115,16 +140,9 @@ export async function reopenModmailThread(params: {
       logger.debug({ threadId: ticket.thread_id }, "[modmail] restored OPEN_MODMAIL_THREADS entry on reopen");
     }
 
-    // Unlock and unarchive thread
-    if (ticket.thread_id) {
-      const thread = (await interaction.client.channels.fetch(
-        ticket.thread_id
-      )) as PrivateThreadChannel | null;
-      if (thread) {
-        await thread.setArchived(false);
-        await thread.setLocked(false);
-      }
-    }
+    // Unlock and unarchive the (confirmed-existing) thread
+    await thread.setArchived(false);
+    await thread.setLocked(false);
 
     // Notify applicant
     try {
