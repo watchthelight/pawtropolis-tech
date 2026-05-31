@@ -88,3 +88,6 @@ docs/moderation/
 
 # graphify export exceeding GitHub 100MB limit (regenerated locally; do not commit)
 graphify-out/exports/graph-connectome-fa2-raw-24000.png
+
+# Throwaway working dir (per CLAUDE.md), should never be committed
+scratch/
