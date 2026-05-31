@@ -367,7 +367,7 @@ function formatActionWithIcon(action: string): string {
 function getOrdinal(n: number): string {
   const s = ["th", "st", "nd", "rd"];
   const v = n % 100;
-  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  return n + (s[(v - 20) % 10] || s[v] || s[0]!);
 }
 
 // ============================================================================
@@ -597,7 +597,7 @@ export function buildReviewEmbedV3(
 
   if (orderedAnswers.length > 0) {
     for (let i = 0; i < orderedAnswers.length; i++) {
-      const qa = orderedAnswers[i];
+      const qa = orderedAnswers[i]!;
       const qNum = i + 1;
       const question = qa.question || `Question ${qNum}`;
       const answer = qa.answer?.trim() || "*(no response)*";

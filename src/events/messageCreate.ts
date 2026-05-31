@@ -172,7 +172,7 @@ client.on("messageCreate", wrapEvent("messageCreate", async (message) => {
         .all(message.author.id) as Array<ModmailTicket>;
 
       if (tickets.length > 0) {
-        const ticket = tickets[0];
+        const ticket = tickets[0]!;
         await routeDmToThread(message, ticket, client);
         return;
       }

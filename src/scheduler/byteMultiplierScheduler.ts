@@ -58,12 +58,12 @@ async function cleanupExpiredMultipliers(client: Client): Promise<number> {
   let successCount = 0;
   let errorCount = 0;
   for (let i = 0; i < settled.length; i++) {
-    const r = settled[i];
+    const r = settled[i]!;
     if (r.status === "fulfilled") {
       successCount++;
     } else {
       logger.error(
-        { err: r.reason, guildId: expired[i].guild_id, userId: expired[i].user_id },
+        { err: r.reason, guildId: expired[i]!.guild_id, userId: expired[i]!.user_id },
         "[byteMultiplier] Failed to process expired multiplier"
       );
       errorCount++;

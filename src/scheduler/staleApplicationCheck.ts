@@ -265,7 +265,7 @@ async function sendAlertForGuild(
 
     // 72h+ escalation: ping admin/leadership role
     if (escalationApps.length > 0) {
-      const escalateRoleId = staleApps[0].admin_role_id ?? gatekeeperRoleId;
+      const escalateRoleId = staleApps[0]!.admin_role_id ?? gatekeeperRoleId;
       const message = buildAlertMessage(escalateRoleId, escalationApps, true);
       await (channel as TextChannel).send({
         content: message,
@@ -328,7 +328,7 @@ async function checkStaleApplications(client: Client): Promise<number> {
   // Send one alert per guild
   for (const [guildId, guildApps] of byGuild) {
     // All apps in a guild have the same channel/role config, so use first
-    const { review_channel_id, gatekeeper_role_id } = guildApps[0];
+    const { review_channel_id, gatekeeper_role_id } = guildApps[0]!;
 
     await sendAlertForGuild(
       client,

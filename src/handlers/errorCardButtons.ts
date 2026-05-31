@@ -31,7 +31,7 @@ const OWNER_IDS = (env.OWNER_IDS ?? "")
 export function matchErrorCardButton(customId: string): { action: "ping" | "copy" | "trace"; traceId: string } | null {
   const m = customId.match(ERROR_CARD_BUTTON_RE);
   if (!m) return null;
-  return { action: m[1] as "ping" | "copy" | "trace", traceId: m[2] };
+  return { action: m[1] as "ping" | "copy" | "trace", traceId: m[2]! };
 }
 
 export async function handleErrorCardButton(
