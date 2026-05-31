@@ -112,13 +112,6 @@ export function getTraceStats(): { size: number; maxSize: number; ttlMinutes: nu
   };
 }
 
-/**
- * Clear all traces (for testing).
- */
-export function clearTraces(): void {
-  cache.clear();
-}
-
 // ===== Automatic Pruning =====
 
 // Run pruning periodically to clean up expired entries
@@ -132,12 +125,6 @@ export function startAutoPrune(): void {
   pruneInterval.unref();
 }
 
-export function stopAutoPrune(): void {
-  if (pruneInterval) {
-    clearInterval(pruneInterval);
-    pruneInterval = null;
-  }
-}
 
 // Start auto-pruning on module load
 startAutoPrune();

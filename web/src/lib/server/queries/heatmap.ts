@@ -189,23 +189,3 @@ export function getHeatmapDataForRange(guildId: string, range: ResolvedRange): H
   return { weeks: weeksData, maxValue, trends };
 }
 
-/**
- * Legacy weeks-count API — kept for any callers (tests, scripts) that still
- * pass a raw number. New code should construct a ResolvedRange and call
- * getHeatmapDataForRange directly.
- */
-export function getHeatmapData(guildId: string, weeks: number = 1): HeatmapData {
-  if (weeks < 1 || weeks > 8) weeks = 1;
-  const endS = Math.floor(Date.now() / 1000);
-  const startS = endS - weeks * 7 * 86400;
-  return getHeatmapDataForRange(guildId, {
-    startS,
-    endS,
-    days: weeks * 7,
-    prevStartS: null,
-    spec: {
-      kind: "preset",
-      preset: weeks === 7 ? "7d" : weeks === 30 ? "30d" : weeks === 90 ? "90d" : "all",
-    },
-  });
-}

@@ -98,11 +98,6 @@ const removeUserMultiplierStmt = db.prepare(`
   WHERE guild_id = ? AND user_id = ?
 `);
 
-const getAllActiveMultipliersStmt = db.prepare(`
-  SELECT * FROM active_byte_multipliers
-  ORDER BY expires_at ASC
-`);
-
 // ============================================================================
 // Functions
 // ============================================================================
@@ -226,18 +221,6 @@ export function removeUserMultiplier(guildId: string, userId: string): boolean {
   }
 }
 
-/**
- * Get all active multipliers across all guilds.
- * Used for debugging and admin commands.
- */
-export function getAllActiveMultipliers(): ActiveMultiplier[] {
-  try {
-    return getAllActiveMultipliersStmt.all() as ActiveMultiplier[];
-  } catch (err) {
-    logger.error({ err }, "[byteMultiplierStore] Failed to get all active multipliers");
-    return [];
-  }
-}
 
 /**
  * Check if a user has an active multiplier that would be replaced.

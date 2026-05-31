@@ -191,19 +191,6 @@ export function removeReaction(reaction: MessageReaction, user: User | PartialUs
   }
 }
 
-/** Direct synchronous insert used by backfill (bypasses buffer). */
-export function archiveMessageRowSync(row: ArchiveRow): void {
-  msgBuf.push(row);
-  if (msgBuf.length >= 500) flush();
-  else scheduleFlush();
-}
-
-export function archiveReactionRowsSync(rows: ReactionRow[]): void {
-  for (const r of rows) reactBuf.push(r);
-  if (reactBuf.length >= 1000) flush();
-  else scheduleFlush();
-}
-
 export function flushArchiveBuffersOnShutdown(): void {
   if (flushTimer) {
     clearTimeout(flushTimer);
