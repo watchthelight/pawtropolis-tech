@@ -747,7 +747,7 @@ export function creditHistoricalGameAttendance(
       duration_minutes, longest_session_minutes, qualified,
       event_type, adjustment_type, adjusted_by, adjustment_reason
     ) VALUES (?, ?, ?, 'manual', ?, ?, ?, 'game', 'manual_add', ?, ?)
-    ON CONFLICT(guild_id, user_id, event_date) DO UPDATE SET
+    ON CONFLICT(guild_id, user_id, event_date, event_type) DO UPDATE SET
       duration_minutes = excluded.duration_minutes,
       longest_session_minutes = excluded.longest_session_minutes,
       qualified = excluded.qualified,
@@ -819,7 +819,7 @@ export function bumpGameAttendance(
       duration_minutes, longest_session_minutes, qualified,
       event_type, adjustment_type, adjusted_by, adjustment_reason
     ) VALUES (?, ?, ?, 'bump', ?, ?, 1, 'game', 'bump', ?, ?)
-    ON CONFLICT(guild_id, user_id, event_date) DO UPDATE SET
+    ON CONFLICT(guild_id, user_id, event_date, event_type) DO UPDATE SET
       duration_minutes = excluded.duration_minutes,
       longest_session_minutes = excluded.longest_session_minutes,
       qualified = 1,

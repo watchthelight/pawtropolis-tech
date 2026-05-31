@@ -690,7 +690,7 @@ CREATE TABLE IF NOT EXISTS movie_attendance (
         longest_session_minutes INTEGER NOT NULL,
         qualified INTEGER DEFAULT 0,
         created_at INTEGER DEFAULT (strftime('%s', 'now')), adjustment_type TEXT DEFAULT 'automatic', adjusted_by TEXT, adjustment_reason TEXT, event_type TEXT DEFAULT 'movie', event_start_time INTEGER, event_end_time INTEGER,
-        UNIQUE(guild_id, user_id, event_date)
+        UNIQUE(guild_id, user_id, event_date, event_type)
       );
 CREATE TABLE IF NOT EXISTS nsfw_flags (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
