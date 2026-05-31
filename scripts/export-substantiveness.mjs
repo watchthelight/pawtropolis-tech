@@ -10,8 +10,12 @@ const dst = new Database(OUT);
 dst.pragma('journal_mode = OFF');
 dst.pragma('synchronous = OFF');
 
-const sql = src.prepare(`SELECT sql FROM sqlite_master WHERE type='table' AND name='general_messages_substantiveness'`).get().sql;
-dst.exec(sql);
+const row = src.prepare(`SELECT sql FROM sqlite_master WHERE type='table' AND name='general_messages_substantiveness'`).get();
+if (!row?.sql) {
+  console.error('table general_messages_substantiveness not found in', SRC);
+  process.exit(1);
+}
+dst.exec(row.sql);
 
 const count = src.prepare('SELECT COUNT(*) AS c FROM general_messages_substantiveness').get().c;
 console.log(`substantiveness: ${count.toLocaleString()} rows`);

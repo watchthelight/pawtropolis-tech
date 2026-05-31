@@ -1,15 +1,19 @@
 #!/bin/bash
-# =============================================================================
-# Pawtropolis Tech - Bot Deployment Script
-# =============================================================================
-# Usage:
-#   ./deploy.sh              Deploy code and restart bot
-#   ./deploy.sh --restart    Just restart PM2 (no code deploy)
-#   ./deploy.sh --logs       Show PM2 logs after deploy
-#   ./deploy.sh --status     Check remote PM2 status
-# =============================================================================
+# Thin wrapper: delegate to the hardened root deploy.sh.
+#
+# This script used to be a separate, divergent deploy path to the same prod
+# host and PM2 process. It shipped migrations/ but never ran them, took no
+# pre-deploy DB backup, and held no deploy lock, so it could restart new code
+# against an un-migrated schema. The root deploy.sh runs migrations (and aborts
+# on failure), acquires the deploy lock, and supports a pre-deploy backup.
+# Converge on it rather than maintaining a second, unsafe code path.
+set -euo pipefail
 
-set -e
+cd "$(dirname "$0")/.."
+exec ./deploy.sh "$@"
+
+# --- legacy body below is unreachable (kept for reference) ---
+return 0 2>/dev/null || exit 0
 
 # Configuration
 REMOTE_ALIAS="bash-ec2"

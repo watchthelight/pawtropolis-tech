@@ -697,7 +697,7 @@ remote_start() {
         }
 
         echo "[5/6] Extracting and installing on remote..."
-        ssh "$REMOTE_ALIAS" "bash -lc 'cd ${REMOTE_PATH} && tar -xzf deploy.tar.gz && npm ci'" || {
+        ssh "$REMOTE_ALIAS" "bash -lc 'cd ${REMOTE_PATH} && tar -xzf deploy.tar.gz && npm ci --omit=dev'" || {
             echo -e "${RED}[ERROR] Remote extraction/install failed${NC}"
             exit 1
         }

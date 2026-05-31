@@ -2,9 +2,15 @@
  * Script to record manual audit findings to the database
  */
 import { insertFinding, generateReportData, generateMarkdownReport } from "../src/store/auditFindingsStore.js";
+import { db } from "../src/db/db.js";
 import { writeFileSync } from "fs";
 
 const auditRunId = "audit-20260112-manual";
+
+// audit_findings has no unique constraint, so re-running this script with the
+// same fixed run id would double-count every finding (inflating the report).
+// Clear the run first so each execution is idempotent.
+db.prepare("DELETE FROM audit_findings WHERE audit_run_id = ?").run(auditRunId);
 
 // Commands tested via browser automation (live tests)
 const liveFindings = [

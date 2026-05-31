@@ -28,7 +28,12 @@ const CURSOR_PATH = '_recon/backfill-general.cursor.json';
 
 const args = process.argv.slice(2);
 const limitArg = args.indexOf('--limit');
-const LIMIT = limitArg >= 0 ? parseInt(args[limitArg + 1], 10) : Infinity;
+const limitVal = limitArg >= 0 ? parseInt(args[limitArg + 1], 10) : Infinity;
+if (limitArg >= 0 && !(Number.isFinite(limitVal) && limitVal > 0)) {
+  console.error(`[error] --limit requires a positive number, got: ${args[limitArg + 1]}`);
+  process.exit(1);
+}
+const LIMIT = Number.isFinite(limitVal) && limitVal > 0 ? limitVal : Infinity;
 const RESET = args.includes('--reset');
 
 if (RESET && existsSync(CURSOR_PATH)) {

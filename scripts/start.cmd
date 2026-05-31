@@ -653,7 +653,7 @@ if %ARG_FRESH%==1 (
     )
 
     echo [5/6] Extracting and installing on remote...
-    ssh %REMOTE_ALIAS% "bash -lc 'cd %REMOTE_PATH% && tar -xzf deploy.tar.gz && npm ci'"
+    ssh %REMOTE_ALIAS% "bash -lc 'cd %REMOTE_PATH% && tar -xzf deploy.tar.gz && npm ci --omit=dev'"
     if errorlevel 1 (
         echo [ERROR] Remote extraction/install failed
         exit /b 1

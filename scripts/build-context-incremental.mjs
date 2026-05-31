@@ -21,7 +21,8 @@ import Database from 'better-sqlite3';
 const DB_PATH = 'data/data.db';
 const args = process.argv.slice(2);
 const batchArg = args.indexOf('--batch');
-const MAX_BATCH = batchArg >= 0 ? parseInt(args[batchArg + 1], 10) : 5000;
+const batchVal = batchArg >= 0 ? parseInt(args[batchArg + 1], 10) : 5000;
+const MAX_BATCH = Number.isFinite(batchVal) && batchVal > 0 ? batchVal : 5000;
 
 const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');

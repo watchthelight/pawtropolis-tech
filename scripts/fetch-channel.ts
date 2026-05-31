@@ -136,7 +136,7 @@ async function fetchMessagesFromChannel(
   channel: TextChannel | ThreadChannel | NewsChannel,
   limit: number = 0
 ): Promise<string[]> {
-  const messages: string[] = [];
+  const collected: Message[] = [];
   let lastId: string | undefined;
   let fetchedCount = 0;
 
@@ -158,14 +158,10 @@ async function fetchMessagesFromChannel(
     fetchedCount += fetched.size;
     logProgress();
 
-    // Sort by timestamp (oldest first for this batch)
-    const sorted = [...fetched.values()].sort(
-      (a, b) => a.createdTimestamp - b.createdTimestamp
-    );
-
-    for (const msg of sorted) {
-      messages.unshift(formatMessage(msg));
-    }
+    // Collect raw messages; a single global sort at the end avoids the
+    // per-batch interleaving that broke chronological order across every
+    // 100-message boundary.
+    collected.push(...fetched.values());
 
     lastId = fetched.last()?.id;
 
@@ -178,9 +174,9 @@ async function fetchMessagesFromChannel(
 
   if (!useStdout && fetchedCount > 0) console.log(""); // Newline after progress
 
-  // Reverse to get chronological order
-  messages.reverse();
-  return messages;
+  // One global sort, oldest-first, is unambiguous across all batches.
+  collected.sort((a, b) => a.createdTimestamp - b.createdTimestamp);
+  return collected.map(formatMessage);
 }
 
 /**

@@ -21,4 +21,10 @@ const result = spawnSync('npx', ['tsx', 'scripts/migrate.ts', ...process.argv.sl
   env: process.env
 });
 
-process.exit(result.status || 0);
+if (result.error) {
+  console.error(result.error);
+  process.exit(1);
+}
+// A signal kill (OOM, SIGTERM) leaves status=null and signal set. `null || 0`
+// would falsely report success, so fail closed: null status or any signal -> 1.
+process.exit(result.signal ? 1 : (result.status ?? 1));

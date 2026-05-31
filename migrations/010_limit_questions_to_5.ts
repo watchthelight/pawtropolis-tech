@@ -92,10 +92,10 @@ export function migrate010LimitQuestionsTo5(db: Database): void {
   // Delete rows with q_index >= 5
   db.prepare(`DELETE FROM guild_question WHERE q_index >= 5`).run();
 
-  // Rebuild table with CHECK constraint
-  // NOTE: We need to disable foreign keys temporarily to rebuild the table
-  db.pragma("foreign_keys = OFF");
-
+  // Rebuild table with CHECK constraint.
+  // NOTE: Toggling PRAGMA foreign_keys here is a no-op because the runner wraps
+  // every migration in an open transaction. We rely on a foreign_key_check
+  // after the rebuild instead.
   db.exec(`
     CREATE TABLE IF NOT EXISTS guild_question_new (
       guild_id TEXT NOT NULL,
@@ -116,7 +116,13 @@ export function migrate010LimitQuestionsTo5(db: Database): void {
     ALTER TABLE guild_question_new RENAME TO guild_question;
   `);
 
-  db.pragma("foreign_keys = ON");
+  // Assert the rebuild left no dangling foreign-key references.
+  const fkViolations = db.pragma("foreign_key_check(guild_question)") as unknown[];
+  if (fkViolations.length > 0) {
+    throw new Error(
+      `[migration 010] foreign_key_check found ${fkViolations.length} violation(s) after rebuild`
+    );
+  }
 
   // Count rows after migration
   const countAfter = db.prepare(`SELECT COUNT(*) as count FROM guild_question`).get() as {

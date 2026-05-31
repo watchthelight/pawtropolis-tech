@@ -127,10 +127,28 @@ maybe_backup_remote_db() {
   local ts
   ts="$(date -u +%Y%m%d-%H%M%S)"
   echo "Backing up remote DB before deploy..."
-  ssh_remote "mkdir -p ${REMOTE_PATH}/data/backups && \
-    cp ${REMOTE_PATH}/data/data.db ${REMOTE_PATH}/data/backups/data.db.${ts} 2>/dev/null && \
-    echo '  -> backup at data/backups/data.db.${ts}' || \
-    echo '  -> WARNING: data.db not found on remote, skipping backup'"
+  # Mirror switch.sh/start.sh: checkpoint WAL into the main file and copy
+  # -wal/-shm so the backup is consistent. A missing DB is a warning, but a
+  # real copy failure (disk full, permissions, I/O) MUST abort the deploy so
+  # we never run destructive migrations without a valid backup.
+  if ! ssh_remote "
+    set -e
+    db='${REMOTE_PATH}/data/data.db'
+    dst='${REMOTE_PATH}/data/backups/data.db.${ts}'
+    mkdir -p '${REMOTE_PATH}/data/backups'
+    if [ ! -f \"\$db\" ]; then
+      echo '  -> WARNING: data.db not found on remote, skipping backup'
+      exit 0
+    fi
+    sqlite3 \"\$db\" 'PRAGMA wal_checkpoint(TRUNCATE);' 2>/dev/null || true
+    cp \"\$db\" \"\$dst\"
+    [ -f \"\$db\"-wal ] && cp \"\$db\"-wal \"\$dst\"-wal || true
+    [ -f \"\$db\"-shm ] && cp \"\$db\"-shm \"\$dst\"-shm || true
+    echo \"  -> backup at data/backups/data.db.${ts}\"
+  "; then
+    echo "ERROR: pre-deploy DB backup failed. Aborting deploy before any migration runs." >&2
+    return 1
+  fi
 }
 
 # Parse arguments
