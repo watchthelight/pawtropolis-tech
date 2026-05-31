@@ -131,6 +131,13 @@ git checkout HEAD~3  # Go back 3 commits
 ./deploy-no-tests.sh
 ```
 
+`deploy-no-tests.sh` now delegates to `deploy.sh --fast`, so it takes the deploy
+lock and a forced pre-deploy DB backup (`BACKUP_BEFORE_DEPLOY=1`) and aborts if a
+migration fails. Note: a code rollback does **not** revert migrations, which only
+move forward. After rolling code back you may be running old code against a
+newer-or-equal schema; if a migration is the problem, restore the DB from the
+pre-deploy backup under `data/backups/` rather than relying on the code rollback.
+
 ## Troubleshooting
 
 ### Health Check Fails
