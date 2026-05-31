@@ -46,6 +46,8 @@ export async function runSchemaSelfHeal(): Promise<boolean> {
       ensureDadModeColumns,
       ensureSkullModeColumns,
       ensureListopenPublicOutputColumn,
+      ensurePokeConfigColumns,
+      ensurePulseConfigColumns,
     } = await import("../lib/config.js");
 
     ensureAvatarScanSchema();
@@ -71,5 +73,9 @@ export async function runSchemaSelfHeal(): Promise<boolean> {
     ensureDadModeColumns();
     ensureSkullModeColumns();
     ensureListopenPublicOutputColumn();
+    // Without these, /config poke and pulse config writes hit "no such column"
+    // (there is no numbered migration for the poke/pulse columns).
+    ensurePokeConfigColumns();
+    ensurePulseConfigColumns();
   });
 }
