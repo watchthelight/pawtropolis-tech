@@ -702,11 +702,11 @@ export function getApplicationFunnel(guildId: string, range: ResolvedRange): Fun
     .prepare(
       `SELECT
 				SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) as drafts,
-				SUM(CASE WHEN status IN ('submitted', 'needs_info', 'approved', 'rejected', 'kicked', 'perm_rejected') THEN 1 ELSE 0 END) as submitted,
+				SUM(CASE WHEN status IN ('submitted', 'needs_info', 'approved', 'rejected', 'kicked') THEN 1 ELSE 0 END) as submitted,
 				SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
-				SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected,
+				SUM(CASE WHEN status = 'rejected' AND COALESCE(permanently_rejected, 0) = 0 THEN 1 ELSE 0 END) as rejected,
 				SUM(CASE WHEN status = 'kicked' THEN 1 ELSE 0 END) as kicked,
-				SUM(CASE WHEN status = 'perm_rejected' THEN 1 ELSE 0 END) as perm_rejected
+				SUM(CASE WHEN status = 'rejected' AND permanently_rejected = 1 THEN 1 ELSE 0 END) as perm_rejected
 			FROM application
 			WHERE guild_id = ?
 				AND (? = 0 OR created_at >= datetime(?, 'unixepoch'))
