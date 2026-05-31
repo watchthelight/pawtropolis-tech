@@ -1,0 +1,31 @@
+const fs = require("fs");
+const path = require("path");
+const src = process.argv[2];
+const raw = fs.readFileSync(src, "utf8");
+const wrapper = JSON.parse(raw);
+const obj = wrapper.result || wrapper;
+const outDir = "audit/2026-05-31";
+fs.mkdirSync(outDir, { recursive: true });
+const report = obj.report || "(no report)";
+fs.writeFileSync(path.join(outDir, "full-codebase-audit.md"), report);
+const all = obj.allFindings || [];
+const confirmed = obj.confirmed || [];
+fs.writeFileSync(path.join(outDir, "findings-all.json"), JSON.stringify(all, null, 2));
+fs.writeFileSync(path.join(outDir, "findings-confirmed.json"), JSON.stringify(confirmed, null, 2));
+
+const bySev = {};
+for (const f of all) bySev[f.severity] = (bySev[f.severity] || 0) + 1;
+const bySource = {};
+for (const f of all) bySource[f.source || "?"] = (bySource[f.source || "?"] || 0) + 1;
+const buckets = new Set();
+for (const f of all) if ((f.source || "").startsWith("bucket-")) buckets.add(f.source);
+const confBySev = {};
+for (const f of confirmed) confBySev[f.severity] = (confBySev[f.severity] || 0) + 1;
+
+console.log("report chars=" + report.length);
+console.log("allFindings=" + all.length + " bySeverity=" + JSON.stringify(bySev));
+console.log("buckets that returned findings=" + buckets.size + " of 91");
+console.log("dim findings=" + (bySource["dim"] || 0));
+console.log("confirmed(forReport)=" + confirmed.length + " bySeverity=" + JSON.stringify(confBySev));
+console.log("distinct files cited=" + new Set(all.map((f) => f.file)).size);
+console.log("wrote: " + outDir + "/full-codebase-audit.md, findings-all.json, findings-confirmed.json");

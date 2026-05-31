@@ -692,6 +692,11 @@ CREATE TABLE IF NOT EXISTS movie_attendance (
         created_at INTEGER DEFAULT (strftime('%s', 'now')), adjustment_type TEXT DEFAULT 'automatic', adjusted_by TEXT, adjustment_reason TEXT, event_type TEXT DEFAULT 'movie', event_start_time INTEGER, event_end_time INTEGER,
         UNIQUE(guild_id, user_id, event_date, event_type)
       );
+
+CREATE TABLE IF NOT EXISTS consumed_confirmations (
+        confirm_id TEXT PRIMARY KEY,
+        consumed_at_s INTEGER NOT NULL DEFAULT (strftime('%s','now'))
+      );
 CREATE TABLE IF NOT EXISTS nsfw_flags (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         guild_id TEXT NOT NULL,

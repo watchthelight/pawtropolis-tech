@@ -371,6 +371,16 @@ db.prepare(
   `CREATE INDEX IF NOT EXISTS idx_art_job_artist_number ON art_job(guild_id, artist_id, artist_job_number)`
 ).run();
 
+// Single-use ledger for confirmation-button clicks (reentrancy guard). Keyed by
+// the random confirmId in the customId so a double-click of a shared, non-ephemeral
+// confirmation cannot run the side effects twice. Also created by migration 080.
+db.prepare(
+  `CREATE TABLE IF NOT EXISTS consumed_confirmations (
+    confirm_id TEXT PRIMARY KEY,
+    consumed_at_s INTEGER NOT NULL DEFAULT (strftime('%s','now'))
+  )`
+).run();
+
 // Movie night qualification threshold: per-guild configurable threshold
 // Default 30 minutes preserves backward compatibility
 // WHY: Allows guilds to customize the threshold for short films vs feature films

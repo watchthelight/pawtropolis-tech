@@ -24,6 +24,7 @@ import {
 } from "./index.js";
 import { createJob } from "../artJobs/index.js";
 import { TicketService } from "../tickets/service.js";
+import { db } from "../../db/db.js";
 
 /*
  * Parse redeemreward button customId
@@ -118,6 +119,22 @@ async function handleConfirm(
   // deferUpdate buys us 15 minutes instead of 3 seconds. We need it because
   // Discord API calls for role removal and message sends add up.
   await interaction.deferUpdate();
+
+  // Reentrancy guard. The confirmation is a shared, non-ephemeral message, so a
+  // double-click (or two staff) produces distinct interactions that would each
+  // rotate the artist queue and create a duplicate art_job. Atomically consume
+  // the confirmId; only the first click wins. Must run before any side effect.
+  const consumed = db
+    .prepare(`INSERT OR IGNORE INTO consumed_confirmations (confirm_id) VALUES (?)`)
+    .run(data.confirmId);
+  if (consumed.changes === 0) {
+    logger.info(
+      { confirmId: data.confirmId, recipientId: data.recipientId, artistId: data.artistId },
+      "[redeemreward] duplicate confirm ignored (already processed)"
+    );
+    await interaction.editReply({ components: [] }).catch(() => undefined);
+    return;
+  }
 
   const results: string[] = [];
   let success = true;

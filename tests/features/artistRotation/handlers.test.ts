@@ -93,10 +93,14 @@ import {
   handleRedeemRewardButton,
   isRedeemRewardButton,
 } from "../../../src/features/artistRotation/handlers.js";
+import { db } from "../../../src/db/db.js";
 
 describe("artistRotation/handlers", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // handleConfirm consumes the confirmId once (reentrancy guard, #00081).
+    // These cases reuse confirmIds, so clear the ledger between them.
+    db.prepare("DELETE FROM consumed_confirmations").run();
   });
 
   describe("isRedeemRewardButton", () => {
@@ -661,6 +665,41 @@ describe("artistRotation/handlers", () => {
 
         expect(mockProcessAssignment).not.toHaveBeenCalled();
         expect(mockEditReply).toHaveBeenCalled();
+      });
+
+      it("double-click runs the assignment side effects only once (#00081)", async () => {
+        const mockMember = {
+          roles: { cache: { has: vi.fn().mockReturnValue(true) }, remove: vi.fn().mockResolvedValue(undefined) },
+        };
+        const mockGuild = {
+          id: "guild-123",
+          members: { fetch: vi.fn().mockResolvedValue(mockMember) },
+          client: { user: { id: "bot-123" } },
+        };
+        const makeInteraction = () =>
+          ({
+            customId: "redeemreward:dup-1:confirm:recipient-1:headshot:artist-1:0",
+            guild: mockGuild,
+            deferUpdate: vi.fn().mockResolvedValue(undefined),
+            editReply: vi.fn().mockResolvedValue(undefined),
+            user: { id: "mod-1" },
+            channel: { send: vi.fn().mockResolvedValue(undefined), id: "channel-1" },
+          }) as any;
+
+        mockGetTicketRoles.mockReturnValue({ headshot: "role-123", halfbody: null, emoji: null, fullbody: null });
+        mockGetArtist.mockReturnValue({ position: 1 });
+        mockGetAllArtists.mockReturnValue([]);
+        mockProcessAssignment.mockReturnValue({ newPosition: 5 });
+        mockLogAssignment.mockReturnValue(1);
+        mockCreateJob.mockReturnValue({ jobNumber: 1 });
+
+        // Two distinct interactions sharing the same confirmId (double-click).
+        await handleRedeemRewardButton(makeInteraction());
+        await handleRedeemRewardButton(makeInteraction());
+
+        // Side effects must run exactly once despite the second click.
+        expect(mockProcessAssignment).toHaveBeenCalledTimes(1);
+        expect(mockCreateJob).toHaveBeenCalledTimes(1);
       });
     });
   });
