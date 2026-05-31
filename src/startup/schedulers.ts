@@ -140,6 +140,18 @@ export async function startSchedulers(client: Client): Promise<void> {
     },
     { level: "warn" },
   );
+
+  // Message activity retention: daily prune of message_activity (90-day window)
+  await runStartupTask(
+    "scheduler_message_activity_prune",
+    async () => {
+      const { startMessageActivityPruneScheduler } = await import(
+        "../scheduler/messageActivityPruneScheduler.js"
+      );
+      startMessageActivityPruneScheduler(client);
+    },
+    { level: "warn" },
+  );
 }
 
 /**
@@ -192,4 +204,9 @@ export async function stopSchedulers(): Promise<void> {
     "../scheduler/badgeRefreshScheduler.js"
   );
   stopBadgeRefreshScheduler();
+
+  const { stopMessageActivityPruneScheduler } = await import(
+    "../scheduler/messageActivityPruneScheduler.js"
+  );
+  stopMessageActivityPruneScheduler();
 }
