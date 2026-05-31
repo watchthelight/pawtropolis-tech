@@ -16,6 +16,7 @@ const {
   mockGetArtist,
   mockGetAllArtists,
   mockProcessAssignment,
+  mockClaimNextArtist,
   mockCreateJob,
 } = vi.hoisted(() => ({
   mockLogger: {
@@ -30,6 +31,7 @@ const {
   mockGetArtist: vi.fn(),
   mockGetAllArtists: vi.fn(),
   mockProcessAssignment: vi.fn(),
+  mockClaimNextArtist: vi.fn(),
   mockCreateJob: vi.fn(),
 }));
 
@@ -53,6 +55,7 @@ vi.mock("../../../src/features/artistRotation/index.js", () => ({
   getArtist: mockGetArtist,
   getAllArtists: mockGetAllArtists,
   processAssignment: mockProcessAssignment,
+  claimNextArtist: mockClaimNextArtist,
 }));
 
 vi.mock("../../../src/features/artJobs/index.js", () => ({
@@ -239,9 +242,8 @@ describe("artistRotation/handlers", () => {
           emoji: null,
           fullbody: null,
         });
-        mockGetArtist.mockReturnValue({ position: 1 });
-        mockGetAllArtists.mockReturnValue([{ user_id: "artist-1" }]);
-        mockProcessAssignment.mockReturnValue({
+        mockClaimNextArtist.mockReturnValue({
+          userId: "artist-1",
           oldPosition: 1,
           newPosition: 1,
           assignmentsCount: 1,
@@ -254,7 +256,9 @@ describe("artistRotation/handlers", () => {
         expect(mockDeferUpdate).toHaveBeenCalled();
         expect(mockRolesRemove).toHaveBeenCalledWith("role-123");
         expect(mockChannelSend).toHaveBeenCalledWith("$add <@artist-1>");
-        expect(mockProcessAssignment).toHaveBeenCalledWith("guild-123", "artist-1");
+        // Non-override claims the CURRENT next artist at confirm time (#00075),
+        // not the (possibly stale) artistId baked into the button.
+        expect(mockClaimNextArtist).toHaveBeenCalledWith("guild-123");
         expect(mockLogAssignment).toHaveBeenCalled();
         expect(mockCreateJob).toHaveBeenCalled();
         expect(mockEditReply).toHaveBeenCalled();
@@ -453,9 +457,8 @@ describe("artistRotation/handlers", () => {
           emoji: null,
           fullbody: null,
         });
-        mockGetArtist.mockReturnValue({ position: 1 });
-        mockGetAllArtists.mockReturnValue([]);
-        mockProcessAssignment.mockReturnValue({
+        mockClaimNextArtist.mockReturnValue({
+          userId: "artist-1",
           oldPosition: 1,
           newPosition: 1,
           assignmentsCount: 1,
@@ -689,9 +692,7 @@ describe("artistRotation/handlers", () => {
           }) as any;
 
         mockGetTicketRoles.mockReturnValue({ headshot: "role-123", halfbody: null, emoji: null, fullbody: null });
-        mockGetArtist.mockReturnValue({ position: 1 });
-        mockGetAllArtists.mockReturnValue([]);
-        mockProcessAssignment.mockReturnValue({ newPosition: 5 });
+        mockClaimNextArtist.mockReturnValue({ userId: "artist-1", oldPosition: 1, newPosition: 5, assignmentsCount: 1 });
         mockLogAssignment.mockReturnValue(1);
         mockCreateJob.mockReturnValue({ jobNumber: 1 });
 
@@ -700,7 +701,7 @@ describe("artistRotation/handlers", () => {
         await handleRedeemRewardButton(makeInteraction());
 
         // Side effects must run exactly once despite the second click.
-        expect(mockProcessAssignment).toHaveBeenCalledTimes(1);
+        expect(mockClaimNextArtist).toHaveBeenCalledTimes(1);
         expect(mockCreateJob).toHaveBeenCalledTimes(1);
       });
 

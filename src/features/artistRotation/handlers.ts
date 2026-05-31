@@ -18,9 +18,7 @@ import {
   type ArtType,
   incrementAssignments,
   logAssignment,
-  getArtist,
-  getAllArtists,
-  processAssignment,
+  claimNextArtist,
 } from "./index.js";
 import { createJob } from "../artJobs/index.js";
 import { TicketService } from "../tickets/service.js";
@@ -204,6 +202,33 @@ async function handleConfirm(
   }
 
   /*
+   * Step 1.5: Lock in the artist BEFORE touching the channel.
+   *
+   * For non-override flows, atomically claim the CURRENT next artist at confirm
+   * time (#00075). The artistId baked into the confirm button at command time goes
+   * stale the moment another redemption rotates the queue, which previously let two
+   * back-to-back confirms assign the same artist twice. Claiming select+rotate in
+   * one synchronous transaction guarantees each redemption consumes a distinct turn.
+   */
+  let artistId = data.artistId;
+  let queueLine: string;
+  if (data.isOverride) {
+    // Staff explicitly picked this artist out of turn. Count it, do not rotate.
+    incrementAssignments(guild.id, data.artistId);
+    queueLine = "*Override - queue position unchanged*";
+  } else {
+    const claim = claimNextArtist(guild.id);
+    if (!claim) {
+      await abort(
+        "The artist rotation queue is empty, so no artist could be assigned. The ticket role was already removed; re-grant it and try again once an artist is in the queue."
+      );
+      return;
+    }
+    artistId = claim.userId;
+    queueLine = `Artist moved from #${claim.oldPosition} to #${claim.newPosition} in queue (${claim.assignmentsCount} total assignments)`;
+  }
+
+  /*
    * Step 2: Add the artist to the ticket channel.
    *
    * Two paths:
@@ -228,7 +253,7 @@ async function handleConfirm(
       // Path A: first-party ticket. Grant perms directly, no $add.
       ticketIdForJob = ticket.id;
       try {
-        const artistMember = await guild.members.fetch(data.artistId);
+        const artistMember = await guild.members.fetch(artistId);
         await channel.permissionOverwrites.edit(artistMember, {
           ViewChannel: true,
           SendMessages: true,
@@ -236,10 +261,10 @@ async function handleConfirm(
           AttachFiles: true,
           ReadMessageHistory: true,
         });
-        results.push(`<@${data.artistId}> granted ticket access`);
+        results.push(`<@${artistId}> granted ticket access`);
       } catch (err) {
         logger.warn(
-          { err, artistId: data.artistId, ticketId: ticket.id },
+          { err, artistId, ticketId: ticket.id },
           "[redeemreward] direct grant failed on first-party ticket"
         );
         results.push(`Failed to grant artist access`);
@@ -249,7 +274,7 @@ async function handleConfirm(
       // Rename channel for art-redeem types to include the artist identity.
       if (ticket.typeKey === "art-redeem") {
         try {
-          await TicketService.renameForArtist(ticket.id, data.artistId, guild);
+          await TicketService.renameForArtist(ticket.id, artistId, guild);
         } catch (err) {
           logger.warn({ err, ticketId: ticket.id }, "[redeemreward] rename after assign failed");
         }
@@ -257,11 +282,11 @@ async function handleConfirm(
     } else {
       // Path B: legacy Ticket Tool channel. Keep puppeting until it closes.
       try {
-        await channel.send(`$add <@${data.artistId}>`);
-        results.push(`<@${data.artistId}> added to ticket`);
+        await channel.send(`$add <@${artistId}>`);
+        results.push(`<@${artistId}> added to ticket`);
       } catch (err) {
         logger.warn(
-          { err, artistId: data.artistId },
+          { err, artistId },
           "[redeemreward] Failed to send $add command"
         );
         results.push(`Failed to send $add command`);
@@ -273,37 +298,13 @@ async function handleConfirm(
     success = false;
   }
 
-  /*
-   * Step 3: Update queue (if not override, move artist to end)
-   *
-   * WHY is override different? Sometimes staff manually picks an artist
-   * out of turn. We still want to log it, but we shouldn't penalize
-   * the artist's queue position for being popular.
-   */
-  const artistInfo = getArtist(guild.id, data.artistId);
-  const oldPosition = artistInfo?.position ?? null;
-
-  if (!data.isOverride && oldPosition !== null) {
-    const result = processAssignment(guild.id, data.artistId);
-
-    if (result) {
-      getAllArtists(guild.id);
-      results.push(`Artist moved from #${result.oldPosition} to #${result.newPosition} in queue (${result.assignmentsCount} total assignments)`);
-    } else {
-      results.push(`*Failed to update queue - artist not found*`);
-      success = false;
-    }
-  } else if (data.isOverride) {
-    // Still count toward their total even if we didn't rotate them.
-    // Stats are stats, even when the rules are bent.
-    incrementAssignments(guild.id, data.artistId);
-    results.push(`*Override - queue position unchanged*`);
-  }
+  // Step 3: Record the queue outcome decided in Step 1.5.
+  results.push(queueLine);
 
   // Step 4: Log assignment
   logAssignment({
     guildId: guild.id,
-    artistId: data.artistId,
+    artistId,
     recipientId: data.recipientId,
     ticketType: data.artType,
     ticketRoleId: ticketRoleId ?? null,
@@ -316,7 +317,7 @@ async function handleConfirm(
   // Step 5: Create art job for tracking (separate from queue - this is for WIP tracking)
   const job = createJob({
     guildId: guild.id,
-    artistId: data.artistId,
+    artistId,
     recipientId: data.recipientId,
     ticketType: data.artType,
     ticketId: ticketIdForJob,
@@ -331,7 +332,7 @@ async function handleConfirm(
       [
         `**Recipient:** <@${data.recipientId}>`,
         `**Type:** ${ART_TYPE_DISPLAY[data.artType]}`,
-        `**Artist:** <@${data.artistId}>`,
+        `**Artist:** <@${artistId}>`,
         "",
         "**Actions:**",
         ...results.map((r) => `- ${r}`),
@@ -347,7 +348,8 @@ async function handleConfirm(
     {
       guildId: guild.id,
       recipientId: data.recipientId,
-      artistId: data.artistId,
+      artistId,
+      requestedArtistId: data.artistId,
       artType: data.artType,
       isOverride: data.isOverride,
       assignedBy: interaction.user.id,

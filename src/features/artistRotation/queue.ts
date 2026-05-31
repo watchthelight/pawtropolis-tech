@@ -427,6 +427,52 @@ export function processAssignment(
 }
 
 /**
+ * claimNextArtist
+ * WHAT: Atomically select the current next artist (lowest position, not skipped)
+ *       and rotate them to the end + increment assignments, in one transaction.
+ * WHY: getNextArtist (a pure read) used to be called at /redeemreward command time
+ *      and the chosen artistId baked into the confirm button. Two non-override
+ *      redemptions confirmed back to back both carried the SAME stale artistId and
+ *      each called processAssignment on it, assigning one artist twice (#00075).
+ *      Selecting AND rotating inside a single synchronous transaction at confirm
+ *      time guarantees each redemption consumes a distinct turn.
+ * @returns the claimed artist + rotation result, or null if the queue is empty.
+ */
+export function claimNextArtist(
+  guildId: string
+): { userId: string; oldPosition: number; newPosition: number; assignmentsCount: number } | null {
+  return db.transaction(() => {
+    const next = getNextArtistStmt.get(guildId) as
+      | { user_id: string; position: number; assignments_count: number; last_assigned_at: string | null }
+      | undefined;
+
+    if (!next) {
+      logger.warn({ guildId }, "[artistQueue] claimNextArtist - queue is empty");
+      return null;
+    }
+
+    const userId = next.user_id;
+    const currentPosition = next.position;
+    const maxPosition = getMaxPosition(guildId);
+
+    if (currentPosition !== maxPosition) {
+      shiftPositionsAfterStmt.run(guildId, currentPosition);
+      setPositionStmt.run(maxPosition, guildId, userId);
+    }
+
+    const newAssignmentsCount = next.assignments_count + 1;
+    updateAssignmentsStmt.run(newAssignmentsCount, guildId, userId);
+
+    logger.info(
+      { guildId, userId, oldPosition: currentPosition, newPosition: maxPosition, assignmentsCount: newAssignmentsCount },
+      "[artistQueue] Next artist claimed + rotated atomically"
+    );
+
+    return { userId, oldPosition: currentPosition, newPosition: maxPosition, assignmentsCount: newAssignmentsCount };
+  })();
+}
+
+/**
  * logAssignment
  * WHAT: Record an art reward assignment in the audit log.
  */
