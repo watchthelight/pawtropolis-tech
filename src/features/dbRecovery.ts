@@ -17,13 +17,31 @@ import Database from "better-sqlite3";
 import { createHash } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { exec } from "node:child_process";
-import { promisify } from "node:util";
+import { spawn } from "node:child_process";
 import { env } from "../lib/env.js";
 import { db } from "../db/db.js";
 import { logger } from "../lib/logger.js";
 
-const execAsync = promisify(exec);
+/**
+ * scheduleDetachedPm2Restart
+ * WHAT: Spawn an independent, detached process that waits briefly then runs
+ *       `pm2 restart <processName>`.
+ * WHY: The bot IS the PM2-managed process. Calling `pm2 stop`/`pm2 restart` and
+ *      awaiting it from inside itself tears down this event loop mid-restore, so
+ *      the file replacement/verify/reply never finish (#00068). A detached +
+ *      unref'd child survives our own restart, and the short delay lets the
+ *      success reply flush to Discord before we go down.
+ * SAFETY: processName must already be validated (validateProcessName) before this
+ *         is called; delaySec is a numeric literal. No untrusted input reaches sh.
+ */
+function scheduleDetachedPm2Restart(processName: string, delaySec = 2): void {
+  const child = spawn("sh", ["-c", `sleep ${delaySec}; pm2 restart ${processName}`], {
+    detached: true,
+    stdio: "ignore",
+  });
+  child.unref();
+  logger.info({ processName, delaySec }, "[dbRecovery] Scheduled detached pm2 restart");
+}
 
 // ============================================================================
 // Security: Path Traversal Protection
@@ -488,34 +506,28 @@ export async function restoreCandidate(
     messages.push(`🔍 [DRY RUN] Would create: ${path.basename(preRestoreBackupPath)}`);
   }
 
-  // Step 3: Stop PM2 process (if enabled)
+  // Step 3: Prepare PM2 coordination (if enabled)
+  //
+  // We do NOT stop the bot here. The bot IS the PM2-managed process, so stopping
+  // it from within itself terminates this event loop mid-restore and the
+  // replace/verify/reply below never run (#00068). Instead we replace + verify
+  // while running, then schedule a detached `pm2 restart` as the final step.
+  // Validate the process name up front so we fail before touching the live DB if
+  // it is misconfigured.
+  let restartProcessName: string | null = null;
   if (pm2Coord) {
-    logger.info(`[dbRecovery] Step 3: Stopping PM2 process`);
-
-    // Validate process name before use in shell command to prevent injection
-    let processName: string;
+    logger.info(`[dbRecovery] Step 3: Validating PM2 process name (restart deferred to end)`);
     try {
-      processName = validateProcessName(env.PM2_PROCESS_NAME);
+      restartProcessName = validateProcessName(env.PM2_PROCESS_NAME);
     } catch (err) {
       messages.push(`❌ PM2 coordination failed: ${err instanceof Error ? err.message : "Invalid process name"}`);
       return { success: false, messages };
     }
-
-    messages.push(`🛑 Stopping PM2 process: ${processName}`);
-
-    if (!dryRun) {
-      try {
-        const { stdout, stderr } = await execAsync(`pm2 stop ${processName}`);
-        logger.info(`[dbRecovery] PM2 stop output: ${stdout}`);
-        if (stderr) logger.warn(`[dbRecovery] PM2 stop stderr: ${stderr}`);
-        messages.push(`✅ PM2 process stopped`);
-      } catch (err: any) {
-        messages.push(`⚠️ PM2 stop failed: ${err.message}`);
-        messages.push(`   Continuing anyway - you may need to stop manually`);
-      }
-    } else {
-      messages.push(`🔍 [DRY RUN] Would run: pm2 stop ${processName}`);
-    }
+    messages.push(
+      dryRun
+        ? `🔍 [DRY RUN] Would restart PM2 process at the end: ${restartProcessName}`
+        : `🔁 Will restart PM2 process after restore: ${restartProcessName}`
+    );
   }
 
   // Step 4: Replace live DB (if not dry-run)
@@ -534,16 +546,29 @@ export async function restoreCandidate(
   messages.push(`🔄 Replacing live database with backup`);
 
   try {
-    // Close live DB connection (if open)
-    // Note: In production, PM2 should be stopped first
-    // db.close(); // Don't close here - it's shared across the app
+    // We replace the DB file while still running (see Step 3). The live `db`
+    // connection keeps its now-unlinked inode until the scheduled restart swaps
+    // the process out, so:
+    //   1. Flush + truncate the live WAL so no pending pages are stranded.
+    //   2. Copy the candidate to a temp file, then rename() over the live path -
+    //      rename is atomic on the same filesystem, so a crash mid-copy can never
+    //      leave a half-written live DB.
+    //   3. Drop the stale -wal/-shm sidecars so the restarted process opens the
+    //      replaced file clean instead of replaying a mismatched WAL.
+    try {
+      db.pragma("wal_checkpoint(TRUNCATE)");
+    } catch (ckptErr) {
+      logger.warn({ err: ckptErr }, "[dbRecovery] pre-replace WAL checkpoint failed (continuing)");
+    }
 
-    // Copy candidate to live DB path
-    // Note: fs.copyFile is NOT atomic - there's a brief window where the file
-    // could be corrupted if the process crashes mid-copy. For true atomicity,
-    // we'd need to copy to a temp file then rename. In practice, this is
-    // acceptable because: 1) PM2 should be stopped, 2) we have pre-restore backup.
-    await fs.copyFile(candidate.path, liveDbPath);
+    const incomingTmpPath = `${liveDbPath}.incoming.tmp`;
+    await fs.copyFile(candidate.path, incomingTmpPath);
+    await fs.rename(incomingTmpPath, liveDbPath);
+
+    // Best-effort: remove sidecars left by the old connection.
+    await fs.rm(`${liveDbPath}-wal`, { force: true });
+    await fs.rm(`${liveDbPath}-shm`, { force: true });
+
     messages.push(`Database replaced successfully`);
   } catch (err) {
     messages.push(`❌ Failed to replace database: ${err}`);
@@ -600,32 +625,20 @@ export async function restoreCandidate(
     messages.push(`❌ Post-restore verification error: ${err}`);
   }
 
-  // Step 6: Restart PM2 process (if enabled)
-  if (pm2Coord) {
-    logger.info(`[dbRecovery] Step 6: Restarting PM2 process`);
-
-    // Validate process name before use in shell command to prevent injection
-    // Note: We validated earlier in Step 3, but re-validate for defense in depth
-    let processName: string;
+  // Step 6: Restart PM2 process (if enabled).
+  //
+  // We are still the live process here, so a synchronous `pm2 restart` would kill
+  // this event loop before the caller can send its success reply (the #00068 bug).
+  // Instead spawn a detached, unref'd `pm2 restart` that sleeps briefly and then
+  // restarts us - it survives our own teardown and lets the reply flush first.
+  if (pm2Coord && restartProcessName) {
+    logger.info(`[dbRecovery] Step 6: Scheduling detached PM2 restart`);
     try {
-      processName = validateProcessName(env.PM2_PROCESS_NAME);
-    } catch (err) {
-      messages.push(`⚠️ PM2 restart skipped: ${err instanceof Error ? err.message : "Invalid process name"}`);
-      messages.push(`   You may need to start manually after fixing PM2_PROCESS_NAME`);
-      // Don't fail the whole operation - DB is already restored
-      return { success: true, preRestoreBackupPath, messages, verificationResult };
-    }
-
-    messages.push(`🚀 Restarting PM2 process: ${processName}`);
-
-    try {
-      const { stdout, stderr } = await execAsync(`pm2 start ${processName}`);
-      logger.info(`[dbRecovery] PM2 start output: ${stdout}`);
-      if (stderr) logger.warn(`[dbRecovery] PM2 start stderr: ${stderr}`);
-      messages.push(`✅ PM2 process restarted`);
+      scheduleDetachedPm2Restart(restartProcessName);
+      messages.push(`🚀 Restart scheduled: the bot will reload on the new database in a moment`);
     } catch (err: any) {
-      messages.push(`⚠️ PM2 start failed: ${err.message}`);
-      messages.push(`   You may need to start manually: pm2 start ${processName}`);
+      messages.push(`⚠️ Could not schedule PM2 restart: ${err.message}`);
+      messages.push(`   Restart manually: pm2 restart ${restartProcessName}`);
     }
   }
 

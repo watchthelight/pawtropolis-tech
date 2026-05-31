@@ -228,15 +228,19 @@ describe("restore safety mechanisms", () => {
     });
   });
 
-  describe("PM2 coordination", () => {
-    it("stops process before DB replacement", () => {
-      const steps = ["stop_pm2", "replace_db", "start_pm2"];
-      expect(steps.indexOf("stop_pm2")).toBeLessThan(steps.indexOf("replace_db"));
+  describe("PM2 coordination (#00068)", () => {
+    // The bot IS the PM2-managed process, so it must NOT stop itself before the
+    // replacement - doing so killed the event loop mid-restore. The flow now
+    // replaces + verifies while running, then schedules a detached restart last.
+    const steps = ["validate_pm2_name", "replace_db", "verify_db", "schedule_detached_restart"];
+
+    it("does not stop the running process before DB replacement", () => {
+      expect(steps).not.toContain("stop_pm2");
     });
 
-    it("restarts process after DB replacement", () => {
-      const steps = ["stop_pm2", "replace_db", "start_pm2"];
-      expect(steps.indexOf("start_pm2")).toBeGreaterThan(steps.indexOf("replace_db"));
+    it("schedules the restart only after replacement and verification", () => {
+      expect(steps.indexOf("schedule_detached_restart")).toBeGreaterThan(steps.indexOf("replace_db"));
+      expect(steps.indexOf("schedule_detached_restart")).toBeGreaterThan(steps.indexOf("verify_db"));
     });
   });
 
