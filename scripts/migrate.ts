@@ -34,6 +34,11 @@ const __dirname = dirname(__filename);
 // Parse CLI args
 const args = process.argv.slice(2);
 const dryRun = args.includes("--dry-run");
+// Creating a brand-new database must be explicit. Without this, a wrong/missing
+// DB_PATH (or a cwd mismatch on the deploy host) silently creates an empty DB,
+// "backs up" the empty file, and stamps every migration as applied against it -
+// unrecoverable data loss with a clean-looking migration log.
+const allowInit = args.includes("--init") || args.includes("--bootstrap");
 
 // Database path
 const dbPath = process.env.DB_PATH || "./data/data.db";
@@ -44,10 +49,26 @@ console.log(`Database: ${dbPath}`);
 console.log(`Migrations directory: ${migrationsDir}`);
 console.log(`Mode: ${dryRun ? "DRY RUN (no changes)" : "APPLY"}\n`);
 
-// Open database with same settings as production
-// GOTCHA: fileMustExist: false means we'll happily create a fresh DB if the path is wrong.
-// You'll only notice when all your data is mysteriously "gone."
-const db = new Database(dbPath, { fileMustExist: false });
+// Guard against migrating a non-existent / empty database. Opening with
+// fileMustExist:false would create the file as a side effect, so we must check
+// BEFORE constructing the connection (and before the backup copies it).
+if (!allowInit) {
+  const exists = existsSync(dbPath);
+  const size = exists ? statSync(dbPath).size : 0;
+  if (!exists || size === 0) {
+    console.error(
+      `\n❌ Refusing to migrate: database at "${dbPath}" is ${exists ? "empty (0 bytes)" : "missing"}.\n` +
+        `   This usually means DB_PATH is wrong or the working directory is unexpected.\n` +
+        `   Migrating here would create a fresh empty DB and stamp it as fully migrated (data loss).\n` +
+        `   If you genuinely intend to bootstrap a new database, re-run with --init.\n`
+    );
+    process.exit(1);
+  }
+}
+
+// Open database with same settings as production. fileMustExist mirrors the guard
+// above: only allow creation when --init was passed.
+const db = new Database(dbPath, { fileMustExist: !allowInit });
 db.pragma("journal_mode = WAL");
 db.pragma("synchronous = NORMAL");
 // WHY: SQLite has foreign keys OFF by default. Yes, really. The ghost of the 1990s haunts us still.
