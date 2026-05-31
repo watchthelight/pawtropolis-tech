@@ -186,9 +186,15 @@ export async function startDmVerification(
     }
   };
 
-  // Check for existing active session
+  // Check for existing active session.
+  // NOTE: sessions are keyed by guild+user, but answer routing (handleDmAnswer)
+  // and button routing (handleDmButton) look sessions up by userId alone (a DM
+  // carries no guildId). Allowing a second active session for the same user in
+  // another guild would let a DM answer be persisted against the wrong guild's
+  // application. So we disallow more than one active session per user globally;
+  // this keeps getSessionForUser deterministic.
   const existingKey = sessionKey(guildId, userId);
-  if (activeSessions.has(existingKey)) {
+  if (activeSessions.has(existingKey) || hasActiveSession(userId)) {
     await respond("You already have a verification in progress! Check your DMs.");
     return;
   }

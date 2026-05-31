@@ -295,6 +295,22 @@ export function wrapCommand<I extends InstrumentedInteraction>(
         await fn(commandCtx);
       });
 
+      // Reconcile response state from the interaction's actual flags. Many
+      // component/modal handlers call interaction.defer*/reply/editReply
+      // directly instead of through ensureDeferred()/replyOrEdit(), so the
+      // wide event would otherwise report deferredAt/repliedAt as null even
+      // though the user did receive a response. discord.js sets .deferred and
+      // .replied regardless of how we responded, so trust those here. Only
+      // mark when our telemetry missed it, to preserve accurate earlier
+      // timestamps recorded by the cmdWrap helpers.
+      const rs = wideEvent.snapshot().responseState;
+      if (interaction.deferred && rs.deferredAt === null) {
+        wideEvent.markDeferred();
+      }
+      if (interaction.replied && rs.repliedAt === null) {
+        wideEvent.markReplied();
+      }
+
       // Success - emit wide event
       wideEvent.setOutcome("success");
       emitWideEvent(wideEvent.finalize());
