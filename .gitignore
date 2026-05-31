@@ -91,3 +91,4 @@ graphify-out/exports/graph-connectome-fa2-raw-24000.png
 
 # Throwaway working dir (per CLAUDE.md), should never be committed
 scratch/
+.loop-state.md
