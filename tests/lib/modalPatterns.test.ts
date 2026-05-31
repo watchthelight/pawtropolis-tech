@@ -22,7 +22,6 @@ import {
   MODAL_ACCEPT_RE,
   MODAL_KICK_RE,
   MODAL_UNCLAIM_RE,
-  MODAL_18_RE,
   identifyModalRoute,
 } from "../../src/lib/modalPatterns.js";
 
@@ -250,18 +249,6 @@ describe("modalPatterns", () => {
     });
   });
 
-  describe("MODAL_18_RE", () => {
-    it("matches age verification modal IDs", () => {
-      expect("v1:avatar:confirm18:code98FF66").toMatch(MODAL_18_RE);
-    });
-
-    it("extracts code", () => {
-      const match = "v1:avatar:confirm18:code98FF66".match(MODAL_18_RE);
-      expect(match).not.toBeNull();
-      expect(match![1]).toBe("98FF66");
-    });
-  });
-
   describe("identifyModalRoute", () => {
     describe("gate_submit_page", () => {
       it("routes page modal submissions", () => {
@@ -329,16 +316,6 @@ describe("modalPatterns", () => {
         expect(route).toEqual({
           type: "review_unclaim",
           code: "123456",
-        });
-      });
-    });
-
-    describe("avatar_confirm18", () => {
-      it("routes age verification modal submissions", () => {
-        const route = identifyModalRoute("v1:avatar:confirm18:codeABCDEF");
-        expect(route).toEqual({
-          type: "avatar_confirm18",
-          code: "ABCDEF",
         });
       });
     });

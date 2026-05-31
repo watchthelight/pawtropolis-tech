@@ -18,9 +18,16 @@ import {
   type ModalSubmitInteraction,
 } from "discord.js";
 import { logger } from "../../lib/logger.js";
+import { checkCooldown, formatCooldown } from "../../lib/rateLimiter.js";
 import { COMMUNITY_AMBASSADOR_ROLE_ID, MOD_TEAM_ROLE_ID } from "./config.js";
 import { TicketService } from "./service.js";
 import { getTicketType } from "./registry.js";
+
+// Short anti-double-click window. Discord button double-clicks dispatch as two
+// separate interactions; the first defers but is not yet replied, so the second
+// is still valid. Gating per (user, ticket type) stops a double-click from
+// opening two channels / burning two numbers / firing duplicate staff pings.
+const TICKET_OPEN_COOLDOWN_MS = 5000;
 
 export const CLOSE_MODAL_ID_PREFIX = "tk:closemod:";
 
@@ -228,6 +235,15 @@ async function handleOpenButton(
   if (!type || !type.isActive) {
     await interaction.reply({
       content: "That ticket type is not available right now.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  const cooldown = checkCooldown(`ticket:open:${typeKey}`, interaction.user.id, TICKET_OPEN_COOLDOWN_MS);
+  if (!cooldown.allowed) {
+    await interaction.reply({
+      content: `You just opened a ticket of this type. Please wait ${formatCooldown(cooldown.remainingMs ?? 0)} before opening another.`,
       flags: MessageFlags.Ephemeral,
     });
     return;

@@ -41,13 +41,4 @@ describe("reject modal path", () => {
     expect(route).toBeNull();
   });
 
-  // Different modal namespace (avatar vs review) but same code extraction pattern.
-  // confirm18 is the 18+ age verification flow for avatar review.
-  it("matches avatar confirm18 modal with code", () => {
-    const route = identifyModalRoute("v1:avatar:confirm18:codeFEDCBA");
-    expect(route).toEqual({
-      type: "avatar_confirm18",
-      code: "FEDCBA",
-    });
-  });
 });

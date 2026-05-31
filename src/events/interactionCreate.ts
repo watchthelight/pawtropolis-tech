@@ -766,7 +766,7 @@ export function registerInteractionCreate(
             // yes, HEX6 on purpose (humans > uuids)
             // The 6-char hex codes are used for application codes - short enough to read aloud
             // during debugging calls, long enough to be unique within a reasonable timeframe.
-            if (customId.startsWith("v1:modal:") || customId.startsWith("v1:avatar:confirm18:")) {
+            if (customId.startsWith("v1:modal:")) {
               const route = identifyModalRoute(customId);
 
               if (route?.type === "gate_submit_page") {
@@ -1022,6 +1022,27 @@ export function registerInteractionCreate(
               await routeIsitRealInteraction(interaction);
               return;
             }
+
+            // No prefix matched. Acknowledge with an error card + reportable trace
+            // ID rather than silently dropping the interaction (Discord shows the
+            // user a generic "Something went wrong" with no trace otherwise).
+            logger.error(
+              {
+                evt: "ix_route_miss",
+                kind: "modal",
+                id: customId,
+                traceId,
+              },
+              "unhandled modal customId pattern"
+            );
+            await postErrorCard(interaction, {
+              cmd: "modal",
+              phase: "route_miss",
+              err: { name: "RouteError", message: `Unhandled modal: ${customId}` },
+              lastSql: null,
+              traceId,
+            });
+            return;
           }
 
           // Context menu commands — USER targets

@@ -122,6 +122,7 @@ export function getFlaggerConfig(guildId: string): FlaggerConfig {
 
   let channelId: string | null = null;
   let silentDays: number = 7; // Default threshold (7 days)
+  let dbProvidedDays = false;
 
   try {
     // First, check for guild-specific override in guild_config table
@@ -139,6 +140,7 @@ export function getFlaggerConfig(guildId: string): FlaggerConfig {
       // Guild-specific threshold override (DB > ENV)
       if (row.silent_first_msg_days !== null && row.silent_first_msg_days !== undefined) {
         silentDays = row.silent_first_msg_days;
+        dbProvidedDays = true;
       }
     }
   } catch (err) {
@@ -156,16 +158,12 @@ export function getFlaggerConfig(guildId: string): FlaggerConfig {
     }
   }
 
-  // Only use env fallback for silentDays if DB didn't provide a value.
-  // We already checked DB above, so just check if we still have the default value
-  // and if the env var is set. This avoids a redundant DB query.
-  // GOTCHA: This logic assumes 7 is the default. If you change the default above,
-  // update this check or env fallback will silently break. Been there.
-  // WHY not use undefined as a sentinel? Because TypeScript + SQLite nulls are pain.
+  // Only use env fallback for silentDays if the DB did not supply a value.
+  // We track dbProvidedDays explicitly rather than treating 7 as a sentinel:
+  // 7 is a valid, user-settable value (setSilentFirstMsgDays accepts 7..365),
+  // so an explicit DB value of 7 must NOT be overridden by the env default.
   const envDays = process.env.SILENT_FIRST_MSG_DAYS;
-  if (envDays && !isNaN(Number(envDays)) && silentDays === 7) {
-    // silentDays === 7 means DB either didn't have a row or had null for this field
-    // (since we initialized to 7 and only changed it if DB had a non-null value)
+  if (envDays && !isNaN(Number(envDays)) && !dbProvidedDays) {
     silentDays = Number(envDays);
   }
 

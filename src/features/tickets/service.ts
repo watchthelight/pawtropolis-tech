@@ -249,16 +249,28 @@ export class TicketService {
     const ticketId = randomUUID();
     const openedAt = Math.floor(Date.now() / 1000);
 
-    getInsertTicketStmt().run({
-      id: ticketId,
-      type_key: type.key,
-      number,
-      channel_id: channel.id,
-      staff_thread_id: null,
-      guild_id: guild.id,
-      opener_user_id: openerUserId,
-      opened_at: openedAt,
-    });
+    try {
+      getInsertTicketStmt().run({
+        id: ticketId,
+        type_key: type.key,
+        number,
+        channel_id: channel.id,
+        staff_thread_id: null,
+        guild_id: guild.id,
+        opener_user_id: openerUserId,
+        opened_at: openedAt,
+      });
+    } catch (insertErr) {
+      // The channel exists but the tracking row does not. Delete the channel so
+      // we do not leave a permanent orphan that nothing can find/close.
+      await channel.delete("Ticket DB insert failed; rolling back orphan channel").catch((delErr) => {
+        logger.error(
+          { err: delErr, ticketId, channelId: channel.id },
+          "[tickets/service] failed to delete orphan channel after insert failure"
+        );
+      });
+      throw insertErr;
+    }
 
     emitEvent(ticketId, "opened", openerUserId, {
       typeKey: type.key,
@@ -462,7 +474,19 @@ export class TicketService {
       return;
     }
 
-    const archivePath = await TicketService.writeArchive(ticket);
+    // Apply the closed state to the DB first, then snapshot the terminal ticket
+    // into the archive. writeArchive serializes the ticket object verbatim, so it
+    // must reflect status='closed' / closeReason / closedAt rather than the stale
+    // open snapshot returned by findById.
+    const closedAt = Math.floor(Date.now() / 1000);
+    const closedTicket: Ticket = {
+      ...ticket,
+      status: "closed",
+      closeReason: reason,
+      closedByUserId,
+      closedAt,
+    };
+    const archivePath = await TicketService.writeArchive(closedTicket);
     getSetClosedStmt().run(reason, closedByUserId, archivePath, ticketId);
     emitEvent(ticketId, "closed", closedByUserId, { reason, archivePath });
 

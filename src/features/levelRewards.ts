@@ -231,6 +231,25 @@ export async function handleLevelRoleAdded(
       }
     }
 
+    // If any reward failed to apply (transient Discord 429/5xx/network — assignRole
+    // returns success:false WITHOUT throwing), drop the dedup marker so the next
+    // guildMemberUpdate for this level retries. Leaving the marker in place would
+    // convert a transient failure into a permanent loss of the reward. Successful
+    // and benign-skip (already-has-role) outcomes keep the marker.
+    if (failedRewards.length > 0) {
+      db.prepare(`
+        DELETE FROM level_reward_granted
+        WHERE guild_id = ? AND user_id = ? AND level = ?
+      `).run(guild.id, member.id, level);
+      logger.warn({
+        evt: "level_reward_dedup_rollback",
+        guildId: guild.id,
+        userId: member.id,
+        level,
+        failedCount: failedRewards.length,
+      }, `Cleared dedup marker for level ${level} so failed rewards can retry`);
+    }
+
     // Log consolidated results to Discord channel (one embed for all rewards)
     // This bunches together multiple rewards at the same level into a single log entry
     if (grantedRewards.length > 0) {

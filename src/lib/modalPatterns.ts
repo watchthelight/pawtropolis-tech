@@ -10,7 +10,6 @@
  * ID format examples:
  *  - v1:decide:approve:code98FF66 → button; codeHEX6 maps to application via lookup
  *  - v1:modal:<sessionId>:p0 → modal; session id is an application id or UUID
- *  - v1:avatar:confirm18:codeAABBCC → modal; 18+ confirmation for viewing avatar source
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
@@ -71,9 +70,6 @@ export const MODAL_KICK_RE = /^v1:modal:kick:code([0-9A-F]{6})$/;
 export const MODAL_UNCLAIM_RE = /^v1:modal:unclaim:code([0-9A-F]{6})$/;
 export const MODAL_VOTE_OUT_RE = /^v1:modal:vote_out:code([0-9A-F]{6})$/;
 
-// Age verification modal - requires explicit confirmation before showing NSFW avatar source
-export const MODAL_18_RE = /^v1:avatar:confirm18:code([0-9A-F]{6})$/;
-
 // Content report system - ambassador reports with resolve workflow
 export const BTN_REPORT_RESOLVE_RE = /^v1:report:resolve:([0-9A-F]{6})$/;
 export const MODAL_REPORT_RESOLVE_RE = /^v1:modal:report:resolve:([0-9A-F]{6})$/;
@@ -95,7 +91,6 @@ export type ModalRoute =
   | { type: "review_kick"; code: string }
   | { type: "review_unclaim"; code: string }
   | { type: "review_vote_out"; code: string }
-  | { type: "avatar_confirm18"; code: string }
   | { type: "report_resolve"; code: string }
   | { type: "qotd_suggest" }
   | { type: "qotd_reject"; code: string };
@@ -144,11 +139,6 @@ export function identifyModalRoute(id: string): ModalRoute | null {
   const voteOut = id.match(MODAL_VOTE_OUT_RE);
   if (voteOut) {
     return { type: "review_vote_out", code: voteOut[1]! };
-  }
-
-  const confirm18 = id.match(MODAL_18_RE);
-  if (confirm18) {
-    return { type: "avatar_confirm18", code: confirm18[1]! };
   }
 
   const reportResolve = id.match(MODAL_REPORT_RESOLVE_RE);

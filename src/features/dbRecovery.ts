@@ -202,7 +202,9 @@ export async function listCandidates(): Promise<BackupCandidate[]> {
           created_at: Math.floor(stats.mtimeMs / 1000),
           size_bytes: stats.size,
           integrity_result: existingMeta?.integrity_result,
-          foreign_key_violations: existingMeta?.row_count,
+          // db_backups does not persist a foreign-key-violation count; do not alias
+          // it to row_count (that mislabels the total row count as FK violations).
+          foreign_key_violations: undefined,
           row_count: existingMeta?.row_count,
           checksum: existingMeta?.checksum,
           verified_at: existingMeta?.verified_at,

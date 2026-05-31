@@ -315,9 +315,18 @@ describe("help/cache", () => {
     it("queries and caches on cache miss", () => {
       mockPermissionCacheGet.mockReturnValue(undefined);
 
-      filterCommandsByPermission(null, "guild-123", "user-456");
+      const mockMember = { id: "user-456", roles: { cache: new Map() } } as unknown as GuildMember;
+      filterCommandsByPermission(mockMember, "guild-123", "user-456");
 
       expect(mockPermissionCacheSet).toHaveBeenCalled();
+    });
+
+    it("does not cache when member is null (transient fetch failure)", () => {
+      mockPermissionCacheGet.mockReturnValue(undefined);
+
+      filterCommandsByPermission(null, "guild-123", "user-456");
+
+      expect(mockPermissionCacheSet).not.toHaveBeenCalled();
     });
 
     it("returns only public commands for null member", () => {
@@ -384,10 +393,11 @@ describe("help/cache", () => {
     it("caches command names, not full objects", () => {
       mockPermissionCacheGet.mockReturnValue(undefined);
 
-      filterCommandsByPermission(null, "guild-123", "user-456");
+      const mockMember = { id: "user-456", roles: { cache: new Map() } } as unknown as GuildMember;
+      filterCommandsByPermission(mockMember, "guild-123", "user-456");
 
       const setCall = mockPermissionCacheSet.mock.calls[0];
-      expect(setCall[0]).toBe("guild-123:user-456");
+      expect(setCall[0]).toContain("guild-123:user-456");
       expect(Array.isArray(setCall[1])).toBe(true);
       expect(typeof setCall[1][0]).toBe("string");
     });

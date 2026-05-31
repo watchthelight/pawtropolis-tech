@@ -26,13 +26,6 @@ describe("identifyModalRoute", () => {
     expect(route).toEqual({ type: "review_reject", code: "A1B2C3" });
   });
 
-  // Avatar confirmation for 18+ content is a separate flow with its own modal.
-  // Uses "avatar" namespace instead of "modal" to distinguish the feature.
-  it("matches avatar confirm 18 modal", () => {
-    const route = identifyModalRoute("v1:avatar:confirm18:codeABCDEF");
-    expect(route).toEqual({ type: "avatar_confirm18", code: "ABCDEF" });
-  });
-
   // Legacy format from before we added session IDs. These old buttons may
   // still exist in cached messages - returning null triggers a "please retry" response.
   it("treats legacy page ids as unmatched", () => {

@@ -169,13 +169,15 @@ async function sweepOnce(client: Client): Promise<number> {
  * and strip the lower tiers. Then start a periodic sweep to catch re-stacking
  * from external Patreon integration bots.
  */
+let _sweepInterval: NodeJS.Timeout | null = null;
+
 export async function sweepPatreonRoleStacks(client: Client): Promise<void> {
   const totalFixed = await sweepOnce(client);
   logger.info({ totalFixed }, "[patreonRoleDedup] Startup sweep complete");
 
   // Periodic sweep every 10 minutes to catch roles re-added by external Patreon bots
   const SWEEP_INTERVAL_MS = 10 * 60 * 1000;
-  setInterval(async () => {
+  _sweepInterval = setInterval(async () => {
     try {
       const fixed = await sweepOnce(client);
       if (fixed > 0) {
@@ -185,4 +187,15 @@ export async function sweepPatreonRoleStacks(client: Client): Promise<void> {
       logger.error({ err }, "[patreonRoleDedup] Periodic sweep failed");
     }
   }, SWEEP_INTERVAL_MS);
+  // unref so this timer alone cannot keep the Node event loop alive at shutdown,
+  // matching every other recurring timer in the bot process.
+  _sweepInterval.unref?.();
+}
+
+/** Stop the periodic Patreon role-dedup sweep (graceful shutdown / tests). */
+export function stopPatreonRoleDedup(): void {
+  if (_sweepInterval) {
+    clearInterval(_sweepInterval);
+    _sweepInterval = null;
+  }
 }

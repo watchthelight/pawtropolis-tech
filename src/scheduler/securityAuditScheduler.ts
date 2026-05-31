@@ -43,6 +43,7 @@ const LEADERSHIP_ROLE_IDS = {
 const CONFLICTS_DOC_URL = "https://github.com/watchthelight/pawtropolis-tech/blob/main/docs/internal-info/CONFLICTS.md";
 
 let _activeInterval: NodeJS.Timeout | null = null;
+let _running = false;
 
 /**
  * Build an embed for dangerous permission changes detected via diff.
@@ -347,12 +348,23 @@ export function startSecurityAuditScheduler(client: Client): void {
 
   // Set up periodic runs
   const interval = setInterval(async () => {
+    // Re-entrancy guard: setInterval does not await the callback, so a run that
+    // outlives the interval would otherwise start a second concurrent audit
+    // (duplicate leadership pings + snapshot diff against a snapshot the other
+    // run just wrote). Skip if a previous run is still in flight.
+    if (_running) {
+      logger.warn("[security-audit:scheduler] Previous audit still in flight, skipping tick");
+      return;
+    }
+    _running = true;
     try {
       await runSecurityAudit(client);
       recordSchedulerRun("securityAudit", true);
     } catch (err: any) {
       recordSchedulerRun("securityAudit", false);
       logger.error({ err: err.message }, "[security-audit:scheduler] Scheduled audit failed");
+    } finally {
+      _running = false;
     }
   }, AUDIT_INTERVAL_MS);
 

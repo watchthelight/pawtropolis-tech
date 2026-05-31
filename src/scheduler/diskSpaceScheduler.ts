@@ -32,6 +32,7 @@ const ALERT_COOLDOWN_MS = 4 * 60 * 60 * 1000;
 
 // Module-level state
 let _activeInterval: NodeJS.Timeout | null = null;
+let _startupTimeout: NodeJS.Timeout | null = null;
 let _lastAlertTime: number = 0;
 let _lastAlertLevel: "warning" | "critical" | null = null;
 
@@ -233,7 +234,8 @@ export function startDiskSpaceScheduler(client: Client): void {
   );
 
   // Run initial check after a short delay
-  setTimeout(async () => {
+  _startupTimeout = setTimeout(async () => {
+    _startupTimeout = null;
     try {
       await checkDiskSpace(client);
       recordSchedulerRun("diskSpace", true);
@@ -242,6 +244,7 @@ export function startDiskSpaceScheduler(client: Client): void {
       logger.error({ err: err.message }, "[diskspace:scheduler] initial check failed");
     }
   }, 15000); // 15s delay
+  _startupTimeout.unref?.();
 
   // Set up periodic check
   const interval = setInterval(async () => {
@@ -265,6 +268,10 @@ export function startDiskSpaceScheduler(client: Client): void {
  * WHY: Clean shutdown during bot termination.
  */
 export function stopDiskSpaceScheduler(): void {
+  if (_startupTimeout) {
+    clearTimeout(_startupTimeout);
+    _startupTimeout = null;
+  }
   if (_activeInterval) {
     clearInterval(_activeInterval);
     _activeInterval = null;
