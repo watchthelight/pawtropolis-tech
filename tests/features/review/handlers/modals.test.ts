@@ -1,11 +1,22 @@
 /**
  * Pawtropolis Tech — tests/features/review/handlers/modals.test.ts
  * WHAT: Unit tests for review modal submission handlers.
- * WHY: Verify modal pattern matching, input parsing, and action dispatching.
+ * WHY: Verify modal pattern matching, input parsing, staff gating, and action dispatching
+ *      by driving the REAL handlers in src/features/review/handlers/modals.ts.
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { ModalSubmitInteraction } from "discord.js";
+
+// Real regexes from the source of truth, used to build canonical customIds in tests.
+import {
+  MODAL_REJECT_RE,
+  MODAL_ACCEPT_RE,
+  MODAL_PERM_REJECT_RE,
+  MODAL_KICK_RE,
+  MODAL_UNCLAIM_RE,
+} from "../../../../src/lib/modalPatterns.js";
 
 vi.mock("../../../../src/lib/logger.js", () => ({
   logger: {
@@ -21,360 +32,425 @@ vi.mock("../../../../src/lib/sentry.js", () => ({
 }));
 
 vi.mock("../../../../src/lib/cmdWrap.js", () => ({
-  replyOrEdit: vi.fn().mockResolvedValue(undefined),
+  ephemeralFollowUp: vi.fn().mockResolvedValue(undefined),
 }));
 
-describe("features/review/handlers/modals", () => {
+// reqctx is mocked so the trace id used in catch blocks is deterministic. This lets
+// us assert the REAL derivation (ctx().traceId ?? newTraceId()) instead of a literal.
+vi.mock("../../../../src/lib/reqctx.js", () => ({
+  ctx: vi.fn(() => ({})),
+  newTraceId: vi.fn(() => "TRACE12345A"),
+}));
+
+// helpers.js is mocked at the genuine boundary: requireInteractionStaff and
+// resolveApplication are the gates the handler delegates to. MODAL_RE / ACCEPT_MODAL_RE
+// re-export the REAL canonical patterns so matching is not re-implemented.
+vi.mock("../../../../src/features/review/handlers/helpers.js", async () => {
+  const patterns = await vi.importActual<typeof import("../../../../src/lib/modalPatterns.js")>(
+    "../../../../src/lib/modalPatterns.js"
+  );
+  return {
+    MODAL_RE: patterns.MODAL_REJECT_RE,
+    ACCEPT_MODAL_RE: patterns.MODAL_ACCEPT_RE,
+    requireInteractionStaff: vi.fn(() => true),
+    resolveApplication: vi.fn(),
+  };
+});
+
+vi.mock("../../../../src/features/review/handlers/actionRunners.js", () => ({
+  runApproveAction: vi.fn().mockResolvedValue(undefined),
+  runRejectAction: vi.fn().mockResolvedValue(undefined),
+  runPermRejectAction: vi.fn().mockResolvedValue(undefined),
+  runKickAction: vi.fn().mockResolvedValue(undefined),
+  runVoteOutAction: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("../../../../src/features/review/handlers/claimHandlers.js", () => ({
+  handleUnclaimAction: vi.fn().mockResolvedValue(undefined),
+}));
+
+import {
+  handleRejectModal,
+  handleAcceptModal,
+  handlePermRejectModal,
+  handleKickModal,
+  handleUnclaimModal,
+} from "../../../../src/features/review/handlers/modals.js";
+import { ephemeralFollowUp } from "../../../../src/lib/cmdWrap.js";
+import { captureException } from "../../../../src/lib/sentry.js";
+import { logger } from "../../../../src/lib/logger.js";
+import { requireInteractionStaff, resolveApplication } from "../../../../src/features/review/handlers/helpers.js";
+import {
+  runApproveAction,
+  runRejectAction,
+  runPermRejectAction,
+  runKickAction,
+} from "../../../../src/features/review/handlers/actionRunners.js";
+import { handleUnclaimAction } from "../../../../src/features/review/handlers/claimHandlers.js";
+
+const APP = { id: "app-1", guild_id: "guild-1", user_id: "user-1", status: "pending" };
+
+/**
+ * Build a minimal ModalSubmitInteraction stub. fieldValues maps the modal field
+ * customId to the raw text input value the handler will read.
+ */
+function makeInteraction(
+  customId: string,
+  fieldValues: Record<string, string> = {}
+): ModalSubmitInteraction {
+  const deferUpdate = vi.fn().mockResolvedValue(undefined);
+  return {
+    id: "interaction-XYZ987654321",
+    customId,
+    deferred: false,
+    replied: false,
+    inGuild: () => true,
+    guildId: "guild-1",
+    user: { id: "staff-1", username: "staff" },
+    deferUpdate,
+    fields: {
+      getTextInputValue: vi.fn((id: string) => {
+        if (id in fieldValues) return fieldValues[id];
+        return "";
+      }),
+    },
+  } as unknown as ModalSubmitInteraction;
+}
+
+describe("features/review/handlers/modals (real handlers)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(requireInteractionStaff).mockReturnValue(true);
+    vi.mocked(resolveApplication).mockResolvedValue(APP as never);
   });
 
   describe("handleRejectModal", () => {
-    describe("pattern matching", () => {
-      const MODAL_RE = /^v1:modal:reject:code([0-9A-F]{6})$/;
-
-      it("matches reject modal customId", () => {
-        const customId = "v1:modal:reject:codeABCDEF";
-        const match = MODAL_RE.exec(customId);
-        expect(match).not.toBeNull();
-        expect(match?.[1]).toBe("ABCDEF");
+    it("matches the canonical reject customId, defers, and dispatches runRejectAction with trimmed/truncated reason", async () => {
+      const code = "ABCDEF";
+      const interaction = makeInteraction(`v1:modal:reject:code${code}`, {
+        "v1:modal:reject:reason": "  User is banned  ",
       });
 
-      it("ignores non-matching customIds", () => {
-        const customId = "v1:modal:accept:codeABCDEF";
-        const match = MODAL_RE.exec(customId);
-        expect(match).toBeNull();
-      });
+      await handleRejectModal(interaction);
+
+      expect(interaction.deferUpdate).toHaveBeenCalledTimes(1);
+      expect(resolveApplication).toHaveBeenCalledWith(interaction, code);
+      expect(runRejectAction).toHaveBeenCalledWith(interaction, APP, "User is banned");
     });
 
-    describe("deferUpdate behavior", () => {
-      it("calls deferUpdate to acknowledge without visible bubble", () => {
-        const shouldDefer = true;
-        expect(shouldDefer).toBe(true);
+    it("truncates reject reason to 500 chars (string, never null)", async () => {
+      const interaction = makeInteraction("v1:modal:reject:codeABCDEF", {
+        "v1:modal:reject:reason": "a".repeat(600),
       });
+
+      await handleRejectModal(interaction);
+
+      const reason = vi.mocked(runRejectAction).mock.calls[0]![2] as string;
+      expect(reason).toHaveLength(500);
     });
 
-    describe("reason extraction", () => {
-      it("trims whitespace from reason", () => {
-        const reasonRaw = "  User is banned  ";
-        const reason = reasonRaw.trim();
-        expect(reason).toBe("User is banned");
+    it("reads the reason from the v1:modal:reject:reason field", async () => {
+      const interaction = makeInteraction("v1:modal:reject:codeABCDEF", {
+        "v1:modal:reject:reason": "from correct field",
       });
 
-      it("truncates to 500 characters", () => {
-        const reasonRaw = "a".repeat(600);
-        const reason = reasonRaw.trim().slice(0, 500);
-        expect(reason.length).toBe(500);
-      });
+      await handleRejectModal(interaction);
 
-      it("extracts reason from correct field", () => {
-        const fieldId = "v1:modal:reject:reason";
-        expect(fieldId).toBe("v1:modal:reject:reason");
-      });
+      expect(interaction.fields.getTextInputValue).toHaveBeenCalledWith("v1:modal:reject:reason");
+      expect(runRejectAction).toHaveBeenCalledWith(interaction, APP, "from correct field");
     });
 
-    describe("error handling", () => {
-      it("generates trace ID from interaction ID", () => {
-        const interactionId = "1234567890ABCDEF";
-        const traceId = interactionId.slice(-8).toUpperCase();
-        expect(traceId).toBe("90ABCDEF");
-      });
+    it("early-returns on a non-matching customId without deferring or dispatching", async () => {
+      const interaction = makeInteraction("v1:modal:accept:codeABCDEF");
 
-      it("captures exception to Sentry", () => {
-        const area = "handleRejectModal";
-        expect(area).toBe("handleRejectModal");
-      });
+      await handleRejectModal(interaction);
+
+      expect(interaction.deferUpdate).not.toHaveBeenCalled();
+      expect(requireInteractionStaff).not.toHaveBeenCalled();
+      expect(resolveApplication).not.toHaveBeenCalled();
+      expect(runRejectAction).not.toHaveBeenCalled();
+    });
+
+    it("early-returns (no dispatch) when the staff check fails", async () => {
+      vi.mocked(requireInteractionStaff).mockReturnValue(false);
+      const interaction = makeInteraction("v1:modal:reject:codeABCDEF");
+
+      await handleRejectModal(interaction);
+
+      expect(requireInteractionStaff).toHaveBeenCalledWith(interaction);
+      expect(interaction.deferUpdate).not.toHaveBeenCalled();
+      expect(resolveApplication).not.toHaveBeenCalled();
+      expect(runRejectAction).not.toHaveBeenCalled();
+    });
+
+    it("early-returns when resolveApplication yields no application", async () => {
+      vi.mocked(resolveApplication).mockResolvedValue(null);
+      const interaction = makeInteraction("v1:modal:reject:codeABCDEF");
+
+      await handleRejectModal(interaction);
+
+      expect(resolveApplication).toHaveBeenCalled();
+      expect(runRejectAction).not.toHaveBeenCalled();
+    });
+
+    it("on error, reports to Sentry/logs and replies with the trace id from newTraceId()", async () => {
+      vi.mocked(resolveApplication).mockRejectedValue(new Error("boom"));
+      const interaction = makeInteraction("v1:modal:reject:codeABCDEF");
+
+      await handleRejectModal(interaction);
+
+      // Trace id is the value newTraceId() returns, NOT a slice of interaction.id.
+      expect(captureException).toHaveBeenCalledWith(
+        expect.any(Error),
+        expect.objectContaining({ area: "handleRejectModal", code: "ABCDEF", traceId: "TRACE12345A" })
+      );
+      expect(logger.error).toHaveBeenCalled();
+      expect(ephemeralFollowUp).toHaveBeenCalledWith(
+        interaction,
+        "Failed to process rejection (trace: TRACE12345A)."
+      );
     });
   });
 
   describe("handleAcceptModal", () => {
-    describe("pattern matching", () => {
-      const ACCEPT_MODAL_RE = /^v1:modal:accept:code([0-9A-F]{6})$/;
-
-      it("matches accept modal customId", () => {
-        const customId = "v1:modal:accept:code123456";
-        const match = ACCEPT_MODAL_RE.exec(customId);
-        expect(match).not.toBeNull();
-        expect(match?.[1]).toBe("123456");
+    it("matches accept customId and dispatches runApproveAction with trimmed reason", async () => {
+      const interaction = makeInteraction("v1:modal:accept:code123456", {
+        "v1:modal:accept:reason": "  Welcome to the server!  ",
       });
+
+      await handleAcceptModal(interaction);
+
+      expect(interaction.deferUpdate).toHaveBeenCalledTimes(1);
+      expect(resolveApplication).toHaveBeenCalledWith(interaction, "123456");
+      expect(runApproveAction).toHaveBeenCalledWith(interaction, APP, "Welcome to the server!");
     });
 
-    describe("reason extraction", () => {
-      it("trims whitespace from reason", () => {
-        const reasonRaw = "  Welcome to the server!  ";
-        const reason = reasonRaw.trim();
-        expect(reason).toBe("Welcome to the server!");
+    it("dispatches null reason when the accept field is empty/whitespace", async () => {
+      const interaction = makeInteraction("v1:modal:accept:code123456", {
+        "v1:modal:accept:reason": "   ",
       });
 
-      it("returns null for empty reason", () => {
-        const reasonRaw = "   ";
-        const reason = reasonRaw.trim().slice(0, 500) || null;
-        expect(reason).toBeNull();
+      await handleAcceptModal(interaction);
+
+      expect(runApproveAction).toHaveBeenCalledWith(interaction, APP, null);
+    });
+
+    it("truncates accept reason to 500 chars", async () => {
+      const interaction = makeInteraction("v1:modal:accept:code123456", {
+        "v1:modal:accept:reason": "b".repeat(600),
       });
 
-      it("truncates to 500 characters", () => {
-        const reasonRaw = "b".repeat(600);
-        const reason = reasonRaw.trim().slice(0, 500) || null;
-        expect(reason?.length).toBe(500);
+      await handleAcceptModal(interaction);
+
+      const reason = vi.mocked(runApproveAction).mock.calls[0]![2] as string;
+      expect(reason).toHaveLength(500);
+    });
+
+    it("reads the reason from the v1:modal:accept:reason field", async () => {
+      const interaction = makeInteraction("v1:modal:accept:code123456", {
+        "v1:modal:accept:reason": "note",
       });
 
-      it("extracts reason from correct field", () => {
-        const fieldId = "v1:modal:accept:reason";
-        expect(fieldId).toBe("v1:modal:accept:reason");
-      });
+      await handleAcceptModal(interaction);
+
+      expect(interaction.fields.getTextInputValue).toHaveBeenCalledWith("v1:modal:accept:reason");
+    });
+
+    it("early-returns on a non-matching customId", async () => {
+      const interaction = makeInteraction("v1:modal:reject:code123456");
+
+      await handleAcceptModal(interaction);
+
+      expect(resolveApplication).not.toHaveBeenCalled();
+      expect(runApproveAction).not.toHaveBeenCalled();
     });
   });
 
   describe("handlePermRejectModal", () => {
-    describe("pattern matching", () => {
-      const MODAL_PERM_REJECT_RE = /^v1:modal:permreject:code([0-9A-F]{6})$/;
-
-      it("matches permreject modal customId", () => {
-        const customId = "v1:modal:permreject:codeFEDCBA";
-        const match = MODAL_PERM_REJECT_RE.exec(customId);
-        expect(match).not.toBeNull();
-        expect(match?.[1]).toBe("FEDCBA");
+    it("matches permreject customId and dispatches runPermRejectAction with trimmed reason", async () => {
+      const interaction = makeInteraction("v1:modal:permreject:codeFEDCBA", {
+        "v1:modal:permreject:reason": "  Permanent ban for repeated violations  ",
       });
+
+      await handlePermRejectModal(interaction);
+
+      expect(interaction.deferUpdate).toHaveBeenCalledTimes(1);
+      expect(resolveApplication).toHaveBeenCalledWith(interaction, "FEDCBA");
+      expect(runPermRejectAction).toHaveBeenCalledWith(
+        interaction,
+        APP,
+        "Permanent ban for repeated violations"
+      );
     });
 
-    describe("reason extraction", () => {
-      it("extracts reason from correct field", () => {
-        const fieldId = "v1:modal:permreject:reason";
-        expect(fieldId).toBe("v1:modal:permreject:reason");
+    it("reads the reason from the v1:modal:permreject:reason field (string, not null)", async () => {
+      const interaction = makeInteraction("v1:modal:permreject:codeFEDCBA", {
+        "v1:modal:permreject:reason": "reason text",
       });
 
-      it("trims and truncates reason", () => {
-        const reasonRaw = "  Permanent ban for repeated violations  ";
-        const reason = reasonRaw.trim().slice(0, 500);
-        expect(reason).toBe("Permanent ban for repeated violations");
-      });
+      await handlePermRejectModal(interaction);
+
+      expect(interaction.fields.getTextInputValue).toHaveBeenCalledWith("v1:modal:permreject:reason");
+      expect(runPermRejectAction).toHaveBeenCalledWith(interaction, APP, "reason text");
+    });
+
+    it("early-returns on a non-matching customId", async () => {
+      const interaction = makeInteraction("v1:modal:kick:codeFEDCBA");
+
+      await handlePermRejectModal(interaction);
+
+      expect(resolveApplication).not.toHaveBeenCalled();
+      expect(runPermRejectAction).not.toHaveBeenCalled();
     });
   });
 
   describe("handleKickModal", () => {
-    describe("pattern matching", () => {
-      const MODAL_KICK_RE = /^v1:modal:kick:code([0-9A-F]{6})$/;
-
-      it("matches kick modal customId", () => {
-        const customId = "v1:modal:kick:code000FFF";
-        const match = MODAL_KICK_RE.exec(customId);
-        expect(match).not.toBeNull();
-        expect(match?.[1]).toBe("000FFF");
+    it("matches kick customId and dispatches runKickAction with the reason", async () => {
+      const interaction = makeInteraction("v1:modal:kick:code000FFF", {
+        "v1:modal:kick:reason": "Spamming in unverified",
       });
+
+      await handleKickModal(interaction);
+
+      expect(interaction.deferUpdate).toHaveBeenCalledTimes(1);
+      expect(resolveApplication).toHaveBeenCalledWith(interaction, "000FFF");
+      expect(runKickAction).toHaveBeenCalledWith(interaction, APP, "Spamming in unverified");
     });
 
-    describe("reason extraction", () => {
-      it("extracts reason from correct field", () => {
-        const fieldId = "v1:modal:kick:reason";
-        expect(fieldId).toBe("v1:modal:kick:reason");
+    it("dispatches null reason when the kick field is empty (optional)", async () => {
+      const interaction = makeInteraction("v1:modal:kick:code000FFF", {
+        "v1:modal:kick:reason": "",
       });
 
-      it("returns null for empty reason (optional)", () => {
-        const reasonRaw = "";
-        const reason = reasonRaw.trim().slice(0, 500) || null;
-        expect(reason).toBeNull();
+      await handleKickModal(interaction);
+
+      expect(runKickAction).toHaveBeenCalledWith(interaction, APP, null);
+    });
+
+    it("reads the reason from the v1:modal:kick:reason field", async () => {
+      const interaction = makeInteraction("v1:modal:kick:code000FFF", {
+        "v1:modal:kick:reason": "some reason",
       });
 
-      it("allows non-empty reason", () => {
-        const reasonRaw = "Spamming in unverified";
-        const reason = reasonRaw.trim().slice(0, 500) || null;
-        expect(reason).toBe("Spamming in unverified");
-      });
+      await handleKickModal(interaction);
+
+      expect(interaction.fields.getTextInputValue).toHaveBeenCalledWith("v1:modal:kick:reason");
+    });
+
+    it("early-returns on a non-matching customId", async () => {
+      const interaction = makeInteraction("v1:modal:unclaim:code000FFF");
+
+      await handleKickModal(interaction);
+
+      expect(resolveApplication).not.toHaveBeenCalled();
+      expect(runKickAction).not.toHaveBeenCalled();
     });
   });
 
   describe("handleUnclaimModal", () => {
-    describe("pattern matching", () => {
-      const MODAL_UNCLAIM_RE = /^v1:modal:unclaim:code([0-9A-F]{6})$/;
-
-      it("matches unclaim modal customId", () => {
-        const customId = "v1:modal:unclaim:codeAAAAAA";
-        const match = MODAL_UNCLAIM_RE.exec(customId);
-        expect(match).not.toBeNull();
-        expect(match?.[1]).toBe("AAAAAA");
+    it("matches unclaim customId and dispatches handleUnclaimAction when confirm is UNCLAIM", async () => {
+      const interaction = makeInteraction("v1:modal:unclaim:codeAAAAAA", {
+        "v1:modal:unclaim:confirm": "unclaim",
       });
+
+      await handleUnclaimModal(interaction);
+
+      expect(interaction.deferUpdate).toHaveBeenCalledTimes(1);
+      expect(resolveApplication).toHaveBeenCalledWith(interaction, "AAAAAA");
+      // Confirm text is uppercased before comparison, so lowercase "unclaim" passes.
+      expect(handleUnclaimAction).toHaveBeenCalledWith(interaction, APP);
+      expect(ephemeralFollowUp).not.toHaveBeenCalled();
     });
 
-    describe("confirmation validation", () => {
-      it("extracts confirm from correct field", () => {
-        const fieldId = "v1:modal:unclaim:confirm";
-        expect(fieldId).toBe("v1:modal:unclaim:confirm");
+    it("cancels (no unclaim) when confirmation text does not match UNCLAIM", async () => {
+      const interaction = makeInteraction("v1:modal:unclaim:codeAAAAAA", {
+        "v1:modal:unclaim:confirm": "CANCEL",
       });
 
-      it("converts confirm text to uppercase", () => {
-        const confirmRaw = "unclaim";
-        const confirm = confirmRaw.trim().toUpperCase();
-        expect(confirm).toBe("UNCLAIM");
+      await handleUnclaimModal(interaction);
+
+      expect(handleUnclaimAction).not.toHaveBeenCalled();
+      expect(ephemeralFollowUp).toHaveBeenCalledWith(
+        interaction,
+        "Unclaim cancelled. You must type `UNCLAIM` to confirm."
+      );
+    });
+
+    it("cancels on empty confirmation", async () => {
+      const interaction = makeInteraction("v1:modal:unclaim:codeAAAAAA", {
+        "v1:modal:unclaim:confirm": "",
       });
 
-      it("accepts exact UNCLAIM text", () => {
-        const confirm = "UNCLAIM";
-        const isValid = confirm === "UNCLAIM";
-        expect(isValid).toBe(true);
+      await handleUnclaimModal(interaction);
+
+      expect(handleUnclaimAction).not.toHaveBeenCalled();
+      expect(ephemeralFollowUp).toHaveBeenCalled();
+    });
+
+    it("reads confirmation from the v1:modal:unclaim:confirm field", async () => {
+      const interaction = makeInteraction("v1:modal:unclaim:codeAAAAAA", {
+        "v1:modal:unclaim:confirm": "UNCLAIM",
       });
 
-      it("rejects incorrect confirmation", () => {
-        const confirm = "CANCEL";
-        const isValid = confirm === "UNCLAIM";
-        expect(isValid).toBe(false);
-      });
+      await handleUnclaimModal(interaction);
 
-      it("rejects empty confirmation", () => {
-        const confirm = "";
-        const isValid = confirm === "UNCLAIM";
-        expect(isValid).toBe(false);
-      });
+      expect(interaction.fields.getTextInputValue).toHaveBeenCalledWith("v1:modal:unclaim:confirm");
+    });
 
-      it("provides cancellation message on invalid confirm", () => {
-        const msg = "Unclaim cancelled. You must type `UNCLAIM` to confirm.";
-        expect(msg).toContain("UNCLAIM");
-        expect(msg).toContain("cancelled");
+    it("early-returns on a non-matching customId", async () => {
+      const interaction = makeInteraction("v1:modal:reject:codeAAAAAA");
+
+      await handleUnclaimModal(interaction);
+
+      expect(resolveApplication).not.toHaveBeenCalled();
+      expect(handleUnclaimAction).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("deferUpdate gating", () => {
+    it("does not call deferUpdate when the interaction is already replied/deferred", async () => {
+      const interaction = makeInteraction("v1:modal:reject:codeABCDEF", {
+        "v1:modal:reject:reason": "x",
       });
+      (interaction as unknown as { replied: boolean }).replied = true;
+
+      await handleRejectModal(interaction);
+
+      expect(interaction.deferUpdate).not.toHaveBeenCalled();
+      // Still dispatches the action even though it did not re-acknowledge.
+      expect(runRejectAction).toHaveBeenCalled();
     });
   });
 });
 
-describe("modal customId formats", () => {
-  describe("reject modal", () => {
-    it("uses v1:modal:reject:code<CODE> format", () => {
-      const code = "ABCDEF";
-      const customId = `v1:modal:reject:code${code}`;
-      expect(customId).toBe("v1:modal:reject:codeABCDEF");
-    });
+describe("modal customId patterns (canonical source-of-truth regexes)", () => {
+  it("MODAL_REJECT_RE captures the 6-char hex code", () => {
+    const match = MODAL_REJECT_RE.exec("v1:modal:reject:codeABCDEF");
+    expect(match?.[1]).toBe("ABCDEF");
+    expect(MODAL_REJECT_RE.exec("v1:modal:accept:codeABCDEF")).toBeNull();
   });
 
-  describe("accept modal", () => {
-    it("uses v1:modal:accept:code<CODE> format", () => {
-      const code = "123456";
-      const customId = `v1:modal:accept:code${code}`;
-      expect(customId).toBe("v1:modal:accept:code123456");
-    });
+  it("MODAL_ACCEPT_RE captures the 6-char hex code", () => {
+    const match = MODAL_ACCEPT_RE.exec("v1:modal:accept:code123456");
+    expect(match?.[1]).toBe("123456");
   });
 
-  describe("permreject modal", () => {
-    it("uses v1:modal:permreject:code<CODE> format", () => {
-      const code = "FEDCBA";
-      const customId = `v1:modal:permreject:code${code}`;
-      expect(customId).toBe("v1:modal:permreject:codeFEDCBA");
-    });
+  it("MODAL_PERM_REJECT_RE captures the 6-char hex code", () => {
+    const match = MODAL_PERM_REJECT_RE.exec("v1:modal:permreject:codeFEDCBA");
+    expect(match?.[1]).toBe("FEDCBA");
   });
 
-  describe("kick modal", () => {
-    it("uses v1:modal:kick:code<CODE> format", () => {
-      const code = "000FFF";
-      const customId = `v1:modal:kick:code${code}`;
-      expect(customId).toBe("v1:modal:kick:code000FFF");
-    });
+  it("MODAL_KICK_RE captures the 6-char hex code", () => {
+    const match = MODAL_KICK_RE.exec("v1:modal:kick:code000FFF");
+    expect(match?.[1]).toBe("000FFF");
   });
 
-  describe("unclaim modal", () => {
-    it("uses v1:modal:unclaim:code<CODE> format", () => {
-      const code = "AAAAAA";
-      const customId = `v1:modal:unclaim:code${code}`;
-      expect(customId).toBe("v1:modal:unclaim:codeAAAAAA");
-    });
-  });
-});
-
-describe("modal field IDs", () => {
-  it("reject reason field: v1:modal:reject:reason", () => {
-    const fieldId = "v1:modal:reject:reason";
-    expect(fieldId).toMatch(/^v1:modal:reject:reason$/);
+  it("MODAL_UNCLAIM_RE captures the 6-char hex code", () => {
+    const match = MODAL_UNCLAIM_RE.exec("v1:modal:unclaim:codeAAAAAA");
+    expect(match?.[1]).toBe("AAAAAA");
   });
 
-  it("accept reason field: v1:modal:accept:reason", () => {
-    const fieldId = "v1:modal:accept:reason";
-    expect(fieldId).toMatch(/^v1:modal:accept:reason$/);
-  });
-
-  it("permreject reason field: v1:modal:permreject:reason", () => {
-    const fieldId = "v1:modal:permreject:reason";
-    expect(fieldId).toMatch(/^v1:modal:permreject:reason$/);
-  });
-
-  it("kick reason field: v1:modal:kick:reason", () => {
-    const fieldId = "v1:modal:kick:reason";
-    expect(fieldId).toMatch(/^v1:modal:kick:reason$/);
-  });
-
-  it("unclaim confirm field: v1:modal:unclaim:confirm", () => {
-    const fieldId = "v1:modal:unclaim:confirm";
-    expect(fieldId).toMatch(/^v1:modal:unclaim:confirm$/);
-  });
-});
-
-describe("error trace format", () => {
-  it("uses last 8 chars of interaction ID", () => {
-    const interactionId = "1234567890ABCDEF1234567890";
-    const traceId = interactionId.slice(-8).toUpperCase();
-    expect(traceId).toHaveLength(8);
-  });
-
-  it("converts to uppercase", () => {
-    const interactionId = "1234567890abcdef";
-    const traceId = interactionId.slice(-8).toUpperCase();
-    expect(traceId).toBe("90ABCDEF");
-  });
-});
-
-describe("staff validation", () => {
-  it("calls requireInteractionStaff before processing", () => {
-    const checkPerformed = true;
-    expect(checkPerformed).toBe(true);
-  });
-
-  it("returns early if staff check fails", () => {
-    const continueProcessing = false;
-    expect(continueProcessing).toBe(false);
-  });
-});
-
-describe("application resolution", () => {
-  it("calls resolveApplication with code", () => {
-    const code = "ABCDEF";
-    expect(code).toHaveLength(6);
-  });
-
-  it("returns early if application not found", () => {
-    const app = null;
-    const shouldContinue = app !== null;
-    expect(shouldContinue).toBe(false);
-  });
-});
-
-describe("action dispatching", () => {
-  describe("reject modal", () => {
-    it("calls runRejectAction with app and reason", () => {
-      const action = "runRejectAction";
-      expect(action).toBe("runRejectAction");
-    });
-  });
-
-  describe("accept modal", () => {
-    it("calls runApproveAction with app and reason", () => {
-      const action = "runApproveAction";
-      expect(action).toBe("runApproveAction");
-    });
-  });
-
-  describe("permreject modal", () => {
-    it("calls runPermRejectAction with app and reason", () => {
-      const action = "runPermRejectAction";
-      expect(action).toBe("runPermRejectAction");
-    });
-  });
-
-  describe("kick modal", () => {
-    it("calls runKickAction with app and reason", () => {
-      const action = "runKickAction";
-      expect(action).toBe("runKickAction");
-    });
-  });
-
-  describe("unclaim modal", () => {
-    it("calls handleUnclaimAction with app", () => {
-      const action = "handleUnclaimAction";
-      expect(action).toBe("handleUnclaimAction");
-    });
+  it("rejects lowercase hex codes", () => {
+    expect(MODAL_REJECT_RE.exec("v1:modal:reject:codeabcdef")).toBeNull();
   });
 });

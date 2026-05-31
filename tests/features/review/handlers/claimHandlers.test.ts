@@ -1,18 +1,53 @@
 /**
  * Pawtropolis Tech — tests/features/review/handlers/claimHandlers.test.ts
  * WHAT: Unit tests for review claim/unclaim handlers.
- * WHY: Verify atomic claim operations and error handling.
+ * WHY: Verify atomic claim operations, ClaimError mapping, and side effects.
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { mockGet, mockAll, mockRun, mockPrepare } = vi.hoisted(() => ({
-  mockGet: vi.fn(),
-  mockAll: vi.fn(),
-  mockRun: vi.fn(),
-  mockPrepare: vi.fn(),
-}));
+// Everything referenced inside a `vi.mock` factory must live in a hoisted block,
+// because vi.mock calls are lifted above all other top-level code. ClaimError is a
+// REAL class here so the handler's `instanceof` check matches the same constructor
+// the dynamic import resolves to.
+const {
+  mockGet,
+  mockAll,
+  mockRun,
+  mockPrepare,
+  mockClaimTx,
+  mockUnclaimTx,
+  ClaimError,
+  mockEphemeralFollowUp,
+  mockLogActionPretty,
+  mockEnsureReviewMessage,
+  mockCacheUser,
+  mockNotifyDashboard,
+} = vi.hoisted(() => {
+  class ClaimError extends Error {
+    code: string;
+    constructor(message: string, code: string) {
+      super(message);
+      this.name = "ClaimError";
+      this.code = code;
+    }
+  }
+  return {
+    mockGet: vi.fn(),
+    mockAll: vi.fn(),
+    mockRun: vi.fn(),
+    mockPrepare: vi.fn(),
+    mockClaimTx: vi.fn(),
+    mockUnclaimTx: vi.fn(),
+    ClaimError,
+    mockEphemeralFollowUp: vi.fn().mockResolvedValue(undefined),
+    mockLogActionPretty: vi.fn().mockResolvedValue(undefined),
+    mockEnsureReviewMessage: vi.fn().mockResolvedValue({ messageId: "msg-123" }),
+    mockCacheUser: vi.fn(),
+    mockNotifyDashboard: vi.fn(),
+  };
+});
 
 mockPrepare.mockReturnValue({
   get: mockGet,
@@ -40,7 +75,7 @@ vi.mock("../../../../src/lib/sentry.js", () => ({
 }));
 
 vi.mock("../../../../src/lib/cmdWrap.js", () => ({
-  replyOrEdit: vi.fn().mockResolvedValue(undefined),
+  ephemeralFollowUp: mockEphemeralFollowUp,
 }));
 
 vi.mock("../../../../src/lib/ids.js", () => ({
@@ -48,312 +83,354 @@ vi.mock("../../../../src/lib/ids.js", () => ({
 }));
 
 vi.mock("../../../../src/logging/pretty.js", () => ({
-  logActionPretty: vi.fn().mockResolvedValue(undefined),
+  logActionPretty: mockLogActionPretty,
 }));
 
 vi.mock("../../../../src/features/review.js", () => ({
-  ensureReviewMessage: vi.fn().mockResolvedValue({ messageId: "msg-123" }),
+  ensureReviewMessage: mockEnsureReviewMessage,
 }));
 
-describe("features/review/handlers/claimHandlers", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockPrepare.mockReturnValue({
-      get: mockGet,
-      all: mockAll,
-      run: mockRun,
-    });
-  });
+vi.mock("../../../../src/lib/userCache.js", () => ({
+  cacheUser: mockCacheUser,
+}));
 
+vi.mock("../../../../src/web/notifyDashboard.js", () => ({
+  notifyDashboard: mockNotifyDashboard,
+}));
+
+// The handlers dynamically import this module; provide a real ClaimError class plus
+// controllable claimTx/unclaimTx so we exercise the actual error-mapping branches.
+vi.mock("../../../../src/features/reviewActions.js", () => ({
+  claimTx: mockClaimTx,
+  unclaimTx: mockUnclaimTx,
+  ClaimError,
+}));
+
+import {
+  handleClaimToggle,
+  handleUnclaimAction,
+} from "../../../../src/features/review/handlers/claimHandlers.js";
+
+type AppRow = {
+  id: string;
+  guild_id: string;
+  user_id: string;
+  status: string;
+};
+
+const APP: AppRow = {
+  id: "application-7-abc123",
+  guild_id: "guild-1",
+  user_id: "applicant-42",
+  status: "submitted",
+};
+
+function makeInteraction(overrides: Record<string, unknown> = {}) {
+  return {
+    user: { id: "moderator-99" },
+    member: { displayAvatarURL: () => "https://cdn/avatar.png" },
+    guild: { id: "guild-1", name: "Pawtropolis" },
+    client: {},
+    followUp: vi.fn().mockResolvedValue(undefined),
+    ...overrides,
+  } as never;
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  mockPrepare.mockReturnValue({
+    get: mockGet,
+    all: mockAll,
+    run: mockRun,
+  });
+  // Default: success transactions, user not permanently rejected.
+  mockClaimTx.mockReset();
+  mockUnclaimTx.mockReset();
+  mockGet.mockReturnValue(undefined);
+  mockEphemeralFollowUp.mockResolvedValue(undefined);
+  mockLogActionPretty.mockResolvedValue(undefined);
+  mockEnsureReviewMessage.mockResolvedValue({ messageId: "msg-123" });
+});
+
+describe("features/review/handlers/claimHandlers", () => {
   describe("handleClaimToggle", () => {
     describe("ClaimError handling", () => {
-      describe("ALREADY_CLAIMED error", () => {
-        it("returns user-friendly message", () => {
-          const errorCode = "ALREADY_CLAIMED";
-          const msg = errorCode === "ALREADY_CLAIMED"
-            ? "This application is already claimed by another moderator."
-            : "Failed to claim application";
-          expect(msg).toContain("already claimed");
+      it("maps ALREADY_CLAIMED to a user-friendly message and skips side effects", async () => {
+        mockClaimTx.mockImplementation(() => {
+          throw new ClaimError("Application already claimed by <@other>", "ALREADY_CLAIMED");
         });
+
+        await handleClaimToggle(makeInteraction(), APP as never);
+
+        expect(mockEphemeralFollowUp).toHaveBeenCalledTimes(1);
+        expect(mockEphemeralFollowUp.mock.calls[0][1]).toBe(
+          "This application is already claimed by another moderator."
+        );
+        // Error path must not run success side effects.
+        expect(mockLogActionPretty).not.toHaveBeenCalled();
+        expect(mockNotifyDashboard).not.toHaveBeenCalled();
+        // Permanent-rejection re-check should not run when the claim itself failed.
+        expect(mockGet).not.toHaveBeenCalled();
       });
 
-      describe("INVALID_STATUS error", () => {
-        it("extracts status from error message", () => {
-          const errorMessage = "Cannot claim: status is approved";
-          const status = errorMessage.split(" ")[2];
-          expect(status).toBe("status");
+      it("maps INVALID_STATUS terminal state, embeds the status word, and refreshes the card", async () => {
+        mockClaimTx.mockImplementation(() => {
+          throw new ClaimError("Application already approved", "INVALID_STATUS");
         });
 
-        it("refreshes card to show current state", () => {
-          const shouldRefresh = true;
-          expect(shouldRefresh).toBe(true);
-        });
+        await handleClaimToggle(makeInteraction(), APP as never);
+
+        expect(mockEphemeralFollowUp).toHaveBeenCalledTimes(1);
+        expect(mockEphemeralFollowUp.mock.calls[0][1]).toBe(
+          "Cannot claim: application is already **approved**."
+        );
+        // Terminal-state branch refreshes the card to reflect current state.
+        expect(mockEnsureReviewMessage).toHaveBeenCalledWith(expect.anything(), APP.id);
+        expect(mockLogActionPretty).not.toHaveBeenCalled();
+        expect(mockNotifyDashboard).not.toHaveBeenCalled();
       });
 
-      describe("APP_NOT_FOUND error", () => {
-        it("returns application not found message", () => {
-          const errorCode = "APP_NOT_FOUND";
-          const msg = errorCode === "APP_NOT_FOUND" ? "Application not found." : "Unknown error";
-          expect(msg).toBe("Application not found.");
+      it("maps INVALID_STATUS panic mode without parsing a status word or refreshing", async () => {
+        mockClaimTx.mockImplementation(() => {
+          throw new ClaimError("Panic mode is active. All review operations are suspended.", "INVALID_STATUS");
         });
+
+        await handleClaimToggle(makeInteraction(), APP as never);
+
+        expect(mockEphemeralFollowUp).toHaveBeenCalledTimes(1);
+        expect(mockEphemeralFollowUp.mock.calls[0][1]).toBe(
+          "Panic mode is active; review operations are suspended."
+        );
+        // Panic branch must NOT refresh the card.
+        expect(mockEnsureReviewMessage).not.toHaveBeenCalled();
       });
 
-      describe("unexpected errors", () => {
-        it("returns generic error message", () => {
-          const msg = "An unexpected error occurred. Please try again.";
-          expect(msg).toContain("unexpected error");
+      it("maps APP_NOT_FOUND to application not found", async () => {
+        mockClaimTx.mockImplementation(() => {
+          throw new ClaimError("Application not found", "APP_NOT_FOUND");
         });
+
+        await handleClaimToggle(makeInteraction(), APP as never);
+
+        expect(mockEphemeralFollowUp.mock.calls[0][1]).toBe("Application not found.");
+        expect(mockEnsureReviewMessage).not.toHaveBeenCalled();
+      });
+
+      it("uses the generic fallback for an unknown ClaimError code", async () => {
+        mockClaimTx.mockImplementation(() => {
+          throw new ClaimError("weird", "SOMETHING_ELSE");
+        });
+
+        await handleClaimToggle(makeInteraction(), APP as never);
+
+        expect(mockEphemeralFollowUp.mock.calls[0][1]).toBe("Failed to claim application");
+      });
+
+      it("returns a generic message for unexpected (non-ClaimError) errors", async () => {
+        mockClaimTx.mockImplementation(() => {
+          throw new Error("boom: db offline");
+        });
+
+        await handleClaimToggle(makeInteraction(), APP as never);
+
+        expect(mockEphemeralFollowUp.mock.calls[0][1]).toBe(
+          "An unexpected error occurred. Please try again."
+        );
+        expect(mockNotifyDashboard).not.toHaveBeenCalled();
       });
     });
 
     describe("permanent rejection check", () => {
-      it("queries for permanently_rejected flag", () => {
-        const query = `SELECT permanently_rejected FROM application WHERE guild_id = ? AND user_id = ? AND permanently_rejected = 1`;
-        expect(query).toContain("permanently_rejected = 1");
+      it("queries the application table for the permanently_rejected flag", async () => {
+        await handleClaimToggle(makeInteraction(), APP as never);
+
+        expect(mockPrepare).toHaveBeenCalledWith(
+          expect.stringContaining("permanently_rejected = 1")
+        );
+        expect(mockGet).toHaveBeenCalledWith(APP.guild_id, APP.user_id);
       });
 
-      it("blocks claim for permanently rejected users", () => {
-        const permRejectCheck = { permanently_rejected: 1 };
-        expect(permRejectCheck.permanently_rejected).toBe(1);
+      it("blocks the claim and notifies the moderator when the user is permanently rejected", async () => {
+        mockGet.mockReturnValue({ permanently_rejected: 1 });
+
+        await handleClaimToggle(makeInteraction(), APP as never);
+
+        expect(mockEphemeralFollowUp).toHaveBeenCalledTimes(1);
+        expect(mockEphemeralFollowUp.mock.calls[0][1]).toContain("permanently rejected");
+        // Blocked: must not log the claim, refresh, or notify the dashboard.
+        expect(mockLogActionPretty).not.toHaveBeenCalled();
+        expect(mockEnsureReviewMessage).not.toHaveBeenCalled();
+        expect(mockNotifyDashboard).not.toHaveBeenCalled();
       });
 
-      it("allows claim for non-rejected users", () => {
-        const permRejectCheck = undefined;
-        expect(permRejectCheck).toBeUndefined();
+      it("allows the claim when the user is not permanently rejected", async () => {
+        mockGet.mockReturnValue(undefined);
+
+        await handleClaimToggle(makeInteraction(), APP as never);
+
+        expect(mockNotifyDashboard).toHaveBeenCalledWith("review:claimed", {
+          appId: APP.id,
+          reviewerId: "moderator-99",
+        });
       });
     });
 
     describe("success flow", () => {
-      it("logs claim action via logActionPretty", () => {
-        const actionData = {
-          appId: "app-123",
-          appCode: "ABCDEF",
-          actorId: "user123",
-          subjectId: "user456",
+      it("logs the claim action via logActionPretty with the expected payload", async () => {
+        await handleClaimToggle(makeInteraction(), APP as never);
+
+        expect(mockLogActionPretty).toHaveBeenCalledTimes(1);
+        const [, payload] = mockLogActionPretty.mock.calls[0];
+        expect(payload).toMatchObject({
+          appId: APP.id,
+          actorId: "moderator-99",
+          subjectId: APP.user_id,
           action: "claim",
-        };
-        expect(actionData.action).toBe("claim");
+        });
       });
 
-      it("refreshes review card after claim", () => {
-        const shouldRefresh = true;
-        expect(shouldRefresh).toBe(true);
+      it("refreshes the review card after a successful claim", async () => {
+        await handleClaimToggle(makeInteraction(), APP as never);
+
+        expect(mockEnsureReviewMessage).toHaveBeenCalledWith(expect.anything(), APP.id);
       });
 
-      it("replies with claim confirmation", () => {
-        const userId = "user123";
-        const content = `<@${userId}> has claimed this application.`;
-        expect(content).toContain("has claimed this application");
+      it("notifies the dashboard and confirms privately to the clicking moderator", async () => {
+        await handleClaimToggle(makeInteraction(), APP as never);
+
+        expect(mockNotifyDashboard).toHaveBeenCalledWith("review:claimed", {
+          appId: APP.id,
+          reviewerId: "moderator-99",
+        });
+        expect(mockEphemeralFollowUp).toHaveBeenLastCalledWith(
+          expect.anything(),
+          "You have claimed this application."
+        );
+      });
+
+      it("caches the moderator identity for dashboard display", async () => {
+        await handleClaimToggle(makeInteraction(), APP as never);
+
+        expect(mockCacheUser).toHaveBeenCalledTimes(1);
+      });
+
+      it("still confirms even when card refresh throws", async () => {
+        mockEnsureReviewMessage.mockRejectedValue(new Error("discord 500"));
+
+        await handleClaimToggle(makeInteraction(), APP as never);
+
+        // Refresh failure is swallowed; the mod still gets confirmation and the
+        // dashboard is still notified.
+        expect(mockNotifyDashboard).toHaveBeenCalledTimes(1);
+        expect(mockEphemeralFollowUp).toHaveBeenLastCalledWith(
+          expect.anything(),
+          "You have claimed this application."
+        );
+      });
+    });
+
+    describe("deferUpdate behavior", () => {
+      it("does not call deferUpdate (parent already deferred)", async () => {
+        const deferUpdate = vi.fn();
+        await handleClaimToggle(makeInteraction({ deferUpdate }), APP as never);
+
+        expect(deferUpdate).not.toHaveBeenCalled();
       });
     });
   });
 
   describe("handleUnclaimAction", () => {
     describe("ClaimError handling", () => {
-      describe("NOT_CLAIMED error", () => {
-        it("returns not claimed message", () => {
-          const errorCode = "NOT_CLAIMED";
-          const msg = errorCode === "NOT_CLAIMED"
-            ? "This application is not currently claimed."
-            : "Failed to unclaim";
-          expect(msg).toContain("not currently claimed");
+      it("maps NOT_CLAIMED to a not-currently-claimed message", async () => {
+        mockUnclaimTx.mockImplementation(() => {
+          throw new ClaimError("not claimed", "NOT_CLAIMED");
         });
+
+        await handleUnclaimAction(makeInteraction(), APP as never);
+
+        expect(mockEphemeralFollowUp.mock.calls[0][1]).toBe(
+          "This application is not currently claimed."
+        );
+        expect(mockNotifyDashboard).not.toHaveBeenCalled();
       });
 
-      describe("NOT_OWNER error", () => {
-        it("returns not owner message", () => {
-          const errorCode = "NOT_OWNER";
-          const msg = errorCode === "NOT_OWNER"
-            ? "You did not claim this application. Only the claim owner can unclaim it."
-            : "Failed to unclaim";
-          expect(msg).toContain("Only the claim owner");
+      it("maps NOT_OWNER to an ownership message", async () => {
+        mockUnclaimTx.mockImplementation(() => {
+          throw new ClaimError("not owner", "NOT_OWNER");
         });
+
+        await handleUnclaimAction(makeInteraction(), APP as never);
+
+        expect(mockEphemeralFollowUp.mock.calls[0][1]).toBe(
+          "You did not claim this application. Only the claim owner can unclaim it."
+        );
       });
 
-      describe("APP_NOT_FOUND error", () => {
-        it("returns application not found message", () => {
-          const errorCode = "APP_NOT_FOUND";
-          const msg = errorCode === "APP_NOT_FOUND" ? "Application not found." : "Unknown error";
-          expect(msg).toBe("Application not found.");
+      it("maps APP_NOT_FOUND to application not found", async () => {
+        mockUnclaimTx.mockImplementation(() => {
+          throw new ClaimError("nope", "APP_NOT_FOUND");
         });
+
+        await handleUnclaimAction(makeInteraction(), APP as never);
+
+        expect(mockEphemeralFollowUp.mock.calls[0][1]).toBe("Application not found.");
+      });
+
+      it("uses the generic fallback for an unknown unclaim ClaimError code", async () => {
+        mockUnclaimTx.mockImplementation(() => {
+          throw new ClaimError("weird", "SOMETHING_ELSE");
+        });
+
+        await handleUnclaimAction(makeInteraction(), APP as never);
+
+        expect(mockEphemeralFollowUp.mock.calls[0][1]).toBe("Failed to unclaim application");
+      });
+
+      it("returns a generic message for unexpected (non-ClaimError) errors", async () => {
+        mockUnclaimTx.mockImplementation(() => {
+          throw new Error("boom");
+        });
+
+        await handleUnclaimAction(makeInteraction(), APP as never);
+
+        expect(mockEphemeralFollowUp.mock.calls[0][1]).toBe(
+          "An unexpected error occurred. Please try again."
+        );
       });
     });
 
     describe("success flow", () => {
-      it("logs unclaim action via logActionPretty", () => {
-        const actionData = {
-          appId: "app-123",
-          appCode: "ABCDEF",
-          actorId: "user123",
-          subjectId: "user456",
+      it("logs the unclaim action via logActionPretty with unclaim meta", async () => {
+        await handleUnclaimAction(makeInteraction(), APP as never);
+
+        expect(mockLogActionPretty).toHaveBeenCalledTimes(1);
+        const [, payload] = mockLogActionPretty.mock.calls[0];
+        expect(payload).toMatchObject({
+          appId: APP.id,
           action: "unclaim",
           meta: { type: "unclaim" },
-        };
-        expect(actionData.action).toBe("unclaim");
-        expect(actionData.meta.type).toBe("unclaim");
+        });
       });
 
-      it("refreshes review card after unclaim", () => {
-        const shouldRefresh = true;
-        expect(shouldRefresh).toBe(true);
+      it("refreshes the review card after a successful unclaim", async () => {
+        await handleUnclaimAction(makeInteraction(), APP as never);
+
+        expect(mockEnsureReviewMessage).toHaveBeenCalledWith(expect.anything(), APP.id);
       });
 
-      it("sends ephemeral confirmation message", () => {
-        const code = "ABCDEF";
-        const content = `Application \`${code}\` unclaimed successfully.`;
-        expect(content).toContain("unclaimed successfully");
+      it("notifies the dashboard and sends an ephemeral confirmation with the short code", async () => {
+        await handleUnclaimAction(makeInteraction(), APP as never);
+
+        expect(mockNotifyDashboard).toHaveBeenCalledWith("review:unclaimed", {
+          appId: APP.id,
+          reviewerId: "moderator-99",
+        });
+        // shortCode mock uppercases the last 6 chars of the id.
+        expect(mockEphemeralFollowUp).toHaveBeenLastCalledWith(
+          expect.anything(),
+          "Application `ABC123` unclaimed successfully."
+        );
       });
     });
-  });
-});
-
-describe("claim error codes", () => {
-  const errorCodes = ["ALREADY_CLAIMED", "INVALID_STATUS", "APP_NOT_FOUND", "NOT_CLAIMED", "NOT_OWNER"];
-
-  it("includes ALREADY_CLAIMED", () => {
-    expect(errorCodes).toContain("ALREADY_CLAIMED");
-  });
-
-  it("includes INVALID_STATUS", () => {
-    expect(errorCodes).toContain("INVALID_STATUS");
-  });
-
-  it("includes APP_NOT_FOUND", () => {
-    expect(errorCodes).toContain("APP_NOT_FOUND");
-  });
-
-  it("includes NOT_CLAIMED", () => {
-    expect(errorCodes).toContain("NOT_CLAIMED");
-  });
-
-  it("includes NOT_OWNER", () => {
-    expect(errorCodes).toContain("NOT_OWNER");
-  });
-});
-
-describe("claim atomicity", () => {
-  describe("claimTx", () => {
-    it("uses transaction for atomic claim", () => {
-      const operation = "claimTx";
-      expect(operation).toContain("Tx");
-    });
-
-    it("includes validation in transaction", () => {
-      const includesValidation = true;
-      expect(includesValidation).toBe(true);
-    });
-
-    it("inserts review_action inside transaction", () => {
-      const auditInTransaction = true;
-      expect(auditInTransaction).toBe(true);
-    });
-  });
-
-  describe("unclaimTx", () => {
-    it("uses transaction for atomic unclaim", () => {
-      const operation = "unclaimTx";
-      expect(operation).toContain("Tx");
-    });
-
-    it("validates ownership in transaction", () => {
-      const ownershipCheck = true;
-      expect(ownershipCheck).toBe(true);
-    });
-  });
-});
-
-describe("race condition prevention", () => {
-  it("atomic claimTx prevents simultaneous claims", () => {
-    const atomicOperation = "claimTx";
-    expect(atomicOperation).toBeDefined();
-  });
-
-  it("returns ALREADY_CLAIMED when race detected", () => {
-    const errorCode = "ALREADY_CLAIMED";
-    expect(errorCode).toBe("ALREADY_CLAIMED");
-  });
-});
-
-describe("claim state transitions", () => {
-  describe("valid transitions", () => {
-    it("pending -> claimed", () => {
-      const fromStatus = "pending";
-      const canClaim = fromStatus === "pending" || fromStatus === "submitted";
-      expect(canClaim).toBe(true);
-    });
-
-    it("submitted -> claimed", () => {
-      const fromStatus = "submitted";
-      const canClaim = fromStatus === "pending" || fromStatus === "submitted";
-      expect(canClaim).toBe(true);
-    });
-  });
-
-  describe("invalid transitions", () => {
-    it("approved -> claimed is blocked", () => {
-      const fromStatus = "approved";
-      const canClaim = fromStatus === "pending" || fromStatus === "submitted";
-      expect(canClaim).toBe(false);
-    });
-
-    it("rejected -> claimed is blocked", () => {
-      const fromStatus = "rejected";
-      const canClaim = fromStatus === "pending" || fromStatus === "submitted";
-      expect(canClaim).toBe(false);
-    });
-
-    it("kicked -> claimed is blocked", () => {
-      const fromStatus = "kicked";
-      const canClaim = fromStatus === "pending" || fromStatus === "submitted";
-      expect(canClaim).toBe(false);
-    });
-  });
-});
-
-describe("claim logging", () => {
-  describe("logActionPretty call", () => {
-    it("includes appId", () => {
-      const logData = { appId: "app-123" };
-      expect(logData.appId).toBeDefined();
-    });
-
-    it("includes appCode", () => {
-      const logData = { appCode: "ABCDEF" };
-      expect(logData.appCode).toBeDefined();
-    });
-
-    it("includes actorId (claimer)", () => {
-      const logData = { actorId: "user123" };
-      expect(logData.actorId).toBeDefined();
-    });
-
-    it("includes subjectId (applicant)", () => {
-      const logData = { subjectId: "user456" };
-      expect(logData.subjectId).toBeDefined();
-    });
-
-    it("includes action type", () => {
-      const logData = { action: "claim" };
-      expect(logData.action).toBeDefined();
-    });
-  });
-});
-
-describe("claim preservation", () => {
-  it("preserves claim record after resolution for display", () => {
-    const preserveClaimAfterResolution = true;
-    expect(preserveClaimAfterResolution).toBe(true);
-  });
-});
-
-describe("deferUpdate behavior", () => {
-  it("expects parent to have called deferUpdate", () => {
-    const expectsDeferFromParent = true;
-    expect(expectsDeferFromParent).toBe(true);
-  });
-
-  it("does not call deferUpdate again", () => {
-    const callsDeferAgain = false;
-    expect(callsDeferAgain).toBe(false);
   });
 });

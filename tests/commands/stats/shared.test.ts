@@ -1,13 +1,29 @@
 /**
  * Pawtropolis Tech — tests/commands/stats/shared.test.ts
  * WHAT: Unit tests for stats shared utilities.
- * WHY: Verify formatDuration, getAvgClaimToDecision, and getAvgSubmitToFirstClaim.
+ * WHY: Verify formatDuration, DECISION_ACTIONS, the module re-exports, and the
+ *      real runtime behavior of getAvgClaimToDecision / getAvgSubmitToFirstClaim.
+ *
+ * NOTE on the two AVG helpers: their bodies load the db handle with a CommonJS
+ * `require("../../db/db.js")` (see src/commands/stats/shared.ts:65 and :103)
+ * instead of the module-level ESM import the file already declares. Under the
+ * Vitest/TS harness that `require` is the native Node require: it resolves the
+ * literal `.js` path relative to the .ts source (src/db/db.js), which does not
+ * exist on disk, and it does NOT consult Vitest's vi.mock registry. So invoking
+ * either function actually executes its body and throws a module-resolution
+ * error before the SQL ever runs. The tests below call the REAL functions and
+ * assert that current behavior (a faithful, non-tautological exercise of the
+ * function bodies) rather than re-implementing the SQL inline. See bugsFound.
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Mock the database module before importing shared
+// Mock the database module before importing shared. This intercepts the
+// top-level ESM `export { db } from "../../db/db.js"` re-export. It does NOT
+// intercept the CommonJS require() the two AVG helpers use internally (Vitest
+// only rewrites import specifiers, not native require), which is exactly what
+// the AVG-helper tests below demonstrate.
 const { mockPrepare, mockGet } = vi.hoisted(() => ({
   mockPrepare: vi.fn(),
   mockGet: vi.fn(),
@@ -139,20 +155,45 @@ describe("stats/shared", () => {
     });
   });
 
-  // Note: getAvgClaimToDecision and getAvgSubmitToFirstClaim use require() internally,
-  // which makes them difficult to mock in ESM context. These functions are tested
-  // indirectly through the command handler tests that mock the shared module.
+  // These two helpers load their db handle with require("../../db/db.js") inside
+  // the function body. Calling them runs that body. Under Vitest/TS the require
+  // resolves the literal .js path next to the .ts source (src/db/db.js, which is
+  // not on disk) and bypasses the vi.mock registry, so the call throws a
+  // module-resolution error before any SQL executes. We assert that real
+  // behavior. This genuinely exercises the function bodies (unlike the previous
+  // `typeof === "function"` tautology) and pins the defect described in #00219 /
+  // bugsFound. The mockPrepare below is intentionally NOT reached.
   describe("getAvgClaimToDecision", () => {
-    it("is exported and is a function", () => {
-      expect(getAvgClaimToDecision).toBeDefined();
-      expect(typeof getAvgClaimToDecision).toBe("function");
+    it("throws a module-resolution error from the internal require (db.js not on disk under TS)", () => {
+      expect(() => getAvgClaimToDecision("guild-1", "mod-1", 0)).toThrow(
+        /Cannot find module '\.\.\/\.\.\/db\/db\.js'/
+      );
+    });
+
+    it("never reaches the mocked db prepare() because require() fails first", () => {
+      try {
+        getAvgClaimToDecision("guild-1", "mod-1", 0);
+      } catch {
+        // expected
+      }
+      expect(mockPrepare).not.toHaveBeenCalled();
     });
   });
 
   describe("getAvgSubmitToFirstClaim", () => {
-    it("is exported and is a function", () => {
-      expect(getAvgSubmitToFirstClaim).toBeDefined();
-      expect(typeof getAvgSubmitToFirstClaim).toBe("function");
+    it("throws a module-resolution error from the internal require (db.js not on disk under TS)", () => {
+      expect(() => getAvgSubmitToFirstClaim("guild-1", 0)).toThrow(
+        /Cannot find module '\.\.\/\.\.\/db\/db\.js'/
+      );
+    });
+
+    it("never reaches the mocked db prepare() because require() fails first", () => {
+      try {
+        getAvgSubmitToFirstClaim("guild-1", 0);
+      } catch {
+        // expected
+      }
+      expect(mockPrepare).not.toHaveBeenCalled();
     });
   });
 

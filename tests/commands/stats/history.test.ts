@@ -5,16 +5,21 @@
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createMockInteraction, createMockUser, createMockGuild, createMockMember } from "../../utils/discordMocks.js";
 import { createTestCommandContext } from "../../utils/contextFactory.js";
-import type { ChatInputCommandInteraction } from "discord.js";
 
-// Hoisted mocks
+// Hoisted mocks. The db layer is routed by SQL text (see mockPrepare below) so each
+// distinct query in the handler resolves to its own row-set. This avoids the prior
+// tautology where every .all() returned [] because the bound parameters (not the SQL)
+// were inspected. See finding #00216.
 const {
   mockPrepare,
-  mockGet,
-  mockAll,
+  mockGetTotal,
+  mockAllCounts,
+  mockAllResponse,
+  mockAllDaily,
+  mockAllExport,
   mockIsOwner,
   mockHasStaffPermissions,
   mockGetConfig,
@@ -27,8 +32,11 @@ const {
   mockMkdirSync,
 } = vi.hoisted(() => ({
   mockPrepare: vi.fn(),
-  mockGet: vi.fn(),
-  mockAll: vi.fn(),
+  mockGetTotal: vi.fn(),
+  mockAllCounts: vi.fn(),
+  mockAllResponse: vi.fn(),
+  mockAllDaily: vi.fn(),
+  mockAllExport: vi.fn(),
   mockIsOwner: vi.fn(),
   mockHasStaffPermissions: vi.fn(),
   mockGetConfig: vi.fn(),
@@ -95,6 +103,33 @@ vi.mock("node:crypto", () => ({
 
 import { handleHistory } from "../../../src/commands/stats/history.js";
 
+/**
+ * Routes a prepared SQL string to the correct row-source mock.
+ *
+ * The handler calls db.prepare(SQL) with five distinct query strings and then
+ * .get()/.all() with bound parameters. The bound parameters are identical across
+ * queries (moderator id, guild id, from timestamp), so routing MUST key off the
+ * SQL text, not the arguments. This is the core of finding #00216.
+ */
+function routePrepare(sql: string): { get: typeof mockGetTotal; all: ReturnType<typeof vi.fn> } {
+  const normalized = sql.replace(/\s+/g, " ");
+
+  if (normalized.includes("GROUP BY action")) {
+    return { get: mockGetTotal, all: mockAllCounts };
+  }
+  if (normalized.includes("response_ms")) {
+    return { get: mockGetTotal, all: mockAllResponse };
+  }
+  if (normalized.includes("GROUP BY day")) {
+    return { get: mockGetTotal, all: mockAllDaily };
+  }
+  if (normalized.includes("ORDER BY created_at_s DESC")) {
+    return { get: mockGetTotal, all: mockAllExport };
+  }
+  // COUNT(*) total / export-size check resolve via .get().
+  return { get: mockGetTotal, all: vi.fn(() => []) };
+}
+
 describe("stats/history", () => {
   const mockModeratorUser = createMockUser({ id: "mod-user-123", tag: "TestMod#0001" });
 
@@ -104,16 +139,18 @@ describe("stats/history", () => {
     mockHasStaffPermissions.mockReturnValue(true);
     mockGetConfig.mockReturnValue(null);
     mockIsGuildMember.mockReturnValue(true);
-    mockPrepare.mockReturnValue({ get: mockGet, all: mockAll });
-    mockGet.mockReturnValue({ total: 100 });
-    mockAll.mockImplementation((query) => {
-      if (typeof query === "string") return [];
-      return [
-        { action: "approve", cnt: 80 },
-        { action: "reject", cnt: 15 },
-        { action: "kick", cnt: 5 },
-      ];
-    });
+    mockPrepare.mockImplementation((sql: string) => routePrepare(sql));
+    mockGetTotal.mockReturnValue({ total: 100 });
+    // Per-action counts: this is the row-set the embed's Approvals/Rejections/Reject
+    // Rate fields are computed from. Routed by the "GROUP BY action" SQL.
+    mockAllCounts.mockReturnValue([
+      { action: "approve", cnt: 80 },
+      { action: "reject", cnt: 15 },
+      { action: "kick", cnt: 5 },
+    ]);
+    mockAllResponse.mockReturnValue([]);
+    mockAllDaily.mockReturnValue([]);
+    mockAllExport.mockReturnValue([]);
     mockComputePercentiles.mockReturnValue(new Map([[50, 30000], [95, 120000]]));
     mockDetectModeratorAnomalies.mockReturnValue({ isAnomaly: false, score: 0.5, reason: "" });
     mockLogActionPretty.mockResolvedValue(undefined);
@@ -253,7 +290,7 @@ describe("stats/history", () => {
 
       await handleHistory(ctx);
 
-      expect(mockGet).toHaveBeenCalled();
+      expect(interaction.options.getUser).toHaveBeenCalledWith("moderator", true);
     });
 
     it("uses default days (30) when not provided", async () => {
@@ -262,10 +299,16 @@ describe("stats/history", () => {
       });
       const ctx = createTestCommandContext(interaction);
 
+      const before = Math.floor(Date.now() / 1000) - 30 * 24 * 60 * 60;
       await handleHistory(ctx);
+      const after = Math.floor(Date.now() / 1000) - 30 * 24 * 60 * 60;
 
-      // Check that from timestamp is ~30 days ago
-      expect(mockGet).toHaveBeenCalled();
+      // The total-count query binds (moderatorId, guildId, fromTimestamp). With days
+      // defaulting to 30, fromTimestamp must land in the ~30-days-ago window.
+      const totalCall = mockGetTotal.mock.calls[0];
+      expect(totalCall[0]).toBe("mod-user-123");
+      expect(totalCall[2]).toBeGreaterThanOrEqual(before - 1);
+      expect(totalCall[2]).toBeLessThanOrEqual(after + 1);
     });
 
     it("uses provided days value", async () => {
@@ -274,9 +317,12 @@ describe("stats/history", () => {
       });
       const ctx = createTestCommandContext(interaction);
 
+      const expected = Math.floor(Date.now() / 1000) - 60 * 24 * 60 * 60;
       await handleHistory(ctx);
 
-      expect(mockGet).toHaveBeenCalled();
+      const totalCall = mockGetTotal.mock.calls[0];
+      expect(totalCall[2]).toBeGreaterThanOrEqual(expected - 2);
+      expect(totalCall[2]).toBeLessThanOrEqual(expected + 2);
     });
 
     it("uses default export (false) when not provided", async () => {
@@ -287,7 +333,10 @@ describe("stats/history", () => {
 
       await handleHistory(ctx);
 
-      expect(mockWriteFileSync).not.toHaveBeenCalled();
+      // No export means no export-only queries and no file attachment.
+      expect(mockGenerateModHistoryCsv).not.toHaveBeenCalled();
+      const lastCall = (interaction.editReply as any).mock.calls.at(-1)[0];
+      expect(lastCall.files).toBeUndefined();
     });
   });
 
@@ -330,7 +379,8 @@ describe("stats/history", () => {
       expect(call.embeds[0].data.title).toContain("TestMod#0001");
     });
 
-    it("embed contains total actions field", async () => {
+    it("embed total actions field reflects the count query", async () => {
+      mockGetTotal.mockReturnValue({ total: 1234 });
       const interaction = createMockInteraction({
         options: { getUser: { moderator: mockModeratorUser } },
       });
@@ -340,12 +390,12 @@ describe("stats/history", () => {
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       const fields = call.embeds[0].data.fields;
-      expect(fields).toContainEqual(
-        expect.objectContaining({ name: "Total Actions" })
-      );
+      const totalField = fields.find((f: any) => f.name === "Total Actions");
+      expect(totalField).toBeDefined();
+      expect(totalField.value).toBe("1,234");
     });
 
-    it("embed contains approvals and rejections", async () => {
+    it("embed approvals and rejections reflect the per-action counts", async () => {
       const interaction = createMockInteraction({
         options: { getUser: { moderator: mockModeratorUser } },
       });
@@ -355,11 +405,15 @@ describe("stats/history", () => {
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       const fields = call.embeds[0].data.fields;
-      expect(fields).toContainEqual(expect.objectContaining({ name: "Approvals" }));
-      expect(fields).toContainEqual(expect.objectContaining({ name: "Rejections" }));
+      const approvals = fields.find((f: any) => f.name === "Approvals");
+      const rejections = fields.find((f: any) => f.name === "Rejections");
+      // Default counts: approve=80, reject=15. These are the real numbers the embed
+      // must surface (previously asserted only by field name and silently always 0).
+      expect(approvals.value).toBe("80");
+      expect(rejections.value).toBe("15");
     });
 
-    it("embed contains reject rate", async () => {
+    it("embed reject rate is computed from approve/reject counts", async () => {
       const interaction = createMockInteraction({
         options: { getUser: { moderator: mockModeratorUser } },
       });
@@ -369,7 +423,25 @@ describe("stats/history", () => {
 
       const call = (interaction.editReply as any).mock.calls[0][0];
       const fields = call.embeds[0].data.fields;
-      expect(fields).toContainEqual(expect.objectContaining({ name: "Reject Rate" }));
+      const rejectRate = fields.find((f: any) => f.name === "Reject Rate");
+      // 15 / (80 + 15) = 15.789... -> toFixed(1) = "15.8".
+      expect(rejectRate.value).toBe("15.8%");
+    });
+
+    it("reject rate is 0.0 when there are no decisions", async () => {
+      mockAllCounts.mockReturnValue([{ action: "kick", cnt: 3 }]);
+      const interaction = createMockInteraction({
+        options: { getUser: { moderator: mockModeratorUser } },
+      });
+      const ctx = createTestCommandContext(interaction);
+
+      await handleHistory(ctx);
+
+      const call = (interaction.editReply as any).mock.calls[0][0];
+      const fields = call.embeds[0].data.fields;
+      expect(fields.find((f: any) => f.name === "Approvals").value).toBe("0");
+      expect(fields.find((f: any) => f.name === "Rejections").value).toBe("0");
+      expect(fields.find((f: any) => f.name === "Reject Rate").value).toBe("0.0%");
     });
 
     it("embed contains response time percentiles", async () => {
@@ -408,8 +480,8 @@ describe("stats/history", () => {
   });
 
   describe("anomaly detection", () => {
-    it("calls detectModeratorAnomalies with daily counts", async () => {
-      mockAll.mockImplementation(() => [
+    it("calls detectModeratorAnomalies with the daily counts row-set", async () => {
+      mockAllDaily.mockReturnValue([
         { day: "2024-01-01", cnt: 10 },
         { day: "2024-01-02", cnt: 15 },
         { day: "2024-01-03", cnt: 12 },
@@ -421,7 +493,8 @@ describe("stats/history", () => {
 
       await handleHistory(ctx);
 
-      expect(mockDetectModeratorAnomalies).toHaveBeenCalled();
+      // The handler maps daily rows to their cnt values before calling anomaly detection.
+      expect(mockDetectModeratorAnomalies).toHaveBeenCalledWith([10, 15, 12]);
     });
 
     it("shows anomaly warning when detected", async () => {
@@ -484,7 +557,7 @@ describe("stats/history", () => {
 
   describe("CSV export", () => {
     beforeEach(() => {
-      mockAll.mockReturnValue([
+      mockAllExport.mockReturnValue([
         { id: 1, action: "approve", actor_id: "mod-123", created_at_s: 1700000000 },
         { id: 2, action: "reject", actor_id: "mod-123", created_at_s: 1700000100 },
       ]);
@@ -502,6 +575,21 @@ describe("stats/history", () => {
       // CSV is now attached to the reply, never persisted to data/exports.
       expect(mockMkdirSync).not.toHaveBeenCalled();
       expect(mockWriteFileSync).not.toHaveBeenCalled();
+    });
+
+    it("generates the CSV from the exported rows", async () => {
+      const interaction = createMockInteraction({
+        guild: createMockGuild(),
+        options: { getUser: { moderator: mockModeratorUser }, getBoolean: { export: true } },
+      } as any);
+      const ctx = createTestCommandContext(interaction);
+
+      await handleHistory(ctx);
+
+      expect(mockGenerateModHistoryCsv).toHaveBeenCalledWith([
+        { id: 1, action: "approve", actor_id: "mod-123", created_at_s: 1700000000 },
+        { id: 2, action: "reject", actor_id: "mod-123", created_at_s: 1700000100 },
+      ]);
     });
 
     it("attaches the CSV as a file on the reply", async () => {
@@ -558,7 +646,7 @@ describe("stats/history", () => {
     });
 
     it("enforces export row limit", async () => {
-      mockGet.mockReturnValue({ total: 60000 }); // Over 50000 limit
+      mockGetTotal.mockReturnValue({ total: 60000 }); // Over 50000 limit
       const interaction = createMockInteraction({
         options: { getUser: { moderator: mockModeratorUser }, getBoolean: { export: true } },
       });
@@ -574,7 +662,7 @@ describe("stats/history", () => {
 
   describe("high volume warning", () => {
     it("shows sampling note for high volume moderators", async () => {
-      mockGet.mockReturnValue({ total: 15000 });
+      mockGetTotal.mockReturnValue({ total: 15000 });
       const interaction = createMockInteraction({
         options: { getUser: { moderator: mockModeratorUser } },
       });
@@ -647,6 +735,19 @@ describe("stats/history", () => {
       const call = (interaction.editReply as any).mock.calls[0][0];
       const p50Field = call.embeds[0].data.fields.find((f: any) => f.name === "Response Time (p50)");
       expect(p50Field.value).toBe("60s");
+    });
+
+    it("feeds positive response_ms rows to computePercentiles", async () => {
+      mockAllResponse.mockReturnValue([{ ms: 1000 }, { ms: 0 }, { ms: 5000 }, { ms: -3 }]);
+      const interaction = createMockInteraction({
+        options: { getUser: { moderator: mockModeratorUser } },
+      });
+      const ctx = createTestCommandContext(interaction);
+
+      await handleHistory(ctx);
+
+      // Handler filters to ms > 0 before computing percentiles.
+      expect(mockComputePercentiles).toHaveBeenCalledWith([1000, 5000], [50, 95]);
     });
   });
 

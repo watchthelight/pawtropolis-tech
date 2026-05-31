@@ -43,6 +43,8 @@ vi.mock("../../../src/lib/sentry.js", () => ({
 
 vi.mock("../../../src/lib/reqctx.js", () => ({
   enrichEvent: vi.fn(),
+  newTraceId: vi.fn(() => "trace-test"),
+  ctx: vi.fn(() => ({ traceId: "trace-test" })),
 }));
 
 vi.mock("../../../src/lib/ids.js", () => ({
@@ -74,6 +76,10 @@ vi.mock("../../../src/features/modmail/threadState.js", () => ({
 vi.mock("../../../src/features/modmail/threadPerms.js", () => ({
   missingPermsForStartThread: vi.fn(() => []),
   ensureModsCanSpeakInThread: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("../../../src/web/notifyDashboard.js", () => ({
+  notifyDashboard: vi.fn(),
 }));
 
 import { openPublicModmailThreadFor } from "../../../src/features/modmail/threadOpen.js";
@@ -347,55 +353,211 @@ describe("features/modmail/threadOpen", () => {
   });
 });
 
+// Helper: build a fake User the way discord.js would hand one back.
+function makeUser(): any {
+  return {
+    id: "user123",
+    username: "applicant",
+    tag: "applicant#0001",
+    createdTimestamp: 1_600_000_000_000,
+    displayAvatarURL: vi.fn(() => "https://cdn.discordapp.com/avatars/user123/abc.png"),
+    send: vi.fn().mockResolvedValue(undefined),
+  };
+}
+
+// Helper: build an interaction that drives openPublicModmailThreadFor all the
+// way through Discord thread creation, capturing what gets sent to the thread.
+function makeSuccessInteraction(opts: { sentComponents: any[] }) {
+  const user = makeUser();
+  const thread = {
+    id: "thread999",
+    type: ChannelType.PublicThread,
+    parentId: "channel123",
+    guildId: "guild123",
+    autoArchiveDuration: 4320,
+    send: vi.fn((payload: any) => {
+      if (payload?.components) opts.sentComponents.push(...payload.components);
+      return Promise.resolve(undefined);
+    }),
+  };
+  const channel = {
+    id: "channel123",
+    type: ChannelType.GuildText,
+    permissionsFor: vi.fn(),
+    threads: { create: vi.fn().mockResolvedValue(thread) },
+  };
+  const interaction = {
+    guildId: "guild123",
+    guild: {
+      id: "guild123",
+      name: "Test Guild",
+      members: { me: { id: "bot123" } },
+    },
+    member: { id: "user456" },
+    user: { id: "user456" },
+    channel,
+    client: {
+      users: { fetch: vi.fn().mockResolvedValue(user) },
+    },
+  };
+  return { interaction, thread, channel, user };
+}
+
 describe("modmail thread customId format", () => {
-  describe("close button customId", () => {
-    it("follows expected format", () => {
-      const ticketId = 123;
-      const customId = `v1:modmail:close:${ticketId}`;
-      expect(customId).toBe("v1:modmail:close:123");
+  // Exercises the real customId construction at threadOpen.ts:384 by driving the
+  // full success path and inspecting the button actually emitted to the thread.
+  it("emits a close button whose customId encodes the real ticket id", async () => {
+    mockGet.mockReturnValue(undefined); // no existing thread
+
+    const sentComponents: any[] = [];
+    const { interaction } = makeSuccessInteraction({ sentComponents });
+
+    const result = await openPublicModmailThreadFor({
+      interaction: interaction as any,
+      userId: "user123",
     });
 
-    it("can be parsed to extract ticket ID", () => {
-      const customId = "v1:modmail:close:456";
-      const match = customId.match(/^v1:modmail:close:(\d+)$/);
-      expect(match).not.toBeNull();
-      expect(match?.[1]).toBe("456");
-    });
+    expect(result.success).toBe(true);
+    expect(result.message).toBe("Modmail thread created: <#thread999>");
+
+    // createTicket is mocked to return 123, so the real code must build
+    // "v1:modmail:close:123" at threadOpen.ts:384.
+    const customIds = sentComponents
+      .flatMap((row: any) => row.components ?? [])
+      .map((btn: any) => btn.data?.custom_id)
+      .filter(Boolean);
+
+    expect(customIds).toContain("v1:modmail:close:123");
+
+    // And the emitted id is parseable back to the ticket id.
+    const closeId = customIds.find((id: string) => id.startsWith("v1:modmail:close:"));
+    const match = closeId?.match(/^v1:modmail:close:(\d+)$/);
+    expect(match).not.toBeNull();
+    expect(match?.[1]).toBe("123");
   });
 });
 
 describe("modmail race condition handling", () => {
+  // Exercises the real race-detection branch in the catch block
+  // (threadOpen.ts:444-473) by making thread creation throw a constraint error.
   describe("pending state", () => {
-    it("pending indicates in-progress creation", () => {
-      const threadState = "pending";
-      expect(threadState === "pending").toBe(true);
+    it("returns the 'being created' message when the race winner is still pending", async () => {
+      // No existing row on the fast path or in-transaction check, so the code
+      // proceeds to create the Discord thread.
+      mockGet
+        .mockReturnValueOnce(undefined) // fast-path SELECT
+        .mockReturnValueOnce(undefined) // in-transaction guard SELECT
+        .mockReturnValueOnce({ thread_id: "pending" }); // post-error lookup
+
+      const sentComponents: any[] = [];
+      const { interaction, channel } = makeSuccessInteraction({ sentComponents });
+      const raceErr: any = new Error("UNIQUE constraint failed: open_modmail.guild_id");
+      channel.threads.create.mockRejectedValue(raceErr);
+
+      const result = await openPublicModmailThreadFor({
+        interaction: interaction as any,
+        userId: "user123",
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain("being created by another moderator");
     });
 
-    it("non-pending indicates completed creation", () => {
-      const threadState = "thread123456";
-      expect(threadState !== "pending" && threadState.length > 0).toBe(true);
+    it("links to the winner's thread when a non-pending thread already exists", async () => {
+      mockGet
+        .mockReturnValueOnce(undefined) // fast-path SELECT
+        .mockReturnValueOnce(undefined) // in-transaction guard SELECT
+        .mockReturnValueOnce({ thread_id: "winner777" }); // post-error lookup
+
+      const sentComponents: any[] = [];
+      const { interaction, channel } = makeSuccessInteraction({ sentComponents });
+      const raceErr: any = new Error("PRIMARY KEY constraint failed");
+      channel.threads.create.mockRejectedValue(raceErr);
+
+      const result = await openPublicModmailThreadFor({
+        interaction: interaction as any,
+        userId: "user123",
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toBe("Modmail thread already exists: <#winner777>");
     });
   });
 
   describe("primary key constraint detection", () => {
-    it("detects UNIQUE constraint errors", () => {
-      const error = { message: "UNIQUE constraint failed" };
-      const isRace =
-        error.message.includes("UNIQUE") || error.message.includes("PRIMARY KEY");
-      expect(isRace).toBe(true);
+    // Each case proves the real isRaceCondition logic at threadOpen.ts:444-448
+    // routes the error to the race branch (linking to the winner's thread)
+    // rather than the generic failure message.
+    it("treats a UNIQUE constraint error as a race", async () => {
+      mockGet
+        .mockReturnValueOnce(undefined)
+        .mockReturnValueOnce(undefined)
+        .mockReturnValueOnce({ thread_id: "winnerUNIQUE" });
+
+      const sentComponents: any[] = [];
+      const { interaction, channel } = makeSuccessInteraction({ sentComponents });
+      channel.threads.create.mockRejectedValue(new Error("UNIQUE constraint failed"));
+
+      const result = await openPublicModmailThreadFor({
+        interaction: interaction as any,
+        userId: "user123",
+      });
+
+      expect(result.message).toBe("Modmail thread already exists: <#winnerUNIQUE>");
     });
 
-    it("detects PRIMARY KEY constraint errors", () => {
-      const error = { message: "PRIMARY KEY constraint failed" };
-      const isRace =
-        error.message.includes("UNIQUE") || error.message.includes("PRIMARY KEY");
-      expect(isRace).toBe(true);
+    it("treats a PRIMARY KEY constraint error as a race", async () => {
+      mockGet
+        .mockReturnValueOnce(undefined)
+        .mockReturnValueOnce(undefined)
+        .mockReturnValueOnce({ thread_id: "winnerPK" });
+
+      const sentComponents: any[] = [];
+      const { interaction, channel } = makeSuccessInteraction({ sentComponents });
+      channel.threads.create.mockRejectedValue(new Error("PRIMARY KEY constraint failed"));
+
+      const result = await openPublicModmailThreadFor({
+        interaction: interaction as any,
+        userId: "user123",
+      });
+
+      expect(result.message).toBe("Modmail thread already exists: <#winnerPK>");
     });
 
-    it("detects SQLITE_CONSTRAINT code", () => {
-      const error = { code: "SQLITE_CONSTRAINT" };
-      const isRace = error.code === "SQLITE_CONSTRAINT";
-      expect(isRace).toBe(true);
+    it("treats a SQLITE_CONSTRAINT code as a race", async () => {
+      mockGet
+        .mockReturnValueOnce(undefined)
+        .mockReturnValueOnce(undefined)
+        .mockReturnValueOnce({ thread_id: "winnerCODE" });
+
+      const sentComponents: any[] = [];
+      const { interaction, channel } = makeSuccessInteraction({ sentComponents });
+      const codeErr: any = new Error("constraint");
+      codeErr.code = "SQLITE_CONSTRAINT";
+      channel.threads.create.mockRejectedValue(codeErr);
+
+      const result = await openPublicModmailThreadFor({
+        interaction: interaction as any,
+        userId: "user123",
+      });
+
+      expect(result.message).toBe("Modmail thread already exists: <#winnerCODE>");
+    });
+
+    it("falls back to the generic failure message for a non-race error", async () => {
+      mockGet.mockReturnValue(undefined);
+
+      const sentComponents: any[] = [];
+      const { interaction, channel } = makeSuccessInteraction({ sentComponents });
+      channel.threads.create.mockRejectedValue(new Error("network exploded"));
+
+      const result = await openPublicModmailThreadFor({
+        interaction: interaction as any,
+        userId: "user123",
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain("Failed to create modmail thread");
     });
   });
 });

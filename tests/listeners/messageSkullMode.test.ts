@@ -23,15 +23,15 @@ vi.mock("../../src/lib/logger.js", () => ({
   },
 }));
 
-// Mock constants
-vi.mock("../../src/lib/constants.js", () => ({
-  SKULLMODE_ODDS_MIN: 1,
-  SKULLMODE_ODDS_MAX: 10000,
-}));
+// NOTE: constants.js is deliberately NOT mocked. The listener clamps odds with
+// the REAL SKULLMODE_ODDS_MIN / SKULLMODE_ODDS_MAX bounds, so the tests exercise
+// production values. A previous version mocked SKULLMODE_ODDS_MAX as 10000 while
+// production is 1000, hiding a 10x divergence (finding #00135).
 
 import { name, execute } from "../../src/listeners/messageSkullMode.js";
 import { getConfig } from "../../src/lib/config.js";
 import { logger } from "../../src/lib/logger.js";
+import { SKULLMODE_ODDS_MIN, SKULLMODE_ODDS_MAX } from "../../src/lib/constants.js";
 
 const mockGetConfig = getConfig as ReturnType<typeof vi.fn>;
 
@@ -134,7 +134,8 @@ describe("messageSkullMode", () => {
     });
 
     it("does not react when roll is non-zero", async () => {
-      mockGetConfig.mockResolvedValue({ skullmode_enabled: true, skullmode_odds: 10000 });
+      // odds = real-clamped 1000, floor(0.5 * 1000) = 500 != 0 -> no react
+      mockGetConfig.mockResolvedValue({ skullmode_enabled: true, skullmode_odds: 1000 });
       vi.spyOn(Math, "random").mockReturnValue(0.5);
       const message = createMockMessage();
 
@@ -143,33 +144,66 @@ describe("messageSkullMode", () => {
       expect(message.react).not.toHaveBeenCalled();
     });
 
-    it("clamps odds to minimum", async () => {
-      mockGetConfig.mockResolvedValue({ skullmode_enabled: true, skullmode_odds: 0 });
+    it("clamps odds below the floor up to SKULLMODE_ODDS_MIN", async () => {
+      // A negative value survives the `|| 1000` falsy guard, so the lower clamp
+      // is genuinely exercised: Math.max(SKULLMODE_ODDS_MIN, min(MAX, -5)) = MIN.
+      mockGetConfig.mockResolvedValue({ skullmode_enabled: true, skullmode_odds: -5 });
+      vi.spyOn(Math, "random").mockReturnValue(0);
       const message = createMockMessage();
 
       await execute(message as any);
 
-      expect(message.react).toHaveBeenCalled();
+      expect(message.react).toHaveBeenCalledWith("\u{1F480}");
+      // The logged odds prove the clamp landed on the real production minimum.
+      expect(logger.info).toHaveBeenCalledWith(
+        expect.objectContaining({ odds: SKULLMODE_ODDS_MIN }),
+        expect.any(String)
+      );
     });
 
-    it("clamps odds to maximum", async () => {
+    it("clamps odds above the ceiling down to SKULLMODE_ODDS_MAX", async () => {
       mockGetConfig.mockResolvedValue({ skullmode_enabled: true, skullmode_odds: 100000 });
       vi.spyOn(Math, "random").mockReturnValue(0);
       const message = createMockMessage();
 
       await execute(message as any);
 
-      expect(message.react).toHaveBeenCalled();
+      expect(message.react).toHaveBeenCalledWith("\u{1F480}");
+      // Asserting the real bound (1000) catches divergence from production.
+      expect(logger.info).toHaveBeenCalledWith(
+        expect.objectContaining({ odds: SKULLMODE_ODDS_MAX }),
+        expect.any(String)
+      );
     });
 
-    it("uses default odds when not configured", async () => {
+    it("treats a falsy odds value of 0 as the default 1000 (current behavior)", async () => {
+      // CURRENT BEHAVIOR: `Number(cfg.skullmode_odds || 1000)` coerces 0 -> 1000,
+      // so the SKULLMODE_ODDS_MIN clamp is bypassed for falsy odds. Documented here
+      // so a future change to the falsy guard is caught (finding #00135).
+      mockGetConfig.mockResolvedValue({ skullmode_enabled: true, skullmode_odds: 0 });
+      vi.spyOn(Math, "random").mockReturnValue(0);
+      const message = createMockMessage();
+
+      await execute(message as any);
+
+      expect(logger.info).toHaveBeenCalledWith(
+        expect.objectContaining({ odds: 1000 }),
+        expect.any(String)
+      );
+    });
+
+    it("uses default odds of 1000 when not configured", async () => {
       mockGetConfig.mockResolvedValue({ skullmode_enabled: true });
       vi.spyOn(Math, "random").mockReturnValue(0);
       const message = createMockMessage();
 
       await execute(message as any);
 
-      expect(message.react).toHaveBeenCalled();
+      expect(message.react).toHaveBeenCalledWith("\u{1F480}");
+      expect(logger.info).toHaveBeenCalledWith(
+        expect.objectContaining({ odds: 1000 }),
+        expect.any(String)
+      );
     });
   });
 

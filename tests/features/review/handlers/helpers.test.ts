@@ -1,11 +1,15 @@
 /**
  * Pawtropolis Tech — tests/features/review/handlers/helpers.test.ts
  * WHAT: Unit tests for review handler helper functions.
- * WHY: Verify staff checks, application resolution, and modal opening logic.
+ * WHY: Verify staff checks, application resolution, and modal opening logic by
+ *      exercising the REAL exported functions with mocked external boundaries
+ *      (config, cmdWrap, claims, queries, appLookup, logger) - not by re-deriving
+ *      the logic inline.
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { MessageFlags } from "discord.js";
 
 vi.mock("../../../../src/lib/logger.js", () => ({
   logger: {
@@ -28,6 +32,7 @@ vi.mock("../../../../src/lib/config.js", () => ({
 
 vi.mock("../../../../src/lib/cmdWrap.js", () => ({
   replyOrEdit: vi.fn().mockResolvedValue(undefined),
+  ephemeralFollowUp: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("../../../../src/lib/ids.js", () => ({
@@ -48,11 +53,40 @@ vi.mock("../../../../src/features/review/queries.js", () => ({
 }));
 
 import { shouldBypass, hasRole } from "../../../../src/lib/config.js";
-import { replyOrEdit } from "../../../../src/lib/cmdWrap.js";
+import { replyOrEdit, ephemeralFollowUp } from "../../../../src/lib/cmdWrap.js";
 import { findAppByShortCode } from "../../../../src/features/appLookup.js";
 import { getClaim, claimGuard } from "../../../../src/features/review/claims.js";
 import { loadApplication } from "../../../../src/features/review/queries.js";
-import { BUTTON_RE } from "../../../../src/features/review/handlers/helpers.js";
+import {
+  BUTTON_RE,
+  MODAL_RE,
+  ACCEPT_MODAL_RE,
+  isStaff,
+  requireInteractionStaff,
+  resolveApplication,
+  openRejectModal,
+  openAcceptModal,
+  openPermRejectModal,
+  openKickModal,
+  openUnclaimModal,
+} from "../../../../src/features/review/handlers/helpers.js";
+
+// A minimal stand-in for a discord.js ButtonInteraction that exercises the real
+// modal-opener code path. createdTimestamp is "now" so safeShowModal's token-age
+// guard (>2500ms) does not trip; replied/deferred are false so the "already
+// acked" guard does not trip either.
+function makeButtonInteraction(overrides: Record<string, unknown> = {}) {
+  return {
+    id: "interaction-1",
+    user: { id: "user123" },
+    createdTimestamp: Date.now(),
+    replied: false,
+    deferred: false,
+    showModal: vi.fn().mockResolvedValue(undefined),
+    reply: vi.fn().mockResolvedValue(undefined),
+    ...overrides,
+  };
+}
 
 describe("features/review/handlers/helpers", () => {
   beforeEach(() => {
@@ -61,129 +95,225 @@ describe("features/review/handlers/helpers", () => {
 
   describe("isStaff", () => {
     describe("bypass checks", () => {
-      it("returns true when shouldBypass returns true", () => {
+      it("returns true when shouldBypass returns true (short-circuits role check)", () => {
         vi.mocked(shouldBypass).mockReturnValue(true);
-        // The function returns true when bypass allows
-        const member = null;
-        const userId = "user123";
-        const result = shouldBypass(userId, member);
+        vi.mocked(hasRole).mockReturnValue(false);
+
+        const result = isStaff(null, "user123");
+
         expect(result).toBe(true);
+        expect(shouldBypass).toHaveBeenCalledWith("user123", null);
+        // Bypass wins before the role is ever consulted.
+        expect(hasRole).not.toHaveBeenCalled();
       });
 
-      it("returns false when not bypassed and no role", () => {
+      it("returns false when not bypassed and no Gatekeeper role", () => {
         vi.mocked(shouldBypass).mockReturnValue(false);
         vi.mocked(hasRole).mockReturnValue(false);
-        const result = hasRole(null, "gatekeeper-role-id");
+
+        const result = isStaff(null, "user123");
+
         expect(result).toBe(false);
+        expect(hasRole).toHaveBeenCalledWith(null, "gatekeeper-role-id");
       });
     });
 
     describe("Gatekeeper role check", () => {
-      it("returns true when user has Gatekeeper role", () => {
+      it("returns true when not bypassed but user has Gatekeeper role", () => {
         vi.mocked(shouldBypass).mockReturnValue(false);
         vi.mocked(hasRole).mockReturnValue(true);
-        const result = hasRole({} as any, "gatekeeper-role-id");
+
+        const member = { roles: { cache: new Map() } };
+        const result = isStaff(member as never, "user123");
+
         expect(result).toBe(true);
+        expect(hasRole).toHaveBeenCalledWith(member, "gatekeeper-role-id");
       });
     });
   });
 
   describe("requireInteractionStaff", () => {
     describe("guild validation", () => {
-      it("rejects non-guild interactions", () => {
+      it("rejects non-guild interactions and sends an ephemeral 'Guild only.' reply", () => {
+        const reply = vi.fn().mockResolvedValue(undefined);
         const interaction = {
+          id: "int-1",
           inGuild: () => false,
           guildId: null,
-          reply: vi.fn().mockResolvedValue(undefined),
+          user: { id: "user123" },
+          member: null,
+          reply,
         };
 
-        const isGuild = interaction.inGuild();
-        expect(isGuild).toBe(false);
+        const result = requireInteractionStaff(interaction as never);
+
+        expect(result).toBe(false);
+        expect(reply).toHaveBeenCalledTimes(1);
+        expect(reply).toHaveBeenCalledWith({ flags: MessageFlags.Ephemeral, content: "Guild only." });
+        // Never even looks at staffing when the guild guard fails.
+        expect(shouldBypass).not.toHaveBeenCalled();
       });
 
-      it("requires guildId to be present", () => {
+      it("rejects when inGuild is true but guildId is missing", () => {
+        const reply = vi.fn().mockResolvedValue(undefined);
         const interaction = {
+          id: "int-2",
           inGuild: () => true,
           guildId: null,
+          user: { id: "user123" },
+          member: null,
+          reply,
         };
 
-        const valid = interaction.inGuild() && interaction.guildId;
-        expect(valid).toBeFalsy();
+        const result = requireInteractionStaff(interaction as never);
+
+        expect(result).toBe(false);
+        expect(reply).toHaveBeenCalledWith({ flags: MessageFlags.Ephemeral, content: "Guild only." });
       });
     });
 
     describe("permission validation", () => {
-      it("checks Gatekeeper role when not bypassed", () => {
+      it("rejects with the Gatekeeper notice when the member is not staff", () => {
         vi.mocked(shouldBypass).mockReturnValue(false);
         vi.mocked(hasRole).mockReturnValue(false);
+        const reply = vi.fn().mockResolvedValue(undefined);
+        const interaction = {
+          id: "int-3",
+          inGuild: () => true,
+          guildId: "guild123",
+          user: { id: "user123" },
+          member: { roles: { cache: new Map() } },
+          reply,
+        };
 
-        const member = { roles: { cache: new Map() } };
-        const hasGatekeeperRole = hasRole(member as any, "gatekeeper-role-id");
-        expect(hasGatekeeperRole).toBe(false);
+        const result = requireInteractionStaff(interaction as never);
+
+        expect(result).toBe(false);
+        expect(reply).toHaveBeenCalledWith({
+          flags: MessageFlags.Ephemeral,
+          content: "You do not have the Gatekeeper role required for this action.",
+        });
       });
 
-      it("allows when user has Gatekeeper role", () => {
+      it("allows (returns true, no reply) when the member is staff", () => {
         vi.mocked(shouldBypass).mockReturnValue(false);
         vi.mocked(hasRole).mockReturnValue(true);
+        const reply = vi.fn().mockResolvedValue(undefined);
+        const interaction = {
+          id: "int-4",
+          inGuild: () => true,
+          guildId: "guild123",
+          user: { id: "user123" },
+          member: { roles: { cache: new Map([["gatekeeper-role-id", {}]]) } },
+          reply,
+        };
 
-        const member = { roles: { cache: new Map([["gatekeeper-role-id", {}]]) } };
-        const hasGatekeeperRole = hasRole(member as any, "gatekeeper-role-id");
-        expect(hasGatekeeperRole).toBe(true);
+        const result = requireInteractionStaff(interaction as never);
+
+        expect(result).toBe(true);
+        expect(reply).not.toHaveBeenCalled();
       });
     });
   });
 
   describe("resolveApplication", () => {
-    describe("guild validation", () => {
-      it("returns null when guildId missing", async () => {
-        const interaction = {
-          guildId: null,
-        };
+    function makeResolveInteraction(overrides: Record<string, unknown> = {}) {
+      return {
+        id: "int-resolve",
+        guildId: "guild123",
+        deferred: false,
+        replied: false,
+        ...overrides,
+      };
+    }
 
-        expect(interaction.guildId).toBeNull();
+    describe("guild validation", () => {
+      it("returns null and replies 'Guild only.' when guildId is missing", async () => {
+        const interaction = makeResolveInteraction({ guildId: null });
+
+        const result = await resolveApplication(interaction as never, "ABCDEF");
+
+        expect(result).toBeNull();
+        expect(replyOrEdit).toHaveBeenCalledWith(interaction, {
+          content: "Guild only.",
+          flags: MessageFlags.Ephemeral,
+        });
+        // Never looks anything up once the guild guard fails.
+        expect(findAppByShortCode).not.toHaveBeenCalled();
       });
     });
 
     describe("application lookup", () => {
-      it("returns null when app not found by code", () => {
+      it("returns null and reports the missing code when no row is found", async () => {
         vi.mocked(findAppByShortCode).mockReturnValue(null);
+        const interaction = makeResolveInteraction();
 
-        const result = findAppByShortCode("guild123", "ABCDEF");
+        const result = await resolveApplication(interaction as never, "ABCDEF");
+
         expect(result).toBeNull();
+        expect(findAppByShortCode).toHaveBeenCalledWith("guild123", "ABCDEF");
+        expect(replyOrEdit).toHaveBeenCalledWith(interaction, {
+          content: "No application with code ABCDEF.",
+          flags: MessageFlags.Ephemeral,
+        });
+        expect(loadApplication).not.toHaveBeenCalled();
       });
 
-      it("finds app by short code", () => {
-        vi.mocked(findAppByShortCode).mockReturnValue({ id: "app-123" });
+      it("returns null and reports 'Application not found.' when loadApplication returns null", async () => {
+        vi.mocked(findAppByShortCode).mockReturnValue({ id: "app-123" } as never);
+        vi.mocked(loadApplication).mockReturnValue(null as never);
+        const interaction = makeResolveInteraction();
 
-        const result = findAppByShortCode("guild123", "ABCDEF");
-        expect(result).toEqual({ id: "app-123" });
+        const result = await resolveApplication(interaction as never, "ABCDEF");
+
+        expect(result).toBeNull();
+        expect(loadApplication).toHaveBeenCalledWith("app-123");
+        expect(replyOrEdit).toHaveBeenCalledWith(interaction, {
+          content: "Application not found.",
+          flags: MessageFlags.Ephemeral,
+        });
       });
     });
 
-    describe("full application load", () => {
-      it("returns null when loadApplication returns null", () => {
-        vi.mocked(findAppByShortCode).mockReturnValue({ id: "app-123" });
-        vi.mocked(loadApplication).mockReturnValue(null);
+    describe("guild-match authz guard", () => {
+      it("returns null and reports a guild mismatch when app.guild_id differs", async () => {
+        vi.mocked(findAppByShortCode).mockReturnValue({ id: "app-123" } as never);
+        vi.mocked(loadApplication).mockReturnValue({ id: "app-123", guild_id: "guild456" } as never);
+        const interaction = makeResolveInteraction({ guildId: "guild123" });
 
-        const row = findAppByShortCode("guild123", "ABCDEF");
-        const app = loadApplication((row as any).id);
-        expect(app).toBeNull();
+        const result = await resolveApplication(interaction as never, "ABCDEF");
+
+        expect(result).toBeNull();
+        expect(replyOrEdit).toHaveBeenCalledWith(interaction, {
+          content: "Guild mismatch for application.",
+          flags: MessageFlags.Ephemeral,
+        });
       });
 
-      it("validates guild matches", () => {
-        const app = { id: "app-123", guild_id: "guild123" };
-        const requestGuildId = "guild456";
+      it("returns the app (no reply) when the guild matches", async () => {
+        const app = { id: "app-123", guild_id: "guild123", user_id: "u1", status: "submitted" };
+        vi.mocked(findAppByShortCode).mockReturnValue({ id: "app-123" } as never);
+        vi.mocked(loadApplication).mockReturnValue(app as never);
+        const interaction = makeResolveInteraction({ guildId: "guild123" });
 
-        const matches = app.guild_id === requestGuildId;
-        expect(matches).toBe(false);
-      });
+        const result = await resolveApplication(interaction as never, "ABCDEF");
 
-      it("returns app when guild matches", () => {
-        const app = { id: "app-123", guild_id: "guild123" };
-        vi.mocked(loadApplication).mockReturnValue(app as any);
-
-        const result = loadApplication("app-123");
         expect(result).toEqual(app);
+        expect(replyOrEdit).not.toHaveBeenCalled();
+        expect(ephemeralFollowUp).not.toHaveBeenCalled();
+      });
+    });
+
+    describe("post-ack failure path", () => {
+      it("uses ephemeralFollowUp (not replyOrEdit) when the interaction is already deferred", async () => {
+        vi.mocked(findAppByShortCode).mockReturnValue(null);
+        const interaction = makeResolveInteraction({ deferred: true });
+
+        const result = await resolveApplication(interaction as never, "ABCDEF");
+
+        expect(result).toBeNull();
+        expect(ephemeralFollowUp).toHaveBeenCalledWith(interaction, "No application with code ABCDEF.");
+        expect(replyOrEdit).not.toHaveBeenCalled();
       });
     });
   });
@@ -271,8 +401,7 @@ describe("BUTTON_RE pattern", () => {
 });
 
 describe("MODAL_RE pattern", () => {
-  const MODAL_RE = /^v1:modal:reject:code([0-9A-F]{6})$/;
-
+  // Real exported reject-modal pattern (MODAL_REJECT_RE), not an inline copy.
   describe("valid patterns", () => {
     it("matches reject modal", () => {
       const customId = "v1:modal:reject:codeABCDEF";
@@ -292,8 +421,7 @@ describe("MODAL_RE pattern", () => {
 });
 
 describe("ACCEPT_MODAL_RE pattern", () => {
-  const ACCEPT_MODAL_RE = /^v1:modal:accept:code([0-9A-F]{6})$/;
-
+  // Real exported accept-modal pattern (MODAL_ACCEPT_RE), not an inline copy.
   describe("valid patterns", () => {
     it("matches accept modal", () => {
       const customId = "v1:modal:accept:code123456";
@@ -302,173 +430,196 @@ describe("ACCEPT_MODAL_RE pattern", () => {
       expect(match?.[1]).toBe("123456");
     });
   });
+
+  describe("invalid patterns", () => {
+    it("rejects reject modal ID", () => {
+      const customId = "v1:modal:reject:code123456";
+      const match = ACCEPT_MODAL_RE.exec(customId);
+      expect(match).toBeNull();
+    });
+  });
 });
 
 describe("modal opening functions", () => {
+  const PENDING_APP = { id: "app-ABCDEF", guild_id: "guild123", user_id: "u1", status: "submitted" };
+
+  beforeEach(() => {
+    // Default: unclaimed, claim guard passes.
+    vi.mocked(getClaim).mockReturnValue(null);
+    vi.mocked(claimGuard).mockReturnValue(null);
+  });
+
   describe("openRejectModal", () => {
-    describe("pre-validation", () => {
-      it("blocks already resolved applications", () => {
-        const app = { status: "approved" };
-        const isResolved = ["rejected", "approved", "kicked"].includes(app.status);
-        expect(isResolved).toBe(true);
-      });
+    it("shows a modal with the reject customId for a pending application", async () => {
+      const interaction = makeButtonInteraction();
 
-      it("allows pending applications", () => {
-        const app = { status: "pending" };
-        const isResolved = ["rejected", "approved", "kicked"].includes(app.status);
-        expect(isResolved).toBe(false);
+      await openRejectModal(interaction as never, PENDING_APP as never);
+
+      expect(interaction.showModal).toHaveBeenCalledTimes(1);
+      const modal = interaction.showModal.mock.calls[0][0];
+      expect(modal.data.custom_id).toBe("v1:modal:reject:codeABCDEF");
+      expect(replyOrEdit).not.toHaveBeenCalled();
+    });
+
+    it("blocks already-resolved applications without showing a modal", async () => {
+      const interaction = makeButtonInteraction();
+
+      await openRejectModal(interaction as never, { ...PENDING_APP, status: "approved" } as never);
+
+      expect(interaction.showModal).not.toHaveBeenCalled();
+      expect(replyOrEdit).toHaveBeenCalledWith(interaction, {
+        content: "This application is already resolved.",
+        flags: MessageFlags.Ephemeral,
       });
     });
 
-    describe("claim guard", () => {
-      it("checks claim before showing modal", () => {
-        vi.mocked(getClaim).mockReturnValue({ reviewer_id: "user123" });
-        vi.mocked(claimGuard).mockReturnValue(null);
+    it("blocks and surfaces the claim error when claimGuard fails", async () => {
+      vi.mocked(getClaim).mockReturnValue({ app_id: "app-ABCDEF", reviewer_id: "other", claimed_at: "0" });
+      vi.mocked(claimGuard).mockReturnValue("Not your claim");
+      const interaction = makeButtonInteraction();
 
-        const claim = getClaim("app-123");
-        const error = claimGuard(claim, "user123");
-        expect(error).toBeNull();
-      });
+      await openRejectModal(interaction as never, PENDING_APP as never);
 
-      it("blocks when claim guard fails", () => {
-        vi.mocked(getClaim).mockReturnValue({ reviewer_id: "user456" });
-        vi.mocked(claimGuard).mockReturnValue("Not your claim");
-
-        const claim = getClaim("app-123");
-        const error = claimGuard(claim, "user123");
-        expect(error).toBe("Not your claim");
-      });
-    });
-
-    describe("modal structure", () => {
-      it("uses correct customId format", () => {
-        const code = "ABCDEF";
-        const customId = `v1:modal:reject:code${code}`;
-        expect(customId).toBe("v1:modal:reject:codeABCDEF");
-      });
-
-      it("sets max length 500 for reason", () => {
-        const maxLength = 500;
-        expect(maxLength).toBe(500);
+      expect(interaction.showModal).not.toHaveBeenCalled();
+      expect(claimGuard).toHaveBeenCalledWith({ app_id: "app-ABCDEF", reviewer_id: "other", claimed_at: "0" }, "user123");
+      expect(replyOrEdit).toHaveBeenCalledWith(interaction, {
+        content: "Not your claim",
+        flags: MessageFlags.Ephemeral,
       });
     });
   });
 
   describe("openAcceptModal", () => {
-    describe("pre-validation", () => {
-      it("blocks rejected applications", () => {
-        const app = { status: "rejected" };
-        const isResolved = ["rejected", "approved", "kicked"].includes(app.status);
-        expect(isResolved).toBe(true);
-      });
+    it("shows a modal with the accept customId for a pending application", async () => {
+      const interaction = makeButtonInteraction();
 
-      it("blocks kicked applications", () => {
-        const app = { status: "kicked" };
-        const isResolved = ["rejected", "approved", "kicked"].includes(app.status);
-        expect(isResolved).toBe(true);
+      await openAcceptModal(interaction as never, PENDING_APP as never);
+
+      expect(interaction.showModal).toHaveBeenCalledTimes(1);
+      const modal = interaction.showModal.mock.calls[0][0];
+      expect(modal.data.custom_id).toBe("v1:modal:accept:codeABCDEF");
+    });
+
+    it("blocks rejected applications", async () => {
+      const interaction = makeButtonInteraction();
+
+      await openAcceptModal(interaction as never, { ...PENDING_APP, status: "rejected" } as never);
+
+      expect(interaction.showModal).not.toHaveBeenCalled();
+      expect(replyOrEdit).toHaveBeenCalledWith(interaction, {
+        content: "This application is already resolved.",
+        flags: MessageFlags.Ephemeral,
       });
     });
 
-    describe("modal structure", () => {
-      it("uses correct customId format", () => {
-        const code = "123456";
-        const customId = `v1:modal:accept:code${code}`;
-        expect(customId).toBe("v1:modal:accept:code123456");
-      });
+    it("blocks kicked applications", async () => {
+      const interaction = makeButtonInteraction();
 
-      it("reason field is optional", () => {
-        const required = false;
-        expect(required).toBe(false);
+      await openAcceptModal(interaction as never, { ...PENDING_APP, status: "kicked" } as never);
+
+      expect(interaction.showModal).not.toHaveBeenCalled();
+      expect(replyOrEdit).toHaveBeenCalledWith(interaction, {
+        content: "This application is already resolved.",
+        flags: MessageFlags.Ephemeral,
       });
     });
   });
 
   describe("openPermRejectModal", () => {
-    describe("claim validation", () => {
-      it("blocks when claimed by another user", () => {
-        vi.mocked(getClaim).mockReturnValue({ reviewer_id: "user456" });
+    it("shows a modal with the permreject customId when unclaimed", async () => {
+      vi.mocked(getClaim).mockReturnValue(null);
+      const interaction = makeButtonInteraction();
 
-        const claim = getClaim("app-123");
-        const isOtherUser = claim && claim.reviewer_id !== "user123";
-        expect(isOtherUser).toBe(true);
-      });
+      await openPermRejectModal(interaction as never, PENDING_APP as never);
 
-      it("allows when claimed by same user", () => {
-        vi.mocked(getClaim).mockReturnValue({ reviewer_id: "user123" });
+      expect(interaction.showModal).toHaveBeenCalledTimes(1);
+      const modal = interaction.showModal.mock.calls[0][0];
+      expect(modal.data.custom_id).toBe("v1:modal:permreject:codeABCDEF");
+    });
 
-        const claim = getClaim("app-123");
-        const isOtherUser = claim && claim.reviewer_id !== "user123";
-        expect(isOtherUser).toBe(false);
+    it("blocks when claimed by another user", async () => {
+      vi.mocked(getClaim).mockReturnValue({ app_id: "app-ABCDEF", reviewer_id: "user456", claimed_at: "0" });
+      const interaction = makeButtonInteraction();
+
+      await openPermRejectModal(interaction as never, PENDING_APP as never);
+
+      expect(interaction.showModal).not.toHaveBeenCalled();
+      expect(replyOrEdit).toHaveBeenCalledWith(interaction, {
+        content: "You did not claim this application.",
+        flags: MessageFlags.Ephemeral,
       });
     });
 
-    describe("modal structure", () => {
-      it("uses permreject customId format", () => {
-        const code = "FEDCBA";
-        const customId = `v1:modal:permreject:code${code}`;
-        expect(customId).toBe("v1:modal:permreject:codeFEDCBA");
-      });
+    it("allows when claimed by the same user", async () => {
+      vi.mocked(getClaim).mockReturnValue({ app_id: "app-ABCDEF", reviewer_id: "user123", claimed_at: "0" });
+      const interaction = makeButtonInteraction();
 
-      it("reason field is required", () => {
-        const required = true;
-        expect(required).toBe(true);
-      });
+      await openPermRejectModal(interaction as never, PENDING_APP as never);
+
+      expect(interaction.showModal).toHaveBeenCalledTimes(1);
+      expect(replyOrEdit).not.toHaveBeenCalled();
     });
   });
 
   describe("openKickModal", () => {
-    describe("pre-validation", () => {
-      it("blocks already approved applications", () => {
-        const app = { status: "approved" };
-        const isResolved = ["rejected", "approved", "kicked"].includes(app.status);
-        expect(isResolved).toBe(true);
-      });
+    it("shows a modal with the kick customId for a pending application", async () => {
+      const interaction = makeButtonInteraction();
+
+      await openKickModal(interaction as never, PENDING_APP as never);
+
+      expect(interaction.showModal).toHaveBeenCalledTimes(1);
+      const modal = interaction.showModal.mock.calls[0][0];
+      expect(modal.data.custom_id).toBe("v1:modal:kick:codeABCDEF");
     });
 
-    describe("modal structure", () => {
-      it("uses kick customId format", () => {
-        const code = "000FFF";
-        const customId = `v1:modal:kick:code${code}`;
-        expect(customId).toBe("v1:modal:kick:code000FFF");
-      });
+    it("blocks already-approved applications", async () => {
+      const interaction = makeButtonInteraction();
 
-      it("reason field is optional", () => {
-        const required = false;
-        expect(required).toBe(false);
+      await openKickModal(interaction as never, { ...PENDING_APP, status: "approved" } as never);
+
+      expect(interaction.showModal).not.toHaveBeenCalled();
+      expect(replyOrEdit).toHaveBeenCalledWith(interaction, {
+        content: "This application is already resolved.",
+        flags: MessageFlags.Ephemeral,
       });
     });
   });
 
   describe("openUnclaimModal", () => {
-    describe("claim validation", () => {
-      it("blocks when not claimed", () => {
-        vi.mocked(getClaim).mockReturnValue(null);
+    it("shows a modal with the unclaim customId when claimed by the same user", async () => {
+      vi.mocked(getClaim).mockReturnValue({ app_id: "app-ABCDEF", reviewer_id: "user123", claimed_at: "0" });
+      const interaction = makeButtonInteraction();
 
-        const claim = getClaim("app-123");
-        expect(claim).toBeNull();
-      });
+      await openUnclaimModal(interaction as never, PENDING_APP as never);
 
-      it("blocks when claimed by another user", () => {
-        vi.mocked(getClaim).mockReturnValue({ reviewer_id: "user456" });
+      expect(interaction.showModal).toHaveBeenCalledTimes(1);
+      const modal = interaction.showModal.mock.calls[0][0];
+      expect(modal.data.custom_id).toBe("v1:modal:unclaim:codeABCDEF");
+    });
 
-        const claim = getClaim("app-123");
-        const isOtherUser = claim && claim.reviewer_id !== "user123";
-        expect(isOtherUser).toBe(true);
+    it("blocks when the application is not claimed", async () => {
+      vi.mocked(getClaim).mockReturnValue(null);
+      const interaction = makeButtonInteraction();
+
+      await openUnclaimModal(interaction as never, PENDING_APP as never);
+
+      expect(interaction.showModal).not.toHaveBeenCalled();
+      expect(replyOrEdit).toHaveBeenCalledWith(interaction, {
+        content: "This application is not currently claimed.",
+        flags: MessageFlags.Ephemeral,
       });
     });
 
-    describe("modal structure", () => {
-      it("uses unclaim customId format", () => {
-        const code = "AAAAAA";
-        const customId = `v1:modal:unclaim:code${code}`;
-        expect(customId).toBe("v1:modal:unclaim:codeAAAAAA");
-      });
+    it("blocks when claimed by another user", async () => {
+      vi.mocked(getClaim).mockReturnValue({ app_id: "app-ABCDEF", reviewer_id: "user456", claimed_at: "0" });
+      const interaction = makeButtonInteraction();
 
-      it("requires UNCLAIM confirmation text", () => {
-        const minLength = 7;
-        const maxLength = 7;
-        expect(minLength).toBe(7);
-        expect(maxLength).toBe(7);
+      await openUnclaimModal(interaction as never, PENDING_APP as never);
+
+      expect(interaction.showModal).not.toHaveBeenCalled();
+      expect(replyOrEdit).toHaveBeenCalledWith(interaction, {
+        content: "You did not claim this application. Only the claim owner can unclaim it.",
+        flags: MessageFlags.Ephemeral,
       });
     });
   });

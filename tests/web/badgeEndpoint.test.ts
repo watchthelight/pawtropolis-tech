@@ -72,12 +72,12 @@ function fakeRes(): {
   } as never;
 }
 
-function entry(id: string): BadgeManifestEntry {
+function entry(id: string, discordId = "1"): BadgeManifestEntry {
   return {
     id,
     kind: "role",
     guildId: "g",
-    discordId: "1",
+    discordId,
     displayName: "Movie Tier I",
     prefix: "@",
     suffix: "1+ movies",
@@ -130,25 +130,14 @@ describe("handleBadgeRequest", () => {
   });
 
   it("blocks direct ID routes by default", () => {
+    // The module loaded at the top of this file captured
+    // BADGE_ALLOW_DIRECT_DISCORD_ID_ROUTES (unset) as false at import time, so
+    // this exercises the genuinely-disabled direct-ID branch (404 JSON).
     const r = fakeRes();
     handleBadgeRequest(fakeReq("/badges/roles/123456789.svg"), r.res, config);
     expect(r.status).toBe(404);
     expect(r.headers["Content-Type"]).toContain("application/json");
     expect(JSON.parse(r.body).error).toBe("direct_id_routes_disabled");
-  });
-
-  it("allows direct ID routes when enabled", () => {
-    process.env.BADGE_ALLOW_DIRECT_DISCORD_ID_ROUTES = "true";
-    // re-import not needed; module reads env at call time via constants -- in
-    // this codebase the constant is captured at import time, so we instead
-    // test behavior through enabled-mode by stubbing the manifest with a
-    // matching entry and calling the handler directly via the registry path.
-    let m = readManifest(config);
-    m = upsertManifestEntry(m, entry("movie-tier-1"));
-    writeManifest(config, m);
-    const r = fakeRes();
-    handleBadgeRequest(fakeReq("/badges/movie-tier-1.svg"), r.res, config);
-    expect(r.status).toBe(200);
   });
 
   it("rejects unsafe ids", () => {
@@ -173,5 +162,84 @@ describe("handleBadgeRequest", () => {
     const r2 = fakeRes();
     handleBadgeRequest(req2, r2.res, config);
     expect(r2.status).toBe(304);
+  });
+});
+
+// badgeEndpoint captures ALLOW_DIRECT_ID_ROUTES from the env at module-import
+// time, so the only faithful way to exercise the flag-enabled direct-ID branch
+// (badgeEndpoint.ts ~l163-187) is to stub the env and re-import the module so a
+// fresh instance picks up the true value. We re-import the store helpers from
+// the same reset graph so the manifest we seed is read back consistently.
+describe("handleBadgeRequest -- direct ID routes enabled", () => {
+  let mod: typeof import("../../src/web/badgeEndpoint.js");
+  let store: typeof import("../../src/features/badges/store.js");
+
+  beforeEach(async () => {
+    vi.resetModules();
+    vi.stubEnv("BADGE_ALLOW_DIRECT_DISCORD_ID_ROUTES", "true");
+    mod = await import("../../src/web/badgeEndpoint.js");
+    store = await import("../../src/features/badges/store.js");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  function seed(e: BadgeManifestEntry): void {
+    let m = store.readManifest(config);
+    m = store.upsertManifestEntry(m, e);
+    store.writeManifest(config, m);
+  }
+
+  it("health JSON reports directIdRoutes enabled", () => {
+    const r = fakeRes();
+    mod.handleBadgeRequest(fakeReq("/api/badges/health"), r.res, config);
+    expect(r.status).toBe(200);
+    expect(JSON.parse(r.body).directIdRoutes).toBe(true);
+  });
+
+  it("renders a badge for a known discordId on a direct role route", () => {
+    seed(entry("movie-tier-1", "123456789"));
+    const r = fakeRes();
+    const handled = mod.handleBadgeRequest(
+      fakeReq("/badges/roles/123456789.svg"),
+      r.res,
+      config,
+    );
+    expect(handled).toBe(true);
+    expect(r.status).toBe(200);
+    expect(r.headers["Content-Type"]).toContain("image/svg+xml");
+    expect(r.body).toContain("<svg");
+    expect(r.body).toContain("Movie Tier I");
+  });
+
+  it("matches the synthesized id (role-<digits>) when present in the manifest", () => {
+    seed(entry("role-987654321", "000000000"));
+    const r = fakeRes();
+    mod.handleBadgeRequest(fakeReq("/badges/roles/987654321.svg"), r.res, config);
+    expect(r.status).toBe(200);
+    expect(r.headers["Content-Type"]).toContain("image/svg+xml");
+    expect(r.body).toContain("Movie Tier I");
+  });
+
+  it("serves an unknown-role fallback SVG when no manifest entry matches", () => {
+    const r = fakeRes();
+    const handled = mod.handleBadgeRequest(
+      fakeReq("/badges/roles/555555555.svg"),
+      r.res,
+      config,
+    );
+    expect(handled).toBe(true);
+    expect(r.status).toBe(200);
+    expect(r.headers["Content-Type"]).toContain("image/svg+xml");
+    expect(r.body).toContain("<svg");
+    expect(r.body).toContain("unknown role");
+  });
+
+  it("does not return the direct_id_routes_disabled error when enabled", () => {
+    const r = fakeRes();
+    mod.handleBadgeRequest(fakeReq("/badges/users/444444444.svg"), r.res, config);
+    expect(r.status).toBe(200);
+    expect(r.headers["Content-Type"]).toContain("image/svg+xml");
   });
 });

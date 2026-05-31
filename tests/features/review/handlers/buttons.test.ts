@@ -1,7 +1,8 @@
 /**
  * Pawtropolis Tech — tests/features/review/handlers/buttons.test.ts
  * WHAT: Unit tests for review button handlers.
- * WHY: Verify button routing, permission checks, and action dispatching.
+ * WHY: Verify button routing, staff gating, rate limiting, and mention hardening
+ *      by invoking the REAL exported handlers with mocked ButtonInteraction objects.
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
@@ -39,9 +40,16 @@ vi.mock("../../../../src/lib/sentry.js", () => ({
   captureException: vi.fn(),
 }));
 
+// Control the staff gate precisely. The real isStaff()/requireInteractionStaff()
+// helpers run; they delegate to these two predicates.
+const { mockShouldBypass, mockHasRole } = vi.hoisted(() => ({
+  mockShouldBypass: vi.fn(() => false),
+  mockHasRole: vi.fn(() => false),
+}));
+
 vi.mock("../../../../src/lib/config.js", () => ({
-  shouldBypass: vi.fn(() => false),
-  hasRole: vi.fn(() => false),
+  shouldBypass: mockShouldBypass,
+  hasRole: mockHasRole,
   getConfig: vi.fn(),
   ROLE_IDS: {
     GATEKEEPER: "gatekeeper-role-id",
@@ -51,6 +59,7 @@ vi.mock("../../../../src/lib/config.js", () => ({
 vi.mock("../../../../src/lib/cmdWrap.js", () => ({
   replyOrEdit: vi.fn().mockResolvedValue(undefined),
   ensureDeferred: vi.fn().mockResolvedValue(undefined),
+  ephemeralFollowUp: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("../../../../src/lib/ids.js", () => ({
@@ -69,6 +78,99 @@ vi.mock("../../../../src/features/appLookup.js", () => ({
   findAppByShortCode: vi.fn(),
 }));
 
+// Claim/queries are the DB-backed boundaries the real helpers call.
+vi.mock("../../../../src/features/review/claims.js", () => ({
+  getClaim: vi.fn(() => null),
+  claimGuard: vi.fn(() => null),
+}));
+
+vi.mock("../../../../src/features/review/queries.js", () => ({
+  loadApplication: vi.fn(),
+  getVoteOutVoters: vi.fn(() => []),
+}));
+
+// Heavy action runners and claim handlers are external to the routing logic
+// under test; stub them so routing can be asserted without their full chains.
+vi.mock("../../../../src/features/review/handlers/actionRunners.js", () => ({
+  runRejectAction: vi.fn().mockResolvedValue(undefined),
+  runVoteOutRetractAction: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("../../../../src/features/review/handlers/claimHandlers.js", () => ({
+  handleClaimToggle: vi.fn().mockResolvedValue(undefined),
+}));
+
+import {
+  handleReviewButton,
+  handleModmailButton,
+  handlePermRejectButton,
+  handleCopyUidButton,
+  handlePingInUnverified,
+  handleDeletePing,
+} from "../../../../src/features/review/handlers/buttons.js";
+
+import { handleClaimToggle } from "../../../../src/features/review/handlers/claimHandlers.js";
+
+import {
+  BTN_DECIDE_RE,
+  BTN_MODMAIL_RE,
+  BTN_PERM_REJECT_RE,
+  BTN_COPY_UID_RE,
+} from "../../../../src/lib/modalPatterns.js";
+
+import { findAppByShortCode } from "../../../../src/features/appLookup.js";
+import { loadApplication } from "../../../../src/features/review/queries.js";
+import { getConfig } from "../../../../src/lib/config.js";
+import { replyOrEdit } from "../../../../src/lib/cmdWrap.js";
+import { _resetCooldownsForTest } from "../../../../src/features/review/handlers/buttonCooldown.js";
+
+const STAFF_USER = "111111111111111111";
+
+/**
+ * Build a mock ButtonInteraction. Real helpers call inGuild(), member access,
+ * showModal(), reply(), deferUpdate(), etc. We expose vi.fn() spies for each so
+ * the handler's actual control flow can be asserted.
+ */
+function makeButtonInteraction(
+  customId: string,
+  opts: {
+    guildId?: string | null;
+    userId?: string;
+    member?: unknown;
+    guild?: unknown;
+    channel?: unknown;
+  } = {}
+) {
+  const guildId = opts.guildId === undefined ? "guild-1" : opts.guildId;
+  const member = "member" in opts ? opts.member : { roles: { cache: new Map() } };
+  const interaction = {
+    customId,
+    id: "9999999990ABCDEF",
+    createdTimestamp: Date.now(),
+    guildId,
+    user: { id: opts.userId ?? STAFF_USER, username: "mod" },
+    member,
+    guild: opts.guild,
+    channel: opts.channel,
+    deferred: false,
+    replied: false,
+    inGuild: vi.fn(() => guildId !== null),
+    reply: vi.fn().mockResolvedValue(undefined),
+    deferReply: vi.fn().mockResolvedValue(undefined),
+    deferUpdate: vi.fn().mockResolvedValue(undefined),
+    editReply: vi.fn().mockResolvedValue(undefined),
+    followUp: vi.fn().mockResolvedValue(undefined),
+    showModal: vi.fn().mockResolvedValue(undefined),
+    message: { delete: vi.fn().mockResolvedValue(undefined) },
+  };
+  return interaction;
+}
+
+/** Flip the gate so the real isStaff() returns true. */
+function asStaff() {
+  mockHasRole.mockReturnValue(true);
+}
+
 describe("features/review/handlers/buttons", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -77,403 +179,290 @@ describe("features/review/handlers/buttons", () => {
       all: mockAll,
       run: mockRun,
     });
+    mockShouldBypass.mockReturnValue(false);
+    mockHasRole.mockReturnValue(false);
+    vi.mocked(findAppByShortCode).mockReturnValue(null);
+    vi.mocked(loadApplication).mockReturnValue(undefined);
+    _resetCooldownsForTest();
   });
 
   describe("handleReviewButton", () => {
-    describe("pattern matching", () => {
-      const BUTTON_RE = /^v1:decide:(\w+):code([0-9A-F]{6})$/;
-
-      it("ignores non-matching customIds", () => {
-        const customId = "some-other-button";
-        const match = BUTTON_RE.exec(customId);
-        expect(match).toBeNull();
-      });
-
-      it("matches review button pattern", () => {
-        const customId = "v1:decide:approve:codeABCDEF";
-        const match = BUTTON_RE.exec(customId);
-        expect(match).not.toBeNull();
-      });
+    it("ignores non-matching customIds (no reply, no gate)", async () => {
+      const interaction = makeButtonInteraction("some-other-button");
+      await handleReviewButton(interaction as never);
+      expect(interaction.reply).not.toHaveBeenCalled();
+      expect(interaction.deferUpdate).not.toHaveBeenCalled();
+      expect(interaction.showModal).not.toHaveBeenCalled();
     });
 
-    describe("action routing", () => {
-      it("routes reject to modal opener (no defer)", () => {
-        const action = "reject";
-        const opensModal = ["reject", "approve", "accept", "kick", "unclaim"].includes(action);
-        expect(opensModal).toBe(true);
-      });
-
-      it("routes approve to modal opener (no defer)", () => {
-        const action = "approve";
-        const opensModal = ["reject", "approve", "accept", "kick", "unclaim"].includes(action);
-        expect(opensModal).toBe(true);
-      });
-
-      it("routes accept to modal opener (no defer)", () => {
-        const action = "accept";
-        const opensModal = ["reject", "approve", "accept", "kick", "unclaim"].includes(action);
-        expect(opensModal).toBe(true);
-      });
-
-      it("routes kick to modal opener", () => {
-        const action = "kick";
-        const opensModal = ["reject", "approve", "accept", "kick", "unclaim"].includes(action);
-        expect(opensModal).toBe(true);
-      });
-
-      it("routes unclaim to modal opener", () => {
-        const action = "unclaim";
-        const opensModal = ["reject", "approve", "accept", "kick", "unclaim"].includes(action);
-        expect(opensModal).toBe(true);
-      });
-
-      it("routes claim to direct handler with deferUpdate", () => {
-        const action = "claim";
-        const opensModal = ["reject", "approve", "accept", "kick", "unclaim"].includes(action);
-        expect(opensModal).toBe(false);
-      });
+    it("real BTN_DECIDE_RE matches the v1 decide pattern", () => {
+      // The handler routes off this exact regex; assert against the real one.
+      const m = BTN_DECIDE_RE.exec("v1:decide:approve:codeABCDEF");
+      expect(m).not.toBeNull();
+      expect(m?.[1]).toBe("approve");
+      expect(m?.[2]).toBe("ABCDEF");
     });
 
-    describe("error handling", () => {
-      it("generates trace ID from interaction ID", () => {
-        const interactionId = "1234567890ABCDEF";
-        const traceId = interactionId.slice(-8).toUpperCase();
-        expect(traceId).toBe("90ABCDEF");
-      });
+    it("rejects non-staff with the Gatekeeper-required reply", async () => {
+      const interaction = makeButtonInteraction("v1:decide:reject:codeABCDEF");
+      // not staff (default), but matches the pattern
+      await handleReviewButton(interaction as never);
+      expect(interaction.reply).toHaveBeenCalledTimes(1);
+      const arg = interaction.reply.mock.calls[0]![0] as { content: string };
+      expect(arg.content).toContain("Gatekeeper role required");
+      // gate fails => no modal opened, no claim handler
+      expect(interaction.showModal).not.toHaveBeenCalled();
+    });
 
-      it("defers reply on error for non-modal actions", () => {
-        const action = "claim";
-        const modalActions = ["reject", "approve", "accept", "kick", "unclaim"];
-        const shouldDefer = !modalActions.includes(action);
-        expect(shouldDefer).toBe(true);
-      });
+    it("routes reject (staff) to the modal opener without deferring", async () => {
+      asStaff();
+      vi.mocked(findAppByShortCode).mockReturnValue({ id: "app-ABCDEF" } as never);
+      vi.mocked(loadApplication).mockReturnValue({
+        id: "app-ABCDEF",
+        guild_id: "guild-1",
+        user_id: "222",
+        status: "submitted",
+      } as never);
+
+      const interaction = makeButtonInteraction("v1:decide:reject:codeABCDEF");
+      await handleReviewButton(interaction as never);
+
+      expect(interaction.showModal).toHaveBeenCalledTimes(1);
+      expect(interaction.deferUpdate).not.toHaveBeenCalled();
+    });
+
+    it("routes claim (staff) through deferUpdate to handleClaimToggle", async () => {
+      asStaff();
+      const app = {
+        id: "app-ABCDEF",
+        guild_id: "guild-1",
+        user_id: "222",
+        status: "submitted",
+      };
+      vi.mocked(findAppByShortCode).mockReturnValue({ id: "app-ABCDEF" } as never);
+      vi.mocked(loadApplication).mockReturnValue(app as never);
+
+      const interaction = makeButtonInteraction("v1:decide:claim:codeABCDEF");
+      await handleReviewButton(interaction as never);
+
+      expect(interaction.deferUpdate).toHaveBeenCalledTimes(1);
+      expect(handleClaimToggle).toHaveBeenCalledTimes(1);
+      expect(interaction.showModal).not.toHaveBeenCalled();
+    });
+
+    it("silently acks a rate-limited repeat click via deferUpdate", async () => {
+      asStaff();
+      vi.mocked(findAppByShortCode).mockReturnValue({ id: "app-ABCDEF" } as never);
+      vi.mocked(loadApplication).mockReturnValue({
+        id: "app-ABCDEF",
+        guild_id: "guild-1",
+        user_id: "222",
+        status: "submitted",
+      } as never);
+
+      // First claim click records the cooldown and dispatches.
+      const first = makeButtonInteraction("v1:decide:claim:codeABCDEF");
+      await handleReviewButton(first as never);
+      expect(handleClaimToggle).toHaveBeenCalledTimes(1);
+
+      // Immediate second click on the same user/code/action is rate-limited:
+      // it deferUpdate()s to dismiss the spinner and does NOT dispatch again.
+      const second = makeButtonInteraction("v1:decide:claim:codeABCDEF");
+      await handleReviewButton(second as never);
+      expect(second.deferUpdate).toHaveBeenCalledTimes(1);
+      expect(handleClaimToggle).toHaveBeenCalledTimes(1);
     });
   });
 
   describe("handleModmailButton", () => {
-    describe("pattern matching", () => {
-      const BTN_MODMAIL_RE = /^review:modmail:code([0-9A-F]{6})$/;
-
-      it("matches modmail button pattern", () => {
-        const customId = "review:modmail:codeABCDEF";
-        const match = BTN_MODMAIL_RE.exec(customId);
-        expect(match).not.toBeNull();
-        expect(match?.[1]).toBe("ABCDEF");
-      });
-
-      it("ignores non-matching patterns", () => {
-        const customId = "v1:decide:approve:codeABCDEF";
-        const match = BTN_MODMAIL_RE.exec(customId);
-        expect(match).toBeNull();
-      });
+    it("real BTN_MODMAIL_RE matches the modmail pattern", () => {
+      const m = BTN_MODMAIL_RE.exec("review:modmail:codeABCDEF");
+      expect(m).not.toBeNull();
+      expect(m?.[1]).toBe("ABCDEF");
     });
 
-    describe("success feedback", () => {
-      it("posts public message on success", () => {
-        const result = { success: true, message: "Modmail thread created." };
-        expect(result.success).toBe(true);
-        expect(result.message).toContain("Modmail");
-      });
+    it("returns silently on a non-matching customId", async () => {
+      const interaction = makeButtonInteraction("v1:decide:approve:codeABCDEF");
+      await handleModmailButton(interaction as never);
+      expect(interaction.deferUpdate).not.toHaveBeenCalled();
+      expect(interaction.reply).not.toHaveBeenCalled();
     });
 
-    describe("failure handling", () => {
-      it("sends ephemeral warning on failure", () => {
-        const result = { success: false, message: "User has DMs disabled" };
-        expect(result.success).toBe(false);
-      });
-
-      it("provides default error message when none given", () => {
-        const result = { success: false, message: null };
-        const msg = result.message || "Failed to create modmail thread. Check bot permissions.";
-        expect(msg).toContain("Failed to create modmail");
-      });
+    it("rejects non-staff with the Gatekeeper-required reply", async () => {
+      const interaction = makeButtonInteraction("review:modmail:codeABCDEF");
+      await handleModmailButton(interaction as never);
+      expect(interaction.reply).toHaveBeenCalledTimes(1);
+      const arg = interaction.reply.mock.calls[0]![0] as { content: string };
+      expect(arg.content).toContain("Gatekeeper role required");
+      // gate fails before any deferUpdate
+      expect(interaction.deferUpdate).not.toHaveBeenCalled();
     });
   });
 
   describe("handlePermRejectButton", () => {
-    describe("pattern matching", () => {
-      const BTN_PERM_REJECT_RE = /^review:(perm_reject|permreject):code([0-9A-F]{6})$/;
-
-      it("matches perm_reject pattern", () => {
-        const customId = "review:perm_reject:codeABCDEF";
-        const match = BTN_PERM_REJECT_RE.exec(customId);
-        expect(match).not.toBeNull();
-        expect(match?.[2]).toBe("ABCDEF");
-      });
-
-      it("matches permreject pattern", () => {
-        const customId = "review:permreject:code123456";
-        const match = BTN_PERM_REJECT_RE.exec(customId);
-        expect(match).not.toBeNull();
-        expect(match?.[2]).toBe("123456");
-      });
+    it("real BTN_PERM_REJECT_RE matches both perm_reject spellings", () => {
+      expect(BTN_PERM_REJECT_RE.exec("review:perm_reject:codeABCDEF")?.[2]).toBe("ABCDEF");
+      expect(BTN_PERM_REJECT_RE.exec("review:permreject:code123456")?.[2]).toBe("123456");
     });
 
-    describe("modal opening", () => {
-      it("opens permanent reject modal after validation", () => {
-        const action = "open_perm_reject_modal";
-        expect(action).toBe("open_perm_reject_modal");
-      });
+    it("rejects non-staff with the Gatekeeper-required reply", async () => {
+      const interaction = makeButtonInteraction("review:perm_reject:codeABCDEF");
+      await handlePermRejectButton(interaction as never);
+      expect(interaction.reply).toHaveBeenCalledTimes(1);
+      const arg = interaction.reply.mock.calls[0]![0] as { content: string };
+      expect(arg.content).toContain("Gatekeeper role required");
+    });
+
+    it("opens the permanent-reject modal for staff with a valid app", async () => {
+      asStaff();
+      vi.mocked(findAppByShortCode).mockReturnValue({ id: "app-ABCDEF" } as never);
+      vi.mocked(loadApplication).mockReturnValue({
+        id: "app-ABCDEF",
+        guild_id: "guild-1",
+        user_id: "222",
+        status: "submitted",
+      } as never);
+
+      const interaction = makeButtonInteraction("review:perm_reject:codeABCDEF");
+      await handlePermRejectButton(interaction as never);
+
+      expect(interaction.showModal).toHaveBeenCalledTimes(1);
     });
   });
 
   describe("handleCopyUidButton", () => {
-    describe("pattern matching", () => {
-      const BTN_COPY_UID_RE = /^review:copy_uid:code([0-9A-F]{6}):user(\d+)$/;
-
-      it("matches copy_uid pattern", () => {
-        const customId = "review:copy_uid:codeABCDEF:user123456789";
-        const match = BTN_COPY_UID_RE.exec(customId);
-        expect(match).not.toBeNull();
-        expect(match?.[1]).toBe("ABCDEF");
-        expect(match?.[2]).toBe("123456789");
-      });
+    it("real BTN_COPY_UID_RE captures code and user", () => {
+      const m = BTN_COPY_UID_RE.exec("review:copy_uid:codeABCDEF:user123456789");
+      expect(m).not.toBeNull();
+      expect(m?.[1]).toBe("ABCDEF");
+      expect(m?.[2]).toBe("123456789");
     });
 
-    describe("guild validation", () => {
-      it("requires guild context", () => {
-        const guildId = null;
-        expect(guildId).toBeNull();
-      });
+    it("rejects non-staff with the Gatekeeper-required reply", async () => {
+      const interaction = makeButtonInteraction("review:copy_uid:codeABCDEF:user123456789");
+      await handleCopyUidButton(interaction as never);
+      expect(interaction.reply).toHaveBeenCalledTimes(1);
+      const arg = interaction.reply.mock.calls[0]![0] as { content: string };
+      expect(arg.content).toContain("Gatekeeper role required");
     });
 
-    describe("application validation", () => {
-      it("verifies application exists for security", () => {
-        const appRow = null;
-        expect(appRow).toBeNull();
-      });
+    it("refuses to leak a UID when no application exists for the code (security check)", async () => {
+      asStaff();
+      vi.mocked(findAppByShortCode).mockReturnValue(null);
+
+      const interaction = makeButtonInteraction("review:copy_uid:codeABCDEF:user123456789");
+      await handleCopyUidButton(interaction as never);
+
+      expect(interaction.reply).toHaveBeenCalledTimes(1);
+      const arg = interaction.reply.mock.calls[0]![0] as { content: string };
+      expect(arg.content).toContain("No application with code");
+      // must NOT have replied with the raw UID
+      expect(arg.content).not.toBe("123456789");
     });
 
-    describe("response", () => {
-      it("replies with UID only for easy copying", () => {
-        const userId = "123456789012345678";
-        const content = userId;
-        expect(content).toBe(userId);
-      });
-    });
+    it("replies with the UID only and logs an audit row when the app exists", async () => {
+      asStaff();
+      vi.mocked(findAppByShortCode).mockReturnValue({ id: "app-ABCDEF" } as never);
 
-    describe("audit trail", () => {
-      it("inserts copy_uid action to review_action table", () => {
-        const action = "copy_uid";
-        expect(action).toBe("copy_uid");
-      });
+      const interaction = makeButtonInteraction("review:copy_uid:codeABCDEF:user123456789");
+      await handleCopyUidButton(interaction as never);
+
+      expect(interaction.reply).toHaveBeenCalledTimes(1);
+      const arg = interaction.reply.mock.calls[0]![0] as { content: string };
+      // mobile-copy convenience: content is exactly the UID, nothing else
+      expect(arg.content).toBe("123456789");
+
+      // audit trail INSERT into review_action
+      expect(mockPrepare).toHaveBeenCalled();
+      const insertedSql = mockPrepare.mock.calls.map((c) => c[0] as string);
+      expect(insertedSql.some((s) => s.includes("INSERT INTO review_action"))).toBe(true);
+      expect(mockRun).toHaveBeenCalledWith("app-ABCDEF", STAFF_USER, 1700000000);
     });
   });
 
   describe("handlePingInUnverified", () => {
-    describe("pattern matching", () => {
-      const legacy = /^v1:ping:(.+)$/;
-      const modern = /^review:ping_unverified:code([0-9A-F]{6})(?::user(\d+))?$/;
-
-      it("matches legacy pattern", () => {
-        const customId = "v1:ping:user123456789";
-        const match = legacy.exec(customId);
-        expect(match).not.toBeNull();
-      });
-
-      it("matches modern pattern with user", () => {
-        const customId = "review:ping_unverified:codeABCDEF:user123456789";
-        const match = modern.exec(customId);
-        expect(match).not.toBeNull();
-        expect(match?.[1]).toBe("ABCDEF");
-        expect(match?.[2]).toBe("123456789");
-      });
-
-      it("matches modern pattern without user", () => {
-        const customId = "review:ping_unverified:codeABCDEF";
-        const match = modern.exec(customId);
-        expect(match).not.toBeNull();
-        expect(match?.[2]).toBeUndefined();
-      });
+    it("returns silently when the customId matches neither legacy nor modern pattern", async () => {
+      const interaction = makeButtonInteraction("totally:unrelated");
+      await handlePingInUnverified(interaction as never);
+      expect(interaction.reply).not.toHaveBeenCalled();
     });
 
-    describe("configuration check", () => {
-      it("requires unverified_channel_id in config", () => {
-        const cfg = { unverified_channel_id: null };
-        expect(cfg.unverified_channel_id).toBeNull();
-      });
+    it("rejects a non-staff member with the Gatekeeper-required reply", async () => {
+      // This handler responds via replyOrEdit (not interaction.reply directly).
+      const interaction = makeButtonInteraction(
+        "review:ping_unverified:codeABCDEF:user123456789",
+        { guild: { channels: { fetch: vi.fn() } } }
+      );
+      await handlePingInUnverified(interaction as never);
+      expect(replyOrEdit).toHaveBeenCalledTimes(1);
+      const arg = vi.mocked(replyOrEdit).mock.calls[0]![1] as { content: string };
+      expect(arg.content).toContain("Gatekeeper role required");
     });
 
-    describe("permission checks", () => {
-      it("checks ViewChannel permission", () => {
-        const permission = "ViewChannel";
-        expect(permission).toBe("ViewChannel");
-      });
+    it("sends the ping with hardened allowedMentions (only the target user, parse [])", async () => {
+      asStaff();
+      vi.mocked(getConfig).mockReturnValue({ unverified_channel_id: "chan-1" } as never);
 
-      it("checks SendMessages permission", () => {
-        const permission = "SendMessages";
-        expect(permission).toBe("SendMessages");
-      });
+      const send = vi.fn().mockResolvedValue({ id: "msg-1" });
+      const channel = {
+        id: "chan-1",
+        isTextBased: () => true,
+        permissionsFor: () => ({ has: () => true }),
+        send,
+      };
+      const guild = {
+        channels: { fetch: vi.fn().mockResolvedValue(channel) },
+        members: { me: { id: "bot-1" } },
+      };
 
-      it("checks EmbedLinks permission", () => {
-        const permission = "EmbedLinks";
-        expect(permission).toBe("EmbedLinks");
-      });
+      const interaction = makeButtonInteraction(
+        "review:ping_unverified:codeABCDEF:user123456789",
+        { guild, channel }
+      );
+      await handlePingInUnverified(interaction as never);
 
-      it("warns if ManageMessages missing (auto-delete won't work)", () => {
-        const canManage = false;
-        expect(canManage).toBe(false);
-      });
-    });
-
-    describe("ping message", () => {
-      it("mentions only the specific user", () => {
-        const userId = "123456789";
-        const content = `<@${userId}>`;
-        const allowedMentions = { users: [userId], parse: [] };
-
-        expect(content).toBe("<@123456789>");
-        expect(allowedMentions.users).toContain(userId);
-        expect(allowedMentions.parse).toEqual([]);
-      });
-    });
-
-    describe("auto-delete", () => {
-      it("schedules deletion after 30 seconds when ManageMessages available", () => {
-        const canManage = true;
-        const deleteDelay = 30_000;
-
-        expect(canManage).toBe(true);
-        expect(deleteDelay).toBe(30000);
-      });
-
-      it("skips auto-delete when ManageMessages unavailable", () => {
-        const canManage = false;
-        expect(canManage).toBe(false);
-      });
-    });
-
-    describe("error handling", () => {
-      it("detects permission errors by code 50013", () => {
-        const err = { code: 50013 };
-        const isPermissionError = err.code === 50013 || err.code === "50013";
-        expect(isPermissionError).toBe(true);
-      });
-
-      it("provides helpful error message for permission errors", () => {
-        const isPermissionError = true;
-        const errorMsg = isPermissionError
-          ? "Bot is missing permissions in the unverified channel."
-          : "Failed to post ping.";
-        expect(errorMsg).toContain("missing permissions");
-      });
+      expect(send).toHaveBeenCalledTimes(1);
+      const sent = send.mock.calls[0]![0] as {
+        content: string;
+        allowedMentions: { users: string[]; parse: string[] };
+      };
+      expect(sent.content).toBe("<@123456789>");
+      // SECURITY: must restrict mentions to the single target user, no mass pings.
+      expect(sent.allowedMentions.users).toEqual(["123456789"]);
+      expect(sent.allowedMentions.parse).toEqual([]);
     });
   });
 
   describe("handleDeletePing", () => {
-    describe("pattern matching", () => {
-      const pattern = /^v1:ping:delete:(.+)$/;
+    it("returns silently on a non-matching customId", async () => {
+      const interaction = makeButtonInteraction("not:a:delete:ping");
+      await handleDeletePing(interaction as never);
+      expect(interaction.reply).not.toHaveBeenCalled();
+      expect(interaction.message.delete).not.toHaveBeenCalled();
+    });
 
-      it("matches delete ping pattern", () => {
-        const customId = "v1:ping:delete:1234567890";
-        const match = pattern.exec(customId);
-        expect(match).not.toBeNull();
-        expect(match?.[1]).toBe("1234567890");
+    it("rejects a non-staff member with the Gatekeeper-required reply", async () => {
+      const interaction = makeButtonInteraction("v1:ping:delete:1234567890", {
+        guild: {},
       });
+      await handleDeletePing(interaction as never);
+      expect(interaction.reply).toHaveBeenCalledTimes(1);
+      const arg = interaction.reply.mock.calls[0]![0] as { content: string };
+      expect(arg.content).toContain("Gatekeeper role required");
+      expect(interaction.message.delete).not.toHaveBeenCalled();
     });
 
-    describe("guild validation", () => {
-      it("requires guild context", () => {
-        const guildId = null;
-        expect(guildId).toBeNull();
+    it("deletes the message and acknowledges for a staff member", async () => {
+      asStaff();
+      const interaction = makeButtonInteraction("v1:ping:delete:1234567890", {
+        guild: {},
       });
-    });
+      await handleDeletePing(interaction as never);
 
-    describe("staff validation", () => {
-      it("requires Gatekeeper role", () => {
-        const isStaff = false;
-        expect(isStaff).toBe(false);
-      });
-    });
-
-    describe("deletion", () => {
-      it("deletes the interaction message", () => {
-        const action = "delete_message";
-        expect(action).toBe("delete_message");
-      });
-
-      it("acknowledges deletion ephemerally", () => {
-        const content = "Ping deleted.";
-        expect(content).toBe("Ping deleted.");
-      });
-    });
-
-    describe("error handling", () => {
-      it("handles already-deleted messages gracefully", () => {
-        const errorMessage = "Failed to delete ping message (it may have been already deleted).";
-        expect(errorMessage).toContain("already deleted");
-      });
-    });
-  });
-});
-
-describe("button customId formats", () => {
-  describe("review decision buttons", () => {
-    it("uses v1:decide:<action>:code<CODE> format", () => {
-      const format = "v1:decide:<action>:code<CODE>";
-      expect(format).toContain("v1:decide");
-      expect(format).toContain("code");
-    });
-  });
-
-  describe("modmail button", () => {
-    it("uses review:modmail:code<CODE> format", () => {
-      const format = "review:modmail:code<CODE>";
-      expect(format).toContain("review:modmail");
-    });
-  });
-
-  describe("copy UID button", () => {
-    it("uses review:copy_uid:code<CODE>:user<ID> format", () => {
-      const format = "review:copy_uid:code<CODE>:user<ID>";
-      expect(format).toContain("copy_uid");
-      expect(format).toContain("user");
-    });
-  });
-
-  describe("ping button", () => {
-    it("modern format: review:ping_unverified:code<CODE>:user<ID>", () => {
-      const format = "review:ping_unverified:code<CODE>:user<ID>";
-      expect(format).toContain("ping_unverified");
-    });
-
-    it("legacy format: v1:ping:<payload>", () => {
-      const format = "v1:ping:<payload>";
-      expect(format).toContain("v1:ping");
-    });
-  });
-});
-
-describe("deferring behavior", () => {
-  describe("modal-opening actions", () => {
-    const modalActions = ["reject", "approve", "accept", "kick", "unclaim"];
-
-    it("does not defer for reject (opens modal)", () => {
-      expect(modalActions).toContain("reject");
-    });
-
-    it("does not defer for approve (opens modal)", () => {
-      expect(modalActions).toContain("approve");
-    });
-
-    it("does not defer for accept (opens modal)", () => {
-      expect(modalActions).toContain("accept");
-    });
-
-    it("does not defer for kick (opens modal)", () => {
-      expect(modalActions).toContain("kick");
-    });
-
-    it("does not defer for unclaim (opens modal)", () => {
-      expect(modalActions).toContain("unclaim");
-    });
-  });
-
-  describe("direct actions", () => {
-    it("uses deferUpdate for claim button", () => {
-      const action = "claim";
-      const useDeferUpdate = action === "claim";
-      expect(useDeferUpdate).toBe(true);
+      expect(interaction.message.delete).toHaveBeenCalledTimes(1);
+      expect(interaction.reply).toHaveBeenCalledTimes(1);
+      const arg = interaction.reply.mock.calls[0]![0] as { content: string };
+      expect(arg.content).toBe("Ping deleted.");
     });
   });
 });
