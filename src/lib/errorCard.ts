@@ -172,20 +172,14 @@ type ErrorCardDetails = {
   lastSql?: string | null;
 };
 
-// If this function fails, the user gets nothing. No pressure.
 /**
- * postErrorCard
- * WHAT: Sends an ephemeral embed with error details and a human hint.
- * WHY: Keeps users informed without leaking internals publicly.
- * PARAMS:
- *  - interaction: Any reply-capable interaction.
- *  - details: traceId/cmd/phase + err payload + optional lastSql.
- * RETURNS: Promise<void> — catches 10062/expired and logs instead of throwing.
+ * renderErrorCardEmbed
+ * WHAT: Builds the diagnostic error embed from details, with no I/O.
+ * WHY: Lets callers that must NOT editReply over a source message (e.g. a
+ *      button/select that already deferUpdate'd) deliver the same card via a
+ *      separate followUp instead of going through postErrorCard's replyOrEdit.
  */
-export async function postErrorCard(
-  interaction: ReplyCapableInteraction,
-  details: ErrorCardDetails
-) {
+export function renderErrorCardEmbed(details: ErrorCardDetails): EmbedBuilder {
   const meta = reqCtx();
   const commandLabel =
     meta.kind === "button"
@@ -214,16 +208,33 @@ export async function postErrorCard(
     { name: "Hint", value: hintFor(details.err) },
   ];
 
-  const embed = new EmbedBuilder()
+  return new EmbedBuilder()
     .setTitle("Command Error")
     .setColor(0xed4245)
     .addFields(fields)
     .setFooter({ text: new Date().toISOString() });
+}
+
+// If this function fails, the user gets nothing. No pressure.
+/**
+ * postErrorCard
+ * WHAT: Sends an ephemeral embed with error details and a human hint.
+ * WHY: Keeps users informed without leaking internals publicly.
+ * PARAMS:
+ *  - interaction: Any reply-capable interaction.
+ *  - details: traceId/cmd/phase + err payload + optional lastSql.
+ * RETURNS: Promise<void> — catches 10062/expired and logs instead of throwing.
+ */
+export async function postErrorCard(
+  interaction: ReplyCapableInteraction,
+  details: ErrorCardDetails
+) {
+  const embed = renderErrorCardEmbed(details);
 
   try {
-    // Error cards are public (not ephemeral) so staff can see them if the user asks for help.
+    // On a fresh interaction replyOrEdit posts a public card; when a prior defer
+    // was ephemeral the editReply path inherits that and the card stays ephemeral.
     // Trace IDs are safe to expose - they're just correlation IDs, not secrets.
-    // Public (no Ephemeral flag) so staff can see the error card if the user asks for help.
     await replyOrEdit(interaction, { embeds: [embed] });
   } catch (err) {
     const code = (err as { code?: unknown })?.code;
