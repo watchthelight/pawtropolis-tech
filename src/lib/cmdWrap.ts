@@ -536,3 +536,34 @@ export async function replyOrEdit(
     throw err;
   }
 }
+
+/**
+ * Send a private, per-user message in response to an already-acknowledged
+ * interaction, without touching the original message.
+ *
+ * WHY: replyOrEdit cannot tell deferReply() apart from deferUpdate() (discord.js
+ * sets `deferred = true` for both). After a component interaction calls
+ * deferUpdate(), editReply() PATCHes the public source message (e.g. a shared
+ * review card) instead of creating an ephemeral reply, so ephemeral feedback
+ * leaks publicly and clobbers the card. followUp() always posts a separate
+ * message and honors the Ephemeral flag, and is valid after both deferReply()
+ * and deferUpdate() - so it is the correct primitive for "tell just the clicker
+ * something" after a component ack.
+ */
+export async function ephemeralFollowUp(
+  interaction: ReplyableInteraction,
+  content: string
+) {
+  try {
+    return await interaction.followUp({ content, flags: MessageFlags.Ephemeral });
+  } catch (err) {
+    const code = (err as { code?: unknown })?.code;
+    // 10062 (expired) / 40060 (already acknowledged) are not real failures here.
+    if (code === 10062 || code === 40060) return;
+    logger.warn(
+      { evt: "ephemeral_followup_fail", traceId: reqCtx().traceId, code, err },
+      "ephemeral followUp failed"
+    );
+    return;
+  }
+}

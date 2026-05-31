@@ -10,13 +10,12 @@
 
 import {
   ButtonInteraction,
-  MessageFlags,
   type ModalSubmitInteraction,
 } from "discord.js";
 import { db } from "../../../db/db.js";
 import { logger } from "../../../lib/logger.js";
 import { captureException } from "../../../lib/sentry.js";
-import { replyOrEdit } from "../../../lib/cmdWrap.js";
+import { ephemeralFollowUp } from "../../../lib/cmdWrap.js";
 import { shortCode } from "../../../lib/ids.js";
 import { logActionPretty } from "../../../logging/pretty.js";
 
@@ -59,24 +58,14 @@ export async function handleClaimToggle(interaction: ButtonInteraction, app: App
         msg = "Application not found.";
       }
 
-      await replyOrEdit(interaction, {
-        content: msg,
-        flags: MessageFlags.Ephemeral,
-      }).catch((replyErr) => {
-        logger.debug({ err: replyErr, appId: app.id, action: "claim" }, "[review] claim-error reply failed");
-      });
+      await ephemeralFollowUp(interaction, msg);
 
       return;
     }
 
     // Unexpected error
     logger.error({ err, appId: app.id }, "[review] unexpected claim error");
-    await replyOrEdit(interaction, {
-      content: "An unexpected error occurred. Please try again.",
-      flags: MessageFlags.Ephemeral,
-    }).catch((replyErr) => {
-      logger.debug({ err: replyErr, appId: app.id, action: "claim" }, "[review] unexpected-error reply failed");
-    });
+    await ephemeralFollowUp(interaction, "An unexpected error occurred. Please try again.");
     return;
   }
 
@@ -88,12 +77,10 @@ export async function handleClaimToggle(interaction: ButtonInteraction, app: App
     .get(app.guild_id, app.user_id) as { permanently_rejected: number } | undefined;
 
   if (permRejectCheck) {
-    await replyOrEdit(interaction, {
-      content: `This user has been permanently rejected from **${interaction.guild?.name ?? "this server"}** and cannot reapply.`,
-      flags: MessageFlags.Ephemeral,
-    }).catch((err) => {
-      logger.debug({ err, appId: app.id, action: "claim" }, "[review] perm-rejected reply failed");
-    });
+    await ephemeralFollowUp(
+      interaction,
+      `This user has been permanently rejected from **${interaction.guild?.name ?? "this server"}** and cannot reapply.`
+    );
     logger.info(
       { userId: app.user_id, guildId: app.guild_id, moderatorId: interaction.user.id },
       "[review] Claim attempt blocked - user permanently rejected"
@@ -142,12 +129,10 @@ export async function handleClaimToggle(interaction: ButtonInteraction, app: App
 
   notifyDashboard("review:claimed", { appId: app.id, reviewerId: interaction.user.id });
 
-  // Update the review card message content to show who claimed it
-  await replyOrEdit(interaction, {
-    content: `<@${interaction.user.id}> has claimed this application.`,
-  }).catch((err) => {
-    logger.debug({ err, appId: app.id, action: "claim" }, "[review] claim-success reply failed");
-  });
+  // The card itself already reflects the claim (ensureReviewMessage above).
+  // Confirm privately to the clicking mod instead of editReply-ing the shared
+  // card content (which would replace the rendered embed + buttons).
+  await ephemeralFollowUp(interaction, "You have claimed this application.");
 }
 
 /**
@@ -175,24 +160,14 @@ export async function handleUnclaimAction(interaction: ButtonInteraction | Modal
         msg = "Application not found.";
       }
 
-      await replyOrEdit(interaction, {
-        content: msg,
-        flags: MessageFlags.Ephemeral,
-      }).catch((replyErr) => {
-        logger.debug({ err: replyErr, appId: app.id, action: "unclaim" }, "[review] unclaim-error reply failed");
-      });
+      await ephemeralFollowUp(interaction, msg);
 
       return;
     }
 
     // Unexpected error
     logger.error({ err, appId: app.id }, "[review] unexpected unclaim error");
-    await replyOrEdit(interaction, {
-      content: "An unexpected error occurred. Please try again.",
-      flags: MessageFlags.Ephemeral,
-    }).catch((replyErr) => {
-      logger.debug({ err: replyErr, appId: app.id, action: "unclaim" }, "[review] unexpected-error reply failed");
-    });
+    await ephemeralFollowUp(interaction, "An unexpected error occurred. Please try again.");
     return;
   }
 
@@ -240,10 +215,5 @@ export async function handleUnclaimAction(interaction: ButtonInteraction | Modal
   notifyDashboard("review:unclaimed", { appId: app.id, reviewerId: interaction.user.id });
 
   // Send single ephemeral feedback to confirm unclaim (no public message)
-  await replyOrEdit(interaction, {
-    content: `Application \`${shortCode(app.id)}\` unclaimed successfully.`,
-    flags: MessageFlags.Ephemeral,
-  }).catch((err) => {
-    logger.debug({ err, appId: app.id, action: "unclaim" }, "[review] unclaim-success reply failed");
-  });
+  await ephemeralFollowUp(interaction, `Application \`${shortCode(app.id)}\` unclaimed successfully.`);
 }
