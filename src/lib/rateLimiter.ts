@@ -143,10 +143,15 @@ function cleanupOldCooldowns(): void {
   }
 }
 
-// Start cleanup interval
-// GOTCHA: This interval is never cleared, so this module can't be cleanly unloaded.
-// Fine for production, annoying for tests. If tests start hanging, this is why.
-setInterval(cleanupOldCooldowns, CLEANUP_INTERVAL_MS);
+// Start cleanup interval. unref() so it never keeps the event loop alive (matching
+// every other limiter/scheduler); stoppable for tests/embedding to avoid hangs.
+const cleanupTimer = setInterval(cleanupOldCooldowns, CLEANUP_INTERVAL_MS);
+cleanupTimer.unref?.();
+
+/** Stop the cooldown cleanup interval (for graceful shutdown / tests). */
+export function stopRateLimiterCleanup(): void {
+  clearInterval(cleanupTimer);
+}
 
 /*
  * Export cooldown constants for commands to use.
