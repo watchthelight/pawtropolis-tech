@@ -67,11 +67,16 @@ async function main() {
   await client.login(process.env.DISCORD_TOKEN);
   await new Promise((r) => client.once("ready", r));
 
-  const guild = client.guilds.cache.get(guildId);
+  const guild = await client.guilds.fetch(guildId).catch(() => null);
   if (!guild) {
     console.error(`Guild ${guildId} not found`);
     process.exit(1);
   }
+
+  // role.members is a live filter over the member cache, which is nearly empty for
+  // a freshly-connected client. Without this fetch every tier reports 0 members and
+  // the backfill silently grants nothing. Populate the cache first.
+  await guild.members.fetch();
 
   const upsert = db.prepare(`
     INSERT INTO patreon_art_granted (guild_id, user_id, art_type, quantity_granted, last_granted_at_s)
