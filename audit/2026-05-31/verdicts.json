@@ -1,0 +1,1226 @@
+[
+  {
+    "id": "A0033",
+    "real": true,
+    "severity": "critical",
+    "reason": "Confirmed in src/commands/backfill.ts:137 -- execute() spawns ['npx','tsx','scripts/backfill-message-activity.ts', guildId, weeks, ...]. Glob of scripts/**/backfill* shows that file does NOT exist (only backfill-app-mappings, backfill-user-cache.ts/.mjs, backfill-patreon-art-grants, backfill-general). The real backfill is scripts/backfill/run.ts, which parses --channels=/--skip-reactions/--resume-only and reads guildId from env.GUILD_ID -- it takes no positional guildId/weeks args. So tsx exits non-zero with module-not-found; the close handler (line 175-227) sets success=code===0 and renders the '❌ Backfill Failed' embed. Staff command can never succeed. Critical defect independently confirmed."
+  },
+  {
+    "id": "A0261",
+    "real": true,
+    "severity": "critical",
+    "reason": "Confirmed in src/features/byteTokenHandler.ts handleConfirm: Step1 roles.remove(tokenRoleId) at 314 runs BEFORE Step3 roles.add(multiplierRoleId) at 348 and Step4 upsertActiveMultiplier at 385. The single catch at 449 only calls editReply with an error embed -- it does NOT re-add the token role and writes nothing to active_byte_multipliers. usebyte.ts findMemberByteTokens (146-158) reads member.roles.cache.has(tokenRoleId) as the source of truth; there is no balance ledger, so the token role IS the entitlement. A throw/429/permission-flip at the add (or any step before 385, after the remove succeeds) permanently consumes the token and grants nothing -- irreversible value destruction with no recovery path. Genuine non-atomicity defect. (Note: A0315 is the same defect from a different source bucket.)"
+  },
+  {
+    "id": "A0289",
+    "real": true,
+    "severity": "critical",
+    "reason": "Confirmed in deploy.sh: line 2 is `set -euo pipefail`; line 435 runs `ssh_remote \"cd ${REMOTE_PATH} && node scripts/migrate-remote.js\" || echo \"Migration step completed (may have warnings)\"`. The `|| echo` always exits 0, so a non-zero migration exit is swallowed and set -e never aborts. Step 7 (lines 449-455) then unconditionally runs `pm2 startOrRestart ecosystem.config.cjs`, bringing up new code against an un/half-migrated DB. scripts/migrate-remote.js exists, and docs/reference/database-schema-safety.md:13 explicitly promises the opposite ('If a migration fails, the rest of the deploy bails.'). Documented contract directly violated; highest-impact ops defect. Independently confirmed."
+  },
+  {
+    "id": "A0315",
+    "real": true,
+    "severity": "critical",
+    "reason": "Confirmed -- same code path as A0261, cited at the narrower window 268-394. byteTokenHandler.ts removes the token role at 314 before adding the multiplier (348) and writing the DB row (385); the catch at 449 does not compensate (no re-add of the token role). usebyte.ts treats role presence as the wallet (findMemberByteTokens reads roles.cache.has), confirming the cross-file claim that the token role is the entitlement. Pre-flight canManageRole at 245 does not prevent a hierarchy change / 429 / transient failure occurring at the actual roles.add. Genuine irreversible economic-loss defect. (Duplicate of A0261: same file, overlapping lines, same root cause and fix; both are valid.)"
+  },
+  {
+    "id": "A0008",
+    "real": true,
+    "severity": "high",
+    "reason": "Confirmed across three files. migrations/039_fix_art_job_unique_constraint.ts:12 does `import { db } from '../src/db/db.js'` and exports migrate039FixArtJobUniqueConstraint() with NO db parameter, operating on the singleton. scripts/migrate.ts applyMigration (182-221) loads the fn by name migrate039FixArtJobUniqueConstraint, runs `db.transaction(() => migrateFn(db))` on ITS OWN handle (line 50), and -- confirmed by grep -- contains NO recordMigration / INSERT INTO schema_migrations anywhere. 039 never calls recordMigration (absent from the grep match list), so version 039 is never inserted and stays pending forever: it re-runs every invocation and forces createBackup each run (pendingMigrations.length>0). Its writes execute via the singleton's autocommit, outside the runner's transaction (broken atomicity), and importing src/db/db.ts opens a second WAL connection + runs the schema bootstrap. Contrast migration 040 (migrate040EventAttendanceUnification(db: Database) ... recordMigration(db,'040',...) at line 135), the standard pattern. All three consequences verified. Severity high is appropriate (re-runs are non-destructive due to IF NOT EXISTS / DROP INDEX IF EXISTS guards and the dup query returning 0 rows once the unique index exists, but the perpetual re-run, forced backups, broken atomicity, and double DB handle are real)."
+  },
+  {
+    "id": "A0010",
+    "real": true,
+    "severity": "high",
+    "reason": "Confirmed in scripts/backfill-patreon-art-grants.ts: line 70 `const guild = client.guilds.cache.get(guildId)`, then line 100 `for (const [, member] of role.members)` with NO guild.members.fetch() anywhere in the file (grep of scripts/ for members.fetch does not list this script). Client is created with the GuildMembers intent (line 64) but role.members is a filter over the member cache, which is near-empty on a fresh connect, so role.members.size is ~0, the inner loop never runs, and it prints '(0 members)' then 'Backfill complete: 0 members, 0 grant records' and exits 0 -- silent no-op. Sibling scripts prove the intended pattern: backfill-user-cache.ts:49 and backfill-user-cache.mjs:35 both `await guild.members.fetch()` first. This is the one-time economy backfill meant to run after migration 062; entitled supporters silently get nothing. Genuine high-severity defect."
+  },
+  {
+    "id": "A0016",
+    "real": true,
+    "severity": "medium",
+    "reason": "Partially confirmed but central mechanism REFUTED. Confirmed: scripts/fix-review-action.cjs needsMigration() (line 86) returns true on missing idx_review_action_app_time / non-CASCADE FK alone, and unlike migration 028 (which early-returns at lines 90-95 when created_at is already INTEGER) it then runs the full copy-swap, re-applying CAST(strftime('%s', created_at) AS INTEGER) (lines 128-135) with no source-type guard. So running it on an INTEGER-but-missing-index DB does corrupt created_at. HOWEVER the finding's load-bearing claim is false: I tested in better-sqlite3 and strftime('%s', 1700000000) returns NULL, not 'garbage ~year 2026'. The COALESCE therefore falls through to strftime('%s','now'), resetting every created_at to the CURRENT time, not to bogus future values. Real corruption, but milder/different than described, and the trigger is narrow: it is a manual ops script superseded by migration 028, and on a healthy 028-migrated DB needsMigration() returns false (index present, INTEGER, CASCADE, no CHECK). Downgraded high->medium for mischaracterized impact and unlikely trigger state."
+  },
+  {
+    "id": "A0037",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed the unscoped deletes: gateMain.ts executeReset 'wipe_tables' (lines 385-391) runs DELETE FROM application / application_response / review_action / modmail_bridge / review_card / avatar_scan / review_claim with no WHERE guild_id, while the next step (line 398) is correctly scoped DELETE FROM guild_question WHERE guild_id=? and the modal customId is guild-scoped, proving per-guild intent. application (schema.sql:199) and modmail_bridge (651) have guild_id NOT NULL, so those unscoped deletes wipe ALL guilds, and FK CASCADE from application then wipes the child tables for all guilds too. NOTE the finding overclaims that all listed tables 'carry a guild_id column' (confirmed in schema): application_response/review_action/review_card/review_claim/avatar_scan actually have NO guild_id and cascade from application via app_id. Core multi-guild data-loss bug is real, but CLAUDE.md states this is a single-prod-guild deployment and the finding itself calls it a 'latent footgun', so present-day impact is limited; downgraded high->medium."
+  },
+  {
+    "id": "A0054",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. verify.ts inserts into verified_users (lines 196-198) BEFORE member.roles.add (lines 206-217), the catch only logs (216) and continues, and the success DM (219) is sent unconditionally regardless of roleGranted. The early existence check (lines 69-81) returns 'You have the Thin Line role' without re-attempting the grant, and verified_users has UNIQUE(guild_id,discord_user_id) (schema.sql:992) so re-running /verify hits the existence early-return and can never recover the role. So a failed grant (missing Manage Roles, role hierarchy, transient API error) leaves a verified DB row with no role, unrecoverable via the command, and the 'already verified' message then lies. Genuine state-divergence/non-idempotency defect. Severity adjusted high->medium: the Thin Line role is a cosmetic honor-system role, not a permission/security grant, so user-facing impact is moderate."
+  },
+  {
+    "id": "A0071",
+    "real": true,
+    "severity": "high",
+    "reason": "Confirmed cleanly across files. movie_attendance was created with UNIQUE(guild_id,user_id,event_date) (migrations/025_role_automation.ts:111); migration 040 only ALTERs in event_type and creates a NON-unique index idx_movie_attendance_event_type (040:49-56, 126-133) and never rebuilds the unique key. game.ts:92 confirms event_date is a date-only YYYY-MM-DD string. finalizeGameAttendance uses INSERT OR REPLACE ... 'game' (gameNight.ts:247-253) keyed on that unique constraint, and movie finalize uses INSERT OR REPLACE into the same table with default event_type='movie' (movieNight.ts:291-296) on the same key. creditHistoricalGameAttendance (744-757) and bumpGameAttendance (816-829) use ON CONFLICT(guild_id,user_id,event_date), which cannot reference event_type since it is not a unique key. So a user attending both a movie night and a game night on the same calendar day has the second finalize silently overwrite the first event's attendance row, corrupting qualification/tier counts. Real data-integrity bug; high retained (collision is realistic and silently destroys an audit row)."
+  },
+  {
+    "id": "A0072",
+    "real": true,
+    "severity": "high",
+    "reason": "Confirmed. dbRecoveryButtons.ts:193-199 invokes restoreCandidate with pm2Coord:true, and the bot itself is the PM2-managed process (env.PM2_PROCESS_NAME, env.ts:157). dbRecovery.ts:506 awaits execAsync('pm2 stop '+processName) BEFORE replacing the DB file (544), verifying (561+), and pm2 start (620). ready.ts registers SIGTERM/SIGINT handlers (417-418) whose gracefulShutdown ends in process.exit(0) (410). So when 'pm2 stop' signals this very process, the handler tears down and exits, terminating the event loop while the await is still pending -> steps 4-6 never run, the DB is NOT actually replaced, the app is left stopped (pm2 stop does not autorestart), and the promised Discord reply is never sent. Pre-restore backup (step 2) is the only thing that completes. Real correctness defect in a critical recovery path; high retained (finding's own confidence is medium, acknowledged)."
+  },
+  {
+    "id": "A0081",
+    "real": true,
+    "severity": "high",
+    "reason": "Confirmed cleanly. Installed discord.js is 14.26.4 and its typings define FetchPinnedMessagesResponse.items as 'readonly MessagePin<InGuild>[]' (node_modules/discord.js/typings/index.d.ts:6581-6590) -- a plain readonly Array, which has includes/some/find but NO .has(). entryPanel.ts:600-603 casts items via 'as unknown as { has: (id)=>boolean }' (suppressing the type error) and calls pinnedItems.has(message.id) on a truthy (possibly empty) array, throwing TypeError: pinnedItems.has is not a function. This runs inside the try at 596 AFTER message.pin() already succeeded; the catch at 615 logs then re-throws (623). ensureGateEntry is awaited under withStep, which propagates (cmdWrap.ts:391-392, docstring 'caught by wrapCommand upstream'). The same file's findExistingGateEntry (161-165) correctly treats items as an array, confirming the intended shape. Net: every /gate setup (and /update re-ensure) that successfully pins surfaces an error card to staff. Real runtime bug; high retained."
+  },
+  {
+    "id": "A0088",
+    "real": true,
+    "severity": "high",
+    "reason": "Confirmed. In reopenModmailThread (threadReopen.ts) the closed-within-7-days branch (72-85 falls through) runs the DB transaction reopenTicket() + INSERT open_modmail (89-109) and addOpenThread() (113-116) FIRST, committing synchronously, then calls interaction.client.channels.fetch(ticket.thread_id) at line 120. Verified in discord.js 14.26.4 ChannelManager.fetch (line 124-131) that fetching a deleted channel rejects at the REST layer (Unknown Channel 10003) rather than returning null (the return-null at _add:54 is only for unknown channel TYPE). The reject is caught by the outer catch (150) returning {success:false}, but the transaction has already committed: reopenTicket sets status='open', closed_at=NULL (tickets.ts:177). openPublicModmailThreadFor short-circuits on the existing guard row (threadOpen.ts:142-158, returns 'Modmail thread already exists'), so the user is permanently blocked from a new modmail pointing at a dead thread. Precondition (deleted thread on close) is near-universal because delete-on-close is the default and, per A0109, delete is forced regardless of the setting. Staff see 'Failed to reopen' while state is left inconsistent. Data-integrity defect, high."
+  },
+  {
+    "id": "A0107",
+    "real": true,
+    "severity": "high",
+    "reason": "Confirmed producer/consumer format mismatch. Producers store comma-separated permission NAMES: roleToSnapshot does permissions: role.permissions.join(',') (serverAudit/types.ts:234) and channelToSnapshot does allow/deny: ow.allow.join(',') (252-253); the source RoleData.permissions is string[] of names produced by getPermissionNames (analyze.ts:40), which pushes flag name strings (types.ts:171-180). Consumers in securityDiff.ts call BigInt() on those: computeRoleChange (256-257), computeOverwriteModification (346-349), bitfieldToPermissionNames (382), getDangerousChanges (414). Empirically verified BigInt('ViewChannel') and BigInt('Administrator,ManageRoles') throw SyntaxError. Reachable: computeSnapshotDiff calls getDangerousChanges at line 247 (iterating rolesAdded at 413-414), and computeRoleChange fires whenever a role's permission name-list changed (168-169). Error surfaces to the user via diff.ts catch (144) and is silently swallowed in serverAuditDocs.ts (174) so DIFF.md is never written and dangerous escalations go undetected. Tests mask it: securityDiff.test.ts only uses permissions:'0' (44, 77), and BigInt('0')/BigInt('') = 0n do not throw. Correctness + security-monitoring defect, high."
+  },
+  {
+    "id": "A0109",
+    "real": true,
+    "severity": "high",
+    "reason": "Confirmed. modmail_delete_on_close column is INTEGER DEFAULT 1 (config.ts:375); upsertConfig converts boolean true/false to integer 1/0 (config.ts:685-688) and setFeatures.ts passes a boolean (300-304); getConfig does SELECT * and returns the raw row with no boolean coercion (config.ts:707). So at runtime cfg.modmail_delete_on_close is the NUMBER 0 or 1. Both consumers compute the decision as cfg?.modmail_delete_on_close !== false (threadClose.ts:365 in closeModmailThread, 546 in closeModmailForApplication). Empirically verified 0 !== false === true and 1 !== false === true in JS (different types), so preferDelete/deleteOnClose is always true even when an admin set it off (stored as 0). The archive+keep opt-out path is unreachable; threads are always deleted on close, irreversibly. Correctness defect against explicit admin opt-out, high."
+  },
+  {
+    "id": "A0113",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed real, severity adjusted down to medium. handleOpenButton defers ephemerally then calls TicketService.create() with no per-user/per-type guard (handlers.ts:236-243). create() unconditionally allocateNextNumber(), creates the Discord channel, and inserts the ticket row (service.ts:236-261) with no SELECT for an existing open ticket. The interactionCreate router sends tk: buttons straight to handleTicketButton with no checkCooldown wrapper (interactionCreate.ts:582-595). The ticket table has only UNIQUE(type_key, number) and channel_id UNIQUE plus non-unique indexes on opener/status (schema.sql:853-871, 1162-1165) -- no constraint on (opener_user_id, type_key, status='open'), so two near-simultaneous clicks each allocate a distinct number and create a separate channel with no DB collision. The defect is genuine (duplicate channels, wasted numbers, duplicate staff pings). Downgraded from high to medium: impact is operational duplication that staff can close, not data corruption, privilege escalation, or information disclosure."
+  },
+  {
+    "id": "A0118",
+    "real": true,
+    "severity": "high",
+    "reason": "Confirmed. handleReviewButton calls interaction.deferUpdate() before delegating to handleClaimToggle for the claim action (buttons.ts:177-187). Verified in discord.js 14.26.4 that deferUpdate() sends DeferredMessageUpdate and sets this.deferred = true (InteractionResponses.js:307,312). replyOrEdit takes the deferred branch, destructures off flags, and calls editReply(editPayload) (cmdWrap.ts:503-506), which PATCHes the @original -- for a component interaction that is the public review card the button is attached to. So every ephemeral-intended feedback call (claimHandlers.ts:62-67 ALREADY_CLAIMED/INVALID_STATUS, 74-79 unexpected error, 84-102 permanent-rejection message, 146-150 success) is written publicly onto the shared review card with the Ephemeral flag dropped, clobbering the card content and exposing internal moderation state (notably the permanently-rejected disclosure) to the whole channel. All cited lines present and reachable. Correctness/info-disclosure defect, high."
+  },
+  {
+    "id": "A0119",
+    "real": true,
+    "severity": "high",
+    "reason": "Confirmed via the same mechanism on the modal path. handleUnclaimModal calls interaction.deferUpdate() (modals.ts:242-246) before delegating to handleUnclaimAction (270), so interaction.deferred is true. Every replyOrEdit({ flags: MessageFlags.Ephemeral }) in handleUnclaimAction (claimHandlers.ts:178-184 NOT_CLAIMED/NOT_OWNER/APP_NOT_FOUND, 190-195 unexpected error, 243-248 'unclaimed successfully' confirmation) hits the deferred branch in replyOrEdit which strips flags and calls editReply (cmdWrap.ts:503-506), turning each into a public PATCH of the review card. Owner-mismatch and not-claimed messages meant for one mod are shown to the whole channel and overwrite the card content line. All cited lines present and reachable. Correctness/info-disclosure defect, high."
+  },
+  {
+    "id": "A0252",
+    "real": true,
+    "severity": "high",
+    "reason": "Confirmed independently. getNextArtist (queue.ts:264-279) is a pure SELECT that does not mutate the queue; the chosen artistId is baked into the Confirm customId (redeemreward.ts:283). handleConfirm (handlers.ts:102-265) trusts data.artistId, never re-validates 'still next', never consumes confirmId, and applies no cooldown (buttonCooldown.ts is keyed userId:code:action for review cards only, not redeemreward). interactionCreate.ts:599-613 dispatches each click with no in-flight guard. processAssignment is transactional (queue.ts:378) but only protects the queue shift, not the command-time decision, so the TOCTOU window stays open for both the two-staff and double-click scenarios -> duplicate createJob (handlers.ts:258) and double rotation. The byte-token contrast (byteTokenHandler.ts:353-382) does have explicit race mitigation this path lacks. Staff-gated, so high rather than critical."
+  },
+  {
+    "id": "A0262",
+    "real": true,
+    "severity": "high",
+    "reason": "Confirmed. Sole entitlement gate is guildMember.roles.cache.has(tokenConfig.tokenRoleId) at byteTokenHandler.ts:283. handleConfirm defers via deferUpdate (line 182) and never disables the button; the token role is removed only at line 314 after awaited REST calls. Step-3.5 cleanup (357-382) explicitly excludes roleId===multiplierRoleId (line 361), so two same-rarity confirms both no-op on cleanup and both reach upsertActiveMultiplier. The ON CONFLICT in byteMultiplierStore.ts:66-79 blindly overwrites expires_at with a fresh full-duration value, so a replayed click silently refreshes/extends the window. Verified usebyte.ts:87 and :96 share multiplier role 1405369052829974543 (epic+legendary), so the epic-then-legendary extension scenario is real. No atomic DB claim exists. Economy-abuse defect."
+  },
+  {
+    "id": "A0263",
+    "real": true,
+    "severity": "high",
+    "reason": "Confirmed. PATREON_ART_ENTITLEMENTS Legendary Fiona has emoji:2 (patreonArtRewards.ts:38). The grant loop assigns the ticket role once regardless of delta (186-195) then upserts quantity_granted to the full entitlement via MAX() high-water-mark (96-104, 199). Migration 062 (lines 20-30) confirms quantity_granted is the only quantity column and is 'never decremented'; redemption (handlers.ts:125-145) removes the single binary ticket role after one use and tracks no remaining/redeemed counter. On the periodic re-sweep getGrantedQuantity returns 2 >= entitlement 2, so line 180 (entitlement <= alreadyGranted) short-circuits and never re-grants. roles.ts:729 only displays quantity_granted. Net: a Legendary Fiona patron paying for 2 emoji tickets can only ever redeem 1. Highest-tier paying supporter is under-paid."
+  },
+  {
+    "id": "A0266",
+    "real": true,
+    "severity": "high",
+    "reason": "Confirmed. cmdWrap.ts replyOrEdit branches solely on interaction.deferred/replied; the deferred branch (503-506) strips flags and calls editReply. In discord.js v14 (14.26.4 confirmed) deferred===true after BOTH deferReply and deferUpdate, and editReply after deferUpdate edits the source message. handleReviewButton calls deferUpdate for the claim action (buttons.ts:177-181); handleClaimToggle (claimHandlers.ts:39 comment confirms parent already deferred) then on ALREADY_CLAIMED calls replyOrEdit({content, flags:Ephemeral}) (62-67), which becomes editReply on the shared review card -> embed and action buttons replaced with bare public text, ephemerality lost. Same pattern at claimHandlers.ts:74,91,178,190,243 (unclaim path reached via handleUnclaimModal deferUpdate at modals.ts:243). Routinely triggered by two mods racing Claim."
+  },
+  {
+    "id": "A0267",
+    "real": true,
+    "severity": "high",
+    "reason": "Confirmed; same root cause as A0266 but distinct call sites. handleRejectModal (modals.ts:49-53) and the sibling modal handlers (handleAcceptModal:87, handlePermRejectModal, handleKickModal, handleVoteOutModal, handleUnclaimModal:243) all deferUpdate first, then on any thrown error call replyOrEdit(interaction,{content:'Failed to process ... (trace: X).'}) with NO flags (e.g. 69-71). Via the cmdWrap deferred->editReply path this edits the original review card, replacing applicant embed + buttons with a public plaintext error and leaking the internal trace id into the staff channel. handleReviewButton catch (buttons.ts:200-204) hits the same fate for already-deferred actions (it only deferReply's non-modal actions at 195-199), and handleModmailButton catch (buttons.ts:270-275) likewise after its deferUpdate at 222. A transient DB/Discord error destroys the shared card for all staff."
+  },
+  {
+    "id": "A0283",
+    "real": true,
+    "severity": "medium",
+    "reason": "Technically confirmed but over-rated as high. getInsights (pulse.ts:1472) loops 18 detectors sequentially (array 1452-1469, loop 1483). Verified query fan-out: detectMessageAnomaly 1+4 (827-848), detectCommunicatorRatioDecline 2x4=8 (910-927), detectVoiceTrend 4 (968-987), and detectAppBacklog/ModWorkloadImbalance/RejectionRateShift use app_id IN (SELECT id FROM application WHERE guild_id=?) semi-joins (1056,1091,1126,1138). count() (27-33) is a synchronous re-prepared better-sqlite3 .get(); db.ts:1 confirms better-sqlite3, so a cold load blocks the event loop. However impact is materially mitigated: results are wrapped in cached(CACHE_TTL.medium) (pulse +page.server.ts:37-45), the page is mod-only on a single guild (low concurrency), and the 'million-row table' / '~50 queries stall all requests' impact is unverified speculation. Real perf smell worth collapsing the per-window loops, but medium not high."
+  },
+  {
+    "id": "A0290",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed at scripts/migrate-remote.js:24. `process.exit(result.status || 0)` exits 0 when the child tsx process is killed by a signal (status=null, signal set), masking a failed/incomplete migration as success; it also ignores result.error. Genuine fail-open defect. Downgraded from high to medium because the two scripted callers that actually invoke it (deploy.sh:435 and deploy-no-tests.sh:25, both verified) already discard the exit code via `|| echo`, so the realistic incremental blast radius is direct/manual or CI invocations rather than the main deploy path."
+  },
+  {
+    "id": "A0291",
+    "real": true,
+    "severity": "high",
+    "reason": "Confirmed at scripts/migrate.ts:50 (`new Database(dbPath, { fileMustExist: false })`, with an in-file comment at 48-49 acknowledging it will create a fresh DB on a wrong path) and createBackup() at 134-143 which does copyFileSync(dbPath,...) only AFTER the connection at line 50 already created the file. On a wrong/missing DB_PATH or cwd mismatch the runner creates an empty DB, 'backs up' that empty file, stamps all migrations into schema_migrations, and there is no assertion the DB pre-existed and was non-empty. Conditional on misconfiguration but matches the data-loss severity; kept high."
+  },
+  {
+    "id": "A0292",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed: deploy-no-tests.sh targets the same host/path/PM2 process as deploy.sh, repeats the swallowed-migration pattern at line 25 (`node scripts/migrate-remote.js || echo ...`), never acquires the mkdir deploy lock that deploy.sh uses (deploy.sh:83), takes no pre-deploy DB backup (deploy.sh has maybe_backup_remote_db at 123-134), and only does a best-effort `pm2 show | grep` status check (lines 33-35). All factual claims verified, and deploy.sh --fast/--no-tests already exists (lines 159-162). Real cross-file deploy-safety hazard, but it requires an operator to deliberately run the redundant script, so downgraded from high to medium."
+  },
+  {
+    "id": "A0299",
+    "real": true,
+    "severity": "high",
+    "reason": "Confirmed reentrancy gap. handleConfirm (src/features/artistRotation/handlers.ts:102-299) runs all side effects (role removal, $add/grant, processAssignment, logAssignment, createJob) across multiple awaited Discord API calls and only clears the buttons at the very end (editReply components:[] at 282-285). The reply is non-ephemeral (redeemreward.ts:294-297, no MessageFlags.Ephemeral) and there is no initiator check. The interactionCreate dedup map (interactionCreate.ts:69-97) keys solely on interaction.id, so a second click is a distinct id and is processed. Verified non-idempotent downstream: processAssignment (queue.ts:407-408) unconditionally increments assignments_count and rotates the queue per call; createJob (store.ts:114-138) computes artistJobNumber as MAX+1 inside its own transaction so two sequential calls insert two distinct rows (no UNIQUE clash). confirmId is parsed but never consumed. Double-click within the multi-roundtrip window double-rotates the artist, over-counts assignments, and creates duplicate jobs / $add posts. Kept high: button double-clicks are common and the queue-fairness/job corruption is silent."
+  },
+  {
+    "id": "A0309",
+    "real": true,
+    "severity": "high",
+    "reason": "Confirmed and verified as the unique outlier. migrations/039_fix_art_job_unique_constraint.ts:12 imports the singleton `db` from ../src/db/db.js, its signature (line 14) takes NO db argument so it ignores the handle the runner passes via db.transaction(() => migrateFn(db)) (migrate.ts:209-213), and it never calls recordMigration. A repo-wide scan confirmed 039 is the ONLY migration of all of them missing recordMigration (every other migration follows the helpers.ts:149 pattern, e.g. 049 calls recordMigration(db,...)). The runner itself never inserts into schema_migrations, so 039 is permanently 'pending' and re-runs on every migrate/deploy, and its writes execute on a separate connection outside the runner's transaction, breaking the advertised atomicity. Body is idempotent so not data-destroying, but the permanent-pending + un-transactional + separate-connection behavior is a real integrity defect; kept high."
+  },
+  {
+    "id": "A0310",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed empirically. review_claim.claimed_at is TEXT NOT NULL (src/db/db.ts:132). nowUtc() returns integer Unix seconds (src/lib/time.ts:34). The writer reviewActions.ts:110-114 inserts that integer; I verified with better-sqlite3 that an integer inserted into a TEXT-affinity column is stored as the string '1748000000.0'. normalizeTimestamp (web/.../shared.ts) takes the string branch -> '1748000000.0Z' -> new Date(...) = NaN -> returns null; I verified normalizeTimestamp('1748000000.0') === null. Both getReviewQueue (reviews.ts:189) and getApplicationDetail (reviews.ts:456) feed claimedAt through normalizeTimestamp, so the dashboard claimedAt is permanently null in production. The test fixture (dbFixtures.ts:334) writes claimed_at as new Date().toISOString(), which normalizeTimestamp parses fine, masking the bug in tests. Diagnosis is airtight; downgraded from high to medium because the impact is a permanently-blank informational display field (claiming/locking still functions), not data loss or a crash."
+  },
+  {
+    "id": "A0316",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed in src/features/byteTokenHandler.ts. The only redemption guard is guildMember.roles.cache.has(tokenConfig.tokenRoleId) at line 283, read from a per-interaction members.fetch (line 268). The interaction dedup in events/interactionCreate.ts:88-97 is keyed on interaction.id, so two distinct Confirm clicks (distinct IDs) are NOT deduped. upsertActiveMultiplier (store/byteMultiplierStore.ts:66-79) uses ON CONFLICT DO UPDATE that unconditionally rewrites expires_at on every call, and the post-add cleanup at handler lines 353-382 only strips OTHER multiplier role IDs, not the duplicate expiry reset of the same role. No DB-level idempotency and no per-(guild,user) lock exist. The race is genuine but bounded: the outcome is one boost's expiry re-extended from a single consumed token within a narrow window before role removal propagates, not unlimited grants. Downgraded high->medium for limited impact and small timing window."
+  },
+  {
+    "id": "A0317",
+    "real": true,
+    "severity": "high",
+    "reason": "Confirmed precisely in src/features/levelRewards.ts. The permanent dedup row INSERT OR IGNORE INTO level_reward_granted runs at lines 130-133, BEFORE getLevelRewards(guild.id, level) at line 146. A user reaching a level that currently has zero configured rewards still commits the dedup marker, then returns at 147-154 (rewards.length===0). The table has UNIQUE(guild_id,user_id,level) (migration 057) and is never cleared for re-grant. If staff later add a reward for that level, the INSERT OR IGNORE returns changes===0 and the function short-circuits at 135-143 before getLevelRewards is consulted, so users who already passed that level can never receive the newly-added reward. Genuine silent under-grant from check ordering."
+  },
+  {
+    "id": "A0318",
+    "real": true,
+    "severity": "high",
+    "reason": "Confirmed in src/features/artistRotation/handlers.ts handleConfirm. The ticket spend is gated only on member.roles.cache.has(ticketRoleId) at line 131 with a non-atomic roles.remove and no DB-backed entitlement claim. Two independent defects: (1) when the recipient does NOT have the ticket role, the else branch at 135-137 only pushes a soft warning string and execution continues to rotate the artist (processAssignment, 228) and createJob (258) - an unconditional grant against no ticket; (2) concurrent confirms for the same recipient+artType can both observe the role present and both succeed, double-spending one ticket. The non-atomic check-then-act and the no-ticket-still-grants path are both real. Severity high justified by the unconditional path; the double-spend race specifically is medium-likelihood."
+  },
+  {
+    "id": "A0319",
+    "real": true,
+    "severity": "high",
+    "reason": "Confirmed in src/features/patreonArtRewards.ts. PATREON_ART_ENTITLEMENTS sets emoji:2 for Legendary Fiona (line 38). handlePatreonArtRewards computes delta (line 182) but calls assignRole exactly once regardless of delta (lines 189-195), while upsertGrant records the full entitlement via MAX(excluded, existing) (lines 96-103). The Discord role is a binary 'has a ticket' marker. After /redeemreward removes that single role (artistRotation/handlers.ts:131-134), getGrantedQuantity still returns 2, so the periodic sweep sees entitlement(2) <= alreadyGranted(2) at line 180 and never re-grants. The quantity ledger and binary-role mechanism disagree whenever quantity>1; the second emoji ticket is silently lost. Genuine economy correctness defect."
+  },
+  {
+    "id": "A0328",
+    "real": true,
+    "severity": "high",
+    "reason": "Confirmed and robust, independent of prod DB state. ensurePokeConfigColumns (src/lib/config.ts:492) is the ONLY code path that adds poke_category_ids_json / poke_excluded_channel_ids_json; grep across migrations/ shows NO migration references these columns, and they are absent from tests/fixtures/schema.sql line 493 (which DOES contain the other config columns). src/startup/schema.ts:runSchemaSelfHeal imports and calls 7 config ensure* functions (lines 41-49,67-73) but omits ensurePokeConfigColumns; grep confirms the function is referenced nowhere in src/ outside its own definition. Both columns are in the upsertConfig ALLOWLIST (config.ts:659), so /config poke (commands/config/poke.ts:69) reaches db.prepare('UPDATE guild_config SET poke_category_ids_json = ?'), which throws 'no such column' on any DB built from migrations. The deploy migration step (deploy.sh:435) cannot help because no poke migration exists. Real runtime failure."
+  },
+  {
+    "id": "A0329",
+    "real": false,
+    "severity": "invalid",
+    "reason": "Code-level facts are accurate (ensurePulseConfigColumns at config.ts:534 is never wired into schema.ts; the web query at web/src/lib/server/queries/pulse.ts:242 is unguarded against a missing column, with the line-245 guard only handling NULL), but the finding's load-bearing impact claim - 'migration 059 not applied -> prod DB lacks the column -> SELECT crashes' - is refuted. Unlike the poke case, migration 059 (migrations/059_pulse_excluded_categories.ts) DOES exist and adds the column, and scripts/migrate.ts auto-discovers migrations by directory scan (lines 105-129). deploy.sh:435 runs node scripts/migrate-remote.js on every deploy, which delegates to scripts/migrate.ts and applies all pending migrations - so migration 059 is applied on deploy, contradicting the asserted 'highest applied = 045' prod state (which would also break 14+ other migrations for actively-used features). The column is also present in tests/fixtures/schema.sql:493. The unwired ensure function is dead/redundant, not a confirmed runtime defect; the prod-DB-state premise is unverifiable from the tree and is contradicted by the deploy pipeline."
+  },
+  {
+    "id": "A0351",
+    "real": true,
+    "severity": "high",
+    "reason": "Confirmed at deploy.sh:435: `ssh_remote \"... node scripts/migrate-remote.js\" || echo \"Migration step completed (may have warnings)\"`. The migration runner contract is real: migrate.ts:308-311 calls process.exit(1) on failure and migrate-remote.js:24 propagates it via process.exit(result.status || 0). The `|| echo` converts that non-zero exit to success, after which Step 6.6 (commands.ts) and Step 7 (pm2 startOrRestart, line 451/454) run, starting new code against a possibly un-migrated schema. Root deploy.sh does have a lock (lines 82-93) and backup (line 123), so the masked-failure-then-restart path is the genuine defect. High is defensible for a production deploy-safety / error-masking issue."
+  },
+  {
+    "id": "A0352",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed: scripts/deploy.sh line 108 tars `dist package.json package-lock.json migrations scripts`, but the remote block (lines 122-133) only does extract -> `npm ci --omit=dev` -> `pm2 restart`. No migrate step anywhere in the file (verified). It also has no lock and no backup, unlike root deploy.sh. The two same-named scripts (root deploy.sh with migrations, scripts/deploy.sh without) is a real footgun. Downgraded from high to medium: the documented happy path (DEPLOY-AGENT.md:47) uses the hardened root `./deploy.sh`, so reachability of this legacy script is lower; still a defensible defect worth fixing/deleting."
+  },
+  {
+    "id": "A0353",
+    "real": true,
+    "severity": "high",
+    "reason": "Confirmed: deploy-no-tests.sh has no acquire_deploy_lock (grep found only the tarball line) and no deploy-level DB backup, while running the migration step (line 25, same `|| echo` swallow) and `pm2 startOrRestart` (line 28). Root deploy.sh has both lock (lines 82-93) and backup (lines 123, 318, 373). DEPLOY-AGENT.md:79/125/131 documents `git checkout HEAD~1 && ./deploy-no-tests.sh` as the rollback recipe. Nuance verified: migrate.ts:270-273 does call createBackup() but only when pendingMigrations.length>0; in a code-only rollback there are typically no pending migrations, so no backup is taken, while the missing lock (concurrent-deploy race on the live WAL) is unconditional. A rollback path with no lock and no fresh backup during an incident justifies high."
+  },
+  {
+    "id": "A0358",
+    "real": true,
+    "severity": "high",
+    "reason": "Confirmed cross-file supply-chain defect. scripts/embed-incremental.mjs:14, embed-all.mjs:10, and embed-gold.mjs:11 all `import { pipeline, env } from '@xenova/transformers'`, but the package has 0 occurrences in package.json and 0 in both package-lock.json files (verified). deploy.sh:408 ships the `scripts` dir; deploy.sh:421 runs `npm ci --omit=dev` (which can only install lockfile entries); quality-cron.txt:14 schedules embed-incremental.mjs every 30 min on EC2. So the cron either fails with MODULE_NOT_FOUND every 30 min (logging to an unrotated /tmp log) or relies on an out-of-band manual prod install. embed-incremental.mjs:18 sets env.allowLocalModels=false and line 47 fetches Xenova/all-MiniLM-L6-v2 weights from the HF CDN at runtime with no pinning. Prior audit (2026-05-19/deps-ops-findings.md, Finding 1) already flagged it as HIGH-vuln via onnxruntime-web. High is defensible."
+  },
+  {
+    "id": "A0001",
+    "real": true,
+    "severity": "low",
+    "reason": "Technically correct. migrate.ts:209-211 wraps migrateFn(db) in db.transaction(), so migration 010 always runs inside an open transaction. SQLite's `PRAGMA foreign_keys` is a documented no-op while a transaction/savepoint is active, so the `db.pragma(\"foreign_keys = OFF\")` at 010:97 and `... = ON\"` at 010:119 are silently defeated and the 'disable FKs to rebuild the table' comment is misleading. Confirmed real, but downgraded high-side severity to low: the finding itself acknowledges the migration currently still succeeds (the only FK is guild_question->guild_config as a child, and nothing references guild_question as a parent), so present-day impact is nil; it is a latent trap / misleading comment, not an active bug."
+  },
+  {
+    "id": "A0023",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed by independent trace of fetch-channel.ts:139-183. messages starts empty (139). Each Discord batch is newest-first; line 162-164 sorts a batch oldest-first into `sorted`, then 166-168 unshift-prepends each, and 170 pages older via fetched.last()?.id, with a final reverse() at 182. Trace for batches [10,9,8] then [7,6,5]: after batch1 messages=[10,9,8]; after batch2 messages=[7,6,5,10,9,8]; final reverse -> [8,9,10,5,6,7], whereas correct chronological is [5,6,7,8,9,10]. So any channel/thread over 100 messages is exported with each 100-message block out of order, silently (the total count stays correct). Real correctness bug; medium rather than higher because this is an ops/archive utility script, not live bot behavior, and the corruption is inter-block ordering of an export."
+  },
+  {
+    "id": "A0031",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. art_jobs.assigned_at/completed_at are stored via datetime('now') (db.ts:353-355) producing space-separated UTC strings with no offset. art.ts feeds them straight into new Date(job.assigned_at).getTime() at lines 425, 635, 712, 732, 865, 1038 with no normalization, so per ECMAScript they parse in the host's LOCAL tz. The repo's own reviewCard.ts:108-111 and features/review/card.ts:128-130 normalize this exact format with replace(' ','T')+'Z', proving the inconsistency is a real defect. handleFinish daysToComplete (635-637) lacks a Math.max(0,..) clamp so a positive-offset host can render negative days. No global process.env.TZ forces UTC (queries.ts:387 only 'assumes' UTC), so on a non-UTC host the relative timestamps are off. Medium: prod is likely EC2/UTC which masks the offset portion, but the latent defect and code inconsistency are genuine."
+  },
+  {
+    "id": "A0032",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed mechanically. Commands are dispatched via executor(interaction) with no auto-defer (interactionCreate.ts:265). handleAssign (959 then 992), handleCancel (1136 then 1171) and handleReassign (1242 then 1259) each await logActionPretty(...) before the first interaction.reply and never call deferReply, while the read-only siblings deferReply at 400/765/844/1019. logActionPretty does a sync DB insert then getLoggingChannel + channel.send network POST (pretty.ts:517+) before returning. So a slow audit-log POST before the first ack can blow Discord's ~3s window and yield 10062 after the DB write already committed. Downgraded to low: under normal conditions a single channel.send lands well within 3s; the 10062 only triggers on a rate-limit/latency spike, and the correct pattern is already used by the sibling handlers."
+  },
+  {
+    "id": "A0034",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. checkCooldown('backfill', guildId, COOLDOWNS.BACKFILL_MS) is called at backfill.ts:85, BEFORE the weeks/date validation (97-115) and BEFORE spawn (137). rateLimiter.ts:77 sets scopeCooldowns.set(scopeId, now) on every allowed:true return regardless of whether the caller proceeds (documented intentional side effect at 61-66). The spawn 'error' handler (229-231) only logs and does NOT clearCooldown. So an out-of-range weeks value or a spawn failure consumes the full 30-minute cooldown, locking the guild out. Validation-failure lockout is independently real even without the referenced missing-script bug. Medium retained: staff-only diagnostic, lockout is bounded to 30 min and self-clears."
+  },
+  {
+    "id": "A0035",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. buttonRouter.ts:128 skips the per-guild cooldown for action==='resume'. Runners are launched fire-and-forget (187/206). auditSessionStore.ts has no lock and only statuses in_progress|completed|cancelled (line 85); getActiveSession returns the same in_progress row for every clicker (137-148); markUserScanned is INSERT OR IGNORE (48) which only dedups the scanned table. runMembersAudit loads alreadyScanned ONCE at start (members.ts:55), so two concurrent resume runners both analyze members not yet recorded: upsertManualFlag (145) and channel.send (168) fire twice and updateProgress (196) is last-writer-wins on flagged_count. A double-click or two staff clicking Resume reproduces it; the parallel NSFW path (also fire-and-forget at 187) additionally doubles paid Vision calls. Medium: requires near-simultaneous resume clicks, impact is duplicate flags/embeds and double API cost."
+  },
+  {
+    "id": "A0044",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. PERMISSION_CACHE (cache.ts:208) has a 5-min TTL keyed ${guildId}:${userId}; the only invalidation is invalidatePermissionCache (325), and a repo-wide grep shows it is called nowhere in production, only in cache.ts itself and tests/commands/help/cache.test.ts. So on a role change /help output and the showCommandDetail auth gate (index.ts:220-234, which derives canView from filterCommandsByPermission and denies 'You don't have permission to view /<cmd>') stay stale for up to 5 minutes. Real correctness/staleness bug, but downgraded to low: impact is confined to /help display and its detail-view gate (help TEXT only) and is self-healing via TTL; it does not gate actual command execution."
+  },
+  {
+    "id": "A0045",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. Help entry points fetch the member with members.fetch(userId).catch(() => null) (autocomplete.ts:53, index.ts:90) and tolerate null. When member is null, hasPermissionLevel returns true only for public/owner (cache.ts:232/238/242), and filterCommandsByPermission caches that public-only list unconditionally at line 283 with no null guard, under the shared module-level key ${guildId}:${userId}. So a single failed autocomplete fetch poisons the cache and the subsequent /help execute and showCommandDetail gate (index.ts:220) serve the stale public-only list for the full TTL; with invalidatePermissionCache dead-wired (A0044) nothing clears it early. Genuine, but downgraded to low: requires a transient Discord fetch failure, is bounded to help display, and self-heals in 5 minutes."
+  },
+  {
+    "id": "A0055",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed at src/commands/verify.ts:195-203. The catch block treats every thrown error as a duplicate: it logs logger.warn({err,...},'duplicate verification attempt'), sends 'You're already verified!', and returns. Genuine duplicates are already prevented by the existence check at lines 60-67, so the catch is realistically reached by unrelated failures (missing verified_users table, SQLITE_BUSY, etc.), which would falsely tell the user they are verified and grant no role. The err object IS attached to the warn log so it is not fully invisible to operators, but it is mislabeled and at the wrong level. Real correctness defect; medium is fair."
+  },
+  {
+    "id": "A0056",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed at src/commands/verify.ts:178-188. The Finalize button is awaited via uploadMessage.awaitMessageComponent(...) but the resolved interaction is neither captured nor acknowledged (no update/deferUpdate/reply). Discord requires component interactions be acknowledged within 3s or the client shows 'This interaction failed'. The flow still proceeds server-side (message edited at 191, INSERT at 197). The cited contrast is accurate: line 154 correctly acknowledges via categoryInteraction.update(). Real Discord-API UX defect; medium is fair."
+  },
+  {
+    "id": "A0058",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed at src/config/flaggerStore.ts:159-170. silentDays===7 is used as the sentinel for 'DB had no value' (line 166), but 7 is a valid user-settable value: setSilentFirstMsgDays enforces 7..365 with 7 as the minimum (line 236). If a guild explicitly stores 7 and SILENT_FIRST_MSG_DAYS is set to a different value, the env value silently overrides the guild's explicit 7, violating the documented DB>ENV priority (lines 102-106). The in-code comment acknowledges the brittleness. Real defect, but trigger is narrow (guild must pick exactly 7 AND env must differ), so downgraded to low. Note: duplicate of A0063."
+  },
+  {
+    "id": "A0060",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed at src/commands/stats/history.ts:269-274. The export builds a link to ${PUBLIC_URL||https://pawtropolis.tech}/exports/<filename> labeled 'Download CSV ... Link expires in 24 hours'. Exhaustive search confirms no /exports route or static mount exists: the bot's Fastify dashboardApi (src/web/dashboardApi.ts) registers only audit/review/art/scan/levelStats/config/health/modmail/qotd/flag route modules with no static serving, and the SvelteKit tree has only /api/export (web/src/routes/api/export/+server.ts) which generates CSV inline and never reads data/exports. The link always 404s; the on-disk file is undownloadable. Real dead-feature defect; medium is fair."
+  },
+  {
+    "id": "A0061",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed at src/commands/stats/history.ts:236-248. Each export writes a uniquely-named file (up to MAX_EXPORT_ROWS=50000 rows) to data/exports via writeFileSync with no cleanup. src/startup/schedulers.ts lists every recurring job and none prune data/exports; repo-wide search for unlink/rm/prune of exports or stats-history-*.csv found nothing. The embed's 'Link expires in 24 hours' (line 273) is therefore false and the directory grows unboundedly. Mitigating: leadership-gated and slow to accumulate, but the false expiry claim and unbounded growth are real. Medium is defensible."
+  },
+  {
+    "id": "A0063",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed at src/config/flaggerStore.ts:165-170, identical defect to A0058. silentDays is initialized to 7 (line 124), set from a non-null DB value (lines 140-142), and the env fallback fires only when silentDays===7 (line 166). Because 7 is a legitimate user-settable value (min in setSilentFirstMsgDays, line 236), an explicit DB 7 is indistinguishable from 'no row/null' and gets overwritten by SILENT_FIRST_MSG_DAYS, violating the documented DB>ENV priority for that one value. Real but narrow-trigger; low. Duplicate of A0058."
+  },
+  {
+    "id": "A0064",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed in src/commands/verify.ts. INSERT into verified_users (lines 196-198) commits in its own try/catch BEFORE the role grant (lines 205-217), whose catch (216) only logs and leaves roleGranted=false. Line 219 then unconditionally DMs the user that they received the role. On any later /verify, the existing-row check (line 69) short-circuits with 'You have the Thin Line role' (line 78) and never re-checks member.roles.cache.has(...) or retries. The log embed even records 'Role Granted: Failed' (line 233), confirming the failure path is anticipated. A user whose role add throws (Manage Roles missing, hierarchy, transient API) is permanently told they are verified yet never gets the role via this command. Genuine data-integrity defect; medium is fair."
+  },
+  {
+    "id": "A0066",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. The Finalize button is awaited via uploadMessage.awaitMessageComponent (lines 179-183) and the resulting ButtonInteraction is discarded; the only acknowledgments in the file (grep) are categoryInteraction.update at line 154 for the select menu. discord.js awaitMessageComponent does not auto-acknowledge, so the clicking user gets 'This interaction failed' after 3s even though the backend proceeds to insert/grant/DM (lines 190-219). Reliable user-facing breakage in the primary success path; the asymmetry vs the correctly-acked select step (line 154) confirms the omission. Medium."
+  },
+  {
+    "id": "A0067",
+    "real": true,
+    "severity": "low",
+    "reason": "Substance confirmed: LOG_CHANNEL_ID is a hardcoded snowflake (verify.ts:26, also duplicated in securityAuditScheduler.ts:33, no env/guild_config override), the prompt invites badge/ID uploads (lines 141-145), and every uploaded image URL is echoed into that channel as embed images (lines 241-252) with no deletion/retention path. The hardcoded-channel robustness concern is concrete. The PII-exposure impact is real but partly speculative: uploads are explicitly optional, the prompt asks users to redact, and the 'indefinitely retained / broad staff access' severity depends on the channel's ACLs which the audit did not verify. A legitimate, defensible privacy/hardening finding rather than a confirmed exploitable defect; low."
+  },
+  {
+    "id": "A0078",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. closeTicket stores closed_at via SQLite datetime('now') (tickets.ts:165) producing a marker-less UTC string; schema is closed_at TEXT (db.ts:187). threadReopen.ts:73 does new Date(ticket.closed_at).getTime(), and I empirically verified on this UTC-5 host that new Date('2026-05-31 12:00:00').toISOString() === '2026-05-31T17:00:00Z' (a 5h error == host offset). The 7-day boundary at line 77 consumes the mis-parsed value, so the window is off by the host offset (directional claims correct). The project otherwise standardizes on Unix-seconds UTC helpers (lib/time.ts), so this is a real inconsistency/correctness bug. Severity low: dormant on the primary UTC production host (EC2), only manifests on non-UTC hosts (local dev) and only near the exact 7-day boundary."
+  },
+  {
+    "id": "A0082",
+    "real": true,
+    "severity": "medium",
+    "reason": "Verified against the installed discord.js 14.26.4 typings: FetchPinnedMessagesResponse.items is 'readonly MessagePin[]' (index.d.ts:6583) and MessagePin = { message, pinnedAt, pinnedTimestamp } (6586-6590) - a plain array, not a Collection. The cited code (entryPanel.ts:251-253) calls items.values() and treats each element as a Message. I confirmed empirically that Array.prototype.values() yields the MessagePin objects, so m.id is undefined (all pinned entries collapse to one undefined Map key) and m.components/m.embeds are undefined, making the guard at line 263 always continue. The pinned branch is dead. findExistingGateEntry in the same file (lines 158-167) handles the identical API correctly by iterating items and using item.message, proving the inconsistency. Impact (foreign-bot panel cleanup and pinned-panel reuse miss pinned messages, partially masked by the recent-50 fetch at line 256) is sound. Medium, matching the stated purpose of the startup function."
+  },
+  {
+    "id": "A0083",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. Sessions are keyed by `${guildId}:${userId}` (dmVerification.ts:83-85, set at 326) but hasActiveSession (87-92) and getSessionForUser (94-99) scan by session.userId only and return the first insertion-order match. The duplicate guard at line 191 is guild-scoped, so a second session for guild B is created while guild A's exists; handleDmAnswer (353) then resolves to the first session and upsertAnswer (380) writes to that session's appId. Both DM routing (messageCreate.ts:155) and thread routing (messageCreate.ts:138) pass only author id, so even the guild-scoped thread path misroutes. Bot is genuinely multi-guild (15 files iterate client.guilds.cache, incl. ready.ts). Real data-integrity defect (answers persisted against the wrong guild's application), but gated on the narrow precondition of a user holding two concurrent active sessions across two bot guilds; low."
+  },
+  {
+    "id": "A0089",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed TOCTOU race. closeTicket (tickets.ts:161-167) runs an unconditional `UPDATE ... SET status='closed' WHERE id=?` with no `AND status='open'` clause; both closeModmailThread (guard at threadClose.ts:226-228) and closeModmailForApplication (guard at 456-460) use plain-read guards and share no lock. flushTranscript is non-idempotent: it deletes the in-memory buffer on first flush (transcript.ts:262) and reconstructs the conversation from modmail_message and posts a SECOND transcript when the buffer is empty (transcript.ts:129-160). The cross-function race is reachable because closeModmailForApplication is fired unawaited via `.catch()` from web/routes/review.ts (lines 223, 279, 336, 392, 446, 502, 608), so a moderator's manual Close-button click (handlers.ts:144-159, deferUpdate then close) can race the dashboard auto-close. Result: double transcript posts, double user DMs, double action-log/dashboard notifies. Fix (conditional UPDATE + changes() check) is correct. Medium severity appropriate."
+  },
+  {
+    "id": "A0093",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed mechanism. reopenTicket (tickets.ts:174-179) runs an unconditional `UPDATE ... SET status='open' WHERE id=?`. The partial unique index idx_modmail_open_unique ON modmail_ticket(guild_id,user_id,status) WHERE status='open' exists (db.ts:193-199). The reopen-by-userId path selects the most recent status='closed' ticket (threadReopen.ts:46-56) and is reachable via the `/modmail reopen user:` slash command (commands.ts:88). A closed+open ticket can coexist for the same user (the index only constrains status='open', so closing one and opening a new one is allowed), and flipping the old closed row to open then violates the index, throwing SQLITE_CONSTRAINT_UNIQUE caught at threadReopen.ts:150-153 as a generic 'Failed to reopen modmail thread. Check logs.' DM/unarchive side effects never run. However, integrity IS preserved by the constraint (the finding admits this) and the harm is only a confusing failure on an uncommon admin action, so the 'data-integrity'/medium framing overstates it. Downgraded to low."
+  },
+  {
+    "id": "A0100",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed Discord API misuse. Every review modal handler calls interaction.deferUpdate() before invoking the runner (modals.ts:50->runRejectAction:64, 88->runApproveAction:102, 127->perm-reject, 166->runKickAction:180, 204->runVoteOutAction:218), and the wrong_password/stale_modmail button paths deferUpdate before runRejectAction (buttons.ts:98, 122). replyOrEdit then takes the `interaction.deferred` branch and calls editReply (cmdWrap.ts:503-506), which also STRIPS the flags object (line 505) so any Ephemeral flag is dropped, and edits the SOURCE component message (the review card). The early guard branches inside the runners (e.g. actionRunners.ts:85 'Already approved.', :91 'Already resolved (...)', :97 'Application is not ready'; vote-out :940/:944) replyOrEdit then `return` with no ensureReviewMessage refresh, so the card's embed+buttons are replaced by a bare text line and left clobbered. Reachable on a two-moderator race. Medium appropriate. (Note: the modal-opener guards in helpers.ts correctly pass Ephemeral pre-showModal, as the finding states.)"
+  },
+  {
+    "id": "A0101",
+    "real": false,
+    "severity": "invalid",
+    "reason": "Refuted: the triggering precondition is unreachable. The finding assumes a row can be permanently_rejected=1 while its status is non-terminal (e.g. needs_info/submitted). I grepped every write of permanently_rejected in src: the ONLY path that sets it to 1 is rejectTx (reject.ts:87), and that same UPDATE sets status='rejected' (reject.ts:82). The vote-out path (actionRunners.ts:927-935) sets status='rejected' but never touches permanently_rejected. unblock (unblock.ts:189) only sets it to 0. Three in-code invariant comments confirm 'Permanently rejected apps have status=rejected with permanently_rejected=1' (drafts.ts:193, listopen.ts:46, ensure.ts). Therefore permanently_rejected=1 always implies status='rejected', and rejectTx's terminal guard `if (row.status === 'rejected') return {kind:'already'}` (reject.ts:59) short-circuits BEFORE the UPDATE at lines 79-91 ever runs. The flag can never be clobbered to 0 by a normal reject. Defect cannot occur."
+  },
+  {
+    "id": "A0105",
+    "real": false,
+    "severity": "invalid",
+    "reason": "Refuted on reachability. The orphaned claim at claimHandlers.ts:90-101 (returns after the cross-row perm-reject check without clearClaim/unclaimTx) requires the claimed app row to be non-terminal (so claimTx succeeds) while a SEPARATE row for the same (guild_id,user_id) has permanently_rejected=1. That coexistence is not producible by any code path: (1) the sole `INSERT INTO application` (drafts.ts:211, inside getOrCreateDraft) is gated by a perm-reject check that throws 'User is permanently rejected' before the INSERT (drafts.ts:155-162); (2) the sole writer of permanently_rejected=1 (rejectTx) also sets status='rejected' (terminal); (3) unblock clears the flag to 0 rather than creating coexistence. The same-row case is also blocked because claimTx rejects terminal statuses approved/rejected/kicked (reviewActions.ts:79-83). The finding itself concedes only 'direct flag-setting' (manual DB tampering) could create the precondition. The cross-row check is therefore unreachable defense-in-depth (documented as intended), and the orphaned-claim outcome cannot occur via code. Per unreachable-path policy: real=false."
+  },
+  {
+    "id": "A0108",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. analyze.ts:377 emits `Role can assign/remove ${role.position} roles below it.` but role.position is the Discord hierarchy position index, not the count of roles beneath this role. The loop only computes rolesAbove (line 369) and never computes a roles-below count, so the position integer is substituted as if it were that count. A staff role at position 50 with 3 roles beneath it would report it can assign/remove 50 roles. This is misinformation inside a 'ManageRoles Scope Warning' security advisory generated by /audit security and shown to leadership. Detection logic is fine; only the interpolated number is wrong. The proposed fix (filter roles with r.position < role.position excluding @everyone) is correct. Medium severity is reasonable for misleading security-advisory output."
+  },
+  {
+    "id": "A0110",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. threadReopen.ts:73 does `new Date(ticket.closed_at).getTime()` on closed_at, which closeTicket (tickets.ts:165) writes as datetime('now') into a TEXT column (db.ts:187), producing 'YYYY-MM-DD HH:MM:SS' with no 'Z'. V8/Node parses that space-separated form as LOCAL time; I empirically reproduced a 5h skew vs the UTC-normalized parse on a UTC-5 host. The 7-day boundary (line 77) is therefore shifted by the host UTC offset, taking the wrong branch (new thread vs reopen) near the boundary. The codebase's own normalizer (reviewCard.ts:108-111) does replace(' ','T')+'Z' and is omitted here; the sibling dashboardBridge.ts:304 repeats the bug. Boundary-only impact on non-UTC hosts keeps this at medium, not higher."
+  },
+  {
+    "id": "A0114",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed mechanism. insertJoinStmt uses INSERT OR IGNORE keyed on (guild_id,user_id,channel_id,joined_at_s) with second resolution (line 25-26, 58); the UNIQUE constraint is exactly that 4-tuple (migration 052:27). A same-second leave-then-rejoin to the same channel (Case 2 sets left_at_s=T, then Case 1 re-inserts the identical tuple) is silently IGNORED, leaving no open session, and the same applies to a one-second A->B->A. Real and silent, but it requires sub-second same-channel rejoin and only slightly undercounts voice minutes, so I downgrade the finding's medium to low."
+  },
+  {
+    "id": "A0116",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. In TicketService.create the Discord channel is created at line 241 and the tracking row is inserted at line 252 with no try/catch around the post-create work. If getInsertTicketStmt().run throws (missing migration 067 per the lazy-prepare note lines 39-44, a constraint violation, or a transient SqliteError), create() rejects but the channel already exists, untracked: findByChannelId returns null and the lifecycle can never close it, leaving a permanent orphan under the Tickets category and a consumed number. Error-path-only and rare, so medium rather than high."
+  },
+  {
+    "id": "A0117",
+    "real": true,
+    "severity": "medium",
+    "reason": "Duplicate of A0110 (same file/line/bug), independently re-confirmed. closeTicket writes closed_at via datetime('now') (no 'Z'); threadReopen.ts:73 parses it with new Date(...).getTime(), which V8 treats as local time, skewing the 7-day comparison (line 77) by the host UTC offset and flipping the reopen-vs-new-thread branch (line 79) at the boundary. The cited test artifact (closed_at built via toISOString with 'Z') does mask it. Same medium rating as A0110."
+  },
+  {
+    "id": "A0120",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. The review modals are shown from a ButtonInteraction on the card (safeShowModal, helpers.ts:138-156), so the ModalSubmitInteraction's @original message is the card. Each handler calls deferUpdate() first (e.g. lines 49-53), making interaction.deferred true; on error it calls replyOrEdit({content:...}) with no flags, which in cmdWrap.ts:503-506 strips flags and calls editReply, PATCHing the card's @original and overwriting its content line ('New application from <@...> | App #...', card.ts:917) with the trace/error text for everyone. Subsequent ensureReviewMessage edits omit content (card.ts:891) so the corruption persists. The unclaim-cancelled branch (modals.ts:258-265) passes flags:Ephemeral which replyOrEdit also strips, so it too shows publicly. Real; medium since embeds/components survive (only the content line is clobbered)."
+  },
+  {
+    "id": "A0124",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. claimHandlers.ts:50 renders INVALID_STATUS as `application is already **${err.message.split(' ')[2]}**`. claimTx throws INVALID_STATUS for BOTH the terminal-state case ('Application already <status>', reviewActions.ts:82 -> split[2]=status, correct) AND panic mode ('Panic mode is active. All review operations are suspended.', line 62 -> split[2]='is'). I verified split(' ')[2] of the panic string is 'is', so a moderator clicking Claim during panic sees 'Cannot claim: application is already **is**.' Cosmetic/diagnostic (the claim is still correctly blocked) but actively misleading during an emergency; medium is fair."
+  },
+  {
+    "id": "A0148",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. migration 040 adds event_type (default 'movie') to active_movie_events/active_movie_sessions. gameNight persists rows with event_type='game' (gameNight.ts:399-414) and its recovery filters WHERE event_type='game' (gameNight.ts:447,471). movieNight persist writes rows with no event_type (defaults to 'movie', movieNight.ts:543-558) but recoverPersistedSessions has NO event_type filter on either SELECT (movieNight.ts:590-598, 611-623), so it loads BOTH movie and game rows into activeEvents/movieSessions. Both recovery paths run at startup (ready.ts:44 and :57). After a restart during an active game night, game rows are pulled into the movie maps and treated as movie attendance. Genuine correctness defect; medium is appropriate (requires restart while a game session is persisted, but yields cross-contaminated attendance data)."
+  },
+  {
+    "id": "A0154",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. accept.ts uses 'if (!requireGatekeeper(...)) return;' (accept.ts:70-74) and the denial message is emitted inside requireGatekeeper. The test (accept.test.ts:129-146) sets requireGatekeeper->false, calls executeAccept, and asserts only expect(requireGatekeeper).toHaveBeenCalled() with no post-condition that privileged work (findAppByShortCode/approveTx) was skipped. An inverted guard or a dropped return would keep the test green. Verified the identical weak pattern in the four cited siblings: reject.test.ts:127-144, kick.test.ts:137-146, unclaim.test.ts:130-139, gateMain.test.ts:202-209 (requireStaff). Real test-effectiveness gap on security-critical authz paths with broad replication; no current production bug (code is correct today), so medium rather than higher."
+  },
+  {
+    "id": "A0165",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. Partial unique index idx_modmail_open_unique ON modmail_ticket(guild_id,user_id,status) WHERE status='open' exists (db.ts:195-197). reopenTicket runs UPDATE ... SET status='open' (tickets.ts:177) inside db.transaction (threadReopen.ts:89-109). The user-based lookup selects the most-recent ticket WHERE status='closed' (threadReopen.ts:46-57); it does not check for a newer open ticket. If the same user already has an open ticket (a plausible sequence), the UPDATE collides with the partial index, throws SQLITE_CONSTRAINT, rolls back, and the catch returns the generic 'Failed to reopen modmail thread. Check logs.' (threadReopen.ts:150-154) plus a Sentry capture. Reachable via /modmail reopen user: (commands.ts:85-93). getOpenTicketByUser already exists (tickets.ts:59) so the suggested pre-check is feasible. Real defect (opaque failure + Sentry noise where a clear message belongs). Note: the index actually PREVENTS data corruption (rollback), so the 'data-integrity' framing is slightly generous; the true impact is UX/logging, hence medium."
+  },
+  {
+    "id": "A0177",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. hive.test.ts header claims to verify response parsing/error handling, but detectHive is never imported or called (verified zero references in the file). Every parsing test re-implements the nested status/output/classes loop inline and asserts on local literals (e.g. lines 58-75, 92-106, 148-160); config/timeout tests assert string/number literals (lines 200-221); originalFetch is saved (line 27) but fetch is never mocked. The real detectHive has exactly the cited branches: !response.ok throw (hive.ts:39-42), output guard (hive.ts:60-64), class scan (hive.ts:68-76) -- none are exercised, so a regression in the real parser would pass this suite. Genuine zero-coverage test; medium for a security-relevant AI-detection module."
+  },
+  {
+    "id": "A0178",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed, same pattern as A0177. detectOptic is never imported or called in optic.test.ts (verified zero references). Parsing tests read response?.report?.ai?.confidence from local literals (lines 33-101); the non-numeric test (91-101) checks typeof on a local object, not optic.ts's guard at optic.ts:57-60; config tests assert local strings (105-138). The source's real behavior (Bearer header, 'object' body key at optic.ts:32-34, !response.ok throw at 38-41, null on non-numeric at 57-60) is never exercised. Cited source line references are accurate. Genuine zero-coverage test; medium."
+  },
+  {
+    "id": "A0179",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. activityTracker.test.ts imports only trackJoin (line 48); trackFirstMessage, trackLeave, and evaluateAndFlag are never referenced (verified). Only the first describe block (59-86) calls trackJoin, and even it does not assert the SQL shape. All blocks after line 88 assert local literals/SQL strings/arithmetic (UPSERT 92-102, silent-days math 114-166, config 171-197, first-message 201-224, embed 229-258, edge cases 263-295, schema 299-330). Specifics check out: real trackJoin SQL sets left_at = NULL on conflict (activityTracker.ts:46) which the test's inline copy (lines 92-97) omits; the threshold check 'if (silentDays < config.silentDays)' is at activityTracker.ts:213 as cited but is re-derived in the test rather than driven through evaluateAndFlag. Genuine dead/ineffective test for an anti-abuse flagger; medium."
+  },
+  {
+    "id": "A0184",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. queries.ts query functions are synchronous better-sqlite3 calls that re-throw in their catch blocks (lines 143-146, 257-260, 355-358, 456-459, 524-527). command.ts:165-175 calls them EAGERLY inside Promise.resolve(getX(...)) during array-literal construction. A synchronous throw therefore propagates out before Promise.allSettled is invoked, is NOT captured as a 'rejected' settlement, and falls through to the outer try/catch at command.ts:336 which replies with the error message instead of the intended partial-results/warn path. The test at command.test.ts:271-283 uses mockRejectedValue (an already-rejected Promise / async rejection), so it exercises the allSettled rejected branch that production never reaches, masking the bug. Genuine correctness defect; medium is appropriate (degrades only when a query errors, on an internal analytics command)."
+  },
+  {
+    "id": "A0185",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. getMonthlyLeaderboard (store.ts:449-467) and getArtistStats (store.ts:481-495) build startIso via new Date()/setDate(1)/setHours(0,0,0,0)/toISOString() producing '...T00:00:00.000Z' (T separator, ms, Z). completed_at is written ONLY via datetime('now') (store.ts:297; grep shows no other writer) producing SQLite's '... 00:00:00' (space separator). The columns are compared lexically (completed_at >= startIso, lines 461 and 90); at index 10 a space (0x20) < 'T' (0x54), so any job completed on the 1st-of-month boundary day is wrongly excluded, plus a separate UTC-offset skew. store.test.ts mocks db.prepare/get/all and only asserts pass-through values (lines 330-380), so it never exercises the SQL comparison. Real silent undercount; bounded to the month-boundary day on a gamification leaderboard, so medium is the high end but defensible."
+  },
+  {
+    "id": "A0196",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. helpers.test.ts:191-258 defines its own BUTTON_RE = /^v1:decide:(\\w+):code([0-9A-F]{6})$/ and the file's imports (lines 50-54) do NOT include BUTTON_RE/BTN_DECIDE_RE. Production BUTTON_RE (helpers.ts:38) aliases BTN_DECIDE_RE (modalPatterns.ts:35) = /^(?:v1:decide|review):(approve|accept|reject|kick|claim|unclaim|wrong_password|stale_modmail):code([0-9A-F]{6})$/. The test regex differs materially: (\\w+) accepts any action vs the production allowlist, and it omits the 'review:' prefix alias. A regression in BTN_DECIDE_RE (dropping an action or the alias) would not fail these tests, giving false coverage of moderation-button routing. Test-quality defect; medium given the security-relevant surface and the HARD coverage gate."
+  },
+  {
+    "id": "A0200",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. actionRunners.test.ts imports only getConfig, getClaim/claimGuard, and approveTx/rejectTx/kickTx/*Flow from flows/index.js (lines 74-83); it never imports actionRunners.ts. The runner names appear only inside describe() strings (lines 90, 276, 389, 445), never invoked, while the real exported runApproveAction/runRejectAction/runPermRejectAction/runKickAction exist (actionRunners.ts:63/291/455/636). Assertions are literals (e.g. line 94 expect(guild).toBeNull(), line 161 feature=['review','approve']) and the mocked approveTx is called directly. Line 124/151 mock approveTx to return {kind:'ok'}, but TxResult (types.ts:132-136) has only changed|already|terminal|invalid (success is 'changed'), confirming the test was written against a misremembered contract. Claim-guard enforcement and the role-grant-failure abort block have zero behavioral coverage here. Real vacuous-coverage defect; medium."
+  },
+  {
+    "id": "A0201",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. buttons.test.ts imports ONLY vitest (line 8); it never imports buttons.ts and the handler names (handleReviewButton/handleModmailButton/handlePermRejectButton/handleCopyUidButton/handlePingInUnverified/handleDeletePing) appear only in describe() strings (lines 82/153/193/220/263/363), never called. Regexes are re-declared inline (line 84) and routing assertions are tautologies (line 102-103 ['reject',...].includes('reject') -> toBe(true)). The cited real security behavior exists and is untested: requireInteractionStaff gating (buttons.ts:77,216,286,319,637) and allowedMentions {users:[userId],parse:[]} hardening (buttons.ts:494). A dropped staff check or widened mentions would not fail here. Real false-confidence defect on a moderator-only, mention-capable surface; medium."
+  },
+  {
+    "id": "A0202",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. claimHandlers.test.ts imports ONLY vitest (line 8); it never imports claimHandlers.ts and handleClaimToggle/handleUnclaimAction appear only in describe() strings (lines 68, 151), never invoked. Cases assert locally-built literals (line 73-76 reconstructs the message then asserts it; line 110-112 asserts a hardcoded SQL string) rather than running the handler. The real post-claim permanently_rejected re-check exists at claimHandlers.ts:86-88 and is only mirrored as a string here, so removing it (allowing a banned user to be claimed/approved) would not fail any assertion. Real vacuous-coverage defect on security-relevant claim flow; medium."
+  },
+  {
+    "id": "A0206",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. tests/features/review/handlers/modals.test.ts imports NOTHING from src/features/review/handlers/modals.ts (verified: no import of handleRejectModal/handleAcceptModal/etc.; the only matches for those names are descriptive describe()/it() strings). Every it block re-implements logic inline (reasonRaw.trim().slice(0,500), locally re-declared regexes) or asserts hard-coded literals. The 'staff validation' (320-330), 'application resolution' (332-343) and 'action dispatching' (345-380) blocks assert constants like expect(checkPerformed).toBe(true) and expect(action).toBe('runRejectAction') that can never fail. A real regression in modals.ts (wrong field id, dropped requireInteractionStaff, wrong action) would not be caught. Genuine false-coverage defect on an authz-sensitive review flow. Medium is appropriate for test-integrity false coverage."
+  },
+  {
+    "id": "A0207",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed factually. modals.ts catch blocks at lines 66,104,143,182,220,272 compute `const traceId = ctx().traceId ?? newTraceId();`. newTraceId() (src/lib/reqctx.ts:39-57) returns an 11-char random base62 string and never touches interaction.id. The tests at 77-81 and 306-317 assert traceId === interactionId.slice(-8).toUpperCase(), which is not what the source does, and pass only because they evaluate their own inline slice(). The asserted/documented derivation is genuinely false and the real trace logic is untested. Downgraded to low: production trace code is actually correct (only the test's description is wrong), no production impact, and this is a narrower sub-case of the same root cause as A0206 (tests never exercise the module)."
+  },
+  {
+    "id": "A0208",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. tests/features/review/handlers/helpers.test.ts imports only the mocked primitives (shouldBypass, hasRole, findAppByShortCode, getClaim, claimGuard, loadApplication) and never imports isStaff/requireInteractionStaff/resolveApplication from helpers.js. The it blocks call the mocks directly and assert the mock returns what it was told (e.g. 154-159 sets findAppByShortCode -> {id:'app-123'} then asserts it returns that). The real branching is untested: isStaff bypass-then-role precedence (helpers.ts:49-54), requireInteractionStaff guild rejection + ephemeral 'Guild only.' reply (62-82), and resolveApplication's guild-mismatch guard `if (app.guild_id !== guildId)` (helpers.ts:117) plus null-app early returns. Inverting shouldBypass or dropping the guild_id authz check would still pass. False coverage on authorization logic warrants medium."
+  },
+  {
+    "id": "A0217",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. getSchedulerHealth() returns `new Map(schedulerHealth)` (schedulerHealth.ts:114), a SHALLOW copy whose value objects are the same references stored internally; recordSchedulerRun mutates those objects in place (62-85: fetches existing, sets health.lastRunAt/totalRuns/etc.). getSchedulerHealthByName returns a spread copy `{ ...health }` (132), so the two accessors are inconsistent. The test 'returns a copy of the internal map' (163-170) only asserts health1 !== health2, trivially true for any new Map(), and does NOT detect value-object aliasing; the timestamp tests (246-266) re-read via getSchedulerHealthByName, which copies, so they never touch the aliased map. All claims verified true. Note: the sole production consumer (src/commands/health.ts:157) iterates the map synchronously and discards it, so the latent bug does not manifest today; impact is the false test assurance plus the accessor inconsistency. Medium for test integrity is defensible."
+  },
+  {
+    "id": "A0222",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. (1) Test 'clamps odds to minimum' (tests/listeners/messageDadMode.test.ts:265-272) sets dadmode_odds:0, but source line 73 does Math.max(DADMODE_ODDS_MIN, Math.min(DADMODE_ODDS_MAX, Number(cfg.dadmode_odds || 1000))); 0||1000 short-circuits to 1000 before Math.max, so the lower-clamp branch is never exercised - the test is vacuous (passes only because beforeEach Math.random=0 forces roll 0). (2) The test mocks constants (lines 27-30) with DADMODE_ODDS_MIN:1, DADMODE_ODDS_MAX:10000, but real constants.ts:34-35 are 2 and 100000, so a regression in the real bounds is uncatchable and 'clamps odds to maximum' validates nothing (roll is 0 regardless of odds when random=0). Minor wording imprecision in the finding ('asserts a 10000 ceiling' - the test actually sets 100000), but all substantive claims are verified. Medium."
+  },
+  {
+    "id": "A0223",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed, same defect class. (1) 'clamps odds to minimum' (tests/listeners/messageSkullMode.test.ts:146-153) sets skullmode_odds:0, but src/listeners/messageSkullMode.ts:44 does Number(cfg.skullmode_odds || 1000) so 0 becomes 1000 and the SKULLMODE_ODDS_MIN Math.max clamp is never exercised (test passes only via beforeEach random=0). (2) Test mocks SKULLMODE_ODDS_MAX:10000 (line 29) while real constants.ts:39 is 1000 - a verified 10x divergence; 'does not react when roll is non-zero' (136-144) and 'clamps odds to maximum' (155-163) run against the wrong bound, and a change to the real ceiling would not be caught. All claims independently verified. Medium for false confidence on production odds bounds."
+  },
+  {
+    "id": "A0245",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed mechanically and empirically. getHeatmapDataForRange (web/src/lib/server/queries/heatmap.ts:165-190) computes weeksCount=ceil(spanS/7d) then walks 7-day windows backward from endS, so the oldest window starts at endS-weeksCount*7d, earlier than startS whenever the span is not a 7-day multiple. Reachable via the dashboard custom time picker: timeWindow.ts supports ?window=custom&from=&to= (lines 18-22,99-101) and heatmap/+page.server.ts:17-21 passes the resolved range with no clamping. Quantified: 10d span over-reaches 4d, 30d 5d, 40d 2d, 90d 1d (7d/14d none). buildWeek queries created_at_s>=weekStartS so pre-startS rows inflate totalMessages, avgMessagesPerHour (divided by padded week count), busiest/quiet hours and week-over-week growth. Genuine accuracy bug. Downgraded to low: read-only analytics over-count, no functional or security impact, only affects non-7-multiple custom ranges."
+  },
+  {
+    "id": "A0247",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed and actually stronger than stated. push-sender.ts:122 gates sends on the cached sub.tier from push.db; the ONLY refresh path is updateTier via a 'role:changed' SSE event (lines 87-96). I grepped the entire repo (web + bot src) and found NO emitter of 'role:changed' anywhere -- the type is defined (events.ts:33,262), consumed by fan-out.ts/+layout.svelte/push-sender, but never published. So a subscription's tier is set once at subscribe time (push-db.ts:90, default 'gk') and effectively never updates. deleteStaleSubscriptions (push-db.ts:177) only prunes by 30-day inactivity, not role loss. review:/modmail: events require tier 'gk' and audit: 'admin' (events.ts:327-337); the review:submitted body leaks the applicant display name (line 63) and appId (line 113). A demoted/removed moderator keeps receiving tier-gated PII pushes. Real authorization-staleness defect. Severity medium: PII is low-sensitivity (display name, event-occurred), requires prior subscription plus role loss, not remotely exploitable, but the authz model is genuinely broken."
+  },
+  {
+    "id": "A0253",
+    "real": true,
+    "severity": "low",
+    "reason": "Mechanism confirmed: securityAuditScheduler.ts:349 uses setInterval(async () => {...}) with no in-flight/reentrancy guard, and setInterval does not await the callback, so a run exceeding the interval overlaps the next. runSecurityAudit posts leadership-ping messages on critical/dangerous findings (lines 169-198) and generateAuditDocs saves a snapshot, so overlapping runs could duplicate pings/snapshots. However the audit interval is 30 minutes (line 30), so overlap requires a single run (role/channel walk + snapshot + one channel post) to exceed 30 minutes -- only under a pathological hung REST call, which the finding itself concedes. Real latent defensive-coding gap (a reentrancy guard is the standard pattern and the proposed fix is correct), but downgraded from medium to low: overlap is rare under the 30-min cadence and the worst case is non-destructive duplicate pings, not data loss or a security breach."
+  },
+  {
+    "id": "A0257",
+    "real": false,
+    "severity": "invalid",
+    "reason": "Refuted empirically. The finding claims the 'end' listener registered at command.ts:444-446 (after awaiting exportPromise) can miss the event because csv.ts:253 calls stream.end() before streamReviewActionsCSV resolves, hanging the promise forever. streamReviewActionsCSV (csv.ts:144-272) is async but contains ZERO awaits (synchronous better-sqlite3 + stream.write, then end()), so its promise resolves on a microtask after the synchronous body. I reproduced the exact pattern on Node v20.20.0 (the repo's runtime): a PassThrough in flowing mode emits 'end' only on a later event-loop phase, AFTER the resolved-promise microtask continuation runs. In every iteration (small payload and a 528KB multi-read payload) the late 'end' listener fired and the promise RESOLVED; an immediately-attached spy listener confirmed 'end' is emitted after reaching the equivalent of line 444. The promise does not hang and no buffer/interaction is leaked. The reasoning conflates synchronous end() with synchronous 'end' emission, which is incorrect."
+  },
+  {
+    "id": "A0264",
+    "real": true,
+    "severity": "low",
+    "reason": "Mixed; the headline race is wrong but a real sub-defect remains. Race claim REFUTED: removeExpiredMultipliers (byteMultiplierStore.ts:182-204) runs getExpiredMultipliersStmt then deleteExpiredMultipliersStmt back-to-back, and it is called synchronously at the very top of cleanupExpiredMultipliers (scheduler line 37) BEFORE the first await (line 54). better-sqlite3 is synchronous, so SELECT+DELETE complete with no event-loop yield; the rows are deleted before any overlapping tick can run, so a second tick SELECTs an empty set. Not wrapping them in db.transaction is inconsequential in this single-threaded, no-intermediate-await path. Panic-orphan claim CONFIRMED: processExpiredMultiplier returns early under panic mode (lines 100-109) after the row was already deleted, leaving the multiplier role on the member with no tracking row; the comment at 105-108 explicitly acknowledges manual cleanup is then required. Real low-severity correctness issue, but it is a rare (panic-mode-only) and documented/accepted tradeoff, and the primary race thesis is incorrect, so low not medium."
+  },
+  {
+    "id": "A0268",
+    "real": true,
+    "severity": "medium",
+    "reason": "Fully confirmed. resolveApplication (helpers.ts:90-125) emits not-found/guild-mismatch feedback via replyOrEdit with no ephemeral flag. replyOrEdit calls interaction.editReply when interaction.deferred (cmdWrap.ts:503-506). The wrong_password (buttons.ts:96-103), stale_modmail (120-127), claim (177-184) and handleModmailButton (221-229) paths all call deferUpdate() BEFORE resolveApplication, as do all modal handlers in modals.ts (e.g. deferUpdate at 88 then resolveApplication at 96). Because deferred=true, editReply with only { content } edits the source review card to 'No application with code XXXXXX.' publicly and strips its buttons, destroying the live card. The finding's nuance is accurate: the modal-opening button paths (reject/approve/accept/kick/unclaim at buttons.ts:144-173) do NOT defer first, so they correctly use reply there. Real correctness defect. Severity medium: publicly wipes a live UI card, but only when the referenced app is already deleted, and it is recoverable by reposting."
+  },
+  {
+    "id": "A0269",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. Buttons are routed directly (interactionCreate.ts:275+), NOT via wrapCommand, so post-defer throws land in the catch-all at line 1078. There ensureDeferred (cmdWrap.ts:449-451) returns early when interaction.deferred is true, then postErrorCard -> replyOrEdit -> editReply (cmdWrap.ts:503-506) fires. handleConfirm in artistRotation/handlers.ts:120 calls deferUpdate() early, then runs many unguarded ops (getArtist/processAssignment/logAssignment/createJob L224-265, editReply L282) any of which can throw. For a deferUpdate'd component, editReply edits the ORIGINAL component message, so the confirmation panel gets overwritten by the public error card. Reachable, defensible defect. The errorCard.ts:224-227 'public so staff can see' comment is also inaccurate on this path. Keep medium."
+  },
+  {
+    "id": "A0270",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. The isModalSubmit() block (interactionCreate.ts:726-1025) handles prefixes tk:closemod: (734), help:modal:search (751), v1:modal:/v1:avatar:confirm18: (769), v1:gate:reset: (1003), isitreal_modal_ (1010). The route_miss error card + ix_route_miss log exist ONLY inside the v1:modal: branch (984-1000). A modal with none of these prefixes falls past line 1025, skips the contextMenu blocks (kind!='contextMenu'), and returns from the handler with no reply/deferUpdate/error card/log. The catch at 1078 only catches throws, not normal fall-through. So unhandled modal customIds yield Discord's generic error with no trace ID, exactly as described. Keep medium."
+  },
+  {
+    "id": "A0273",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed dead. command.ts (481 lines) exports executeAnalyticsCommand/executeAnalyticsExportCommand/parseWindow; repo-wide grep shows the only importer is tests/features/analytics/command.test.ts, no src/ importer. 'analytics' is absent from runtimeManifest.ts SLASH_COMMAND_NAMES (which contains 'stats' at L39) and there is no /analytics registration in src/index.ts or src/commands. The startup drift guard (index.ts:270-294) enforces the manifest is authoritative, so the module is unreachable at runtime. Genuinely dead, but dead code has no runtime/user impact, so severity is low rather than medium."
+  },
+  {
+    "id": "A0274",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed transitively dead. queries.ts (528 lines) exports getActionCountsByMod/getTopReasons/getVolumeSeries/getLeadTimeStats/getOpenQueueAge; the only non-test consumer is the dead command.ts. Verified src/db/ensure.ts:267 is a JSDoc comment ('...by age (getOpenQueueAge)'), not an import. The live /stats path uses commands/stats/* and features/analytics/approvalRate.ts, not this file. Real dead code; low severity (no runtime reachability or user impact)."
+  },
+  {
+    "id": "A0275",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed fully orphaned. approvalRateCommand.ts (196 lines) exports executeApprovalRateCommand; repo-wide grep shows ZERO importers, not even a test (only its own header self-reference). The live approval-rate feature is /stats approval-rate (stats/index.ts:24,50 -> stats/approvalRate.ts:23) which imports the SHARED features/analytics/approvalRate.ts (269 lines, distinct, correctly retained). Real dead code; low severity."
+  },
+  {
+    "id": "A0277",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed dead infra + latent bug. MODAL_18_RE (modalPatterns.ts:75), the 'avatar_confirm18' union member (98), and the identifyModalRoute branch (149-152) all exist. The string v1:avatar:confirm18: appears only in modalPatterns.ts and interactionCreate.ts:769 plus tests; no ModalBuilder/showModal ever produces it, so it is unreachable in production. Verified the router (interactionCreate.ts:772-979) has NO route.type==='avatar_confirm18' branch, so such a modal would hit the route_miss 'Unhandled modal' card at 984-1000. Both dead and a latent route-miss. Real, but unreachable/latent with no current user impact, so low severity."
+  },
+  {
+    "id": "A0284",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed: detectNsfwFlagSurge (pulse.ts:1216,1222) and detectModmailResponseTime (1176-1180) wrap TEXT timestamp columns in strftime('%s', ...). nsfw_flags.flagged_at is TEXT (mig 032:45) with only (guild_id) and (guild_id,reviewed) indexes (032:53-54); modmail_ticket.created_at is TEXT (schema.sql:680). Wrapping the column defeats any time index, so SQLite filters by guild_id equality then scans those rows applying strftime per row, twice (this+prev window). Genuinely non-sargable. Severity lowered to low: nsfw_flags has UNIQUE(guild_id,user_id) so rows are bounded by member count, modmail is similarly bounded, and getInsights is wrapped in a 60s cached() at pulse/+page.server.ts:37-45. Real but modest impact for a single Discord guild."
+  },
+  {
+    "id": "A0285",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed: getReviewQueue (reviews.ts:388-461) is called at reviews/+layout.server.ts:14 with NO cached() wrapper, so it re-runs on every navigation into /dashboard/reviews/*. The SELECT carries two correlated scalar subqueries per pending row (404-411 EXISTS, 412-419) plus a third correlated EXISTS in ORDER BY (432-439), each containing a nested SELECT MAX(mm2.id). Fan-out is ~3x pending-app-count correlated subqueries. Real perf concern. Severity lowered to low: idx_modmail_message_ticket_id(ticket_id,id DESC) (mig 063:31-33) covers the MAX lookups and pending-app counts are typically small, so the practical cost is bounded."
+  },
+  {
+    "id": "A0287",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed: getHeatmapDataForRange (heatmap.ts:180-183) loops up to MAX_WEEKS=26 (line 37) calling buildWeek, which runs SELECT created_at_s ... (122-127) returning every raw message_activity row for the week and buckets in a JS loop (144-150). So a 26-week window = 26 queries each streaming raw rows. message_activity has hour_bucket + idx_message_activity_guild_hour (mig 020:53,68-69), so a single GROUP BY is feasible. Real. Severity lowered to low: heatmap/+page.server.ts:20 wraps it in cached() with CACHE_TTL.medium=60000 (cache.ts:130), so only cold loads / new windows pay the cost; per-guild weekly volume is bounded."
+  },
+  {
+    "id": "A0293",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed: scripts/deploy.sh is a distinct deploy path to PM2 'pawtropolis'. It uses only set -e (line 12) with no -u/pipefail. It has NO migration execution step: the 6 steps extract, npm ci --omit=dev, pm2 restart (122-133) with no 'npm run migrate' or migrate call (its tarball at line 108 ships the migrations/ dir but never runs them). Its tarball (dist package.json package-lock.json migrations scripts) omits .env.build, web/build, ecosystem.config.cjs that the root deploy.sh tarball ships (deploy.sh:408). Three divergent deploy scripts confirmed to exist (deploy.sh, deploy-no-tests.sh, scripts/deploy.sh). Genuine deploy-safety/maintenance trap; medium retained."
+  },
+  {
+    "id": "A0294",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed divergence: recordMigration (helpers.ts:149-216) writes to schema_migrations (INSERT ... ON CONFLICT DO NOTHING, 207-213), and migrations/046:32 correctly calls it. But run-migration-046.mjs:24-27 checks/inserts into a separate migration_log table, which grep shows is referenced ONLY by that one script (orphan table). If an operator runs the mjs, schema_migrations is not stamped, so npm run migrate re-runs migrations/046. Real footgun. Severity lowered to low: 046 guards every ALTER with columnExists (046:26), so the re-run is non-destructive today; the finding itself frames it as latent."
+  },
+  {
+    "id": "A0295",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed: migrate.ts wraps migrateFn in db.transaction (209-213) and the in-file GOTCHA comment (206-208) explicitly states it only rolls back on a thrown exception. Each migration calls recordMigration itself inside that same transaction (e.g. 046:32), so a partial-but-non-throwing migration commits AND stamps schema_migrations permanently. Cited deploy.sh:435 confirmed to swallow failures: 'node scripts/migrate-remote.js' || echo 'Migration step completed (may have warnings)'. So a migration that logs-and-returns instead of throwing is recorded as applied and never retried, with the deploy proceeding. Genuine deploy-safety gap; finding's own 'medium' confidence is well-calibrated; medium retained."
+  },
+  {
+    "id": "A0300",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. card.ts:799-801 reads the review_card mapping once, then many awaits (inSpan embed render 837-851, dynamic imports) separate that snapshot from the create branch. On the no-mapping path channel.send() posts a brand-new card with one-time Gatekeeper/bot-dev role pings (919-929) BEFORE the row is written (upsert at 958). review_card.app_id is PRIMARY KEY (schema.sql:760) and the no-row branch uses plain INSERT (949-954), so a second concurrent caller would throw on conflict, but two physical Discord messages with duplicate pings are already sent and the throw is swallowed by the catch (960-966). Concurrent invocation is real and acknowledged in-tree: queueAvatarScan fires ensureReviewMessage via setImmediate (scan.ts:141,217) concurrently with the submit handler, and waitForReviewCardMapping is only a 5s mitigation that explicitly proceeds to call ensureReviewMessage on timeout (scan.ts:210-217). No internal mutex exists. Medium (not high): needs a sub-500ms timing window, low frequency, and a partial mitigation already exists."
+  },
+  {
+    "id": "A0305",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. handleLevelRoleAdded writes the dedup marker first via INSERT OR IGNORE INTO level_reward_granted (levelRewards.ts:130-133) and early-returns on changes===0 (143). Grants run afterward via assignRole (180), which I verified in roleAutomation.ts:307-319 catches ANY thrown error and returns {success:false, action:'skipped'} WITHOUT rethrowing. levelRewards.ts:198-209 logs these as reward_error but never deletes the dedup row. Grep confirms there is NO DELETE FROM level_reward_granted anywhere in src/ (only matches are inside the audit JSON files). So a transient Discord 429/5xx/network failure permanently skips the reward on all future re-sync events. Real defect; medium is appropriate."
+  },
+  {
+    "id": "A0311",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. home.ts:74 (decisionsToday) and home.ts:88 (weekStats decisions + AVG response time) filter action IN ('approve','reject','kick'), omitting 'perm_reject'. reject.ts:69 writes action='perm_reject' to review_action for permanent rejections. Grep of stats.ts shows every other review_action query in the system uses the 4-verb set ('approve','reject','perm_reject','kick'), so home.ts is the lone inconsistent caller. The undercount and avg-response-time skew are real. Downgraded to low: impact is limited to one user's personal dashboard counters (reporting accuracy), not data integrity, security, or core correctness."
+  },
+  {
+    "id": "A0312",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. getApplicationFunnel (stats.ts:705,709) counts application.status='perm_rejected', but the application CHECK constraint only permits ('draft','submitted','approved','rejected','needs_info','kicked') (schema.sql:201), so 'perm_rejected' can never exist. reject.ts:82-91 sets status='rejected' with permanently_rejected=1 for BOTH normal and permanent rejections, so FunnelMetrics.permRejected is always 0 and every permanent rejection is silently counted in the 'rejected' bucket. The query ignores the real permanently_rejected flag entirely. Genuine dead-predicate / metric-correctness bug; medium appropriate."
+  },
+  {
+    "id": "A0313",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. user_activity has PRIMARY KEY (guild_id,user_id) (schema.sql:945) -- one current-state row per user. trackJoin upserts with ON CONFLICT DO UPDATE SET joined_at=excluded.joined_at, left_at=NULL (activityTracker.ts:44-46), and the code comment (37-39) confirms this is intentional. refresh.ts derives daily leaves from date(left_at) (186-187), accumulates cumulative_net from joins-leaves (300,312), and buckets cohorts by joined_at week while reading left_at for retention (362-373). On any rejoin the prior leave is erased and the original join day moves, so historical leaves, cumulative_net, and past-week cohort size/retention all mutate retroactively and gross churn is undercounted. Real event-log-vs-current-state mismatch; medium appropriate."
+  },
+  {
+    "id": "A0320",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. removeExpiredMultipliers (byteMultiplierStore.ts:182-204, actual path src/store/, not src/features/) fetches expired rows (187) and DELETEs them (191) in the same call, then returns them. cleanupExpiredMultipliers calls it first (scheduler:37) and only afterward attempts role removal via processExpiredMultiplier. That function early-returns WITHOUT removing the role when the guild is not cached (90-97), when panic mode is active (100-109, comment explicitly acknowledges the row is already deleted and staff must remove manually), or when member fetch returns null (114-120). Because the authoritative row is already destroyed, the scheduler can never retry, leaving an expired XP-multiplier role orphaned (continuing economic over-grant). The cited line range is slightly off (file is in src/store/) but the code and behavior match exactly. Real defect; medium appropriate."
+  },
+  {
+    "id": "A0321",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed in src/commands/usebyte.ts: epic (lines 84-92) and legendary (93-101) share multiplierRoleId '1405369052829974543' and multiplierValue 5, differing only in durationHours (48 vs 72). migrations/044 line 87 enforces UNIQUE(guild_id,user_id), so one tracked multiplier per user. src/store/byteMultiplierStore.ts upsert (lines 66-79) unconditionally overwrites expires_at via excluded.expires_at with no MAX() guard, and byteTokenHandler.ts handleConfirm (line 385) calls it with the new (shorter) expiresAt. So redeeming Epic while a Legendary boost is active shortens 72h to 48h and the two rarities can never coexist. Real correctness/economy defect. Mild overstatement: the confirmation UI (byteTokenHandler.ts 568-574, usebyte.ts 225-231) does show current vs proposed expiry, so an attentive user can notice the times, but both render as '[5x] Byte' so the downgrade is not clearly signposted. Medium is defensible."
+  },
+  {
+    "id": "A0322",
+    "real": false,
+    "severity": "invalid",
+    "reason": "Core causal mechanism is factually wrong. The finding claims the review modal handlers 'do meaningful pre-ack work first: requireInteractionStaff -> resolveApplication (SQLite) before calling deferUpdate' and cites lines ~49/87/126/166/203. But in src/features/review/handlers/modals.ts every handler calls deferUpdate() as its FIRST awaited operation (e.g. handleRejectModal line 50) and only calls resolveApplication AFTERWARD (line 58); the cited line numbers ARE the deferUpdate lines. requireInteractionStaff (helpers.ts 62-82) is fully synchronous (role-cache checks, no DB). The QOTD handler (qotd/handlers.ts 288-290) also defers before its DB lookup (line 295). So there is no pre-ack DB work to push the handler past 2500ms. The only residual race would need gross event-loop starvation between armWatchdog (interactionCreate.ts:219) and the handler running at all, which is not the described cause; the watchdog also re-checks modalInteraction.deferred/replied (cmdWrap.ts:161) before deferring. Mechanism misdescribed; refuted."
+  },
+  {
+    "id": "A0323",
+    "real": false,
+    "severity": "invalid",
+    "reason": "Literal behavior confirmed (cmdWrap.ts replyOrEdit lines 503-506 destructures and discards flags on the deferred path), but this is correct/necessary Discord behavior: editReply cannot change ephemerality, which the finding concedes ('the discard is technically necessary'). All cited callers (modals.ts 259-261, actionRunners.ts 830-833, helpers.ts 187/212) are confirmed correct today because their prior ack was ephemeral, which the finding also concedes ('visually correct only by luck'). The one concrete leak vector named, handleModmailContextMenu (modmail/handlers.ts:190 defers public), does NOT route through replyOrEdit({flags:Ephemeral}): it calls interaction.editReply({content}) directly with no flags (line 239). So no current path leaks. This is a latent API-ergonomics/missing-warning concern with no confirmed defect or incorrect output; per the refute-on-unconfirmed-impact bar, not real."
+  },
+  {
+    "id": "A0324",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed in src/features/review/handlers/helpers.ts: safeShowModal returns false silently with NO user-facing ack/feedback when already acked (148), when age > 2500ms (151-154, only logs a warn), or when showModal throws (158-165). All open* callers ignore the boolean return (helpers.ts 202/240/313/391), and the button router handleReviewButton ignores it too (buttons.ts 147/155/163/171). For reject/accept/kick/unclaim the button path runs resolveApplication's two synchronous SQLite lookups (buttons.ts 145/153/161/169 -> helpers.ts 102/110) BEFORE reaching safeShowModal, so under DB-lock contention the interaction can cross 2500ms, after which safeShowModal bails, the interaction is never acked, and the moderator sees Discord's generic 'This interaction failed' with no error card or ephemeral notice. Genuine, defensible ack-window/UX defect at medium severity."
+  },
+  {
+    "id": "A0330",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed unreachable. 'analytics' is absent from SLASH_COMMAND_NAMES in src/commands/runtimeManifest.ts (the documented single source of truth that src/index.ts asserts every dispatched command against at startup). src/features/analytics/command.ts (executeAnalyticsCommand/executeAnalyticsExportCommand/parseWindow) has no production importer: grep returns only the file itself plus tests/features/analytics/command.test.ts. src/features/analytics/queries.ts is imported only by that dead command.ts and its tests (done/00024.md is a closed todo, not code). index.ts only mentions analytics in a comment. Live analytics is the consolidated /stats command. Genuinely dead handler module, but pure maintenance burden with no runtime/correctness/security impact, so severity lowered to low (finding said medium). Fix correctly preserves analytics/approvalRate.ts, which is still live."
+  },
+  {
+    "id": "A0331",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed unreachable. 'approval-rate' is absent from SLASH_COMMAND_NAMES (runtimeManifest.ts). src/features/analytics/approvalRateCommand.ts (executeApprovalRateCommand, line 39) has no importer anywhere in src or tests (grep yields only the file itself plus a docs/source-tree-analysis.md mention; not even a test imports it). The live path is the /stats approval-rate subcommand: src/commands/stats/approvalRate.ts handleApprovalRate imports from analytics/approvalRate.ts (line 23), NOT from approvalRateCommand.ts. So the top-level handler is dead since the stats consolidation. Real dead code, but no runtime/correctness/security impact, so severity lowered to low (finding said medium)."
+  },
+  {
+    "id": "A0343",
+    "real": true,
+    "severity": "low",
+    "reason": "Independently confirmed: modmail_ticket.created_at is TEXT (schema.sql:680) and the WHERE clause wraps it in strftime('%s', mt.created_at) at pulse.ts:1179, which is non-sargable. The only indexes on modmail_ticket are (guild_id,status) and (guild_id,user_id,status) (schema.sql:1120-1123), none covering created_at, and the strftime wrap defeats range seeking. So SQLite uses the index for guild_id equality but filters all that guild's tickets for the time bound. Genuine non-sargable predicate. Downgraded to low because the finding itself documents strong mitigations the impact depends on: the whole Pulse bundle is cached (CACHE_TTL.medium with in-flight dedup, confirmed in pulse/+page.server.ts), the guild_id equality bounds the scan to one guild on a single-guild bot, and the finding concedes this is a latent scaling cost, not an active outage."
+  },
+  {
+    "id": "A0347",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed via repo-wide search: the exported invalidate() at cache.ts:143 has ZERO callers; every other 'invalidate' match is SvelteKit client-side invalidateAll() or the definition. pulse/+page.server.ts:37 and stats/+page.server.ts:40-56 read through cached(key, CACHE_TTL.medium=60_000, ...) with keys built from rangeCacheKeyParts(range,60), whose bucket Math.floor(endS/60) is stable inside any 60s window (timeWindow.ts:153-162). So after a mutation the SSE-triggered invalidateAll() re-runs the server load, but cached() returns the same pre-mutation L1 object until the ~60s TTL lapses. The live-refresh wiring does not refresh the cached counters. Real staleness defect; medium is appropriate (bounded to <=60s, no data corruption)."
+  },
+  {
+    "id": "A0348",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed: getAuditLog and getActionTypes (audit.ts) are fully synchronous better-sqlite3 calls (db().prepare(...).get/.all, no await; verified lines 55-75 and 90-166). The load wraps cached(...) in Promise.race against a setTimeout(8000) reject (audit/+page.server.ts:50-58). Synchronous SQL blocks the Node event loop for its full duration, so the setTimeout callback cannot fire until after the work completes, at which point cached() has already resolved and wins the race. The 8s timeout therefore cannot interrupt the query and the 504 branch is effectively dead. This is a correct, well-known event-loop-blocking architectural defect. Medium retained: the queries are reasonably bounded (keyset pagination, FTS index, LIMIT 200 name lookup, default 7-day window), so a true multi-second freeze is possible but not the common case."
+  },
+  {
+    "id": "A0354",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed at deploy.sh:130-133: maybe_backup_remote_db does a bare cp of data.db with no WAL checkpoint and does not copy -wal/-shm, while the sibling ops paths switch.sh:93 and start.sh:275,313 explicitly run PRAGMA wal_checkpoint(PASSIVE) and copy -wal/-shm. The DB runs in WAL mode, so the bare cp can produce a torn/stale backup. The '2>/dev/null && ... || echo WARNING: data.db not found' collapses all failure modes into a misleading 'not found' message, and maybe_backup_remote_db always returns success, after which deploy.sh:435 runs node scripts/migrate-remote.js applying migrations including 035 (DROP TABLE, migration 035 lines 41-44). Genuine deploy-safety/backup-integrity defect. (Note: migration 035 guards each drop with an emptiness check, so the destructive risk is somewhat lower than implied, but the WAL-torn-backup + misleading error + always-proceed issues are valid independent of which migration runs.)"
+  },
+  {
+    "id": "A0355",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed: stamp-migrations.mjs:6 maps '047' -> 'lock_db_mode', but the on-disk migration is 047_nsfw_reviewed_tracking.ts (verified) and no 047_lock_db_mode file exists. The runner scripts/migrate.ts decides what to skip purely by version membership in schema_migrations (line 253: filter !appliedVersions.has(m.version)), so stamping version '047' makes it skip the real 047, whose nsfw_flags.reviewed_by/reviewed_at columns (047 lines 18-25) would then never be applied, and the stored name corrupts the audit trail. Real defect. Note the finding overstates 'the same shift affects other entries' -- I verified 048-066 names DO line up with the on-disk files; only 047 is misaligned. Severity kept medium: the single 047 mismatch is a genuine footgun if the script is ever run, but it is one entry, not a wholesale shift, and the script targets a /tmp test DB by default."
+  },
+  {
+    "id": "A0356",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed all key claims: run-migration-046.mjs writes completion to a migration_log table (lines 24-27), which a repo-wide search shows is created nowhere in the canonical schema/migrations (only this script and audit JSON reference it), so SELECT id FROM migration_log throws on a box without it. The canonical runner migrate.ts and migration 046 (046_extend_user_cache_profile.ts:32) track in schema_migrations via recordMigration, so this script does NOT mark 046 applied there and migrate.ts will re-run 046. new Database(dbPath) at line 4 uses DB_PATH default './data/data.db' with no fileMustExist, so wrong-cwd invocation creates an empty DB. The ALTERs are guarded by columnExists in migration 046 (line 26), so re-running via migrate.ts won't duplicate columns, which correctly keeps this medium not high. Real dual-table-tracking inconsistency."
+  },
+  {
+    "id": "A0359",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. tsx is a devDependency (package.json:90), and prod installs use `npm ci --omit=dev` (deploy.sh:341/421/428), so tsx is excluded from prod node_modules. migrate-remote.js:18 runs bare `spawnSync('npx', ['tsx', 'scripts/migrate.ts', ...], {shell:true})`, and this is invoked on the prod host via ssh_remote (deploy.sh:435, also deploy-no-tests.sh:25). scripts/migrate.ts exists and is TypeScript, so a runtime TS loader is genuinely needed. No global tsx provisioning exists in setup-server.sh (only pm2 is installed -g). With non-interactive ssh, npx auto-fetches tsx from the registry at an unpinned latest-matching version and executes it against the prod DB. Real supply-chain inconsistency; medium is defensible."
+  },
+  {
+    "id": "A0360",
+    "real": true,
+    "severity": "medium",
+    "reason": "Confirmed. start.sh:700 (`ssh ... 'cd ${REMOTE_PATH} && tar -xzf deploy.tar.gz && npm ci'`) and start.cmd:656 (identical) run plain `npm ci` on the prod host under the --fresh deploy path (ARG_FRESH gate, a reachable alternate operator entrypoint), installing the full devDependency tree (eslint, vitest, tsup, tsx, prettier, @anthropic-ai/sdk, etc. per package.json:76-93). The canonical deploy.sh uses `npm ci --omit=dev` (341/421/428). Genuine inconsistency that enlarges the prod supply-chain surface for no runtime benefit. Real; medium defensible."
+  },
+  {
+    "id": "A0011",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. backfill-general.mjs:31 `const LIMIT = limitArg >= 0 ? parseInt(args[limitArg + 1], 10) : Infinity;`. When --limit is the final arg, args[limitArg+1] is undefined and parseInt(undefined,10) is NaN (verified). The cap check at line 153 `if (runAdded >= LIMIT)` is `runAdded >= NaN`, always false (verified), so the smoke-test cap never fires and the script pages the full #general history. Not corrupting (INSERT OR IGNORE) but defeats documented --limit 500 mode. Low is appropriate."
+  },
+  {
+    "id": "A0012",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. build-context-incremental.mjs:24 `const MAX_BATCH = batchArg >= 0 ? parseInt(args[batchArg + 1], 10) : 5000;`. --batch with no following numeric value yields NaN, bound as `LIMIT ?` at line 37 via .all(MAX_BATCH). Empirically verified better-sqlite3 throws SQLITE_MISMATCH (datatype mismatch) on a NaN integer LIMIT bind, aborting the cron run before any work. Fails safe (no corruption) but scheduled materialization silently stalls. Low is appropriate."
+  },
+  {
+    "id": "A0017",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. export-embed.mjs:13 `...get().sql` has no guard; if general_messages_embed is absent in the source DB, .get() returns undefined and .sql throws an opaque TypeError. Sibling export-processed.mjs:29-30 demonstrates the intended graceful pattern (`?.sql` + skip message). export-substantiveness.mjs:13 shares the identical defect, as the finding states. Genuine but minor robustness/UX defect on a trusted-local operator tool (operator confusion, no corruption). Low is appropriate."
+  },
+  {
+    "id": "A0018",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. export-score.mjs:13 `src.prepare(...).get().sql` is the identical unguarded dereference as A0017; if general_messages_score is missing it throws an opaque TypeError instead of a clear message. Trusted-local operator tool, impact limited to operator confusion (no corruption). Low is appropriate."
+  },
+  {
+    "id": "A0019",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed at scripts/export-substantiveness.mjs:13. `src.prepare(\"SELECT sql FROM sqlite_master WHERE type='table' AND name='general_messages_substantiveness'\").get().sql` returns undefined from .get() when the table is absent, so the `.sql` access throws an opaque TypeError instead of a clear message. Sibling file export-embed.mjs:13 shows the identical pattern, confirming the 'same defect' framing. Genuine but minimal: this is a trusted-local-data one-shot operator export script (reads DB_PATH, writes to /tmp). Impact is operator confusion only. Low is correct."
+  },
+  {
+    "id": "A0025",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed end to end. record-audit-findings.ts:7 hardcodes auditRunId='audit-20260112-manual'; lines 108-131 call insertFinding(...) which (auditFindingsStore.ts:94-103,189) runs a plain INSERT with no ON CONFLICT. migrations/043_audit_findings.ts:57-117 defines the table with only an AUTOINCREMENT PK and NO unique constraint on (audit_run_id, command_name, subcommand) -- only non-unique indexes. The script has no pre-delete. generateReportData (line 252,283-287) computes totalCommands as allFindings.length and pass/skip/etc. via GROUP BY test_status COUNT scoped to the run id, so a re-run doubles every count and the generated markdown report. Real data-integrity defect, but it is a manual one-shot script (not a runtime or CI path), as the finding itself acknowledges. Low is correct."
+  },
+  {
+    "id": "A0038",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed at health.ts:218-220. setTimeout(...HEALTH_CHECK_TIMEOUT_MS) is created with no handle captured, no clearTimeout anywhere, and no .unref(); HEALTH_CHECK_TIMEOUT_MS=5000 (constants.ts:44, asserted by tests). In the happy path healthCheckPromise wins Promise.race but the 5s timer still runs to completion holding the reject closure + Error alive. The finding's own caveat is accurate: the late rejection is consumed by Promise.race so there is no unhandled rejection. By contrast armWatchdog (cmdWrap.ts:192-193) does unref() and returns clearTimeout. Genuine lifecycle/resource hygiene defect (transient per-call timer, can delay graceful shutdown up to 5s), but self-clearing and short-lived, not an unbounded leak. Low is correct."
+  },
+  {
+    "id": "A0040",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed at accept.ts:336. Three identifier options exist: app/codeRaw (line 80), user/userOption (81), uid/uidRaw (82); exactly one is enforced (86-98). updateReviewActionMeta is called with via: uidRaw ? 'uid' : 'code', so when a mod approves via the @mention `user` option (uidRaw null), via is recorded as 'code' even though no short code was used. The comment at lines 329-330 explicitly states this field tracks 'whether mods prefer short codes or user IDs', confirming the analytics intent it corrupts. Genuine data-integrity defect; impact limited to inaccurate analytics metadata. Low is correct."
+  },
+  {
+    "id": "A0041",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed at reject.ts:213 and 222. Same three-option structure (app/user/uid parsed at 85-87, exactly-one enforced 93-105). Both updateReviewActionMeta calls in executeReject (success path line 210-214, fetch-failure path 219-223) use via: uidRaw ? 'uid' : 'code', so a mention-based (`user`) rejection with uidRaw null is logged as via='code'. Same defect as accept.ts, in both meta-update branches. Genuine but minor analytics/audit-metadata inaccuracy. Low is correct."
+  },
+  {
+    "id": "A0046",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. cache.ts:359 storeSearchSession and :352 generateNonce are called every search (index.ts:266-267); the nonce is embedded into the select-menu customId (components.ts:260 `help:select:search:${nonce}`) but the option value is just cmd.name (components.ts:255). The select handler (index.ts:405-406) only checks the customId prefix and acts on interaction.values[0] (the command name) via showCommandDetail -- it never parses the nonce nor calls getSearchSession. Grep confirms getSearchSession is referenced only in cache.ts (definition), tests, and audit/graphify artifacts; index.ts imports only generateNonce and storeSearchSession (lines 46-47), not getSearchSession. So SEARCH_SESSIONS, generateNonce, and storeSearchSession are dead weight (randomBytes + LRU write per search for data never consumed). Genuine dead-code/wasted-work defect; trivial perf cost. Low is correct."
+  },
+  {
+    "id": "A0048",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed at cache.ts. PERMISSION_CACHE key is `${guildId}:${userId}` only (line 266); the `member` argument (carrying roles) is not part of the key. All callers fetch member with `.catch(() => null)` (autocomplete.ts:53, index.ts:319/397/461). When member is null, hasPermissionLevel returns false for every non-public level for non-owners (lines 232-242), so a degraded public-only list is written to cache (line 283). The cache hit (line 269) short-circuits before member is re-consulted, so a staff/reviewer user is pinned to public-only help for the 5-min TTL after a single transient fetch failure. Display-only; command execution is independently gated. Low is correct."
+  },
+  {
+    "id": "A0049",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. Repo-wide grep shows invalidatePermissionCache is referenced only by its own definition (cache.ts:325), the 'call this when roles change' comment (cache.ts:206), and the test file (cache.test.ts:190/456/458). No production role-change path (guildMemberUpdate/role automation/config update) calls it, so the documented invariant is unenforced and role changes are not reflected in /help for the full TTL. Genuine dead-wiring / unmet contract. Low is appropriate (help-display accuracy only)."
+  },
+  {
+    "id": "A0051",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed at cache.ts:155-184. Scoring sets queryLower = full raw query.toLowerCase() (line 156, includes interior whitespace) and compares it against single command names/aliases/subcommand names (lines 159,162,165,168,172-177), none of which contain spaces. Any multi-word query therefore falls through to the else branch (score 50, matchedOn 'description', lines 181-184), and the subsequent sort (190-193) degenerates to alphabetical order. The AND term-matching (93-141) is unaffected, so results are correct but relevance ordering is lost for multi-term searches. Degraded ordering only; low is correct."
+  },
+  {
+    "id": "A0052",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. parseHelpCustomId returns {type:'search'} for /^help:search:([a-f0-9]+)$/ (metadata.ts:257-264) and buildHelpCustomId has a 'search' case (metadata.ts:285-286), but grep shows buildHelpCustomId is never invoked with type:'search' (components.ts only uses category/search_modal/overview/command). Search navigation actually goes through the select menu id help:select:search:${nonce} (components.ts:260) routed to handleHelpSelectMenu (index.ts:405). handleHelpButton's switch (index.ts:326-343) has no case 'search', so it would hit default 'Unknown navigation'. Both the parse branch and the missing switch case are dead/unreachable. Dead-code, not a live bug; low is correct."
+  },
+  {
+    "id": "A0065",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. The send/close branch in welcomeBatchContext.ts is entered solely on isMemberBuffered(guild.id, target.id) (line 118) with no check that the current user opened the session, and flushSession (welcomeBatch.ts:120-157) performs no owner check. By contrast addMember returns denied_other_opener when s.openedBy !== openedBy (welcomeBatch.ts:204-205). So gatekeeper B is blocked from adding to A's session but can flush/close it prematurely by right-clicking a buffered user. Asymmetric authorization gap is real. Impact bounded (all actors trusted gatekeepers); low is appropriate."
+  },
+  {
+    "id": "A0068",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed at flaggerStore.ts:165-170. The env fallback fires on `silentDays === 7` as a sentinel for 'DB had no value', but 7 is a legitimately persistable value: setSilentFirstMsgDays accepts 7-365 (line 236). A guild that explicitly persists 7 while SILENT_FIRST_MSG_DAYS is set to a different number (e.g. 30) has its explicit DB value silently overridden by the env value. The in-code comment (lines 162-167) acknowledges the fragility. Genuine logic defect; trigger is narrow (explicit boundary value 7 plus differing env), so low is appropriate."
+  },
+  {
+    "id": "A0073",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. dbRecovery.ts:205 sets `foreign_key_violations: existingMeta?.row_count` -- a copy-paste error. Migration 012 (012_add_db_backups_table.ts:52-62) defines db_backups with no FK-violations column; validateCandidate's INSERT (dbRecovery.ts:348-363) persists only row_count (the summed total at line 360). So for any already-validated candidate, the recovery card (dbRecoveryCard.ts:134) and CLI (dbRecoverCli.ts:159) display the total row count as the FK-violation count, e.g. a healthy backup with 5000 rows renders 'FK: 5000 violation(s)'. Genuine, low-impact correctness defect (cosmetic/misleading until revalidated)."
+  },
+  {
+    "id": "A0075",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. closeTicket (tickets.ts:164-166) writes closed_at via SQLite datetime('now'), a space-separated UTC string with no 'Z'. threadReopen.ts:73 parses it with `new Date(ticket.closed_at).getTime()`; per ES spec V8 treats the space form as LOCAL time (verified empirically: 5h skew on this UTC-5 host). The now-closedAt>sevenDays boundary (line 77) is therefore shifted by the host UTC offset, mis-routing tickets near the exact 7-day edge. Test (threadReopen.test.ts:191,255,286) feeds closed_at via toISOString() with 'Z', masking the prod format. dashboardBridge.ts:304 has the identical bug. Impact is narrow (hours of skew on a 7-day window), so low is fair. Note: duplicate of A0094."
+  },
+  {
+    "id": "A0085",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed mechanism. guild is `Guild | undefined` from interaction.client.guilds.cache.get (dmVerification.ts:534), and the author explicitly handles undefined at 535-538, yet line 565 uses `logActionPretty(guild!, ...)`. logActionPretty (pretty.ts:464) is async and dereferences guild.id synchronously at line 488 with no undefined guard, so an undefined guild yields a rejected promise swallowed by the .catch at 571 -- silently dropping the gate_submit action_log row. The undefined trigger is uncommon (GuildManager is NOT swept; index.ts:95-109 limits only member/message/etc caches, not guilds), but the type genuinely permits undefined and the `!` overrides a deliberate prior check. Real latent type-safety defect; low severity appropriate given rare trigger and non-crashing failure mode."
+  },
+  {
+    "id": "A0094",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed -- same defect as A0075 (duplicate finding from a different bucket). closeTicket writes closed_at = datetime('now') (tickets.ts:164-166), a space-separated UTC string. threadReopen.ts:73 parses it as local time via new Date(), skewing the 7-day reopen boundary by the host UTC offset (verified 5h skew). Independently reconfirmed. Low impact (sub-day skew on a 7-day window)."
+  },
+  {
+    "id": "A0095",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. transcriptBuffers is a module-level Map (transcript.ts:24) actively populated by appendTranscript from routing.ts:315,434 and dashboardBridge.ts:101. flushTranscript deletes the buffer only on success paths (transcript.ts:203,262); the no-log-channel early return (119-122), non-text channel path (179), and exception path (282) all return without deleting. Neither closeModmailThread (threadClose.ts:298) nor closeModmailForApplication (threadClose.ts:505) calls clearTranscriptBuffer; grep shows clearTranscriptBuffer (transcript.ts:57) is only re-exported (index.ts:41, modmail.ts:56), never invoked. So in any guild with no modmail_log_channel_id set, each close leaks the ticket's transcript lines into the Map permanently. Real unbounded-growth leak; low severity fits (bounded by close volume in unconfigured guilds)."
+  },
+  {
+    "id": "A0099",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed dead code. getOpenTicketByUser (tickets.ts:59-78) returns only rows WHERE status='open'. At threadClose.ts:457 `if (!ticket || ticket.status !== 'open')`, the status comparison is reachable only when ticket is truthy, in which case status is always 'open', so it is always false -- the branch can fire only via !ticket. The status check is genuinely unreachable. Harmless but a real dead-defensive-check; low/cosmetic, matching the finding's own characterization."
+  },
+  {
+    "id": "A0106",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed at src/features/review/handlers/claimHandlers.ts:49-50. claimTx throws INVALID_STATUS at reviewActions.ts:62 (panic) and :82 (terminal). Verified arithmetic: panic message 'Panic mode is active. All review operations are suspended.'.split(' ')[2] = 'is'; terminal 'Application already approved'.split(' ')[2] = 'approved'. So in panic mode a Claim click renders 'Cannot claim: application is already **is**.' These are the only two INVALID_STATUS throw sites reachable from claimTx, and the handler routes both through the same string-split path. Real but cosmetic/UX defect confined to the rare panic-mode state; no data or availability impact, so low is appropriate."
+  },
+  {
+    "id": "A0115",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed at src/features/tickets/service.ts. close() calls writeArchive(ticket) at line 465 using the findById object (status 'open', closedAt/closeReason null) BEFORE getSetClosedStmt() flips the row at line 466. writeArchive embeds `ticket` verbatim (line 562), so the archive JSON records the closing ticket as status:'open'. The long-term auditable snapshot is wrong. Minor inaccuracy in the detail: it claims the 'closed'/'archived' events are captured, but those are emitted at lines 467/531 AFTER writeArchive runs, so they are NOT in the archive either; this does not change the verdict since the core defect (stale ticket snapshot) holds. Low: data-integrity of an archive record only; the live row and event log are correct."
+  },
+  {
+    "id": "A0128",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. src/features/review/claims.ts:61-66 SELECTs only reviewer_id, claimed_at yet casts the result to ReviewClaimRow, whose type (types.ts:63-67) declares non-optional app_id: string. At runtime app_id is undefined while typed present: an unsound cast. Sibling reviewActions.ts:207-213 correctly SELECTs app_id. Current consumers (claimGuard, card) read only reviewer_id/claimed_at so no crash today; the finding states this. Latent type-soundness defect, low."
+  },
+  {
+    "id": "A0133",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed at src/scheduler/diskSpaceScheduler.ts:236-244. The 15s initial-check setTimeout is not captured to a variable, not .unref()'d, and not cleared in stopDiskSpaceScheduler() (267-273 clears only _activeInterval). Only the setInterval handle is stored and unref'd (lines 258-260). Verified the comparison: badgeRefreshScheduler.ts captures startupTimer (line 38), unref's it (114), clears on stop (134-136). Both consequences hold: timer can fire after stop within 15s, and can keep the event loop alive up to 15s. Real but minor (15s window), low."
+  },
+  {
+    "id": "A0153",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed at tests/commands/health.test.ts:218-221. The only expect() calls in 'shows scheduler status when schedulers are tracked' are inside if (schedulersField) { ... }. Source health.ts:184-193 emits the 'Schedulers' field only when schedulerHealthMap.size > 0; the test mocks a 2-entry map so the field exists today and assertions run. But if a regression dropped/renamed the field, schedulersField would be undefined, the block skipped, and the test would PASS with zero assertions, failing to protect its named behavior. Real test-quality (vacuous-assertion) defect, low."
+  },
+  {
+    "id": "A0155",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed at tests/commands/gate/gateMain.test.ts:248-255 and src/commands/gate/gateMain.ts:800-847. withStep(ctx, 'route_subcommand', ...) wraps the entire switch covering all subcommands and the welcome group, so ctx.step('route_subcommand') fires for every branch. The preview test asserting toHaveBeenCalledWith('route_subcommand') is therefore tautological and does not verify the preview path. executeWelcomePreview has a unique 'render_preview' step (line 658) that would be meaningful; contrast status/config tests (lines 216/224) which assert branch-specific 'query_stats'/'load_config'. Real test-quality defect, low."
+  },
+  {
+    "id": "A0158",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed: nowUtc() (src/lib/time.ts:34) returns epoch SECONDS as an integer; claimTx (reviewActions.ts:110-114) inserts that into review_claim.claimed_at TEXT. So the stored value is a digit-only string like \"1748600000\". Verified at runtime that new Date('1748600000') => Invalid Date and Math.floor(getTime()/1000) => NaN, exactly what claimedAtToDate (types.ts:74) and claimedAtToEpoch (types.ts:83) would return. The JSDoc/type comment (line 66, 71, 80) falsely claim \"ISO timestamp string\". Grep confirms both helpers are defined but never called anywhere in src (only the two definition lines match). Real but low: dead code today, genuine latent trap for any future caller trusting the JSDoc. The real consumer (reviewCard.ts parseClaimedAt) sidesteps these and handles numeric strings correctly."
+  },
+  {
+    "id": "A0159",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed: claimTx throws ClaimError(\"Panic mode is active. All review operations are suspended.\", \"INVALID_STATUS\") at reviewActions.ts:62, sharing the INVALID_STATUS code with the terminal-state message \"Application already <status>\" (line 82). The handler at claimHandlers.ts:50 builds the user message via err.message.split(' ')[2]. For the panic message, tokens are [Panic, mode, is, ...] so [2]='is', yielding the nonsensical \"Cannot claim: application is already **is**.\" and hiding the real panic reason (plus a needless ensureReviewMessage refresh). Genuine correctness/UX defect; low severity (cosmetic, panic mode is rare)."
+  },
+  {
+    "id": "A0162",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed: rateLimiter.ts:149 calls setInterval(cleanupOldCooldowns, CLEANUP_INTERVAL_MS) with no .unref(), no stored handle, no test-env guard; the module's own comment (lines 147-148) admits it. cmdWrap.ts:192 demonstrates the correct timer.unref() pattern. Import chain verified: tests/commands/listopen imports src/commands/listopen.ts, which imports checkCooldown/COOLDOWNS from rateLimiter (listopen.ts:40,508), so the interval is armed during tests. A ref'd 10-min interval keeps the Node event loop alive, risking unclean vitest worker exit and blocking graceful prod shutdown. Real leak; low severity (impact is teardown/shutdown cleanliness, not a runtime fault)."
+  },
+  {
+    "id": "A0164",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed: closeTicket sets closed_at = datetime('now') (tickets.ts:165), which yields a space-separated UTC string with no Z marker. threadReopen.ts:73 parses it via new Date(ticket.closed_at).getTime(); V8 parses non-ISO space-separated datetime strings as LOCAL time, so the now-closedAt comparison (lines 74-77) is skewed by the host UTC offset, mis-routing tickets near the 7-day boundary between reopen-in-place and new-thread (lines 78-85). Genuine timezone/boundary bug; low severity (only affects tickets within hours of the 7-day edge, and prod runs UTC which would mask it)."
+  },
+  {
+    "id": "A0168",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed: avatarUrl = user.displayAvatarURL({ size: 128 }) at threadOpen.ts:364, which is a discord.js method that always returns a non-empty CDN URL string (never null/empty). The ternary avatarUrl ? ... : null (lines 369-371) therefore always takes the truthy branch, making the : null and the later if (lensUrl) guard (line 389) dead. No runtime impact; misleading defensive code. Real dead-code finding, low/trivial severity."
+  },
+  {
+    "id": "A0169",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed by reading both files. Mock harness: mockPrepare.mockReturnValue({ get: mockGet, all: mockAll }) (test L106) ignores the SQL; withSql is a passthrough (_ctx,_sql,fn)=>fn() (L64). In source history.ts:111-118 the counts query calls .all(moderator.id, guildId, fromTimestamp), so mockAll's first param (query) is always moderator.id (\"mod-user-123\"), making typeof query==='string' always true => mock always returns []. The intended [{approve:80},{reject:15},{kick:5}] branch (L110-114) is unreachable, so counts is always {} and Approvals/Rejections/Reject-Rate compute to 0/0.0. The cited tests (L347 approvals/rejections, L361 reject rate) assert only objectContaining({ name: ... }) (L357-358, L371), never values, so they pass regardless and would not catch regressions in the count/rate math. Genuine false-coverage test defect; low severity."
+  },
+  {
+    "id": "A0170",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed at export.test.ts:200-209. The test named 'CSV contains correct header row' only asserts expect(attachment).toBeDefined() and the in-code comment admits the buffer is not accessed. The handler emits a specific header at export.ts:116 ('Moderator ID,Total Decisions,...'); reordering/renaming/dropping it would not fail this test. Genuine test-gap (dead-code) defect; low severity is appropriate."
+  },
+  {
+    "id": "A0172",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed at history.test.ts:8. afterEach is imported from vitest but grep shows only one occurrence in the file (the import line itself); it is never used. Harmless at runtime but a genuine unused import that would trip a strict noUnusedLocals/lint gate. Low severity correct."
+  },
+  {
+    "id": "A0173",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. shared.test.ts:145-157 only asserts typeof === 'function' and the comment at 142-144 says they are tested indirectly. But user.test.ts:24 and export.test.ts:24 both vi.mock the shared module and replace getAvgClaimToDecision/getAvgSubmitToFirstClaim with vi.fn() (user.test.ts:39-40, export.test.ts:38). So the real multi-CTE SQL bodies in shared.ts:60-132, including the c.claim_time < d.decision_time and c.claim_time > s.submit_time guards, are executed by zero tests. Genuine coverage blind spot on the mod-performance metric; low severity appropriate."
+  },
+  {
+    "id": "A0183",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed at badgeDocsIntegration.test.ts:89-99. The expect() asserts on realMatches (code-fence-stripped, lines 91-94) but the failure message interpolates matches (full text including code blocks, line 95). A file with a real violation outside a code fence AND mention syntax inside a fence would report the allowed code-block mentions in the diagnostic, misdirecting the developer. Guard correctness is fine; this is a genuine diagnostics defect. Low severity correct."
+  },
+  {
+    "id": "A0189",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. closeTicket() writes closed_at = datetime('now') (tickets.ts:165), producing a space-separated zone-less UTC string. threadReopen.ts:73 does new Date(ticket.closed_at).getTime() with no normalization; V8 parses such non-ISO space-separated strings as LOCAL time, skewing the 7-day window by up to the host UTC offset. The correct normalization (.replace(' ','T')+'Z') is used for the same kind of SQLite timestamp at reviewCard.ts:109-110 and review/card.ts:128-130, confirming an in-repo inconsistency. Identical raw-parse bug at dashboardBridge.ts:304. Genuine defect; latent/zero-impact on a UTC server (prod is EC2), so low severity is appropriate."
+  },
+  {
+    "id": "A0191",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed at threadClose.test.ts:255-409. The reason-text tests re-implement the exact ternary from threadClose.ts:466-473 inline and assert on the local copy; the embed-format, delete-on-close (cfg?.modmail_delete_on_close !== false), log-URL, duplicate-detection, and ticket-structure blocks likewise assert on locally-defined literals/expressions. The file does import closeModmailForApplication (L78) and uses it in the guard tests (L224-252), but these blocks never invoke it, so they pass regardless of the real implementation. Genuine tautological/false-confidence test defect; low severity correct."
+  },
+  {
+    "id": "A0193",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. threadReopen.test.ts:24 hoists mockTransaction as `vi.fn((fn) => fn())`, which invokes the callback immediately and returns undefined; the source uses `db.transaction(() => {...})()` with a trailing call (threadReopen.ts:89-109), so under this mock the trailing `()` would call undefined() -> TypeError. Verified db.ts:97-98 returns a callable wrapper and the sibling threadOpen.test.ts:16 correctly uses `(fn) => fn`. Verified that none of the success tests reach the transaction: the three >7-day / null-closed_at cases all return early at threadReopen.ts:79, and the error-handling test makes db.transaction throw synchronously before the trailing call. The happy-path reopen transaction (reopenTicket + open_modmail upsert + addOpenThread + unarchive/unlock + DM, lines 87-149) is entirely untested and the existing mock would break a future test. Genuine test-correctness defect; low severity (test-only)."
+  },
+  {
+    "id": "A0195",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. threadOpen.test.ts:350-401 define three describe blocks ('customId format', 'race condition handling', 'primary key constraint detection') that build local string/boolean literals and assert on them (e.g. ``v1:modmail:close:${ticketId}`` equals the literal; `error.message.includes('UNIQUE')`). They import nothing from threadOpen.ts for these cases. Verified the real production logic they purport to cover exists and is untested: customId construction at threadOpen.ts:384 and race detection at threadOpen.ts:444-448. Vacuous/tautological tests giving false coverage confidence. Low severity."
+  },
+  {
+    "id": "A0197",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. helpers.test.ts imports only mocked dependencies (shouldBypass, hasRole, replyOrEdit, findAppByShortCode, getClaim, claimGuard, loadApplication) and never imports the real isStaff/requireInteractionStaff/resolveApplication/open*Modal functions. The blocks at lines 56-188 and 294-462 call the mocks directly or assert on inline recomputed expressions (e.g. `['rejected','approved','kicked'].includes(app.status)`, ``v1:modal:reject:code${code}``). Verified the real functions in src/features/review/handlers/helpers.ts have non-trivial logic that is unexercised, notably safeShowModal's already-acked/token-age checks at helpers.ts:138-166 and the claimGuard ordering. Tautological tests; low severity."
+  },
+  {
+    "id": "A0198",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. modals.test.ts mocks only logger/sentry/cmdWrap and never imports the handlers from src/features/review/handlers/modals.ts. Every block declares local regexes (MODAL_RE, ACCEPT_MODAL_RE, MODAL_PERM_REJECT_RE, MODAL_KICK_RE, MODAL_UNCLAIM_RE) and inline trim/slice recomputations and asserts on those; the 'action dispatching' block (lines 345-380) is pure tautology (`expect('runRejectAction').toBe('runRejectAction')`). Verified the local regex copies currently match modalPatterns.ts (MODAL_REJECT_RE/ACCEPT/PERM_REJECT/KICK/UNCLAIM at lines 67-71), so no false assertion today, but the handlers' parsing/dispatch is unprotected against regression. Low severity."
+  },
+  {
+    "id": "A0203",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed on both counts. The test 'extracts status from error message' (claimHandlers.test.ts:81-85) uses a fabricated message 'Cannot claim: status is approved' and asserts split[2]==='status', which is meaningless. The production handler (claimHandlers.ts:50) renders `Cannot claim: application is already **${err.message.split(' ')[2]}**.` against ClaimError messages from claimTx. Verified claimTx throws INVALID_STATUS in two shapes: terminal-state 'Application already approved' (reviewActions.ts:82) -> split[2]='approved' (correct), and panic-mode 'Panic mode is active. All review operations are suspended.' (reviewActions.ts:62) -> split[2]='is', yielding the nonsensical 'Cannot claim: application is already **is**.' Verified panic mode is a real, reachable feature (isPanicMode in panicStore.ts, /panic command, used in 12 files) and the path is reachable via handleClaimToggle. Genuine garbled-message bug, but cosmetic (claim is still correctly blocked) so low severity, matching the rating."
+  },
+  {
+    "id": "A0209",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. helpers.test.ts:192 declares a local `BUTTON_RE = /^v1:decide:(\\w+):code([0-9A-F]{6})$/` and tests routing against it, but the real pattern used by handlers is BTN_DECIDE_RE = /^(?:v1:decide|review):(approve|accept|reject|kick|claim|unclaim|wrong_password|stale_modmail):code([0-9A-F]{6})$/ (modalPatterns.ts:35, re-exported as BUTTON_RE at helpers.ts:38). Two material divergences verified: (1) the real regex also accepts the legacy `review:` prefix which the test copy rejects; (2) the real regex constrains the action to a fixed allowlist while the test copy accepts any `\\w+` (so `v1:decide:garbage:codeABCDEF` matches in the test but not in production). The tests validate a fictional regex and would not catch allowlist/prefix changes. Low severity."
+  },
+  {
+    "id": "A0211",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed in both src/features/review/flows/reject.ts:26-33 and kick.ts:29-36: withTimeout races against new Promise((_,reject)=>setTimeout(...,30000)) but never captures the handle, and Grep found no clearTimeout anywhere in src/features/review/flows. The dangling 30s timer self-clears and rejecting an already-settled promise is a no-op, so production impact is modest, but it keeps the event loop active and, under approval/rejection bursts, accumulates pending timers (up to 3 per kick: fetch L109, send L150, kick L167). In tests with no fake timers it leaves real timers alive. Genuine resource-hygiene defect; low is appropriate."
+  },
+  {
+    "id": "A0214",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed at tests/lib/errors.test.ts:236-243. const cause (L237) is created and assigned as err.cause (L239) but never referenced; the sole assertion (L242) is expect(result.cause).toBe(err). src/lib/errors.ts:234 stores cause: err instanceof Error ? err : undefined, i.e. the passed-in error itself, discarding any nested err.cause. So the cause local is dead and the test name 'preserves cause' is misleading. Test-integrity defect, low."
+  },
+  {
+    "id": "A0216",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. src/lib/wideEventEmitter.ts shouldSample() returns true for outcome==='error' (L104) and 'timeout' (L105) BEFORE getSampleRate() is called (L108). The test 'uses default rate when not specified' (tests/lib/wideEventEmitter.test.ts:188-206) deletes WIDE_EVENT_SAMPLE_RATE then asserts on an outcome:'error' event, whose logger.error fires regardless of the default rate (the test's own comment concedes this). The default-rate branch is never exercised, so the test gives false confidence. Low."
+  },
+  {
+    "id": "A0226",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed at tests/store/flagsStore.test.ts:232-254. expect.any(Number) is placed inside mockGet.mockReturnValueOnce({ joined_at: ..., flagged_at: ... }) (L237-238) as raw mock data, where the asymmetric matcher has no comparison semantics. result is assigned (L245) but never asserted; the only check is expect(mockRun).toHaveBeenCalled() (L253). The intended verification that 'now' is used for joined_at/flagged_at when joinedAt is omitted is never performed. Weak/ineffective test, low."
+  },
+  {
+    "id": "A0229",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed structurally in tests/utils/discordMocks.ts. createMockInteraction destructures {options,...rest} (L273) leaving user/guild/member in rest, builds enriched user/guild/member (L274-276; createMockMember L68-91 injects roles/permissions/user/send/kick/ban), sets them in the return object (L280-282), then re-spreads ...rest at L301, so a caller's raw partial member/user/guild clobbers the enriched mocks. Same pattern in createMockButtonInteraction (...overrides L338) and createMockModalInteraction (...rest L379). guildId:guild.id (L283) is computed pre-clobber, producing a guildId/guild mismatch when a partial guild without id is passed. The specific cited example approvalRate.test.ts:109 passes a full createMockMember() so it is benign there, but the general defect (partial overrides silently degraded) is real and defensible. Test-infra correctness bug, low."
+  },
+  {
+    "id": "A0230",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. src/web/badgeEndpoint.ts:40-42 captures ALLOW_DIRECT_ID_ROUTES at import time, so setting process.env.BADGE_ALLOW_DIRECT_DISCORD_ID_ROUTES inside the test (badgeEndpoint.test.ts:141) has no effect (the test comment L142-145 admits this). The request /badges/movie-tier-1.svg matches the registry regex (L149) and is served 200 by tryServeRegistryBadge (L156) via the seeded manifest entry, NOT the flag-gated direct-ID branch /badges/(roles|channels|users)/<id>.svg (L163-187). The enabled direct-ID path is therefore never exercised, giving false confidence. Low."
+  },
+  {
+    "id": "A0232",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed empirically: makeEvent serializes body via JSON.stringify, and JSON.stringify({timestamp:NaN}) yields {\"timestamp\":null}, so the handler sees event.timestamp === null. That hits the `typeof event.timestamp !== \"number\"` branch (+server.ts line 67) -- the same branch the 'yesterday' string test already covers. The dedicated `!Number.isFinite(event.timestamp)` guard (line 68) is never exercised by any test in the suite (only string and NaN cases exist for timestamp). A regression deleting the finite check (allowing Infinity) would not be caught. Accurate low-severity test-quality / false-confidence defect."
+  },
+  {
+    "id": "A0235",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed: copy() at line 11 calls navigator.clipboard.writeText(value) without await/catch, then unconditionally sets copied=true and shows the 'Copied!' toast (lines 12, 27). writeText rejects in insecure contexts / unfocused document / denied permission, producing a false success UI plus an unhandled rejection. The sibling NewsletterStatsCard.copyToClipboard (lines 126-135) handles this correctly with try/await/catch, proving the expected pattern. CopyableId is used in 5 real review/audit/modmail/config surfaces. Genuine reachable defect."
+  },
+  {
+    "id": "A0238",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed: in numDelta (lines 36-37) and pctDelta (lines 50-51), direction is `abs>0?'up':abs<0?'down':'flat'` but emoji is `abs>=0?UP_EMOJI:DOWN_EMOJI`. For equal non-zero current/previous values (not caught by the prev===0&&cur===0 early returns at lines 29/44), abs===0 so direction='flat' yet emoji=UP_EMOJI. The Discord markdown (lines 76, 92-102) prints d.X.emoji unconditionally, so an unchanged metric renders the green up-vote next to +0.0%. Reachable with any stable week-over-week metric. Verified via simulation (50/50 -> flat + UP)."
+  },
+  {
+    "id": "A0241",
+    "real": false,
+    "severity": "invalid",
+    "reason": "The code-level behavior is accurate (months[m-1] is undefined for m>12, returning 'undefined D'), but the impact is not confirmable on any reachable path. All callers (observatory page, DivergingBars, CohortTable, QotdFunnel, AreaChart, LineChart) feed YYYY-MM-DD strings derived from SQLite date/week buckets, which can never produce month>12. The existing guards (length!==3, !m/!d) cover the genuinely-possible malformed inputs; a month-range check is pure defensive hardening, which the repo's CLAUDE.md explicitly discourages ('No defensive over-engineering. Trust framework guarantees.'). Triggering input does not occur; refuted."
+  },
+  {
+    "id": "A0242",
+    "real": false,
+    "severity": "invalid",
+    "reason": "The mechanism is accurately described (filename.toUpperCase() yields e.g. 'BOT-HANDBOOK.MD' which does not match key 'BOT-HANDBOOK.md', so the two fallbacks are dead for all but the lowercase 'slash-commands.md' key, and the 'Case-insensitive' comment overpromises). But the claimed impact does NOT occur: I extracted all 155 .md cross-reference links from the 10 actually-rendered handbook source docs (the only inputs that pass through rewriteHandbookHref via Inline.svelte) and every one resolves to /handbook/<slug> -- zero 404s. The one non-canonical case, all-uppercase 'SLASH-COMMANDS.md', resolves via toLowerCase to the lowercase key. No real doc contains a mixed-case link like 'Bot-Handbook.md'. Latent robustness/comment nit with no confirmable defect on any real path; refuted."
+  },
+  {
+    "id": "A0259",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed: setInterval(cleanupOldCooldowns, ...) at line 149 is not stored, not .unref()'d, and not cleared; the in-code comment (lines 147-148) admits 'This interval is never cleared'. It is inconsistent with the dominant codebase pattern (notifyLimiter line 62, traceStore line 132, buttons line 63, badgeRefreshScheduler line 122, etc. all .unref()). Two caveats lower severity: the 'sole outlier' framing is imprecise (patreonRoleDedup.ts:178 is an identical un-unref'd/uncleared peer), and production impact is nil because gracefulShutdown calls process.exit(0) (ready.ts:410). Residual is a test-hang/embedding hygiene issue. Factually accurate omission inconsistent with the prevailing leak-safe pattern; valid low-severity finding (closer to hygiene than a true 'leak')."
+  },
+  {
+    "id": "A0272",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. cmdWrap.ts emits markDeferred() only inside ensureDeferred() (line 457) and markReplied() only inside replyOrEdit() (line 516); grep shows markDeferred/markReplied exist only in cmdWrap.ts, wideEvent.ts, and a test. errorCardV2.ts:288-325 (formatResponseState) prints 'Deferred: No (direct reply or error before defer)' and 'Replied: No' when rs.deferredAt/repliedAt are null. Verified that wrapCommand-wrapped handlers call defer/reply directly without enriching the event: e.g. qotd handlers.ts (handleQotdSuggestModal is wrapped via wrapCommand at interactionCreate.ts:955) calls interaction.deferReply()/editReply()/reply() directly (lines 193-269) and never calls ensureDeferred/replyOrEdit/enrichEvent/markDeferred/markReplied. The errorCardV2 with this Response State section is produced inside wrapCommand (cmdWrap.ts:336 postErrorCardV2), so for these wrapped-but-direct-reply error flows the telemetry is genuinely inaccurate. Nuance: byteTokenHandler is dispatched WITHOUT wrapCommand (interactionCreate.ts:628), so it would not itself emit an errorCardV2, but the review/qotd/report modal routes that ARE wrapped and call defer/reply directly fully validate the defect. Low severity is correct: this degrades a debugging signal, not user-facing functionality."
+  },
+  {
+    "id": "A0276",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed dead export. streamReviewActionsCSV (csv.ts:144) is imported only by src/features/analytics/command.ts:37 and tests; the sibling export generateModHistoryCsv is the live one (used by src/commands/stats/history.ts:24). Verified src/features/analytics/command.ts is itself dead: executeAnalyticsCommand/executeAnalyticsExportCommand are defined there but imported nowhere in src (grep of 'features/analytics/command' yields only its own header comment; the live command is /stats). Minor citation inaccuracy: the finding names the test as tests/lib/csv.test.ts, but the actual importing test is tests/features/analytics/command.test.ts:66 — substance (dead export gated on dead command.ts) is correct. The CSV-injection comment critique is correctly flagged as a no-runtime-impact side note. Low / dead-code is appropriate."
+  },
+  {
+    "id": "A0278",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed dead clause. interactionCreate.ts:769 guards the modal block with startsWith('v1:modal:') || startsWith('v1:avatar:confirm18:'). The block (lines 769-1001) has handler branches for gate_submit_page, review_reject/perm_reject/accept/kick/vote_out/unclaim, report_resolve, qotd_suggest, qotd_reject -- but NO branch for route.type === 'avatar_confirm18'. Any v1:avatar:confirm18: id entering the block falls through to the catch-all 'Unhandled modal' postErrorCard at line 993. Verified no showModal anywhere creates such a customId (grep for confirm18:code / showModal+avatar = zero matches); MODAL_18_RE is only defined and matched in modalPatterns.ts (75, 149) and used nowhere else. So the clause is genuinely dead and misleading. Low / dead-code is appropriate."
+  },
+  {
+    "id": "A0279",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed dead module. fireAndForget (src/lib/fireAndForget.ts:15) has zero importers: grep across src/, scripts/, web/, workers/, tests/ for import/require of fireAndForget returns no matches; only the definition itself plus audit/graphify artifacts reference the name. The JSDoc claims it replaces the .catch(() => {}) anti-pattern but adoption never happened. Dead utility. Low / dead-code is appropriate."
+  },
+  {
+    "id": "A0280",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed empty husk. Read the full file: src/lib/commandSync.ts is lines 1-15, entirely a header comment, SPDX line, and a note that syncGuildCommandsInProcess() was removed in v4.4.5 -- there is no code and no export statement. Verified zero importers across src/, scripts/, web/, workers/, tests/ (grep for import/require of commandSync returns nothing; other hits are docs and graphify/audit artifacts). Zero-value placeholder module. Low / dead-code is appropriate."
+  },
+  {
+    "id": "A0286",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. getModmailThreads() (web/src/lib/server/queries/modmail.ts:37) runs, per ticket row, two correlated subqueries against modmail_message ordered by created_at DESC LIMIT 1 -- latest_message (lines 55-56) and latest_direction (lines 57-58) -- pulling the same latest row twice, on top of the LEFT JOIN modmail_message + GROUP BY used for COUNT(m.id). It is called from dashboard/modmail/+layout.server.ts:13 directly (no cached() wrapper) on every layout load/navigation. The query is bounded by LIMIT 50, so the redundant repeated work is real but modest, exactly as the finding states. The proposed window-function fix is valid. Low / perf is appropriate; impact is honestly characterized."
+  },
+  {
+    "id": "A0302",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed at src/features/patreonRoleDedup.ts:178: setInterval has no .unref() and no stored handle; grep finds no stopPatreonRoleDedup anywhere. Contrasts with 22 other timers that all call .unref() (e.g. interactionCreate.ts:80, modmail/routing.ts:144, all schedulers). ready.ts gracefulShutdown (line 281) tears down schedulers via stopSchedulers but never this sweep. The finding correctly self-limits impact: gracefulShutdown calls process.exit(0) so it terminates anyway, and the callback is idle-cheap; the real cost is an un-unref'd ref-counted timer that can keep the event loop alive on signal-less exit and is uncancellable in tests. Genuine, defensible deviation from an otherwise consistent convention. Low severity is appropriate."
+  },
+  {
+    "id": "A0308",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed at scripts/migrate-remote.js:24: process.exit(result.status || 0). spawnSync sets status=null when the child dies by signal (OOM/SIGTERM mid-deploy), and null || 0 evaluates to 0, so the wrapper reports success despite a killed migration. A deploy keying off this exit code would wrongly proceed. Normal failures are unaffected (migrate.ts exits 1). Real defect; low severity given it is a deploy edge case."
+  },
+  {
+    "id": "A0325",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed: handleModmailContextMenu calls interaction.deferReply() with no MessageFlags.Ephemeral (handlers.ts:190) and uses editReply for BOTH success and failure (line 239), so failure strings like 'Failed to create modmail thread. Check bot permissions.' and the 'thinking' bubble are public in the channel. The sibling button path uses deferUpdate() (line 92, no bubble) and ephemeral followUp on failure (lines 124-131), posting only success publicly. Asymmetry is real and broadcasts a moderator's setup/permission failure publicly. Minor info-disclosure; low severity is correct."
+  },
+  {
+    "id": "A0332",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed two barrels exist: src/features/review.ts and src/features/review/index.ts, both claiming back-compat. Grep across src/web/tests/scripts found ZERO imports of the bare 'features/review' directory or 'review/index.js'; only review.ts (the file barrel) is imported. review/index.ts is pure re-exports with no side effects, so it is unreachable dead source. Matches in repo are only in audit/docs/graphify artifacts. Low severity (dead code) is correct."
+  },
+  {
+    "id": "A0333",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed at messageArchive.ts:195/201: archiveMessageRowSync and archiveReactionRowsSync are defined but referenced nowhere else in src. The only importer (guildEvents.ts:37 'import * as archive') accesses only archiveMessage/markMessageDeleted/recordReaction/removeReaction. backfill.ts (src/commands/backfill.ts) has no archive reference (grep of src/commands returned no matches). The line-194 comment 'Direct synchronous insert used by backfill (bypasses buffer)' is false on both counts: there is no backfill consumer, and the functions actually push to msgBuf/reactBuf and call flush()/scheduleFlush() (not a synchronous bypass). Dead exports with a misleading comment. Low severity correct."
+  },
+  {
+    "id": "A0334",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed at messageActivityLogger.ts:198: pruneOldMessages is exported but has no callers anywhere in src, including src/scheduler (grep returned no files). Its own docstring (lines 191) says 'Call this periodically (e.g., daily via cron job or scheduled task)' yet nothing does, so message_activity retention is never enforced. Real unused-export/latent-retention defect; low severity is appropriate."
+  },
+  {
+    "id": "A0335",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. getAllActiveMultipliers (src/store/byteMultiplierStore.ts:231) and its backing prepared statement getAllActiveMultipliersStmt (line 99) are referenced only at their own definitions; grep across the tree shows no callers in src/tests/scripts/web (other hits are audit JSON and graphify-out artifacts). Genuine dead read-side export. Low severity is appropriate: harmless, the wasted prepared-statement work at module load is negligible."
+  },
+  {
+    "id": "A0338",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. clearAllRulesCache (src/features/gate/rulesCache.ts:68) has no callers anywhere; the only non-artifact hit is its own definition. Its docstring claims 'Used by tests / hot-reload only' yet nothing invokes it. The per-entry invalidateRulesCache plus 10-min TTL handle real invalidation, so this global-flush helper is genuinely dead. Low severity (cosmetic dead code)."
+  },
+  {
+    "id": "A0339",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. clearTraces (src/lib/traceStore.ts:118) and stopAutoPrune (line 135) appear only at their definitions; no imports in tests or elsewhere. The 'Clear all traces (for testing)' comment is misleading since no test exercises it. startAutoPrune is live (auto-invoked line 143) and pruneExpired is used internally, as the finding states. Genuine dead teardown/test hooks. Low severity."
+  },
+  {
+    "id": "A0341",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. getHeatmapData (web/src/lib/server/queries/heatmap.ts:197) is referenced only at its own definition. Its docstring (lines 192-196) explicitly says new code should call getHeatmapDataForRange directly, and the live route web/src/routes/dashboard/heatmap/+page.server.ts imports/uses getHeatmapDataForRange (lines 3, 21). Genuine superseded dead wrapper. Low severity."
+  },
+  {
+    "id": "A0344",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed core defect. detectNsfwFlagSurge (web/src/lib/server/queries/pulse.ts:1216,1222) wraps flagged_at in strftime('%s', flagged_at) for the time bound, which is non-sargable; flagged_at is TEXT (migrations/032_nsfw_flags.ts:45) and no index covers it. Minor inaccuracy in the finding: it says the only indexes are idx_nsfw_flags_guild and idx_nsfw_flags_pending, but migration 034 also adds idx_nsfw_flags_user(user_id) -- however that index is on user_id, not flagged_at, so it does not help this query and the conclusion is unchanged. The finding itself notes the row count is bounded by UNIQUE(guild_id,user_id) and the bundle is cached. Real but genuinely low impact; severity low is correct."
+  },
+  {
+    "id": "A0350",
+    "real": true,
+    "severity": "low",
+    "reason": "Confirmed. getGuildSnapshot(guildId) (web/src/lib/server/queries/pulse.ts:405) returns window-independent real-time presence (online_count, voice_users_now) yet is computed inside cached(guildKey, CACHE_TTL.medium, ...) where guildKey embeds rangeCacheKeyParts(range, 60) (+page.server.ts:34-41). CACHE_TTL.medium is 60_000ms (cache.ts:130). The UI labels these cards 'live from Discord' (+page.svelte:264) and 'connected to voice' (line 275) despite up-to-60s staleness, and switching the window pointlessly recomputes the snapshot via the range-scoped key. Genuine accuracy/caching mismatch; low severity, and CACHE_TTL.short=30_000 exists to support the suggested fix."
+  }
+]
