@@ -65,12 +65,12 @@ export function buildOverviewComponents(
   // Row 1: First 5 categories
   const row1 = new ActionRowBuilder<ButtonBuilder>();
   for (let i = 0; i < Math.min(5, activeCategories.length); i++) {
-    const cat = activeCategories[i];
+    const cat = activeCategories[i]!;
     const info = CATEGORY_INFO[cat];
     row1.addComponents(
       new ButtonBuilder()
         .setCustomId(buildHelpCustomId({ type: "category", category: cat, page: 0 }))
-        .setLabel(info.label.split(" ")[0]) // First word only for compact buttons
+        .setLabel(info.label.split(" ")[0]!) // First word only for compact buttons
         .setStyle(ButtonStyle.Secondary)
     );
   }
@@ -82,12 +82,12 @@ export function buildOverviewComponents(
   if (activeCategories.length > 5) {
     const row2 = new ActionRowBuilder<ButtonBuilder>();
     for (let i = 5; i < activeCategories.length; i++) {
-      const cat = activeCategories[i];
+      const cat = activeCategories[i]!;
       const info = CATEGORY_INFO[cat];
       row2.addComponents(
         new ButtonBuilder()
           .setCustomId(buildHelpCustomId({ type: "category", category: cat, page: 0 }))
-          .setLabel(info.label.split(" ")[0])
+          .setLabel(info.label.split(" ")[0]!)
           .setStyle(ButtonStyle.Secondary)
       );
     }

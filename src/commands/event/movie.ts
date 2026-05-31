@@ -85,7 +85,7 @@ async function handleStart(ctx: CommandContext<ChatInputCommandInteraction>): Pr
   }
 
   const { retroactiveCount, eventDate, threshold } = await withStep(ctx, "start_event", async () => {
-    const eventDate = new Date().toISOString().split("T")[0];
+    const eventDate = new Date().toISOString().split("T")[0]!;
     const { retroactiveCount } = await startMovieEvent(guild, channel.id, eventDate);
     const threshold = getMovieQualificationThreshold(guild.id);
     return { retroactiveCount, eventDate, threshold };
@@ -415,7 +415,7 @@ async function handleCredit(ctx: CommandContext<ChatInputCommandInteraction>): P
     return;
   }
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split("T")[0]!;
   if (dateStr > today) {
     await interaction.reply({
       content: "Cannot credit attendance for future dates.",
@@ -477,7 +477,7 @@ async function handleBump(ctx: CommandContext<ChatInputCommandInteraction>): Pro
   const { interaction } = ctx;
   const guild = interaction.guild!;
   const user = interaction.options.getUser("user", true);
-  const dateStr = interaction.options.getString("date") ?? new Date().toISOString().split("T")[0];
+  const dateStr = interaction.options.getString("date") ?? new Date().toISOString().split("T")[0]!;
   const reason = interaction.options.getString("reason") ?? undefined;
 
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {

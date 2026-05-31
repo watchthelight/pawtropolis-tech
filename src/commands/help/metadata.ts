@@ -246,7 +246,7 @@ export function parseHelpCustomId(customId: string): HelpNavigation | null {
   if (cmdMatch) {
     return {
       type: "command",
-      name: cmdMatch[1],
+      name: cmdMatch[1]!,
       full: customId.endsWith(":full"),
     };
   }
@@ -259,7 +259,7 @@ export function parseHelpCustomId(customId: string): HelpNavigation | null {
     return {
       type: "search",
       query: "", // Query is stored in cache, not ID
-      nonce: searchMatch[1],
+      nonce: searchMatch[1]!,
     };
   }
 

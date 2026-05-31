@@ -386,7 +386,7 @@ export async function handleHelpSelectMenu(
   }
 
   const customId = interaction.customId;
-  const selected = interaction.values[0];
+  const selected = interaction.values[0]!;
 
   const guildId = interaction.guildId ?? "";
   const userId = interaction.user.id;

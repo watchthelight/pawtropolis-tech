@@ -90,7 +90,7 @@ async function handleStart(ctx: CommandContext<ChatInputCommandInteraction>): Pr
   }
 
   const { retroactiveCount, eventDate, config } = await withStep(ctx, "start_event", async () => {
-    const eventDate = new Date().toISOString().split("T")[0];
+    const eventDate = new Date().toISOString().split("T")[0]!;
     const { retroactiveCount } = await startGameEvent(guild, channel.id, eventDate);
     const config = getGameConfig(guild.id);
     return { retroactiveCount, eventDate, config };
@@ -163,7 +163,7 @@ async function handleEnd(ctx: CommandContext<ChatInputCommandInteraction>): Prom
 
   // Calculate event duration
   const eventDuration = results.length > 0
-    ? results[0].qualification.eventDurationMinutes
+    ? results[0]!.qualification.eventDurationMinutes
     : 0;
 
   // Update tier roles for qualified users
@@ -485,7 +485,7 @@ async function handleCredit(ctx: CommandContext<ChatInputCommandInteraction>): P
     return;
   }
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split("T")[0]!;
   if (dateStr > today) {
     await interaction.reply({
       content: "Cannot credit attendance for future dates.",
@@ -543,7 +543,7 @@ async function handleBump(ctx: CommandContext<ChatInputCommandInteraction>): Pro
   const { interaction } = ctx;
   const guild = interaction.guild!;
   const user = interaction.options.getUser("user", true);
-  const dateStr = interaction.options.getString("date") ?? new Date().toISOString().split("T")[0];
+  const dateStr = interaction.options.getString("date") ?? new Date().toISOString().split("T")[0]!;
   const reason = interaction.options.getString("reason") ?? undefined;
 
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
