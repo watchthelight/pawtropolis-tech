@@ -5,12 +5,14 @@
 #                 cat /home/ubuntu/pawtropolis-tech/scripts/quality-cron.txt >> /tmp/crontab.bak; \
 #                 sort -u /tmp/crontab.bak | crontab -'
 #
-# Each script is resumable / capped. Memory peaks at ~200MB for embed-incremental;
-# everything else is sub-50MB.
+# Each script is resumable / capped; everything here is sub-50MB.
+#
+# The embedding step (embed-incremental.mjs) was removed with #00089: it imported
+# @xenova/transformers, which #00003 deleted for a protobufjs RCE, so the job could
+# never run under `npm ci --omit=dev` and fetched unpinned remote model weights.
 #
 # Logs: /tmp/quality-*.log (rotate yourself if they grow large; not critical).
 
 */15 * * * * cd /home/ubuntu/pawtropolis-tech && /usr/bin/node scripts/build-context-incremental.mjs >> /tmp/quality-ctx.log 2>&1
-*/30 * * * * cd /home/ubuntu/pawtropolis-tech && /usr/bin/node scripts/embed-incremental.mjs        >> /tmp/quality-embed.log 2>&1
 */30 * * * * cd /home/ubuntu/pawtropolis-tech && /usr/bin/node scripts/score-effort-v1.mjs          >> /tmp/quality-effort.log 2>&1
 0    * * * * cd /home/ubuntu/pawtropolis-tech && /usr/bin/node scripts/score-resonance.mjs          >> /tmp/quality-reso.log 2>&1

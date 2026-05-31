@@ -1,6 +1,11 @@
 #!/usr/bin/env node
-// Local-only pipeline runner. Loops ctx + embed until drained, then runs
+// Local-only pipeline runner. Loops ctx until drained, then runs
 // effort + resonance once. Designed for big-RAM workstation, NOT EC2.
+//
+// The embed step was removed with #00089 (its embedder imported
+// @xenova/transformers, deleted for a protobufjs RCE in #00003). effort
+// scoring only advances rows that already have embeddings; without a live
+// embedder it simply no-ops on new rows rather than crashing.
 //
 // Usage:
 //   node scripts/local-pipeline.mjs
@@ -10,7 +15,6 @@ import Database from 'better-sqlite3';
 
 const DB_PATH = 'data/data.db';
 const CTX_BATCH = 100_000;
-const EMBED_BATCH = 50_000;
 
 function pendingCounts() {
 	const db = new Database(DB_PATH, { readonly: true });
@@ -71,7 +75,6 @@ async function main() {
 	console.log('[start] pending:', start);
 
 	await loopUntilDrained('ctx', 'scripts/build-context-incremental.mjs', CTX_BATCH, () => pendingCounts().ctx);
-	await loopUntilDrained('embed', 'scripts/embed-incremental.mjs', EMBED_BATCH, () => pendingCounts().embed);
 
 	console.log('\n[run] score-effort-v1');
 	await run('node', ['--max-old-space-size=8192', 'scripts/score-effort-v1.mjs']);
