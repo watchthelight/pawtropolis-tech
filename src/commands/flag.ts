@@ -18,7 +18,7 @@ import {
   MessageFlags,
 } from "discord.js";
 import { logger } from "../lib/logger.js";
-import { requireMinRole, ROLE_IDS, JUNIOR_MOD_PLUS } from "../lib/config.js";
+import { requireMinRole, ROLE_IDS } from "../lib/config.js";
 import { env } from "../lib/env.js";
 import { getExistingFlag, isAlreadyFlagged, upsertManualFlag } from "../store/flagsStore.js";
 import { type CommandContext, withStep, withSql } from "../lib/cmdWrap.js";

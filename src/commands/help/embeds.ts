@@ -24,7 +24,6 @@ import { CATEGORY_INFO, COMMANDS_PER_PAGE } from "./metadata.js";
 const DIVIDER = "\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501";
 // Zero-width space: the "I exist but you can't see me" character.
 // Useful for forcing Discord to render empty embed fields.
-const EMPTY = "\u200b"; // Zero-width space
 
 const COLORS = {
   primary: 0x1e293b, // slate-800

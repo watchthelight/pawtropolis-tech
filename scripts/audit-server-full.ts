@@ -11,10 +11,6 @@ import {
   PermissionFlagsBits,
   ChannelType,
   type Guild,
-  type Role,
-  type GuildChannel,
-  type PermissionOverwrites,
-  type CategoryChannel,
 } from "discord.js";
 import { writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
@@ -384,7 +380,6 @@ function analyzeSecurityIssues(roles: RoleData[], channels: ChannelData[]): Secu
     const hasBan = role.permissions.includes("BanMembers");
     const hasKick = role.permissions.includes("KickMembers");
     const hasManageRoles = role.permissions.includes("ManageRoles");
-    const hasManageChannels = role.permissions.includes("ManageChannels");
     const hasManageWebhooks = role.permissions.includes("ManageWebhooks");
     const hasMentionEveryone = role.permissions.includes("MentionEveryone");
 

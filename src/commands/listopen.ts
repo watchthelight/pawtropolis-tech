@@ -585,7 +585,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
     });
 
     // Build embed with clickable links
-    const { embed, appUrls } = await withStep(ctx, "build_embed", async () => {
+    const { embed } = await withStep(ctx, "build_embed", async () => {
       return buildListEmbed(interaction, apps, 0, totalCount, scope);
     });
 
@@ -711,7 +711,7 @@ export async function handleListOpenPagination(interaction: ButtonInteraction): 
     }
 
     // Build embed for new page with clickable links
-    const { embed, appUrls } = await buildListEmbed(interaction, apps, newPage, totalCount, viewMode);
+    const { embed } = await buildListEmbed(interaction, apps, newPage, totalCount, viewMode);
 
     // Build pagination buttons (reuse same nonce, preserve view mode)
     const components = buildPaginationButtons(newPage, totalCount, nonce!, viewMode);

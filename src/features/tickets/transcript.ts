@@ -18,7 +18,6 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import {
-  ChannelType,
   type Message,
   type PartialMessage,
 } from "discord.js";

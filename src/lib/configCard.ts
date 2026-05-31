@@ -12,7 +12,6 @@ import {
   ButtonBuilder,
   ButtonStyle,
   EmbedBuilder,
-  MessageFlags,
   type ChatInputCommandInteraction,
   type Guild,
   type TextChannel,

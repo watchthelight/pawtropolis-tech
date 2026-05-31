@@ -5,7 +5,7 @@
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
-import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
+import { SlashCommandBuilder } from "discord.js";
 
 export const data = new SlashCommandBuilder()
   .setName("stats")

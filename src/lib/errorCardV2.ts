@@ -46,17 +46,15 @@ import {
   ButtonBuilder,
   ButtonStyle,
   EmbedBuilder,
-  MessageFlags,
   type ChatInputCommandInteraction,
   type ModalSubmitInteraction,
   type ButtonInteraction,
 } from "discord.js";
 import { logger, redact } from "./logger.js";
 import { replyOrEdit } from "./cmdWrap.js";
-import { ctx as reqCtx } from "./reqctx.js";
-import type { WideEvent, WideEventError, PhaseRecord, ResponseState } from "./wideEvent.js";
+import type { WideEvent, WideEventError, PhaseRecord } from "./wideEvent.js";
 import type { ClassifiedError, ErrorKind } from "./errors.js";
-import { getBuildInfo, getBuildAge, getShortBuildId } from "./buildInfo.js";
+import { getBuildAge, getShortBuildId } from "./buildInfo.js";
 
 // ===== Severity System =====
 
@@ -197,19 +195,6 @@ function formatExecutionPath(phases: PhaseRecord[], failedPhase?: string): strin
     .join(" \u2192 ");
 }
 
-/**
- * Format phases with timing for detailed view.
- */
-function formatPhasesWithTiming(phases: PhaseRecord[]): string {
-  if (phases.length === 0) return "No timing data";
-
-  return phases
-    .map((p) => {
-      const timing = p.durationMs !== null ? `${p.durationMs}ms` : "...";
-      return `${p.name} (${timing})`;
-    })
-    .join(" \u2192 ");
-}
 
 // ===== SQL Formatting =====
 

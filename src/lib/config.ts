@@ -949,7 +949,7 @@ function getBotOwnerIds(): string[] {
     .filter(Boolean);
 }
 
-function getGuildAdminRoleIds(guildId: string): string[] {
+function getGuildAdminRoleIds(_guildId: string): string[] {
   /**
    * getGuildAdminRoleIds
    * WHAT: Returns list of gate admin role IDs for a guild.

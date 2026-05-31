@@ -12,10 +12,9 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import type { Guild } from "discord.js";
-import { EmbedBuilder, TextChannel, ChannelType } from "discord.js";
+import { EmbedBuilder } from "discord.js";
 import { db } from "../db/db.js";
 import { nowUtc } from "../lib/time.js";
-import { getLoggingChannelId } from "../config/loggingStore.js";
 import { logger } from "../lib/logger.js";
 import { getLoggingChannel, logActionJSON } from "../features/logger.js";
 import { SAFE_ALLOWED_MENTIONS } from "../lib/constants.js";

@@ -42,7 +42,7 @@ import { join } from "node:path";
 // Parse arguments
 const args = process.argv.slice(2);
 const channelId = args.find((a) => !a.startsWith("--") && !args[args.indexOf(a) - 1]?.startsWith("--limit"));
-const limitArg = args.find((a, i) => args[i - 1] === "--limit");
+const limitArg = args.find((_a, i) => args[i - 1] === "--limit");
 const messageLimit = limitArg ? parseInt(limitArg, 10) : 0; // 0 = no limit
 
 // Find output file (second positional arg that's not the channel ID)

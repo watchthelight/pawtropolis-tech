@@ -79,13 +79,6 @@ export function formatCommandTree(commands: CommandSpec): string[] {
   return lines;
 }
 
-// Dead code. Keeping it because removing things always breaks something else.
-function collectGroupNames(command: CommandSpec[number]): string[] {
-  return (command.options ?? [])
-    .filter((opt: CmdOption) => opt.type === OPTION.SubcommandGroup)
-    .map((opt: CmdOption) => opt.name);
-}
-
 export function summarizeGate(commands: CommandSpec) {
   const gate = commands.find((cmd) => cmd.name === "gate");
   if (!gate) {

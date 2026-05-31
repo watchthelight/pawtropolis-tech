@@ -411,7 +411,7 @@ export async function restoreCandidate(
   candidateId: string,
   opts: RestoreOptions = {}
 ): Promise<RestoreResult> {
-  const { dryRun = false, pm2Coord = false, confirm = false, actorId = "cli", notes = "" } = opts;
+  const { dryRun = false, pm2Coord = false, confirm = false, notes = "" } = opts;
 
   // Restore is a multi-step process with built-in safety mechanisms:
   // 1. Re-validate the candidate (ensure nothing changed since last validation)
@@ -466,7 +466,6 @@ export async function restoreCandidate(
       // Register pre-restore backup in db_backups table
       const backupStats = await fs.stat(preRestoreBackupPath);
       const backupChecksum = await computeChecksum(preRestoreBackupPath);
-      const now = Math.floor(Date.now() / 1000);
 
       db.prepare(
         `INSERT INTO db_backups (path, created_at, size_bytes, integrity_result, checksum, notes)

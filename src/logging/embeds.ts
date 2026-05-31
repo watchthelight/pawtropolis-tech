@@ -55,10 +55,6 @@ export function buildFlagEmbedSilentFirstMsg(params: FlagEmbedParams): EmbedBuil
   // This is one of the few things Discord got really right.
   const joinedAtDiscord = `<t:${joinedAt}:F>`;
   const firstMessageAtDiscord = `<t:${firstMessageAt}:F>`;
-  // Note: silentDaysRelative is defined but never used below. Left it in case someone
-  // wants to swap out the hardcoded "X days" for a relative timestamp later.
-  const silentDaysRelative = `<t:${firstMessageAt}:R>`;
-
   // Build message link (format: https://discord.com/channels/GUILD_ID/CHANNEL_ID/MESSAGE_ID)
   // GOTCHA: If guildId is null (DM context), this creates a broken link.
   // Shouldn't happen for this use case, but if you copy-paste this elsewhere, heads up.

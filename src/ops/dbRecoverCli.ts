@@ -308,8 +308,6 @@ async function handleRestore(candidateId: string, opts: CLIArgs) {
       console.log("⚠️  IMPORTANT: Verify bot functionality immediately");
       console.log("⚠️  If issues occur, restore from pre-restore backup:\n");
       if (result.preRestoreBackupPath) {
-        // Yes, backupFilename is unused. Leaving it for future error messages.
-        const backupFilename = result.preRestoreBackupPath.split(/[\\/]/).pop();
         // Print the exact commands so the panicking operator can just copy-paste
         console.log(`   cp "${result.preRestoreBackupPath}" "data/data.db"`);
         console.log(`   pm2 restart pawtropolis\n`);

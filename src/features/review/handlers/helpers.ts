@@ -27,7 +27,6 @@ import {
   BTN_DECIDE_RE,
   MODAL_REJECT_RE,
   MODAL_ACCEPT_RE,
-  MODAL_KICK_RE,
 } from "../../../lib/modalPatterns.js";
 
 import type { ApplicationRow, ReviewStaffInteraction } from "../types.js";

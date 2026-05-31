@@ -18,7 +18,6 @@ import {
 import { requireOwnerOnly } from "../lib/config.js";
 import { checkCooldown, formatCooldown, COOLDOWNS } from "../lib/rateLimiter.js";
 import {
-  wrapCommand,
   type CommandContext,
   replyOrEdit,
 } from "../lib/cmdWrap.js";
@@ -29,8 +28,8 @@ import path from "path";
 import { exec } from "child_process";
 import { promisify } from "util";
 import os from "os";
-import { listCandidates, validateCandidate, restoreCandidate, findCandidateById } from "../features/dbRecovery.js";
-import { buildCandidateListEmbed, buildValidationEmbed, buildRestoreSummaryEmbed, buildCandidateActionRow } from "../ui/dbRecoveryCard.js";
+import { listCandidates } from "../features/dbRecovery.js";
+import { buildCandidateListEmbed, buildCandidateActionRow } from "../ui/dbRecoveryCard.js";
 import { randomBytes } from "crypto";
 import { env } from "../lib/env.js";
 import { secureCompare } from "../lib/secureCompare.js";

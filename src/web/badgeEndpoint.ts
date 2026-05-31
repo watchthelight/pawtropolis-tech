@@ -27,7 +27,6 @@ import {
   defaultStoreConfig,
   getBadgeDefinition,
   isSafeBadgeId,
-  manifestEntryUrl,
   readBadgeSvg,
   readManifest,
   renderBadgeSvg,

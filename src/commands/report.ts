@@ -18,7 +18,7 @@ import {
   GuildMember,
 } from "discord.js";
 import type { CommandContext } from "../lib/cmdWrap.js";
-import { withStep, withSql, ensureDeferred, replyOrEdit } from "../lib/cmdWrap.js";
+import { withStep, ensureDeferred, replyOrEdit } from "../lib/cmdWrap.js";
 import { getConfig, hasRoleOrAbove, ROLE_IDS, shouldBypass } from "../lib/config.js";
 import { logger } from "../lib/logger.js";
 import { createReportThread, generateReportCode } from "../features/report/index.js";

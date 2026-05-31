@@ -107,7 +107,7 @@ async function handleReviewPreview(ctx: CommandContext<ChatInputCommandInteracti
   }
 
   // Parse options
-  const { status, applicantOverride, claimedByOverride, long, answers } = await withStep(
+  const { status, applicantOverride, claimedByOverride, answers } = await withStep(
     ctx,
     "parse_options",
     async () => {

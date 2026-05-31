@@ -11,9 +11,8 @@
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
-import { logger } from "./logger.js";
 import { captureException } from "./sentry.js";
-import { classifyError, errorContext, shouldReportToSentry } from "./errors.js";
+import { classifyError, shouldReportToSentry } from "./errors.js";
 import { newTraceId, runWithCtx } from "./reqctx.js";
 import { WideEventBuilder } from "./wideEvent.js";
 import { emitWideEvent } from "./wideEventEmitter.js";

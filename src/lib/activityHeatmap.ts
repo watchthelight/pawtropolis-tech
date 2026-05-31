@@ -297,7 +297,6 @@ function drawWeekHeatmap(
 ): number {
   const cellSpacing = 2;
   const cornerRadius = 4;
-  const gridWidth = 24 * cfg.cellWidth;
   const gridHeight = 7 * cfg.cellHeight;
 
   // Draw week title if multi-week mode

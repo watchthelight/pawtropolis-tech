@@ -29,7 +29,6 @@ import {
   type TextChannel,
 } from "discord.js";
 import { db } from "../src/db/db.js";
-import { logger } from "../src/lib/logger.js";
 import { getTicketsCategoryId } from "../src/features/tickets/config.js";
 import { TicketService } from "../src/features/tickets/service.js";
 import { formatChannelName, resolveMemberIdentity } from "../src/features/tickets/rendering.js";

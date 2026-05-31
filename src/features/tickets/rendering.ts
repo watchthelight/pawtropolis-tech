@@ -89,7 +89,7 @@ export function buildGreetingEmbed(opts: {
   openedAt: Date;
   claimedByUserId?: string | null;
 }): EmbedBuilder {
-  const { type, ticketId, ticketNumber, openedAt, claimedByUserId } = opts;
+  const { type, ticketNumber, openedAt, claimedByUserId } = opts;
   const padded = String(ticketNumber).padStart(4, "0");
   const embed = new EmbedBuilder()
     .setColor(type.embedColor)

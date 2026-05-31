@@ -197,7 +197,7 @@ export async function handleModmailContextMenu(
 
   // Try to find app code from the message content or embeds
   let appCode: string | undefined;
-  const { findAppByShortCode } = await import("../appLookup.js");
+  await import("../appLookup.js");
 
   // Check if the message is a review message by looking for app code in content or embeds
   const content = targetMessage.content;

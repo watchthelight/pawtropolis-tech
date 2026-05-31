@@ -20,7 +20,7 @@ import { calculateGameSessionQualification } from "./gameQualification.js";
 
 // gameQualification.ts doesn't export a named result type, so derive it from the function.
 type GameQualificationResult = ReturnType<typeof calculateGameSessionQualification>;
-import type { ActiveEvent, EventSession, EventType } from "./types.js";
+import type { ActiveEvent, EventSession } from "./types.js";
 import { assignRole, getRoleTiers, removeRole, type RoleAssignmentResult } from "../roleAutomation.js";
 import { isPanicMode } from "../panicStore.js";
 import { logActionPretty } from "../../logging/pretty.js";

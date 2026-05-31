@@ -60,46 +60,6 @@ function likelihoodToScore(likelihood: SafeSearchLikelihood): number {
   }
 }
 
-// Singleton pattern for client - avoid re-initializing on every request.
-// Note: We don't actually use the SDK anymore (see below), but keeping the
-// lazy-load pattern in case we switch back to SDK auth later.
-let visionClient: any = null;
-
-/**
- * Legacy SDK loader - kept for potential future use.
- *
- * We switched to direct HTTP API because:
- * 1. @google-cloud/vision requires service account JSON, not API keys
- * 2. API key auth via REST is simpler for this single-endpoint use case
- * 3. Avoids bundling the entire Google Cloud SDK just for SafeSearch
- */
-async function loadVisionClient() {
-  if (!GOOGLE_VISION_ENABLED) {
-    return null;
-  }
-
-  if (visionClient) {
-    return visionClient;
-  }
-
-  try {
-    const vision = await import("@google-cloud/vision");
-
-    const apiKey = process.env.GOOGLE_VISION_API_KEY;
-    if (!apiKey) {
-      logger.warn("[googleVision] GOOGLE_VISION_API_KEY not set, Vision API disabled");
-      return null;
-    }
-
-    // Marker object - actual calls use HTTP API, not SDK
-    visionClient = { useHttpApi: true };
-    return visionClient;
-  } catch (err) {
-    logger.error({ err }, "[googleVision] Failed to load Vision SDK");
-    return null;
-  }
-}
-
 /**
  * Detect NSFW content using Google Cloud Vision SafeSearch API
  * Works well with cartoon/anime/hentai/furry content

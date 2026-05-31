@@ -146,7 +146,7 @@ export async function executeAnalyticsCommand(
     const scopeLabel = allGuilds ? "all guilds" : interaction.guild?.name || "this guild";
 
     // Sentry span
-    const span = captureException(null, {
+    captureException(null, {
       area: "analytics.run",
       tags: {
         from: window.from,

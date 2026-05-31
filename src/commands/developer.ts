@@ -18,7 +18,7 @@ import {
 import { withStep, type CommandContext } from "../lib/cmdWrap.js";
 import { requireStaff } from "../lib/config.js";
 import { getTrace, getTraceStats } from "../lib/traceStore.js";
-import type { WideEvent, PhaseRecord, QueryRecord, EntityRef } from "../lib/wideEvent.js";
+import type { WideEvent, QueryRecord, EntityRef } from "../lib/wideEvent.js";
 
 // ===== Command Definition =====
 
@@ -207,7 +207,6 @@ function buildTimelineEmbed(trace: WideEvent): EmbedBuilder {
   }
 
   const failedPhase = trace.error?.phase;
-  const lines = trace.phases.map((phase) => formatPhaseLine(phase, failedPhase));
 
   // Calculate relative start times from first phase
   const firstStart = trace.phases[0]?.startMs ?? 0;
@@ -414,13 +413,6 @@ function formatCommandLabel(trace: WideEvent): string {
     label += ` ${trace.subcommand}`;
   }
   return `\`/${label}\``;
-}
-
-function formatPhaseLine(phase: PhaseRecord, failedPhase?: string): string {
-  const isFailed = phase.name === failedPhase;
-  const duration = phase.durationMs !== null ? `${phase.durationMs}ms` : "...";
-  const prefix = isFailed ? "\u274C " : "";
-  return `${prefix}${phase.name} (${duration})`;
 }
 
 function formatQueryLine(query: QueryRecord, index: number): string {

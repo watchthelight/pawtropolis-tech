@@ -22,7 +22,6 @@ import {
   type GuildMember,
   type GuildTextBasedChannel,
   type Message,
-  type TextChannel,
 } from "discord.js";
 import { db } from "../../db/db.js";
 import { logger } from "../../lib/logger.js";
@@ -254,25 +253,6 @@ function formatUserTag(username: string, discriminator?: string | null) {
     return `${username}#${discriminator}`;
   }
   return username;
-}
-
-async function pingGatekeeperOnNewCard(channel: TextChannel, appId: string) {
-  const cfg = getConfig(channel.guildId);
-  if (!cfg?.gatekeeper_role_id) return;
-
-  const roleMention = `<@&${cfg.gatekeeper_role_id}>`;
-  const code = shortCode(appId);
-  const content = `${roleMention} New application #${code} ready for review.`;
-
-  try {
-    await channel.send({ content });
-    logger.info({ appId, channelId: channel.id }, "[review] gatekeeper ping sent for new card");
-  } catch (err) {
-    logger.warn(
-      { err, appId, channelId: channel.id },
-      "[review] failed to ping gatekeeper for new card"
-    );
-  }
 }
 
 // ===== Main Exports =====
@@ -904,8 +884,6 @@ export async function ensureReviewMessage(
     if (mapping) {
       message = await channel.messages.fetch(mapping.message_id).catch(() => null);
     }
-
-    const isCreate = !mapping || !message;
 
     if (message) {
       // Edit existing card - no ping

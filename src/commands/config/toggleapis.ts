@@ -182,7 +182,6 @@ export async function handleToggleApiButton(interaction: ButtonInteraction) {
 
   // Toggle the service
   const newState = toggleService(guildId, service);
-  const info = SERVICE_INFO[service];
 
   logger.info(
     { guildId, service, enabled: newState, userId: interaction.user.id },

@@ -28,7 +28,6 @@ import {
 } from "../../lib/config.js";
 import { ensureGateEntry } from "../../features/gate.js";
 import { renderWelcomeTemplate } from "../../features/review.js";
-import { postWelcomeCard } from "../../features/welcome.js";
 import { seedDefaultQuestionsIfEmpty, getQuestions, upsertQuestion } from "../../features/gate/questions.js";
 import { postGateConfigCard } from "../../lib/configCard.js";
 import {
@@ -202,7 +201,7 @@ async function executeSetup(ctx: CommandContext<ChatInputCommandInteraction>) {
     );
   });
 
-  const { inserted, total } = await withStep(ctx, "seed_questions", async () => {
+  const { total } = await withStep(ctx, "seed_questions", async () => {
     const result = seedDefaultQuestionsIfEmpty(interaction.guildId!, ctx);
     logger.info(
       { evt: "gate_questions_seed", guildId: interaction.guildId!, inserted: result.inserted, total: result.total },
@@ -411,7 +410,7 @@ export const handleResetModal = wrapCommand<ModalSubmitInteraction>("gate:reset"
     }
   });
 
-  const { inserted, total } = await withStep(ctx, "reseed_questions", async () => {
+  const { total } = await withStep(ctx, "reseed_questions", async () => {
     const result = seedDefaultQuestionsIfEmpty(guildId, ctx);
     logger.info(
       { evt: "gate_questions_seed", guildId, inserted: result.inserted, total: result.total },

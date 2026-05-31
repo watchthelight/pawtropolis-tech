@@ -97,7 +97,7 @@ function discordTimestamp(epochSec: number, format: "F" | "f" | "R" = "F"): stri
  */
 export function buildCandidateListEmbed(
   candidates: BackupCandidate[],
-  guildName?: string
+  _guildName?: string
 ): EmbedBuilder {
   const now = Math.floor(Date.now() / 1000);
   const embed = new EmbedBuilder()

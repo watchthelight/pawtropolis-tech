@@ -58,7 +58,7 @@ export interface PermissionDenialOptions {
  * Uses role mentions (<@&id>) which Discord renders as role names.
  */
 async function resolveRoleDisplay(
-  guild: Guild,
+  _guild: Guild,
   roleIds: string[]
 ): Promise<string[]> {
   const displays: string[] = [];

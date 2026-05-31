@@ -165,7 +165,6 @@ export function registerInteractionCreate(
           username: interaction.user.username,
         });
 
-        const startedAt = Date.now();
         // Note: ix_enter log removed - now tracked by wide events in cmdWrap.ts
 
         if (kind === "modal" && interaction.isModalSubmit()) {
@@ -218,7 +217,6 @@ export function registerInteractionCreate(
         // The watchdog barks (logs a warning) if we don't respond within Discord's 3-second SLA.
         // It doesn't actually cancel anything - just yells at you in the logs. Worth it.
         const cancelWatchdog = armWatchdog(interaction);
-        let succeeded = false;
 
         try {
           // Autocomplete interactions - these have a different timeout (no 3s SLA) but still
@@ -229,7 +227,6 @@ export function registerInteractionCreate(
             if (commandName === "help") {
               await help.handleAutocomplete(interaction);
             }
-            succeeded = true;
             return;
           }
 
@@ -251,7 +248,6 @@ export function registerInteractionCreate(
                 .catch((err) =>
                   logger.warn({ err, traceId }, "Failed to reply with unknown command message")
                 );
-              succeeded = true;
               return;
             }
 
@@ -273,7 +269,6 @@ export function registerInteractionCreate(
               category: "command",
               level: "info",
             });
-            succeeded = true;
             return;
           }
 
@@ -294,7 +289,6 @@ export function registerInteractionCreate(
                 content: "⚠️ This is a sample preview card. Buttons are non-functional.",
                 flags: MessageFlags.Ephemeral,
               });
-              succeeded = true;
               return;
             }
 
@@ -314,7 +308,6 @@ export function registerInteractionCreate(
               );
               const { handleErrorCardButton } = await import("../handlers/errorCardButtons.js");
               await handleErrorCardButton(interaction, errorCardMatch.action, errorCardMatch.traceId);
-              succeeded = true;
               return;
             }
 
@@ -333,7 +326,6 @@ export function registerInteractionCreate(
                 "route: review decide"
               );
               await handleReviewButton(interaction);
-              succeeded = true;
               return;
             }
 
@@ -350,7 +342,6 @@ export function registerInteractionCreate(
                 "route: review modmail"
               );
               await handleModmailButton(interaction);
-              succeeded = true;
               return;
             }
 
@@ -367,7 +358,6 @@ export function registerInteractionCreate(
                 "route: permanent reject"
               );
               await handlePermRejectButton(interaction);
-              succeeded = true;
               return;
             }
 
@@ -385,7 +375,6 @@ export function registerInteractionCreate(
                 "route: copy UID"
               );
               await handleCopyUidButton(interaction);
-              succeeded = true;
               return;
             }
 
@@ -402,7 +391,6 @@ export function registerInteractionCreate(
                 "route: vote out"
               );
               await handleVoteOutButton(interaction);
-              succeeded = true;
               return;
             }
 
@@ -410,12 +398,10 @@ export function registerInteractionCreate(
             // "done" finishes verification, "start" begins the multi-page questionnaire.
             if (customId === "v1:done") {
               await handleDoneButton(interaction);
-              succeeded = true;
               return;
             }
             if (customId.startsWith("v1:start")) {
               await handleStartButton(interaction);
-              succeeded = true;
               return;
             }
 
@@ -423,7 +409,6 @@ export function registerInteractionCreate(
             if (customId.startsWith("v1:dm:")) {
               const { handleDmButton } = await import("../features/gate/dmVerification.js");
               await handleDmButton(interaction);
-              succeeded = true;
               return;
             }
 
@@ -442,7 +427,6 @@ export function registerInteractionCreate(
                 "route: database recovery"
               );
               await handleDbRecoveryButton(interaction);
-              succeeded = true;
               return;
             }
 
@@ -460,7 +444,6 @@ export function registerInteractionCreate(
                 "route: audit"
               );
               await audit.handleAuditButton(interaction);
-              succeeded = true;
               return;
             }
 
@@ -478,7 +461,6 @@ export function registerInteractionCreate(
               );
               const { handleQotdButton } = await import("../features/qotd/handlers.js");
               await handleQotdButton(interaction);
-              succeeded = true;
               return;
             }
 
@@ -497,7 +479,6 @@ export function registerInteractionCreate(
                 "route: listopen pagination"
               );
               await listopen.handleListOpenPagination(interaction);
-              succeeded = true;
               return;
             }
 
@@ -514,7 +495,6 @@ export function registerInteractionCreate(
                 "route: modmail open"
               );
               await handleModmailOpenButton(interaction);
-              succeeded = true;
               return;
             }
             if (customId.startsWith("v1:modmail:close:")) {
@@ -529,7 +509,6 @@ export function registerInteractionCreate(
                 "route: modmail close"
               );
               await handleModmailCloseButton(interaction);
-              succeeded = true;
               return;
             }
             if (customId.startsWith("v1:ping:delete:")) {
@@ -544,7 +523,6 @@ export function registerInteractionCreate(
                 "route: delete ping"
               );
               await handleDeletePing(interaction);
-              succeeded = true;
               return;
             }
 
@@ -561,7 +539,6 @@ export function registerInteractionCreate(
                 "route: ping in unverified"
               );
               await handlePingInUnverified(interaction);
-              succeeded = true;
               return;
             }
 
@@ -581,7 +558,6 @@ export function registerInteractionCreate(
               if (isIsitRealInteraction(customId)) {
                 await routeIsitRealInteraction(interaction);
               }
-              succeeded = true;
               return;
             }
 
@@ -599,7 +575,6 @@ export function registerInteractionCreate(
               );
               const { handleToggleApiButton } = await import("../commands/config/toggleapis.js");
               await handleToggleApiButton(interaction);
-              succeeded = true;
               return;
             }
 
@@ -617,7 +592,6 @@ export function registerInteractionCreate(
               );
               const { handleTicketButton } = await import("../features/tickets/handlers.js");
               await handleTicketButton(interaction);
-              succeeded = true;
               return;
             }
 
@@ -635,7 +609,6 @@ export function registerInteractionCreate(
               );
               const { handleRedeemRewardButton } = await import("../features/artistRotation/index.js");
               await handleRedeemRewardButton(interaction);
-              succeeded = true;
               return;
             }
 
@@ -653,7 +626,6 @@ export function registerInteractionCreate(
               );
               const { handleUseByteButton } = await import("../features/byteTokenHandler.js");
               await handleUseByteButton(interaction);
-              succeeded = true;
               return;
             }
 
@@ -672,7 +644,6 @@ export function registerInteractionCreate(
               );
               const { handleReportResolveButton } = await import("../features/report/handlers.js");
               await handleReportResolveButton(interaction);
-              succeeded = true;
               return;
             }
 
@@ -690,10 +661,8 @@ export function registerInteractionCreate(
                 "route: help navigation"
               );
               await help.handleHelpButton(interaction);
-              succeeded = true;
               return;
             }
-            succeeded = true;
             return;
           }
 
@@ -715,7 +684,6 @@ export function registerInteractionCreate(
                 "route: listopen page select"
               );
               await listopen.handleListOpenPageSelect(interaction);
-              succeeded = true;
               return;
             }
 
@@ -732,7 +700,6 @@ export function registerInteractionCreate(
                 "route: help select menu"
               );
               await help.handleHelpSelectMenu(interaction);
-              succeeded = true;
               return;
             }
 
@@ -750,11 +717,9 @@ export function registerInteractionCreate(
               );
               const { handleUseByteSelectMenu } = await import("../features/byteTokenHandler.js");
               await handleUseByteSelectMenu(interaction);
-              succeeded = true;
               return;
             }
 
-            succeeded = true;
             return;
           }
 
@@ -779,7 +744,6 @@ export function registerInteractionCreate(
               );
               const { handleCloseModal } = await import("../features/tickets/handlers.js");
               await handleCloseModal(interaction);
-              succeeded = true;
               return;
             }
 
@@ -796,7 +760,6 @@ export function registerInteractionCreate(
                 "route: help search modal"
               );
               await help.handleHelpModal(interaction);
-              succeeded = true;
               return;
             }
 
@@ -825,7 +788,6 @@ export function registerInteractionCreate(
                   }
                 );
                 await executor(interaction);
-                succeeded = true;
                 return;
               }
 
@@ -848,7 +810,6 @@ export function registerInteractionCreate(
                   }
                 );
                 await executor(interaction);
-                succeeded = true;
                 return;
               }
 
@@ -871,7 +832,6 @@ export function registerInteractionCreate(
                   }
                 );
                 await executor(interaction);
-                succeeded = true;
                 return;
               }
 
@@ -894,7 +854,6 @@ export function registerInteractionCreate(
                   }
                 );
                 await executor(interaction);
-                succeeded = true;
                 return;
               }
 
@@ -917,7 +876,6 @@ export function registerInteractionCreate(
                   }
                 );
                 await executor(interaction);
-                succeeded = true;
                 return;
               }
 
@@ -940,7 +898,6 @@ export function registerInteractionCreate(
                   }
                 );
                 await executor(interaction);
-                succeeded = true;
                 return;
               }
 
@@ -963,7 +920,6 @@ export function registerInteractionCreate(
                   }
                 );
                 await executor(interaction);
-                succeeded = true;
                 return;
               }
 
@@ -987,7 +943,6 @@ export function registerInteractionCreate(
                   }
                 );
                 await executor(interaction);
-                succeeded = true;
                 return;
               }
 
@@ -1004,7 +959,6 @@ export function registerInteractionCreate(
                   }
                 );
                 await executor(interaction);
-                succeeded = true;
                 return;
               }
 
@@ -1021,7 +975,6 @@ export function registerInteractionCreate(
                   }
                 );
                 await executor(interaction);
-                succeeded = true;
                 return;
               }
 
@@ -1044,14 +997,12 @@ export function registerInteractionCreate(
                 lastSql: null,
                 traceId,
               });
-              succeeded = false;
               return;
             }
 
             if (customId.startsWith("v1:gate:reset:")) {
               const { handleResetModal } = await import("../commands/gate.js");
               await handleResetModal(interaction);
-              succeeded = true;
               return;
             }
 
@@ -1069,10 +1020,8 @@ export function registerInteractionCreate(
               );
               const { routeIsitRealInteraction } = await import("../commands/config/isitreal.js");
               await routeIsitRealInteraction(interaction);
-              succeeded = true;
               return;
             }
-            succeeded = true;
           }
 
           // Context menu commands — USER targets
@@ -1090,7 +1039,6 @@ export function registerInteractionCreate(
               );
               const { handleWelcomeBatchContextMenu } = await import("../commands/welcomeBatchContext.js");
               await handleWelcomeBatchContextMenu(interaction);
-              succeeded = true;
               return;
             }
           }
@@ -1109,7 +1057,6 @@ export function registerInteractionCreate(
                 "route: isitreal context menu"
               );
               await isitreal.handleIsItRealContextMenu(interaction);
-              succeeded = true;
               return;
             }
 
@@ -1125,7 +1072,6 @@ export function registerInteractionCreate(
                 "route: modmail context menu"
               );
               await handleModmailContextMenu(interaction);
-              succeeded = true;
               return;
             }
           }

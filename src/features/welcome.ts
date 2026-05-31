@@ -3,7 +3,6 @@
 // Separated from review.ts to keep welcome logic self-contained and testable.
 import {
   APIEmbed,
-  ChannelType,
   Guild,
   GuildMember,
   GuildTextBasedChannel,

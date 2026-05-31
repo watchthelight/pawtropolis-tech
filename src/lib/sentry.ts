@@ -26,8 +26,6 @@ import {
 import { env } from "./env.js";
 import { logger } from "./logger.js";
 import { getBuildInfo } from "./buildInfo.js";
-import fs from "node:fs";
-import path from "node:path";
 
 let sentryEnabled = false;
 
@@ -50,16 +48,6 @@ function hasValidDsn(dsn: string | undefined): dsn is string {
   }
 }
 
-// Get version from package.json for release tracking
-function getVersion(): string {
-  try {
-    const packagePath = path.join(process.cwd(), "package.json");
-    const packageJson = JSON.parse(fs.readFileSync(packagePath, "utf-8"));
-    return packageJson.version || "unknown";
-  } catch {
-    return "unknown";
-  }
-}
 
 /**
  * Initialize Sentry error tracking

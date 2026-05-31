@@ -28,7 +28,6 @@ import { isOwner } from "../../lib/owner.js";
 import { requireAdminOrLeadership, getConfig } from "../../lib/config.js";
 import { logger } from "../../lib/logger.js";
 import {
-  getServiceStatus,
   testAllConfigured,
   testHive,
   testRapidAI,

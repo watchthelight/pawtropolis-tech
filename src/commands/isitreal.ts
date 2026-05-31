@@ -21,7 +21,7 @@ import {
 } from "discord.js";
 import { logger } from "../lib/logger.js";
 import { type CommandContext, withStep } from "../lib/cmdWrap.js";
-import { requireMinRole, ROLE_IDS, JUNIOR_MOD_PLUS, shouldBypass, hasRoleOrAbove, postPermissionDenied } from "../lib/config.js";
+import { requireMinRole, ROLE_IDS, shouldBypass, hasRoleOrAbove, postPermissionDenied } from "../lib/config.js";
 import { detectAIForImages, buildAIDetectionEmbed } from "../features/aiDetection/index.js";
 import { isGuildMember } from "../lib/typeGuards.js";
 
@@ -75,7 +75,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   });
 
   // Parse message ID/link from option
-  const { messageId, targetMessage } = await withStep(ctx, "fetch_message", async () => {
+  const { targetMessage } = await withStep(ctx, "fetch_message", async () => {
     const messageInput = interaction.options.getString("message", true);
     const parsedId = parseMessageId(messageInput);
 

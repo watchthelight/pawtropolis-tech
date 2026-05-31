@@ -197,7 +197,7 @@ export async function ensureModsCanSpeakInThread(
             "[modmail] adding mod role members to private thread"
           );
 
-          for (const [memberId, member] of members) {
+          for (const [memberId] of members) {
             try {
               await thread.members.add(memberId);
               logger.debug(

@@ -29,7 +29,7 @@ export const OPEN_MODMAIL_THREADS = new Set<string>();
  * WHAT: Load all open modmail thread IDs into memory on startup.
  * WHY: Enables fast routing checks without DB queries per message.
  */
-export async function hydrateOpenModmailThreadsOnStartup(client: Client) {
+export async function hydrateOpenModmailThreadsOnStartup(_client: Client) {
   const rows = db
     .prepare(`SELECT thread_id FROM modmail_ticket WHERE status = 'open' AND thread_id IS NOT NULL`)
     .all() as { thread_id: string }[];

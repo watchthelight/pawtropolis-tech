@@ -15,7 +15,6 @@ import {
 import { db } from "../../db/db.js";
 import { logger } from "../../lib/logger.js";
 import { captureException } from "../../lib/sentry.js";
-import { SAFE_ALLOWED_MENTIONS } from "../../lib/constants.js";
 import type { ModmailTicket } from "./types.js";
 import { getTicketByThread, reopenTicket } from "./tickets.js";
 import { addOpenThread } from "./threadState.js";

@@ -11,7 +11,6 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 import {
   EmbedBuilder,
-  MessageFlags,
   type ChatInputCommandInteraction,
   type ModalSubmitInteraction,
   type ButtonInteraction,

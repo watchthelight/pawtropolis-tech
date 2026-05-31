@@ -975,10 +975,8 @@ export async function runVoteOutAction(
 
   // Send rejection DM
   const user = await interaction.client.users.fetch(app.user_id).catch(() => null);
-  let dmDelivered = false;
   if (user) {
-    const dmResult = await rejectFlow(user, { guildName, reason: rejectionReason });
-    dmDelivered = dmResult.dmDelivered;
+    await rejectFlow(user, { guildName, reason: rejectionReason });
   } else {
     logger.warn({ userId: app.user_id }, "[review] failed to fetch user for vote out DM");
   }

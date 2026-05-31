@@ -150,7 +150,7 @@ export async function executeGetArtistRotation(ctx: CommandContext<ChatInputComm
     // Import getArtistConfig to show resolved values
     const { getArtistConfig, ARTIST_ROLE_ID, AMBASSADOR_ROLE_ID, SERVER_ARTIST_CHANNEL_ID, TICKET_ROLES } =
       await import("../../features/artistRotation/constants.js");
-    const resolved = getArtistConfig(interaction.guildId!);
+    getArtistConfig(interaction.guildId!);
 
     const result: string[] = ["**Artist Rotation Configuration (Issue #78)**", ""];
 

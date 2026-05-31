@@ -10,7 +10,6 @@
 
 import {
   type ButtonInteraction,
-  type Client,
   type Message,
   EmbedBuilder,
   ActionRowBuilder,

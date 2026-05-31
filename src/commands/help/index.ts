@@ -45,7 +45,6 @@ import {
   searchCommands,
   generateNonce,
   storeSearchSession,
-  getSearchSession,
 } from "./cache.js";
 import {
   buildOverviewEmbed,

@@ -26,7 +26,6 @@ import { withStep, type CommandContext } from "../lib/cmdWrap.js";
 import { logger } from "../lib/logger.js";
 import { randomUUID } from "node:crypto";
 import {
-  getActiveMultiplier,
   checkWouldReplace,
   type TokenRarity,
 } from "../store/byteMultiplierStore.js";

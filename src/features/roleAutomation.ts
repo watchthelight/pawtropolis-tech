@@ -10,7 +10,7 @@
  *  - Discord.js Permissions: https://discord.js.org/#/docs/discord.js/main/class/PermissionsBitField
  */
 
-import type { Guild, GuildMember, Role } from "discord.js";
+import type { Guild, Role } from "discord.js";
 import { PermissionFlagsBits } from "discord.js";
 import { db } from "../db/db.js";
 import { logger } from "../lib/logger.js";

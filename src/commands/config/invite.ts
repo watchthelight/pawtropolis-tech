@@ -8,7 +8,6 @@
 
 import {
   type ChatInputCommandInteraction,
-  MessageFlags,
   type CommandContext,
   replyOrEdit,
   ensureDeferred,

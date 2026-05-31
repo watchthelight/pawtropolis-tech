@@ -281,7 +281,7 @@ async function runMigrations(): Promise<void> {
 
     // Show final applied versions
     // Yes, finalApplied is unused. It's here for debugging and the type checker doesn't care.
-    const finalApplied = getAppliedVersions();
+    getAppliedVersions();
     console.log("All applied migrations:");
     const rows = db
       .prepare(`SELECT version, name, applied_at FROM schema_migrations ORDER BY version`)

@@ -37,10 +37,8 @@ import {
   getMonthlyLeaderboard,
   getAllTimeLeaderboard,
   formatJobNumber,
-  JOB_STATUSES,
   type ArtJobRow,
   type JobStatus,
-  type JobByRecipientResult,
 } from "../features/artJobs/index.js";
 
 // The slash command builder graveyard: where dreams of a simple API go to die.

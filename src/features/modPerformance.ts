@@ -49,14 +49,6 @@ export interface ModMetrics {
   updated_at: string;
 }
 
-/**
- * Action pair for response time calculation (claim → accept/reject)
- */
-interface ActionPair {
-  claim_time: number;
-  resolution_time: number;
-  response_time_s: number;
-}
 
 /**
  * LRU cache for metrics (guild_id -> metrics[]) with TTL and bounded size.
@@ -174,7 +166,7 @@ function computeAllResponseTimes(
     }
 
     // Calculate response times (app_submitted -> first mod action)
-    for (const [appId, events] of appGroups) {
+    for (const [, events] of appGroups) {
       // Handle resubmissions: only measure from the LATEST submission
       const submissions = events.filter((e) => e.action === "app_submitted");
       if (submissions.length === 0) continue;

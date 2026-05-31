@@ -15,7 +15,6 @@ import {
   ButtonStyle,
   type ChatInputCommandInteraction,
   type TextChannel,
-  type Attachment,
   MessageFlags,
   ComponentType,
 } from "discord.js";

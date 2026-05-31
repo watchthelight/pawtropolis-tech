@@ -406,7 +406,6 @@ export function analyzeSecurityIssues(roles: RoleData[], channels: ChannelData[]
       if (chOverwrite.allow.length > 0) {
         // Channel allows something - check if parent denies it or doesn't allow it
         const parentDenied = parentOverwrite?.deny || [];
-        const parentAllowed = parentOverwrite?.allow || [];
 
         const overridesDeny = chOverwrite.allow.filter((p) => parentDenied.includes(p));
         if (overridesDeny.length > 0) {
@@ -488,13 +487,6 @@ export function analyzeSecurityIssues(roles: RoleData[], channels: ChannelData[]
       // and only allow unverified/new member roles
       const everyoneOverwrite = channel.overwrites.find((o) => o.name === "@everyone");
       const hasEveryoneAccess = !everyoneOverwrite?.deny.includes("ViewChannel");
-
-      // Check if any staff/mod roles can see this channel
-      const staffKeywords = ["mod", "admin", "staff", "helper", "support"];
-      const staffWithAccess = channel.overwrites.filter((o) => {
-        const isStaff = staffKeywords.some((kw) => o.name.toLowerCase().includes(kw));
-        return isStaff && o.allow.includes("ViewChannel");
-      });
 
       // If @everyone can see it but it looks like a gate, flag it
       if (hasEveryoneAccess && !nameLower.includes("rules")) {

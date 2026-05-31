@@ -16,7 +16,6 @@
 import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
-  PermissionFlagsBits,
   EmbedBuilder,
   MessageFlags,
   Role,
@@ -24,7 +23,7 @@ import {
 import { type CommandContext, withStep, withSql } from "../lib/cmdWrap.js";
 import { db } from "../db/db.js";
 import { logger } from "../lib/logger.js";
-import { getRoleTiers, canManageRoleSync, type RoleTier, type LevelReward } from "../features/roleAutomation.js";
+import { getRoleTiers, canManageRoleSync, type LevelReward } from "../features/roleAutomation.js";
 
 // Note: No default permission set here because we do manual ManageRoles check in execute().
 // This allows the command to appear for everyone but gate functionality at runtime.

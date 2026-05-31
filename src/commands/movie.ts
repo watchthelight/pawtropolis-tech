@@ -25,7 +25,7 @@ import {
 import { type CommandContext, withStep, withSql } from "../lib/cmdWrap.js";
 import { db } from "../db/db.js";
 import { logger } from "../lib/logger.js";
-import { requireMinRole, ROLE_IDS, MODERATOR_PLUS } from "../lib/config.js";
+import { requireMinRole, ROLE_IDS } from "../lib/config.js";
 import {
   startMovieEvent,
   getActiveMovieEvent,
@@ -454,7 +454,7 @@ async function handleAttendance(ctx: CommandContext<ChatInputCommandInteraction>
         .setColor(0x5865F2)
         .setTimestamp();
 
-      const lines = allAttendees.map((a, i) => {
+      const lines = allAttendees.map((a) => {
         const status = a.qualified ? "✅" : "❌";
         return `${status} <@${a.user_id}> — ${a.duration_minutes}min total (longest: ${a.longest_session_minutes}min)`;
       });

@@ -21,7 +21,6 @@ import type {
   AvatarScanRow,
   ReviewCardApplication,
 } from "../features/review/types.js";
-import type { ModmailTicket } from "../features/modmail/types.js";
 
 // Re-export types for backward compatibility
 export type { ApplicationStatus, ReviewAnswer, ReviewClaimRow, AvatarScanRow, ReviewCardApplication };
@@ -243,25 +242,6 @@ export function buildActionRowsV2(
   return rows;
 }
 
-/**
- * Estimate embed size for Discord limits
- */
-function estimateEmbedSize(embed: EmbedBuilder): number {
-  let size = 0;
-
-  if (embed.data.title) size += embed.data.title.length;
-  if (embed.data.description) size += embed.data.description.length;
-  if (embed.data.footer?.text) size += embed.data.footer.text.length;
-
-  if (embed.data.fields) {
-    for (const field of embed.data.fields) {
-      size += field.name.length + field.value.length;
-    }
-  }
-
-  return size;
-}
-
 // ============================================================================
 // Visual Design Constants
 // ============================================================================
@@ -291,8 +271,6 @@ const SECTION_PRIORITY = {
   ANSWERS: 5,             // Keep - core application content
 } as const;
 
-// Discord embed description limit
-const _DISCORD_MAX_LENGTH = 4096; // eslint-disable-line -- documented constant
 // WHY 4000 and not 4096? Because we add content dynamically and I don't trust our length
 // estimation to be byte-perfect for every Unicode character. 96 bytes of buffer has saved
 // us from embarrassing truncation errors more than once.

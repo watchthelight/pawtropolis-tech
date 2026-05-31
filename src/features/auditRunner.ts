@@ -21,11 +21,9 @@ import { upsertNsfwFlag } from "../store/nsfwFlagsStore.js";
 import { sleep } from "../lib/retry.js";
 import {
   createSession,
-  getScannedUserIds,
   markUserScanned,
   updateProgress,
   completeSession,
-  type AuditSession,
 } from "../store/auditSessionStore.js";
 import { notifyDashboard } from "../web/notifyDashboard.js";
 import { trackJoin } from "./activityTracker.js";

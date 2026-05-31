@@ -16,7 +16,7 @@ import { db } from "../db/db.js";
 import { logger } from "../lib/logger.js";
 import { getFlaggerConfig } from "../config/flaggerStore.js";
 import { getLoggingChannel } from "./logger.js";
-import type { Guild, Client, Message } from "discord.js";
+import type { Client, Message } from "discord.js";
 
 /**
  * WHAT: Track user join event in user_activity table.

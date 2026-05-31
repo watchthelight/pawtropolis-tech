@@ -9,7 +9,7 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import { db } from "../../db/db.js";
-import type { ModmailTicket, ModmailMessageMap } from "./types.js";
+import type { ModmailTicket } from "./types.js";
 import { touchSyncMarker } from "../../lib/syncMarker.js";
 
 // ===== Ticket CRUD =====

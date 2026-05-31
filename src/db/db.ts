@@ -19,7 +19,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { env } from "../lib/env.js";
 import { logger } from "../lib/logger.js";
-import { SQL_IDENTIFIER_RE } from "./utils.js";
 
 const DB_BUSY_TIMEOUT_MS = 15000;
 const DB_DEFAULT_PATH = "data/data.db";

@@ -26,7 +26,6 @@ import {
   writeManifest,
 } from "../features/badges/index.js";
 import type {
-  BadgeManifest,
   BadgeManifestEntry,
   BadgeStoreConfig,
 } from "../features/badges/index.js";

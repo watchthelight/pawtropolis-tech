@@ -228,7 +228,7 @@ async function handleConfirm(
     const result = processAssignment(guild.id, data.artistId);
 
     if (result) {
-      const queueSize = getAllArtists(guild.id).length;
+      getAllArtists(guild.id);
       results.push(`Artist moved from #${result.oldPosition} to #${result.newPosition} in queue (${result.assignmentsCount} total assignments)`);
     } else {
       results.push(`*Failed to update queue - artist not found*`);

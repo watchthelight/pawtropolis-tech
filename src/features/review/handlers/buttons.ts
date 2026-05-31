@@ -21,7 +21,6 @@ import { logger } from "../../../lib/logger.js";
 import { captureException } from "../../../lib/sentry.js";
 import { getConfig } from "../../../lib/config.js";
 import { replyOrEdit, ensureDeferred } from "../../../lib/cmdWrap.js";
-import { shortCode } from "../../../lib/ids.js";
 import {
   BTN_PERM_REJECT_RE,
   BTN_COPY_UID_RE,
@@ -47,9 +46,9 @@ import {
   openVoteOutModal,
 } from "./helpers.js";
 
-import { runRejectAction, runKickAction, runVoteOutAction, runVoteOutRetractAction } from "./actionRunners.js";
+import { runRejectAction, runVoteOutRetractAction } from "./actionRunners.js";
 import { getVoteOutVoters } from "../queries.js";
-import { handleClaimToggle, handleUnclaimAction } from "./claimHandlers.js";
+import { handleClaimToggle } from "./claimHandlers.js";
 
 // ===== Button Rate Limiting =====
 

@@ -28,7 +28,6 @@ import {
   type ButtonInteraction,
   type ChatInputCommandInteraction,
   type GuildMember,
-  type TextChannel,
 } from "discord.js";
 import type { CommandContext } from "../lib/cmdWrap.js";
 import { logger } from "../lib/logger.js";

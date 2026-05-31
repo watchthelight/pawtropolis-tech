@@ -13,7 +13,7 @@ import { db } from "../../db/db.js";
 import { logger } from "../../lib/logger.js";
 import { type CommandContext, withStep, withSql } from "../../lib/cmdWrap.js";
 import { logActionPretty } from "../../logging/pretty.js";
-import { getGameConfig, getGameQualificationPercentage } from "../../store/gameConfigStore.js";
+import { getGameConfig } from "../../store/gameConfigStore.js";
 import {
   startGameEvent,
   getActiveGameEvent,
@@ -28,7 +28,6 @@ import {
   getCurrentGameSession,
   updateGameTierRole,
 } from "../../features/events/gameNight.js";
-import { formatQualificationResult } from "../../features/events/gameQualification.js";
 
 /**
  * Route game subcommands to their handlers

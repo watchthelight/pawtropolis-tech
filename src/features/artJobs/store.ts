@@ -14,7 +14,6 @@ import type {
   UpdateJobOptions,
   LeaderboardEntry,
   ArtistMonthlyStats,
-  JobStatus,
 } from "./types.js";
 
 // ============================================================================

@@ -16,7 +16,6 @@ import fs from "node:fs";
 import {
   DISCORD_BLURPLE,
   DISCORD_NEUTRAL_PILL,
-  intToHex,
   normalizeHex,
   readableTextOn,
   tintForPill,

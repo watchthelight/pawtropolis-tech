@@ -10,8 +10,6 @@
 import {
   SlashCommandBuilder,
   type ChatInputCommandInteraction,
-  EmbedBuilder,
-  Colors,
   MessageFlags,
   type User,
 } from "discord.js";

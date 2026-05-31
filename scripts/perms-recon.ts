@@ -333,9 +333,6 @@ async function runRecon(rest: REST, guildId: string): Promise<ReconResult> {
 
   const roleMap = new Map<string, Role>(roles.map((r) => [r.id, r]));
   const unverifiedRoleSet = [guildId];
-  const verifiedRoleSet = gateConfig?.accepted_role_id
-    ? [guildId, gateConfig.accepted_role_id]
-    : [guildId];
 
   const expectedVisibleIds = new Set<string>(
     [

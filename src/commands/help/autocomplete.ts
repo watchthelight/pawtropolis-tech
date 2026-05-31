@@ -11,7 +11,6 @@
 
 import type { AutocompleteInteraction, GuildMember } from "discord.js";
 import { filterCommandsByPermission, searchCommands } from "./cache.js";
-import { COMMAND_REGISTRY } from "./registry.js";
 import { logger } from "../../lib/logger.js";
 
 /**

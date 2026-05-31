@@ -20,7 +20,6 @@ import {
   formatDuration,
   withStep,
   withSql,
-  ensureDeferred,
   type CommandContext,
 } from "./shared.js";
 import { checkCooldown, formatCooldown, COOLDOWNS } from "../../lib/rateLimiter.js";

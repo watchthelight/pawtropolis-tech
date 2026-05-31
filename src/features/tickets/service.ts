@@ -15,7 +15,6 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   ChannelType,
-  PermissionFlagsBits,
   ThreadAutoArchiveDuration,
   EmbedBuilder,
   type Guild,

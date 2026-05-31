@@ -28,7 +28,6 @@ import { join } from "node:path";
 import { randomBytes } from "node:crypto";
 
 const DEFAULT_DAYS = 30;
-const MAX_DAYS = 365;
 const MAX_PERCENTILE_ROWS = 30000;
 const MAX_EXPORT_ROWS = 50000;
 

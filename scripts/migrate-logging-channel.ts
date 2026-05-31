@@ -7,13 +7,6 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import Database from "better-sqlite3";
-import path from "path";
-import { fileURLToPath } from "url";
-
-// The ESM tax: two lines of boilerplate just to know where we are.
-// Thanks, Node.js, for making us all miss __dirname.
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Load .env
 import dotenv from "dotenv";

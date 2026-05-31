@@ -23,7 +23,6 @@ import {
   TextChannel,
   ChannelType,
   MessageCreateOptions,
-  Message,
 } from "discord.js";
 import { type CommandContext, withStep } from "../lib/cmdWrap.js";
 import { isOwner } from "../lib/owner.js";
