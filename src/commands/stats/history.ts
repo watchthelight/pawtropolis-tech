@@ -8,6 +8,7 @@
 import {
   ChatInputCommandInteraction,
   EmbedBuilder,
+  AttachmentBuilder,
   MessageFlags,
   db,
   logger,
@@ -23,8 +24,6 @@ import { computePercentiles } from "../../lib/percentiles.js";
 import { detectModeratorAnomalies } from "../../lib/anomaly.js";
 import { generateModHistoryCsv } from "../../lib/csv.js";
 import { logActionPretty } from "../../logging/pretty.js";
-import { writeFileSync, mkdirSync } from "node:fs";
-import { join } from "node:path";
 import { randomBytes } from "node:crypto";
 
 const DEFAULT_DAYS = 30;
@@ -232,22 +231,9 @@ export async function handleHistory(
         );
 
         const csv = generateModHistoryCsv(rows);
+        const filename = `stats-history-${moderator.id}-${Date.now()}-${randomBytes(4).toString("hex")}.csv`;
 
-        const exportsDir = join(process.cwd(), "data", "exports");
-        try {
-          mkdirSync(exportsDir, { recursive: true });
-        } catch {
-          // Directory may already exist
-        }
-
-        const timestamp = Date.now();
-        const random = randomBytes(4).toString("hex");
-        const filename = `stats-history-${moderator.id}-${timestamp}-${random}.csv`;
-        const filepath = join(exportsDir, filename);
-
-        writeFileSync(filepath, csv, "utf-8");
-
-        return { filename, rowCount: rows.length };
+        return { csv, filename, rowCount: rows.length };
       });
 
       if ("error" in exportResult) {
@@ -266,12 +252,17 @@ export async function handleHistory(
         },
       });
 
-      const downloadUrl = `${process.env.PUBLIC_URL || "https://pawtropolis.tech"}/exports/${exportResult.filename}`;
-
       embed.addFields({
         name: "CSV Export",
-        value: `[Download CSV](${downloadUrl}) (${exportResult.rowCount} rows)\n*Link expires in 24 hours*`,
+        value: `Attached below (${exportResult.rowCount} rows).`,
       });
+
+      const attachment = new AttachmentBuilder(Buffer.from(exportResult.csv, "utf-8"), {
+        name: exportResult.filename,
+      });
+
+      await interaction.editReply({ embeds: [embed], files: [attachment] });
+      return;
     }
 
     await interaction.editReply({ embeds: [embed] });

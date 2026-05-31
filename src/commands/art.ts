@@ -957,6 +957,12 @@ async function handleAssign(
     );
   });
 
+  // Defer before the network audit-log post so a slow log POST can't push the first
+  // ack past Discord's ~3s window and 10062 the reply.
+  await withStep(ctx, "defer", async () => {
+    await interaction.deferReply();
+  });
+
   // Audit log the assignment
   await withStep(ctx, "audit_log", async () => {
     await logActionPretty(interaction.guild!, {
@@ -991,7 +997,7 @@ async function handleAssign(
       );
     }
 
-    await interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
   });
 }
 
@@ -1134,6 +1140,11 @@ async function handleCancel(
     return;
   }
 
+  // Defer before the network audit-log post to avoid 10062 on a slow log POST.
+  await withStep(ctx, "defer", async () => {
+    await interaction.deferReply();
+  });
+
   // Audit log the cancellation
   await withStep(ctx, "audit_log", async () => {
     await logActionPretty(interaction.guild!, {
@@ -1170,7 +1181,7 @@ async function handleCancel(
       embed.addFields({ name: "Reason", value: reason });
     }
 
-    await interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
   });
 }
 
@@ -1241,6 +1252,10 @@ async function handleReassign(
     );
   });
 
+  await withStep(ctx, "defer", async () => {
+    await interaction.deferReply();
+  });
+
   await withStep(ctx, "audit_log", async () => {
     await logActionPretty(interaction.guild!, {
       actorId: interaction.user.id,
@@ -1279,6 +1294,6 @@ async function handleReassign(
       .setColor(0xe67e22) // Orange for reassignment
       .setTimestamp();
 
-    await interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
   });
 }

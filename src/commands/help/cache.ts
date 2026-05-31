@@ -148,39 +148,34 @@ export function searchCommands(query: string): SearchResult[] {
     const cmd = getCommand(name);
     if (!cmd) continue;
 
-    // Scoring: exact name match > alias match > description match
-    let score = 0;
+    // Scoring: exact name match > alias match > description match.
+    // Score against individual terms, not the whole multi-word query: a command
+    // name never contains the full 'role config' string, which previously pinned
+    // every multi-term result to 50/description and collapsed the sort to alphabetical.
+    let score = 50;
     let matchedOn: SearchResult["matchedOn"] = "description";
 
     const lowerName = cmd.name.toLowerCase();
-    const queryLower = query.toLowerCase();
 
-    // Exact name match
-    if (lowerName === queryLower) {
-      score = 100;
-      matchedOn = "name";
-    } else if (lowerName.startsWith(queryLower)) {
-      score = 90;
-      matchedOn = "name";
-    } else if (lowerName.includes(queryLower)) {
-      score = 80;
-      matchedOn = "name";
-    } else if (cmd.aliases?.some((a) => a.toLowerCase().includes(queryLower))) {
-      score = 70;
-      matchedOn = "alias";
-    } else if (
-      cmd.subcommands?.some((sc) => sc.name.toLowerCase().includes(queryLower)) ||
-      cmd.subcommandGroups?.some(
-        (g) =>
-          g.name.toLowerCase().includes(queryLower) ||
-          g.subcommands.some((sc) => sc.name.toLowerCase().includes(queryLower))
-      )
-    ) {
-      score = 60;
-      matchedOn = "subcommand";
-    } else {
-      score = 50;
-      matchedOn = "description";
+    for (const term of terms) {
+      if (lowerName === term) {
+        if (score < 100) { score = 100; matchedOn = "name"; }
+      } else if (lowerName.startsWith(term)) {
+        if (score < 90) { score = 90; matchedOn = "name"; }
+      } else if (lowerName.includes(term)) {
+        if (score < 80) { score = 80; matchedOn = "name"; }
+      } else if (cmd.aliases?.some((a) => a.toLowerCase().includes(term))) {
+        if (score < 70) { score = 70; matchedOn = "alias"; }
+      } else if (
+        cmd.subcommands?.some((sc) => sc.name.toLowerCase().includes(term)) ||
+        cmd.subcommandGroups?.some(
+          (g) =>
+            g.name.toLowerCase().includes(term) ||
+            g.subcommands.some((sc) => sc.name.toLowerCase().includes(term))
+        )
+      ) {
+        if (score < 60) { score = 60; matchedOn = "subcommand"; }
+      }
     }
 
     results.push({ command: cmd, score, matchedOn });
@@ -203,8 +198,8 @@ export function searchCommands(query: string): SearchResult[] {
  * Cache for permission-filtered command lists.
  * Key: `${guildId}:${userId}`, Value: filtered command names
  */
-// 500 entries, 5 min TTL. If someone's roles change, call invalidatePermissionCache().
-// Otherwise they'll see stale command lists for up to 5 minutes.
+// 500 entries, 5 min TTL. Keyed on guildId:userId:roleFingerprint, so a role change
+// naturally misses the cache instead of serving a stale command list.
 const PERMISSION_CACHE = new LRUCache<string, string[]>(500, 5 * 60 * 1000); // 5 min TTL
 
 /**
@@ -262,14 +257,23 @@ export function filterCommandsByPermission(
   guildId: string,
   userId: string
 ): CommandMetadata[] {
-  // Check cache first
-  const cacheKey = `${guildId}:${userId}`;
-  const cached = PERMISSION_CACHE.get(cacheKey);
+  // Key the cache on a fingerprint of the member's role IDs so a role change
+  // (promotion/demotion) naturally misses the cache instead of serving a stale
+  // command list. A null member means the fetch failed transiently: we still
+  // compute the (public-only) list but do NOT read from or write to the cache,
+  // so a single API hiccup can't poison the shared cache for the whole TTL.
+  const roleFingerprint = member?.roles?.cache
+    ? [...member.roles.cache.keys()].sort().join(",")
+    : null;
+  const cacheKey = roleFingerprint !== null ? `${guildId}:${userId}:${roleFingerprint}` : null;
 
-  if (cached) {
-    return cached
-      .map((name) => getCommand(name))
-      .filter((cmd): cmd is CommandMetadata => cmd !== undefined);
+  if (cacheKey) {
+    const cached = PERMISSION_CACHE.get(cacheKey);
+    if (cached) {
+      return cached
+        .map((name) => getCommand(name))
+        .filter((cmd): cmd is CommandMetadata => cmd !== undefined);
+    }
   }
 
   // Filter commands by permission
@@ -277,13 +281,15 @@ export function filterCommandsByPermission(
     hasPermissionLevel(cmd.permissionLevel, member, guildId, userId)
   );
 
-  // Cache the result (just names to save memory)
+  // Cache the result (just names to save memory) only when we have a real member.
   // WHY: Storing full CommandMetadata objects would bloat memory. Names are
   // ~20 bytes each; full objects are ~500+ bytes. We re-lookup on cache hit.
-  PERMISSION_CACHE.set(
-    cacheKey,
-    filtered.map((cmd) => cmd.name)
-  );
+  if (cacheKey) {
+    PERMISSION_CACHE.set(
+      cacheKey,
+      filtered.map((cmd) => cmd.name)
+    );
+  }
 
   return filtered;
 }

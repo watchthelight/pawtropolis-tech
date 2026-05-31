@@ -43,11 +43,12 @@ const {
 
 // Mock shared module
 vi.mock("../../../src/commands/stats/shared.js", async () => {
-  const { EmbedBuilder, MessageFlags } = await vi.importActual("discord.js");
+  const { EmbedBuilder, MessageFlags, AttachmentBuilder } = await vi.importActual("discord.js");
   return {
     ChatInputCommandInteraction: {},
     EmbedBuilder,
     MessageFlags,
+    AttachmentBuilder,
     db: { prepare: mockPrepare },
     isOwner: mockIsOwner,
     hasStaffPermissions: mockHasStaffPermissions,
@@ -490,7 +491,7 @@ describe("stats/history", () => {
       mockGenerateModHistoryCsv.mockReturnValue("id,action,actor_id\n1,approve,mod-123\n2,reject,mod-123");
     });
 
-    it("creates exports directory", async () => {
+    it("does not write the CSV to disk (#00106/#00107)", async () => {
       const interaction = createMockInteraction({
         options: { getUser: { moderator: mockModeratorUser }, getBoolean: { export: true } },
       });
@@ -498,34 +499,41 @@ describe("stats/history", () => {
 
       await handleHistory(ctx);
 
-      expect(mockMkdirSync).toHaveBeenCalledWith(expect.stringContaining("exports"), { recursive: true });
+      // CSV is now attached to the reply, never persisted to data/exports.
+      expect(mockMkdirSync).not.toHaveBeenCalled();
+      expect(mockWriteFileSync).not.toHaveBeenCalled();
     });
 
-    it("writes CSV file", async () => {
+    it("attaches the CSV as a file on the reply", async () => {
       const interaction = createMockInteraction({
+        guild: createMockGuild(),
         options: { getUser: { moderator: mockModeratorUser }, getBoolean: { export: true } },
-      });
+      } as any);
       const ctx = createTestCommandContext(interaction);
 
       await handleHistory(ctx);
 
-      expect(mockWriteFileSync).toHaveBeenCalled();
+      const calls = (interaction.editReply as any).mock.calls.map((c: any[]) => c[0]);
+      const withFiles = calls.find((c: any) => Array.isArray(c?.files) && c.files.length > 0);
+      expect(withFiles).toBeTruthy();
     });
 
-    it("adds download link to embed", async () => {
+    it("notes the attachment in the embed (no dead download link)", async () => {
       const interaction = createMockInteraction({
+        guild: createMockGuild(),
         options: { getUser: { moderator: mockModeratorUser }, getBoolean: { export: true } },
-      });
+      } as any);
       const ctx = createTestCommandContext(interaction);
 
       await handleHistory(ctx);
 
-      const call = (interaction.editReply as any).mock.calls[0][0];
-      const fields = call.embeds[0].data.fields;
+      const calls = (interaction.editReply as any).mock.calls.map((c: any[]) => c[0]);
+      const exportCall = calls.find((c: any) => Array.isArray(c?.files) && c.files.length > 0) ?? calls[calls.length - 1];
+      const fields = exportCall.embeds[0].data.fields;
       expect(fields).toContainEqual(
         expect.objectContaining({
           name: "CSV Export",
-          value: expect.stringContaining("Download CSV"),
+          value: expect.stringContaining("Attached below"),
         })
       );
     });

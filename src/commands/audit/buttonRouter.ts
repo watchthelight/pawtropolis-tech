@@ -20,6 +20,11 @@ import { getActiveSession, cancelSession } from "../../store/auditSessionStore.j
 import { runMembersAudit } from "./members.js";
 import { runNsfwAudit } from "./nsfw.js";
 
+// Guards against two staff (or a double-click) launching concurrent runners for the
+// same guild+audit type. Resume skips the cooldown, so without this two runners can
+// race the same session: double-flagging members and doubling paid Vision calls.
+const activeAuditRunners = new Set<string>();
+
 /**
  * Handle audit button interactions (Confirm/Cancel/Resume/Fresh)
  *
@@ -144,6 +149,18 @@ export async function handleAuditButton(interaction: ButtonInteraction): Promise
     }
   }
 
+  // Concurrency guard: refuse a second runner for this guild+audit type. The fire-and-
+  // forget runners below release the key when they settle.
+  const runnerKey = `${guild.id}:${subcommand}`;
+  if (activeAuditRunners.has(runnerKey)) {
+    await interaction.reply({
+      content: "An audit of this type is already running for this server. Please wait for it to finish.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+  activeAuditRunners.add(runnerKey);
+
   // Handle "fresh" - cancel old session and start new
   if (action === "fresh" && sessionId) {
     cancelSession(sessionId);
@@ -201,6 +218,8 @@ export async function handleAuditButton(interaction: ButtonInteraction): Promise
       } catch (notifyErr) {
         logger.debug({ err: notifyErr }, "[audit:nsfw] Failed to notify user of audit failure");
       }
+    }).finally(() => {
+      activeAuditRunners.delete(runnerKey);
     });
   } else {
     runMembersAudit(interaction, guild, channel as TextChannel, resumeSession).catch(async (err) => {
@@ -220,6 +239,8 @@ export async function handleAuditButton(interaction: ButtonInteraction): Promise
       } catch (notifyErr) {
         logger.debug({ err: notifyErr }, "[audit:members] Failed to notify user of audit failure");
       }
+    }).finally(() => {
+      activeAuditRunners.delete(runnerKey);
     });
   }
 }

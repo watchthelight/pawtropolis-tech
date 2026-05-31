@@ -19,7 +19,7 @@ import { spawn } from 'child_process';
 import { type CommandContext, withStep } from '../lib/cmdWrap.js';
 import { requireMinRole, ROLE_IDS, getConfig } from '../lib/config.js';
 import { logger } from '../lib/logger.js';
-import { checkCooldown, formatCooldown, COOLDOWNS } from '../lib/rateLimiter.js';
+import { checkCooldown, clearCooldown, formatCooldown, COOLDOWNS } from '../lib/rateLimiter.js';
 
 export const data = new SlashCommandBuilder()
   .setName('backfill')
@@ -81,16 +81,6 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   });
   if (!hasPermission) return;
 
-  // Rate limit: 30 minutes per guild to prevent resource exhaustion
-  const cooldownResult = checkCooldown("backfill", guildId, COOLDOWNS.BACKFILL_MS);
-  if (!cooldownResult.allowed) {
-    await interaction.reply({
-      content: `Backfill on cooldown. Try again in ${formatCooldown(cooldownResult.remainingMs!)}.`,
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
-
   const weeks = interaction.options.getInteger('weeks', false) || 8;
   const dryRun = interaction.options.getBoolean('dry-run', false) || false;
 
@@ -109,6 +99,17 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   if (oldestDate > currentDate) {
     await interaction.reply({
       content: '❌ Invalid date range: calculated start date is in the future.',
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  // Rate limit: 30 minutes per guild. Checked AFTER validation so a rejected input
+  // does not burn the cooldown; released in the spawn 'error' handler below.
+  const cooldownResult = checkCooldown("backfill", guildId, COOLDOWNS.BACKFILL_MS);
+  if (!cooldownResult.allowed) {
+    await interaction.reply({
+      content: `Backfill on cooldown. Try again in ${formatCooldown(cooldownResult.remainingMs!)}.`,
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -227,6 +228,8 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   });
 
   backfillProcess.on('error', (err) => {
+    // Spawn failed, so release the cooldown to let staff retry immediately.
+    clearCooldown('backfill', guildId);
     logger.error({ err, guildId }, '[backfill] Failed to spawn backfill process');
   });
 }

@@ -26,6 +26,7 @@ import {
   addMember,
   isMemberBuffered,
   flushSession,
+  getSessionStatus,
   WELCOME_BATCH_MAX_USERS,
   WELCOME_BATCH_EXPIRY_MS,
 } from "../features/welcomeBatch.js";
@@ -116,6 +117,20 @@ export async function handleWelcomeBatchContextMenu(
   // Toggle semantics: if the target is already buffered, treat the right-click as
   // "send and close the batch". Otherwise add (auto-start if no session yet).
   if (isMemberBuffered(guild.id, target.id)) {
+    // Only the gatekeeper who opened the session may send/close it. addMember already
+    // blocks cross-opener adds; without this, another gatekeeper could prematurely
+    // flush an in-progress batch by right-clicking a queued user.
+    const sessionOwner = getSessionStatus(guild.id).openedBy;
+    if (
+      sessionOwner &&
+      sessionOwner !== interaction.user.id &&
+      !shouldBypass(interaction.user.id, member)
+    ) {
+      await interaction.editReply({
+        content: `This batch session is owned by <@${sessionOwner}>. Ask them to send or cancel it.`,
+      });
+      return;
+    }
     const cfg = getConfig(guild.id);
     if (!cfg) {
       await interaction.editReply({ content: "Guild not configured." });
