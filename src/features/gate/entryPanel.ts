@@ -598,9 +598,13 @@ export async function ensureGateEntry(
       await message.pin();
     }
     const pinnedResponse = await channel.messages.fetchPins();
-    // discord.js v14.16+ fetchPins() returns { items: Collection, hasMore: boolean }, not a bare Collection.
-    const pinnedItems = (pinnedResponse as unknown as { items?: { has: (id: string) => boolean } }).items;
-    const pinnedMatch = pinnedItems ? pinnedItems.has(message.id) : false;
+    // discord.js v14.26 fetchPins() returns { hasMore, items: readonly MessagePin[] } -
+    // `items` is a plain Array (no .has()). Match the array shape used by
+    // findExistingGateEntry elsewhere in this file.
+    const pinnedItems = (pinnedResponse as unknown as { items?: ReadonlyArray<{ message?: { id: string } }> }).items;
+    const pinnedMatch = Array.isArray(pinnedItems)
+      ? pinnedItems.some((it) => it?.message?.id === message.id)
+      : false;
     result.pinned = pinnedMatch;
     if (!pinnedMatch) {
       result.reason = "pin verification failed";
