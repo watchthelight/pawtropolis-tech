@@ -4,8 +4,6 @@ import { getAuditLog, getActionTypes, type AuditFilters } from "$lib/server/quer
 import { cached, cacheKey, CACHE_TTL, CACHE_HEADERS } from "$lib/server/cache";
 import type { PageServerLoad } from "./$types";
 
-const QUERY_TIMEOUT_MS = 8000;
-
 export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
   setHeaders({ "cache-control": CACHE_HEADERS.default });
   if (!locals.user || !hasMinTier(locals.user.tier, "admin")) {
@@ -46,30 +44,20 @@ export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
     cursor ?? "",
   ]);
 
-  try {
-    const result = await Promise.race([
-      cached(key, CACHE_TTL.medium, () => ({
-        ...getAuditLog(guildId, filters),
-        actionTypes: getActionTypes(guildId),
-      })),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("audit-query-timeout")), QUERY_TIMEOUT_MS)
-      ),
-    ]);
-    return {
-      ...result,
-      filters: {
-        action: action ?? "",
-        search: search ?? "",
-        from: fromParam ?? "",
-        to: toParam ?? "",
-      },
-    };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    if (msg === "audit-query-timeout") {
-      error(504, "Audit query took too long. Narrow the date range or remove the search term.");
-    }
-    throw err;
-  }
+  // Work is bounded at the SQL layer (mandatory date window, keyset LIMIT,
+  // FTS-indexed search, capped user_cache lookup). better-sqlite3 is synchronous,
+  // so a Promise.race timeout could never interrupt it — don't pretend it guards.
+  const result = await cached(key, CACHE_TTL.medium, () => ({
+    ...getAuditLog(guildId, filters),
+    actionTypes: getActionTypes(guildId),
+  }));
+  return {
+    ...result,
+    filters: {
+      action: action ?? "",
+      search: search ?? "",
+      from: fromParam ?? "",
+      to: toParam ?? "",
+    },
+  };
 };

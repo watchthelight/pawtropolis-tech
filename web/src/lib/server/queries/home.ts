@@ -71,7 +71,7 @@ export function getHomeMetrics(
   );
   const decisionsToday = count(
     `SELECT COUNT(*) as count FROM review_action
-		 WHERE moderator_id = ? AND action IN ('approve', 'reject', 'kick') AND created_at >= ?`,
+		 WHERE moderator_id = ? AND action IN ('approve', 'reject', 'perm_reject', 'kick') AND created_at >= ?`,
     userId,
     getTodayMidnightUnix()
   );
@@ -85,7 +85,7 @@ export function getHomeMetrics(
 			AVG(ra.created_at - rc.claimed_at) AS avg_secs
 		FROM review_action ra
 		LEFT JOIN review_claim rc ON rc.app_id = ra.app_id AND rc.reviewer_id = ra.moderator_id
-		WHERE ra.moderator_id = ? AND ra.action IN ('approve', 'reject', 'kick')
+		WHERE ra.moderator_id = ? AND ra.action IN ('approve', 'reject', 'perm_reject', 'kick')
 			AND ra.created_at >= ?`
     )
     .get(userId, weekStartS) as { decisions: number; avg_secs: number | null };

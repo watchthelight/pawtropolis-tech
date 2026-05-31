@@ -136,22 +136,9 @@ describe("dashboard/audit load()", () => {
     expect(out.filters).toMatchObject({ action: "kick", search: "hi" });
   });
 
-  it("504 when query exceeds 8s timeout", async () => {
-    // cached() wrapper resolves slowly; race loses to the 8s timeout.
-    cached.mockImplementationOnce(
-      () => new Promise(() => undefined), // never resolves
-    );
-    vi.useFakeTimers();
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const p = load(evt() as any);
-      const settled = expect(p).rejects.toMatchObject({ status: 504 });
-      await vi.advanceTimersByTimeAsync(8001);
-      await settled;
-    } finally {
-      vi.useRealTimers();
-    }
-  });
+  // Note: the artificial 8s Promise.race/504 timeout was removed (#00150) - it
+  // could never interrupt synchronous better-sqlite3 work and was dead code. The
+  // query is bounded at the SQL layer instead. Errors still propagate (below).
 
   it("non-timeout errors propagate unchanged", async () => {
     cached.mockImplementationOnce(() => {

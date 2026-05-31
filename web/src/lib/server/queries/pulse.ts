@@ -1176,7 +1176,7 @@ function detectModmailResponseTime(guildId: string, ctx: InsightCtx): Insight | 
 			SELECT MIN(strftime('%s', mm.created_at) - strftime('%s', mt.created_at)) as reply_delay
 			FROM modmail_ticket mt
 			JOIN modmail_message mm ON mm.ticket_id = mt.id AND mm.direction = 'to_user'
-			WHERE mt.guild_id = ? AND strftime('%s', mt.created_at) >= ? AND strftime('%s', mt.created_at) < ?
+			WHERE mt.guild_id = ? AND mt.created_at >= datetime(?, 'unixepoch') AND mt.created_at < datetime(?, 'unixepoch')
 			GROUP BY mt.id
 		)`;
 
@@ -1211,18 +1211,19 @@ function detectModmailResponseTime(guildId: string, ctx: InsightCtx): Insight | 
 function detectNsfwFlagSurge(guildId: string, ctx: InsightCtx): Insight | null {
   const { nowS, startS: weekStart, prevStartS: prevStart, winLabel } = ctx;
 
-  // nsfw_flags.flagged_at is ISO text — use strftime to compare
+  // nsfw_flags.flagged_at is ISO text (datetime('now') format). Compare against
+  // ISO bounds so the predicate stays sargable instead of running strftime per row.
   const thisWeek = count(
-    "SELECT COUNT(*) as count FROM nsfw_flags WHERE guild_id = ? AND strftime('%s', flagged_at) >= ? AND strftime('%s', flagged_at) < ?",
+    "SELECT COUNT(*) as count FROM nsfw_flags WHERE guild_id = ? AND flagged_at >= datetime(?, 'unixepoch') AND flagged_at < datetime(?, 'unixepoch')",
     guildId,
-    String(weekStart),
-    String(nowS)
+    weekStart,
+    nowS
   );
   const prevWeek = count(
-    "SELECT COUNT(*) as count FROM nsfw_flags WHERE guild_id = ? AND strftime('%s', flagged_at) >= ? AND strftime('%s', flagged_at) < ?",
+    "SELECT COUNT(*) as count FROM nsfw_flags WHERE guild_id = ? AND flagged_at >= datetime(?, 'unixepoch') AND flagged_at < datetime(?, 'unixepoch')",
     guildId,
-    String(prevStart),
-    String(weekStart)
+    prevStart,
+    weekStart
   );
 
   if (prevWeek === 0 || thisWeek < prevWeek * 2) return null;

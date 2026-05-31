@@ -179,7 +179,9 @@ export function getHeatmapDataForRange(guildId: string, range: ResolvedRange): H
   const weeksData: HeatmapWeekData[] = [];
   for (let offset = 0; offset < weeksCount; offset++) {
     const weekEndS = endS - offset * 7 * 86400;
-    const weekStartS = weekEndS - 7 * 86400;
+    // Clamp the oldest window so it never reaches before the requested range
+    // when the span is not an exact multiple of 7 days.
+    const weekStartS = Math.max(weekEndS - 7 * 86400, startS);
     weeksData.push(buildWeek(guildId, weekStartS, weekEndS));
   }
 

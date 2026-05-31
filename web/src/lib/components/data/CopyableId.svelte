@@ -7,8 +7,13 @@
 	let copied = $state(false);
 	let timer: ReturnType<typeof setTimeout> | undefined;
 
-	function copy() {
-		navigator.clipboard.writeText(value);
+	async function copy() {
+		try {
+			if (!navigator.clipboard) return;
+			await navigator.clipboard.writeText(value);
+		} catch {
+			return;
+		}
 		copied = true;
 		if (timer) clearTimeout(timer);
 		timer = setTimeout(() => { copied = false; }, 1500);

@@ -24,9 +24,10 @@
 
 	const UP_EMOJI = '<:Iup_Vote:1363727092898074664>';
 	const DOWN_EMOJI = '<:Idown_Vote:1363727105967525928>';
+	const NEUTRAL_EMOJI = '➖';
 
 	function numDelta(cur: number, prev: number): Delta {
-		if (prev === 0 && cur === 0) return { pctChange: '0.0', absChange: '0', direction: 'flat', emoji: UP_EMOJI };
+		if (prev === 0 && cur === 0) return { pctChange: '0.0', absChange: '0', direction: 'flat', emoji: NEUTRAL_EMOJI };
 		if (prev === 0) return { pctChange: '+\u221e', absChange: `+${cur.toLocaleString()}`, direction: 'up', emoji: UP_EMOJI };
 		const pct = ((cur - prev) / prev) * 100;
 		const abs = cur - prev;
@@ -34,21 +35,21 @@
 			pctChange: `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}`,
 			absChange: `${abs >= 0 ? '+' : ''}${abs.toLocaleString()}`,
 			direction: abs > 0 ? 'up' : abs < 0 ? 'down' : 'flat',
-			emoji: abs >= 0 ? UP_EMOJI : DOWN_EMOJI
+			emoji: abs > 0 ? UP_EMOJI : abs < 0 ? DOWN_EMOJI : NEUTRAL_EMOJI
 		};
 	}
 
 	function pctDelta(cur: number, prev: number): Delta {
 		// For retention (already a percentage): absolute change is pp, relative change is %
 		const ppDiff = cur - prev;
-		if (prev === 0 && cur === 0) return { pctChange: '0.0', absChange: '0.0%', direction: 'flat', emoji: UP_EMOJI };
+		if (prev === 0 && cur === 0) return { pctChange: '0.0', absChange: '0.0%', direction: 'flat', emoji: NEUTRAL_EMOJI };
 		if (prev === 0) return { pctChange: '+\u221e', absChange: `+${cur.toFixed(1)}%`, direction: 'up', emoji: UP_EMOJI };
 		const relChange = ((cur - prev) / prev) * 100;
 		return {
 			pctChange: `${relChange >= 0 ? '+' : ''}${relChange.toFixed(1)}`,
 			absChange: `${ppDiff >= 0 ? '+' : ''}${ppDiff.toFixed(1)}%`,
 			direction: ppDiff > 0 ? 'up' : ppDiff < 0 ? 'down' : 'flat',
-			emoji: ppDiff >= 0 ? UP_EMOJI : DOWN_EMOJI
+			emoji: ppDiff > 0 ? UP_EMOJI : ppDiff < 0 ? DOWN_EMOJI : NEUTRAL_EMOJI
 		};
 	}
 

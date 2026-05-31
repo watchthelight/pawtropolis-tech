@@ -38,11 +38,18 @@ export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
     metrics: getPulseMetrics(guildId, range),
     newsletterStats: getNewsletterStats(guildId, range),
     insights: getInsights(guildId, range),
-    guildSnapshot: getGuildSnapshot(guildId),
     topVoiceChannels: getTopVoiceChannels(guildId, range),
     channelRanking: getChannelActivityRanking(guildId, range),
     engagement: getEngagementWindow(guildId, range),
   }));
+
+  // Live presence is window-independent — cache it on a short TTL keyed only by
+  // guild so it reflects near-real-time state regardless of the selected window.
+  const guildSnapshot = await cached(
+    cacheKey(["pulse:snapshot", guildId]),
+    CACHE_TTL.short,
+    () => getGuildSnapshot(guildId)
+  );
 
   const levelRoleStats = await getLevelRoleStats(locals.user.id, locals.user.tier).catch(
     () => null
@@ -50,6 +57,7 @@ export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
 
   return {
     ...guildData,
+    guildSnapshot,
     levelRoleStats,
     spec,
     windowLabel: formatWindowLabel(spec),
