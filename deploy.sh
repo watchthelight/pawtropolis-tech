@@ -431,8 +431,16 @@ else
 fi
 
 # Step 6.5: Run migrations on remote
+# A migration failure MUST abort the deploy: restarting new code against an
+# un-migrated (or half-migrated) schema produces a green-looking deploy and a
+# bot that throws at runtime on missing columns/tables. Do not swallow the exit
+# code (the old `|| echo` always returned 0, defeating set -e). The lock trap
+# still releases the lock on this abort.
 echo "Step 6.5/9: Running migrations on remote..."
-ssh_remote "cd ${REMOTE_PATH} && node scripts/migrate-remote.js" || echo "Migration step completed (may have warnings)"
+if ! ssh_remote "cd ${REMOTE_PATH} && node scripts/migrate-remote.js"; then
+  echo "ERROR: remote migration failed. Aborting deploy; code NOT restarted." >&2
+  exit 1
+fi
 
 # Step 6.6: Register slash commands with Discord
 # ─────────────────────────────────────────────────────────────────────────────
