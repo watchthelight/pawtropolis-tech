@@ -22,6 +22,7 @@ import { logActionPretty } from "../logging/pretty.js";
 import {
   upsertActiveMultiplier,
   getActiveMultiplier,
+  removeUserMultiplier,
   checkWouldReplace,
   type TokenRarity,
 } from "../store/byteMultiplierStore.js";
@@ -310,13 +311,14 @@ async function handleConfirm(
   const expiresAt = nowSeconds + tokenConfig.durationHours * 60 * 60;
 
   try {
-    // Step 1: Remove token role
-    await guildMember.roles.remove(
-      tokenConfig.tokenRoleId,
-      `Byte token redeemed for ${tokenConfig.multiplierRoleName}`
-    );
+    // ORDER MATTERS: grant-then-consume. The token role IS the entitlement
+    // (usebyte.ts reads role presence as the wallet; there is no balance ledger),
+    // so we must grant + persist the multiplier BEFORE removing the token. If any
+    // step throws, the user is left still holding the token (recoverable) instead
+    // of losing it for nothing. The token is removed LAST, with a compensating
+    // rollback if even that fails (see below).
 
-    // Step 2: Remove ALL existing multiplier roles to prevent stacking
+    // Step 1: Remove ALL existing multiplier roles to prevent stacking
     // This removes any multiplier roles the user has, whether from DB or manual grants
     const rolesToRemove = ALL_MULTIPLIER_ROLE_IDS.filter(
       (roleId) =>
@@ -344,13 +346,13 @@ async function handleConfirm(
       }
     }
 
-    // Step 3: Add multiplier role
+    // Step 2: Add multiplier role
     await guildMember.roles.add(
       tokenConfig.multiplierRoleId,
       `${tokenConfig.tokenRoleName} redeemed - expires in ${tokenConfig.durationHours}h`
     );
 
-    // Step 3.5: Post-add cleanup for race conditions
+    // Step 2.5: Post-add cleanup for race conditions
     // If user clicked multiple confirm buttons rapidly, another request might have added
     // a different multiplier role between our "remove" check and "add". Clean up now.
     // Refetch member to see current roles
@@ -381,7 +383,8 @@ async function handleConfirm(
       }
     }
 
-    // Step 4: Track in database
+    // Step 3: Track in database (authoritative claim, persisted before the
+    // irreversible token consumption so the scheduler can later expire the role)
     upsertActiveMultiplier({
       guildId: guild.id,
       userId: interaction.user.id,
@@ -392,6 +395,36 @@ async function handleConfirm(
       tokenRarity: tokenConfig.rarity,
       redeemedBy: interaction.user.id,
     });
+
+    // Step 4: Consume the token LAST. The grant is now applied and tracked, so
+    // this is the only remaining destructive step. If it fails we compensate by
+    // rolling the grant back (remove the multiplier role + delete the DB row),
+    // leaving the user exactly as they started: holding their token, no boost.
+    // This prevents the failure window from either destroying the token (old bug)
+    // or handing out a free, double-redeemable boost.
+    try {
+      await guildMember.roles.remove(
+        tokenConfig.tokenRoleId,
+        `Byte token redeemed for ${tokenConfig.multiplierRoleName}`
+      );
+    } catch (removeErr) {
+      logger.error(
+        { err: removeErr, guildId: guild.id, userId: interaction.user.id },
+        "[byteToken] Token removal failed after grant; rolling back multiplier"
+      );
+      await guildMember.roles
+        .remove(tokenConfig.multiplierRoleId, "Rollback: token consumption failed")
+        .catch((rbErr) => {
+          logger.error(
+            { err: rbErr, guildId: guild.id, userId: interaction.user.id },
+            "[byteToken] Rollback of multiplier role also failed"
+          );
+        });
+      removeUserMultiplier(guild.id, interaction.user.id);
+      // Re-throw so the outer catch surfaces a generic failure. The user still
+      // holds their token and can retry.
+      throw removeErr;
+    }
 
     // Step 5: Log to audit trail
     await logActionPretty(guild, {
