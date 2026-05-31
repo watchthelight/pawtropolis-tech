@@ -6,6 +6,7 @@ Reverse chronological by completion date.
 
 ## 2026-05-31
 
+- [x] [Verify production migration state and advance past 045](done/00046.md) `High` Verified over SSH: prod was at head 077 (not stuck at 045); full deploy applied the remaining migration 078. Prod now fully migrated to head 078, bot + web healthy.
 - [x] [Changelog web page and full changelog refresh](done/00059.md) `Medium` Brought CHANGELOG.md fully current (everything since 6.0.0) and added a themed `/changelog` page that inlines + renders it; `/CHANGELOG.md` now 308-redirects there instead of 404ing.
 - [x] [Rate limit the error-card Ping developer button](done/00058.md) `High` Per-trace 10 min cooldown on the dev-ping button; repeat clicks reply ephemerally instead of spamming a public ping. Fixes observed 10x ping spam on one trace.
 - [x] [Fix web svelte-check type errors](done/00057.md) `Medium` Cleared all 15 web check errors (was a runtime regression: reset-to-Discord button + restored its backing state; plus session null-narrowing, art thumbnailUrl, two async GSAP callbacks). Web check 0 errors, build green.
