@@ -6,6 +6,7 @@ Reverse chronological by completion date.
 
 ## 2026-05-31
 
+- [x] [Fix web svelte-check type errors](done/00057.md) `Medium` Cleared all 15 web check errors (was a runtime regression: reset-to-Discord button + restored its backing state; plus session null-narrowing, art thumbnailUrl, two async GSAP callbacks). Web check 0 errors, build green.
 - [x] [Patch web moderate npm audit vulnerabilities](done/00056.md) `Medium` npm --prefix web audit fix bumped postcss (XSS) + brace-expansion (DoS) transitives. Web check baseline unchanged, build green. 5 low cookie-chain vulns left (no non-destructive fix; awaiting SvelteKit bump). Root audit 0.
 - [x] [Upgrade Vitest to 4.x (major)](done/00032.md) `Medium` vitest+coverage-v8+ui 3.2.4 -> 4.1.7. Fixed 44 failures across 9 files (arrow-constructor mocks, v4 mock-impl reset between tests, stale vi.mock path to a removed module, two tests that were green for the wrong reason). No src/ changes, no weakened assertions. typecheck 0, 5455 tests, build, coverage all green.
 - [x] [Enable tsconfig noUncheckedIndexedAccess and unused checks](done/00024.md) `Medium` TypeScript strict mode completed. Cleared 354 noUncheckedIndexedAccess errors across 5 layers (src/lib, src/web, src/features, src/commands, scripts) then flipped the flag; enabled noUnusedLocals + noUnusedParameters and pruned 114 unused symbols (8-agent sweep). Two real bug-guards landed (gate/dmVerification zero-questions crash earlier; isitreal unknown-service). typecheck 0, 5455 tests, build green.
