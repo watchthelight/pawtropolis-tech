@@ -158,12 +158,18 @@ export function updateTicketThread(ticketId: number, threadId: string) {
  * WHAT: Mark a ticket as closed.
  * WHY: End the modmail conversation and record close time.
  */
-export function closeTicket(ticketId: number) {
-  // No-op if the ticket doesn't exist. We don't throw because racing
-  // close requests happen more often than you'd think (button mashing).
-  db.prepare(
-    `UPDATE modmail_ticket SET status = 'closed', closed_at = datetime('now') WHERE id = ?`
-  ).run(ticketId);
+export function closeTicket(ticketId: number): number {
+  // Atomic claim: flip 'open' -> 'closed' only when the ticket is still open.
+  // Returns the number of rows changed so callers can detect a lost race (another
+  // path already closed it) and skip duplicate side effects (transcript flush,
+  // DM, archive, action log). We don't throw on a miss because racing close
+  // requests happen more often than you'd think (button mashing).
+  const result = db
+    .prepare(
+      `UPDATE modmail_ticket SET status = 'closed', closed_at = datetime('now') WHERE id = ? AND status = 'open'`
+    )
+    .run(ticketId);
+  return result.changes;
 }
 
 /**

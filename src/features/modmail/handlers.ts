@@ -185,9 +185,11 @@ export async function handleModmailCloseButton(interaction: ButtonInteraction) {
 export async function handleModmailContextMenu(
   interaction: MessageContextMenuCommandInteraction
 ) {
-  // Context menus don't support deferUpdate, so we use deferReply.
-  // This WILL show the "Bot is thinking..." message for a moment.
-  await interaction.deferReply();
+  // Context menus don't support deferUpdate, so we use deferReply. Keep it
+  // ephemeral so the "Bot is thinking..." bubble and any setup/permission failure
+  // stay private to the acting staffer (matching the button path); the public
+  // "thread created" confirmation is posted separately via channel.send.
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const targetMessage = interaction.targetMessage;
   // WHY author.id and not looking up by app code first: Staff might right-click
@@ -234,7 +236,23 @@ export async function handleModmailContextMenu(
     reviewMessageId: targetMessage.id,
   });
 
-  // No fancy success/failure branching here like the button handler.
-  // Context menu always gets a visible reply, so we just dump the result.
-  await interaction.editReply({ content: result.message ?? "Unknown error." });
+  // Mirror the button path: on success post a public confirmation in-channel and
+  // keep the staffer's ephemeral reply private; on failure keep the message
+  // ephemeral so it is not broadcast.
+  if (result.success) {
+    if (interaction.channel && "send" in interaction.channel) {
+      try {
+        await interaction.channel.send({
+          content: result.message ?? "Modmail thread created.",
+          allowedMentions: SAFE_ALLOWED_MENTIONS,
+        });
+      } catch (err) {
+        logger.warn({ err, userId }, "[modmail] failed to post public thread creation message");
+      }
+    }
+    await interaction.editReply({ content: result.message ?? "Modmail thread created." });
+  } else {
+    const msg = result.message || "Failed to create modmail thread. Check bot permissions.";
+    await interaction.editReply({ content: `Warning: ${msg}` });
+  }
 }

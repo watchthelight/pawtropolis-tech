@@ -118,6 +118,9 @@ export async function flushTranscript(params: {
 
   if (!config?.modmail_log_channel_id) {
     logger.info({ ticketId, guildId }, "[modmail] transcript skipped (no log channel configured)");
+    // Clear the in-memory buffer even with no log channel, otherwise it leaks in
+    // transcriptBuffers forever on every close in such guilds.
+    transcriptBuffers.delete(ticketId);
     return { messageId: null, lineCount: 0 };
   }
 
@@ -279,6 +282,9 @@ export async function flushTranscript(params: {
       channelId: config.modmail_log_channel_id,
     });
 
+    // Clear the buffer on the failure path too: the data is recoverable from
+    // modmail_message and keeping it would leak the entry forever.
+    transcriptBuffers.delete(ticketId);
     return { messageId: null, lineCount: lines?.length ?? 0 };
   }
 }

@@ -17,7 +17,7 @@ import { logger } from "../../lib/logger.js";
 import { parseSqliteUtc } from "../../lib/sqliteTime.js";
 import { captureException } from "../../lib/sentry.js";
 import type { ModmailTicket } from "./types.js";
-import { getTicketByThread, reopenTicket } from "./tickets.js";
+import { getTicketByThread, getOpenTicketByUser, reopenTicket } from "./tickets.js";
 import { addOpenThread } from "./threadState.js";
 import { openPublicModmailThreadFor } from "./threadOpen.js";
 
@@ -110,6 +110,23 @@ export async function reopenModmailThread(params: {
         appCode: ticket.app_code ?? undefined,
         reviewMessageId: ticket.review_message_id ?? undefined,
       });
+    }
+
+    // Guard the partial unique index idx_modmail_open_unique (one open ticket per
+    // guild+user). The user-based lookup grabs the most recent CLOSED ticket, but a
+    // NEWER open ticket may already exist for this user; flipping the old one back
+    // to 'open' would violate the index and throw SQLITE_CONSTRAINT. Detect that
+    // here and surface a clear message instead of an opaque failure.
+    if (interaction.guildId) {
+      const existingOpen = getOpenTicketByUser(interaction.guildId, ticket.user_id);
+      if (existingOpen && existingOpen.id !== ticket.id) {
+        return {
+          success: false,
+          message: existingOpen.thread_id
+            ? `This user already has an open modmail thread: <#${existingOpen.thread_id}>`
+            : "This user already has an open modmail thread.",
+        };
+      }
     }
 
     // Reopen in DB and restore guard table in single transaction

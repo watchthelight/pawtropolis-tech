@@ -436,8 +436,10 @@ describe("features/modmail/handlers", () => {
 
       await handleModmailContextMenu(interaction);
 
+      // Failure path now mirrors the button handler: a private ephemeral warning
+      // with the permission-oriented fallback when no specific message is given.
       expect(interaction.editReply).toHaveBeenCalledWith({
-        content: "Unknown error.",
+        content: "Warning: Failed to create modmail thread. Check bot permissions.",
       });
     });
 

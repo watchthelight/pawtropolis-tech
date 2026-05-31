@@ -366,9 +366,9 @@ export async function openPublicModmailThreadFor(params: {
       ? `<t:${Math.floor(user.createdTimestamp / 1000)}:R>`
       : "unknown";
 
-    const lensUrl = avatarUrl
-      ? `https://lens.google.com/uploadbyurl?url=${encodeURIComponent(avatarUrl)}`
-      : null;
+    // displayAvatarURL always returns a non-empty CDN URL, so build the lens link
+    // unconditionally.
+    const lensUrl = `https://lens.google.com/uploadbyurl?url=${encodeURIComponent(avatarUrl)}`;
 
     const embed = new EmbedBuilder()
       .setTitle(`Modmail Thread`)

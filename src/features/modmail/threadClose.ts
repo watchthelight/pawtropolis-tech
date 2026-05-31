@@ -228,9 +228,12 @@ export async function closeModmailThread(params: {
   }
 
   try {
-    // Close in DB and clean up guard table in single transaction
-    db.transaction(() => {
-      closeTicket(ticket.id);
+    // Close in DB and clean up guard table in single transaction. closeTicket is
+    // the atomic gate: it flips 'open' -> 'closed' only when still open. If a
+    // concurrent close already won, changes === 0; bail out before flushing the
+    // transcript, DMing the user, or archiving so none of that happens twice.
+    const claimed = db.transaction(() => {
+      if (closeTicket(ticket.id) === 0) return false;
 
       // Clean up from open_modmail guard table
       if (interaction.guildId && ticket.user_id) {
@@ -246,7 +249,13 @@ export async function closeModmailThread(params: {
           "[modmail] removed from open_modmail guard table"
         );
       }
+      return true;
     })();
+
+    if (!claimed) {
+      logger.debug({ ticketId: ticket.id }, "[modmail] close lost race (already closed)");
+      return { success: false, message: "This ticket is already closed." };
+    }
 
     // Remove from open threads set
     if (ticket.thread_id) {
@@ -457,14 +466,26 @@ export async function closeModmailForApplication(
   logger.info({ guildId, userId, appCode, reason }, "[modmail] close:start auto-close on decision");
 
   // Guard: if already closed or doesn't exist, nothing to do
+  // getOpenTicketByUser only returns open tickets, so a closed/missing ticket
+  // surfaces as null here; that null check is the real guard.
   const ticket = getOpenTicketByUser(guildId, userId);
-  if (!ticket || ticket.status !== "open") {
+  if (!ticket) {
     logger.debug({ guildId, userId }, "[modmail] close:start no open ticket (idempotent)");
     return;
   }
 
   const ticketId = ticket.id;
   const threadId = ticket.thread_id;
+
+  // Atomically claim the close before any side effects. closeTicket flips
+  // 'open' -> 'closed' only when still open; if a concurrent close (the Close
+  // button, the dashboard, or another decision) already won, changes === 0 and
+  // we bail so the transcript is not flushed twice, no duplicate DM is sent, and
+  // the thread is not archived/deleted again.
+  if (closeTicket(ticketId) === 0) {
+    logger.debug({ guildId, userId, ticketId }, "[modmail] close:start lost race (already closed)");
+    return;
+  }
 
   try {
     const reasonText =
