@@ -420,7 +420,8 @@ describe("artistRotation/handlers", () => {
 
         const mockMember = {
           roles: {
-            cache: { has: vi.fn().mockReturnValue(false) },
+            cache: { has: vi.fn().mockReturnValue(true) },
+            remove: vi.fn().mockResolvedValue(undefined),
           },
         };
 
@@ -524,7 +525,8 @@ describe("artistRotation/handlers", () => {
 
         const mockMember = {
           roles: {
-            cache: { has: vi.fn().mockReturnValue(false) },
+            cache: { has: vi.fn().mockReturnValue(true) },
+            remove: vi.fn().mockResolvedValue(undefined),
           },
         };
 
@@ -700,6 +702,38 @@ describe("artistRotation/handlers", () => {
         // Side effects must run exactly once despite the second click.
         expect(mockProcessAssignment).toHaveBeenCalledTimes(1);
         expect(mockCreateJob).toHaveBeenCalledTimes(1);
+      });
+
+      it("hard-fails without creating a job when recipient lacks the ticket role (#00084)", async () => {
+        const mockMember = {
+          roles: { cache: { has: vi.fn().mockReturnValue(false) }, remove: vi.fn().mockResolvedValue(undefined) },
+        };
+        const mockGuild = {
+          id: "guild-123",
+          members: { fetch: vi.fn().mockResolvedValue(mockMember) },
+          client: { user: { id: "bot-123" } },
+        };
+        const interaction = {
+          customId: "redeemreward:noticket-1:confirm:recipient-1:headshot:artist-1:0",
+          guild: mockGuild,
+          deferUpdate: vi.fn().mockResolvedValue(undefined),
+          editReply: vi.fn().mockResolvedValue(undefined),
+          user: { id: "mod-1" },
+          channel: { send: vi.fn().mockResolvedValue(undefined), id: "channel-1" },
+        } as any;
+
+        mockGetTicketRoles.mockReturnValue({ headshot: "role-123", halfbody: null, emoji: null, fullbody: null });
+        mockGetArtist.mockReturnValue({ position: 1 });
+        mockGetAllArtists.mockReturnValue([]);
+        mockProcessAssignment.mockReturnValue({ newPosition: 5 });
+        mockCreateJob.mockReturnValue({ jobNumber: 1 });
+
+        await handleRedeemRewardButton(interaction);
+
+        // No ticket -> no assignment, no job, no queue rotation.
+        expect(mockCreateJob).not.toHaveBeenCalled();
+        expect(mockProcessAssignment).not.toHaveBeenCalled();
+        expect(mockMember.roles.remove).not.toHaveBeenCalled();
       });
     });
   });

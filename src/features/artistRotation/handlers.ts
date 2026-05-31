@@ -139,26 +139,59 @@ async function handleConfirm(
   const results: string[] = [];
   let success = true;
 
-  // Step 1: Remove ticket role from recipient (using guild-specific config)
+  // Step 1: Consume the ticket. The Discord ticket role IS the single-use token,
+  // so this is the spend. If we cannot consume it we MUST abort before assigning an
+  // artist or creating a job - otherwise a redemption against a user with no ticket,
+  // or a second concurrent /redeemreward whose first confirm already removed the
+  // role, would still produce a duplicate assignment + art_job (#00084 / #00075).
+  const abort = async (message: string): Promise<void> => {
+    await interaction
+      .editReply({
+        embeds: [
+          new EmbedBuilder()
+            .setTitle("Art Reward Not Redeemed")
+            .setColor(0xff0000)
+            .setDescription(message),
+        ],
+        components: [],
+      })
+      .catch(() => undefined);
+  };
+
   const ticketRoles = getTicketRoles(guild.id);
   const ticketRoleId = ticketRoles[data.artType];
-  if (ticketRoleId) {
-    try {
-      const member = await guild.members.fetch(data.recipientId);
-      if (member.roles.cache.has(ticketRoleId)) {
-        await member.roles.remove(ticketRoleId);
-        const roleName = TICKET_ROLE_NAMES[ticketRoleId] ?? data.artType;
-        results.push(`${roleName} role removed from <@${data.recipientId}>`);
-      } else {
-        results.push(`*User did not have ticket role*`);
-      }
-    } catch (err) {
-      logger.warn({ err, recipientId: data.recipientId, roleId: ticketRoleId }, "[redeemreward] Failed to remove ticket role");
-      results.push(`Failed to remove ticket role (check bot permissions)`);
-      success = false;
-    }
-  } else {
-    results.push(`*No ticket role defined for ${data.artType}*`);
+  if (!ticketRoleId) {
+    logger.warn({ guildId: guild.id, artType: data.artType }, "[redeemreward] no ticket role configured for art type");
+    await abort(`No ticket role is configured for **${ART_TYPE_DISPLAY[data.artType]}**. Nothing was redeemed.`);
+    return;
+  }
+
+  let recipientMember;
+  try {
+    recipientMember = await guild.members.fetch(data.recipientId);
+  } catch (err) {
+    logger.warn({ err, recipientId: data.recipientId }, "[redeemreward] could not fetch recipient");
+    await abort(`Could not look up <@${data.recipientId}>. Nothing was redeemed.`);
+    return;
+  }
+
+  if (!recipientMember.roles.cache.has(ticketRoleId)) {
+    // No ticket = nothing to spend. Hard-fail instead of silently assigning.
+    await abort(
+      `<@${data.recipientId}> does not hold a **${ART_TYPE_DISPLAY[data.artType]}** ticket. ` +
+        "It may have already been redeemed. Nothing was assigned."
+    );
+    return;
+  }
+
+  try {
+    await recipientMember.roles.remove(ticketRoleId);
+    const roleName = TICKET_ROLE_NAMES[ticketRoleId] ?? data.artType;
+    results.push(`${roleName} role removed from <@${data.recipientId}>`);
+  } catch (err) {
+    logger.warn({ err, recipientId: data.recipientId, roleId: ticketRoleId }, "[redeemreward] Failed to remove ticket role");
+    await abort("Failed to remove the ticket role (check bot permissions). Nothing was assigned.");
+    return;
   }
 
   /*
