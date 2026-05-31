@@ -24,6 +24,7 @@ import { readdirSync, copyFileSync, existsSync, statSync, unlinkSync } from "nod
 import { join, dirname, basename } from "node:path";
 import { fileURLToPath, pathToFileURL } from "url";
 import dotenv from "dotenv";
+import { recordMigration } from "../migrations/lib/helpers.js";
 
 // Load .env for DB_PATH and LOGGING_CHANNEL
 dotenv.config();
@@ -215,20 +216,35 @@ async function applyMigration(migration: {
     // in dynamic imports. The version+name combo ensures uniqueness.
     const migrationUrl = pathToFileURL(migration.path).href;
     const migrationModule = await import(migrationUrl);
-    const migrateFn = migrationModule[`migrate${migration.version}${toPascalCase(migration.name)}`];
+    const fnSuffix = `${migration.version}${toPascalCase(migration.name)}`;
+    const migrateFn = migrationModule[`migrate${fnSuffix}`];
 
     if (typeof migrateFn !== "function") {
       throw new Error(
-        `Migration ${migration.version} does not export a migrate function. Expected: migrate${migration.version}${toPascalCase(migration.name)}`
+        `Migration ${migration.version} does not export a migrate function. Expected: migrate${fnSuffix}`
       );
     }
 
-    // Run migration in transaction
-    // GOTCHA: The transaction only rolls back if an exception is thrown.
-    // If your migration does something stupid but doesn't throw, congratulations,
-    // you've successfully committed your mistake to the database.
+    // Optional post-condition hook: a migration may export verify<Version><Name>(db)
+    // that returns false (or throws) when the schema is not what it should be after
+    // the body runs. This is the only generic defense against a body that makes a
+    // partial/incorrect change WITHOUT throwing (#00141).
+    const verifyFn = migrationModule[`verify${fnSuffix}`];
+
+    // Run body + post-condition + stamp in ONE transaction. The RUNNER owns the
+    // stamp and writes it only after migrateFn AND any post-condition succeed, so a
+    // body that throws - or a post-condition that returns false - rolls back the
+    // stamp too and the migration is retried on the next run. recordMigration is
+    // idempotent (ON CONFLICT DO NOTHING), so migrations that still self-stamp are
+    // harmless.
     const runMigration = db.transaction(() => {
       migrateFn(db);
+      if (typeof verifyFn === "function" && verifyFn(db) === false) {
+        throw new Error(
+          `Migration ${migration.version} post-condition check (verify${fnSuffix}) returned false - rolling back`
+        );
+      }
+      recordMigration(db, migration.version, migration.name);
     });
 
     runMigration();
