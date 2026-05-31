@@ -63,13 +63,6 @@ export function invalidateRulesCache(guildId: string): void {
 }
 
 /**
- * Invalidate ALL guild caches. Used by tests / hot-reload only.
- */
-export function clearAllRulesCache(): void {
-  cache.clear();
-}
-
-/**
  * Convert a discord.js Message into a minimal ReplicableMessage. Strips
  * components, member mentions (to avoid pinging staff when the rules content
  * mentions someone), and large attachments.
