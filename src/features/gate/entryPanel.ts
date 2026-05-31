@@ -242,15 +242,20 @@ export async function ensureGateEntryStartup(
   const hasManage = perms.has(PermissionsBitField.Flags.ManageMessages);
 
   // Scan pinned + recent for ANY gate-entry-shaped message regardless of author.
-  // NOTE: discord.js v14.16+ fetchPins() returns { items: Collection, hasMore: boolean }
-  // (not a bare Collection). Access via .items.values().
+  // NOTE: discord.js v14.26 fetchPins() returns { items: Array<MessagePin>, hasMore }
+  // where MessagePin = { message, pinnedAt, pinnedTimestamp }. `items` is a plain
+  // array of pin entries, NOT a Collection of Message. Iterate it and use the
+  // inner `message`, matching findExistingGateEntry above.
   const pinned = await channel.messages.fetchPins().catch(() => null);
   const recent = await channel.messages.fetch({ limit: 50 }).catch(() => null);
   const candidates = new Map<string, Message>();
   if (pinned) {
-    const pinnedCollection = (pinned as { items?: { values: () => Iterable<Message> } }).items;
-    if (pinnedCollection) {
-      for (const m of pinnedCollection.values()) candidates.set(m.id, m);
+    const items = (pinned as { items?: ReadonlyArray<{ message?: Message }> }).items;
+    if (Array.isArray(items)) {
+      for (const it of items) {
+        const m = it?.message;
+        if (m) candidates.set(m.id, m);
+      }
     }
   }
   if (recent) for (const m of recent.values()) candidates.set(m.id, m);

@@ -210,7 +210,7 @@ export async function executeReject(ctx: CommandContext<ChatInputCommandInteract
         updateReviewActionMeta(tx.reviewActionId, {
           ...dmResult,
           source: "slash",
-          via: uidRaw ? "uid" : "code",
+          via: codeRaw ? "code" : userOption ? "mention" : "uid",
         })
       );
     } else {
@@ -219,7 +219,7 @@ export async function executeReject(ctx: CommandContext<ChatInputCommandInteract
         updateReviewActionMeta(tx.reviewActionId, {
           dmDelivered: delivered,
           source: "slash",
-          via: uidRaw ? "uid" : "code",
+          via: codeRaw ? "code" : userOption ? "mention" : "uid",
         })
       );
     }

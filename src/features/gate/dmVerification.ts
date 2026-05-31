@@ -561,16 +561,23 @@ async function handleSubmit(interaction: ButtonInteraction, session: DmSession):
     applicantName: interaction.user.username,
   });
 
-  // Log action
-  await logActionPretty(guild!, {
-    actorId: session.userId,
-    subjectId: session.userId,
-    action: "gate_submit",
-    reason: "Application submitted via DM verification",
-    meta: { appId: session.appId, questionCount: session.questions.length },
-  }).catch((err) => {
-    logger.warn({ err }, "[dmVerify] Failed to log submit action");
-  });
+  // Log action (guild may be uncached; logActionPretty dereferences guild.id)
+  if (guild) {
+    await logActionPretty(guild, {
+      actorId: session.userId,
+      subjectId: session.userId,
+      action: "gate_submit",
+      reason: "Application submitted via DM verification",
+      meta: { appId: session.appId, questionCount: session.questions.length },
+    }).catch((err) => {
+      logger.warn({ err }, "[dmVerify] Failed to log submit action");
+    });
+  } else {
+    logger.warn(
+      { guildId: session.guildId, appId: session.appId },
+      "[dmVerify] guild not cached; skipped gate_submit audit log"
+    );
+  }
 
   // Update DM with confirmation
   await interaction.editReply({

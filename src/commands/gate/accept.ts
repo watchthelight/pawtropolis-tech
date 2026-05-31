@@ -333,7 +333,7 @@ export async function executeAccept(ctx: CommandContext<ChatInputCommandInteract
       roleApplied: flowResult.roleApplied,
       dmDelivered,
       source: "slash",
-      via: uidRaw ? "uid" : "code",
+      via: codeRaw ? "code" : userOption ? "mention" : "uid",
     })
   );
 

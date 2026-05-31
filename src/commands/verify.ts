@@ -74,8 +74,25 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
       day: "numeric",
     });
 
+    // The DB row exists, but a prior run may have failed to grant the role.
+    // Re-attempt the grant so the user can recover the role without being told
+    // they already have it when they do not.
+    let hasRole = true;
+    try {
+      const guild = interaction.guild!;
+      const member = await guild.members.fetch(userId);
+      if (!member.roles.cache.has(VERIFIED_ROLE_ID)) {
+        await member.roles.add(VERIFIED_ROLE_ID, `Thin Line verification: ${categoryLabel}`);
+      }
+    } catch (err) {
+      hasRole = false;
+      logger.error({ err, userId }, "[verify] failed to re-grant Thin Line role on re-run");
+    }
+
     await interaction.editReply({
-      content: `You're already verified as **${categoryLabel}** (${verifiedDate}). You have the Thin Line role.`,
+      content: hasRole
+        ? `You're already verified as **${categoryLabel}** (${verifiedDate}). You have the Thin Line role.`
+        : `You're already verified as **${categoryLabel}** (${verifiedDate}), but I couldn't grant the Thin Line role. Please contact staff.`,
     });
     return;
   }
@@ -193,30 +210,50 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   messageCollector.stop();
   await uploadMessage.edit({ content: uploadPrompt, components: [] });
 
-  // ── Step 3: Insert record + grant role ──
+  // ── Step 3: Grant role, then insert record ──
 
-  try {
-    db
-      .prepare("INSERT INTO verified_users (guild_id, discord_user_id, category) VALUES (?, ?, ?)")
-      .run(guildId, userId, category);
-  } catch (err) {
-    logger.warn({ err, userId, category }, "[verify] duplicate verification attempt");
-    await dmChannel.send("You're already verified!");
-    return;
-  }
-
+  // Grant the role FIRST. If the grant fails (missing Manage Roles, role above
+  // the bot, transient API error), abort before writing the DB row so the user
+  // is not permanently recorded as verified without ever receiving the role.
   let roleGranted = false;
   try {
     const guild = interaction.guild!;
     const member = await guild.members.fetch(userId);
     if (!member.roles.cache.has(VERIFIED_ROLE_ID)) {
       await member.roles.add(VERIFIED_ROLE_ID, `Thin Line verification: ${categoryLabel}`);
-      roleGranted = true;
-    } else {
-      roleGranted = true;
     }
+    roleGranted = true;
   } catch (err) {
     logger.error({ err, userId, category }, "[verify] failed to grant Thin Line role");
+  }
+
+  if (!roleGranted) {
+    await dmChannel.send(
+      "I couldn't grant the **Thin Line** role right now. Verification was not completed. Please try again later or contact staff."
+    );
+    return;
+  }
+
+  try {
+    db
+      .prepare("INSERT INTO verified_users (guild_id, discord_user_id, category) VALUES (?, ?, ?)")
+      .run(guildId, userId, category);
+  } catch (err) {
+    const code = (err as { code?: string }).code;
+    const isDuplicate =
+      code === "SQLITE_CONSTRAINT_UNIQUE" ||
+      code === "SQLITE_CONSTRAINT_PRIMARYKEY" ||
+      (err instanceof Error && err.message.includes("UNIQUE constraint failed"));
+    if (isDuplicate) {
+      logger.warn({ err, userId, category }, "[verify] duplicate verification attempt");
+      await dmChannel.send("You're already verified!");
+      return;
+    }
+    logger.error({ err, userId, category }, "[verify] failed to record verification");
+    await dmChannel.send(
+      "Something went wrong recording your verification. Please try again later or contact staff."
+    );
+    return;
   }
 
   await dmChannel.send("Thank you for your service. You have been given the **Thin Line** role.");
