@@ -18,7 +18,7 @@ import { db } from "../../../db/db.js";
 import { logger } from "../../../lib/logger.js";
 import { captureException } from "../../../lib/sentry.js";
 import { getConfig } from "../../../lib/config.js";
-import { replyOrEdit } from "../../../lib/cmdWrap.js";
+import { ephemeralFollowUp } from "../../../lib/cmdWrap.js";
 import { enrichEvent } from "../../../lib/reqctx.js";
 import { shortCode } from "../../../lib/ids.js";
 import { nowUtc } from "../../../lib/time.js";
@@ -67,36 +67,26 @@ export async function runApproveAction(
 ) {
   const guild = interaction.guild as Guild | null;
   if (!guild) {
-    await replyOrEdit(interaction, { content: "Guild not found." }).catch((err) => {
-      logger.debug({ err, appId: app.id, action: "approve" }, "[review] guild-not-found reply failed");
-    });
+    await ephemeralFollowUp(interaction, "Guild not found.");
     return;
   }
   const claim = getClaim(app.id);
   const claimError = claimGuard(claim, interaction.user.id);
   if (claimError) {
-    await replyOrEdit(interaction, { content: claimError }).catch((err) => {
-      logger.debug({ err, appId: app.id, action: "approve" }, "[review] claim-guard reply failed");
-    });
+    await ephemeralFollowUp(interaction, claimError);
     return;
   }
   const result = approveTx(app.id, interaction.user.id, reason);
   if (result.kind === "already") {
-    await replyOrEdit(interaction, { content: "Already approved." }).catch((err) => {
-      logger.debug({ err, appId: app.id, action: "approve" }, "[review] already-approved reply failed");
-    });
+    await ephemeralFollowUp(interaction, "Already approved.");
     return;
   }
   if (result.kind === "terminal") {
-    await replyOrEdit(interaction, { content: `Already resolved (${result.status}).` }).catch((err) => {
-      logger.debug({ err, appId: app.id, action: "approve", status: result.status }, "[review] already-resolved reply failed");
-    });
+    await ephemeralFollowUp(interaction, `Already resolved (${result.status}).`);
     return;
   }
   if (result.kind === "invalid") {
-    await replyOrEdit(interaction, { content: "Application is not ready for approval." }).catch((err) => {
-      logger.debug({ err, appId: app.id, action: "approve" }, "[review] invalid-status reply failed");
-    });
+    await ephemeralFollowUp(interaction, "Application is not ready for approval.");
     return;
   }
 
@@ -295,46 +285,34 @@ export async function runRejectAction(
   options?: { dmComponents?: ActionRowBuilder<MessageActionRowComponentBuilder>[] }
 ) {
   if (app.status === "rejected" || app.status === "approved" || app.status === "kicked") {
-    await replyOrEdit(interaction, { content: "This application is already resolved." }).catch((err) => {
-      logger.debug({ err, appId: app.id, action: "reject" }, "[review] already-resolved reply failed");
-    });
+    await ephemeralFollowUp(interaction, "This application is already resolved.");
     return;
   }
 
   const claim = getClaim(app.id);
   const claimError = claimGuard(claim, interaction.user.id);
   if (claimError) {
-    await replyOrEdit(interaction, { content: claimError }).catch((err) => {
-      logger.debug({ err, appId: app.id, action: "reject" }, "[review] claim-guard reply failed");
-    });
+    await ephemeralFollowUp(interaction, claimError);
     return;
   }
 
   const trimmed = reason.trim();
   if (trimmed.length === 0) {
-    await replyOrEdit(interaction, { content: "Reason is required." }).catch((err) => {
-      logger.debug({ err, appId: app.id, action: "reject" }, "[review] reason-required reply failed");
-    });
+    await ephemeralFollowUp(interaction, "Reason is required.");
     return;
   }
 
   const tx = rejectTx(app.id, interaction.user.id, trimmed);
   if (tx.kind === "already") {
-    await replyOrEdit(interaction, { content: "Already rejected." }).catch((err) => {
-      logger.debug({ err, appId: app.id, action: "reject" }, "[review] already-rejected reply failed");
-    });
+    await ephemeralFollowUp(interaction, "Already rejected.");
     return;
   }
   if (tx.kind === "terminal") {
-    await replyOrEdit(interaction, { content: `Already resolved (${tx.status}).` }).catch((err) => {
-      logger.debug({ err, appId: app.id, action: "reject", status: tx.status }, "[review] already-resolved reply failed");
-    });
+    await ephemeralFollowUp(interaction, `Already resolved (${tx.status}).`);
     return;
   }
   if (tx.kind === "invalid") {
-    await replyOrEdit(interaction, { content: "Application not submitted yet." }).catch((err) => {
-      logger.debug({ err, appId: app.id, action: "reject" }, "[review] invalid-status reply failed");
-    });
+    await ephemeralFollowUp(interaction, "Application not submitted yet.");
     return;
   }
 
@@ -458,46 +436,34 @@ export async function runPermRejectAction(
   reason: string
 ) {
   if (app.status === "rejected" || app.status === "approved" || app.status === "kicked") {
-    await replyOrEdit(interaction, { content: "This application is already resolved." }).catch((err) => {
-      logger.debug({ err, appId: app.id, action: "perm_reject" }, "[review] already-resolved reply failed");
-    });
+    await ephemeralFollowUp(interaction, "This application is already resolved.");
     return;
   }
 
   const claim = getClaim(app.id);
   const claimError = claimGuard(claim, interaction.user.id);
   if (claimError) {
-    await replyOrEdit(interaction, { content: claimError }).catch((err) => {
-      logger.debug({ err, appId: app.id, action: "perm_reject" }, "[review] claim-guard reply failed");
-    });
+    await ephemeralFollowUp(interaction, claimError);
     return;
   }
 
   const trimmed = reason.trim();
   if (trimmed.length === 0) {
-    await replyOrEdit(interaction, { content: "Reason is required." }).catch((err) => {
-      logger.debug({ err, appId: app.id, action: "perm_reject" }, "[review] reason-required reply failed");
-    });
+    await ephemeralFollowUp(interaction, "Reason is required.");
     return;
   }
 
   const tx = rejectTx(app.id, interaction.user.id, trimmed, true); // permanent = true
   if (tx.kind === "already") {
-    await replyOrEdit(interaction, { content: "Already rejected." }).catch((err) => {
-      logger.debug({ err, appId: app.id, action: "perm_reject" }, "[review] already-rejected reply failed");
-    });
+    await ephemeralFollowUp(interaction, "Already rejected.");
     return;
   }
   if (tx.kind === "terminal") {
-    await replyOrEdit(interaction, { content: `Already resolved (${tx.status}).` }).catch((err) => {
-      logger.debug({ err, appId: app.id, action: "perm_reject", status: tx.status }, "[review] already-resolved reply failed");
-    });
+    await ephemeralFollowUp(interaction, `Already resolved (${tx.status}).`);
     return;
   }
   if (tx.kind === "invalid") {
-    await replyOrEdit(interaction, { content: "Application not submitted yet." }).catch((err) => {
-      logger.debug({ err, appId: app.id, action: "perm_reject" }, "[review] invalid-status reply failed");
-    });
+    await ephemeralFollowUp(interaction, "Application not submitted yet.");
     return;
   }
 
@@ -640,36 +606,26 @@ export async function runKickAction(
 ) {
   const guild = interaction.guild as Guild | null;
   if (!guild) {
-    await replyOrEdit(interaction, { content: "Guild not found." }).catch((err) => {
-      logger.debug({ err, appId: app.id, action: "kick" }, "[review] guild-not-found reply failed");
-    });
+    await ephemeralFollowUp(interaction, "Guild not found.");
     return;
   }
   const claim = getClaim(app.id);
   const claimError = claimGuard(claim, interaction.user.id);
   if (claimError) {
-    await replyOrEdit(interaction, { content: claimError }).catch((err) => {
-      logger.debug({ err, appId: app.id, action: "kick" }, "[review] claim-guard reply failed");
-    });
+    await ephemeralFollowUp(interaction, claimError);
     return;
   }
   const tx = kickTx(app.id, interaction.user.id, reason);
   if (tx.kind === "already") {
-    await replyOrEdit(interaction, { content: "Already kicked." }).catch((err) => {
-      logger.debug({ err, appId: app.id, action: "kick" }, "[review] already-kicked reply failed");
-    });
+    await ephemeralFollowUp(interaction, "Already kicked.");
     return;
   }
   if (tx.kind === "terminal") {
-    await replyOrEdit(interaction, { content: `Already resolved (${tx.status}).` }).catch((err) => {
-      logger.debug({ err, appId: app.id, action: "kick", status: tx.status }, "[review] already-resolved reply failed");
-    });
+    await ephemeralFollowUp(interaction, `Already resolved (${tx.status}).`);
     return;
   }
   if (tx.kind === "invalid") {
-    await replyOrEdit(interaction, { content: "Application not in a kickable state." }).catch((err) => {
-      logger.debug({ err, appId: app.id, action: "kick" }, "[review] invalid-status reply failed");
-    });
+    await ephemeralFollowUp(interaction, "Application not in a kickable state.");
     return;
   }
 
@@ -781,9 +737,7 @@ export async function runVoteOutRetractAction(
   app: ApplicationRow
 ) {
   if (app.status === "rejected" || app.status === "approved" || app.status === "kicked") {
-    await replyOrEdit(interaction, { content: "This application is already resolved." }).catch((err) => {
-      logger.debug({ err, appId: app.id, action: "vote_out" }, "[review] already-resolved reply failed");
-    });
+    await ephemeralFollowUp(interaction, "This application is already resolved.");
     return;
   }
 
@@ -819,20 +773,13 @@ export async function runVoteOutAction(
 ) {
   // Terminal guard
   if (app.status === "rejected" || app.status === "approved" || app.status === "kicked") {
-    await replyOrEdit(interaction, { content: "This application is already resolved." }).catch((err) => {
-      logger.debug({ err, appId: app.id, action: "vote_out" }, "[review] already-resolved reply failed");
-    });
+    await ephemeralFollowUp(interaction, "This application is already resolved.");
     return;
   }
 
   const trimmedReason = reason.trim().slice(0, 300);
   if (!trimmedReason) {
-    await replyOrEdit(interaction, {
-      content: "Vote out requires a reason.",
-      flags: MessageFlags.Ephemeral,
-    }).catch((err) => {
-      logger.debug({ err, appId: app.id, action: "vote_out" }, "[review] missing-reason reply failed");
-    });
+    await ephemeralFollowUp(interaction, "Vote out requires a reason.");
     return;
   }
 
@@ -937,11 +884,11 @@ export async function runVoteOutAction(
   })();
 
   if (txResult.kind === "already") {
-    await replyOrEdit(interaction, { content: "Already rejected." }).catch((err) => { logger.warn({ err }, "[review] reply for already-rejected failed"); });
+    await ephemeralFollowUp(interaction, "Already rejected.");
     return;
   }
   if (txResult.kind === "terminal") {
-    await replyOrEdit(interaction, { content: `Already resolved (${txResult.status}).` }).catch((err) => { logger.warn({ err }, "[review] reply for already-resolved failed"); });
+    await ephemeralFollowUp(interaction, `Already resolved (${txResult.status}).`);
     return;
   }
 

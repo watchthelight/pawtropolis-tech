@@ -20,7 +20,7 @@ import {
 } from "discord.js";
 import { logger } from "../../../lib/logger.js";
 import { shouldBypass, hasRole, ROLE_IDS } from "../../../lib/config.js";
-import { replyOrEdit } from "../../../lib/cmdWrap.js";
+import { replyOrEdit, ephemeralFollowUp } from "../../../lib/cmdWrap.js";
 import { shortCode } from "../../../lib/ids.js";
 import { findAppByShortCode } from "../../appLookup.js";
 import {
@@ -91,33 +91,38 @@ export async function resolveApplication(
   interaction: ReviewStaffInteraction,
   code: string
 ): Promise<ApplicationRow | null> {
+  // After a component deferUpdate(), replyOrEdit() editReply's the source review
+  // card (clobbering it publicly). When already acked, post the failure notice as
+  // a separate ephemeral followUp; only on a fresh interaction do we reply.
+  const sendFail = async (content: string) => {
+    if (interaction.deferred || interaction.replied) {
+      await ephemeralFollowUp(interaction, content);
+    } else {
+      await replyOrEdit(interaction, { content, flags: MessageFlags.Ephemeral }).catch((err) => {
+        logger.debug({ err, code, interactionId: interaction.id }, "[review] resolveApplication reply failed");
+      });
+    }
+  };
+
   const guildId = interaction.guildId;
   if (!guildId) {
-    await replyOrEdit(interaction, { content: "Guild only." }).catch((err) => {
-      logger.debug({ err, code, interactionId: interaction.id }, "[review] guild-only reply failed (resolveApplication)");
-    });
+    await sendFail("Guild only.");
     return null;
   }
 
   const row = findAppByShortCode(guildId, code) as { id: string } | null;
   if (!row) {
-    await replyOrEdit(interaction, { content: `No application with code ${code}.` }).catch((err) => {
-      logger.debug({ err, code, guildId, interactionId: interaction.id }, "[review] no-app reply failed");
-    });
+    await sendFail(`No application with code ${code}.`);
     return null;
   }
 
   const app = loadApplication(row.id);
   if (!app) {
-    await replyOrEdit(interaction, { content: "Application not found." }).catch((err) => {
-      logger.debug({ err, code, appId: row.id, interactionId: interaction.id }, "[review] app-not-found reply failed");
-    });
+    await sendFail("Application not found.");
     return null;
   }
   if (app.guild_id !== guildId) {
-    await replyOrEdit(interaction, { content: "Guild mismatch for application." }).catch((err) => {
-      logger.debug({ err, code, appId: app.id, guildId, interactionId: interaction.id }, "[review] guild-mismatch reply failed");
-    });
+    await sendFail("Guild mismatch for application.");
     return null;
   }
 
@@ -150,6 +155,15 @@ async function safeShowModal(
   const ageMs = Date.now() - interaction.createdTimestamp;
   if (ageMs > 2500) {
     logger.warn({ ...ctx, ageMs, interactionId: interaction.id }, "[review] modal: interaction near token-expiry, skipping showModal");
+    // The token is too old to show a modal but the interaction is still unacked;
+    // tell the mod so they don't just see Discord's generic 'interaction failed'.
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction
+        .reply({ content: "That action timed out. Please click the button again.", flags: MessageFlags.Ephemeral })
+        .catch((replyErr) => {
+          logger.debug({ ...ctx, err: replyErr, interactionId: interaction.id }, "[review] modal timeout notice reply failed");
+        });
+    }
     return false;
   }
   try {
@@ -161,6 +175,15 @@ async function safeShowModal(
       { ...ctx, err, code, ageMs: Date.now() - interaction.createdTimestamp, replied: interaction.replied, deferred: interaction.deferred, interactionId: interaction.id },
       "[review] showModal failed"
     );
+    // If showModal failed before acking, surface an ephemeral notice instead of
+    // leaving the click resolving to Discord's generic 'This interaction failed'.
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction
+        .reply({ content: "Could not open that form. Please click the button again.", flags: MessageFlags.Ephemeral })
+        .catch((replyErr) => {
+          logger.debug({ ...ctx, err: replyErr, interactionId: interaction.id }, "[review] modal failure notice reply failed");
+        });
+    }
     return false;
   }
 }

@@ -46,13 +46,20 @@ export async function handleClaimToggle(interaction: ButtonInteraction, app: App
       if (err.code === "ALREADY_CLAIMED") {
         msg = "This application is already claimed by another moderator.";
       } else if (err.code === "INVALID_STATUS") {
-        msg = `Cannot claim: application is already **${err.message.split(" ")[2]}**.`;
+        if (err.message.startsWith("Panic mode")) {
+          // Panic mode reuses INVALID_STATUS but is not a terminal-status case;
+          // nothing changed on the card, so don't parse the status word or refresh.
+          msg = "Panic mode is active; review operations are suspended.";
+        } else {
+          // Terminal-state form is "Application already <status>" -> word[2] is the status.
+          msg = `Cannot claim: application is already **${err.message.split(" ")[2]}**.`;
 
-        // Refresh card to show current state
-        try {
-          await ensureReviewMessage(interaction.client, app.id);
-        } catch (refreshErr) {
-          logger.warn({ err: refreshErr, appId: app.id }, "[review] failed to refresh card after blocked claim");
+          // Refresh card to show current state
+          try {
+            await ensureReviewMessage(interaction.client, app.id);
+          } catch (refreshErr) {
+            logger.warn({ err: refreshErr, appId: app.id }, "[review] failed to refresh card after blocked claim");
+          }
         }
       } else if (err.code === "APP_NOT_FOUND") {
         msg = "Application not found.";

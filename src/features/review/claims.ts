@@ -60,7 +60,7 @@ export function claimGuard(claim: ReviewClaimRow | null, userId: string): string
  */
 export function getClaim(appId: string): ReviewClaimRow | null {
   const row = db
-    .prepare(`SELECT reviewer_id, claimed_at FROM review_claim WHERE app_id = ?`)
+    .prepare(`SELECT app_id, reviewer_id, claimed_at FROM review_claim WHERE app_id = ?`)
     .get(appId) as ReviewClaimRow | undefined;
   return row ?? null;
 }
