@@ -362,7 +362,11 @@ export async function closeModmailThread(params: {
     // Auto-delete or leave thread based on config (after transcript is flushed)
     if (threadForCleanup && interaction.guildId) {
       const cfg = getConfig(interaction.guildId);
-      const preferDelete = cfg?.modmail_delete_on_close !== false; // default true
+      // Stored as INTEGER 0/1, so at runtime this is a number, not a boolean.
+      // A strict `!== false` check treats 0 as truthy and force-deletes even on an
+      // explicit opt-out. Coerce, defaulting to delete only when null/undefined.
+      const preferDelete =
+        cfg?.modmail_delete_on_close == null ? true : Boolean(cfg.modmail_delete_on_close);
 
       try {
         if (preferDelete) {
@@ -543,7 +547,10 @@ export async function closeModmailForApplication(
 
     if (thread) {
       const cfg = getConfig(guildId);
-      const deleteOnClose = cfg?.modmail_delete_on_close !== false; // default true
+      // INTEGER 0/1 at runtime; a strict `!== false` check treats 0 as truthy and
+      // ignores an explicit opt-out. Coerce, defaulting to delete only when null.
+      const deleteOnClose =
+        cfg?.modmail_delete_on_close == null ? true : Boolean(cfg.modmail_delete_on_close);
 
       archiveResult = await archiveOrDeleteThread(thread, deleteOnClose, client);
       logger.info(
