@@ -16,6 +16,7 @@ import {
 } from "discord.js";
 import { db } from "../../db/db.js";
 import { logger } from "../../lib/logger.js";
+import { parseSqliteUtc } from "../../lib/sqliteTime.js";
 import { captureException } from "../../lib/sentry.js";
 import { getConfig } from "../../lib/config.js";
 import { SAFE_ALLOWED_MENTIONS } from "../../lib/constants.js";
@@ -300,8 +301,9 @@ export async function dashboardReopenThread(params: {
   if (!ticket) return { success: false, error: "Ticket not found" };
   if (ticket.status === "open") return { success: false, error: "Ticket is already open" };
 
-  // Check if closed within 7 days
-  const closedAt = ticket.closed_at ? new Date(ticket.closed_at).getTime() : 0;
+  // Check if closed within 7 days. closed_at is a SQLite UTC string with no zone
+  // marker; parse it as UTC so the window isn't skewed by the host timezone.
+  const closedAt = parseSqliteUtc(ticket.closed_at) || 0;
   const sevenDays = 7 * 24 * 60 * 60 * 1000;
 
   if (Date.now() - closedAt > sevenDays) {

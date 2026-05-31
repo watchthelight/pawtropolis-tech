@@ -14,6 +14,7 @@ import {
 } from "discord.js";
 import { db } from "../../db/db.js";
 import { logger } from "../../lib/logger.js";
+import { parseSqliteUtc } from "../../lib/sqliteTime.js";
 import { captureException } from "../../lib/sentry.js";
 import type { ModmailTicket } from "./types.js";
 import { getTicketByThread, reopenTicket } from "./tickets.js";
@@ -69,8 +70,9 @@ export async function reopenModmailThread(params: {
     return { success: false, message: "This ticket is already open." };
   }
 
-  // Check if closed within 7 days
-  const closedAt = ticket.closed_at ? new Date(ticket.closed_at).getTime() : 0;
+  // Check if closed within 7 days. closed_at is a SQLite UTC string with no zone
+  // marker; parse it as UTC so the window isn't skewed by the host timezone.
+  const closedAt = parseSqliteUtc(ticket.closed_at) || 0;
   const now = Date.now();
   const sevenDays = 7 * 24 * 60 * 60 * 1000;
 
