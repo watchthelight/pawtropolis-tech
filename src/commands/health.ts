@@ -215,8 +215,11 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
     });
   })();
 
+  let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
   const timeoutPromise = new Promise<never>((_, reject) => {
-    setTimeout(() => reject(new Error('Health check timeout')), HEALTH_CHECK_TIMEOUT_MS);
+    timeoutHandle = setTimeout(() => reject(new Error('Health check timeout')), HEALTH_CHECK_TIMEOUT_MS);
+    // Don't let the 5s timer keep the event loop alive after the race resolves.
+    timeoutHandle.unref?.();
   });
 
   try {
@@ -232,5 +235,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
     } else {
       throw error;
     }
+  } finally {
+    clearTimeout(timeoutHandle);
   }
 }
