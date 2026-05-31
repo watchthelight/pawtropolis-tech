@@ -89,6 +89,23 @@ function needsMigration(db) {
 function runMigration(db) {
   log('starting copy-swap migration');
 
+  // Only convert created_at via strftime when it is stored as TEXT (ISO8601).
+  // strftime('%s', <int>) treats an integer as a Julian day number, not a Unix
+  // epoch, so running it on already-INTEGER values silently rewrites every
+  // timestamp to garbage. When created_at is already INTEGER, copy it verbatim.
+  const createdAtType = getCreatedAtType(db, 'review_action');
+  const createdAtSelectExpr =
+    createdAtType === 'INTEGER'
+      ? `COALESCE(created_at, CAST(strftime('%s', 'now') AS INTEGER))`
+      : `COALESCE(
+          CASE
+            WHEN created_at IS NOT NULL AND created_at != ''
+            THEN CAST(strftime('%s', created_at) AS INTEGER)
+            ELSE NULL
+          END,
+          CAST(strftime('%s', 'now') AS INTEGER)
+        )`;
+
   const migrate = db.transaction(() => {
     // 1. Count rows before
     const countBefore = db.prepare(`SELECT COUNT(*) as count FROM review_action`).get();
@@ -114,7 +131,7 @@ function runMigration(db) {
       )
     `).run();
 
-    // 4. Copy data with created_at conversion
+    // 4. Copy data with type-aware created_at conversion
     db.prepare(`
       INSERT INTO review_action_new (id, app_id, moderator_id, action, reason, message_link, meta, created_at)
       SELECT
@@ -125,14 +142,7 @@ function runMigration(db) {
         reason,
         message_link,
         meta,
-        COALESCE(
-          CASE
-            WHEN created_at IS NOT NULL AND created_at != ''
-            THEN CAST(strftime('%s', created_at) AS INTEGER)
-            ELSE NULL
-          END,
-          CAST(strftime('%s', 'now') AS INTEGER)
-        ) as created_at
+        ${createdAtSelectExpr} as created_at
       FROM review_action
     `).run();
 
