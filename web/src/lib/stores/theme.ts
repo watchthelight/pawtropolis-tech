@@ -114,6 +114,10 @@ function extractImageHue(imageUrl: string): Promise<number | null> {
 }
 
 let _activeUserId: string | null = null;
+// Last Discord-derived theme inputs, captured by applyTheme so the
+// reset-to-Discord control can replay them.
+let _discordAccentColor: number | null = null;
+let _discordAvatarUrl: string | null | undefined = null;
 
 /**
  * Generate a gamut-safe hex color from OKLCH values using culori's clampChroma.
@@ -191,6 +195,8 @@ export function applyTheme(
   userId?: string
 ): void {
   if (userId) _activeUserId = userId;
+  _discordAccentColor = accentColor;
+  _discordAvatarUrl = avatarUrl;
 
   // Clear stale theme cache from previous sessions
   if (typeof localStorage !== "undefined") {
@@ -222,4 +228,13 @@ export function applyTheme(
   }
 
   applyPalette(FALLBACK_HUE);
+}
+
+/**
+ * Re-apply the theme derived from the active user's Discord accent/avatar,
+ * discarding any manual palette the user picked. Replays the inputs captured
+ * by the last applyTheme call.
+ */
+export function resetToDiscordTheme(): void {
+  applyTheme(_discordAccentColor, _discordAvatarUrl, _activeUserId ?? undefined);
 }

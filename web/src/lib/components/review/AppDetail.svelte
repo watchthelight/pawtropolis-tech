@@ -150,7 +150,9 @@
 				if (detailBody) {
 					gsap.to(detailBody, {
 						x: 80, opacity: 0, duration: 0.35, ease: 'power2.in',
-						onComplete: () => goto('/dashboard/reviews?tab=unclaimed')
+						onComplete: () => {
+						void goto('/dashboard/reviews?tab=unclaimed');
+					}
 					});
 				} else {
 					setTimeout(() => goto('/dashboard/reviews?tab=unclaimed'), 400);
@@ -362,7 +364,9 @@
 					opacity: 0,
 					duration: 0.35,
 					ease: 'power2.in',
-					onComplete: () => goto('/dashboard/reviews?tab=unclaimed')
+					onComplete: () => {
+						void goto('/dashboard/reviews?tab=unclaimed');
+					}
 				});
 			} else {
 				setTimeout(() => goto('/dashboard/reviews?tab=unclaimed'), 400);

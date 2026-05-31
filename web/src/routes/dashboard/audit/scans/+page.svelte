@@ -88,7 +88,7 @@
 	{#if activeMember || activeNsfw}
 		<div class="section-heading">Active Scans</div>
 		<div class="active-grid">
-			{#each [activeMember, activeNsfw].filter(Boolean) as session}
+			{#each [activeMember, activeNsfw].filter((s): s is NonNullable<typeof s> => s != null) as session}
 				{@const pct = progressPct(session.scannedCount, session.totalToScan)}
 				<DataCard accent>
 					<div class="scan-type">{typeLabel(session.auditType, session.scope)}</div>

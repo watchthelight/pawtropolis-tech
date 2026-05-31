@@ -422,6 +422,7 @@
 					recipientId: assignRecipientId!,
 					ticketType: assignTicketType,
 					status: 'assigned',
+					thumbnailUrl: null,
 					assignedAt: Date.now(),
 					updatedAt: Date.now()
 				}, ...activeJobs];
