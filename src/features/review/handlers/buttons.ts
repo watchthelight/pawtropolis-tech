@@ -20,7 +20,7 @@ import { db } from "../../../db/db.js";
 import { logger } from "../../../lib/logger.js";
 import { captureException } from "../../../lib/sentry.js";
 import { getConfig } from "../../../lib/config.js";
-import { replyOrEdit, ensureDeferred } from "../../../lib/cmdWrap.js";
+import { replyOrEdit, ensureDeferred, ephemeralFollowUp } from "../../../lib/cmdWrap.js";
 import {
   BTN_PERM_REJECT_RE,
   BTN_COPY_UID_RE,
@@ -190,18 +190,18 @@ export async function handleReviewButton(interaction: ButtonInteraction) {
     const traceId = ctx().traceId ?? newTraceId();
     logger.error({ err, action, code, traceId }, "Review button handling failed");
     captureException(err, { area: "handleReviewButton", action, code, traceId });
-    // Modal-opening actions (reject, approve, accept, kick, unclaim) don't defer
-    const modalActions = ["reject", "approve", "accept", "kick", "unclaim"];
-    if (!interaction.deferred && !interaction.replied && !modalActions.includes(action)) {
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral }).catch((deferErr) => {
-        logger.debug({ err: deferErr, action, code, traceId }, "[review] error-deferReply failed");
+    const errMsg = `Failed to process action (trace: ${traceId}). Try again or check logs.`;
+    if (interaction.deferred || interaction.replied) {
+      // Already acknowledged. For deferUpdate'd actions (claim/wrong_password/etc.)
+      // editReply would overwrite the shared review card with a public error and
+      // leak the trace id; followUp keeps the failure private to the acting mod.
+      await ephemeralFollowUp(interaction, errMsg);
+    } else {
+      // Modal-opening action that threw before acknowledging: reply ephemerally.
+      await interaction.reply({ content: errMsg, flags: MessageFlags.Ephemeral }).catch((replyErr) => {
+        logger.debug({ err: replyErr, action, code, traceId }, "[review] error-reply failed");
       });
     }
-    await replyOrEdit(interaction, {
-      content: `Failed to process action (trace: ${traceId}). Try again or check logs.`,
-    }).catch((replyErr) => {
-      logger.debug({ err: replyErr, action, code, traceId }, "[review] error-reply failed");
-    });
   }
 }
 
@@ -267,11 +267,9 @@ export async function handleModmailButton(interaction: ButtonInteraction) {
     const traceId = ctx().traceId ?? newTraceId();
     logger.error({ err, code, traceId }, "Modmail button handling failed");
     captureException(err, { area: "handleModmailButton", code, traceId });
-    await replyOrEdit(interaction, {
-      content: `Failed to open modmail (trace: ${traceId}).`,
-    }).catch((replyErr) => {
-      logger.debug({ err: replyErr, code, traceId }, "[review] modmail-error reply failed");
-    });
+    // Acknowledged via deferUpdate above; followUp keeps the error private and
+    // preserves the review card instead of editReply-clobbering it.
+    await ephemeralFollowUp(interaction, `Failed to open modmail (trace: ${traceId}).`);
   }
 }
 

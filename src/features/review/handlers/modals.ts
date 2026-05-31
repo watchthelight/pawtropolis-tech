@@ -7,13 +7,10 @@
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
-import {
-  ModalSubmitInteraction,
-  MessageFlags,
-} from "discord.js";
+import { ModalSubmitInteraction } from "discord.js";
 import { logger } from "../../../lib/logger.js";
 import { captureException } from "../../../lib/sentry.js";
-import { replyOrEdit } from "../../../lib/cmdWrap.js";
+import { ephemeralFollowUp } from "../../../lib/cmdWrap.js";
 import { MODAL_PERM_REJECT_RE, MODAL_KICK_RE, MODAL_UNCLAIM_RE, MODAL_VOTE_OUT_RE } from "../../../lib/modalPatterns.js";
 import { newTraceId, ctx } from "../../../lib/reqctx.js";
 
@@ -66,11 +63,7 @@ export async function handleRejectModal(interaction: ModalSubmitInteraction) {
     const traceId = ctx().traceId ?? newTraceId();
     logger.error({ err, code, traceId }, "Reject modal handling failed");
     captureException(err, { area: "handleRejectModal", code, traceId });
-    await replyOrEdit(interaction, {
-      content: `Failed to process rejection (trace: ${traceId}).`,
-    }).catch((replyErr) => {
-      logger.debug({ err: replyErr, code, traceId }, "[review] reject-modal error-reply failed");
-    });
+    await ephemeralFollowUp(interaction, `Failed to process rejection (trace: ${traceId}).`);
   }
 }
 
@@ -104,11 +97,7 @@ export async function handleAcceptModal(interaction: ModalSubmitInteraction) {
     const traceId = ctx().traceId ?? newTraceId();
     logger.error({ err, code, traceId }, "Accept modal handling failed");
     captureException(err, { area: "handleAcceptModal", code, traceId });
-    await replyOrEdit(interaction, {
-      content: `Failed to process approval (trace: ${traceId}).`,
-    }).catch((replyErr) => {
-      logger.debug({ err: replyErr, code, traceId }, "[review] accept-modal error-reply failed");
-    });
+    await ephemeralFollowUp(interaction, `Failed to process approval (trace: ${traceId}).`);
   }
 }
 
@@ -143,11 +132,7 @@ export async function handlePermRejectModal(interaction: ModalSubmitInteraction)
     const traceId = ctx().traceId ?? newTraceId();
     logger.error({ err, code, traceId }, "Permanent reject modal handling failed");
     captureException(err, { area: "handlePermRejectModal", code, traceId });
-    await replyOrEdit(interaction, {
-      content: `Failed to process permanent rejection (trace: ${traceId}).`,
-    }).catch((replyErr) => {
-      logger.debug({ err: replyErr, code, traceId }, "[review] perm-reject-modal error-reply failed");
-    });
+    await ephemeralFollowUp(interaction, `Failed to process permanent rejection (trace: ${traceId}).`);
   }
 }
 
@@ -182,11 +167,7 @@ export async function handleKickModal(interaction: ModalSubmitInteraction) {
     const traceId = ctx().traceId ?? newTraceId();
     logger.error({ err, code, traceId }, "Kick modal handling failed");
     captureException(err, { area: "handleKickModal", code, traceId });
-    await replyOrEdit(interaction, {
-      content: `Failed to process kick (trace: ${traceId}).`,
-    }).catch((replyErr) => {
-      logger.debug({ err: replyErr, code, traceId }, "[review] kick-modal error-reply failed");
-    });
+    await ephemeralFollowUp(interaction, `Failed to process kick (trace: ${traceId}).`);
   }
 }
 
@@ -220,11 +201,7 @@ export async function handleVoteOutModal(interaction: ModalSubmitInteraction) {
     const traceId = ctx().traceId ?? newTraceId();
     logger.error({ err, code, traceId }, "Vote out modal handling failed");
     captureException(err, { area: "handleVoteOutModal", code, traceId });
-    await replyOrEdit(interaction, {
-      content: `Failed to process vote out (trace: ${traceId}).`,
-    }).catch((replyErr) => {
-      logger.debug({ err: replyErr, code, traceId }, "[review] vote-out-modal error-reply failed");
-    });
+    await ephemeralFollowUp(interaction, `Failed to process vote out (trace: ${traceId}).`);
   }
 }
 
@@ -256,12 +233,7 @@ export async function handleUnclaimModal(interaction: ModalSubmitInteraction) {
     const confirm = confirmRaw.trim().toUpperCase();
 
     if (confirm !== "UNCLAIM") {
-      await replyOrEdit(interaction, {
-        content: "Unclaim cancelled. You must type `UNCLAIM` to confirm.",
-        flags: MessageFlags.Ephemeral,
-      }).catch((err) => {
-        logger.debug({ err, code }, "[review] unclaim-cancelled reply failed");
-      });
+      await ephemeralFollowUp(interaction, "Unclaim cancelled. You must type `UNCLAIM` to confirm.");
       return;
     }
 
@@ -272,10 +244,6 @@ export async function handleUnclaimModal(interaction: ModalSubmitInteraction) {
     const traceId = ctx().traceId ?? newTraceId();
     logger.error({ err, code, traceId }, "Unclaim modal handling failed");
     captureException(err, { area: "handleUnclaimModal", code, traceId });
-    await replyOrEdit(interaction, {
-      content: `Failed to process unclaim (trace: ${traceId}).`,
-    }).catch((replyErr) => {
-      logger.debug({ err: replyErr, code, traceId }, "[review] unclaim-modal error-reply failed");
-    });
+    await ephemeralFollowUp(interaction, `Failed to process unclaim (trace: ${traceId}).`);
   }
 }
