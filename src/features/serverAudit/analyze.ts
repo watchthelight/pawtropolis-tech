@@ -367,6 +367,9 @@ export function analyzeSecurityIssues(roles: RoleData[], channels: ChannelData[]
     if (role.permissions.includes("ManageRoles") && !role.permissions.includes("Administrator")) {
       // Find roles above this one that this role could theoretically target
       const rolesAbove = roles.filter((r) => r.position > role.position && r.name !== "@everyone");
+      // Roles BELOW this one are the ones it can actually assign/remove. (role.position
+      // is a hierarchy index, not a count - reporting it as the count was misleading.)
+      const rolesBelow = roles.filter((r) => r.position < role.position && r.name !== "@everyone").length;
       if (rolesAbove.length > 0 && role.memberCount > 0) {
         const hashData = `hierarchy:manage_scope:${role.id}:${role.position}`;
         issues.push({
@@ -374,7 +377,7 @@ export function analyzeSecurityIssues(roles: RoleData[], channels: ChannelData[]
           id: `MED-${String(issueId++).padStart(3, "0")}`,
           title: `ManageRoles Scope Warning`,
           affected: `Role: ${role.name} (position ${role.position})`,
-          issue: `Role can assign/remove ${role.position} roles below it. ${rolesAbove.length} roles are protected above.`,
+          issue: `Role can assign/remove ${rolesBelow} roles below it. ${rolesAbove.length} roles are protected above.`,
           risk: `Ensure position is intentional. Lower positions = more assignable roles.`,
           recommendation: `Review role position. Move up if this is a senior staff role.`,
           issueKey: `hierarchy:manage_scope:${role.id}`,
