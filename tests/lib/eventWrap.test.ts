@@ -47,7 +47,9 @@ const mockWideEventBuilder = {
 };
 
 vi.mock("../../src/lib/wideEvent.js", () => ({
-  WideEventBuilder: vi.fn(() => mockWideEventBuilder),
+  WideEventBuilder: vi.fn(function () {
+    return mockWideEventBuilder;
+  }),
 }));
 
 vi.mock("../../src/lib/reqctx.js", () => ({

@@ -247,6 +247,13 @@ describe("messageDadMode", () => {
   describe("odds handling", () => {
     it("does not reply when roll is non-zero", async () => {
       vi.restoreAllMocks(); // Clear the beforeEach spy
+      // v4: restoreAllMocks no longer keeps the module-mock getConfig
+      // implementation, so re-establish it. Use odds > 1 so a 0.5 random
+      // produces a genuinely non-zero roll (floor(0.5 * 1000) = 500).
+      mockGetConfig.mockResolvedValue({
+        dadmode_enabled: true,
+        dadmode_odds: 1000,
+      });
       vi.spyOn(Math, "random").mockReturnValue(0.5);
       const message = createMockMessage();
 

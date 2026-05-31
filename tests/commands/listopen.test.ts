@@ -53,16 +53,26 @@ vi.mock("../../src/lib/ids.js", () => ({
 
 // Mock LRUCache
 vi.mock("../../src/lib/lruCache.js", () => ({
-  LRUCache: vi.fn().mockImplementation(() => ({
-    get: vi.fn(() => null),
-    set: vi.fn(),
-    delete: vi.fn(),
-  })),
+  LRUCache: vi.fn().mockImplementation(function () {
+    return {
+      get: vi.fn(() => null),
+      set: vi.fn(),
+      delete: vi.fn(),
+    };
+  }),
 }));
 
 describe("/listopen command", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    // vitest v4 resets vi.fn() implementations between tests, so re-establish the
+    // default db.prepare stub each time (tests that need a throwing/empty query
+    // override it locally afterwards).
+    const { db } = await import("../../src/db/db.js");
+    (db.prepare as any).mockImplementation(() => ({
+      all: vi.fn(() => []),
+      get: vi.fn(() => ({ count: 0 })),
+    }));
     // Rate limiter is module-level state; clear the test guild cooldown between cases.
     clearCooldown("listopen", "guild-123");
     clearCooldown("listopen", "test-guild-id");

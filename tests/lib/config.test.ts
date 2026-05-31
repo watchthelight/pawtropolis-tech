@@ -45,7 +45,7 @@ vi.mock("../../src/lib/env.js", () => ({
 }));
 
 // Mock owner utility
-vi.mock("../../src/utils/owner.js", () => ({
+vi.mock("../../src/lib/owner.js", () => ({
   isOwner: vi.fn((id: string) => id === "owner-1" || id === "owner-2"),
 }));
 
@@ -56,7 +56,7 @@ import {
   canRunAllCommands,
   hasStaffPermissions,
 } from "../../src/lib/config.js";
-import { isOwner } from "../../src/utils/owner.js";
+import { isOwner } from "../../src/lib/owner.js";
 
 // ===== Test Helpers =====
 

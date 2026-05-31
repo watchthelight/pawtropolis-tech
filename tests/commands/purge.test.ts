@@ -48,9 +48,16 @@ vi.mock("../../src/lib/constants.js", () => ({
 const originalEnv = process.env;
 
 describe("/purge command", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
     process.env = { ...originalEnv, RESET_PASSWORD: "test-password" };
+
+    const { secureCompare } = await import("../../src/lib/secureCompare.js");
+    (secureCompare as any).mockImplementation((a: string, b: string) => a === b);
+
+    const { checkCooldown, formatCooldown } = await import("../../src/lib/rateLimiter.js");
+    (checkCooldown as any).mockReturnValue({ allowed: true });
+    (formatCooldown as any).mockImplementation((ms: number) => `${Math.round(ms / 1000)}s`);
   });
 
   afterEach(() => {

@@ -79,6 +79,10 @@ describe("ensure.ts", () => {
     vi.clearAllMocks();
     mockFns.get.mockReturnValue(undefined);
     mockFns.all.mockReturnValue([]);
+    mockFns.run.mockReturnValue(undefined);
+    mockFns.exec.mockReturnValue(undefined);
+    mockFns.pragma.mockReturnValue([]);
+    mockFns.transaction.mockImplementation((fn: () => void) => fn);
   });
 
   describe("ensureAvatarScanSchema", () => {

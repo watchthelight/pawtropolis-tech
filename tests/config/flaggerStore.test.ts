@@ -74,7 +74,9 @@ describe("flaggerStore", () => {
     vi.clearAllMocks();
     process.env = { ...originalEnv };
     mockCacheFns.get.mockReturnValue(undefined);
-    mockDbFns._mockGetRun.mockReturnValue(undefined);
+    mockCacheFns.delete.mockReturnValue(true);
+    mockDbFns._mockGetRun.mockImplementation(() => undefined);
+    mockDbFns._mockUpsertRun.mockImplementation(() => undefined);
   });
 
   afterEach(() => {

@@ -134,7 +134,7 @@ describe("messageSkullMode", () => {
     });
 
     it("does not react when roll is non-zero", async () => {
-      vi.restoreAllMocks(); // Clear the beforeEach spy
+      mockGetConfig.mockResolvedValue({ skullmode_enabled: true, skullmode_odds: 10000 });
       vi.spyOn(Math, "random").mockReturnValue(0.5);
       const message = createMockMessage();
 

@@ -52,7 +52,12 @@ import {
 
 describe("features/appLookup", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    // v4: clearAllMocks does NOT drain mockReturnValueOnce queues, and
+    // restoreMocks now strips module-scope vi.fn() implementations between
+    // tests. resetAllMocks clears the once-queues AND implementations so no
+    // leftover Once value leaks into the next test; then re-establish the
+    // default prepare() return shape that lookups depend on.
+    vi.resetAllMocks();
     mockPrepare.mockReturnValue({
       get: mockGet,
       all: mockAll,
