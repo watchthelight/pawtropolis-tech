@@ -19,7 +19,7 @@ import { isOwner } from "../lib/owner.js";
 import { wrapEvent } from "../lib/eventWrap.js";
 import { armWatchdog, ensureDeferred, wrapCommand } from "../lib/cmdWrap.js";
 import { newTraceId, runWithCtx } from "../lib/reqctx.js";
-import { postErrorCard } from "../lib/errorCard.js";
+import { postErrorCard, renderErrorCardEmbed } from "../lib/errorCard.js";
 import { addBreadcrumb, setUser, captureException } from "../lib/sentry.js";
 import {
   BTN_DECIDE_RE,
@@ -1122,11 +1122,7 @@ export function registerInteractionCreate(
             traceId,
           });
           try {
-            // ensureDeferred prevents "interaction has already been acknowledged" errors
-            // when we try to send the error card after a partial failure.
-            await ensureDeferred(interaction as never);
-            const { postErrorCard } = await import("../lib/errorCard.js");
-            await postErrorCard(interaction as never, {
+            const cardDetails = {
               traceId,
               cmd: cmdId,
               phase: "router",
@@ -1137,7 +1133,22 @@ export function registerInteractionCreate(
                 stack: error.stack,
               },
               lastSql: null,
-            });
+            };
+            if (interaction.isMessageComponent() && (interaction.deferred || interaction.replied)) {
+              // A button/select that already deferUpdate'd (or replied) before throwing.
+              // Routing through postErrorCard would editReply the SOURCE message and
+              // clobber its embed (the confirmation/panel), so deliver an ephemeral
+              // followUp instead and leave the original message intact.
+              await interaction.followUp({
+                embeds: [renderErrorCardEmbed(cardDetails)],
+                flags: MessageFlags.Ephemeral,
+              });
+            } else {
+              // ensureDeferred prevents "interaction has already been acknowledged" errors
+              // when we try to send the error card after a partial failure.
+              await ensureDeferred(interaction as never);
+              await postErrorCard(interaction as never, cardDetails);
+            }
           } catch (cardErr) {
             logger.error(
               { err: cardErr, traceId, evt: "router_error_card_fail" },

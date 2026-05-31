@@ -881,8 +881,19 @@ export async function ensureReviewMessage(
 
     const channel = reviewChannel as GuildTextBasedChannel;
 
-    if (mapping) {
-      message = await channel.messages.fetch(mapping.message_id).catch(() => null);
+    // Re-read the mapping right before deciding create-vs-edit. The snapshot taken
+    // near the top is stale by the time we get here (embed render + several dynamic
+    // imports await in between). A concurrent caller (the submit handler races the
+    // setImmediate avatar-scan job, which calls ensureReviewMessage even when
+    // waitForReviewCardMapping times out) may have created the card already; without
+    // this re-read both callers would channel.send a fresh card with duplicate
+    // Gatekeeper/bot-dev pings, and only one row survives in review_card.
+    const currentMapping = (db
+      .prepare(`SELECT channel_id, message_id FROM review_card WHERE app_id = ?`)
+      .get(appId) as ReviewCardRow | undefined) ?? mapping;
+
+    if (currentMapping) {
+      message = await channel.messages.fetch(currentMapping.message_id).catch(() => null);
     }
 
     if (message) {
@@ -955,7 +966,7 @@ export async function ensureReviewMessage(
       }
     });
 
-    upsert(mapping, message);
+    upsert(currentMapping, message);
     return { channelId: message.channelId, messageId: message.id };
   } catch (err) {
     // Never block the flow on review card errors
