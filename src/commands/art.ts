@@ -501,7 +501,7 @@ async function handleBump(
       .map((j) => `• **#${formatJobNumber(j.artist_job_number)}** — ${formatJobDescription(j)}`)
       .join("\n");
     await interaction.reply({
-      content: `You have ${jobResult.count} matching jobs for that user+type. Use the job ID instead:\n\n${jobList}\n\nExample: \`/art bump id:${jobResult.jobs[0].artist_job_number}\``,
+      content: `You have ${jobResult.count} matching jobs for that user+type. Use the job ID instead:\n\n${jobList}\n\nExample: \`/art bump id:${jobResult.jobs[0]!.artist_job_number}\``,
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -609,7 +609,7 @@ async function handleFinish(
       .map((j) => `• **#${formatJobNumber(j.artist_job_number)}** — ${formatJobDescription(j)}`)
       .join("\n");
     await interaction.reply({
-      content: `You have ${jobResult.count} matching jobs for that user+type. Use the job ID instead:\n\n${jobList}\n\nExample: \`/art finish id:${jobResult.jobs[0].artist_job_number}\``,
+      content: `You have ${jobResult.count} matching jobs for that user+type. Use the job ID instead:\n\n${jobList}\n\nExample: \`/art finish id:${jobResult.jobs[0]!.artist_job_number}\``,
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -704,7 +704,7 @@ async function handleView(
       .map((j) => `• **#${formatJobNumber(j.artist_job_number)}** — ${formatJobDescription(j)}`)
       .join("\n");
     await interaction.reply({
-      content: `You have ${jobResult.count} matching jobs for that user+type. Use the job ID instead:\n\n${jobList}\n\nExample: \`/art view id:${jobResult.jobs[0].artist_job_number}\``,
+      content: `You have ${jobResult.count} matching jobs for that user+type. Use the job ID instead:\n\n${jobList}\n\nExample: \`/art view id:${jobResult.jobs[0]!.artist_job_number}\``,
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -784,7 +784,7 @@ async function handleLeaderboard(
   if (monthlyStats.length > 0) {
     description += `**This Month (${monthName})**\n`;
     for (let i = 0; i < monthlyStats.length; i++) {
-      const entry = monthlyStats[i];
+      const entry = monthlyStats[i]!;
       const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}.`;
       description += `${medal} <@${entry.artistId}> - ${entry.completedCount} completed\n`;
     }
@@ -797,7 +797,7 @@ async function handleLeaderboard(
   if (allTimeStats.length > 0) {
     description += "**All Time**\n";
     for (let i = 0; i < allTimeStats.length; i++) {
-      const entry = allTimeStats[i];
+      const entry = allTimeStats[i]!;
       const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}.`;
       description += `${medal} <@${entry.artistId}> - ${entry.completedCount} completed\n`;
     }

@@ -321,9 +321,9 @@ async function buildListEmbed(
   };
 
   const embed = new EmbedBuilder()
-    .setTitle(titles[viewMode])
-    .setDescription(apps.length === 0 ? emptyMessages[viewMode] : descriptions[viewMode])
-    .setColor(colors[viewMode])
+    .setTitle(titles[viewMode]!)
+    .setDescription(apps.length === 0 ? emptyMessages[viewMode]! : descriptions[viewMode]!)
+    .setColor(colors[viewMode]!)
     .setTimestamp();
 
   const appUrls: Array<{ appId: string; url: string | null }> = [];
@@ -334,7 +334,7 @@ async function buildListEmbed(
       all: "No open applications server-wide",
       drafts: "No draft applications",
     };
-    embed.setFooter({ text: emptyFooters[viewMode] });
+    embed.setFooter({ text: emptyFooters[viewMode]! });
     return { embed, appUrls };
   }
 
@@ -669,7 +669,7 @@ export async function handleListOpenPagination(interaction: ButtonInteraction): 
   }
 
   const [, nonce, direction, currentPageStr, , modeValue] = match;
-  const currentPage = parseInt(currentPageStr, 10);
+  const currentPage = parseInt(currentPageStr!, 10);
   const newPage = direction === "next" ? currentPage + 1 : currentPage - 1;
   const viewMode: "mine" | "all" | "drafts" = (modeValue as "all" | "drafts") ?? "mine";
 
@@ -714,7 +714,7 @@ export async function handleListOpenPagination(interaction: ButtonInteraction): 
     const { embed, appUrls } = await buildListEmbed(interaction, apps, newPage, totalCount, viewMode);
 
     // Build pagination buttons (reuse same nonce, preserve view mode)
-    const components = buildPaginationButtons(newPage, totalCount, nonce, viewMode);
+    const components = buildPaginationButtons(newPage, totalCount, nonce!, viewMode);
 
     // Update message
     await interaction.editReply({
@@ -761,7 +761,7 @@ export async function handleListOpenPageSelect(interaction: StringSelectMenuInte
   }
 
   const [, nonce] = match;
-  const selectedPage = parseInt(interaction.values[0], 10);
+  const selectedPage = parseInt(interaction.values[0]!, 10);
   const guildId = interaction.guildId!;
   const reviewerId = interaction.user.id;
 
@@ -776,7 +776,7 @@ export async function handleListOpenPageSelect(interaction: StringSelectMenuInte
     const { embed } = await buildListEmbed(interaction, apps, selectedPage, totalCount, "drafts");
 
     // Build pagination with new page selected
-    const components = buildPaginationButtons(selectedPage, totalCount, nonce, "drafts");
+    const components = buildPaginationButtons(selectedPage, totalCount, nonce!, "drafts");
 
     await interaction.editReply({
       embeds: [embed],

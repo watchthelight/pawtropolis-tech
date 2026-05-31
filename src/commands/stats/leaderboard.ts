@@ -148,7 +148,7 @@ export async function handleLeaderboard(
     const statsData: ModStats[] = [];
 
     for (let i = 0; i < displayRows.length; i++) {
-      const row = displayRows[i];
+      const row = displayRows[i]!;
       const avgTime = getAvgClaimToDecision(interaction.guildId!, row.actor_id, windowStartS);
       const rejects = row.rejections + row.perm_reject + row.kicks;
 
