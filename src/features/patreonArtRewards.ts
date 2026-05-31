@@ -83,6 +83,7 @@ interface ArtGrantRow {
   user_id: string;
   art_type: string;
   quantity_granted: number;
+  quantity_redeemed: number;
   last_granted_at_s: number | null;
 }
 
@@ -91,6 +92,32 @@ function getGrantedQuantity(guildId: string, userId: string, artType: string): n
     `SELECT quantity_granted FROM patreon_art_granted WHERE guild_id = ? AND user_id = ? AND art_type = ?`
   ).get(guildId, userId, artType) as { quantity_granted: number } | undefined;
   return row?.quantity_granted ?? 0;
+}
+
+function getRedeemedQuantity(guildId: string, userId: string, artType: string): number {
+  const row = db.prepare(
+    `SELECT quantity_redeemed FROM patreon_art_granted WHERE guild_id = ? AND user_id = ? AND art_type = ?`
+  ).get(guildId, userId, artType) as { quantity_redeemed: number } | undefined;
+  return row?.quantity_redeemed ?? 0;
+}
+
+/**
+ * Record that a Patreon-granted art ticket was redeemed.
+ * WHAT: Increments quantity_redeemed (capped at quantity_granted so remaining
+ *       never goes negative) for an existing grant row only.
+ * WHY: The ticket role is a single binary marker, so quantity > 1 tiers need a
+ *      redeemed counter for the sweep to know whether to re-grant the role
+ *      (re-grant while granted - redeemed > 0). A redemption of a ticket that was
+ *      not Patreon-granted updates no row and is a no-op.
+ * RETURNS: rows updated (0 when the ticket was not Patreon-granted).
+ */
+export function recordArtTicketRedemption(guildId: string, userId: string, artType: string): number {
+  const res = db.prepare(`
+    UPDATE patreon_art_granted
+       SET quantity_redeemed = MIN(quantity_redeemed + 1, quantity_granted)
+     WHERE guild_id = ? AND user_id = ? AND art_type = ?
+  `).run(guildId, userId, artType);
+  return res.changes;
 }
 
 function upsertGrant(guildId: string, userId: string, artType: string, newQuantity: number): void {
@@ -176,35 +203,43 @@ export async function handlePatreonArtRewards(member: GuildMember): Promise<void
     const artType = artTypes[i]!;
     const entitlement = ticketEntitlements[artType]!;
     const alreadyGranted = getGrantedQuantity(guild.id, fresh.id, artType);
+    const redeemed = getRedeemedQuantity(guild.id, fresh.id, artType);
 
-    if (entitlement <= alreadyGranted) continue; // Already at or above entitlement
-
-    const delta = entitlement - alreadyGranted;
     const roleId = ticketRoles[artType];
     if (!roleId) continue; // No ticket role configured for this art type
 
-    // Grant the ticket role (assignRole is idempotent — if they already have it, it skips)
-    // For delta > 1 (e.g., 2 emoji tickets), we assign the role once.
-    // The quantity is tracked in the DB; the role itself is just the "has a ticket" marker.
+    // Credit any newly-entitled tickets. quantity_granted is a high-water mark:
+    // a tier promising N tickets credits up to N total, ever (never decremented,
+    // never re-credited on resub/downgrade).
+    const newGranted = Math.max(entitlement, alreadyGranted);
+    const newlyCredited = newGranted - alreadyGranted;
+    if (newlyCredited > 0) {
+      upsertGrant(guild.id, fresh.id, artType, newGranted);
+      logGrant(
+        guild.id, fresh.id, artType, newlyCredited, tier.name,
+        `Tier ${tier.name}: ${alreadyGranted} -> ${newGranted} (credited +${newlyCredited})`
+      );
+    }
+
+    // The ticket role is a single binary "you hold an unredeemed ticket" marker.
+    // Re-grant it whenever tickets remain (granted - redeemed > 0) and the user
+    // lacks it. This is what lets a quantity > 1 tier re-issue the role after each
+    // redemption instead of permanently under-granting the second+ ticket.
+    const remaining = newGranted - redeemed;
+    if (remaining <= 0) continue;
+    if (fresh.roles.cache.has(roleId)) continue; // Already holds the ticket
+
     const result = await assignRole(
       guild,
       fresh.id,
       roleId,
-      `patreon_art_reward: ${tier.name} → ${delta}x ${ART_TYPE_DISPLAY[artType]}`,
+      `patreon_art_reward: ${tier.name} -> ${remaining}x ${ART_TYPE_DISPLAY[artType]} remaining`,
       botId
     );
 
-    if (result.action === "add" || result.action === "skipped") {
-      // Update grant tracking (even if role was already present — the quantity matters)
-      upsertGrant(guild.id, fresh.id, artType, entitlement);
-      logGrant(
-        guild.id, fresh.id, artType, delta, tier.name,
-        `Tier ${tier.name}: ${alreadyGranted} → ${entitlement} (delta +${delta})`
-      );
-      granted.push(`${delta}x ${ART_TYPE_DISPLAY[artType]}`);
-    }
-
-    if (i < artTypes.length - 1) {
+    if (result.action === "add") {
+      granted.push(`${remaining}x ${ART_TYPE_DISPLAY[artType]}`);
+      // Space out role adds so we do not trip Discord's per-guild rate limit.
       await new Promise((resolve) => setTimeout(resolve, ROLE_ASSIGN_DELAY_MS));
     }
   }

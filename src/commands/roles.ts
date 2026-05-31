@@ -726,7 +726,10 @@ async function handlePatreonGrants(ctx: CommandContext<ChatInputCommandInteracti
   const logs = getArtLogForUser(guildId, user.id, 5);
 
   const grantLines = grants.length > 0
-    ? grants.map((g) => `• **${g.art_type}**: ${g.quantity_granted} granted`).join("\n")
+    ? grants.map((g) => {
+        const remaining = Math.max(0, g.quantity_granted - (g.quantity_redeemed ?? 0));
+        return `• **${g.art_type}**: ${g.quantity_granted} granted, ${g.quantity_redeemed ?? 0} redeemed, ${remaining} remaining`;
+      }).join("\n")
     : "_No grants recorded_";
 
   const logLines = logs.length > 0

@@ -721,6 +721,7 @@ CREATE TABLE IF NOT EXISTS patreon_art_granted (
       user_id TEXT NOT NULL,
       art_type TEXT NOT NULL,
       quantity_granted INTEGER NOT NULL DEFAULT 0,
+      quantity_redeemed INTEGER NOT NULL DEFAULT 0,
       last_granted_at_s INTEGER,
       UNIQUE(guild_id, user_id, art_type)
     );

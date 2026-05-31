@@ -24,6 +24,7 @@ import {
 } from "./index.js";
 import { createJob } from "../artJobs/index.js";
 import { TicketService } from "../tickets/service.js";
+import { recordArtTicketRedemption } from "../patreonArtRewards.js";
 import { db } from "../../db/db.js";
 
 /*
@@ -188,6 +189,14 @@ async function handleConfirm(
     await recipientMember.roles.remove(ticketRoleId);
     const roleName = TICKET_ROLE_NAMES[ticketRoleId] ?? data.artType;
     results.push(`${roleName} role removed from <@${data.recipientId}>`);
+    // Count the spend against the Patreon grant ledger (no-op for non-Patreon
+    // tickets) so a quantity > 1 tier can have the ticket role re-granted while
+    // tickets remain. Best-effort: a ledger hiccup must not fail the redemption.
+    try {
+      recordArtTicketRedemption(guild.id, data.recipientId, data.artType);
+    } catch (err) {
+      logger.warn({ err, recipientId: data.recipientId, artType: data.artType }, "[redeemreward] failed to record art ticket redemption");
+    }
   } catch (err) {
     logger.warn({ err, recipientId: data.recipientId, roleId: ticketRoleId }, "[redeemreward] Failed to remove ticket role");
     await abort("Failed to remove the ticket role (check bot permissions). Nothing was assigned.");
