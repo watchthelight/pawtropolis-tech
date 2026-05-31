@@ -20,6 +20,7 @@ import {
   MessageFlags,
 } from "discord.js";
 import { type CommandContext, withStep, withSql } from "../lib/cmdWrap.js";
+import { parseSqliteUtc } from "../lib/sqliteTime.js";
 import { requireStaff } from "../lib/config.js";
 import { logActionPretty } from "../logging/pretty.js";
 import { getArtistConfig, ART_TYPE_DISPLAY } from "../features/artistRotation/index.js";
@@ -422,7 +423,7 @@ async function handleJobs(
   for (const job of jobs) {
     // Discord timestamp magic: divide by 1000 to convert ms to seconds,
     // then use <t:TIMESTAMP:R> for relative time ("3 days ago").
-    const assignedAt = Math.floor(new Date(job.assigned_at).getTime() / 1000);
+    const assignedAt = Math.floor(parseSqliteUtc(job.assigned_at) / 1000);
 
     lines.push(
       `**#${formatJobNumber(job.artist_job_number)}** | ${formatJobDescription(job)}`
@@ -632,9 +633,10 @@ async function handleFinish(
   // Calculate time taken. We show this as a fun stat, not to shame anyone.
   // Art takes as long as art takes. Though if it's 0 days, someone might
   // be speedrunning, and that's pretty impressive.
-  const assignedAt = new Date(job.assigned_at).getTime();
+  const assignedAt = parseSqliteUtc(job.assigned_at);
   const now = Date.now();
-  const daysToComplete = Math.floor((now - assignedAt) / (1000 * 60 * 60 * 24));
+  // Clamp: clock/parse skew must never render a negative "Completed in -1 days".
+  const daysToComplete = Math.max(0, Math.floor((now - assignedAt) / (1000 * 60 * 60 * 24)));
 
   await withStep(ctx, "reply", async () => {
     const embed = new EmbedBuilder()
@@ -709,7 +711,7 @@ async function handleView(
   }
 
   const job = jobResult.job;
-  const assignedAt = Math.floor(new Date(job.assigned_at).getTime() / 1000);
+  const assignedAt = Math.floor(parseSqliteUtc(job.assigned_at) / 1000);
 
   const fields = isSpecialJob(job)
     ? [
@@ -729,7 +731,7 @@ async function handleView(
   }
 
   if (job.completed_at) {
-    const completedAt = Math.floor(new Date(job.completed_at).getTime() / 1000);
+    const completedAt = Math.floor(parseSqliteUtc(job.completed_at) / 1000);
     fields.push({ name: "Completed", value: `<t:${completedAt}:f>`, inline: false });
   }
 
@@ -862,7 +864,7 @@ async function handleAll(
 
   const lines: string[] = [];
   for (const job of jobs) {
-    const assignedAt = Math.floor(new Date(job.assigned_at).getTime() / 1000);
+    const assignedAt = Math.floor(parseSqliteUtc(job.assigned_at) / 1000);
 
     const jobDesc = isSpecialJob(job)
       ? `Special: ${formatTicketType(job.ticket_type)}`
@@ -1035,7 +1037,7 @@ async function handleGetStatus(
   // and the DRY police have bigger fish to fry.
   const lines: string[] = [];
   for (const job of jobs) {
-    const assignedAt = Math.floor(new Date(job.assigned_at).getTime() / 1000);
+    const assignedAt = Math.floor(parseSqliteUtc(job.assigned_at) / 1000);
 
     lines.push(`**${formatTicketType(job.ticket_type)}** by <@${job.artist_id}>`);
     lines.push(`${formatStatus(job.status)} • Assigned <t:${assignedAt}:R>`);
