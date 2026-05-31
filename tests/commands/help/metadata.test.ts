@@ -185,31 +185,6 @@ describe("help/metadata", () => {
       });
     });
 
-    describe("search", () => {
-      it("parses 'help:search:<nonce>' correctly", () => {
-        const result = parseHelpCustomId("help:search:abc12345");
-        expect(result).toEqual({
-          type: "search",
-          query: "",
-          nonce: "abc12345",
-        });
-      });
-
-      it("parses 8-character hex nonce", () => {
-        const result = parseHelpCustomId("help:search:deadbeef");
-        expect(result).toEqual({
-          type: "search",
-          query: "",
-          nonce: "deadbeef",
-        });
-      });
-
-      it("returns null for non-hex nonce", () => {
-        const result = parseHelpCustomId("help:search:notahex!");
-        expect(result).toBeNull();
-      });
-    });
-
     describe("search_modal", () => {
       it("parses 'help:search:modal' correctly", () => {
         const result = parseHelpCustomId("help:search:modal");
@@ -306,17 +281,6 @@ describe("help/metadata", () => {
           full: true,
         });
         expect(result).toBe("help:cmd:accept:full");
-      });
-    });
-
-    describe("search", () => {
-      it("builds search custom ID with nonce", () => {
-        const result = buildHelpCustomId({
-          type: "search",
-          query: "test query",
-          nonce: "abc12345",
-        });
-        expect(result).toBe("help:search:abc12345");
       });
     });
 

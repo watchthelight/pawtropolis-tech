@@ -229,7 +229,6 @@ export function buildCommandComponents(
  * Build navigation components for search results.
  */
 export function buildSearchComponents(
-  nonce: string,
   results: CommandMetadata[]
 ): ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] {
   const rows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [];
@@ -257,7 +256,7 @@ export function buildSearchComponents(
 
     const selectRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
       new StringSelectMenuBuilder()
-        .setCustomId(`help:select:search:${nonce}`)
+        .setCustomId(`help:select:search`)
         .setPlaceholder("Select a command for details...")
         .addOptions(options)
     );

@@ -188,9 +188,6 @@ import {
   getVisibleCommandsInCategory,
   countCommandsByCategory,
   invalidatePermissionCache,
-  generateNonce,
-  storeSearchSession,
-  getSearchSession,
 } from "../../../src/commands/help/cache.js";
 import type { GuildMember } from "discord.js";
 
@@ -471,77 +468,4 @@ describe("help/cache", () => {
     });
   });
 
-  describe("generateNonce", () => {
-    it("returns hex string", () => {
-      const nonce = generateNonce();
-      expect(typeof nonce).toBe("string");
-      expect(/^[a-f0-9]+$/.test(nonce)).toBe(true);
-    });
-
-    it("returns 8-character nonce", () => {
-      const nonce = generateNonce();
-      expect(nonce.length).toBe(8);
-    });
-  });
-
-  describe("storeSearchSession", () => {
-    it("stores search query and result names", () => {
-      const results = [
-        { command: { name: "accept" }, score: 100, matchedOn: "name" as const },
-        { command: { name: "reject" }, score: 80, matchedOn: "name" as const },
-      ];
-
-      storeSearchSession("abc12345", "test query", results);
-
-      expect(mockSearchSessionsSet).toHaveBeenCalledWith("abc12345", {
-        query: "test query",
-        results: ["accept", "reject"],
-      });
-    });
-
-    it("stores empty results", () => {
-      storeSearchSession("abc12345", "no matches", []);
-
-      expect(mockSearchSessionsSet).toHaveBeenCalledWith("abc12345", {
-        query: "no matches",
-        results: [],
-      });
-    });
-  });
-
-  describe("getSearchSession", () => {
-    it("returns null for non-existent session", () => {
-      mockSearchSessionsGet.mockReturnValue(undefined);
-
-      const result = getSearchSession("nonexistent");
-
-      expect(result).toBeNull();
-    });
-
-    it("returns session with resolved commands", () => {
-      mockSearchSessionsGet.mockReturnValue({
-        query: "test",
-        results: ["accept", "reject"],
-      });
-
-      const result = getSearchSession("abc12345");
-
-      expect(result).not.toBeNull();
-      expect(result!.query).toBe("test");
-      expect(result!.results).toHaveLength(2);
-      expect(result!.results[0].name).toBe("accept");
-    });
-
-    it("filters out non-existent commands", () => {
-      mockSearchSessionsGet.mockReturnValue({
-        query: "test",
-        results: ["accept", "nonexistent"],
-      });
-
-      const result = getSearchSession("abc12345");
-
-      expect(result!.results).toHaveLength(1);
-      expect(result!.results[0].name).toBe("accept");
-    });
-  });
 });

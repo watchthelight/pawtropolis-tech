@@ -16,7 +16,6 @@ import { hasStaffPermissions, isReviewer, canRunAllCommands } from "../../lib/co
 import { COMMAND_REGISTRY, getCommand } from "./registry.js";
 import type { CommandMetadata, PermissionLevel, SearchResult, CommandCategory } from "./metadata.js";
 import { logger } from "../../lib/logger.js";
-import { randomBytes } from "node:crypto";
 
 // ============================================================================
 // Search Index
@@ -332,63 +331,7 @@ export function invalidatePermissionCache(guildId: string, userId: string): void
   PERMISSION_CACHE.delete(`${guildId}:${userId}`);
 }
 
-// ============================================================================
-// Search Session Storage
-// ============================================================================
-
-/**
- * Temporary storage for search results (keyed by nonce).
- * Allows button navigation to search results.
- */
-/*
- * 15 min TTL matches Discord's component interaction timeout. After that,
- * buttons die anyway, so there's no point keeping the session around.
- * 100 entries should handle concurrent users fine unless this bot goes viral.
- */
-const SEARCH_SESSIONS = new LRUCache<string, { query: string; results: string[] }>(
-  100,
-  15 * 60 * 1000 // 15 min TTL matches Discord component timeout
-);
-
-/**
- * Generate a random nonce for search sessions.
- */
-// 4 bytes = 8 hex chars = 4 billion possible values. Not cryptographically
-// important, just needs to be unique enough that users can't guess each other's sessions.
-export function generateNonce(): string {
-  return randomBytes(4).toString("hex");
-}
-
-/**
- * Store search results for later retrieval.
- */
-export function storeSearchSession(
-  nonce: string,
-  query: string,
-  results: SearchResult[]
-): void {
-  SEARCH_SESSIONS.set(nonce, {
-    query,
-    results: results.map((r) => r.command.name),
-  });
-}
-
-/**
- * Retrieve stored search results.
- */
-export function getSearchSession(
-  nonce: string
-): { query: string; results: CommandMetadata[] } | null {
-  const session = SEARCH_SESSIONS.get(nonce);
-  if (!session) return null;
-
-  // EDGE CASE: If commands were unregistered between storing and retrieving,
-  // we silently drop them from results. Could confuse users if a command
-  // vanishes mid-session, but it's better than crashing.
-  return {
-    query: session.query,
-    results: session.results
-      .map((name) => getCommand(name))
-      .filter((cmd): cmd is CommandMetadata => cmd !== undefined),
-  };
-}
+// Search results are navigated via the select menu (help:select:search), which
+// acts on the selected command name directly - no nonce/session storage needed.
+// The former SEARCH_SESSIONS cache + generateNonce/storeSearchSession/getSearchSession
+// were dead (getSearchSession had no production caller) and were removed (#00192).

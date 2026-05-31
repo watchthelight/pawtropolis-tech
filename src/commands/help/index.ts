@@ -43,8 +43,6 @@ import {
   getVisibleCommandsInCategory,
   countCommandsByCategory,
   searchCommands,
-  generateNonce,
-  storeSearchSession,
 } from "./cache.js";
 import {
   buildOverviewEmbed,
@@ -262,13 +260,9 @@ async function showSearchResults(
   const visibleNames = new Set(visibleCommands.map((c) => c.name));
   const filteredResults = allResults.filter((r) => visibleNames.has(r.command.name));
 
-  // Store session for select menu navigation
-  const nonce = generateNonce();
-  storeSearchSession(nonce, query, filteredResults);
-
   const resultCommands = filteredResults.map((r) => r.command);
   const embed = buildSearchResultsEmbed(query, resultCommands);
-  const components = buildSearchComponents(nonce, resultCommands);
+  const components = buildSearchComponents(resultCommands);
 
   if ("update" in interaction) {
     await (interaction as ModalSubmitInteraction).editReply({ embeds: [embed], components });
@@ -402,7 +396,7 @@ export async function handleHelpSelectMenu(
 
   try {
     // Command selection from category or search results
-    if (customId.startsWith("help:select:cmd:") || customId.startsWith("help:select:search:")) {
+    if (customId.startsWith("help:select:cmd:") || customId.startsWith("help:select:search")) {
       await showCommandDetail(interaction, selected, member, guildId, userId, false);
     } else {
       logger.warn({ customId }, "[help] unknown select menu custom ID");

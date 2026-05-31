@@ -213,7 +213,6 @@ export type HelpNavigation =
   | { type: "overview" }
   | { type: "category"; category: CommandCategory; page: number }
   | { type: "command"; name: string; full: boolean }
-  | { type: "search"; query: string; nonce: string }
   | { type: "search_modal" };
 
 /**
@@ -251,18 +250,6 @@ export function parseHelpCustomId(customId: string): HelpNavigation | null {
     };
   }
 
-  // help:search:<nonce>
-  // WHY a nonce instead of the query? Button custom IDs have a 100-char limit.
-  // Search queries can be long, so we store them in a cache keyed by this nonce.
-  const searchMatch = customId.match(/^help:search:([a-f0-9]+)$/);
-  if (searchMatch) {
-    return {
-      type: "search",
-      query: "", // Query is stored in cache, not ID
-      nonce: searchMatch[1]!,
-    };
-  }
-
   // help:search:modal
   if (customId === "help:search:modal") {
     return { type: "search_modal" };
@@ -282,8 +269,6 @@ export function buildHelpCustomId(nav: HelpNavigation): string {
       return nav.page > 0 ? `help:cat:${nav.category}:p${nav.page}` : `help:cat:${nav.category}`;
     case "command":
       return nav.full ? `help:cmd:${nav.name}:full` : `help:cmd:${nav.name}`;
-    case "search":
-      return `help:search:${nav.nonce}`;
     case "search_modal":
       return "help:search:modal";
   }

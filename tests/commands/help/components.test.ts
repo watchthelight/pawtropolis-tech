@@ -525,13 +525,13 @@ describe("help/components", () => {
     ];
 
     it("returns array of action rows", () => {
-      const result = buildSearchComponents("abc12345", mockResults);
+      const result = buildSearchComponents(mockResults);
 
       expect(Array.isArray(result)).toBe(true);
     });
 
     it("includes back to overview button", () => {
-      const result = buildSearchComponents("abc12345", mockResults);
+      const result = buildSearchComponents(mockResults);
 
       const navRow = result[0];
       const backBtn = navRow.components[0] as { data: { label: string } };
@@ -539,7 +539,7 @@ describe("help/components", () => {
     });
 
     it("includes new search button", () => {
-      const result = buildSearchComponents("abc12345", mockResults);
+      const result = buildSearchComponents(mockResults);
 
       const navRow = result[0];
       const searchBtn = navRow.components[1] as { data: { label: string } };
@@ -547,24 +547,24 @@ describe("help/components", () => {
     });
 
     it("includes result select menu when results exist", () => {
-      const result = buildSearchComponents("abc12345", mockResults);
+      const result = buildSearchComponents(mockResults);
 
       expect(result.length).toBe(2);
       const selectRow = result[1];
       const select = selectRow.components[0] as {
         data: { custom_id: string };
       };
-      expect(select.data.custom_id).toBe("help:select:search:abc12345");
+      expect(select.data.custom_id).toBe("help:select:search");
     });
 
     it("omits select menu when no results", () => {
-      const result = buildSearchComponents("abc12345", []);
+      const result = buildSearchComponents([]);
 
       expect(result.length).toBe(1);
     });
 
     it("populates select menu with result options", () => {
-      const result = buildSearchComponents("abc12345", mockResults);
+      const result = buildSearchComponents(mockResults);
 
       const selectRow = result[1];
       const select = selectRow.components[0] as {
@@ -582,7 +582,7 @@ describe("help/components", () => {
         permissionLevel: "reviewer" as const,
       }));
 
-      const result = buildSearchComponents("abc12345", manyResults);
+      const result = buildSearchComponents(manyResults);
 
       const selectRow = result[1];
       const select = selectRow.components[0] as {

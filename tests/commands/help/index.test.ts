@@ -610,20 +610,6 @@ describe("help/index", () => {
       expect(mockBuildSearchResultsEmbed).toHaveBeenCalled();
     });
 
-    it("stores search session for select navigation", async () => {
-      mockSearchCommands.mockReturnValue([
-        {
-          command: { name: "accept", description: "Accept" },
-          score: 100,
-          matchedOn: "name",
-        },
-      ]);
-
-      await handleHelpModal(mockModalInteraction as ModalSubmitInteraction);
-
-      expect(mockStoreSearchSession).toHaveBeenCalled();
-    });
-
     it("handles search error", async () => {
       mockSearchCommands.mockImplementation(() => {
         throw new Error("Search failed");
