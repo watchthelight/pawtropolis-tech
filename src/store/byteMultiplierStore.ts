@@ -5,7 +5,8 @@
  * FLOWS:
  *  - getActiveMultiplier(guildId, userId) → ActiveMultiplier | null
  *  - upsertActiveMultiplier(data) → void (creates or replaces)
- *  - removeExpiredMultipliers() → ExpiredMultiplier[] (for scheduler)
+ *  - getExpiredMultipliers() → ExpiredMultiplier[] (for scheduler; SELECT only)
+ *  - deleteReconciledMultiplier(guildId, userId, expiresAt) → void (per-row, post-side-effect)
  *  - removeUserMultiplier(guildId, userId) → boolean
  * DOCS:
  *  - better-sqlite3: https://github.com/WiseLibs/better-sqlite3/blob/master/docs/api.md
@@ -81,16 +82,20 @@ const upsertMultiplierStmt = db.prepare(`
 `);
 
 // WHY SELECT before DELETE? We need the full row data to remove the role in Discord.
-// DELETE ... RETURNING would be ideal but better-sqlite3 doesn't support it well.
+// We deliberately do NOT delete in the same call: the scheduler deletes each row
+// only after the Discord side effect is reconciled, so an entry skipped due to
+// panic mode or a transient fetch failure survives to be retried. #00146
 const getExpiredMultipliersStmt = db.prepare(`
   SELECT guild_id, user_id, multiplier_role_id, multiplier_name, token_rarity, expires_at
   FROM active_byte_multipliers
   WHERE expires_at <= ?
 `);
 
-const deleteExpiredMultipliersStmt = db.prepare(`
+// Per-row reconciled delete. Guarded by expires_at so a row renewed (longer-wins
+// upsert) between fetch and delete is NOT clobbered. #00146
+const deleteReconciledMultiplierStmt = db.prepare(`
   DELETE FROM active_byte_multipliers
-  WHERE expires_at <= ?
+  WHERE guild_id = ? AND user_id = ? AND expires_at = ?
 `);
 
 const removeUserMultiplierStmt = db.prepare(`
@@ -168,35 +173,41 @@ export function upsertActiveMultiplier(params: UpsertMultiplierParams): void {
 }
 
 /**
- * Find and remove all expired multipliers.
+ * Fetch all currently-expired multipliers WITHOUT deleting them.
  *
- * This is called by the scheduler every 60 seconds. Returns the list of
- * expired entries so the caller can remove the Discord roles.
- *
- * IMPORTANT: This function both fetches AND deletes in the same call to
- * prevent race conditions where an entry could be processed twice.
+ * Called by the scheduler every 60 seconds. The scheduler removes the Discord
+ * role per entry and then calls deleteReconciledMultiplier() for that entry, so
+ * a row whose side effect could not be applied (panic mode, transient fetch
+ * failure) stays in the table and is retried on the next tick. #00146
  */
-export function removeExpiredMultipliers(): ExpiredMultiplier[] {
+export function getExpiredMultipliers(): ExpiredMultiplier[] {
   const nowSeconds = Math.floor(Date.now() / 1000);
 
   try {
-    // First get all expired entries
-    const expired = getExpiredMultipliersStmt.all(nowSeconds) as ExpiredMultiplier[];
-
-    if (expired.length > 0) {
-      // Then delete them
-      const result = deleteExpiredMultipliersStmt.run(nowSeconds);
-
-      logger.info(
-        { count: result.changes, expiredAt: nowSeconds },
-        "[byteMultiplierStore] Removed expired multipliers"
-      );
-    }
-
-    return expired;
+    return getExpiredMultipliersStmt.all(nowSeconds) as ExpiredMultiplier[];
   } catch (err) {
-    logger.error({ err }, "[byteMultiplierStore] Failed to remove expired multipliers");
+    logger.error({ err }, "[byteMultiplierStore] Failed to fetch expired multipliers");
     return [];
+  }
+}
+
+/**
+ * Delete a single expired multiplier after its Discord role removal has been
+ * reconciled. The expires_at guard means a row renewed by a longer-wins upsert
+ * between fetch and delete is left intact. #00146
+ */
+export function deleteReconciledMultiplier(
+  guildId: string,
+  userId: string,
+  expiresAt: number
+): void {
+  try {
+    deleteReconciledMultiplierStmt.run(guildId, userId, expiresAt);
+  } catch (err) {
+    logger.error(
+      { err, guildId, userId, expiresAt },
+      "[byteMultiplierStore] Failed to delete reconciled multiplier"
+    );
   }
 }
 

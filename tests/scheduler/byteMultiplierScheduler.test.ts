@@ -6,7 +6,8 @@ vi.mock("../../src/lib/logger.js", () => ({
 }));
 
 vi.mock("../../src/store/byteMultiplierStore.js", () => ({
-  removeExpiredMultipliers: vi.fn(() => []),
+  getExpiredMultipliers: vi.fn(() => []),
+  deleteReconciledMultiplier: vi.fn(),
 }));
 
 vi.mock("../../src/features/panicStore.js", () => ({

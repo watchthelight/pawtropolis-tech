@@ -16,14 +16,26 @@ import type { Client, VoiceState } from "discord.js";
 // ─── Prepared Statements (lazy-init to avoid DB access at import time) ────────
 
 let _insertJoin: ReturnType<typeof db.prepare> | null = null;
+let _lastJoinedAt: ReturnType<typeof db.prepare> | null = null;
 let _closeSession: ReturnType<typeof db.prepare> | null = null;
 let _closeAllUser: ReturnType<typeof db.prepare> | null = null;
 let _closeAll: ReturnType<typeof db.prepare> | null = null;
 
 function insertJoinStmt() {
+  // Plain INSERT (not OR IGNORE): insertVoiceJoin bumps joined_at_s past any
+  // existing row for the key, so a same-second rejoin can never collide on the
+  // UNIQUE constraint. OR IGNORE used to silently drop such an open session and
+  // lose the voice time. #00166
   return (_insertJoin ??= db.prepare(
-    `INSERT OR IGNORE INTO voice_session (guild_id, user_id, channel_id, joined_at_s)
+    `INSERT INTO voice_session (guild_id, user_id, channel_id, joined_at_s)
      VALUES (?, ?, ?, ?)`
+  ));
+}
+
+function lastJoinedAtStmt() {
+  return (_lastJoinedAt ??= db.prepare(
+    `SELECT MAX(joined_at_s) AS m FROM voice_session
+     WHERE guild_id = ? AND user_id = ? AND channel_id = ?`
   ));
 }
 
@@ -55,7 +67,17 @@ function closeAllStmt() {
 // ─── Core Operations ─────────────────────────────────────────────────────────
 
 function insertVoiceJoin(guildId: string, userId: string, channelId: string): void {
-  insertJoinStmt().run(guildId, userId, channelId, Math.floor(Date.now() / 1000));
+  const nowS = Math.floor(Date.now() / 1000);
+  // Guard against a same-second rejoin colliding with a just-closed row on the
+  // UNIQUE(guild_id, user_id, channel_id, joined_at_s) constraint: bump the new
+  // join's timestamp past any existing row for this key so the open session is
+  // always recorded. The drift is at most a few seconds and self-corrects once
+  // wall-clock time advances. #00166
+  const last = lastJoinedAtStmt().get(guildId, userId, channelId) as
+    | { m: number | null }
+    | undefined;
+  const joinedAtS = last?.m != null ? Math.max(nowS, last.m + 1) : nowS;
+  insertJoinStmt().run(guildId, userId, channelId, joinedAtS);
 }
 
 function closeVoiceSession(guildId: string, userId: string, channelId: string): void {
