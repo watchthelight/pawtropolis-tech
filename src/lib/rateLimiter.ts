@@ -189,4 +189,6 @@ export const COOLDOWNS = {
   UNBLOCK_MS: 30 * 1000,
   /** Listopen: 60 seconds per guild (db query spam guard for staff-only command) */
   LISTOPEN_MS: 60 * 1000,
+  /** Error-card dev ping: 10 minutes per trace (one error pings the dev once, not on every click) */
+  ERRORCARD_PING_MS: 10 * 60 * 1000,
 } as const;

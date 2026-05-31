@@ -22,6 +22,7 @@ import { ERROR_CARD_BUTTON_RE } from "../lib/errorCardV2.js";
 import { getTrace, getTraceStats } from "../lib/traceStore.js";
 import { buildTraceEmbeds } from "../commands/developer.js";
 import { env } from "../lib/env.js";
+import { checkCooldown, formatCooldown, COOLDOWNS } from "../lib/rateLimiter.js";
 
 const OWNER_IDS = (env.OWNER_IDS ?? "")
   .split(",")
@@ -67,6 +68,18 @@ async function handlePing(interaction: ButtonInteraction, traceId: string): Prom
     await interaction.reply({
       flags: MessageFlags.Ephemeral,
       content: "No bot dev is configured in `OWNER_IDS`. Tell whoever runs the bot.",
+    });
+    return;
+  }
+
+  // Rate limit per trace: one error pings the dev once per window, no matter how
+  // many times the button is clicked. Prevents the public-ping spam seen when a
+  // card is hammered. Blocked clicks reply ephemerally so they add no new ping.
+  const cooldown = checkCooldown("errorcard_ping", traceId, COOLDOWNS.ERRORCARD_PING_MS);
+  if (!cooldown.allowed) {
+    await interaction.reply({
+      flags: MessageFlags.Ephemeral,
+      content: `The bot dev was already pinged about trace \`${traceId}\`. Try again in ${formatCooldown(cooldown.remainingMs!)} if it is still unresolved.`,
     });
     return;
   }
