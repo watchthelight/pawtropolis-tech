@@ -33,7 +33,8 @@ export async function executeDiff(ctx: CommandContext<ChatInputCommandInteractio
         return;
       }
 
-      const [newSnapshot, oldSnapshot] = snapshots;
+      const newSnapshot = snapshots[0]!;
+      const oldSnapshot = snapshots[1]!;
       const diff = computeSnapshotDiff(oldSnapshot, newSnapshot);
       const dangerousChanges = getDangerousChanges(diff);
 

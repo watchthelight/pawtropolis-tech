@@ -65,23 +65,23 @@ export async function handleAuditButton(interaction: ButtonInteraction): Promise
 
   if (membersMatch) {
     subcommand = "members";
-    action = membersMatch[1];
-    nonce = membersMatch[2];
+    action = membersMatch[1]!;
+    nonce = membersMatch[2]!;
   } else if (nsfwMatch) {
     subcommand = "nsfw";
-    scope = nsfwMatch[1];
-    action = nsfwMatch[2];
-    nonce = nsfwMatch[3];
+    scope = nsfwMatch[1]!;
+    action = nsfwMatch[2]!;
+    nonce = nsfwMatch[3]!;
   } else {
     // Resume/fresh/cancel format
     // The non-null assertions (!) are safe here because we already checked
     // that resumeMatch exists in the if/else chain above. TypeScript just
     // can't track that through the conditional logic.
-    subcommand = resumeMatch![1];
-    scope = resumeMatch![2] === "none" ? null : resumeMatch![2];
-    action = resumeMatch![3];
-    sessionId = parseInt(resumeMatch![4], 10);
-    nonce = resumeMatch![5];
+    subcommand = resumeMatch![1]!;
+    scope = resumeMatch![2] === "none" ? null : resumeMatch![2]!;
+    action = resumeMatch![3]!;
+    sessionId = parseInt(resumeMatch![4]!, 10);
+    nonce = resumeMatch![5]!;
   }
 
   if (!guild) {

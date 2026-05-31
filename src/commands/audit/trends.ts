@@ -31,8 +31,8 @@ export async function executeTrends(ctx: CommandContext<ChatInputCommandInteract
       }
 
       // Build trend data
-      const latestEntry = history[0];
-      const oldestEntry = history[history.length - 1];
+      const latestEntry = history[0]!;
+      const oldestEntry = history[history.length - 1]!;
 
       // Calculate changes
       const criticalChange = latestEntry.criticalCount - oldestEntry.criticalCount;
