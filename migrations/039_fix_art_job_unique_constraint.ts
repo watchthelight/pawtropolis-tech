@@ -9,9 +9,10 @@
  * Also fixes any existing duplicates by renumbering them.
  */
 
-import { db } from "../src/db/db.js";
+import type { Database } from "better-sqlite3";
+import { recordMigration } from "./lib/helpers.js";
 
-export function migrate039FixArtJobUniqueConstraint(): void {
+export function migrate039FixArtJobUniqueConstraint(db: Database): void {
   // Step 1: Find and fix any existing duplicates before adding constraint
   const duplicates = db.prepare(`
     SELECT guild_id, artist_id, artist_job_number, COUNT(*) as cnt
@@ -59,4 +60,7 @@ export function migrate039FixArtJobUniqueConstraint(): void {
   `);
 
   console.log("[migrate:039] Added UNIQUE constraint on (guild_id, artist_id, artist_job_number)");
+
+  // Record the migration so the runner stops treating 039 as perpetually pending.
+  recordMigration(db, "039", "fix_art_job_unique_constraint");
 }
