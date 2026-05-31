@@ -176,11 +176,14 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
 
   // Wait for Finalize button
   try {
-    await uploadMessage.awaitMessageComponent({
+    const finalizeInteraction = await uploadMessage.awaitMessageComponent({
       componentType: ComponentType.Button,
       filter: (i) => i.customId === "verify_finalize" && i.user.id === userId,
       time: 5 * 60 * 1000,
     });
+    // Every component interaction must be acknowledged within 3s or the user sees
+    // a red "This interaction failed", even though we still finalize server-side.
+    await finalizeInteraction.deferUpdate().catch(() => undefined);
   } catch {
     messageCollector.stop();
     await uploadMessage.edit({ content: `${uploadPrompt}\n\n*Verification timed out. Run /verify again to restart.*`, components: [] });
