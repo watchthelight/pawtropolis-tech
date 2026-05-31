@@ -65,11 +65,16 @@
     name="description"
     content="Live public stats for the Pawtropolis community: growth, activity, voice, events, and moderation transparency. All times UTC."
   />
-  <meta name="theme-color" content="#05060e" />
+  <meta name="theme-color" content="#008080" />
 </svelte:head>
 
 <div class="observatory">
   <div class="obs-shell">
+    <div class="obs-titlebar" aria-hidden="true">
+      <span class="obs-titlebar-label">Pawtropolis Observatory</span>
+      <span class="obs-titlebar-controls"><i>_</i><i>□</i><i>✕</i></span>
+    </div>
+    <div class="obs-window-body">
     {#if !obs || !vm || !obs.hasData}
       <header class="masthead">
         <p class="obs-eyebrow">Pawtropolis Observatory</p>
@@ -210,24 +215,25 @@
         <a href="/">back to pawtropolis.tech</a>
       </footer>
     {/if}
+    </div>
   </div>
 </div>
 
 <style>
   .masthead {
-    padding-top: clamp(1rem, 4vw, 2.5rem);
+    padding-top: 0.25rem;
   }
   .masthead h1 {
-    font-family: var(--obs-font-display);
-    font-weight: 600;
-    font-size: clamp(1.6rem, 4vw, 2.6rem);
-    line-height: 1.15;
-    margin: 0 0 1.5rem;
+    font-family: var(--obs-font-body);
+    font-weight: 700;
+    font-size: clamp(1.4rem, 3.5vw, 2.1rem);
+    line-height: 1.2;
+    margin: 0.5rem 0 1.25rem;
     color: var(--obs-ink);
     text-wrap: balance;
   }
   .hero-q {
-    max-width: 22ch;
+    max-width: 26ch;
   }
   .empty {
     color: var(--obs-ink-dim);
@@ -262,13 +268,15 @@
     margin-bottom: clamp(0.75rem, 2vw, 1.25rem);
     overflow-x: auto;
   }
+  /* Classic status bar: sunken silver strip pinned at the window bottom. */
   .provenance {
-    margin-top: clamp(3rem, 7vw, 5rem);
-    padding-top: 1.25rem;
-    border-top: 1px solid var(--obs-border);
-    color: var(--obs-ink-mute);
-    font-family: var(--obs-font-mono);
-    font-size: 0.75rem;
+    margin-top: clamp(1.5rem, 4vw, 2.5rem);
+    padding: 3px 6px;
+    background: #c0c0c0;
+    box-shadow: var(--obs-sunken);
+    color: var(--obs-ink-dim);
+    font-family: var(--obs-font-body);
+    font-size: 0.72rem;
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;

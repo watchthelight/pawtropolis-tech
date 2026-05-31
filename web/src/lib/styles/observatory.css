@@ -1,209 +1,239 @@
 /* ============================================================================
-   OBSERVATORY  --  fixed, self-contained theme for the public /observatory page.
-   Loads ONLY on that route (imported by its +page.svelte), so the :global body
-   override and tokens never leak into the cozy dashboard. Does NOT read
-   var(--hue) or any site token: every value here is a literal.
+   OBSERVATORY  --  fixed, self-contained CLASSIC WINDOWS 95/98 theme for the
+   public /observatory page. Loads ONLY on that route (imported by its
+   +page.svelte), so the :global body override and tokens never leak into the
+   cozy dashboard. Does NOT read var(--hue) or any site token: every value is a
+   literal.
 
-   Performance: zero JS, zero webfonts, zero raster images. The night sky is
-   three cheap CSS layers (sky gradient + two tiled star fields). Charts are
-   server-rendered SVG / pure CSS rendered by the components under
-   $lib/components/observatory.
+   Performance: zero JS, zero webfonts (Tahoma/MS Sans are system fonts), zero
+   raster images. The window chrome is pure CSS 3D bevels (layered inset
+   box-shadows, the authentic Win95 recipe). Charts are server-rendered SVG /
+   pure CSS rendered by the components under $lib/components/observatory; they
+   recolor automatically from the --obs-* tokens below.
    ============================================================================ */
 
 .observatory {
-  /* ---- Night-sky surfaces (cool indigo -> black) ---- */
-  --obs-void: #05060e;
-  --obs-bg: #080a16;
-  --obs-surface: #0d1022;
-  --obs-surface-2: #131732;
-  --obs-surface-3: #1a1f44;
+  /* ---- Surfaces: silver control face + white sunken client wells ---- */
+  --obs-void: #008080; /* teal desktop */
+  --obs-bg: #008080;
+  --obs-surface: #c0c0c0; /* ButtonFace */
+  --obs-surface-2: #c0c0c0;
+  --obs-surface-3: #ffffff;
 
-  /* ---- Ink (faint blue-white starlight) ---- */
-  --obs-ink: #eef1ff;
-  --obs-ink-dim: #aab1d6;
-  --obs-ink-mute: #8a93c4;
-  --obs-ink-faint: #5a6299;
+  /* ---- Ink: near-black on silver/white (strong AA contrast) ---- */
+  --obs-ink: #000000;
+  --obs-ink-dim: #1d1d1d;
+  --obs-ink-mute: #3a3a3a;
+  --obs-ink-faint: #555555;
 
-  /* ---- Accents: gold + cyan + violet on near-black ---- */
-  --obs-gold: #f4cf7a;
-  --obs-cyan: #6fe6ff;
-  --obs-violet: #c9b3ff;
-  --obs-rose: #ff99c1;
-  --obs-green: #7be0a8;
+  /* ---- Accents mapped to the VGA 16-color palette (legible on light) ---- */
+  --obs-gold: #808000; /* olive */
+  --obs-cyan: #000080; /* navy (primary line/area + links) */
+  --obs-violet: #800080; /* purple */
+  --obs-rose: #800000; /* maroon */
+  --obs-green: #008000; /* green */
 
   /* ---- Ordered chart series ---- */
-  --obs-c1: #6fe6ff;
-  --obs-c2: #f4cf7a;
-  --obs-c3: #c9b3ff;
-  --obs-c4: #ff99c1;
-  --obs-c5: #7be0a8;
+  --obs-c1: #000080; /* navy */
+  --obs-c2: #008080; /* teal */
+  --obs-c3: #800080; /* purple */
+  --obs-c4: #800000; /* maroon */
+  --obs-c5: #008000; /* green */
 
-  /* ---- Heat scale (deep-sea blue core -> gold flare) ---- */
-  --obs-heat-lo: #142a4a;
-  --obs-heat-hi: #f4cf7a;
+  /* ---- Heat scale (near-white -> navy) ---- */
+  --obs-heat-lo: #e8eefc;
+  --obs-heat-hi: #000080;
 
-  /* ---- Lines + grid (faint star-chart rules) ---- */
-  --obs-grid: rgba(120, 140, 210, 0.1);
-  --obs-grid-strong: rgba(120, 140, 210, 0.18);
-  --obs-border: rgba(143, 168, 255, 0.12);
-  --obs-border-strong: rgba(143, 168, 255, 0.22);
+  /* ---- Lines + grid (on white/silver wells) ---- */
+  --obs-grid: #d4d0c8;
+  --obs-grid-strong: #a0a0a0;
+  --obs-border: #808080;
+  --obs-border-strong: #000000;
 
-  /* ---- Static glows ---- */
-  --obs-glow-cyan: 0 0 10px rgba(111, 230, 255, 0.45);
-  --obs-glow-gold: 0 0 12px rgba(244, 207, 122, 0.4);
-  --obs-glow-violet: 0 0 10px rgba(184, 156, 255, 0.4);
+  /* ---- Win95 is flat: no glows ---- */
+  --obs-glow-cyan: none;
+  --obs-glow-gold: none;
+  --obs-glow-violet: none;
 
-  /* ---- Sharp instrument-panel radii (not the site 6/12/16) ---- */
-  --obs-r-sm: 3px;
-  --obs-r-md: 8px;
-  --obs-r-lg: 14px;
+  /* ---- Everything is square ---- */
+  --obs-r-sm: 0;
+  --obs-r-md: 0;
+  --obs-r-lg: 0;
 
-  --obs-shadow: 0 1px 0 rgba(143, 168, 255, 0.06) inset, 0 8px 30px rgba(0, 2, 12, 0.55);
-  --obs-card-bg: linear-gradient(180deg, rgba(19, 23, 50, 0.72), rgba(13, 16, 34, 0.72));
-  --obs-focus: 0 0 0 2px #05060e, 0 0 0 4px #6fe6ff;
+  /* ---- 3D bevels: the defining Win95 look (classic 4-inset recipe) ---- */
+  --obs-raised:
+    inset -1px -1px #0a0a0a, inset 1px 1px #ffffff, inset -2px -2px #808080,
+    inset 2px 2px #dfdfdf;
+  --obs-sunken:
+    inset -1px -1px #ffffff, inset 1px 1px #808080, inset -2px -2px #dfdfdf,
+    inset 2px 2px #0a0a0a;
 
-  /* ---- Type: zero-webfont. Elegant system serif for display numerals, system
-     sans for body, mono for ids. Tabular figures so numbers never jitter. ---- */
-  --obs-font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman",
-    serif;
-  --obs-font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
-    sans-serif;
-  --obs-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  /* Structural cards use --obs-shadow; point it at the raised bevel. */
+  --obs-shadow: var(--obs-raised);
+  --obs-card-bg: #c0c0c0;
+  /* Win95 keyboard focus = dotted rectangle. */
+  --obs-focus: 0 0 0 0 transparent;
+
+  /* ---- Type: Tahoma / MS Sans, the Win9x system faces. Zero webfont. ---- */
+  --obs-font-display: Tahoma, "MS Sans Serif", Geneva, Verdana, sans-serif;
+  --obs-font-body: Tahoma, "MS Sans Serif", Geneva, Verdana, sans-serif;
+  --obs-font-mono: "Courier New", Courier, monospace;
 
   color: var(--obs-ink);
   font-family: var(--obs-font-body);
-  font-size: 15px;
-  line-height: 1.6;
+  font-size: 12px;
+  line-height: 1.4;
   font-variant-numeric: tabular-nums;
   min-height: 100dvh;
-  position: relative;
-  isolation: isolate;
-  background:
-    radial-gradient(140% 100% at 50% -10%, #0b1030 0%, #080a16 45%, #05060e 100%) fixed;
+  background: #008080;
+  padding: clamp(0.5rem, 2vw, 1.5rem) clamp(0.5rem, 2vw, 1.5rem) 2rem;
 }
 
-/* Body/html paint so no cozy-theme background peeks around the edges.
-   Scoped to this route because this file only loads here. */
+/* Paint the page chrome teal so nothing cozy peeks at the edges. Scoped to
+   this route because this file only loads here. */
 :global(html:has(.observatory)),
 :global(body:has(.observatory)) {
-  background: #05060e;
+  background: #008080;
 }
 
-/* ---- Star field: two tiled layers of tiny dots, pure CSS, no images ---- */
-.observatory::before,
-.observatory::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-}
-.observatory::before {
-  background-image:
-    radial-gradient(1px 1px at 20% 30%, rgba(238, 241, 255, 0.7), transparent),
-    radial-gradient(1px 1px at 75% 44%, rgba(238, 241, 255, 0.5), transparent),
-    radial-gradient(1.5px 1.5px at 50% 70%, rgba(184, 156, 255, 0.5), transparent),
-    radial-gradient(1px 1px at 88% 18%, rgba(111, 230, 255, 0.5), transparent),
-    radial-gradient(1px 1px at 12% 82%, rgba(244, 207, 122, 0.5), transparent);
-  background-repeat: repeat;
-  background-size: 320px 320px;
-  opacity: 0.6;
-  animation: obs-twinkle 6s ease-in-out infinite alternate;
-}
-.observatory::after {
-  background-image:
-    radial-gradient(1px 1px at 40% 12%, rgba(238, 241, 255, 0.4), transparent),
-    radial-gradient(1px 1px at 65% 88%, rgba(238, 241, 255, 0.35), transparent),
-    radial-gradient(1px 1px at 8% 50%, rgba(238, 241, 255, 0.3), transparent);
-  background-repeat: repeat;
-  background-size: 200px 200px;
-  opacity: 0.4;
-}
-
-@keyframes obs-twinkle {
-  from {
-    opacity: 0.45;
-  }
-  to {
-    opacity: 0.7;
-  }
-}
-
-/* ---- Layout vocabulary shared by the page + components ---- */
+/* ---- The whole page is one maximized application window ---- */
 .observatory .obs-shell {
   max-width: 1180px;
   margin: 0 auto;
-  padding: clamp(1.5rem, 4vw, 3rem) clamp(1rem, 3vw, 2rem) 4rem;
+  background: #c0c0c0;
+  box-shadow: var(--obs-raised);
+  padding: 3px;
 }
-.observatory .obs-section {
-  margin-top: clamp(2.5rem, 6vw, 4.5rem);
-}
-.observatory .obs-eyebrow {
-  font-family: var(--obs-font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.22em;
-  font-size: 0.72rem;
-  color: var(--obs-gold);
-  margin: 0 0 1rem;
+
+/* ---- Window title bar with classic min/max/close controls ---- */
+.observatory .obs-titlebar {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 2px 2px 2px 6px;
+  background: linear-gradient(90deg, #000080 0%, #1084d0 100%);
+  color: #ffffff;
+  user-select: none;
 }
-.observatory .obs-eyebrow::before {
-  content: "";
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--obs-gold);
-  box-shadow: var(--obs-glow-gold);
+.observatory .obs-titlebar-label {
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.observatory .obs-card {
-  background: var(--obs-card-bg);
-  border: 1px solid var(--obs-border);
-  border-radius: var(--obs-r-md);
-  box-shadow: var(--obs-shadow);
-  padding: clamp(1rem, 2.5vw, 1.5rem);
+.observatory .obs-titlebar-controls {
+  display: flex;
+  gap: 2px;
+  flex: none;
 }
-.observatory .obs-grid {
+.observatory .obs-titlebar-controls i {
+  width: 18px;
+  height: 16px;
   display: grid;
-  gap: clamp(0.75rem, 2vw, 1.25rem);
+  place-items: center;
+  background: #c0c0c0;
+  color: #000;
+  box-shadow: var(--obs-raised);
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.observatory .obs-window-body {
+  padding: clamp(0.75rem, 2.5vw, 1.5rem) clamp(0.75rem, 2.5vw, 1.5rem) 1rem;
+}
+
+/* ---- Layout vocabulary shared by the page + components ---- */
+.observatory .obs-section {
+  margin-top: clamp(1.5rem, 4vw, 2.5rem);
+}
+.observatory .obs-eyebrow {
+  font-family: var(--obs-font-body);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  font-size: 0.78rem;
+  color: #000080;
+  margin: 0 0 0.75rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid #808080;
+}
+
+/* Cards are raised silver panels by default (KPI tiles, etc.). */
+.observatory .obs-card {
+  background: #c0c0c0;
+  box-shadow: var(--obs-raised);
+  border: 0;
+  border-radius: 0;
+  padding: clamp(0.6rem, 1.6vw, 0.9rem);
+}
+
+/* Cards that hold a chart become sunken WHITE client wells with a navy
+   title-bar strip, so the SVG reads at maximum contrast. */
+.observatory .obs-card:has(> .obs-chart-title) {
+  background: #ffffff;
+  box-shadow: var(--obs-sunken);
+  padding: 6px;
 }
 .observatory .obs-chart-title {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--obs-ink-dim);
-  margin: 0 0 0.75rem;
+  margin: -6px -6px 6px;
+  padding: 2px 6px;
+  background: linear-gradient(90deg, #000080 0%, #1084d0 100%);
+  color: #ffffff;
+  font-family: var(--obs-font-body);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.observatory .obs-grid {
+  display: grid;
+  gap: clamp(0.5rem, 1.5vw, 0.9rem);
 }
 .observatory .obs-num {
-  font-family: var(--obs-font-display);
+  font-family: var(--obs-font-body);
+  font-weight: 700;
   font-variant-numeric: tabular-nums lining;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
 }
+
+/* Classic blue underlined hyperlinks. */
 .observatory a {
-  color: var(--obs-cyan);
+  color: #0000ee;
+  text-decoration: underline;
 }
+.observatory a:visited {
+  color: #551a8b;
+}
+
+/* Win95 keyboard focus: dotted rectangle, no glow. */
 .observatory a:focus-visible,
 .observatory :focus-visible {
-  outline: none;
-  box-shadow: var(--obs-focus);
-  border-radius: var(--obs-r-sm);
+  outline: 1px dotted #000000;
+  outline-offset: -2px;
+  box-shadow: none;
 }
 
-/* Higher-contrast users: lift faint ink and grid, drop glow. */
+/* ---- Override the few night-sky decorations baked into components ---- */
+.observatory .hero-stat .value {
+  text-shadow: none;
+  font-family: var(--obs-font-body);
+}
+.observatory .hero-stat .delta {
+  border-radius: 0;
+  box-shadow: var(--obs-raised);
+  background: #c0c0c0;
+  border: 0;
+}
+
+/* Higher-contrast users: darken the faint ink + grid. */
 @media (prefers-contrast: more) {
   .observatory {
-    --obs-ink-mute: #a8b0d6;
-    --obs-ink-faint: #828ab5;
-    --obs-grid: rgba(120, 140, 210, 0.2);
-    --obs-glow-cyan: none;
-    --obs-glow-gold: none;
-    --obs-glow-violet: none;
-  }
-}
-
-/* Respect reduced motion: no twinkle. */
-@media (prefers-reduced-motion: reduce) {
-  .observatory::before {
-    animation: none;
+    --obs-ink-mute: #1a1a1a;
+    --obs-ink-faint: #2a2a2a;
+    --obs-grid: #9a9a9a;
   }
 }
