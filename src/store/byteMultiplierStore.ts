@@ -72,7 +72,9 @@ const upsertMultiplierStmt = db.prepare(`
     multiplier_role_id = excluded.multiplier_role_id,
     multiplier_name = excluded.multiplier_name,
     multiplier_value = excluded.multiplier_value,
-    expires_at = excluded.expires_at,
+    -- Longest-wins: a stray or weaker write must never SHORTEN an active window
+    -- (e.g. redeeming an epic while a longer legendary window is live). #00076
+    expires_at = MAX(excluded.expires_at, active_byte_multipliers.expires_at),
     token_rarity = excluded.token_rarity,
     redeemed_by = excluded.redeemed_by,
     created_at = strftime('%s', 'now')

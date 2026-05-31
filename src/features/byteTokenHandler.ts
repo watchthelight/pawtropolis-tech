@@ -16,6 +16,7 @@ import type { ButtonInteraction, StringSelectMenuInteraction, GuildMember } from
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from "discord.js";
 import { randomUUID } from "node:crypto";
 import { logger } from "../lib/logger.js";
+import { db } from "../db/db.js";
 import { isPanicMode } from "./panicStore.js";
 import { canManageRole } from "./roleAutomation.js";
 import { logActionPretty } from "../logging/pretty.js";
@@ -181,6 +182,22 @@ async function handleConfirm(
 
   // Defer update immediately (gives us 15 minutes to respond)
   await interaction.deferUpdate();
+
+  // Reentrancy guard. The confirm button isn't disabled until the final editReply,
+  // so a double-click fires two concurrent handlers that both observe the token
+  // role still present (it is removed several awaits later) and both redeem one
+  // token - refreshing/extending the multiplier window. Atomically consume the
+  // confirmId so only the first click proceeds (#00076).
+  const consumed = db
+    .prepare(`INSERT OR IGNORE INTO consumed_confirmations (confirm_id) VALUES (?)`)
+    .run(parsed.confirmId);
+  if (consumed.changes === 0) {
+    logger.info(
+      { userId: interaction.user.id, guildId: guild.id, confirmId: parsed.confirmId },
+      "[byteToken] duplicate confirm ignored (already processed)"
+    );
+    return;
+  }
 
   // Get token configuration
   if (!parsed.rarity || !BYTE_TOKEN_CONFIG[parsed.rarity]) {
