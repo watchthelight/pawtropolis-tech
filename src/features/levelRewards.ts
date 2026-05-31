@@ -127,6 +127,20 @@ export async function handleLevelRoleAdded(
     //  - changes === 0 means row already existed → skip (duplicate)
     //  - changes === 1 means row was inserted → proceed (first time)
     //  - No TOCTOU race possible — SQLite enforces the constraint at engine level
+    // Check the reward catalog BEFORE writing the dedup marker. If this level has
+    // no configured rewards we must NOT record a "granted" fact - otherwise staff
+    // adding a reward to this level later could never reach users who already
+    // passed it (the permanent UNIQUE(guild,user,level) marker short-circuits them).
+    const rewards = getLevelRewards(guild.id, level);
+    if (rewards.length === 0) {
+      logger.debug({
+        evt: "no_rewards_for_level",
+        guildId: guild.id,
+        level,
+      }, "No rewards configured for this level");
+      return results;
+    }
+
     const dedupResult = db.prepare(`
       INSERT OR IGNORE INTO level_reward_granted (guild_id, user_id, level)
       VALUES (?, ?, ?)
@@ -139,17 +153,6 @@ export async function handleLevelRoleAdded(
         userId: member.id,
         level,
       }, `Skipping duplicate level ${level} reward (already granted)`);
-      return results;
-    }
-
-    // Get rewards for this level
-    const rewards = getLevelRewards(guild.id, level);
-    if (rewards.length === 0) {
-      logger.debug({
-        evt: "no_rewards_for_level",
-        guildId: guild.id,
-        level,
-      }, "No rewards configured for this level");
       return results;
     }
 
