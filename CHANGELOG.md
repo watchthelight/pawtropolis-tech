@@ -6,6 +6,108 @@ All changes to Pawtropolis Tech are tracked here.
 
 ## [Unreleased]
 
+Everything landed since 6.0.0 (2026-05-15). The headline is the public Stats
+Observatory page; the rest is a deep correctness, security, and tooling pass:
+TypeScript strict mode finished, the test framework upgraded, large modules
+split apart, and the May security findings cleared.
+
+### Added
+
+- **Stats Observatory** (`/observatory`): a public, zero-JavaScript stats page
+  with its own fixed night-sky theme, separate from the rest of the site. Fourteen
+  server-rendered SVG and pure-CSS charts (member growth, joins vs leaves, a 7x24
+  activity heatmap, cohort retention, channel and voice activity, event turnout,
+  QOTD funnel, top reactions, and an anonymized moderation-transparency block). The
+  page reads only precomputed rollup tables (migration 078) refreshed out of band by
+  `npm run stats:refresh`, so a request is a handful of small indexed reads: 3
+  network requests total (1 HTML + 2 CSS), no client JS, no web fonts, no images.
+  One-command update path documented in `docs/operations/stats-observatory.md`.
+  (#00049 to #00055)
+- **`/changelog` web page**: this changelog, rendered and themed on the dashboard.
+  `/CHANGELOG.md` redirects here. (#00059)
+- **`gen:test-schema` script**: regenerates `tests/fixtures/schema.sql` from a
+  fully migrated database so the test fixture cannot silently drift from the real
+  schema. (#00045)
+
+### Changed
+
+- **TypeScript strict mode completed.** Enabled `noUncheckedIndexedAccess`
+  (354 errors cleared across `src/lib`, `src/web`, `src/features`, `src/commands`,
+  and `scripts`) and `noUnusedLocals` + `noUnusedParameters` (114 unused symbols
+  pruned). Index access is now guarded everywhere; dead imports and variables are
+  gone. (#00024)
+- **Vitest upgraded 3.2.4 to 4.1.7** (with `@vitest/coverage-v8` and `@vitest/ui`).
+  Fixed the v4 fallout: mock constructors now use function implementations, default
+  mock implementations are re-established between tests (v4 resets them), a stale
+  mock path was repointed, and two tests that had been passing for the wrong reason
+  now exercise the real code path. (#00032)
+- **Large modules split for readability**, no behavior change: `index.ts`
+  (2705 to 341 lines) into `src/events/` handlers plus a startup module (#00007);
+  `dashboardApi.ts` (1792 to 114) into 11 route modules (#00008); `audit.ts`
+  (1760 to 115) into subcommand modules (#00009); `serverAuditDocs.ts` into
+  analyze/docs/types modules (#00010); and `gate.ts` (1602 lines) into a
+  Discord-independent state machine plus focused handler modules (#00011).
+- **TypeScript upgraded to 6.0.3** (#00033) and **typescript-eslint to ^8.59.4**
+  (#00034).
+- `@anthropic-ai/sdk` moved to devDependencies (offline tooling only), out of the
+  production install footprint (#00038).
+
+### Fixed
+
+- **Error-card "Ping developer" is now rate limited per trace** (10 minutes). One
+  error pings the bot dev once no matter how many times the button is clicked;
+  blocked clicks get an ephemeral reply instead of another public ping. (#00058)
+- **Dashboard reset-to-Discord theme button restored**: a refactor had removed the
+  function and its backing state while the button kept calling it, so it threw at
+  runtime. Also fixed the remaining web type errors (scan-session null narrowing,
+  art job `thumbnailUrl`, two async GSAP callbacks): web `svelte-check` is now at
+  zero errors. (#00057)
+- **`/api/export`**: removed two routes that referenced a nonexistent table and
+  column and returned 500 in production. (#00044)
+- **Migration runner**: repaired migrations the runner could not apply, and guarded
+  `applied_at` formatting against millisecond and invalid values. Regenerated
+  `schema.sql` from the post-077 dump (88 tables) and dropped all `MISSING_DDL`
+  shims. (#00045)
+- **Litestream**: the replication data directory must be writable; corrected a
+  read-only mount assumption.
+
+### Security
+
+- Patched all HIGH and CRITICAL npm vulnerabilities across root and `web/`: removed
+  the unused `@xenova/transformers` (32 transitive packages dropped), upgraded
+  fastify, discord.js, and the web Vite/SvelteKit/Svelte chain, and added overrides
+  for protobufjs, fast-uri, jws, minimatch, and ws. (#00002, #00003, #00004)
+- Upgraded Sentry packages (`@sentry/node`, `@sentry/profiling-node`) 26 patches
+  forward. (#00005)
+- `npm audit fix`: rollup path-traversal (HIGH) and ajv ReDoS (moderate) in the root
+  build chain (#00048); postcss XSS and brace-expansion DoS in `web/` (#00056).
+  Both audits are now clean of all non-`cookie`-chain issues.
+- **CSRF**: state-changing dashboard routes now require an `Origin` in the
+  configured allowlist (#00006).
+- Guild slash commands hidden in DMs via `setDMPermission(false)` (#00025); deploy
+  lock moved out of world-writable `/tmp` (#00028); SSH host validation added to
+  `deploy.sh` (#00039); database auto-backup before deploy is now the default
+  (#00031).
+
+### Internal
+
+- **Test coverage expanded** without booting the bot: web API route and dashboard
+  page tests (about 125 tests, new `tests/web/` helpers) (#00012); SSE handler tests
+  (#00043); `flagsStore` CRUD (#00047); `securityDiff` and `avatarScan` helpers
+  (#00016, #00017); scheduler smoke tests (#00018); `health` timeout and
+  `hasStaffPermissions` suites restored (#00015, #00014). The suite is now 252 files
+  / 5457 tests, green, no skips.
+- CI: smoke-check the built artifact with `node --check dist/index.js` (#00030);
+  Discord webhook alert on cron failures (#00027).
+- Operational hardening: PM2 `kill_timeout` raised for graceful shutdown (#00029);
+  `/listopen` rate limited per guild (#00019); ESLint env configured for
+  scripts/workers/web/Svelte runes, cutting `no-undef` noise about 91% (#00023);
+  `web/` reformatted with Prettier (#00022); `.env.example` synced with the runtime
+  variables and stale `.env` backups removed (#00041, #00042).
+- Replaced `any` with precise types in `scripts/commands.ts` and `opsHealth.ts`
+  (#00020, #00021); resolved or annotated stale `TODO`s in `activityTracker`,
+  `art.ts`, and `build-overlay-weekly.mjs` (#00036, #00035, #00037).
+
 ## [6.0.0] - 2026-05-15
 
 Major release. Ships a new `/handbook` web page that mirrors every word of
