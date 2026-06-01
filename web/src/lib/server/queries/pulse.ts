@@ -744,9 +744,12 @@ function detectLeaveSpike(guildId: string, ctx: InsightCtx): Insight | null {
   const { nowS, startS: weekStart, winLen, winLabel } = ctx;
   const fourWeeksAgo = nowS - 4 * winLen;
 
+  // Leaves come from action_log append-only member_leave events (created_at_s,
+  // unix seconds), not user_activity.left_at: a rejoin overwrites left_at, so the
+  // mutable table would erase historical leaves and the spike retroactively.
   // Guard: need at least 2 weeks of leave data to compare meaningfully
   const priorWeeks = count(
-    "SELECT COUNT(*) as count FROM user_activity WHERE guild_id = ? AND left_at >= ? AND left_at < ?",
+    "SELECT COUNT(*) as count FROM action_log WHERE guild_id = ? AND action = 'member_leave' AND created_at_s >= ? AND created_at_s < ?",
     guildId,
     fourWeeksAgo,
     weekStart
@@ -754,14 +757,14 @@ function detectLeaveSpike(guildId: string, ctx: InsightCtx): Insight | null {
   if (priorWeeks === 0) return null; // tracking just started — no baseline
 
   const thisWeek = count(
-    "SELECT COUNT(*) as count FROM user_activity WHERE guild_id = ? AND left_at >= ? AND left_at < ?",
+    "SELECT COUNT(*) as count FROM action_log WHERE guild_id = ? AND action = 'member_leave' AND created_at_s >= ? AND created_at_s < ?",
     guildId,
     weekStart,
     nowS
   );
   const fourWeekAvg =
     count(
-      "SELECT COUNT(*) as count FROM user_activity WHERE guild_id = ? AND left_at >= ? AND left_at < ?",
+      "SELECT COUNT(*) as count FROM action_log WHERE guild_id = ? AND action = 'member_leave' AND created_at_s >= ? AND created_at_s < ?",
       guildId,
       fourWeeksAgo,
       nowS
@@ -1277,17 +1280,28 @@ function detectBehavioralFlagCluster(guildId: string, ctx: InsightCtx): Insight 
 function detectRapidJoinLeave(guildId: string, ctx: InsightCtx): Insight | null {
   const { nowS, startS: weekStart } = ctx;
 
+  // Pair each member_join event with a subsequent member_leave for the same user
+  // within 24h, from action_log (append-only, created_at_s in unix seconds).
+  // user_activity is mutable current-state: a rejoin moves joined_at and clears
+  // left_at, so a real rapid join-leave would vanish from the mutable table.
   const rapidLeaves = count(
-    `SELECT COUNT(*) as count FROM user_activity
-		 WHERE guild_id = ? AND joined_at >= ? AND joined_at < ?
-		   AND left_at IS NOT NULL AND (left_at - joined_at) < 86400`,
+    `SELECT COUNT(*) as count FROM action_log j
+		 WHERE j.guild_id = ? AND j.action = 'member_join'
+		   AND j.created_at_s >= ? AND j.created_at_s < ?
+		   AND EXISTS (
+		     SELECT 1 FROM action_log l
+		     WHERE l.guild_id = j.guild_id AND l.actor_id = j.actor_id
+		       AND l.action = 'member_leave'
+		       AND l.created_at_s >= j.created_at_s
+		       AND l.created_at_s < j.created_at_s + 86400
+		   )`,
     guildId,
     weekStart,
     nowS
   );
 
   const totalJoins = count(
-    "SELECT COUNT(*) as count FROM user_activity WHERE guild_id = ? AND joined_at >= ? AND joined_at < ?",
+    "SELECT COUNT(*) as count FROM action_log WHERE guild_id = ? AND action = 'member_join' AND created_at_s >= ? AND created_at_s < ?",
     guildId,
     weekStart,
     nowS

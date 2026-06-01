@@ -170,6 +170,13 @@ client.on("guildMemberRemove", wrapEvent("guildMemberRemove", async (member) => 
   const { cleanupSession } = await import("../features/gate/dmVerification.js");
   cleanupSession(guildId, userId);
 
+  // Append-only leave event (mirrors member_join): one immutable row per leave
+  // in action_log, so churn metrics never change retroactively on rejoin.
+  await logActionPretty(member.guild, {
+    actorId: userId,
+    action: "member_leave",
+  });
+
   // Track member departure in user_activity
   const { trackLeave } = await import("../features/activityTracker.js");
   trackLeave(guildId, userId);

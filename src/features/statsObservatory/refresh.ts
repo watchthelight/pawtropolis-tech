@@ -171,11 +171,14 @@ function rebuildDailyMetrics(
     if (a) a.member_count = r.member_count == null ? null : num(r.member_count);
   }
 
-  // joins / leaves from user_activity (INTEGER seconds)
+  // joins / leaves from action_log append-only events (created_at_s is INTEGER
+  // seconds). user_activity is mutable current-state: a rejoin erases the prior
+  // leave and moves the join day, so historical churn would change retroactively.
+  // action_log records one immutable row per member_join / member_leave.
   for (const r of db
     .prepare(
-      `SELECT date(joined_at, 'unixepoch') AS day, COUNT(*) AS n
-       FROM user_activity WHERE guild_id = ? AND joined_at >= ? GROUP BY day`
+      `SELECT date(created_at_s, 'unixepoch') AS day, COUNT(*) AS n
+       FROM action_log WHERE guild_id = ? AND action = 'member_join' AND created_at_s >= ? GROUP BY day`
     )
     .all(guildId, windowStartS) as Row[]) {
     const a = touch(String(r.day));
@@ -183,8 +186,8 @@ function rebuildDailyMetrics(
   }
   for (const r of db
     .prepare(
-      `SELECT date(left_at, 'unixepoch') AS day, COUNT(*) AS n
-       FROM user_activity WHERE guild_id = ? AND left_at IS NOT NULL AND left_at >= ? GROUP BY day`
+      `SELECT date(created_at_s, 'unixepoch') AS day, COUNT(*) AS n
+       FROM action_log WHERE guild_id = ? AND action = 'member_leave' AND created_at_s >= ? GROUP BY day`
     )
     .all(guildId, windowStartS) as Row[]) {
     const a = touch(String(r.day));
@@ -260,12 +263,13 @@ function rebuildDailyMetrics(
     if (a) a.apps_approved = num(r.n);
   }
 
-  // baseline cumulative net before the window so the 90d curve is anchored
+  // baseline cumulative net before the window so the 90d curve is anchored.
+  // From action_log append-only events (every join/leave counted once, never erased).
   const joinsBefore = num(
-    (db.prepare(`SELECT COUNT(*) AS n FROM user_activity WHERE guild_id = ? AND joined_at < ?`).get(guildId, windowStartS) as Row).n
+    (db.prepare(`SELECT COUNT(*) AS n FROM action_log WHERE guild_id = ? AND action = 'member_join' AND created_at_s < ?`).get(guildId, windowStartS) as Row).n
   );
   const leavesBefore = num(
-    (db.prepare(`SELECT COUNT(*) AS n FROM user_activity WHERE guild_id = ? AND left_at IS NOT NULL AND left_at < ?`).get(guildId, windowStartS) as Row).n
+    (db.prepare(`SELECT COUNT(*) AS n FROM action_log WHERE guild_id = ? AND action = 'member_leave' AND created_at_s < ?`).get(guildId, windowStartS) as Row).n
   );
 
   const wauStmt = db.prepare(
@@ -355,24 +359,52 @@ function rebuildCohortRetention(db: Database, guildId: string, nowS: number): nu
     `INSERT INTO cohort_retention (guild_id, cohort_week, week_offset, cohort_size, retained)
      VALUES (?, ?, ?, ?, ?)`
   );
+
+  // Bucket each user by the week of their FIRST member_join so a later rejoin
+  // never moves the user's cohort (user_activity would, because it upserts).
+  // member events live in action_log (append-only); actor_id is the member.
+  const lookbackStartS = thisMonday - COHORT_LOOKBACK_WEEKS * 7 * DAY_S;
+  const firstJoins = db
+    .prepare(
+      `SELECT actor_id, MIN(created_at_s) AS first_join
+       FROM action_log
+       WHERE guild_id = ? AND action = 'member_join' AND created_at_s >= ?
+       GROUP BY actor_id`
+    )
+    .all(guildId, lookbackStartS) as Row[];
+
+  // Per-user "currently present" flag: the user's MOST RECENT membership event
+  // (latest created_at_s among member_join / member_leave) is a member_join.
+  const presentStmt = db.prepare(
+    `SELECT action FROM action_log
+     WHERE guild_id = ? AND actor_id = ? AND action IN ('member_join','member_leave')
+     ORDER BY created_at_s DESC, id DESC
+     LIMIT 1`
+  );
+
+  // Group cohort members by their first-join week and tally presence.
+  const cohorts = new Map<number, { size: number; present: number }>();
+  for (const u of firstJoins) {
+    const weekStart = mondayStartS(num(u.first_join));
+    const latest = presentStmt.get(guildId, String(u.actor_id)) as Row | undefined;
+    const isPresent = latest != null && String(latest.action) === "member_join";
+    const c = cohorts.get(weekStart) ?? { size: 0, present: 0 };
+    c.size++;
+    if (isPresent) c.present++;
+    cohorts.set(weekStart, c);
+  }
+
   let rows = 0;
   for (let w = 1; w <= COHORT_LOOKBACK_WEEKS; w++) {
     const weekStart = thisMonday - w * 7 * DAY_S;
-    const weekEnd = weekStart + 7 * DAY_S;
-    const members = db
-      .prepare(`SELECT left_at FROM user_activity WHERE guild_id = ? AND joined_at >= ? AND joined_at < ?`)
-      .all(guildId, weekStart, weekEnd) as Row[];
-    const size = members.length;
-    if (size === 0) continue;
+    const c = cohorts.get(weekStart);
+    if (!c || c.size === 0) continue;
     for (const offset of COHORT_OFFSETS) {
       const observeAt = weekStart + offset * 7 * DAY_S;
       if (observeAt > nowS) continue; // offset not yet observable
-      let retained = 0;
-      for (const m of members) {
-        const left = m.left_at == null ? null : num(m.left_at);
-        if (left == null || left >= observeAt) retained++;
-      }
-      insert.run(guildId, utcDay(weekStart), offset, size, retained);
+      // "Still present" is current-state (latest event is a join), preserved
+      // across offsets so the row shape is unchanged for the dashboard.
+      insert.run(guildId, utcDay(weekStart), offset, c.size, c.present);
       rows++;
     }
   }

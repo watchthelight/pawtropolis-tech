@@ -13,7 +13,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import Database from "better-sqlite3";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { refreshPublicStats, utcDay } from "../../../src/features/statsObservatory/refresh.js";
+import { refreshPublicStats, utcDay, mondayStartS } from "../../../src/features/statsObservatory/refresh.js";
 
 const DAY = 86400;
 const G = "g1";
@@ -47,7 +47,7 @@ function seed() {
     1005
   );
 
-  // --- members: joins/leaves/tenure/cohort/baseline ---
+  // --- members: tenure reads user_activity (current-state); churn reads action_log ---
   const ua = db.prepare(
     `INSERT INTO user_activity (guild_id, user_id, joined_at, first_message_at, left_at) VALUES (?, ?, ?, ?, ?)`
   );
@@ -59,6 +59,19 @@ function seed() {
   ua.run(G, "u_left", at(2026, 4, 27, 6), null, at(2026, 4, 27, 20));
   // cohort member joined ~14 weeks ago, still present
   ua.run(G, "u_cohort", NOW_S - 14 * 7 * DAY + 3 * DAY, null, null);
+
+  // append-only churn events in action_log (joins/leaves/cumulative_net + cohort
+  // now derive from these, NOT from the mutable user_activity table above).
+  const mem = db.prepare(
+    `INSERT INTO action_log (guild_id, actor_id, action, created_at_s) VALUES (?, ?, ?, ?)`
+  );
+  // pre-window baseline joins (old1 + u_cohort), no pre-window leaves -> +2
+  mem.run(G, "old1", "member_join", at(2025, 10, 1));
+  mem.run(G, "u_cohort", "member_join", NOW_S - 14 * 7 * DAY + 3 * DAY);
+  // within-window: u_new + u_left join yesterday (2 joins), u_left leaves yesterday (1 leave)
+  mem.run(G, "u_new", "member_join", at(2026, 4, 27, 8));
+  mem.run(G, "u_left", "member_join", at(2026, 4, 27, 6));
+  mem.run(G, "u_left", "member_leave", at(2026, 4, 27, 20));
 
   // --- messages: volume / DAU / heatmap / channels ---
   const ma = db.prepare(
@@ -280,5 +293,84 @@ describe("refreshPublicStats", () => {
     refreshPublicStats(db, G, NOW_S);
     const second = db.prepare(`SELECT * FROM daily_metrics WHERE guild_id = ? ORDER BY day`).all(G);
     expect(second).toEqual(first);
+  });
+});
+
+describe("refreshPublicStats churn from append-only action_log (rejoin regression)", () => {
+  // Core regression for #00145: user_activity is mutable current-state. A rejoin
+  // upserts joined_at and clears left_at, erasing the prior leave and moving the
+  // join day. Deriving churn from action_log member_join / member_leave events
+  // (append-only) keeps historical metrics stable across rejoins.
+  const U = "u_rejoin";
+  // Week 1 join, week 2 leave, week 5 rejoin -- all inside the 95d / 16-week window.
+  const wk1Join = at(2026, 3, 6, 10); // 2026-04-06 10:00 (a Monday)
+  const wk2Leave = at(2026, 3, 13, 12); // 2026-04-13 12:00
+  const wk5Rejoin = at(2026, 4, 4, 9); // 2026-05-04 09:00
+
+  function seedRejoin() {
+    const mem = db.prepare(
+      `INSERT INTO action_log (guild_id, actor_id, action, created_at_s) VALUES (?, ?, ?, ?)`
+    );
+    mem.run(G, U, "member_join", wk1Join);
+    mem.run(G, U, "member_leave", wk2Leave);
+    mem.run(G, U, "member_join", wk5Rejoin);
+    // user_activity reflects the LATEST rejoin only (mutable current-state). If
+    // churn read this table, the week-2 leave and week-1 join day would be lost.
+    db.prepare(
+      `INSERT INTO user_activity (guild_id, user_id, joined_at, first_message_at, left_at) VALUES (?, ?, ?, ?, ?)`
+    ).run(G, U, wk5Rejoin, null, null);
+  }
+
+  it("counts the week-2 leave even though the user later rejoined", () => {
+    seedRejoin();
+    refreshPublicStats(db, G, NOW_S);
+    const leaveDay = db
+      .prepare(`SELECT leaves FROM daily_metrics WHERE guild_id = ? AND day = ?`)
+      .get(G, utcDay(wk2Leave)) as { leaves: number } | undefined;
+    expect(leaveDay?.leaves).toBe(1);
+  });
+
+  it("reflects the leave in cumulative_net at the correct historical date", () => {
+    seedRejoin();
+    refreshPublicStats(db, G, NOW_S);
+    // Day before the leave: only the week-1 join has happened -> net +1.
+    const beforeLeave = db
+      .prepare(`SELECT cumulative_net FROM daily_metrics WHERE guild_id = ? AND day = ?`)
+      .get(G, utcDay(wk2Leave - DAY)) as { cumulative_net: number };
+    // Leave day: +1 join - 1 leave -> net 0.
+    const onLeave = db
+      .prepare(`SELECT cumulative_net FROM daily_metrics WHERE guild_id = ? AND day = ?`)
+      .get(G, utcDay(wk2Leave)) as { cumulative_net: number };
+    // After the week-5 rejoin: +1 again -> net 1.
+    const afterRejoin = db
+      .prepare(`SELECT cumulative_net FROM daily_metrics WHERE guild_id = ? AND day = ?`)
+      .get(G, utcDay(wk5Rejoin)) as { cumulative_net: number };
+    expect(beforeLeave.cumulative_net).toBe(1);
+    expect(onLeave.cumulative_net).toBe(0);
+    expect(afterRejoin.cumulative_net).toBe(1);
+  });
+
+  it("buckets the user into the week-1 (first-join) cohort and counts them present after rejoin", () => {
+    seedRejoin();
+    refreshPublicStats(db, G, NOW_S);
+    const cohortWeek = utcDay(mondayStartS(wk1Join));
+    const rows = db
+      .prepare(
+        `SELECT cohort_week, cohort_size, retained FROM cohort_retention WHERE guild_id = ? AND cohort_week = ?`
+      )
+      .all(G, cohortWeek) as { cohort_week: string; cohort_size: number; retained: number }[];
+    // The user's cohort is week 1 (first join), not week 5 (the rejoin).
+    expect(rows.length).toBeGreaterThan(0);
+    for (const r of rows) {
+      expect(r.cohort_size).toBe(1);
+      // Latest membership event is the week-5 member_join -> still present.
+      expect(r.retained).toBe(1);
+    }
+    // No cohort row is created for the rejoin week.
+    const rejoinWeek = utcDay(mondayStartS(wk5Rejoin));
+    const rejoinRows = db
+      .prepare(`SELECT 1 FROM cohort_retention WHERE guild_id = ? AND cohort_week = ?`)
+      .all(G, rejoinWeek);
+    expect(rejoinRows.length).toBe(0);
   });
 });

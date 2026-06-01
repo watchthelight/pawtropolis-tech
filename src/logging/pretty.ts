@@ -37,6 +37,7 @@ export type ActionType =
   | "modmail_close"
   | "modmail_transcript_fail"
   | "member_join"
+  | "member_leave"
   | "db_recover_list"
   | "db_recover_validate"
   | "db_recover_restore"
@@ -179,6 +180,11 @@ function getActionMeta(action: ActionType): ActionMeta {
       title: "Member Joined",
       color: 0x57f287, // Green
       emoji: "👋",
+    },
+    member_leave: {
+      title: "Member Left",
+      color: 0xed4245, // Red
+      emoji: "🚪",
     },
     db_recover_list: {
       title: "Database Recovery — List Candidates",
