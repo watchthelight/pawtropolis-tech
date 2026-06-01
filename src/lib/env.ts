@@ -68,6 +68,9 @@ const raw = {
   // Manual flag alerts (optional)
   FLAGGED_REPORT_CHANNEL_ID: process.env.FLAGGED_REPORT_CHANNEL_ID?.trim(),
 
+  // Thin Line verification log channel (optional; falls back to hardcoded default in verify.ts)
+  VERIFY_LOG_CHANNEL_ID: process.env.VERIFY_LOG_CHANNEL_ID?.trim(),
+
   // Gate admin roles (optional, comma-separated role IDs)
   GATE_ADMIN_ROLE_IDS: process.env.GATE_ADMIN_ROLE_IDS?.trim(),
 
@@ -148,6 +151,9 @@ const schema = z.object({
 
   // Manual flag alerts (optional)
   FLAGGED_REPORT_CHANNEL_ID: z.string().optional(),
+
+  // Thin Line verification log channel (optional override; verify.ts falls back to a hardcoded default)
+  VERIFY_LOG_CHANNEL_ID: z.string().optional(),
 
   // Gate admin roles (optional, comma-separated role IDs)
   GATE_ADMIN_ROLE_IDS: z.string().optional(),
