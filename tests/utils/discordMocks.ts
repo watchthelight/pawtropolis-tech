@@ -270,17 +270,32 @@ function createMockOptions(config: MockOptionsConfig = {}) {
 export function createMockInteraction(
   overrides: Partial<ChatInputCommandInteraction> & { options?: MockOptionsConfig } = {}
 ): ChatInputCommandInteraction {
-  const { options: optionsConfig, ...rest } = overrides;
-  const user = createMockUser(rest.user as Partial<User> | undefined);
-  const guild = createMockGuild(rest.guild as Partial<Guild> | undefined);
-  const member = createMockMember({ user, ...rest.member as Partial<GuildMember> | undefined });
+  const {
+    options: optionsConfig,
+    user: userOverride,
+    guild: guildOverride,
+    member: memberOverride,
+    ...rest
+  } = overrides;
+  const user =
+    "user" in overrides && !userOverride
+      ? (userOverride as User)
+      : createMockUser(userOverride as Partial<User> | undefined);
+  const guild =
+    "guild" in overrides && !guildOverride
+      ? (guildOverride as Guild)
+      : createMockGuild(guildOverride as Partial<Guild> | undefined);
+  const member =
+    "member" in overrides && !memberOverride
+      ? (memberOverride as GuildMember)
+      : createMockMember({ user, ...(memberOverride as Partial<GuildMember> | undefined) });
 
   return {
     id: "interaction-123",
     user,
     member,
     guild,
-    guildId: guild.id,
+    guildId: guild?.id ?? null,
     channelId: "channel-123",
     channel: createMockChannel(),
     client: createMockClient(),
@@ -308,9 +323,19 @@ export function createMockInteraction(
 export function createMockButtonInteraction(
   overrides: Partial<ButtonInteraction> = {}
 ): ButtonInteraction {
-  const user = createMockUser(overrides.user as Partial<User> | undefined);
-  const guild = createMockGuild(overrides.guild as Partial<Guild> | undefined);
-  const member = createMockMember({ user, ...overrides.member as Partial<GuildMember> | undefined });
+  const { user: userOverride, guild: guildOverride, member: memberOverride, ...rest } = overrides;
+  const user =
+    "user" in overrides && !userOverride
+      ? (userOverride as User)
+      : createMockUser(userOverride as Partial<User> | undefined);
+  const guild =
+    "guild" in overrides && !guildOverride
+      ? (guildOverride as Guild)
+      : createMockGuild(guildOverride as Partial<Guild> | undefined);
+  const member =
+    "member" in overrides && !memberOverride
+      ? (memberOverride as GuildMember)
+      : createMockMember({ user, ...(memberOverride as Partial<GuildMember> | undefined) });
 
   return {
     id: "button-interaction-123",
@@ -318,7 +343,7 @@ export function createMockButtonInteraction(
     user,
     member,
     guild,
-    guildId: guild.id,
+    guildId: guild?.id ?? null,
     channelId: "channel-123",
     channel: createMockChannel(),
     client: createMockClient(),
@@ -335,7 +360,7 @@ export function createMockButtonInteraction(
     followUp: vi.fn().mockResolvedValue(undefined),
     update: vi.fn().mockResolvedValue(undefined),
     isButton: vi.fn().mockReturnValue(true),
-    ...overrides,
+    ...rest,
   } as unknown as ButtonInteraction;
 }
 
@@ -345,10 +370,25 @@ export function createMockButtonInteraction(
 export function createMockModalInteraction(
   overrides: Partial<ModalSubmitInteraction> & { fields?: Record<string, string> } = {}
 ): ModalSubmitInteraction {
-  const { fields: fieldsConfig, ...rest } = overrides;
-  const user = createMockUser(rest.user as Partial<User> | undefined);
-  const guild = createMockGuild(rest.guild as Partial<Guild> | undefined);
-  const member = createMockMember({ user, ...rest.member as Partial<GuildMember> | undefined });
+  const {
+    fields: fieldsConfig,
+    user: userOverride,
+    guild: guildOverride,
+    member: memberOverride,
+    ...rest
+  } = overrides;
+  const user =
+    "user" in overrides && !userOverride
+      ? (userOverride as User)
+      : createMockUser(userOverride as Partial<User> | undefined);
+  const guild =
+    "guild" in overrides && !guildOverride
+      ? (guildOverride as Guild)
+      : createMockGuild(guildOverride as Partial<Guild> | undefined);
+  const member =
+    "member" in overrides && !memberOverride
+      ? (memberOverride as GuildMember)
+      : createMockMember({ user, ...(memberOverride as Partial<GuildMember> | undefined) });
 
   return {
     id: "modal-interaction-123",
@@ -356,7 +396,7 @@ export function createMockModalInteraction(
     user,
     member,
     guild,
-    guildId: guild.id,
+    guildId: guild?.id ?? null,
     channelId: "channel-123",
     channel: createMockChannel(),
     client: createMockClient(),
