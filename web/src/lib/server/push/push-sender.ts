@@ -17,9 +17,11 @@ import type { SSEEvent, RoleChangedPayload } from "$lib/types/events";
 import {
   getSubscriptionsForDomain,
   removeSubscription,
+  removeAllSubscriptions,
   updateLastUsed,
   updateTier,
   deleteStaleSubscriptions,
+  STALE_TIER_TTL_SECONDS,
 } from "./push-db";
 import { getVapidPublicKey, getVapidPrivateKey, getVapidSubject } from "./vapid";
 
@@ -82,13 +84,29 @@ const PUSH_EVENTS: Record<string, PushEventConfig> = {
 // Push broadcast
 // ---------------------------------------------------------------------------
 
-function pushBroadcast(event: SSEEvent): void {
-  // Handle role:changed by updating tier in push-db
+// Lowest tier any pushable event is gated to. Per EVENT_TIER_VISIBILITY the
+// least privileged pushable domains are review: and modmail:, both gated at
+// "gk" (gatekeeper), so gk is the floor. A subscriber resolving below this can
+// never receive a tier-restricted payload, so on demotion past it we drop the
+// rows outright rather than keep a cache that will only ever be rejected.
+// NOTE: if a pushable event gated below gk is added to PUSH_EVENTS, lower this.
+const LOWEST_PUSHABLE_TIER: DashboardTier = "gk";
+
+export function pushBroadcast(event: SSEEvent): void {
+  // role:changed is the authoritative tier-refresh signal. Re-stamp the cached
+  // tier (and its freshness) so the send-time guard trusts it again. If the
+  // user dropped below every pushable threshold, proactively delete their
+  // subscriptions so a demoted or departed member stops receiving payloads
+  // immediately rather than waiting for the next send-time prune.
   if (event.type === "role:changed") {
     const payload = event.payload as RoleChangedPayload;
     if (payload?.userId && payload.newTier) {
       try {
-        updateTier(payload.userId, payload.newTier);
+        if (hasMinTier(payload.newTier, LOWEST_PUSHABLE_TIER)) {
+          updateTier(payload.userId, payload.newTier);
+        } else {
+          removeAllSubscriptions(payload.userId);
+        }
       } catch {
         /* non-critical */
       }
@@ -117,8 +135,25 @@ function pushBroadcast(event: SSEEvent): void {
   // Get subscriptions with this domain enabled
   const subscriptions = getSubscriptionsForDomain(config.domain);
 
+  const nowSeconds = Math.floor(Date.now() / 1000);
+
   for (const sub of subscriptions) {
-    // Tier check
+    // The stored tier is a cache. The web process cannot re-resolve a user's
+    // current tier at send time (no OAuth token here), so a tier that has not
+    // been refreshed within the TTL is not trusted: skip it and prune the row.
+    // Re-subscription (or a login / session refresh) re-resolves tier from the
+    // authoritative Discord source and re-stamps freshness.
+    if (nowSeconds - sub.tier_updated_at > STALE_TIER_TTL_SECONDS) {
+      console.log(`[Push] Pruning stale-tier subscription: ${sub.endpoint.slice(0, 60)}...`);
+      try {
+        removeSubscription(sub.endpoint);
+      } catch {
+        /* non-critical */
+      }
+      continue;
+    }
+
+    // Tier check against the (fresh) cached tier.
     if (!hasMinTier(sub.tier as DashboardTier, minTier)) continue;
 
     const pushSub = {

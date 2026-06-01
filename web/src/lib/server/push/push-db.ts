@@ -10,6 +10,17 @@ import type { DashboardTier } from "$lib/server/roles";
 
 const DB_BUSY_TIMEOUT_MS = 5000;
 
+/**
+ * Maximum age of a cached subscription tier that is still trusted at send time.
+ * The web process cannot re-resolve a user's current tier without their OAuth
+ * token (only the bot/session path can). The stored tier is therefore a cache:
+ * if it has not been refreshed within this window (via login, session refresh,
+ * or a role:changed event), it is treated as stale and not trusted for
+ * tier-restricted notifications. 7 days balances avoiding spurious churn for
+ * active staff against not leaking sensitive payloads to a long-stale device.
+ */
+export const STALE_TIER_TTL_SECONDS = 7 * 86400;
+
 const dbPath =
   process.env.PUSH_DB_PATH ||
   path.resolve(path.dirname(process.env.DB_PATH || path.join("data", "data.db")), "push.db");
@@ -38,10 +49,19 @@ function db(): Database.Database {
 				pref_flag INTEGER NOT NULL DEFAULT 1,
 				pref_audit INTEGER NOT NULL DEFAULT 0,
 				created_at INTEGER NOT NULL DEFAULT (unixepoch()),
-				last_used_at INTEGER
+				last_used_at INTEGER,
+				tier_updated_at INTEGER NOT NULL DEFAULT (unixepoch())
 			);
 			CREATE INDEX IF NOT EXISTS idx_push_user ON push_subscriptions(user_id);
 		`);
+
+    // Add tier_updated_at to subscriptions created before the freshness guard.
+    const hasTierUpdatedAt = (
+      _db.prepare("PRAGMA table_info(push_subscriptions)").all() as Array<{ name: string }>
+    ).some((c) => c.name === "tier_updated_at");
+    if (!hasTierUpdatedAt) {
+      _db.exec("ALTER TABLE push_subscriptions ADD COLUMN tier_updated_at INTEGER NOT NULL DEFAULT 0");
+    }
   }
   return _db;
 }
@@ -63,6 +83,7 @@ export interface PushSubscriptionRow {
   pref_audit: number;
   created_at: number;
   last_used_at: number | null;
+  tier_updated_at: number;
 }
 
 export interface PushPreferences {
@@ -87,8 +108,8 @@ export function upsertSubscription(
   db()
     .prepare(
       `
-		INSERT INTO push_subscriptions (user_id, tier, endpoint, keys_p256dh, keys_auth, pref_review, pref_modmail, pref_flag, pref_audit)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO push_subscriptions (user_id, tier, endpoint, keys_p256dh, keys_auth, pref_review, pref_modmail, pref_flag, pref_audit, tier_updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, unixepoch())
 		ON CONFLICT(endpoint) DO UPDATE SET
 			user_id = excluded.user_id,
 			tier = excluded.tier,
@@ -97,7 +118,8 @@ export function upsertSubscription(
 			pref_review = excluded.pref_review,
 			pref_modmail = excluded.pref_modmail,
 			pref_flag = excluded.pref_flag,
-			pref_audit = excluded.pref_audit
+			pref_audit = excluded.pref_audit,
+			tier_updated_at = unixepoch()
 	`
     )
     .run(
@@ -144,7 +166,9 @@ export function updateLastUsed(endpoint: string): void {
 }
 
 export function updateTier(userId: string, tier: DashboardTier): void {
-  db().prepare("UPDATE push_subscriptions SET tier = ? WHERE user_id = ?").run(tier, userId);
+  db()
+    .prepare("UPDATE push_subscriptions SET tier = ?, tier_updated_at = unixepoch() WHERE user_id = ?")
+    .run(tier, userId);
 }
 
 export function updatePreferences(endpoint: string, prefs: PushPreferences): void {
