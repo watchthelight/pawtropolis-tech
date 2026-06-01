@@ -21,9 +21,14 @@ import {
 import { withStep, type CommandContext } from "../lib/cmdWrap.js";
 import { db } from "../db/db.js";
 import { logger } from "../lib/logger.js";
+import { env } from "../lib/env.js";
 
 const VERIFIED_ROLE_ID = process.env.IDME_VERIFIED_ROLE_ID;
-const LOG_CHANNEL_ID = "1430015254053654599";
+// Channel where uploaded badges/IDs are posted for staff review. Configurable via
+// VERIFY_LOG_CHANNEL_ID so a deleted/moved channel can be repointed without a code
+// change; falls back to the original hardcoded channel to preserve current behavior.
+const DEFAULT_LOG_CHANNEL_ID = "1430015254053654599";
+const LOG_CHANNEL_ID = env.VERIFY_LOG_CHANNEL_ID ?? DEFAULT_LOG_CHANNEL_ID;
 
 const CATEGORIES = [
   { label: "Firefighter", value: "firefighter" },
@@ -263,6 +268,12 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   try {
     const guild = interaction.guild!;
     const logChannel = await guild.channels.fetch(LOG_CHANNEL_ID) as TextChannel | null;
+    if (!logChannel) {
+      logger.warn(
+        { userId, channelId: LOG_CHANNEL_ID, docs: uploadedImages.length },
+        "[verify] verification log channel not found; review embed not posted (set VERIFY_LOG_CHANNEL_ID to repoint)"
+      );
+    }
     if (logChannel) {
       const embed = new EmbedBuilder()
         .setTitle("Thin Line Verification")
