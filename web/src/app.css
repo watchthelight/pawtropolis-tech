@@ -1,24 +1,27 @@
+@import "@fontsource-variable/figtree";
+@import "@fontsource/space-mono/400.css";
+@import "@fontsource/space-mono/700.css";
 @import "@fontsource-variable/inter";
 @import "tailwindcss";
 
 /*
- * Pawtropolis Dashboard — Sage Observatory Design System
+ * Pawtropolis Dashboard: Sage Observatory Design System
  *
  * Three themes, one token vocabulary:
- *   observatory-dark  (:root, default)  — calm deep-space sage
- *   observatory-light ([data-theme="observatory-light"]) — warm parchment
- *   legacy            ([data-theme="legacy"]) — the original Cozy Holdfast look
+ *   observatory-dark  (:root, default): calm deep-space sage
+ *   observatory-light ([data-theme="observatory-light"]): warm parchment
+ *   legacy            ([data-theme="legacy"]): the original Cozy Holdfast look
  *
- * Source of truth is the new vocabulary: --void/--surface*/--ink*/--line*/--sage*.
- * Observatory personalises the sage hue from the Discord accent via
- * --sage-h (see stores/theme.ts). Legacy keeps the old adaptive --hue behaviour.
+ * Source of truth is the new vocabulary: void, surface, ink, line, sage.
+ * Observatory personalises the sage hue from the Discord accent via --sage-h
+ * (see stores/theme.ts). Legacy keeps the old adaptive --hue behaviour.
  *
- * Old token names (--bg/--text-*/--accent*/--border*/...) are aliased to the new
- * tokens in :root so components migrate incrementally. The legacy block redefines
- * the old names verbatim so Legacy is indistinguishable from today.
+ * The old token names (bg, text, accent, border) are aliased to the new tokens
+ * in :root so components migrate incrementally. The legacy block redefines the
+ * old names verbatim so Legacy is indistinguishable from today.
  *
- * Theme swaps must be instant: nothing here transitions background-color/color on
- * :root or body. Animate only transform / border-color / opacity on swap.
+ * Theme swaps must be instant: nothing here transitions background-color or color
+ * on :root or body. Animate only transform, border-color, and opacity on swap.
  */
 
 :root {
