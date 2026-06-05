@@ -59,6 +59,7 @@
   --sage-deep: oklch(58% calc(var(--sage-c) + 0.01) var(--sage-h));
   --sage-soft: oklch(30% calc(var(--sage-c) * 0.55) var(--sage-h));
   --sage-fill: oklch(24% calc(var(--sage-c) * 0.4) var(--sage-h));
+  --sage-muted: var(--sage-deep);
   --on-sage: oklch(17% 0.02 var(--sage-h));
 
   --good: oklch(74% 0.09 150);
@@ -189,6 +190,7 @@
   --sage-deep: oklch(38% calc(var(--sage-c) + 0.03) var(--sage-h));
   --sage-soft: oklch(88% calc(var(--sage-c) * 0.5) var(--sage-h));
   --sage-fill: oklch(92% calc(var(--sage-c) * 0.4) var(--sage-h));
+  --sage-muted: var(--sage-deep);
   --on-sage: oklch(97% 0.01 var(--sage-h));
 
   --good: oklch(50% 0.11 150);
@@ -230,6 +232,7 @@
   --sage-deep: oklch(40% 0.1 var(--hue));
   --sage-soft: oklch(25% 0.06 var(--hue));
   --sage-fill: oklch(20% 0.05 var(--hue));
+  --sage-muted: oklch(55% 0.08 var(--hue));
   --on-sage: oklch(12% 0.01 var(--hue));
   --good: oklch(65% 0.15 145);
   --warn: oklch(70% 0.15 85);
