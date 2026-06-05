@@ -1,0 +1,192 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - navigation "Main navigation" [ref=e4]:
+      - generic [ref=e5]:
+        - img "Pawtropolis" [ref=e6]
+        - generic [ref=e7]:
+          - generic [ref=e8]: Pawtropolis
+          - generic [ref=e9]: Observatory
+      - generic [ref=e10]:
+        - generic "Cassiopeia" [ref=e11]: C
+        - generic [ref=e12]:
+          - generic [ref=e13]: Cassiopeia
+          - generic [ref=e14]: Senior Moderator
+      - list [ref=e15]:
+        - listitem [ref=e16]: Operations
+        - listitem [ref=e17]:
+          - button "Home" [active] [ref=e18] [cursor=pointer]:
+            - img [ref=e20]
+            - generic [ref=e23]: Home
+        - listitem [ref=e24]:
+          - button "Reviews 3" [ref=e25] [cursor=pointer]:
+            - img [ref=e27]
+            - generic [ref=e30]: Reviews
+            - generic [ref=e31]: "3"
+        - listitem [ref=e32]:
+          - button "Stats" [ref=e33] [cursor=pointer]:
+            - img [ref=e35]
+            - generic [ref=e40]: Stats
+        - listitem [ref=e41]:
+          - button "Modmail 1" [ref=e42] [cursor=pointer]:
+            - img [ref=e44]
+            - generic [ref=e47]: Modmail
+            - generic [ref=e48]: "1"
+        - listitem [ref=e49]:
+          - button "Pulse" [ref=e50] [cursor=pointer]:
+            - img [ref=e52]
+            - generic [ref=e54]: Pulse
+        - listitem [ref=e55]:
+          - button "Heatmap" [ref=e56] [cursor=pointer]:
+            - img [ref=e58]
+            - generic [ref=e63]: Heatmap
+        - listitem [ref=e64]:
+          - button "Art" [ref=e65] [cursor=pointer]:
+            - img [ref=e67]
+            - generic [ref=e73]: Art
+        - listitem [ref=e74]:
+          - button "QOTD" [ref=e75] [cursor=pointer]:
+            - img [ref=e77]
+            - generic [ref=e80]: QOTD
+        - listitem [ref=e81]
+        - listitem [ref=e82]: Administration
+        - listitem [ref=e83]:
+          - button "Config" [ref=e84] [cursor=pointer]:
+            - img [ref=e86]
+            - generic [ref=e89]: Config
+        - listitem [ref=e90]:
+          - button "Audit" [ref=e91] [cursor=pointer]:
+            - img [ref=e93]
+            - generic [ref=e97]: Audit
+        - listitem [ref=e98]:
+          - button "System" [ref=e99] [cursor=pointer]:
+            - img [ref=e101]
+            - generic [ref=e104]: System
+        - listitem [ref=e105]
+        - listitem [ref=e106]: Reference
+        - listitem [ref=e107]:
+          - button "Handbook" [ref=e108] [cursor=pointer]:
+            - img [ref=e110]
+            - generic [ref=e113]: Handbook
+      - generic [ref=e114]:
+        - generic [ref=e115]:
+          - button "Night" [ref=e116] [cursor=pointer]:
+            - img [ref=e117]
+            - text: Night
+          - button "Day" [ref=e119] [cursor=pointer]:
+            - img [ref=e120]
+            - text: Day
+        - generic [ref=e123]: Live · synced just now
+        - link "Sign out" [ref=e124] [cursor=pointer]:
+          - /url: "#"
+          - img [ref=e125]
+          - text: Sign out
+    - main [ref=e127]:
+      - generic [ref=e367]:
+        - generic [ref=e368]:
+          - generic "Cassiopeia" [ref=e369]: C
+          - generic [ref=e370]:
+            - generic [ref=e371]:
+              - img [ref=e372]
+              - text: Good morning, Cass
+            - generic [ref=e374]: Welcome back to the Observatory
+            - generic [ref=e375]: A calm shift so far — three folks are waiting at the gate, and your inbox is nearly clear.
+            - generic [ref=e377]: Senior Moderator
+        - button "Next up Review lunar.moth's application Unclaimed · waiting 36 minutes · low risk" [ref=e378] [cursor=pointer]:
+          - img [ref=e380]
+          - generic [ref=e383]:
+            - generic [ref=e384]: Next up
+            - generic [ref=e385]: Review lunar.moth's application
+            - generic [ref=e386]: Unclaimed · waiting 36 minutes · low risk
+          - img [ref=e387]
+        - generic [ref=e389]:
+          - button "Answer QuietHarbor 1 unread modmail" [ref=e390] [cursor=pointer]:
+            - generic [ref=e391]: Answer QuietHarbor
+            - generic [ref=e392]: 1 unread modmail
+          - button "Clear your 2 claims Both submitted today" [ref=e393] [cursor=pointer]:
+            - generic [ref=e394]: Clear your 2 claims
+            - generic [ref=e395]: Both submitted today
+        - generic [ref=e396]: Your queue
+        - generic [ref=e397]:
+          - generic [ref=e398] [cursor=pointer]:
+            - generic [ref=e399]:
+              - img [ref=e401]
+              - generic [ref=e404]: Pending
+            - generic [ref=e405]: "3"
+            - generic [ref=e406]: 2 are yours
+          - generic [ref=e407] [cursor=pointer]:
+            - generic [ref=e408]:
+              - img [ref=e410]
+              - generic [ref=e414]: Your claims
+            - generic [ref=e415]: "2"
+          - generic [ref=e416] [cursor=pointer]:
+            - generic [ref=e417]:
+              - img [ref=e419]
+              - generic [ref=e422]: Decided today
+            - generic [ref=e423]: "7"
+          - generic [ref=e424] [cursor=pointer]:
+            - generic [ref=e425]:
+              - img [ref=e427]
+              - generic [ref=e429]: This week
+            - generic [ref=e430]: "41"
+            - generic [ref=e431]: avg 18m to decide
+        - generic [ref=e432]: Server status
+        - generic [ref=e433]:
+          - generic [ref=e434] [cursor=pointer]:
+            - generic [ref=e435]:
+              - img [ref=e437]
+              - generic [ref=e440]: Open modmail
+            - generic [ref=e441]: "1"
+            - generic [ref=e442]: waiting on a reply
+          - generic [ref=e443] [cursor=pointer]:
+            - generic [ref=e444]:
+              - img [ref=e446]
+              - generic [ref=e450]: Members today
+            - generic [ref=e451]: "12"
+            - generic [ref=e452]: +4 vs. yesterday
+          - generic [ref=e453] [cursor=pointer]:
+            - generic [ref=e454]:
+              - img [ref=e456]
+              - generic [ref=e458]: Open flags
+            - generic [ref=e459]: "0"
+            - generic [ref=e460]: nothing needs eyes
+        - generic [ref=e461]: Your recent activity
+        - list [ref=e462]:
+          - listitem [ref=e463]:
+            - button "✓ Approved lunar.moth 12m" [ref=e464] [cursor=pointer]:
+              - generic [ref=e465]: ✓
+              - generic [ref=e466]:
+                - generic [ref=e467]: Approved
+                - generic [ref=e468]: lunar.moth
+              - generic [ref=e469]: 12m
+          - listitem [ref=e470]:
+            - button "↩ Replied QuietHarbor 40m" [ref=e471] [cursor=pointer]:
+              - generic [ref=e472]: ↩
+              - generic [ref=e473]:
+                - generic [ref=e474]: Replied
+                - generic [ref=e475]: QuietHarbor
+              - generic [ref=e476]: 40m
+          - listitem [ref=e477]:
+            - button "✕ Rejected ad_bot_4417 1h" [ref=e478] [cursor=pointer]:
+              - generic [ref=e479]: ✕
+              - generic [ref=e480]:
+                - generic [ref=e481]: Rejected
+                - generic [ref=e482]: ad_bot_4417
+              - generic [ref=e483]: 1h
+          - listitem [ref=e484]:
+            - button "✓ Approved pinecone_42 2h" [ref=e485] [cursor=pointer]:
+              - generic [ref=e486]: ✓
+              - generic [ref=e487]:
+                - generic [ref=e488]: Approved
+                - generic [ref=e489]: pinecone_42
+              - generic [ref=e490]: 2h
+          - listitem [ref=e491]:
+            - button "↩ Replied vela.nyx 3h" [ref=e492] [cursor=pointer]:
+              - generic [ref=e493]: ↩
+              - generic [ref=e494]:
+                - generic [ref=e495]: Replied
+                - generic [ref=e496]: vela.nyx
+              - generic [ref=e497]: 3h
+  - button "Theme Sage Observatory" [ref=e366] [cursor=pointer]:
+    - generic [ref=e263]:
+      - generic [ref=e264]: Theme
+      - generic [ref=e265]: Sage Observatory

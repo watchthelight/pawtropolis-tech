@@ -1,7 +1,25 @@
 import { formatHex, clampChroma } from "culori";
-import { setPreferenceCookie } from "./consent";
+import { setPreferenceCookie, getPreferenceCookie } from "./consent";
 
 export const FALLBACK_HUE = 250;
+
+/** Default sage hue when the user has no Discord accent and no manual override. */
+export const DEFAULT_SAGE_HUE = 152;
+
+/**
+ * Personalise the Observatory sage hue from the user's Discord accent. A manual
+ * tweak-panel choice (paw-sage-h) always wins, so we skip when one is stored.
+ */
+function setSageHue(hue: number): void {
+  if (typeof document === "undefined") return;
+  if (getPreferenceCookie("paw-sage-h")) return;
+  try {
+    if (localStorage.getItem("paw-sage-h")) return;
+  } catch {
+    // localStorage unavailable — fall through and apply the accent hue
+  }
+  document.documentElement.style.setProperty("--sage-h", String(Math.round(hue)));
+}
 
 /**
  * Convert sRGB to oklch chroma and hue.
@@ -211,6 +229,7 @@ export function applyTheme(
     const hue = accentColorToHue(accentColor);
     if (hue != null) {
       applyPalette(hue);
+      setSageHue(hue);
       return;
     }
   }
@@ -220,14 +239,17 @@ export function applyTheme(
     extractImageHue(avatarUrl).then((hue) => {
       if (hue != null) {
         applyPalette(hue);
+        setSageHue(hue);
       } else {
         applyPalette(FALLBACK_HUE);
+        setSageHue(DEFAULT_SAGE_HUE);
       }
     });
     return;
   }
 
   applyPalette(FALLBACK_HUE);
+  setSageHue(DEFAULT_SAGE_HUE);
 }
 
 /**

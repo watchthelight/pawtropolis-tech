@@ -2,103 +2,136 @@
 @import "tailwindcss";
 
 /*
- * Pawtropolis Dashboard — Cozy Holdfast Design System
+ * Pawtropolis Dashboard — Sage Observatory Design System
  *
- * --hue is derived from the user's Discord accentColor via stores/theme.ts.
- * Surfaces and glows use oklch with the user's hue.
- * Shadows lean warm (hue ~40) regardless of accent for cozy depth.
- * Fallback hue 250 (cool blue) applies before login / when accentColor is null.
+ * Three themes, one token vocabulary:
+ *   observatory-dark  (:root, default)  — calm deep-space sage
+ *   observatory-light ([data-theme="observatory-light"]) — warm parchment
+ *   legacy            ([data-theme="legacy"]) — the original Cozy Holdfast look
+ *
+ * Source of truth is the new vocabulary: --void/--surface*/--ink*/--line*/--sage*.
+ * Observatory personalises the sage hue from the Discord accent via
+ * --sage-h (see stores/theme.ts). Legacy keeps the old adaptive --hue behaviour.
+ *
+ * Old token names (--bg/--text-*/--accent*/--border*/...) are aliased to the new
+ * tokens in :root so components migrate incrementally. The legacy block redefines
+ * the old names verbatim so Legacy is indistinguishable from today.
+ *
+ * Theme swaps must be instant: nothing here transitions background-color/color on
+ * :root or body. Animate only transform / border-color / opacity on swap.
  */
 
 :root {
-  /* ── Hue seeds (adaptive natural palette) ──
-	   --hue:        from Discord accentColor (e.g. forest green)
-	   --hue-warm:   earth/amber companion (~50° target, bark/sand)
-	   --hue-cool:   stone/slate companion (~235° target, granite/sky)
-	   --hue-complement: direct complement (+180°) for pop accents
-	   All set dynamically by theme.ts generateCompanionHues(). */
+  /* ── Sage identity (personalised by Discord accent) ── */
+  --sage-h: 152;
+  --sage-c: 0.075;
+
+  /* Legacy adaptive hue seeds (consumed only by the legacy theme) */
   --hue: 250;
   --hue-warm: 50;
   --hue-cool: 235;
   --hue-complement: calc(var(--hue) + 180);
 
-  /* ── Surfaces (true neutral, subtly tinted by user accent) ── */
-  --bg: oklch(10% 0.003 var(--hue));
-  --surface: oklch(18% 0.005 var(--hue));
-  --surface-raised: oklch(23% 0.007 var(--hue));
-  --surface-overlay: oklch(28% 0.008 var(--hue));
+  /* ── OBSERVATORY DARK — new vocabulary (source of truth) ── */
+  --void: oklch(15.5% 0.012 var(--sage-h));
+  --void-deep: oklch(12% 0.014 var(--sage-h));
+  --surface: oklch(20.5% 0.013 var(--sage-h));
+  --surface-2: oklch(24.5% 0.015 var(--sage-h));
+  --surface-3: oklch(28.5% 0.016 var(--sage-h));
 
-  /* ── Borders (near-neutral, faint hue tint for identity) ── */
-  --border: oklch(25% 0.004 var(--hue));
-  --border-holdfast: oklch(30% 0.012 var(--hue));
-  --border-strong: oklch(40% 0.02 var(--hue));
+  --ink: oklch(93% 0.014 110);
+  --ink-2: oklch(75% 0.016 140);
+  --ink-3: oklch(60% 0.014 150);
+  --ink-faint: oklch(48% 0.012 150);
 
-  /* ── Text (near-white primary, neutral secondary for clarity) ── */
-  --text-primary: oklch(92% 0.004 var(--hue));
-  --text-secondary: oklch(72% 0.008 var(--hue));
-  --text-tertiary: oklch(54% 0.006 var(--hue));
-  --text-muted: oklch(42% 0.004 var(--hue));
-  --text-on-accent: oklch(12% 0.01 var(--hue));
+  --line: oklch(33% 0.014 var(--sage-h));
+  --line-soft: oklch(27% 0.012 var(--sage-h));
+  --line-strong: oklch(46% 0.02 var(--sage-h));
 
-  /* ── Primary accent — user's Discord identity color ── */
-  --accent: oklch(72% 0.18 var(--hue));
-  --accent-dim: oklch(40% 0.1 var(--hue));
-  --accent-soft: oklch(25% 0.06 var(--hue));
-  --accent-strong: oklch(80% 0.22 var(--hue));
-  --accent-muted: oklch(55% 0.08 var(--hue));
+  --sage: oklch(78% var(--sage-c) var(--sage-h));
+  --sage-bright: oklch(85% calc(var(--sage-c) + 0.02) var(--sage-h));
+  --sage-deep: oklch(58% calc(var(--sage-c) + 0.01) var(--sage-h));
+  --sage-soft: oklch(30% calc(var(--sage-c) * 0.55) var(--sage-h));
+  --sage-fill: oklch(24% calc(var(--sage-c) * 0.4) var(--sage-h));
+  --on-sage: oklch(17% 0.02 var(--sage-h));
 
-  /* ── Warm accent — earth/amber tones (borders, badges, secondary highlights) ── */
-  --secondary: oklch(68% 0.12 var(--hue-warm));
-  --secondary-dim: oklch(38% 0.06 var(--hue-warm));
-  --secondary-soft: oklch(23% 0.04 var(--hue-warm));
-  --secondary-strong: oklch(76% 0.16 var(--hue-warm));
+  --good: oklch(74% 0.09 150);
+  --warn: oklch(78% 0.1 78);
+  --danger: oklch(70% 0.11 32);
+  --info: oklch(74% 0.07 220);
 
-  /* ── Cool accent — stone/slate tones (info, metadata, subtle structure) ── */
-  --tertiary: oklch(65% 0.1 var(--hue-cool));
-  --tertiary-dim: oklch(36% 0.05 var(--hue-cool));
-  --tertiary-soft: oklch(22% 0.03 var(--hue-cool));
+  /* ── Shape + texture ── */
+  --radius: 2px;
+  --radius-pill: 2px;
+  --radius-sm: 2px;
+  --radius-md: 2px;
+  --radius-lg: 2px;
 
-  /* ── Complement accent (pop moments — direct opposite of seed) ── */
-  --complement: oklch(65% 0.14 var(--hue-complement));
-  --complement-dim: oklch(35% 0.07 var(--hue-complement));
+  --grain-color: 255 255 255;
+  --grain-opacity: 0.6;
+  --paper-tone: oklch(100% 0 0 / 0.015);
+  --grain-url: url("/grain.svg");
 
-  /* ── Accent surface — highlighted cards, active elements ── */
-  --accent-glow-bg: oklch(20% 0.05 var(--hue));
+  /* Flat by design — a single hairline highlight, no bloom */
+  --shadow: 0 1px 0 oklch(100% 0 0 / 0.03);
+  --shadow-sm: 0 1px 0 oklch(100% 0 0 / 0.03);
+  --shadow-md: 0 1px 0 oklch(100% 0 0 / 0.03);
+  --shadow-lg: 0 2px 0 oklch(100% 0 0 / 0.04);
 
-  /* ── Interactive states (accent-tinted) ── */
-  --hover-bg: oklch(22% 0.02 var(--hue));
-  --active-bg: oklch(26% 0.03 var(--hue));
-  --selected-bg: oklch(24% 0.03 var(--hue));
+  /* ── Typography ── */
+  --font-head: "Figtree Variable", system-ui, sans-serif;
+  --font-body: "Figtree Variable", system-ui, sans-serif;
+  --font-mono: "Space Mono", "Courier New", monospace;
 
-  /* ── Shadows (compound: inset top highlight + tight + diffuse) ── */
-  --shadow-sm:
-    inset 0 1px 0 oklch(100% 0 0 / 0.04), 0 1px 2px oklch(0% 0 0 / 0.2),
-    0 2px 4px oklch(0% 0 0 / 0.1);
-  --shadow-md:
-    inset 0 1px 0 oklch(100% 0 0 / 0.04), 0 2px 4px oklch(0% 0 0 / 0.2),
-    0 8px 16px oklch(0% 0 0 / 0.15);
-  --shadow-lg:
-    inset 0 1px 0 oklch(100% 0 0 / 0.04), 0 4px 8px oklch(0% 0 0 / 0.25),
-    0 16px 32px oklch(0% 0 0 / 0.2);
+  /* ── Observatory mappings for legacy-only companion tokens ──
+     These have no sage equivalent; in Observatory they collapse toward
+     sage + status so any component still referencing them stays on-theme. */
+  --secondary: var(--sage-deep);
+  --secondary-dim: var(--sage-soft);
+  --secondary-soft: var(--sage-fill);
+  --secondary-strong: var(--sage-bright);
+  --tertiary: var(--info);
+  --tertiary-dim: var(--sage-soft);
+  --tertiary-soft: var(--sage-fill);
+  --complement: var(--warn);
+  --complement-dim: var(--sage-soft);
+  --terminal-grid: oklch(33% 0.014 var(--sage-h) / 0.3);
+  --terminal-border: oklch(46% 0.02 var(--sage-h) / 0.5);
+  --terminal-font: var(--font-mono);
 
-  /* ── Constrained radii — pixel art discipline, exactly 3 values ── */
-  --radius-sm: 6px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-
-  /* ── Spacing (viewport-scaled) ── */
-  --space-card: clamp(14px, 2.5vw, 24px);
-  --space-section: clamp(16px, 3vw, 28px);
-
-  /* ── Status colors (fixed — not themed) ── */
-  --status-success: oklch(65% 0.15 145);
-  --status-warning: oklch(70% 0.15 85);
-  --status-danger: oklch(60% 0.15 25);
-  --status-info: oklch(65% 0.12 250);
+  /* ── Old-name aliases → new tokens (transition shim; deleted at Surface 6) ── */
+  --bg: var(--void);
+  --surface-raised: var(--surface-2);
+  --surface-overlay: var(--surface-3);
+  --border: var(--line-soft);
+  --border-holdfast: var(--line);
+  --border-strong: var(--line-strong);
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-2);
+  --text-tertiary: var(--ink-3);
+  --text-muted: var(--ink-faint);
+  --text-on-accent: var(--on-sage);
+  --accent: var(--sage);
+  --accent-dim: var(--sage-deep);
+  --accent-soft: var(--sage-soft);
+  --accent-strong: var(--sage-bright);
+  --accent-muted: var(--sage-deep);
+  --accent-glow-bg: var(--sage-fill);
+  --hover-bg: var(--surface-2);
+  --active-bg: var(--surface-3);
+  --selected-bg: var(--sage-fill);
+  --status-success: var(--good);
+  --status-warning: var(--warn);
+  --status-danger: var(--danger);
+  --status-info: var(--info);
 
   /* ── Brand colors — Pawtropolis paw logo (magenta pads, cyan drips) ── */
   --brand-magenta: oklch(65% 0.25 330);
   --brand-cyan: oklch(70% 0.15 200);
+
+  /* ── Spacing (viewport-scaled) ── */
+  --space-card: clamp(14px, 2.5vw, 24px);
+  --space-section: clamp(16px, 3vw, 28px);
 
   /* ── Animation ── */
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -108,48 +141,186 @@
   --duration-normal: 250ms;
   --duration-slow: 400ms;
 
-  /* ── Motion vocabulary (use these on every animated element) ──
-	   enter:  fade/slide-in for elements arriving on screen
-	   exit:   fade-out for elements leaving
-	   hover:  hover state changes
-	   focus:  focus / press state changes
-	*/
+  /* Motion vocabulary — never includes background-color/color on theme surfaces */
   --motion-enter:
     opacity var(--duration-normal) var(--ease-out), transform var(--duration-normal) var(--ease-out);
   --motion-exit: opacity var(--duration-fast) var(--ease-smooth);
   --motion-hover:
-    background var(--duration-fast) var(--ease-smooth),
     border-color var(--duration-fast) var(--ease-smooth),
-    color var(--duration-fast) var(--ease-smooth),
-    box-shadow var(--duration-fast) var(--ease-smooth);
+    transform var(--duration-fast) var(--ease-smooth),
+    opacity var(--duration-fast) var(--ease-smooth);
   --motion-focus:
     transform var(--duration-fast) var(--ease-spring),
-    box-shadow var(--duration-fast) var(--ease-spring);
+    border-color var(--duration-fast) var(--ease-spring);
 
   /* ── Mobile ── */
   --vh-full: 100dvh;
   --mobile-header-h: 3.25rem;
   --mobile-pad: 1rem;
+}
 
-  /* ── EDEX-UI terminal aesthetic (stats page — uses cool slate + warm accents) ── */
+/* ════════════════════════════════════════════════════════════════════════
+   OBSERVATORY LIGHT — warm parchment
+   ════════════════════════════════════════════════════════════════════════ */
+[data-theme="observatory-light"] {
+  --void: oklch(93.5% 0.012 95);
+  --void-deep: oklch(90% 0.015 90);
+  --surface: oklch(97.5% 0.009 95);
+  --surface-2: oklch(99% 0.006 95);
+  --surface-3: oklch(95% 0.01 95);
+
+  --ink: oklch(28% 0.022 150);
+  --ink-2: oklch(42% 0.02 150);
+  --ink-3: oklch(54% 0.018 150);
+  --ink-faint: oklch(64% 0.014 150);
+
+  --line: oklch(82% 0.016 110);
+  --line-soft: oklch(87% 0.012 110);
+  --line-strong: oklch(72% 0.02 120);
+
+  --sage: oklch(48% calc(var(--sage-c) + 0.02) var(--sage-h));
+  --sage-bright: oklch(42% calc(var(--sage-c) + 0.04) var(--sage-h));
+  --sage-deep: oklch(38% calc(var(--sage-c) + 0.03) var(--sage-h));
+  --sage-soft: oklch(88% calc(var(--sage-c) * 0.5) var(--sage-h));
+  --sage-fill: oklch(92% calc(var(--sage-c) * 0.4) var(--sage-h));
+  --on-sage: oklch(97% 0.01 var(--sage-h));
+
+  --good: oklch(50% 0.11 150);
+  --warn: oklch(56% 0.12 70);
+  --danger: oklch(54% 0.16 30);
+  --info: oklch(50% 0.09 230);
+
+  --grain-color: 60 50 30;
+  --paper-tone: oklch(40% 0.04 80 / 0.02);
+  --shadow: 0 1px 2px oklch(40% 0.03 90 / 0.08);
+  --shadow-sm: 0 1px 2px oklch(40% 0.03 90 / 0.08);
+  --shadow-md: 0 1px 3px oklch(40% 0.03 90 / 0.1);
+  --shadow-lg: 0 2px 6px oklch(40% 0.03 90 / 0.12);
+
+  --terminal-grid: oklch(72% 0.016 110 / 0.5);
+  --terminal-border: oklch(72% 0.02 120 / 0.6);
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   LEGACY — Cozy Holdfast, ported verbatim from the original app.css so it is
+   visually indistinguishable from today. Adaptive via --hue.
+   ════════════════════════════════════════════════════════════════════════ */
+[data-theme="legacy"] {
+  /* New vocabulary mapped to legacy values (for already-migrated components) */
+  --void: oklch(10% 0.003 var(--hue));
+  --void-deep: oklch(8% 0.003 var(--hue));
+  --surface: oklch(18% 0.005 var(--hue));
+  --surface-2: oklch(23% 0.007 var(--hue));
+  --surface-3: oklch(28% 0.008 var(--hue));
+  --ink: oklch(92% 0.004 var(--hue));
+  --ink-2: oklch(72% 0.008 var(--hue));
+  --ink-3: oklch(54% 0.006 var(--hue));
+  --ink-faint: oklch(42% 0.004 var(--hue));
+  --line: oklch(30% 0.012 var(--hue));
+  --line-soft: oklch(25% 0.004 var(--hue));
+  --line-strong: oklch(40% 0.02 var(--hue));
+  --sage: oklch(72% 0.18 var(--hue));
+  --sage-bright: oklch(80% 0.22 var(--hue));
+  --sage-deep: oklch(40% 0.1 var(--hue));
+  --sage-soft: oklch(25% 0.06 var(--hue));
+  --sage-fill: oklch(20% 0.05 var(--hue));
+  --on-sage: oklch(12% 0.01 var(--hue));
+  --good: oklch(65% 0.15 145);
+  --warn: oklch(70% 0.15 85);
+  --danger: oklch(60% 0.15 25);
+  --info: oklch(65% 0.12 250);
+
+  /* Old names — verbatim from the original :root */
+  --bg: oklch(10% 0.003 var(--hue));
+  --surface-raised: oklch(23% 0.007 var(--hue));
+  --surface-overlay: oklch(28% 0.008 var(--hue));
+  --border: oklch(25% 0.004 var(--hue));
+  --border-holdfast: oklch(30% 0.012 var(--hue));
+  --border-strong: oklch(40% 0.02 var(--hue));
+  --text-primary: oklch(92% 0.004 var(--hue));
+  --text-secondary: oklch(72% 0.008 var(--hue));
+  --text-tertiary: oklch(54% 0.006 var(--hue));
+  --text-muted: oklch(42% 0.004 var(--hue));
+  --text-on-accent: oklch(12% 0.01 var(--hue));
+  --accent: oklch(72% 0.18 var(--hue));
+  --accent-dim: oklch(40% 0.1 var(--hue));
+  --accent-soft: oklch(25% 0.06 var(--hue));
+  --accent-strong: oklch(80% 0.22 var(--hue));
+  --accent-muted: oklch(55% 0.08 var(--hue));
+  --accent-glow-bg: oklch(20% 0.05 var(--hue));
+  --hover-bg: oklch(22% 0.02 var(--hue));
+  --active-bg: oklch(26% 0.03 var(--hue));
+  --selected-bg: oklch(24% 0.03 var(--hue));
+
+  --secondary: oklch(68% 0.12 var(--hue-warm));
+  --secondary-dim: oklch(38% 0.06 var(--hue-warm));
+  --secondary-soft: oklch(23% 0.04 var(--hue-warm));
+  --secondary-strong: oklch(76% 0.16 var(--hue-warm));
+  --tertiary: oklch(65% 0.1 var(--hue-cool));
+  --tertiary-dim: oklch(36% 0.05 var(--hue-cool));
+  --tertiary-soft: oklch(22% 0.03 var(--hue-cool));
+  --complement: oklch(65% 0.14 var(--hue-complement));
+  --complement-dim: oklch(35% 0.07 var(--hue-complement));
+
+  --status-success: oklch(65% 0.15 145);
+  --status-warning: oklch(70% 0.15 85);
+  --status-danger: oklch(60% 0.15 25);
+  --status-info: oklch(65% 0.12 250);
+
   --terminal-grid: oklch(32% 0.015 var(--hue-cool) / 0.3);
   --terminal-border: oklch(50% 0.06 var(--hue-warm) / 0.5);
   --terminal-font: "Courier New", "Courier", monospace;
+
+  /* Rounded + soft, the original recipe */
+  --radius: 12px;
+  --radius-pill: 999px;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  --grain-opacity: 0;
+  --paper-tone: transparent;
+
+  --shadow-sm:
+    inset 0 1px 0 oklch(100% 0 0 / 0.04), 0 1px 2px oklch(0% 0 0 / 0.2),
+    0 2px 4px oklch(0% 0 0 / 0.1);
+  --shadow-md:
+    inset 0 1px 0 oklch(100% 0 0 / 0.04), 0 2px 4px oklch(0% 0 0 / 0.2),
+    0 8px 16px oklch(0% 0 0 / 0.15);
+  --shadow-lg:
+    inset 0 1px 0 oklch(100% 0 0 / 0.04), 0 4px 8px oklch(0% 0 0 / 0.25),
+    0 16px 32px oklch(0% 0 0 / 0.2);
+  --shadow: var(--shadow-md);
+
+  --font-head: "Inter Variable", system-ui, sans-serif;
+  --font-body: "Inter Variable", system-ui, sans-serif;
 }
 
-/* Base styles */
+/* ── Base ── */
 body {
-  background-color: var(--bg);
-  color: var(--text-primary);
-  font-family:
-    "Inter Variable",
-    system-ui,
-    -apple-system,
-    sans-serif;
-  font-size: 0.9375rem; /* 15px — comfortable for long sessions */
+  background-color: var(--void);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Paper grain overlay — applied to .surface-class elements (off in legacy). */
+.paper {
+  position: relative;
+}
+.paper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--grain-url);
+  background-size: 180px 180px;
+  opacity: var(--grain-opacity);
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  border-radius: inherit;
 }
 
 /* Scrollbar styling */
@@ -157,39 +328,33 @@ body {
   width: 6px;
   height: 6px;
 }
-
 ::-webkit-scrollbar-track {
   background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
+  background: var(--line);
+  border-radius: var(--radius-pill);
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-secondary);
+  background: var(--ink-3);
 }
 
-/* Focus ring — accent-colored, keyboard-only via :focus-visible */
+/* Focus ring — sage, keyboard-only */
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--sage);
   outline-offset: 2px;
 }
 
-/* dvh fallback for older browsers */
 @supports not (height: 100dvh) {
   :root {
     --vh-full: 100vh;
   }
 }
 
-/* Mobile drawer scroll lock */
 body.drawer-open {
   overflow: hidden;
 }
 
-/* Prevent iOS auto-zoom on input focus + prevent horizontal scroll */
 @media (max-width: 767px) {
   html,
   body {
@@ -203,7 +368,7 @@ body.drawer-open {
   }
 }
 
-/* Respect prefers-reduced-motion — disable all transitions and animations */
+/* Respect prefers-reduced-motion — disable transitions and animations */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -212,8 +377,3 @@ body.drawer-open {
     animation-duration: 0s !important;
   }
 }
-
-/* ── Design style themes (must come AFTER :root for cascade override) ── */
-@import "$lib/styles/neumorphism.css";
-@import "$lib/styles/glassmorphism.css";
-@import "$lib/styles/skeuomorphism.css";

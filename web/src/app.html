@@ -14,8 +14,25 @@
     <script>
       (function () {
         try {
-          var s = localStorage.getItem("paw-style");
-          if (s && s !== "default") document.documentElement.setAttribute("data-style", s);
+          var el = document.documentElement;
+          var m = localStorage.getItem("paw-theme");
+          if (m === "observatory-dark" || m === "observatory-light" || m === "legacy") {
+            el.setAttribute("data-theme", m);
+          } else if (!el.getAttribute("data-theme")) {
+            el.setAttribute("data-theme", "observatory-dark");
+          }
+          var sh = localStorage.getItem("paw-sage-h");
+          if (sh) el.style.setProperty("--sage-h", sh);
+          var sc = localStorage.getItem("paw-sage-c");
+          if (sc) el.style.setProperty("--sage-c", sc);
+          var f = localStorage.getItem("paw-font");
+          var stacks = {
+            figtree: '"Figtree Variable", system-ui, sans-serif',
+            quicksand: '"Quicksand Variable", system-ui, sans-serif',
+            hanken: '"Hanken Grotesk Variable", system-ui, sans-serif',
+            fredoka: '"Fredoka Variable", system-ui, sans-serif'
+          };
+          if (f && stacks[f]) el.style.setProperty("--font-head", stacks[f]);
         } catch (e) {}
       })();
     </script>

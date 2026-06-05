@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { applyTheme } from '$lib/stores/theme';
-	import { getStoredStyle, applyStyle } from '$lib/stores/style';
+	import { getStoredMode, applyMode, applyStoredAppearance } from '$lib/stores/appearance';
 	import { connect, disconnect, onReconnect, offReconnect, subscribe, unsubscribe } from '$lib/stores/sse.svelte';
 	import { startMonitoring, stopMonitoring } from '$lib/stores/bot-status.svelte';
 	import { initViewport, getIsMobile } from '$lib/stores/viewport.svelte';
@@ -32,7 +32,8 @@
 	onMount(() => {
 		sidebarCollapsed = localStorage.getItem('sidebar-collapsed') === '1';
 		initViewport();
-		applyStyle(getStoredStyle());
+		applyMode(getStoredMode());
+		applyStoredAppearance();
 	});
 	function toggleSidebar() {
 		sidebarCollapsed = !sidebarCollapsed;
@@ -289,7 +290,8 @@
 	.layout-root {
 		display: flex;
 		min-height: var(--vh-full);
-		background: var(--bg);
+		/* Transparent so the fixed starfield drifts behind the content gaps. */
+		background: transparent;
 		position: relative;
 	}
 

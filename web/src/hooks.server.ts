@@ -44,21 +44,25 @@ const appHandle: Handle = async ({ event, resolve }) => {
   return resolve(event, {
     transformPageChunk: ({ html }) => {
       let out = html;
-      // The public /observatory page is intentionally zero-JS. Strip the
-      // site-wide inline theme-preference script so no JavaScript ships there.
+      // The public /observatory page is intentionally zero-JS and self-themed.
+      // Strip the inline theme-preference script and skip the data-theme attr
+      // so the dashboard tokens never leak into its Win95 chrome.
       if (isObservatory) {
-        out = out.replace(/<script>\s*\(function \(\)[\s\S]*?paw-style[\s\S]*?<\/script>/, "");
+        out = out.replace(/<script>\s*\(function \(\)[\s\S]*?paw-theme[\s\S]*?<\/script>/, "");
+        return out;
       }
-      const attrs: string[] = [];
-      if (prefs.style && prefs.style !== "default") {
-        attrs.push(`data-style="${prefs.style}"`);
-      }
-      if (prefs.hue) {
-        attrs.push(`style="--hue:${prefs.hue}"`);
-      }
-      if (attrs.length) {
-        out = out.replace('<html lang="en">', `<html lang="en" ${attrs.join(" ")}>`);
-      }
+
+      // Build the inline style overrides (hue + sage personalisation + font).
+      const styleParts: string[] = [];
+      if (prefs.hue) styleParts.push(`--hue:${prefs.hue}`);
+      if (prefs.sageH) styleParts.push(`--sage-h:${prefs.sageH}`);
+      if (prefs.sageC) styleParts.push(`--sage-c:${prefs.sageC}`);
+      if (prefs.fontStack) styleParts.push(`--font-head:${prefs.fontStack}`);
+
+      const attrs = [`data-theme="${prefs.mode}"`];
+      if (styleParts.length) attrs.push(`style="${styleParts.join(";")}"`);
+
+      out = out.replace('<html lang="en">', `<html lang="en" ${attrs.join(" ")}>`);
       return out;
     },
   });

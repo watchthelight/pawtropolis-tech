@@ -1,8 +1,13 @@
 <script lang="ts">
 	import '../app.css';
+	import { page } from '$app/stores';
 	import CookieConsent from '$lib/components/feedback/CookieConsent.svelte';
+	import Starfield from '$lib/components/layout/Starfield.svelte';
 
 	let { children } = $props();
+
+	// The public /observatory page is intentionally zero-JS and self-themed.
+	let showStarfield = $derived($page.url.pathname !== '/observatory');
 </script>
 
 <svelte:head>
@@ -25,6 +30,10 @@
 	<meta name="twitter:description" content="Moderator dashboard for the Pawtropolis Discord community" />
 	<meta name="twitter:image" content="https://pawtropolis.tech/og-image.png" />
 </svelte:head>
+
+{#if showStarfield}
+	<Starfield />
+{/if}
 
 {@render children()}
 

@@ -1,0 +1,177 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - navigation "Main navigation" [ref=e4]:
+      - generic [ref=e5]:
+        - img "Pawtropolis" [ref=e6]
+        - generic [ref=e7]:
+          - generic [ref=e8]: Pawtropolis
+          - generic [ref=e9]: Observatory
+      - generic [ref=e10]:
+        - generic "Cassiopeia" [ref=e11]: C
+        - generic [ref=e12]:
+          - generic [ref=e13]: Cassiopeia
+          - generic [ref=e14]: Senior Moderator
+      - list [ref=e15]:
+        - listitem [ref=e16]: Operations
+        - listitem [ref=e17]:
+          - button "Home" [ref=e18] [cursor=pointer]:
+            - img [ref=e20]
+            - generic [ref=e23]: Home
+        - listitem [ref=e24]:
+          - button "Reviews 3" [ref=e25] [cursor=pointer]:
+            - img [ref=e27]
+            - generic [ref=e30]: Reviews
+            - generic [ref=e31]: "3"
+        - listitem [ref=e32]:
+          - button "Stats" [ref=e33] [cursor=pointer]:
+            - img [ref=e35]
+            - generic [ref=e40]: Stats
+        - listitem [ref=e41]:
+          - button "Modmail 1" [ref=e42] [cursor=pointer]:
+            - img [ref=e44]
+            - generic [ref=e47]: Modmail
+            - generic [ref=e48]: "1"
+        - listitem [ref=e49]:
+          - button "Pulse" [ref=e50] [cursor=pointer]:
+            - img [ref=e52]
+            - generic [ref=e54]: Pulse
+        - listitem [ref=e55]:
+          - button "Heatmap" [ref=e56] [cursor=pointer]:
+            - img [ref=e58]
+            - generic [ref=e63]: Heatmap
+        - listitem [ref=e64]:
+          - button "Art" [ref=e65] [cursor=pointer]:
+            - img [ref=e67]
+            - generic [ref=e73]: Art
+        - listitem [ref=e74]:
+          - button "QOTD" [ref=e75] [cursor=pointer]:
+            - img [ref=e77]
+            - generic [ref=e80]: QOTD
+        - listitem [ref=e81]
+        - listitem [ref=e82]: Administration
+        - listitem [ref=e83]:
+          - button "Config" [ref=e84] [cursor=pointer]:
+            - img [ref=e86]
+            - generic [ref=e89]: Config
+        - listitem [ref=e90]:
+          - button "Audit" [ref=e91] [cursor=pointer]:
+            - img [ref=e93]
+            - generic [ref=e97]: Audit
+        - listitem [ref=e98]:
+          - button "System" [ref=e99] [cursor=pointer]:
+            - img [ref=e101]
+            - generic [ref=e104]: System
+        - listitem [ref=e105]
+        - listitem [ref=e106]: Reference
+        - listitem [ref=e107]:
+          - button "Handbook" [ref=e108] [cursor=pointer]:
+            - img [ref=e110]
+            - generic [ref=e113]: Handbook
+      - generic [ref=e114]:
+        - generic [ref=e115]:
+          - button "Night" [active] [ref=e116] [cursor=pointer]:
+            - img [ref=e117]
+            - text: Night
+          - button "Day" [ref=e119] [cursor=pointer]:
+            - img [ref=e120]
+            - text: Day
+        - generic [ref=e123]: Live · synced just now
+        - link "Sign out" [ref=e124] [cursor=pointer]:
+          - /url: "#"
+          - img [ref=e125]
+          - text: Sign out
+    - main [ref=e127]:
+      - generic [ref=e267]:
+        - generic [ref=e268]:
+          - generic [ref=e269]:
+            - heading "Reviews" [level=1] [ref=e270]
+            - generic [ref=e271]: "3"
+          - generic [ref=e272]:
+            - button "Unclaimed 3" [ref=e273] [cursor=pointer]:
+              - text: Unclaimed
+              - generic [ref=e274]: "3"
+            - button "My Claims 2" [ref=e275] [cursor=pointer]:
+              - text: My Claims
+              - generic [ref=e276]: "2"
+            - button "All Open 5" [ref=e277] [cursor=pointer]:
+              - text: All Open
+              - generic [ref=e278]: "5"
+            - button "History 128" [ref=e279] [cursor=pointer]:
+              - text: History
+              - generic [ref=e280]: "128"
+        - generic [ref=e281]:
+          - button "Flagged" [ref=e282] [cursor=pointer]
+          - button "Has modmail" [ref=e283] [cursor=pointer]
+          - button "Stale (24h+)" [ref=e284] [cursor=pointer]
+        - generic [ref=e285]:
+          - generic [ref=e286]:
+            - button "lunar.moth lunar.moth 36m Pending LOW 14" [ref=e287] [cursor=pointer]:
+              - generic "lunar.moth" [ref=e288]: L
+              - generic [ref=e289]:
+                - generic [ref=e290]:
+                  - generic [ref=e291]: lunar.moth
+                  - generic [ref=e292]: 36m
+                - generic [ref=e293]:
+                  - generic [ref=e294]: Pending
+                  - generic [ref=e296]: LOW 14
+            - button "ad_bot_4417 ad_bot_4417 5h Pending HIGH 88 Stale · waiting 5h" [ref=e298] [cursor=pointer]:
+              - generic "ad_bot_4417" [ref=e299]: A
+              - generic [ref=e300]:
+                - generic [ref=e301]:
+                  - generic [ref=e302]: ad_bot_4417
+                  - generic [ref=e303]: 5h
+                - generic [ref=e304]:
+                  - generic [ref=e305]: Pending
+                  - generic [ref=e307]: HIGH 88
+                - generic [ref=e309]:
+                  - img [ref=e310]
+                  - text: Stale · waiting 5h
+            - button "maple_run maple_run 2h Pending LOW 22" [ref=e313] [cursor=pointer]:
+              - generic "maple_run" [ref=e314]: M
+              - generic [ref=e315]:
+                - generic [ref=e316]:
+                  - generic [ref=e317]: maple_run
+                  - generic [ref=e318]: 2h
+                - generic [ref=e319]:
+                  - generic [ref=e320]: Pending
+                  - generic [ref=e322]: LOW 22
+          - generic [ref=e324]:
+            - generic [ref=e325]:
+              - generic "lunar.moth" [ref=e326]: L
+              - generic [ref=e327]:
+                - generic [ref=e328]: lunar.moth
+                - generic [ref=e329]: "@lunar.moth · 1042…8831"
+              - generic [ref=e330]: LOW 14
+            - generic [ref=e332]:
+              - generic [ref=e333]:
+                - generic [ref=e334]:
+                  - generic [ref=e335]: Account age
+                  - generic [ref=e336]: 2 yrs
+                - generic [ref=e337]:
+                  - generic [ref=e338]: Mutual
+                  - generic [ref=e339]: 3 servers
+                - generic [ref=e340]:
+                  - generic [ref=e341]: Invited by
+                  - generic [ref=e342]: vela.nyx
+                - generic [ref=e343]:
+                  - generic [ref=e344]: Applied
+                  - generic [ref=e345]: Today
+              - generic [ref=e346]:
+                - generic [ref=e347]: What brings you to Pawtropolis?
+                - generic [ref=e348]: A friend in the art channel showed me the sticker wall and I've wanted a cozy place to share sketches and just be around kind people.
+              - generic [ref=e349]:
+                - generic [ref=e350]: How did you find us?
+                - generic [ref=e351]: Through vela.nyx — we draw together on weekends.
+              - generic [ref=e352]:
+                - generic [ref=e353]: Anything we should know?
+                - generic [ref=e354]: I'm a night owl, so I'll mostly be around late. Happy to read the rules first.
+            - generic [ref=e355]:
+              - button "Claim this review" [ref=e356] [cursor=pointer]:
+                - img [ref=e357]
+                - text: Claim this review
+              - button [ref=e361] [cursor=pointer]:
+                - img [ref=e362]
+  - button "Theme Sage Observatory" [ref=e366] [cursor=pointer]:
+    - generic [ref=e263]:
+      - generic [ref=e264]: Theme
+      - generic [ref=e265]: Sage Observatory
