@@ -90,9 +90,9 @@
   --font-body: "Figtree Variable", system-ui, sans-serif;
   --font-mono: "Space Mono", "Courier New", monospace;
 
-  /* ── Observatory mappings for legacy-only companion tokens ──
-     These have no sage equivalent; in Observatory they collapse toward
-     sage + status so any component still referencing them stays on-theme. */
+  /* ── Companion series palette (charts: secondary/tertiary/complement) ──
+     No single sage equivalent; in Observatory they resolve toward sage + status
+     so multi-series charts stay on-theme. Legacy gives them the triadic hues. */
   --secondary: var(--sage-deep);
   --secondary-dim: var(--sage-soft);
   --secondary-soft: var(--sage-fill);
@@ -106,31 +106,8 @@
   --terminal-border: oklch(46% 0.02 var(--sage-h) / 0.5);
   --terminal-font: var(--font-mono);
 
-  /* ── Old-name aliases → new tokens (transition shim; deleted at Surface 6) ── */
-  --bg: var(--void);
-  --surface-raised: var(--surface-2);
-  --surface-overlay: var(--surface-3);
-  --border: var(--line-soft);
-  --border-holdfast: var(--line);
-  --border-strong: var(--line-strong);
-  --text-primary: var(--ink);
-  --text-secondary: var(--ink-2);
-  --text-tertiary: var(--ink-3);
-  --text-muted: var(--ink-faint);
-  --text-on-accent: var(--on-sage);
-  --accent: var(--sage);
-  --accent-dim: var(--sage-deep);
-  --accent-soft: var(--sage-soft);
-  --accent-strong: var(--sage-bright);
-  --accent-muted: var(--sage-deep);
-  --accent-glow-bg: var(--sage-fill);
+  /* ── Interaction states ── */
   --hover-bg: var(--surface-2);
-  --active-bg: var(--surface-3);
-  --selected-bg: var(--sage-fill);
-  --status-success: var(--good);
-  --status-warning: var(--warn);
-  --status-danger: var(--danger);
-  --status-info: var(--info);
 
   /* ── Brand colors — Pawtropolis paw logo (magenta pads, cyan drips) ── */
   --brand-magenta: oklch(65% 0.25 330);
@@ -239,27 +216,8 @@
   --danger: oklch(60% 0.15 25);
   --info: oklch(65% 0.12 250);
 
-  /* Old names — verbatim from the original :root */
-  --bg: oklch(10% 0.003 var(--hue));
-  --surface-raised: oklch(23% 0.007 var(--hue));
-  --surface-overlay: oklch(28% 0.008 var(--hue));
-  --border: oklch(25% 0.004 var(--hue));
-  --border-holdfast: oklch(30% 0.012 var(--hue));
-  --border-strong: oklch(40% 0.02 var(--hue));
-  --text-primary: oklch(92% 0.004 var(--hue));
-  --text-secondary: oklch(72% 0.008 var(--hue));
-  --text-tertiary: oklch(54% 0.006 var(--hue));
-  --text-muted: oklch(42% 0.004 var(--hue));
-  --text-on-accent: oklch(12% 0.01 var(--hue));
-  --accent: oklch(72% 0.18 var(--hue));
-  --accent-dim: oklch(40% 0.1 var(--hue));
-  --accent-soft: oklch(25% 0.06 var(--hue));
-  --accent-strong: oklch(80% 0.22 var(--hue));
-  --accent-muted: oklch(55% 0.08 var(--hue));
-  --accent-glow-bg: oklch(20% 0.05 var(--hue));
+  /* Interaction states */
   --hover-bg: oklch(22% 0.02 var(--hue));
-  --active-bg: oklch(26% 0.03 var(--hue));
-  --selected-bg: oklch(24% 0.03 var(--hue));
 
   --secondary: oklch(68% 0.12 var(--hue-warm));
   --secondary-dim: oklch(38% 0.06 var(--hue-warm));
@@ -270,11 +228,6 @@
   --tertiary-soft: oklch(22% 0.03 var(--hue-cool));
   --complement: oklch(65% 0.14 var(--hue-complement));
   --complement-dim: oklch(35% 0.07 var(--hue-complement));
-
-  --status-success: oklch(65% 0.15 145);
-  --status-warning: oklch(70% 0.15 85);
-  --status-danger: oklch(60% 0.15 25);
-  --status-info: oklch(65% 0.12 250);
 
   --terminal-grid: oklch(32% 0.015 var(--hue-cool) / 0.3);
   --terminal-border: oklch(50% 0.06 var(--hue-warm) / 0.5);
