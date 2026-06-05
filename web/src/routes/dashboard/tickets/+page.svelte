@@ -129,13 +129,13 @@
 		gap: 0.25rem;
 	}
 	.muted {
-		color: var(--text-muted, #888);
+		color: var(--ink-faint, #888);
 		font-size: 0.875rem;
 	}
 	.info-banner {
 		padding: 0.75rem 1rem;
-		background: var(--surface-raised, #2a2a2a);
-		border-left: 3px solid var(--border-strong, #555);
+		background: var(--surface-2, #2a2a2a);
+		border-left: 3px solid var(--line-strong, #555);
 		border-radius: var(--radius-md, 12px);
 		font-size: 0.875rem;
 	}
@@ -150,7 +150,7 @@
 	.filters button {
 		padding: 0.4rem 0.75rem;
 		border-radius: var(--radius-sm, 6px);
-		border: 1px solid var(--border, #444);
+		border: 1px solid var(--line-soft, #444);
 		background: var(--surface, #1c1c1c);
 		color: inherit;
 		font-size: 0.9rem;
@@ -169,11 +169,11 @@
 	.ticket-list td {
 		padding: 0.6rem 0.85rem;
 		text-align: left;
-		border-bottom: 1px solid var(--border, #333);
+		border-bottom: 1px solid var(--line-soft, #333);
 		font-size: 0.875rem;
 	}
 	.ticket-list th {
-		background: var(--surface-raised, #2a2a2a);
+		background: var(--surface-2, #2a2a2a);
 		font-weight: 600;
 		text-transform: uppercase;
 		font-size: 0.75rem;
@@ -205,7 +205,7 @@
 	.empty {
 		text-align: center;
 		padding: 2rem !important;
-		color: var(--text-muted, #888);
+		color: var(--ink-faint, #888);
 	}
 	code {
 		font-size: 0.8rem;
@@ -220,7 +220,7 @@
 	.pagination button {
 		padding: 0.4rem 1rem;
 		background: var(--surface, #1c1c1c);
-		border: 1px solid var(--border, #444);
+		border: 1px solid var(--line-soft, #444);
 		border-radius: var(--radius-sm, 6px);
 		color: inherit;
 		cursor: pointer;

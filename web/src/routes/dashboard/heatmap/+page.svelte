@@ -50,7 +50,7 @@
 		<div class="stats-grid">
 			<div class="card">
 				<div class="card-icon-row">
-					<BarChart3 size={16} color="var(--accent)" />
+					<BarChart3 size={16} color="var(--sage)" />
 				</div>
 				<span class="card-label">Total Messages</span>
 				<StatNumber value={trends.totalMessages} label="" trend={growthTrend} />
@@ -59,7 +59,7 @@
 
 			<div class="card">
 				<div class="card-icon-row">
-					<Clock size={16} color="var(--text-tertiary)" />
+					<Clock size={16} color="var(--ink-3)" />
 				</div>
 				<span class="card-label">Avg / Hour</span>
 				<StatNumber value={trends.avgMessagesPerHour} label="" />
@@ -68,7 +68,7 @@
 
 			<div class="card highlight-accent">
 				<div class="card-icon-row">
-					<TrendingUp size={16} color="var(--accent)" />
+					<TrendingUp size={16} color="var(--sage)" />
 				</div>
 				<span class="card-label">Busiest Hours</span>
 				<div class="text-value">{trends.busiestHours}</div>
@@ -77,7 +77,7 @@
 
 			<div class="card">
 				<div class="card-icon-row">
-					<Calendar size={16} color="var(--text-tertiary)" />
+					<Calendar size={16} color="var(--ink-3)" />
 				</div>
 				<span class="card-label">Peak Days</span>
 				<div class="text-value">{trends.peakDays.join(', ')}</div>
@@ -122,7 +122,7 @@
 
 	.card {
 		background: var(--surface);
-		border: 1px solid color-mix(in oklch, var(--accent) 15%, var(--border-holdfast));
+		border: 1px solid color-mix(in oklch, var(--sage) 15%, var(--line));
 		border-radius: var(--radius-md);
 		padding: var(--space-card);
 		box-shadow: var(--shadow-sm);
@@ -143,26 +143,26 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		color: var(--accent-muted);
+		color: var(--sage-muted);
 		margin-bottom: 0.5rem;
 	}
 
 	.card-sub {
 		display: block;
 		font-size: 0.7rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		margin-top: 0.25rem;
 	}
 
 	.text-value {
 		font-size: 1.25rem;
 		font-weight: 700;
-		color: var(--text-primary);
+		color: var(--ink);
 		line-height: 1.2;
 	}
 
 	.card.highlight-accent {
-		border-color: color-mix(in oklch, var(--accent) 40%, transparent);
+		border-color: color-mix(in oklch, var(--sage) 40%, transparent);
 	}
 
 	.heatmap-card {
@@ -176,7 +176,7 @@
 
 	.week-divider {
 		border: none;
-		border-top: 1px solid var(--border-holdfast);
+		border-top: 1px solid var(--line);
 		margin: 1.25rem 0;
 	}
 

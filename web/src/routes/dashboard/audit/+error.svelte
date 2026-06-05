@@ -35,7 +35,7 @@
 <style>
 	.error-card {
 		background: var(--surface);
-		border: 1px solid var(--border-holdfast);
+		border: 1px solid var(--line);
 		border-radius: var(--radius-md);
 		padding: 1.25rem 1.5rem;
 		max-width: 42rem;
@@ -49,17 +49,17 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		color: var(--status-danger);
+		color: var(--danger);
 		margin: 0;
 	}
 	.message {
 		font-size: 0.95rem;
-		color: var(--text-primary);
+		color: var(--ink);
 		margin: 0;
 	}
 	.hint {
 		font-size: 0.8rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		margin: 0;
 	}
 	.actions {
@@ -69,15 +69,15 @@
 	.btn {
 		padding: 0.45rem 0.9rem;
 		border-radius: var(--radius-sm);
-		border: 1px solid var(--border-holdfast);
-		background: var(--surface-raised);
-		color: var(--text-primary);
+		border: 1px solid var(--line);
+		background: var(--surface-2);
+		color: var(--ink);
 		font-size: 0.8rem;
 		font-weight: 500;
 		cursor: pointer;
 		transition: border-color 150ms;
 	}
 	.btn:hover {
-		border-color: var(--accent);
+		border-color: var(--sage);
 	}
 </style>

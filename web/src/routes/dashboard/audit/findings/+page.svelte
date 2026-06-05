@@ -15,9 +15,9 @@
 	}
 
 	function rateColor(pct: number): string {
-		if (pct >= 95) return 'var(--status-success)';
-		if (pct >= 80) return 'var(--status-warning)';
-		return 'var(--status-danger)';
+		if (pct >= 95) return 'var(--good)';
+		if (pct >= 80) return 'var(--warn)';
+		return 'var(--danger)';
 	}
 </script>
 
@@ -63,8 +63,8 @@
 					<span class="run-id">{run.auditRunId.slice(0, 8)}</span>
 					<span class="run-date">{relativeTime(run.startedAt)}</span>
 					<span>{run.commandCount}</span>
-					<span style:color="var(--status-success)">{run.passCount}</span>
-					<span style:color={run.failCount > 0 ? 'var(--status-danger)' : 'var(--text-secondary)'}>{run.failCount}</span>
+					<span style:color="var(--good)">{run.passCount}</span>
+					<span style:color={run.failCount > 0 ? 'var(--danger)' : 'var(--ink-2)'}>{run.failCount}</span>
 					<span class="run-rate" style:color={rateColor(rate)}>{rate}%</span>
 				</a>
 			{/each}
@@ -87,13 +87,13 @@
 
 	.rate-label {
 		font-size: 0.8rem;
-		color: var(--accent-muted);
+		color: var(--sage-muted);
 		margin-top: 0.15rem;
 	}
 
 	.latest-time {
 		font-size: 0.75rem;
-		color: var(--text-muted);
+		color: var(--ink-faint);
 		margin: 0.75rem 0 1.5rem;
 	}
 
@@ -105,10 +105,10 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		margin-bottom: 0.75rem;
 		padding-bottom: 0.5rem;
-		border-bottom: 1px solid var(--border-holdfast);
+		border-bottom: 1px solid var(--line);
 	}
 
 	.section-heading::before {
@@ -116,7 +116,7 @@
 		width: 4px;
 		height: 4px;
 		border-radius: 50%;
-		background: var(--accent);
+		background: var(--sage);
 		flex-shrink: 0;
 	}
 
@@ -137,7 +137,7 @@
 
 	.runs-header {
 		font-weight: 600;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		font-size: 0.65rem;
@@ -145,25 +145,25 @@
 
 	.runs-row {
 		background: var(--surface);
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-radius: var(--radius-sm);
-		color: var(--text-primary);
+		color: var(--ink);
 		text-decoration: none;
 		transition: background var(--duration-fast);
 	}
 
 	.runs-row:hover {
-		background: var(--surface-raised);
+		background: var(--surface-2);
 	}
 
 	.run-id {
 		font-family: var(--terminal-font);
 		font-size: 0.7rem;
-		color: var(--accent-muted);
+		color: var(--sage-muted);
 	}
 
 	.run-date {
-		color: var(--text-secondary);
+		color: var(--ink-2);
 	}
 
 	.run-rate {

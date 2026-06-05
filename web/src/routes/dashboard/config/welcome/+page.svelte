@@ -96,7 +96,7 @@
 
 <style>
 	.loading {
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		font-size: 0.85rem;
 		padding: 2rem;
 		text-align: center;
@@ -114,7 +114,7 @@
 		font-size: 0.85rem;
 		font-weight: 500;
 		border-radius: var(--radius-sm);
-		border: 1px solid var(--border-holdfast);
+		border: 1px solid var(--line);
 		cursor: pointer;
 		transition: all 120ms var(--ease-smooth);
 	}
@@ -126,18 +126,18 @@
 
 	.btn-secondary {
 		background: var(--surface);
-		color: var(--text-secondary);
+		color: var(--ink-2);
 	}
 
 	.btn-secondary:not(:disabled):hover {
-		background: var(--surface-raised);
-		color: var(--text-primary);
+		background: var(--surface-2);
+		color: var(--ink);
 	}
 
 	.btn-primary {
-		background: var(--accent);
-		border-color: var(--accent);
-		color: var(--bg);
+		background: var(--sage);
+		border-color: var(--sage);
+		color: var(--void);
 	}
 
 	.btn-primary:not(:disabled):hover {

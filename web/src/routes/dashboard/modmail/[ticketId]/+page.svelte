@@ -45,13 +45,13 @@
 		align-items: center;
 		gap: 0.85rem;
 		padding: 0.75rem 1rem;
-		border-bottom: 1px solid var(--border-holdfast);
+		border-bottom: 1px solid var(--line);
 		background: var(--surface);
 	}
 	.convo-id { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
 	.convo-name-row { display: flex; align-items: center; gap: 0.5rem; }
-	.convo-name { font-size: 0.95rem; font-weight: 600; color: var(--text-primary); }
-	.convo-code { font-size: 0.75rem; color: var(--text-tertiary); }
+	.convo-name { font-size: 0.95rem; font-weight: 600; color: var(--ink); }
+	.convo-code { font-size: 0.75rem; color: var(--ink-3); }
 	.convo-status {
 		font-size: 0.6rem;
 		font-weight: 600;
@@ -59,8 +59,8 @@
 		letter-spacing: 0.06em;
 		padding: 0.1rem 0.45rem;
 		border-radius: var(--radius-sm);
-		background: var(--surface-raised);
-		color: var(--text-secondary);
+		background: var(--surface-2);
+		color: var(--ink-2);
 	}
 	.convo-status.status-open { background: oklch(28% 0.06 145); color: oklch(80% 0.14 145); }
 	.convo-body { flex: 1; min-height: 0; overflow-y: auto; padding: 0; }

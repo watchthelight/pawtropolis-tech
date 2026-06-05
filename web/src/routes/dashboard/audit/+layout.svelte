@@ -51,7 +51,7 @@
 		display: flex;
 		gap: 0.25rem;
 		margin-bottom: 1.5rem;
-		border-bottom: 1px solid var(--border-holdfast);
+		border-bottom: 1px solid var(--line);
 		overflow-x: auto;
 	}
 
@@ -59,7 +59,7 @@
 		padding: 0.5rem 1rem;
 		font-size: 0.8rem;
 		font-weight: 500;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		text-decoration: none;
 		border-bottom: 2px solid transparent;
 		transition: all var(--duration-fast) var(--ease-smooth);
@@ -67,13 +67,13 @@
 	}
 
 	.audit-tab-active {
-		color: var(--accent);
-		border-bottom-color: var(--accent);
+		color: var(--sage);
+		border-bottom-color: var(--sage);
 	}
 
 	@media (hover: hover) {
 		.audit-tab:not(.audit-tab-active):hover {
-			color: var(--text-primary);
+			color: var(--ink);
 		}
 	}
 

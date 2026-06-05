@@ -35,7 +35,7 @@
 
 	.detail-prompt {
 		font-size: 1.1rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		margin-bottom: 2rem;
 	}
 
@@ -53,12 +53,12 @@
 	.detail-stat-value {
 		font-size: 1.5rem;
 		font-weight: 700;
-		color: var(--text-primary);
+		color: var(--ink);
 	}
 
 	.detail-stat-label {
 		font-size: 0.75rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		margin-top: 0.25rem;
 	}
 </style>

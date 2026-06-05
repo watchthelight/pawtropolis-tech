@@ -59,7 +59,7 @@
 		justify-content: space-between;
 		padding: 0.625rem 0;
 		margin-bottom: 0.75rem;
-		border-bottom: 1px solid var(--border-holdfast);
+		border-bottom: 1px solid var(--line);
 	}
 
 	.mobile-back-link {
@@ -68,7 +68,7 @@
 		gap: 0.375rem;
 		font-size: 0.875rem;
 		font-weight: 500;
-		color: var(--accent);
+		color: var(--sage);
 		text-decoration: none;
 		min-height: 44px;
 	}
@@ -92,16 +92,16 @@
 		min-height: 44px;
 		min-width: 44px;
 		border-radius: var(--radius-sm);
-		background: var(--surface-raised);
-		border: 1px solid var(--border-holdfast);
-		color: var(--text-primary);
+		background: var(--surface-2);
+		border: 1px solid var(--line);
+		color: var(--ink);
 		font-size: 0.7rem;
 		text-decoration: none;
 		transition: all 150ms;
 	}
 
 	.pager-btn:active {
-		background: var(--accent-dim);
+		background: var(--sage-deep);
 	}
 
 	.pager-disabled {
@@ -111,7 +111,7 @@
 
 	.pager-count {
 		font-size: 0.7rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		min-width: 2.5rem;
 		text-align: center;
 	}

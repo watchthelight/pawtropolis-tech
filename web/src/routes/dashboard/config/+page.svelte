@@ -142,7 +142,7 @@
 
 	.section {
 		background: var(--surface);
-		border: 1px solid var(--border-holdfast);
+		border: 1px solid var(--line);
 		border-radius: var(--radius-md);
 		overflow: hidden;
 	}
@@ -155,7 +155,7 @@
 		padding: 0.75rem 1rem;
 		border: none;
 		background: none;
-		color: var(--text-primary);
+		color: var(--ink);
 		cursor: pointer;
 		text-align: left;
 		transition: background 150ms var(--ease-smooth);
@@ -163,7 +163,7 @@
 
 	@media (hover: hover) {
 		.section-header:hover {
-			background: var(--surface-raised);
+			background: var(--surface-2);
 		}
 	}
 
@@ -178,20 +178,20 @@
 		font-weight: 600;
 		padding: 0.1rem 0.35rem;
 		border-radius: var(--radius-sm);
-		background: var(--accent-dim);
-		color: var(--accent);
+		background: var(--sage-deep);
+		color: var(--sage);
 		font-variant-numeric: tabular-nums;
 	}
 
 	.section-lock {
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		opacity: 0.4;
 		display: flex;
 	}
 
 	.chevron {
 		margin-left: auto;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		transition: transform 150ms var(--ease-smooth);
 		display: flex;
 	}
@@ -201,7 +201,7 @@
 	}
 
 	.section-body {
-		border-top: 1px solid var(--border);
+		border-top: 1px solid var(--line-soft);
 	}
 
 	.editor-link {
@@ -211,17 +211,17 @@
 		padding: 0.75rem 1rem;
 		margin-bottom: 0.75rem;
 		background: var(--surface);
-		border: 1px solid var(--border-holdfast);
+		border: 1px solid var(--line);
 		border-radius: var(--radius-md);
-		color: var(--text-primary);
+		color: var(--ink);
 		text-decoration: none;
 		transition: background 150ms var(--ease-smooth), border-color 150ms var(--ease-smooth);
 	}
 
 	@media (hover: hover) {
 		.editor-link:hover {
-			background: var(--surface-raised);
-			border-color: var(--accent);
+			background: var(--surface-2);
+			border-color: var(--sage);
 		}
 	}
 
@@ -232,8 +232,8 @@
 		width: 2rem;
 		height: 2rem;
 		border-radius: var(--radius-sm);
-		background: var(--accent-dim);
-		color: var(--accent);
+		background: var(--sage-deep);
+		color: var(--sage);
 		flex-shrink: 0;
 	}
 
@@ -252,11 +252,11 @@
 
 	.editor-link-sub {
 		font-size: 0.7rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 	}
 
 	.editor-link-arrow {
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		font-size: 1rem;
 	}
 </style>

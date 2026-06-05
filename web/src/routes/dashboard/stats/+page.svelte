@@ -288,7 +288,7 @@
 		border: none;
 		border-radius: var(--radius-sm);
 		background: transparent;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		font-size: 0.8rem;
 		font-weight: 500;
 		cursor: pointer;
@@ -297,17 +297,17 @@
 
 	@media (hover: hover) {
 		.tab:hover {
-			color: var(--text-primary);
-			background: var(--surface-raised);
+			color: var(--ink);
+			background: var(--surface-2);
 		}
 	}
 
 	.tab:active {
-		background: var(--surface-raised);
+		background: var(--surface-2);
 	}
 
 	.tab-active {
-		color: var(--text-primary);
+		color: var(--ink);
 		background: var(--surface);
 		box-shadow: var(--shadow-sm);
 	}
@@ -323,7 +323,7 @@
 	.card {
 		grid-column: span 3;
 		background: var(--surface);
-		border: 1px solid var(--border-holdfast);
+		border: 1px solid var(--line);
 		border-radius: var(--radius-md);
 		padding: var(--space-card);
 		box-shadow: var(--shadow-sm);
@@ -351,7 +351,7 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		margin-bottom: 0.5rem;
 	}
 
@@ -388,7 +388,7 @@
 		display: block;
 		font-size: 1.8rem;
 		font-weight: 700;
-		color: var(--text-primary);
+		color: var(--ink);
 		line-height: 1.2;
 	}
 
@@ -404,18 +404,18 @@
 	}
 
 	.trend-up {
-		color: var(--status-success);
+		color: var(--good);
 	}
 
 	.trend-down {
-		color: var(--status-danger);
+		color: var(--danger);
 	}
 
 	/* ─── Trend labels ─── */
 	.trend-label {
 		display: block;
 		font-size: 0.7rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		margin-top: 0.25rem;
 	}
 
@@ -429,9 +429,9 @@
 
 	.breakdown-tag {
 		font-size: 0.75rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		background: var(--surface);
-		border: 1px solid var(--border-holdfast);
+		border: 1px solid var(--line);
 		border-radius: var(--radius-sm);
 		padding: 4px 10px;
 	}
@@ -439,7 +439,7 @@
 	/* ─── Window label ─── */
 	.window-label {
 		font-size: 0.75rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		margin-top: 1rem;
 		opacity: 0.6;
 	}
@@ -459,7 +459,7 @@
 	/* ─── Leaderboard ─── */
 	.leaderboard {
 		background: var(--surface);
-		border: 1px solid var(--border-holdfast);
+		border: 1px solid var(--line);
 		border-radius: var(--radius-md);
 		padding: var(--space-card);
 		box-shadow: var(--shadow-sm);
@@ -474,21 +474,21 @@
 		display: flex;
 		gap: 0.5rem;
 		padding: 0.5rem 0;
-		border-bottom: 1px solid var(--border-holdfast);
+		border-bottom: 1px solid var(--line);
 		font-size: 0.7rem;
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 	}
 
 	.lb-row {
 		display: flex;
 		gap: 0.5rem;
 		padding: 0.625rem 0;
-		border-bottom: 1px solid var(--border);
+		border-bottom: 1px solid var(--line-soft);
 		font-size: 0.85rem;
-		color: var(--text-primary);
+		color: var(--ink);
 		transition: background 150ms var(--ease-smooth);
 	}
 
@@ -498,14 +498,14 @@
 
 	@media (hover: hover) {
 		.lb-row:hover {
-			background: var(--surface-raised);
+			background: var(--surface-2);
 		}
 	}
 
 	.lb-rank {
 		width: 2rem;
 		flex-shrink: 0;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		font-weight: 600;
 		font-size: 0.75rem;
 	}
@@ -530,11 +530,11 @@
 	}
 
 	.lb-stat-approve {
-		color: var(--status-success);
+		color: var(--good);
 	}
 
 	.lb-stat-reject {
-		color: var(--status-danger);
+		color: var(--danger);
 	}
 
 	/* ─── Mobile ─── */

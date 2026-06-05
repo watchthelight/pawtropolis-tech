@@ -23,20 +23,20 @@
 
 	function statusBadgeColor(status: string): string {
 		switch (status) {
-			case 'pass': return 'var(--status-success)';
-			case 'fail': return 'var(--status-danger)';
+			case 'pass': return 'var(--good)';
+			case 'fail': return 'var(--danger)';
 			case 'error': return 'oklch(65% 0.15 40)';
-			default: return 'var(--text-muted)';
+			default: return 'var(--ink-faint)';
 		}
 	}
 
 	function severityColor(severity: string | null): string {
 		switch (severity) {
-			case 'critical': return 'var(--status-danger)';
+			case 'critical': return 'var(--danger)';
 			case 'high': return 'oklch(65% 0.15 40)';
-			case 'medium': return 'var(--status-warning)';
-			case 'low': return 'var(--status-info)';
-			case 'info': return 'var(--text-muted)';
+			case 'medium': return 'var(--warn)';
+			case 'low': return 'var(--info)';
+			case 'info': return 'var(--ink-faint)';
 			default: return 'transparent';
 		}
 	}
@@ -69,7 +69,7 @@
 	<!-- Summary -->
 	<div class="summary-grid">
 		<DataCard>
-			<div class="rate-display" style:color={passRate() >= 95 ? 'var(--status-success)' : passRate() >= 80 ? 'var(--status-warning)' : 'var(--status-danger)'}>{passRate()}%</div>
+			<div class="rate-display" style:color={passRate() >= 95 ? 'var(--good)' : passRate() >= 80 ? 'var(--warn)' : 'var(--danger)'}>{passRate()}%</div>
 			<span class="rate-label">Pass Rate</span>
 		</DataCard>
 		<DataCard>
@@ -168,7 +168,7 @@
 <style>
 	.back-link {
 		font-size: 0.8rem;
-		color: var(--accent);
+		color: var(--sage);
 		text-decoration: none;
 		display: inline-block;
 		margin-bottom: 1rem;
@@ -191,12 +191,12 @@
 		font-size: 2rem;
 		font-weight: 700;
 		line-height: 1.1;
-		color: var(--text-primary);
+		color: var(--ink);
 	}
 
 	.rate-label {
 		font-size: 0.8rem;
-		color: var(--accent-muted);
+		color: var(--sage-muted);
 		margin-top: 0.15rem;
 	}
 
@@ -216,17 +216,17 @@
 		font-size: 0.7rem;
 		font-weight: 500;
 		background: var(--surface);
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-radius: var(--radius-pill);
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		cursor: pointer;
 		transition: all var(--duration-fast);
 	}
 
 	.pill-active {
-		background: var(--accent-glow-bg);
-		border-color: var(--accent);
-		color: var(--accent);
+		background: var(--sage-fill);
+		border-color: var(--sage);
+		color: var(--sage);
 	}
 
 	.pill-dot {
@@ -240,18 +240,18 @@
 		padding: 0.3rem 0.75rem;
 		font-size: 0.7rem;
 		font-weight: 500;
-		background: var(--surface-raised);
-		border: 1px solid var(--border-holdfast);
+		background: var(--surface-2);
+		border: 1px solid var(--line);
 		border-radius: var(--radius-sm);
-		color: var(--text-primary);
+		color: var(--ink);
 		cursor: pointer;
 		transition: all var(--duration-fast);
 	}
 
 	.export-btn:hover {
-		background: var(--accent);
-		color: var(--bg);
-		border-color: var(--accent);
+		background: var(--sage);
+		color: var(--void);
+		border-color: var(--sage);
 	}
 
 	.findings-list {
@@ -266,7 +266,7 @@
 		gap: 0.5rem;
 		padding: 0.5rem 0.75rem;
 		background: var(--surface);
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-radius: var(--radius-sm);
 		cursor: pointer;
 		transition: background var(--duration-fast);
@@ -277,7 +277,7 @@
 	}
 
 	.finding-row:hover {
-		background: var(--surface-raised);
+		background: var(--surface-2);
 	}
 
 	.status-badge, .severity-badge {
@@ -286,20 +286,20 @@
 		letter-spacing: 0.05em;
 		padding: 0.1rem 0.3rem;
 		border-radius: 3px;
-		color: var(--bg);
+		color: var(--void);
 		flex-shrink: 0;
 	}
 
 	.finding-cmd {
 		font-size: 0.8rem;
 		font-weight: 500;
-		color: var(--text-primary);
+		color: var(--ink);
 		font-family: var(--terminal-font);
 	}
 
 	.finding-title {
 		font-size: 0.75rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		flex: 1;
 		min-width: 0;
 		overflow: hidden;
@@ -309,14 +309,14 @@
 
 	.finding-time {
 		font-size: 0.65rem;
-		color: var(--text-muted);
+		color: var(--ink-faint);
 		flex-shrink: 0;
 	}
 
 	.finding-detail {
 		padding: 0.75rem 0.75rem 0.75rem 2rem;
 		background: var(--surface);
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-top: none;
 		border-radius: 0 0 var(--radius-sm) var(--radius-sm);
 		margin-top: -2px;
@@ -331,12 +331,12 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
-		color: var(--text-muted);
+		color: var(--ink-faint);
 	}
 
 	.detail-text {
 		font-size: 0.8rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		line-height: 1.5;
 		margin: 0.15rem 0 0;
 		white-space: pre-wrap;
@@ -344,8 +344,8 @@
 
 	.detail-meta {
 		font-size: 0.65rem;
-		color: var(--text-muted);
-		border-top: 1px solid var(--border);
+		color: var(--ink-faint);
+		border-top: 1px solid var(--line-soft);
 		padding-top: 0.5rem;
 		margin-top: 0.5rem;
 	}

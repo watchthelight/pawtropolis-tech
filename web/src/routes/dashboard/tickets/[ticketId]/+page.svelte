@@ -164,7 +164,7 @@
 	.back {
 		text-decoration: none;
 		font-size: 0.875rem;
-		color: var(--text-muted, #888);
+		color: var(--ink-faint, #888);
 	}
 	.ticket-header h1 {
 		margin: 0.25rem 0;
@@ -187,7 +187,7 @@
 		flex-wrap: wrap;
 		gap: 1rem;
 		font-size: 0.875rem;
-		color: var(--text-secondary, #aaa);
+		color: var(--ink-2, #aaa);
 	}
 	.close-reason {
 		flex-basis: 100%;
@@ -206,12 +206,12 @@
 	.tabs {
 		display: flex;
 		gap: 0.5rem;
-		border-bottom: 1px solid var(--border, #333);
+		border-bottom: 1px solid var(--line-soft, #333);
 	}
 	.tabs button {
 		background: transparent;
 		border: none;
-		color: var(--text-secondary, #aaa);
+		color: var(--ink-2, #aaa);
 		padding: 0.5rem 1rem;
 		font-size: 0.9rem;
 		cursor: pointer;
@@ -219,8 +219,8 @@
 		margin-bottom: -1px;
 	}
 	.tabs button.active {
-		color: var(--text-primary, #fff);
-		border-bottom-color: var(--accent, #5865F2);
+		color: var(--ink, #fff);
+		border-bottom-color: var(--sage, #5865F2);
 	}
 	.transcript,
 	.timeline,
@@ -242,10 +242,10 @@
 		gap: 0.5rem;
 		align-items: baseline;
 		font-size: 0.8rem;
-		color: var(--text-muted, #888);
+		color: var(--ink-faint, #888);
 	}
 	.msg-head .author {
-		color: var(--text-primary, #fff);
+		color: var(--ink, #fff);
 		font-weight: 600;
 	}
 	.edited,
@@ -265,7 +265,7 @@
 	.embed {
 		border-left: 4px solid #888;
 		padding: 0.5rem 0.75rem;
-		background: var(--surface-raised, #2a2a2a);
+		background: var(--surface-2, #2a2a2a);
 		border-radius: var(--radius-sm, 6px);
 		font-size: 0.875rem;
 	}
@@ -294,10 +294,10 @@
 	.event-type {
 		font-weight: 600;
 		font-family: ui-monospace, monospace;
-		color: var(--accent, #5865F2);
+		color: var(--sage, #5865F2);
 	}
 	.event .ts {
-		color: var(--text-muted, #888);
+		color: var(--ink-faint, #888);
 		font-size: 0.8rem;
 	}
 	.event .actor {
@@ -307,7 +307,7 @@
 		grid-column: 1 / -1;
 		margin: 0.25rem 0 0;
 		font-size: 0.75rem;
-		background: var(--surface-raised, #2a2a2a);
+		background: var(--surface-2, #2a2a2a);
 		padding: 0.4rem 0.6rem;
 		border-radius: 4px;
 		overflow-x: auto;
@@ -323,13 +323,13 @@
 		color: inherit;
 	}
 	.attachment-card:hover {
-		background: var(--surface-raised, #2a2a2a);
+		background: var(--surface-2, #2a2a2a);
 	}
 	.attachment-card .filename {
 		font-weight: 600;
 	}
 	.attachment-card .size {
-		color: var(--text-muted, #888);
+		color: var(--ink-faint, #888);
 		font-size: 0.875rem;
 	}
 	.attachment-card .warn {
@@ -340,7 +340,7 @@
 	.empty {
 		text-align: center;
 		padding: 2rem;
-		color: var(--text-muted, #888);
+		color: var(--ink-faint, #888);
 	}
 	code {
 		font-size: 0.85rem;

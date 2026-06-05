@@ -113,7 +113,7 @@
 	<div class="pulse-grid">
 		<a href="/dashboard/reviews" class="card clickable" class:card-accent={metrics.pendingApps > 0}>
 			<div class="card-icon-row">
-				<ClipboardList size={16} color={metrics.pendingApps > 0 ? 'var(--accent)' : 'var(--text-tertiary)'} />
+				<ClipboardList size={16} color={metrics.pendingApps > 0 ? 'var(--sage)' : 'var(--ink-3)'} />
 				<span class="status-dot" class:status-green={metrics.pendingApps === 0} class:status-amber={metrics.pendingApps > 0}></span>
 			</div>
 			<span class="card-label">Pending Applications</span>
@@ -123,7 +123,7 @@
 
 		<div class="card" class:card-accent={metrics.openModmail > 0}>
 			<div class="card-icon-row">
-				<Mail size={16} color={metrics.openModmail > 0 ? 'var(--accent)' : 'var(--text-tertiary)'} />
+				<Mail size={16} color={metrics.openModmail > 0 ? 'var(--sage)' : 'var(--ink-3)'} />
 				<span class="status-dot" class:status-green={metrics.openModmail === 0} class:status-amber={metrics.openModmail > 0}></span>
 			</div>
 			<span class="card-label">Open Modmail</span>
@@ -133,7 +133,7 @@
 
 		<a href="/dashboard/flags" class="card clickable" class:card-accent={totalFlags > 0}>
 			<div class="card-icon-row">
-				<Flag size={16} color={totalFlags > 0 ? 'var(--accent)' : 'var(--text-tertiary)'} />
+				<Flag size={16} color={totalFlags > 0 ? 'var(--sage)' : 'var(--ink-3)'} />
 				<span class="status-dot" class:status-green={totalFlags === 0} class:status-amber={totalFlags > 0}></span>
 			</div>
 			<span class="card-label">Active Flags</span>
@@ -146,7 +146,7 @@
 	<div class="pulse-grid">
 		<div class="card">
 			<div class="card-icon-row">
-				<CheckCircle size={16} color="var(--text-tertiary)" />
+				<CheckCircle size={16} color="var(--ink-3)" />
 			</div>
 			<span class="card-label">Decisions</span>
 			<StatNumber value={metrics.decisionsInWindow} label="" />
@@ -155,7 +155,7 @@
 
 		<div class="card">
 			<div class="card-icon-row">
-				<UserCheck size={16} color="var(--text-tertiary)" />
+				<UserCheck size={16} color="var(--ink-3)" />
 			</div>
 			<span class="card-label">Approvals</span>
 			<StatNumber value={metrics.approvalsInWindow} label="" />
@@ -164,7 +164,7 @@
 
 		<div class="card" class:card-accent={activityTrend !== undefined}>
 			<div class="card-icon-row">
-				<MessageSquare size={16} color={activityTrend !== undefined ? 'var(--accent)' : 'var(--text-tertiary)'} />
+				<MessageSquare size={16} color={activityTrend !== undefined ? 'var(--sage)' : 'var(--ink-3)'} />
 				<span class="status-dot" class:status-green={activityTrend === undefined} class:status-amber={activityTrend !== undefined}></span>
 			</div>
 			<span class="card-label">Messages</span>
@@ -177,7 +177,7 @@
 							y={32 - (count / maxBar) * 32}
 							width={Math.max(1, (96 / barData.length) - 1)}
 							height={(count / maxBar) * 32}
-							fill="var(--accent)"
+							fill="var(--sage)"
 							opacity="0.7"
 						/>
 					{/each}
@@ -194,7 +194,7 @@
 	<div class="pulse-grid">
 		<div class="card">
 			<div class="card-icon-row">
-				<MessageSquare size={16} color="var(--text-tertiary)" />
+				<MessageSquare size={16} color="var(--ink-3)" />
 			</div>
 			<span class="card-label">Messages</span>
 			<StatNumber value={engagement.messages} label="" trend={pctDelta(engagement.messages, engagement.messagesPrev)} />
@@ -203,7 +203,7 @@
 
 		<div class="card">
 			<div class="card-icon-row">
-				<UserCheck size={16} color="var(--text-tertiary)" />
+				<UserCheck size={16} color="var(--ink-3)" />
 			</div>
 			<span class="card-label">Communicators</span>
 			<StatNumber value={engagement.communicators} label="" trend={pctDelta(engagement.communicators, engagement.communicatorsPrev)} />
@@ -212,7 +212,7 @@
 
 		<div class="card">
 			<div class="card-icon-row">
-				<Mic size={16} color="var(--text-tertiary)" />
+				<Mic size={16} color="var(--ink-3)" />
 			</div>
 			<span class="card-label">Voice Minutes</span>
 			<StatNumber value={engagement.voiceMinutes} label="" trend={pctDelta(engagement.voiceMinutes, engagement.voiceMinutesPrev)} />
@@ -221,7 +221,7 @@
 
 		<div class="card">
 			<div class="card-icon-row">
-				<Users size={16} color="var(--text-tertiary)" />
+				<Users size={16} color="var(--ink-3)" />
 			</div>
 			<span class="card-label">New Members</span>
 			<StatNumber value={engagement.newMembers} label="" trend={pctDelta(engagement.newMembers, engagement.newMembersPrev)} />
@@ -230,7 +230,7 @@
 
 		<div class="card">
 			<div class="card-icon-row">
-				<Zap size={16} color="var(--text-tertiary)" />
+				<Zap size={16} color="var(--ink-3)" />
 			</div>
 			<span class="card-label">Retention</span>
 			<StatNumber value={Math.round(engagement.retentionPct)} label="" suffix="%" />
@@ -242,7 +242,7 @@
 	<div class="pulse-grid">
 		<a href="/dashboard/audit/scans" class="card clickable">
 			<div class="card-icon-row">
-				<Users size={16} color="var(--text-tertiary)" />
+				<Users size={16} color="var(--ink-3)" />
 			</div>
 			<span class="card-label">Total Members</span>
 			{#if guildSnapshot}
@@ -257,7 +257,7 @@
 		{#if guildSnapshot?.onlineCount}
 			<div class="card">
 				<div class="card-icon-row">
-					<Wifi size={16} color="var(--status-success)" />
+					<Wifi size={16} color="var(--good)" />
 				</div>
 				<span class="card-label">Currently Online</span>
 				<StatNumber value={guildSnapshot.onlineCount} label="" />
@@ -268,7 +268,7 @@
 		{#if guildSnapshot}
 			<div class="card">
 				<div class="card-icon-row">
-					<Mic size={16} color="var(--accent)" />
+					<Mic size={16} color="var(--sage)" />
 				</div>
 				<span class="card-label">In Voice Now</span>
 				<StatNumber value={guildSnapshot.voiceUsersNow} label="" />
@@ -289,7 +289,7 @@
 
 		<a href="/dashboard/audit/scans" class="card clickable">
 			<div class="card-icon-row">
-				<UserCheck size={16} color="var(--accent)" />
+				<UserCheck size={16} color="var(--sage)" />
 			</div>
 			<span class="card-label">Estimated Real Users</span>
 			<StatNumber value={metrics.estimatedRealUsers} label="" />
@@ -298,7 +298,7 @@
 
 		<a href="/dashboard/audit/scans" class="card clickable">
 			<div class="card-icon-row">
-				<Bot size={16} color="var(--text-tertiary)" />
+				<Bot size={16} color="var(--ink-3)" />
 			</div>
 			<span class="card-label">Estimated Bots</span>
 			<StatNumber value={metrics.estimatedBots} label="" />
@@ -307,7 +307,7 @@
 
 		<a href="/dashboard/audit/scans" class="card clickable">
 			<div class="card-icon-row">
-				<Zap size={16} color="var(--accent)" />
+				<Zap size={16} color="var(--sage)" />
 			</div>
 			<span class="card-label">Active Real Users</span>
 			<StatNumber value={metrics.activeRealUsers} label="" />
@@ -372,7 +372,7 @@
 						{@const pct = levelRoleStats.totalMembers > 0 ? (role.count / levelRoleStats.totalMembers) * 100 : 0}
 						<tr>
 							<td class="col-role">
-								<span class="role-dot" style:background={role.color ?? 'var(--text-tertiary)'}></span>
+								<span class="role-dot" style:background={role.color ?? 'var(--ink-3)'}></span>
 								<span class="role-name">{role.roleName}</span>
 							</td>
 							<td class="col-count">{role.count.toLocaleString()}</td>
@@ -382,7 +382,7 @@
 									<div
 										class="bar-fill"
 										style:width="{(role.count / maxRoleCount) * 100}%"
-										style:background={role.color ?? 'var(--accent)'}
+										style:background={role.color ?? 'var(--sage)'}
 									></div>
 								</div>
 							</td>
@@ -417,7 +417,7 @@
 
 	.card {
 		background: var(--surface);
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-radius: var(--radius-md);
 		padding: var(--space-card);
 		box-shadow: var(--shadow-sm);
@@ -435,15 +435,15 @@
 	@media (hover: hover) {
 		.card.clickable:hover {
 			box-shadow: var(--shadow-md);
-			border-color: var(--border-holdfast);
+			border-color: var(--line);
 			transform: translateY(-2px);
 		}
 	}
 
 	.card-accent {
-		border-top: 2px solid var(--accent);
+		border-top: 2px solid var(--sage);
 		border-color: oklch(50% 0.04 var(--hue) / 0.3);
-		border-top-color: var(--accent);
+		border-top-color: var(--sage);
 	}
 
 	.card-icon-row {
@@ -460,13 +460,13 @@
 	}
 
 	.status-green {
-		background: var(--status-success);
-		box-shadow: 0 0 6px var(--status-success);
+		background: var(--good);
+		box-shadow: 0 0 6px var(--good);
 	}
 
 	.status-amber {
-		background: var(--status-warning);
-		box-shadow: 0 0 6px var(--status-warning);
+		background: var(--warn);
+		box-shadow: 0 0 6px var(--warn);
 	}
 
 	.card-label {
@@ -475,14 +475,14 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 		margin-bottom: 0.5rem;
 	}
 
 	.card-breakdown {
 		display: block;
 		font-size: 0.65rem;
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 		font-weight: 500;
 		letter-spacing: 0.02em;
 	}
@@ -490,7 +490,7 @@
 	.card-sub {
 		display: block;
 		font-size: 0.7rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		margin-top: 0.25rem;
 	}
 
@@ -502,7 +502,7 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		margin: 1rem 0 0.5rem;
 	}
 
@@ -511,7 +511,7 @@
 		width: 4px;
 		height: 4px;
 		border-radius: 50%;
-		background: var(--accent);
+		background: var(--sage);
 		flex-shrink: 0;
 	}
 
@@ -538,10 +538,10 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 		text-align: left;
 		padding: 0 0.5rem 0.5rem 0;
-		border-bottom: 1px solid var(--border);
+		border-bottom: 1px solid var(--line-soft);
 	}
 
 	.level-role-table td {
@@ -574,7 +574,7 @@
 
 	.role-name {
 		font-weight: 500;
-		color: var(--text-primary);
+		color: var(--ink);
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -583,7 +583,7 @@
 	.col-count {
 		text-align: right;
 		font-variant-numeric: tabular-nums;
-		color: var(--text-primary);
+		color: var(--ink);
 		font-weight: 600;
 		white-space: nowrap;
 		width: 5rem;
@@ -592,7 +592,7 @@
 	.col-pct {
 		text-align: right;
 		font-variant-numeric: tabular-nums;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		white-space: nowrap;
 		width: 4rem;
 	}
@@ -659,8 +659,8 @@
 		margin-bottom: 0.75rem;
 	}
 
-	.rank-hot { color: var(--status-success, #22c55e); }
-	.rank-cold { color: var(--text-tertiary, #666); }
+	.rank-hot { color: var(--good, #22c55e); }
+	.rank-cold { color: var(--ink-3, #666); }
 
 	.rank-list {
 		display: flex;
@@ -677,13 +677,13 @@
 	}
 
 	.rank-num {
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 		font-weight: 500;
 		font-variant-numeric: tabular-nums;
 	}
 
 	.rank-name {
-		color: var(--text-primary);
+		color: var(--ink);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -692,7 +692,7 @@
 	.rank-bar-wrap {
 		height: 6px;
 		border-radius: 3px;
-		background: var(--surface-raised, rgba(255,255,255,0.05));
+		background: var(--surface-2, rgba(255,255,255,0.05));
 		overflow: hidden;
 	}
 
@@ -703,19 +703,19 @@
 		transition: width 0.3s ease;
 	}
 
-	.rank-bar-hot { background: var(--status-success, #22c55e); }
-	.rank-bar-cold { background: var(--text-tertiary, #555); }
+	.rank-bar-hot { background: var(--good, #22c55e); }
+	.rank-bar-cold { background: var(--ink-3, #555); }
 
 	.rank-count {
 		text-align: right;
 		font-weight: 500;
-		color: var(--text-primary);
+		color: var(--ink);
 		font-variant-numeric: tabular-nums;
 	}
 
 	.rank-users {
 		text-align: right;
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 		font-size: 0.65rem;
 	}
 </style>

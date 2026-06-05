@@ -34,10 +34,10 @@
 
 	function statusColor(status: string): string {
 		switch (status) {
-			case 'in_progress': return 'var(--status-warning)';
-			case 'completed': return 'var(--status-success)';
-			case 'cancelled': return 'var(--text-muted)';
-			default: return 'var(--text-secondary)';
+			case 'in_progress': return 'var(--warn)';
+			case 'completed': return 'var(--good)';
+			case 'cancelled': return 'var(--ink-faint)';
+			default: return 'var(--ink-2)';
 		}
 	}
 
@@ -166,10 +166,10 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		margin-bottom: 0.75rem;
 		padding-bottom: 0.5rem;
-		border-bottom: 1px solid var(--border-holdfast);
+		border-bottom: 1px solid var(--line);
 	}
 
 	.section-heading::before {
@@ -177,7 +177,7 @@
 		width: 4px;
 		height: 4px;
 		border-radius: 50%;
-		background: var(--accent);
+		background: var(--sage);
 		flex-shrink: 0;
 	}
 
@@ -191,7 +191,7 @@
 	.scan-type {
 		font-size: 0.8rem;
 		font-weight: 600;
-		color: var(--accent);
+		color: var(--sage);
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		margin-bottom: 0.5rem;
@@ -200,7 +200,7 @@
 	.progress-bar-container {
 		width: 100%;
 		height: 6px;
-		background: var(--border);
+		background: var(--line-soft);
 		border-radius: 3px;
 		overflow: hidden;
 		margin-bottom: 0.5rem;
@@ -208,7 +208,7 @@
 
 	.progress-bar-fill {
 		height: 100%;
-		background: var(--accent);
+		background: var(--sage);
 		border-radius: 3px;
 		transition: width 0.3s ease;
 	}
@@ -217,18 +217,18 @@
 		display: flex;
 		justify-content: space-between;
 		font-size: 0.75rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		margin-bottom: 0.25rem;
 	}
 
 	.scan-pct {
 		font-weight: 600;
-		color: var(--accent);
+		color: var(--sage);
 	}
 
 	.scan-meta {
 		font-size: 0.7rem;
-		color: var(--text-muted);
+		color: var(--ink-faint);
 		margin-top: 0.25rem;
 	}
 
@@ -238,16 +238,16 @@
 		font-size: 0.7rem;
 		font-weight: 500;
 		background: none;
-		border: 1px solid var(--status-danger);
+		border: 1px solid var(--danger);
 		border-radius: var(--radius-sm);
-		color: var(--status-danger);
+		color: var(--danger);
 		cursor: pointer;
 		transition: all var(--duration-fast);
 	}
 
 	.cancel-btn:hover {
-		background: var(--status-danger);
-		color: var(--bg);
+		background: var(--danger);
+		color: var(--void);
 	}
 
 	.action-grid {
@@ -260,18 +260,18 @@
 		padding: 0.5rem 1rem;
 		font-size: 0.8rem;
 		font-weight: 500;
-		background: var(--surface-raised);
-		border: 1px solid var(--border-holdfast);
+		background: var(--surface-2);
+		border: 1px solid var(--line);
 		border-radius: var(--radius-sm);
-		color: var(--text-primary);
+		color: var(--ink);
 		cursor: pointer;
 		transition: all var(--duration-fast);
 	}
 
 	.scan-btn:hover:not(:disabled) {
-		background: var(--accent);
-		color: var(--bg);
-		border-color: var(--accent);
+		background: var(--sage);
+		color: var(--void);
+		border-color: var(--sage);
 	}
 
 	.scan-btn:disabled {
@@ -281,7 +281,7 @@
 
 	.scan-error {
 		font-size: 0.75rem;
-		color: var(--status-danger);
+		color: var(--danger);
 		margin-top: 0.5rem;
 	}
 
@@ -302,7 +302,7 @@
 
 	.sessions-header {
 		font-weight: 600;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		font-size: 0.65rem;
@@ -310,9 +310,9 @@
 
 	.sessions-row {
 		background: var(--surface);
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-radius: var(--radius-sm);
-		color: var(--text-primary);
+		color: var(--ink);
 	}
 
 	.session-type {
@@ -325,7 +325,7 @@
 	}
 
 	.session-time {
-		color: var(--text-muted);
+		color: var(--ink-faint);
 	}
 
 	@media (max-width: 640px) {

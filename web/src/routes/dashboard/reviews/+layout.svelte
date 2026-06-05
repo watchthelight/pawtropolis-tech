@@ -92,9 +92,9 @@
 	};
 
 	function outcomeColor(status: string): string {
-		if (status === 'approved') return 'var(--status-success)';
-		if (status === 'kicked') return 'var(--status-warning)';
-		return 'var(--status-danger)';
+		if (status === 'approved') return 'var(--good)';
+		if (status === 'kicked') return 'var(--warn)';
+		return 'var(--danger)';
 	}
 
 	function outcomeLabel(status: string): string {
@@ -329,7 +329,7 @@
 	.reviews-title {
 		font-size: 1.5rem;
 		font-weight: 600;
-		color: var(--text-primary);
+		color: var(--ink);
 		letter-spacing: -0.02em;
 	}
 
@@ -337,11 +337,11 @@
 		display: inline-flex;
 		align-items: center;
 		border-radius: var(--radius-sm);
-		background: var(--accent-dim);
+		background: var(--sage-deep);
 		padding: 0.125rem 0.5rem;
 		font-size: 0.75rem;
 		font-weight: 500;
-		color: var(--accent);
+		color: var(--sage);
 	}
 
 	/* Remove TabBar bottom border/margin when inline — header row handles spacing */
@@ -428,7 +428,7 @@
 		display: flex;
 		flex-direction: column;
 		border-radius: var(--radius-md);
-		border: 1px solid var(--border-holdfast);
+		border: 1px solid var(--line);
 		background: var(--surface);
 		min-height: 400px;
 		overflow: hidden;
@@ -458,8 +458,8 @@
 		width: 48px;
 		height: 48px;
 		border-radius: var(--radius-sm);
-		background: var(--accent-dim);
-		color: var(--accent);
+		background: var(--sage-deep);
+		color: var(--sage);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -477,15 +477,15 @@
 	.history-card {
 		padding: 0.75rem 1rem;
 		border-radius: var(--radius-md);
-		border: 1px solid var(--border-holdfast);
+		border: 1px solid var(--line);
 		background: var(--surface);
 		cursor: pointer;
 		transition: all 150ms var(--ease-smooth);
 	}
 
 	.history-card-selected {
-		border-left: 3px solid var(--accent);
-		background: var(--surface-raised);
+		border-left: 3px solid var(--sage);
+		background: var(--surface-2);
 		box-shadow: var(--shadow-sm);
 	}
 
@@ -499,7 +499,7 @@
 	.history-card-name {
 		font-size: 0.875rem;
 		font-weight: 500;
-		color: var(--text-primary);
+		color: var(--ink);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -507,7 +507,7 @@
 
 	.history-card-time {
 		font-size: 0.7rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		flex-shrink: 0;
 		margin-left: 0.5rem;
 	}
@@ -535,13 +535,13 @@
 	}
 
 	.history-card-resolver {
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		font-size: 0.7rem;
 		flex-shrink: 0;
 	}
 
 	.history-card-reason {
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 		font-size: 0.65rem;
 		font-style: italic;
 		line-height: 1.4;
@@ -559,13 +559,13 @@
 
 	.history-showing {
 		font-size: 0.65rem;
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 	}
 
 	.history-limit-select {
 		background: var(--surface);
-		color: var(--text-secondary);
-		border: 1px solid var(--border);
+		color: var(--ink-2);
+		border: 1px solid var(--line-soft);
 		border-radius: var(--radius-sm);
 		padding: 0.2rem 0.4rem;
 		font-size: 0.65rem;
@@ -578,7 +578,7 @@
 		flex-direction: column;
 		min-height: calc(var(--vh-full) - var(--mobile-header-h) - 10rem);
 		border-radius: var(--radius-md);
-		border: 1px solid var(--border-holdfast);
+		border: 1px solid var(--line);
 		background: var(--surface);
 		overflow: hidden;
 	}
@@ -620,7 +620,7 @@
 
 	@media (hover: hover) {
 		.history-card:hover {
-			background: var(--surface-raised);
+			background: var(--surface-2);
 		}
 	}
 </style>

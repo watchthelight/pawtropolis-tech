@@ -58,20 +58,20 @@
 	}
 
 	const ACTION_COLORS: Record<string, { bg: string; text: string }> = {
-		approve: { bg: 'oklch(25% 0.06 145)', text: 'var(--status-success)' },
+		approve: { bg: 'oklch(25% 0.06 145)', text: 'var(--good)' },
 		reject: { bg: 'oklch(30% 0.08 85)', text: 'oklch(70% 0.15 85)' },
-		perm_reject: { bg: 'oklch(25% 0.08 25)', text: 'var(--status-danger)' },
-		kick: { bg: 'oklch(25% 0.08 25)', text: 'var(--status-danger)' },
-		claim: { bg: 'var(--accent-dim)', text: 'var(--accent)' },
-		unclaim: { bg: 'oklch(25% 0.04 0)', text: 'var(--text-secondary)' },
+		perm_reject: { bg: 'oklch(25% 0.08 25)', text: 'var(--danger)' },
+		kick: { bg: 'oklch(25% 0.08 25)', text: 'var(--danger)' },
+		claim: { bg: 'var(--sage-deep)', text: 'var(--sage)' },
+		unclaim: { bg: 'oklch(25% 0.04 0)', text: 'var(--ink-2)' },
 		app_submitted: { bg: 'oklch(30% 0.08 220)', text: 'oklch(75% 0.12 220)' },
 		modmail_open: { bg: 'oklch(30% 0.08 280)', text: 'oklch(75% 0.12 280)' },
-		modmail_close: { bg: 'oklch(25% 0.04 0)', text: 'var(--text-secondary)' },
+		modmail_close: { bg: 'oklch(25% 0.04 0)', text: 'var(--ink-2)' },
 		flag: { bg: 'oklch(30% 0.08 330)', text: 'oklch(75% 0.12 330)' },
 	};
 
 	function actionColor(action: string) {
-		return ACTION_COLORS[action] ?? { bg: 'var(--surface-raised)', text: 'var(--text-secondary)' };
+		return ACTION_COLORS[action] ?? { bg: 'var(--surface-2)', text: 'var(--ink-2)' };
 	}
 
 	function actionLabel(action: string): string {
@@ -234,29 +234,29 @@
 		min-width: 180px;
 		padding: 0.5rem 0.75rem;
 		background: var(--surface);
-		border: 1px solid var(--border-holdfast);
+		border: 1px solid var(--line);
 		border-radius: var(--radius-sm);
-		color: var(--text-primary);
+		color: var(--ink);
 		font-size: 0.8rem;
 		outline: none;
 		transition: border-color 150ms var(--ease-smooth);
 	}
 
 	.search-input::placeholder {
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		opacity: 0.6;
 	}
 
 	.search-input:focus {
-		border-color: var(--accent);
+		border-color: var(--sage);
 	}
 
 	.filter-select, .date-input {
 		padding: 0.5rem 0.75rem;
 		background: var(--surface);
-		border: 1px solid var(--border-holdfast);
+		border: 1px solid var(--line);
 		border-radius: var(--radius-sm);
-		color: var(--text-primary);
+		color: var(--ink);
 		font-size: 0.8rem;
 		cursor: pointer;
 		outline: none;
@@ -272,10 +272,10 @@
 
 	.clear-btn {
 		padding: 0.5rem 0.75rem;
-		border: 1px solid var(--border-holdfast);
+		border: 1px solid var(--line);
 		border-radius: var(--radius-sm);
-		background: var(--surface-raised);
-		color: var(--text-secondary);
+		background: var(--surface-2);
+		color: var(--ink-2);
 		font-size: 0.75rem;
 		font-weight: 500;
 		cursor: pointer;
@@ -283,14 +283,14 @@
 	}
 
 	.clear-btn:hover {
-		color: var(--text-primary);
-		border-color: var(--text-secondary);
+		color: var(--ink);
+		border-color: var(--ink-2);
 	}
 
 	/* ─── Table ─── */
 	.table-card {
 		background: var(--surface);
-		border: 1px solid var(--border-holdfast);
+		border: 1px solid var(--line);
 		border-radius: var(--radius-md);
 		overflow: hidden;
 	}
@@ -299,16 +299,16 @@
 		display: flex;
 		gap: 0.5rem;
 		padding: 0.625rem 1rem;
-		border-bottom: 1px solid var(--border-holdfast);
+		border-bottom: 1px solid var(--line);
 		font-size: 0.7rem;
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 	}
 
 	.table-row {
-		border-bottom: 1px solid var(--border);
+		border-bottom: 1px solid var(--line-soft);
 		cursor: pointer;
 		transition: background 150ms var(--ease-smooth);
 	}
@@ -319,12 +319,12 @@
 
 	@media (hover: hover) {
 		.table-row:hover {
-			background: var(--surface-raised);
+			background: var(--surface-2);
 		}
 	}
 
 	.row-expanded {
-		background: var(--surface-raised);
+		background: var(--surface-2);
 	}
 
 	.row-main {
@@ -333,7 +333,7 @@
 		padding: 0.5rem 1rem;
 		align-items: center;
 		font-size: 0.8rem;
-		color: var(--text-primary);
+		color: var(--ink);
 	}
 
 	/* ─── Columns ─── */
@@ -341,7 +341,7 @@
 		width: 5.5rem;
 		flex-shrink: 0;
 		font-size: 0.75rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 	}
 
 	.col-actor {
@@ -372,7 +372,7 @@
 		text-overflow: ellipsis;
 		white-space: nowrap;
 		font-size: 0.75rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 	}
 
 	.no-target {
@@ -392,7 +392,7 @@
 	/* ─── Expanded detail ─── */
 	.row-detail {
 		padding: 0 1rem 0.75rem;
-		border-top: 1px solid var(--border);
+		border-top: 1px solid var(--line-soft);
 	}
 
 	.detail-grid {
@@ -417,20 +417,20 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 	}
 
 	.detail-value {
 		font-size: 0.8rem;
-		color: var(--text-primary);
+		color: var(--ink);
 		word-break: break-word;
 	}
 
 	.detail-meta {
 		font-size: 0.7rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		background: var(--surface);
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-radius: var(--radius-sm);
 		padding: 0.5rem;
 		margin: 0;
@@ -450,10 +450,10 @@
 
 	.page-btn {
 		padding: 0.375rem 0.75rem;
-		border: 1px solid var(--border-holdfast);
+		border: 1px solid var(--line);
 		border-radius: var(--radius-sm);
 		background: var(--surface);
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		font-size: 0.75rem;
 		font-weight: 500;
 		cursor: pointer;
@@ -461,8 +461,8 @@
 	}
 
 	.page-btn:hover:not(:disabled) {
-		color: var(--text-primary);
-		border-color: var(--accent);
+		color: var(--ink);
+		border-color: var(--sage);
 	}
 
 	.page-btn:disabled {
@@ -472,7 +472,7 @@
 
 	.page-info {
 		font-size: 0.75rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 	}
 
 	.page-total {

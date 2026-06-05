@@ -23,14 +23,14 @@
 	onDestroy(() => { if (pollTimer) clearInterval(pollTimer); });
 
 	function pingColor(ms: number): string {
-		if (ms < 100) return 'var(--status-success)';
-		if (ms <= 500) return 'var(--status-warning)';
-		return 'var(--status-danger)';
+		if (ms < 100) return 'var(--good)';
+		if (ms <= 500) return 'var(--warn)';
+		return 'var(--danger)';
 	}
 	function pctColor(pct: number, amber = 70, red = 90): string {
-		if (pct < amber) return 'var(--status-success)';
-		if (pct <= red) return 'var(--status-warning)';
-		return 'var(--status-danger)';
+		if (pct < amber) return 'var(--good)';
+		if (pct <= red) return 'var(--warn)';
+		return 'var(--danger)';
 	}
 	function formatBytesMB(mb: number): string {
 		if (mb < 1024) return `${mb} MB`;
@@ -45,12 +45,12 @@
 		return `${minutes}m`;
 	}
 	function pm2Color(status: string): string {
-		if (status === 'online') return 'var(--status-success)';
-		if (status === 'launching' || status === 'restarting') return 'var(--status-warning)';
-		return 'var(--status-danger)';
+		if (status === 'online') return 'var(--good)';
+		if (status === 'launching' || status === 'restarting') return 'var(--warn)';
+		return 'var(--danger)';
 	}
 	function severityColor(severity: string): string {
-		return severity === 'critical' ? 'var(--status-danger)' : 'var(--status-warning)';
+		return severity === 'critical' ? 'var(--danger)' : 'var(--warn)';
 	}
 	function alertStatusLabel(status: string): string {
 		if (status === 'resolved') return 'Resolved';
@@ -58,9 +58,9 @@
 		return 'Active';
 	}
 	function alertStatusColor(status: string): string {
-		if (status === 'resolved') return 'var(--status-success)';
-		if (status === 'acknowledged') return 'var(--status-info, var(--accent))';
-		return 'var(--status-danger)';
+		if (status === 'resolved') return 'var(--good)';
+		if (status === 'acknowledged') return 'var(--info, var(--sage))';
+		return 'var(--danger)';
 	}
 	function formatAlertType(type: string): string {
 		return type.replace(/_/g, ' ').replace(/\b\w+/g, w => {
@@ -116,7 +116,7 @@
 
 		<!-- DB integrity -->
 		<div class="db-status">
-			<span class="db-dot" style:background={health.dbIntegrity.ok ? 'var(--status-success)' : 'var(--status-danger)'} aria-hidden="true"></span>
+			<span class="db-dot" style:background={health.dbIntegrity.ok ? 'var(--good)' : 'var(--danger)'} aria-hidden="true"></span>
 			<span class="db-label">Database: {health.dbIntegrity.message}</span>
 		</div>
 
@@ -219,14 +219,14 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		margin: 1.5rem 0 0.6rem;
 		padding-bottom: 0.4rem;
-		border-bottom: 1px solid var(--border);
+		border-bottom: 1px solid var(--line-soft);
 	}
 	.section-label::before {
 		content: '';
-		width: 4px; height: 4px; border-radius: 50%; background: var(--accent);
+		width: 4px; height: 4px; border-radius: 50%; background: var(--sage);
 	}
 	.tile-row {
 		display: grid;
@@ -240,30 +240,30 @@
 		gap: 0.2rem;
 		padding: 0.85rem 1rem;
 		background: var(--surface);
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-radius: var(--radius-md);
 	}
-	.tile-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); font-weight: 600; }
-	.tile-value { font-size: 1.55rem; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; line-height: 1.05; }
-	.tile-sub { font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.15rem; }
+	.tile-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); font-weight: 600; }
+	.tile-value { font-size: 1.55rem; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; line-height: 1.05; }
+	.tile-sub { font-size: 0.7rem; color: var(--ink-2); margin-top: 0.15rem; }
 	.unit { font-size: 0.85rem; font-weight: 500; opacity: 0.7; margin-left: 2px; }
-	.cost-tile .tile-value { color: var(--accent); }
+	.cost-tile .tile-value { color: var(--sage); }
 
 	.db-status {
 		display: flex; align-items: center; gap: 0.5rem;
 		margin-top: 0.6rem; padding: 0.5rem 0.75rem;
-		background: var(--surface); border: 1px solid var(--border);
+		background: var(--surface); border: 1px solid var(--line-soft);
 		border-radius: var(--radius-sm);
 	}
 	.db-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-	.db-label { font-size: 0.78rem; color: var(--text-secondary); }
+	.db-label { font-size: 0.78rem; color: var(--ink-2); }
 
 	.pm2-table {
 		display: flex; flex-direction: column; gap: 1px;
-		background: var(--border);
+		background: var(--line-soft);
 		border-radius: var(--radius-md);
 		overflow: hidden;
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 	}
 	.pm2-row {
 		display: grid;
@@ -274,22 +274,22 @@
 		font-size: 0.78rem;
 		align-items: center;
 	}
-	.pm2-head { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); font-weight: 600; }
-	.proc-name { color: var(--text-primary); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78rem; }
-	.proc-num { color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+	.pm2-head { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); font-weight: 600; }
+	.proc-name { color: var(--ink); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78rem; }
+	.proc-num { color: var(--ink-2); font-variant-numeric: tabular-nums; }
 
 	.offline-banner {
 		display: flex; align-items: center; justify-content: space-between; gap: 1rem;
 		padding: 1rem 1.25rem;
-		background: var(--surface); border: 1px solid var(--status-danger);
+		background: var(--surface); border: 1px solid var(--danger);
 		border-radius: var(--radius-md); margin-bottom: 1rem;
 	}
-	.offline-msg { color: var(--status-danger); font-weight: 500; font-size: 0.85rem; }
+	.offline-msg { color: var(--danger); font-weight: 500; font-size: 0.85rem; }
 	.retry {
 		padding: 0.4rem 0.85rem;
-		border: 1px solid var(--status-danger);
+		border: 1px solid var(--danger);
 		background: transparent;
-		color: var(--status-danger);
+		color: var(--danger);
 		border-radius: var(--radius-sm);
 		font-size: 0.75rem; font-weight: 600;
 		cursor: pointer;
@@ -300,14 +300,14 @@
 	.alert-row {
 		display: flex; align-items: center; gap: 0.75rem;
 		padding: 0.5rem 0.75rem;
-		background: var(--surface); border: 1px solid var(--border);
+		background: var(--surface); border: 1px solid var(--line-soft);
 		border-radius: var(--radius-sm);
 	}
-	.alert-severity { font-size: 0.55rem; font-weight: 700; letter-spacing: 0.05em; padding: 0.1rem 0.35rem; border-radius: 3px; color: var(--bg); flex-shrink: 0; }
-	.alert-type { font-size: 0.8rem; color: var(--text-primary); flex: 1; }
-	.alert-time { font-size: 0.7rem; color: var(--text-secondary); flex-shrink: 0; }
+	.alert-severity { font-size: 0.55rem; font-weight: 700; letter-spacing: 0.05em; padding: 0.1rem 0.35rem; border-radius: 3px; color: var(--void); flex-shrink: 0; }
+	.alert-type { font-size: 0.8rem; color: var(--ink); flex: 1; }
+	.alert-time { font-size: 0.7rem; color: var(--ink-2); flex-shrink: 0; }
 	.alert-status { font-size: 0.65rem; font-weight: 600; flex-shrink: 0; }
-	.alert-resolution { font-size: 0.6rem; color: var(--text-secondary); flex-shrink: 0; }
+	.alert-resolution { font-size: 0.6rem; color: var(--ink-2); flex-shrink: 0; }
 
 	@media (max-width: 768px) {
 		.pm2-row { grid-template-columns: 1fr 1fr; }

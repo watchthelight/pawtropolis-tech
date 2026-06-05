@@ -18,11 +18,11 @@
 
 	function severityColor(severity: string | undefined): string {
 		switch (severity) {
-			case 'critical': return 'var(--status-danger)';
+			case 'critical': return 'var(--danger)';
 			case 'high': return 'oklch(65% 0.15 40)';
-			case 'medium': return 'var(--status-warning)';
-			case 'low': return 'var(--status-info)';
-			default: return 'var(--text-secondary)';
+			case 'medium': return 'var(--warn)';
+			case 'low': return 'var(--info)';
+			default: return 'var(--ink-2)';
 		}
 	}
 </script>
@@ -116,7 +116,7 @@
 <style>
 	.back-link {
 		font-size: 0.8rem;
-		color: var(--accent);
+		color: var(--sage);
 		text-decoration: none;
 		display: inline-block;
 		margin-bottom: 1rem;
@@ -125,13 +125,13 @@
 	.snapshot-title {
 		font-size: 1.25rem;
 		font-weight: 600;
-		color: var(--text-primary);
+		color: var(--ink);
 		margin: 0;
 	}
 
 	.snapshot-time {
 		font-size: 0.75rem;
-		color: var(--text-muted);
+		color: var(--ink-faint);
 		margin: 0.25rem 0 1rem;
 	}
 
@@ -149,9 +149,9 @@
 		width: 100%;
 		padding: 0.625rem 0.75rem;
 		background: var(--surface);
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-radius: var(--radius-sm);
-		color: var(--text-primary);
+		color: var(--ink);
 		font: inherit;
 		font-size: 0.85rem;
 		font-weight: 500;
@@ -162,7 +162,7 @@
 	}
 
 	.collapsible-header:hover {
-		background: var(--surface-raised);
+		background: var(--surface-2);
 	}
 
 	.collapsible-arrow {
@@ -197,7 +197,7 @@
 		letter-spacing: 0.05em;
 		padding: 0.1rem 0.3rem;
 		border-radius: 3px;
-		color: var(--bg);
+		color: var(--void);
 		flex-shrink: 0;
 		margin-top: 0.15rem;
 	}
@@ -210,23 +210,23 @@
 	}
 
 	.detail-title {
-		color: var(--text-primary);
+		color: var(--ink);
 	}
 
 	.detail-desc {
 		font-size: 0.7rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		line-height: 1.4;
 	}
 
 	.role-name {
-		color: var(--text-primary);
+		color: var(--ink);
 		font-weight: 500;
 	}
 
 	.detail-meta {
 		font-size: 0.7rem;
-		color: var(--text-muted);
+		color: var(--ink-faint);
 		margin-left: auto;
 		flex-shrink: 0;
 	}

@@ -102,26 +102,26 @@
 	function statusColor(s: string): string {
 		switch (s) {
 			case 'running':
-				return 'var(--status-success)';
+				return 'var(--good)';
 			case 'pending':
-				return 'var(--status-warning)';
+				return 'var(--warn)';
 			case 'complete':
-				return 'var(--accent)';
+				return 'var(--sage)';
 			case 'error':
-				return 'var(--status-danger)';
+				return 'var(--danger)';
 			case 'skipped':
-				return 'var(--text-muted)';
+				return 'var(--ink-faint)';
 			default:
-				return 'var(--text-muted)';
+				return 'var(--ink-faint)';
 		}
 	}
 
 	function processStateColor(s: string): string {
-		if (s === 'running') return 'var(--status-success)';
-		if (s === 'complete') return 'var(--accent)';
-		if (s === 'error') return 'var(--status-danger)';
-		if (s === 'paused') return 'var(--status-warning)';
-		return 'var(--text-muted)';
+		if (s === 'running') return 'var(--good)';
+		if (s === 'complete') return 'var(--sage)';
+		if (s === 'error') return 'var(--danger)';
+		if (s === 'paused') return 'var(--warn)';
+		return 'var(--ink-faint)';
 	}
 </script>
 
@@ -239,7 +239,7 @@
 		padding: 1.25rem 1.5rem;
 		border-radius: 14px;
 		background: var(--surface);
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		margin-bottom: 1rem;
 	}
 
@@ -290,7 +290,7 @@
 		font-size: 0.8rem;
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
-		color: var(--text-muted);
+		color: var(--ink-faint);
 	}
 
 	.meta {
@@ -299,11 +299,11 @@
 		align-items: flex-end;
 		gap: 0.2rem;
 		font-size: 0.85rem;
-		color: var(--text-muted);
+		color: var(--ink-faint);
 		font-variant-numeric: tabular-nums;
 	}
-	.meta .ok { color: var(--status-success); }
-	.meta .bad { color: var(--status-warning); }
+	.meta .ok { color: var(--good); }
+	.meta .bad { color: var(--warn); }
 
 	.grid {
 		display: grid;
@@ -315,7 +315,7 @@
 	.card {
 		padding: 1rem;
 		background: var(--surface);
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-radius: 10px;
 		display: flex;
 		flex-direction: column;
@@ -325,7 +325,7 @@
 		font-size: 0.75rem;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		color: var(--text-muted);
+		color: var(--ink-faint);
 	}
 	.card-value {
 		font-size: 1.4rem;
@@ -335,22 +335,22 @@
 	}
 	.card-sub {
 		font-size: 0.8rem;
-		color: var(--text-muted);
+		color: var(--ink-faint);
 	}
 
 	.bar {
 		height: 6px;
-		background: var(--border);
+		background: var(--line-soft);
 		border-radius: var(--radius-pill);
 		overflow: hidden;
 	}
 	.bar-fill {
 		height: 100%;
-		background: var(--accent);
+		background: var(--sage);
 		transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 	}
-	.bar-fill.warn { background: var(--status-warning); }
-	.bar-fill.danger { background: var(--status-danger); }
+	.bar-fill.warn { background: var(--warn); }
+	.bar-fill.danger { background: var(--danger); }
 
 	.section-title {
 		margin: 1.5rem 0 0.75rem;
@@ -361,7 +361,7 @@
 
 	.table {
 		background: var(--surface);
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-radius: 10px;
 		overflow: hidden;
 	}
@@ -371,7 +371,7 @@
 		gap: 0.75rem;
 		padding: 0.6rem 0.9rem;
 		font-size: 0.85rem;
-		border-bottom: 1px solid var(--border);
+		border-bottom: 1px solid var(--line-soft);
 		align-items: center;
 	}
 	.row:last-child { border-bottom: none; }
@@ -380,17 +380,17 @@
 		font-size: 0.75rem;
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
-		color: var(--text-muted);
-		background: color-mix(in oklch, var(--surface) 70%, var(--border));
+		color: var(--ink-faint);
+		background: color-mix(in oklch, var(--surface) 70%, var(--line-soft));
 	}
 	.row.running {
-		background: color-mix(in oklch, var(--status-success) 6%, transparent);
+		background: color-mix(in oklch, var(--good) 6%, transparent);
 	}
 	.row.err {
 		padding: 0.3rem 0.9rem 0.6rem;
 		font-size: 0.75rem;
-		color: var(--status-danger);
-		border-bottom: 1px solid var(--border);
+		color: var(--danger);
+		border-bottom: 1px solid var(--line-soft);
 	}
 
 	.right { text-align: right; font-variant-numeric: tabular-nums; }

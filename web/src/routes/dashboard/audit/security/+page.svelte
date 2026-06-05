@@ -60,11 +60,11 @@
 
 	function severityColor(severity: string | undefined): string {
 		switch (severity) {
-			case 'critical': return 'var(--status-danger)';
+			case 'critical': return 'var(--danger)';
 			case 'high': return 'oklch(65% 0.15 40)';
-			case 'medium': return 'var(--status-warning)';
-			case 'low': return 'var(--status-info)';
-			default: return 'var(--text-secondary)';
+			case 'medium': return 'var(--warn)';
+			case 'low': return 'var(--info)';
+			default: return 'var(--ink-2)';
 		}
 	}
 </script>
@@ -167,7 +167,7 @@
 
 	.last-scan {
 		font-size: 0.75rem;
-		color: var(--text-muted);
+		color: var(--ink-faint);
 		margin: 0.75rem 0 1.5rem;
 	}
 
@@ -179,10 +179,10 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		margin-bottom: 0.75rem;
 		padding-bottom: 0.5rem;
-		border-bottom: 1px solid var(--border-holdfast);
+		border-bottom: 1px solid var(--line);
 	}
 
 	.section-heading::before {
@@ -190,7 +190,7 @@
 		width: 4px;
 		height: 4px;
 		border-radius: 50%;
-		background: var(--accent);
+		background: var(--sage);
 		flex-shrink: 0;
 	}
 
@@ -206,7 +206,7 @@
 		gap: 0.5rem;
 		padding: 0.5rem 0.75rem;
 		background: var(--surface);
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-radius: var(--radius-sm);
 		cursor: pointer;
 		transition: background var(--duration-fast);
@@ -217,7 +217,7 @@
 	}
 
 	.issue-row:hover {
-		background: var(--surface-raised);
+		background: var(--surface-2);
 	}
 
 	.issue-acknowledged {
@@ -230,13 +230,13 @@
 		letter-spacing: 0.05em;
 		padding: 0.1rem 0.35rem;
 		border-radius: 3px;
-		color: var(--bg);
+		color: var(--void);
 		flex-shrink: 0;
 	}
 
 	.issue-title {
 		font-size: 0.8rem;
-		color: var(--text-primary);
+		color: var(--ink);
 		flex: 1;
 		min-width: 0;
 		overflow: hidden;
@@ -250,15 +250,15 @@
 
 	.issue-category {
 		font-size: 0.65rem;
-		color: var(--text-muted);
+		color: var(--ink-faint);
 		flex-shrink: 0;
 	}
 
 	.ack-btn {
 		font-size: 0.55rem;
 		font-weight: 700;
-		color: var(--accent);
-		border: 1px solid var(--accent);
+		color: var(--sage);
+		border: 1px solid var(--sage);
 		border-radius: 3px;
 		padding: 0.1rem 0.35rem;
 		flex-shrink: 0;
@@ -268,24 +268,24 @@
 	}
 
 	.ack-btn:hover {
-		background: var(--accent);
-		color: var(--bg);
+		background: var(--sage);
+		color: var(--void);
 	}
 
 	.ack-btn-undo {
-		color: var(--status-success);
-		border-color: var(--status-success);
+		color: var(--good);
+		border-color: var(--good);
 	}
 
 	.ack-btn-undo:hover {
-		background: var(--status-success);
-		color: var(--bg);
+		background: var(--good);
+		color: var(--void);
 	}
 
 	.issue-detail {
 		padding: 0.5rem 0.75rem 0.75rem 2.5rem;
 		background: var(--surface);
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-top: none;
 		border-radius: 0 0 var(--radius-sm) var(--radius-sm);
 		margin-top: -2px;
@@ -293,7 +293,7 @@
 
 	.issue-description {
 		font-size: 0.8rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		line-height: 1.5;
 		white-space: pre-wrap;
 	}
@@ -310,7 +310,7 @@
 		gap: 1rem;
 		padding: 0.5rem 0.75rem;
 		background: var(--surface);
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-radius: var(--radius-sm);
 		text-decoration: none;
 		color: inherit;
@@ -318,30 +318,30 @@
 	}
 
 	.snapshot-row:hover {
-		background: var(--surface-raised);
+		background: var(--surface-2);
 	}
 
 	.snapshot-time {
 		font-size: 0.75rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		min-width: 6rem;
 	}
 
 	.snapshot-stat {
 		font-size: 0.75rem;
-		color: var(--text-primary);
+		color: var(--ink);
 		font-weight: 500;
 	}
 
 	.snapshot-critical {
 		font-size: 0.65rem;
 		font-weight: 600;
-		color: var(--status-danger);
+		color: var(--danger);
 	}
 
 	.snapshot-meta {
 		font-size: 0.7rem;
-		color: var(--text-muted);
+		color: var(--ink-faint);
 		margin-left: auto;
 	}
 
