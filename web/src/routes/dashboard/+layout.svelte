@@ -10,6 +10,9 @@
 	import type { SSEEvent } from '$lib/types/events';
 	import Nav from '$lib/components/layout/Nav.svelte';
 	import ConnectionIndicator from '$lib/components/layout/ConnectionIndicator.svelte';
+	import LegacyFab from '$lib/components/layout/LegacyFab.svelte';
+	import ThemePanel from '$lib/components/layout/ThemePanel.svelte';
+	import { initAppearance } from '$lib/stores/appearanceStore.svelte';
 	import Lightbox from '$lib/components/feedback/Lightbox.svelte';
 	import MobileDesktopOnly from '$lib/components/feedback/MobileDesktopOnly.svelte';
 	import { getToasts, dismissToast } from '$lib/stores/toast.svelte';
@@ -29,11 +32,13 @@
 
 	// Sidebar collapse state — persisted to localStorage
 	let sidebarCollapsed = $state(false);
+	let appearancePanelOpen = $state(false);
 	onMount(() => {
 		sidebarCollapsed = localStorage.getItem('sidebar-collapsed') === '1';
 		initViewport();
 		applyMode(getStoredMode());
 		applyStoredAppearance();
+		initAppearance();
 	});
 	function toggleSidebar() {
 		sidebarCollapsed = !sidebarCollapsed;
@@ -235,7 +240,7 @@
 		class:sidebar-mobile={isMobile}
 		class:sidebar-mobile-open={isMobile && drawerOpen}
 	>
-		<Nav {user} {isArtist} collapsed={!isMobile && sidebarCollapsed} mobileOnly={isMobile} />
+		<Nav {user} {isArtist} collapsed={!isMobile && sidebarCollapsed} mobileOnly={isMobile} onOpenAppearance={() => (appearancePanelOpen = true)} />
 	</aside>
 
 	{#if isMobile && drawerOpen}
@@ -274,6 +279,9 @@
 </div>
 
 <Lightbox />
+
+<LegacyFab />
+<ThemePanel bind:open={appearancePanelOpen} />
 
 <!-- Toast notifications -->
 {#if getToasts().length > 0}
