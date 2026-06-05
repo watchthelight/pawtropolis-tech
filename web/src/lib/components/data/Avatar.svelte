@@ -68,8 +68,8 @@
 		display: block;
 	}
 	.av-ph {
-		background: var(--accent-dim);
-		color: var(--accent);
+		background: var(--sage-deep);
+		color: var(--sage);
 		display: flex;
 		align-items: center;
 		justify-content: center;

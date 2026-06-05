@@ -126,7 +126,7 @@
 	}
 
 	.chart-line {
-		stroke: var(--accent);
+		stroke: var(--sage);
 		stroke-width: 2;
 		filter: drop-shadow(0 0 4px oklch(72% 0.18 var(--hue) / 0.4));
 	}
@@ -139,7 +139,7 @@
 	.axis-label {
 
 		font-size: 0.6rem;
-		fill: var(--text-secondary);
+		fill: var(--ink-2);
 	}
 
 	.y-label {
@@ -149,7 +149,7 @@
 	.empty {
 
 		font-size: 0.75rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		padding: 2rem;
 		text-align: center;
 	}

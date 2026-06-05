@@ -27,13 +27,13 @@
 	.gate-title {
 		font-size: 1.25rem;
 		font-weight: 600;
-		color: var(--text-primary);
+		color: var(--ink);
 		margin: 0;
 	}
 
 	.gate-subtitle {
 		font-size: 0.875rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		max-width: 280px;
 		line-height: 1.5;
 		margin: 0;
@@ -45,8 +45,8 @@
 		justify-content: center;
 		min-height: 44px;
 		padding: 0.625rem 1.25rem;
-		background: var(--accent);
-		color: var(--bg);
+		background: var(--sage);
+		color: var(--void);
 		border-radius: var(--radius-sm);
 		font-size: 0.8rem;
 		font-weight: 600;

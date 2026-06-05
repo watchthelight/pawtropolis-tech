@@ -110,14 +110,14 @@
 
 		font-size: 1.8rem;
 		font-weight: 700;
-		fill: var(--text-primary);
+		fill: var(--ink);
 	}
 
 	.center-label {
 
 		font-size: 0.5rem;
 		letter-spacing: 0.15em;
-		fill: var(--text-secondary);
+		fill: var(--ink-2);
 	}
 
 	.legend {
@@ -143,11 +143,11 @@
 	}
 
 	.legend-label {
-		color: var(--text-secondary);
+		color: var(--ink-2);
 	}
 
 	.legend-value {
-		color: var(--text-primary);
+		color: var(--ink);
 		font-weight: 600;
 	}
 </style>

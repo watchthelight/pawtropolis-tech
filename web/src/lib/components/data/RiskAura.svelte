@@ -18,7 +18,7 @@
 	);
 
 	const tierColor = $derived(
-		tier === 'high' ? 'var(--status-danger)' : tier === 'elevated' ? 'var(--status-warning)' : 'var(--status-success)'
+		tier === 'high' ? 'var(--danger)' : tier === 'elevated' ? 'var(--warn)' : 'var(--good)'
 	);
 
 	const ariaLabel = $derived(
@@ -120,7 +120,7 @@
 	.risk-aura-expanded {
 		padding: 0.5rem 0.75rem;
 		border-radius: var(--radius-sm);
-		background: var(--surface-raised);
+		background: var(--surface-2);
 	}
 
 	.risk-glow-elevated {
@@ -148,14 +148,14 @@
 
 	.risk-label {
 		font-size: 0.75rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 	}
 
 	/* ── Evidence section ───────────────────────────────────── */
 	.risk-evidence {
 		margin-top: 0.5rem;
 		padding-top: 0.5rem;
-		border-top: 1px solid var(--border-holdfast);
+		border-top: 1px solid var(--line);
 	}
 
 	.evidence-label {
@@ -163,7 +163,7 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		margin-bottom: 0.375rem;
 	}
 
@@ -178,17 +178,17 @@
 	}
 
 	.evidence-hard {
-		color: var(--status-danger);
+		color: var(--danger);
 		background: oklch(60% 0.05 25 / 0.15);
 	}
 
 	.evidence-soft {
-		color: var(--status-warning);
+		color: var(--warn);
 		background: oklch(70% 0.05 85 / 0.15);
 	}
 
 	.evidence-safe {
-		color: var(--status-success);
+		color: var(--good);
 		background: oklch(65% 0.05 145 / 0.15);
 	}
 </style>

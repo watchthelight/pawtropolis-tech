@@ -55,7 +55,7 @@
 	.consent-banner {
 		pointer-events: auto;
 		background: var(--surface, #1a1a24);
-		border: 1px solid var(--border-holdfast, #333);
+		border: 1px solid var(--line, #333);
 		border-radius: var(--radius-md, 12px);
 		box-shadow: var(--shadow-lg, 0 8px 32px rgba(0, 0, 0, 0.4));
 		padding: 1rem 1.5rem;
@@ -69,7 +69,7 @@
 	.consent-text {
 		font-size: 0.8rem;
 		line-height: 1.5;
-		color: var(--text-secondary, #aaa);
+		color: var(--ink-2, #aaa);
 		flex: 1;
 		margin: 0;
 	}
@@ -86,24 +86,24 @@
 		font-size: 0.78rem;
 		font-weight: 600;
 		cursor: pointer;
-		border: 1px solid var(--border-holdfast, #333);
+		border: 1px solid var(--line, #333);
 		font-family: inherit;
 		transition: all 150ms ease;
 	}
 
 	.consent-deny {
 		background: transparent;
-		color: var(--text-secondary, #aaa);
+		color: var(--ink-2, #aaa);
 	}
 
 	.consent-deny:hover {
-		background: var(--surface-raised, #252530);
-		color: var(--text-primary, #eee);
+		background: var(--surface-2, #252530);
+		color: var(--ink, #eee);
 	}
 
 	.consent-accept {
-		background: var(--accent, #7c6fc0);
-		color: var(--text-on-accent, #111);
+		background: var(--sage, #7c6fc0);
+		color: var(--on-sage, #111);
 		border-color: transparent;
 	}
 

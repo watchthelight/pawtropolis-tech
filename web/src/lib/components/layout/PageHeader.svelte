@@ -10,13 +10,13 @@
 	<div class="flex items-center gap-2">
 		<h1 class="page-title">{title}</h1>
 		{#if badge != null}
-			<span class="inline-flex items-center rounded-[var(--radius-sm)] bg-[var(--accent-dim)] px-2 py-0.5 text-xs font-medium text-[var(--accent)]">
+			<span class="inline-flex items-center rounded-[var(--radius-sm)] bg-[var(--sage-deep)] px-2 py-0.5 text-xs font-medium text-[var(--sage)]">
 				{badge}
 			</span>
 		{/if}
 	</div>
 	{#if subtitle}
-		<p class="mt-1 text-sm text-[var(--text-secondary)]">{subtitle}</p>
+		<p class="mt-1 text-sm text-[var(--ink-2)]">{subtitle}</p>
 	{/if}
 </header>
 
@@ -24,7 +24,7 @@
 	.page-title {
 		font-size: 1.5rem;
 		font-weight: 600;
-		color: var(--text-primary);
+		color: var(--ink);
 		letter-spacing: -0.02em;
 	}
 </style>

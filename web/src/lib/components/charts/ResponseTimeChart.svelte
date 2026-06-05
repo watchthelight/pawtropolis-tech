@@ -157,7 +157,7 @@
 	.axis-label {
 
 		font-size: 0.6rem;
-		fill: var(--text-secondary);
+		fill: var(--ink-2);
 	}
 
 	.y-label {
@@ -167,7 +167,7 @@
 	.empty {
 
 		font-size: 0.75rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		padding: 2rem;
 		text-align: center;
 	}

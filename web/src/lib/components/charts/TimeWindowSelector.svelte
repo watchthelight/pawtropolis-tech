@@ -145,10 +145,10 @@
 		font-weight: 600;
 		letter-spacing: 0.12em;
 		padding: 6px 14px;
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-radius: 4px;
 		background: transparent;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		cursor: pointer;
 		transition: all 150ms ease;
 	}
@@ -161,7 +161,7 @@
 
 	@media (hover: hover) {
 		.chip:hover {
-			color: var(--text-primary);
+			color: var(--ink);
 			border-color: var(--terminal-border);
 		}
 	}
@@ -175,7 +175,7 @@
 	}
 
 	.chip.active {
-		color: var(--text-primary);
+		color: var(--ink);
 		background: oklch(72% 0.18 var(--hue) / 0.12);
 		border-color: var(--terminal-border);
 		box-shadow:
@@ -194,7 +194,7 @@
 		padding: 14px;
 		min-width: 240px;
 		background: var(--surface);
-		border: 1px solid var(--border-holdfast);
+		border: 1px solid var(--line);
 		border-radius: var(--radius-md);
 		box-shadow: var(--shadow-lg, 0 10px 30px rgba(0, 0, 0, 0.25));
 	}
@@ -204,16 +204,16 @@
 		flex-direction: column;
 		gap: 4px;
 		font-size: 0.72rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		font-weight: 600;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 	}
 
 	.field input {
-		background: var(--surface-raised, var(--surface));
-		color: var(--text-primary);
-		border: 1px solid var(--border);
+		background: var(--surface-2, var(--surface));
+		color: var(--ink);
+		border: 1px solid var(--line-soft);
 		border-radius: 4px;
 		padding: 6px 8px;
 		font-size: 0.85rem;
@@ -240,9 +240,9 @@
 		padding: 6px 12px;
 		border-radius: 4px;
 		cursor: pointer;
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		background: transparent;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		transition: all 150ms ease;
 	}
 
@@ -252,14 +252,14 @@
 	}
 
 	.btn-primary {
-		color: var(--text-primary);
+		color: var(--ink);
 		background: oklch(72% 0.18 var(--hue) / 0.15);
 		border-color: var(--terminal-border);
 	}
 
 	@media (hover: hover) {
 		.btn:hover:not(:disabled) {
-			color: var(--text-primary);
+			color: var(--ink);
 			border-color: var(--terminal-border);
 		}
 	}

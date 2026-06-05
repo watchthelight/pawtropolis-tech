@@ -38,7 +38,7 @@
 	onmouseenter={canHover ? (e) => {
 		const el = e.currentTarget;
 		el.style.boxShadow = hoverShadowVar[elevation];
-		el.style.borderColor = 'var(--border-holdfast)';
+		el.style.borderColor = 'var(--line)';
 		if (!prefersReducedMotion()) el.style.transform = 'translateY(-2px)';
 	} : undefined}
 	onmouseleave={canHover ? (e) => {
@@ -58,19 +58,19 @@
 <style>
 	.card {
 		background: var(--surface);
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-radius: var(--radius-md);
 		padding: var(--space-card);
 		transition: all var(--duration-fast) var(--ease-smooth);
 	}
 
 	.card-accent {
-		background: var(--accent-glow-bg);
+		background: var(--sage-fill);
 		border: 1px solid oklch(50% 0.04 var(--hue) / 0.3);
-		border-top: 2px solid var(--accent);
+		border-top: 2px solid var(--sage);
 	}
 
 	.card-selected {
-		border-left: 4px solid var(--accent);
+		border-left: 4px solid var(--sage);
 	}
 </style>

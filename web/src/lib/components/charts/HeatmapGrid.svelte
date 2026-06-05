@@ -177,7 +177,7 @@
 	.week-title {
 		font-size: 0.8rem;
 		font-weight: 600;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		margin: 0;
 		letter-spacing: 0.04em;
 	}
@@ -191,7 +191,7 @@
 
 	.hour-label {
 		font-size: 0.6rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		text-align: center;
 		padding-bottom: 4px;
 		min-width: 0;
@@ -205,7 +205,7 @@
 	.day-label {
 		font-size: 0.65rem;
 		font-weight: 600;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		display: flex;
 		align-items: center;
 		padding-right: 8px;
@@ -216,13 +216,13 @@
 		aspect-ratio: 1;
 		min-width: 0;
 		border-radius: 2px;
-		background-color: var(--accent);
+		background-color: var(--sage);
 		transition: opacity var(--duration-fast) var(--ease-smooth);
 		cursor: crosshair;
 	}
 
 	.cell-hovered {
-		outline: 2px solid var(--accent);
+		outline: 2px solid var(--sage);
 		outline-offset: -1px;
 		z-index: 1;
 	}
@@ -234,8 +234,8 @@
 		transform: translateX(-50%);
 		pointer-events: none;
 		z-index: 10;
-		background: var(--surface-raised);
-		border: 1px solid var(--border-strong);
+		background: var(--surface-2);
+		border: 1px solid var(--line-strong);
 		border-radius: var(--radius-sm);
 		box-shadow: var(--shadow-md);
 		padding: 0.4rem 0.6rem;
@@ -259,24 +259,24 @@
 	.tooltip-day {
 		font-size: 0.7rem;
 		font-weight: 700;
-		color: var(--text-primary);
+		color: var(--ink);
 	}
 
 	.tooltip-hour {
 		font-size: 0.6rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 	}
 
 	.tooltip-count {
 		font-size: 0.7rem;
 		font-weight: 600;
-		color: var(--accent);
+		color: var(--sage);
 		font-variant-numeric: tabular-nums;
 	}
 
 	.axis-note {
 		font-size: 0.6rem;
-		color: var(--text-tertiary, var(--text-secondary));
+		color: var(--ink-3, var(--ink-2));
 		text-align: right;
 		opacity: 0.7;
 	}
@@ -290,7 +290,7 @@
 
 	.legend-label {
 		font-size: 0.6rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 	}
 
 	.legend-gradient {
@@ -299,8 +299,8 @@
 		border-radius: 2px;
 		background: linear-gradient(
 			to right,
-			color-mix(in oklch, var(--accent) 4%, transparent) 0%,
-			var(--accent) 100%
+			color-mix(in oklch, var(--sage) 4%, transparent) 0%,
+			var(--sage) 100%
 		);
 	}
 </style>

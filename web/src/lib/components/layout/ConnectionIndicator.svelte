@@ -3,10 +3,10 @@
 	import { getBotOnline } from '$lib/stores/bot-status.svelte';
 
 	const STATUS_CONFIG = {
-		connected: { color: 'var(--status-success)', label: 'Connected', pulse: false },
-		connecting: { color: 'var(--status-warning)', label: 'Connecting...', pulse: false },
-		reconnecting: { color: 'var(--status-warning)', label: 'Reconnecting...', pulse: true },
-		disconnected: { color: 'var(--status-danger)', label: 'Disconnected', pulse: false }
+		connected: { color: 'var(--good)', label: 'Connected', pulse: false },
+		connecting: { color: 'var(--warn)', label: 'Connecting...', pulse: false },
+		reconnecting: { color: 'var(--warn)', label: 'Reconnecting...', pulse: true },
+		disconnected: { color: 'var(--danger)', label: 'Disconnected', pulse: false }
 	} as const;
 
 	let config = $derived(STATUS_CONFIG[getConnectionStatus()]);
@@ -14,7 +14,7 @@
 </script>
 
 <div class="space-y-1">
-	<div class="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+	<div class="flex items-center gap-2 text-xs text-[var(--ink-2)]">
 		<span
 			class="status-dot"
 			class:pulse-glow={config.pulse}
@@ -23,10 +23,10 @@
 		{config.label}
 	</div>
 	{#if !botOnline}
-		<div class="flex items-center gap-2 text-xs text-[var(--status-danger)]">
+		<div class="flex items-center gap-2 text-xs text-[var(--danger)]">
 			<span
 				class="status-dot"
-				style:--dot-color="var(--status-danger)"
+				style:--dot-color="var(--danger)"
 			></span>
 			Bot offline
 		</div>

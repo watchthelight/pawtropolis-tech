@@ -23,15 +23,15 @@
 	);
 
 	const defaultTrendColor: Record<string, string> = {
-		up: 'var(--status-success)',
-		down: 'var(--status-danger)',
-		neutral: 'var(--text-secondary)'
+		up: 'var(--good)',
+		down: 'var(--danger)',
+		neutral: 'var(--ink-2)'
 	};
 
 	const invertedTrendColor: Record<string, string> = {
-		up: 'var(--status-danger)',
-		down: 'var(--status-success)',
-		neutral: 'var(--text-secondary)'
+		up: 'var(--danger)',
+		down: 'var(--good)',
+		neutral: 'var(--ink-2)'
 	};
 
 	let trendColor = $derived(invertColors ? invertedTrendColor : defaultTrendColor);
@@ -80,13 +80,13 @@
 	.stat-value {
 		font-size: clamp(1.75rem, 4vw, 2.5rem);
 		font-weight: 700;
-		color: var(--text-primary);
+		color: var(--ink);
 		line-height: 1.1;
 	}
 
 	.stat-label {
 		font-size: 0.8rem;
-		color: var(--accent-muted);
+		color: var(--sage-muted);
 		margin-top: 0.15rem;
 	}
 
@@ -130,7 +130,7 @@
 	.suffix {
 		font-size: 0.7em;
 		font-weight: 600;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		margin-left: 0.1em;
 		line-height: 1.2;
 	}

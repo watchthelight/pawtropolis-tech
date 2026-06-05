@@ -39,7 +39,7 @@
 		gap: 0.3rem;
 		font-family: monospace;
 		font-size: 0.65rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		background: none;
 		border: none;
 		padding: 0.15rem 0.35rem;
@@ -51,16 +51,16 @@
 	}
 
 	.copyable-id:hover {
-		color: var(--text-primary);
-		background: var(--surface-raised);
+		color: var(--ink);
+		background: var(--surface-2);
 	}
 
 	.copyable-id-copied {
-		color: var(--status-success);
+		color: var(--good);
 	}
 
 	.copyable-id-copied:hover {
-		color: var(--status-success);
+		color: var(--good);
 	}
 
 	.copyable-id-label {
@@ -91,9 +91,9 @@
 		font-family: system-ui, sans-serif;
 		font-size: 0.6rem;
 		font-weight: 600;
-		color: var(--status-success);
+		color: var(--good);
 		background: var(--surface);
-		border: 1px solid var(--border-holdfast);
+		border: 1px solid var(--line);
 		border-radius: var(--radius-sm);
 		padding: 0.1rem 0.4rem;
 		white-space: nowrap;
