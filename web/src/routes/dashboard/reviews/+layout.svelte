@@ -359,29 +359,33 @@
 	}
 
 	.filter-chip {
-		padding: 0.25rem 0.625rem;
-		border-radius: 999px;
-		border: 1px solid var(--border-subtle, rgba(255,255,255,0.1));
+		padding: 0.3rem 0.7rem;
+		border-radius: var(--radius);
+		border: 1px solid var(--line-soft);
 		background: transparent;
-		color: var(--text-secondary, #aaa);
-		font-size: 0.75rem;
+		color: var(--ink-3);
+		font-family: var(--font-mono);
+		font-size: 0.66rem;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
 		cursor: pointer;
-		transition: all 0.15s ease;
+		transition: border-color 0.15s var(--ease-smooth), color 0.15s var(--ease-smooth);
 	}
 
 	.filter-chip:hover {
-		border-color: var(--text-secondary);
+		border-color: var(--line);
+		color: var(--ink);
 	}
 
 	.filter-chip.active {
-		background: var(--accent, oklch(0.7 0.15 280));
-		color: var(--text-on-accent, #fff);
-		border-color: transparent;
+		background: var(--sage-fill);
+		color: var(--sage);
+		border-color: var(--sage-soft);
 	}
 
 	.filter-chip.clear {
-		color: var(--status-danger, #ef4444);
-		border-color: var(--status-danger, #ef4444);
+		color: var(--danger);
+		border-color: color-mix(in oklch, var(--danger) 40%, transparent);
 	}
 
 	.review-layout {
