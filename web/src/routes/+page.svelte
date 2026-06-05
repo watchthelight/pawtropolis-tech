@@ -23,7 +23,7 @@
 		align-items: center;
 		justify-content: center;
 		overflow: hidden;
-		background-color: var(--bg);
+		background-color: var(--void);
 	}
 
 	.content {
@@ -47,7 +47,7 @@
 	.title {
 		font-size: 3rem;
 		font-weight: 800;
-		color: var(--text-primary);
+		color: var(--ink);
 		letter-spacing: -0.03em;
 		line-height: 1;
 		margin-bottom: 0.75rem;
@@ -55,7 +55,7 @@
 
 	.subtitle {
 		font-size: 1rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		letter-spacing: 0.04em;
 		margin-bottom: 2.5rem;
 	}
@@ -72,8 +72,8 @@
 		gap: 0.75rem;
 		padding: 0.875rem 2.25rem;
 		border-radius: var(--radius-md);
-		background: var(--accent);
-		color: var(--text-on-accent);
+		background: var(--sage);
+		color: var(--on-sage);
 		font-weight: 600;
 		font-size: 1rem;
 		text-decoration: none;
@@ -84,20 +84,20 @@
 
 	@media (hover: hover) {
 		.discord-btn:hover {
-			background: var(--accent-strong);
+			background: var(--sage-bright);
 			box-shadow: var(--shadow-lg);
 		}
 	}
 
 	.discord-btn:active {
-		background: var(--accent-dim);
+		background: var(--sage-deep);
 		box-shadow: var(--shadow-sm);
 	}
 
 	.footer {
 		margin-top: 2rem;
 		font-size: 0.7rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		opacity: 0.5;
 		letter-spacing: 0.1em;
 		text-transform: lowercase;

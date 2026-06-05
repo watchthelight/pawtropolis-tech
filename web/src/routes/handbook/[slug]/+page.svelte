@@ -128,18 +128,18 @@
 		font-size: 0.78rem;
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
-		color: var(--accent);
+		color: var(--sage);
 		font-weight: 700;
 	}
 	.hb-doc-head h1 {
 		margin: 0.3rem 0 0;
 		font-size: clamp(2rem, 5vw, 2.8rem);
-		color: var(--text-primary);
+		color: var(--ink);
 		letter-spacing: -0.02em;
 	}
 	.hb-doc-tagline {
 		margin: 0.4rem 0 0;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		font-size: 1.02rem;
 	}
 	.hb-doc-meta {
@@ -148,14 +148,14 @@
 		gap: 1rem;
 		flex-wrap: wrap;
 		font-size: 0.88rem;
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 	}
 	.hb-doc-meta strong {
-		color: var(--text-primary);
+		color: var(--ink);
 		font-weight: 600;
 	}
 	.hb-doc-public {
-		color: var(--accent);
+		color: var(--sage);
 	}
 	.hb-doc-body {
 		font-size: 1rem;
@@ -170,7 +170,7 @@
 		overflow-y: auto;
 		width: 14rem;
 		padding: 1rem;
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-radius: var(--radius-md);
 		background: var(--surface);
 	}
@@ -179,7 +179,7 @@
 		font-size: 0.72rem;
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 	}
 	.hb-toc-desktop ul {
 		list-style: none;
@@ -193,17 +193,17 @@
 		display: block;
 		padding: 0.3rem 0.5rem;
 		border-radius: var(--radius-sm);
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 		text-decoration: none;
 		font-size: 0.85rem;
 		line-height: 1.3;
 	}
 	.hb-toc-desktop a:hover {
-		color: var(--text-primary);
+		color: var(--ink);
 	}
 	.hb-toc-desktop a.active {
-		color: var(--accent);
-		background: var(--accent-soft);
+		color: var(--sage);
+		background: var(--sage-soft);
 	}
 	.hb-toc-desktop .hb-toc-d3 a,
 	.hb-toc-desktop .hb-toc-d4 a {
@@ -226,8 +226,8 @@
 		bottom: 1rem;
 		padding: 0.65rem 1rem;
 		border-radius: 999px;
-		background: var(--accent);
-		color: var(--text-on-accent);
+		background: var(--sage);
+		color: var(--on-sage);
 		border: none;
 		box-shadow: var(--shadow-md);
 		font-size: 0.92rem;
@@ -251,10 +251,10 @@
 		right: 0;
 		bottom: 0;
 		max-height: 75vh;
-		background: var(--surface-raised);
+		background: var(--surface-2);
 		border-top-left-radius: var(--radius-lg);
 		border-top-right-radius: var(--radius-lg);
-		border-top: 1px solid var(--border-holdfast);
+		border-top: 1px solid var(--line);
 		z-index: 50;
 		display: flex;
 		flex-direction: column;
@@ -273,14 +273,14 @@
 		align-items: center;
 		justify-content: space-between;
 		padding: 0.8rem 1.1rem;
-		border-bottom: 1px solid var(--border);
-		color: var(--text-primary);
+		border-bottom: 1px solid var(--line-soft);
+		color: var(--ink);
 	}
 	.hb-toc-head button {
 		background: none;
 		border: none;
 		font-size: 1.4rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		cursor: pointer;
 		min-height: 44px;
 		min-width: 44px;
@@ -301,7 +301,7 @@
 		border: none;
 		background: transparent;
 		text-align: left;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		font-size: 0.93rem;
 		border-radius: var(--radius-sm);
 		cursor: pointer;
@@ -309,10 +309,10 @@
 	}
 	.hb-toc-list button:hover {
 		background: var(--hover-bg);
-		color: var(--text-primary);
+		color: var(--ink);
 	}
 	.hb-toc-list button.active {
-		color: var(--accent);
+		color: var(--sage);
 	}
 	.hb-toc-list .hb-toc-d3 button {
 		padding-left: 1.4rem;
@@ -327,8 +327,8 @@
 		padding: 0.15em 0.5em;
 		border-radius: var(--radius-sm);
 		background: var(--surface);
-		color: var(--text-tertiary);
-		border: 1px solid var(--border);
+		color: var(--ink-3);
+		border: 1px solid var(--line-soft);
 	}
 	.hb-toc-backdrop {
 		position: fixed;

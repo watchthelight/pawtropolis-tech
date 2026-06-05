@@ -25,36 +25,36 @@
 		max-width: 52rem;
 		margin: 0 auto;
 		padding: clamp(2rem, 5vw, 4rem) clamp(1.1rem, 4vw, 2rem) 6rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 	}
 
 	.cl-head {
 		margin-bottom: 2.5rem;
 		padding-bottom: 1.5rem;
-		border-bottom: 1px solid var(--border);
+		border-bottom: 1px solid var(--line-soft);
 	}
 	.cl-back {
 		display: inline-block;
 		margin-bottom: 1.25rem;
 		font-size: 0.85rem;
 		letter-spacing: 0.02em;
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 		text-decoration: none;
 		transition: color 0.15s ease;
 	}
 	.cl-back:hover {
-		color: var(--accent);
+		color: var(--sage);
 	}
 	.cl-title {
 		margin: 0;
 		font-size: clamp(2rem, 6vw, 2.75rem);
 		font-weight: 700;
 		letter-spacing: -0.02em;
-		color: var(--text-primary);
+		color: var(--ink);
 	}
 	.cl-sub {
 		margin: 0.5rem 0 0;
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 		font-size: 0.95rem;
 	}
 
@@ -68,16 +68,16 @@
 		margin: 3rem 0 1rem;
 		font-size: 1.6rem;
 		font-weight: 700;
-		color: var(--text-primary);
+		color: var(--ink);
 		letter-spacing: -0.01em;
 	}
 	.prose :global(h2) {
 		margin: 3rem 0 1rem;
 		padding-top: 1.75rem;
-		border-top: 1px solid var(--border);
+		border-top: 1px solid var(--line-soft);
 		font-size: 1.4rem;
 		font-weight: 700;
-		color: var(--text-primary);
+		color: var(--ink);
 		letter-spacing: -0.01em;
 		scroll-margin-top: 1.5rem;
 	}
@@ -91,27 +91,27 @@
 		font-weight: 650;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		color: var(--accent);
+		color: var(--sage);
 		scroll-margin-top: 1.5rem;
 	}
 	.prose :global(h4) {
 		margin: 1.5rem 0 0.5rem;
 		font-size: 0.95rem;
 		font-weight: 650;
-		color: var(--text-primary);
+		color: var(--ink);
 	}
 
 	.prose :global(p) {
 		margin: 0.9rem 0;
 	}
 	.prose :global(a) {
-		color: var(--accent);
+		color: var(--sage);
 		text-decoration: none;
 		border-bottom: 1px solid transparent;
 		transition: border-color 0.15s ease;
 	}
 	.prose :global(a:hover) {
-		border-bottom-color: var(--accent);
+		border-bottom-color: var(--sage);
 	}
 
 	.prose :global(ul),
@@ -123,11 +123,11 @@
 		margin: 0.4rem 0;
 	}
 	.prose :global(li::marker) {
-		color: var(--text-muted);
+		color: var(--ink-faint);
 	}
 
 	.prose :global(strong) {
-		color: var(--text-primary);
+		color: var(--ink);
 		font-weight: 650;
 	}
 
@@ -136,9 +136,9 @@
 		font-size: 0.86em;
 		padding: 0.12em 0.4em;
 		border-radius: 5px;
-		background: var(--surface-raised);
-		border: 1px solid var(--border);
-		color: var(--text-primary);
+		background: var(--surface-2);
+		border: 1px solid var(--line-soft);
+		color: var(--ink);
 	}
 	.prose :global(pre) {
 		margin: 1rem 0;
@@ -146,7 +146,7 @@
 		overflow-x: auto;
 		border-radius: 10px;
 		background: var(--surface);
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 	}
 	.prose :global(pre code) {
 		padding: 0;
@@ -157,14 +157,14 @@
 	.prose :global(hr) {
 		margin: 2.5rem 0;
 		border: none;
-		border-top: 1px solid var(--border);
+		border-top: 1px solid var(--line-soft);
 	}
 
 	.prose :global(blockquote) {
 		margin: 1rem 0;
 		padding: 0.5rem 1rem;
-		border-left: 3px solid var(--accent-dim);
-		color: var(--text-tertiary);
+		border-left: 3px solid var(--sage-deep);
+		color: var(--ink-3);
 	}
 
 	.prose :global(table) {
@@ -176,11 +176,11 @@
 	.prose :global(th),
 	.prose :global(td) {
 		padding: 0.5rem 0.7rem;
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		text-align: left;
 	}
 	.prose :global(th) {
-		background: var(--surface-raised);
-		color: var(--text-primary);
+		background: var(--surface-2);
+		color: var(--ink);
 	}
 </style>

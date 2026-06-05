@@ -38,11 +38,11 @@
 	<header class="hb-topbar">
 		<a class="hb-brand" href="/handbook" aria-label="Handbook home">
 			<svg viewBox="0 0 32 32" aria-hidden="true">
-				<rect x="3" y="5" width="22" height="22" rx="3" fill="var(--accent-dim)" />
-				<rect x="6" y="5" width="22" height="22" rx="3" fill="var(--accent)" />
-				<rect x="9" y="9" width="14" height="2" fill="var(--text-on-accent)" opacity="0.85" />
-				<rect x="9" y="13" width="14" height="2" fill="var(--text-on-accent)" opacity="0.6" />
-				<rect x="9" y="17" width="14" height="2" fill="var(--text-on-accent)" opacity="0.4" />
+				<rect x="3" y="5" width="22" height="22" rx="3" fill="var(--sage-deep)" />
+				<rect x="6" y="5" width="22" height="22" rx="3" fill="var(--sage)" />
+				<rect x="9" y="9" width="14" height="2" fill="var(--on-sage)" opacity="0.85" />
+				<rect x="9" y="13" width="14" height="2" fill="var(--on-sage)" opacity="0.6" />
+				<rect x="9" y="17" width="14" height="2" fill="var(--on-sage)" opacity="0.4" />
 			</svg>
 			<span class="hb-brand-text">
 				Handbook
@@ -119,8 +119,8 @@
 <style>
 	.hb-shell {
 		min-height: 100vh;
-		background: var(--bg);
-		color: var(--text-primary);
+		background: var(--void);
+		color: var(--ink);
 		font-family: 'Inter Variable', system-ui, sans-serif;
 		display: flex;
 		flex-direction: column;
@@ -130,7 +130,7 @@
 		align-items: center;
 		gap: 1rem;
 		padding: 0.75rem 1.25rem;
-		border-bottom: 1px solid var(--border);
+		border-bottom: 1px solid var(--line-soft);
 		background: var(--surface);
 		position: sticky;
 		top: 0;
@@ -141,7 +141,7 @@
 		align-items: center;
 		gap: 0.6rem;
 		text-decoration: none;
-		color: var(--text-primary);
+		color: var(--ink);
 		flex: 1;
 	}
 	.hb-brand svg {
@@ -155,7 +155,7 @@
 	}
 	.hb-brand-text small {
 		font-size: 0.7rem;
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 	}
@@ -169,39 +169,39 @@
 		font-weight: 600;
 		padding: 0.3em 0.7em;
 		border-radius: var(--radius-sm);
-		background: var(--accent-soft);
-		color: var(--text-primary);
-		border: 1px solid var(--accent-dim);
+		background: var(--sage-soft);
+		color: var(--ink);
+		border: 1px solid var(--sage-deep);
 	}
 	.hb-link {
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		text-decoration: none;
 		font-size: 0.92rem;
 	}
 	.hb-link:hover {
-		color: var(--accent);
+		color: var(--sage);
 	}
 	.hb-cta {
 		display: inline-flex;
 		align-items: center;
 		padding: 0.5em 1em;
 		border-radius: var(--radius-sm);
-		background: var(--accent);
-		color: var(--text-on-accent);
+		background: var(--sage);
+		color: var(--on-sage);
 		font-weight: 600;
 		text-decoration: none;
 		font-size: 0.9rem;
 		min-height: 36px;
 	}
 	.hb-cta:hover {
-		background: var(--accent-strong);
+		background: var(--sage-bright);
 	}
 	.hb-drawer-toggle {
 		display: none;
 		background: none;
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-radius: var(--radius-sm);
-		color: var(--text-primary);
+		color: var(--ink);
 		padding: 0.4rem;
 		cursor: pointer;
 	}
@@ -217,7 +217,7 @@
 		min-height: 0;
 	}
 	.hb-rail {
-		border-right: 1px solid var(--border);
+		border-right: 1px solid var(--line-soft);
 		background: var(--surface);
 		padding: 1rem 0.75rem 2rem;
 		min-height: calc(100vh - 4rem);
@@ -232,7 +232,7 @@
 		font-size: 0.72rem;
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 		padding: 0 0.5rem;
 	}
 	.hb-rail-list {
@@ -250,18 +250,18 @@
 		padding: 0.55rem 0.6rem;
 		border-radius: var(--radius-sm);
 		text-decoration: none;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		border: 1px solid transparent;
 		transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 	}
 	.hb-rail-list a:hover {
 		background: var(--hover-bg);
-		color: var(--text-primary);
+		color: var(--ink);
 	}
 	.hb-rail-list a.active {
-		background: var(--accent-soft);
-		color: var(--text-primary);
-		border-color: var(--accent-dim);
+		background: var(--sage-soft);
+		color: var(--ink);
+		border-color: var(--sage-deep);
 	}
 	.hb-rail-list a.locked {
 		opacity: 0.7;
@@ -272,14 +272,14 @@
 	}
 	.hb-rail-doc-tagline {
 		font-size: 0.78rem;
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 	}
 	.hb-rail-foot {
 		margin: 1rem 0.6rem 0;
 		padding-top: 0.8rem;
 		font-size: 0.78rem;
-		color: var(--text-tertiary);
-		border-top: 1px solid var(--border);
+		color: var(--ink-3);
+		border-top: 1px solid var(--line-soft);
 	}
 	.hb-main {
 		padding: 2rem clamp(1rem, 4vw, 2.5rem) 5rem;

@@ -101,12 +101,12 @@
 	.hb-landing-head h1 {
 		margin: 0;
 		font-size: clamp(2rem, 5vw, 3rem);
-		color: var(--text-primary);
+		color: var(--ink);
 		letter-spacing: -0.02em;
 	}
 	.hb-tagline {
 		margin: 0.4rem 0 0;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		font-size: 1.05rem;
 		max-width: 60ch;
 	}
@@ -123,7 +123,7 @@
 		flex-direction: column;
 		gap: 0.2rem;
 		padding: 1rem 1.2rem;
-		border: 1px solid var(--border-holdfast);
+		border: 1px solid var(--line);
 		border-radius: var(--radius-md);
 		background: var(--surface);
 	}
@@ -134,34 +134,34 @@
 		font-size: 0.74rem;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 	}
 	.hb-tier-card-name {
 		font-size: 1.15rem;
-		color: var(--text-primary);
+		color: var(--ink);
 	}
 	.hb-tier-card-tier {
 		font-size: 0.92rem;
-		color: var(--accent);
+		color: var(--sage);
 	}
 	.hb-landing-cta {
 		display: inline-flex;
 		align-items: center;
 		padding: 0.7em 1.4em;
 		border-radius: var(--radius-md);
-		background: var(--accent);
-		color: var(--text-on-accent);
+		background: var(--sage);
+		color: var(--on-sage);
 		font-weight: 600;
 		text-decoration: none;
 		min-height: 44px;
 	}
 	.hb-landing-cta:hover {
-		background: var(--accent-strong);
+		background: var(--sage-bright);
 	}
 	.hb-landing-docs h2 {
 		margin: 0 0 0.8rem;
 		font-size: 1.4rem;
-		color: var(--text-primary);
+		color: var(--ink);
 	}
 	.hb-doc-grid {
 		list-style: none;
@@ -176,7 +176,7 @@
 		flex-direction: column;
 		gap: 0.3rem;
 		padding: 0.9rem 1rem;
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-radius: var(--radius-md);
 		background: var(--surface);
 		text-decoration: none;
@@ -184,25 +184,25 @@
 		transition: border-color 0.15s ease, transform 0.15s ease;
 	}
 	.hb-doc-card:hover {
-		border-color: var(--accent-dim);
+		border-color: var(--sage-deep);
 		transform: translateY(-1px);
 	}
 	.hb-doc-card h3 {
 		margin: 0;
-		color: var(--text-primary);
+		color: var(--ink);
 		font-size: 1.02rem;
 	}
 	.hb-doc-card p {
 		margin: 0;
 		font-size: 0.88rem;
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 	}
 	.hb-doc-card.locked {
 		opacity: 0.78;
 	}
 	.hb-doc-lock {
 		font-size: 0.76rem;
-		color: var(--accent);
+		color: var(--sage);
 		font-weight: 600;
 	}
 </style>
