@@ -234,16 +234,13 @@ export function applyTheme(
     }
   }
 
-  // Fallback: extract from avatar image
+  // Fallback: the avatar drives only the legacy --hue palette. Observatory sage
+  // personalises from a real Discord accent, never the avatar, so hold it at the
+  // default here instead of letting avatar extraction drift it off 152.
   if (avatarUrl && typeof document !== "undefined") {
+    setSageHue(DEFAULT_SAGE_HUE);
     extractImageHue(avatarUrl).then((hue) => {
-      if (hue != null) {
-        applyPalette(hue);
-        setSageHue(hue);
-      } else {
-        applyPalette(FALLBACK_HUE);
-        setSageHue(DEFAULT_SAGE_HUE);
-      }
+      applyPalette(hue ?? FALLBACK_HUE);
     });
     return;
   }

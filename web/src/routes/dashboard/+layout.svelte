@@ -141,7 +141,7 @@
 			.then((r) => r.json())
 			.then((result) => {
 				if (result.changed) {
-					applyTheme(result.accentColor ?? user.accentColor, user.avatarUrl);
+					applyTheme(result.accentColor || user.accentColor, user.avatarUrl);
 				}
 			})
 			.catch(() => {}); // silent on failure
