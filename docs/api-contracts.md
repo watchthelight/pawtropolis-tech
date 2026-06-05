@@ -31,7 +31,7 @@ Create tables organized by feature area:
 ### Art Management
 - /art (jobs, bump, finish, view, leaderboard, all, assign, getstatus, cancel, reassign) - Art management - Artists/Staff - DB: art_jobs, artist_queue
 - /artistqueue (list, sync, move, skip, unskip, history, setup) - Artist rotation queue - ManageRoles - DB: artist_queue
-- /redeemreward - Assign art from queue - Ambassadors/ManageRoles - DB: artist_queue, art_jobs
+- /redeemreward - Assign art from queue - JuniorMod+/Ambassadors/ManageRoles - DB: artist_queue, art_jobs
 
 ### Event Tracking
 - /event movie (start, end, attendance, list, user, bump, credit, manual, recover) - Movie night - Staff - DB: movie_event, movie_attendance

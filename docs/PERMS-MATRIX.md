@@ -227,7 +227,7 @@ These check Discord's built-in permissions instead of role hierarchy:
 | `/purge` | ManageMessages + Password | Bulk delete messages (up to 100, max 14 days old) |
 | `/roles` | ManageRoles | Configure role automation mappings |
 | `/artistqueue` | ManageRoles | Manage the artist rotation queue |
-| `/redeemreward` | ManageRoles OR Ambassador Role | Assign an art reward to a user |
+| `/redeemreward` | Junior Mod+ OR Ambassador Role OR ManageRoles | Assign an art reward to a user |
 | `/report` | Ambassador Role OR Gatekeeper+ | Report content violations with evidence |
 | `/resetdata` | ManageGuild + Password | Reset metrics data from now forward |
 | `/review-set-listopen-output` | ManageGuild | Configure listopen visibility |
@@ -399,7 +399,8 @@ Bypass conditions are checked before anything else:
 | Discord Perm | ManageGuild | `/postticketpanel`, `/review-set-listopen-output` |
 | Discord Perm | ManageRoles | `/roles`, `/artistqueue`, `/assignticket` |
 | Discord Perm | Administrator | `/review-set-notify-config`, `/review-get-notify-config` |
-| Hybrid | ManageRoles OR Ambassador | `/redeemreward`, `/assignticket` |
+| Hybrid | ManageRoles OR Ambassador | `/assignticket` |
+| Hybrid | Junior Mod+ OR Ambassador OR ManageRoles | `/redeemreward` |
 | Hybrid | Ambassador OR Mod Team | `/closeticket` |
 | Hybrid | Ambassador OR Gatekeeper+ | `/report` |
 

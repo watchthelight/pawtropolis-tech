@@ -22,6 +22,7 @@ import {
 } from "discord.js";
 import { withStep, type CommandContext } from "../lib/cmdWrap.js";
 import { logger } from "../lib/logger.js";
+import { hasRoleOrAbove, ROLE_IDS } from "../lib/roles.js";
 import { randomUUID } from "node:crypto";
 import {
   getTicketRoles,
@@ -48,7 +49,7 @@ export const data = new SlashCommandBuilder()
   .setName("redeemreward")
   .setDescription("Assign an art reward to a user from the artist rotation queue")
   // Visibility is intentionally unrestricted so Community Ambassadors (custom role)
-  // can see the command. The execute() handler enforces Ambassador-or-ManageRoles.
+  // can see the command. The execute() handler enforces staff-or-Ambassador-or-ManageRoles.
   .addUserOption((opt) =>
     opt
       .setName("user")
@@ -125,14 +126,18 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
     return;
   }
 
-  // Permission check: ManageRoles OR Ambassador role
+  // Permission check: any staff (Junior Mod and above) OR Ambassador role OR ManageRoles.
+  // Redeeming an art reward is a non-dangerous use of role management, so the whole
+  // staff team can run it (decision by Community Manager, 2026-06-05).
+  const member = interaction.member as GuildMember;
   const ambassadorRoleId = getAmbassadorRoleId(guild.id);
-  const hasAmbassadorRole = (interaction.member as GuildMember)?.roles?.cache?.has(ambassadorRoleId);
+  const hasAmbassadorRole = member?.roles?.cache?.has(ambassadorRoleId);
   const hasManageRoles = interaction.memberPermissions?.has(PermissionFlagsBits.ManageRoles);
+  const isStaff = hasRoleOrAbove(member, ROLE_IDS.JUNIOR_MOD);
 
-  if (!hasAmbassadorRole && !hasManageRoles) {
+  if (!isStaff && !hasAmbassadorRole && !hasManageRoles) {
     await interaction.reply({
-      content: "You need the Ambassador role or Manage Roles permission to use this command.",
+      content: "You need a staff role (Junior Moderator and above), the Ambassador role, or Manage Roles permission to use this command.",
       flags: MessageFlags.Ephemeral,
     });
     return;
