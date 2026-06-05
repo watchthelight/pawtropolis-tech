@@ -248,7 +248,7 @@
 		align-items: center;
 		gap: 0.5rem;
 		padding: 0.4rem 0.75rem;
-		border-radius: 999px;
+		border-radius: var(--radius-pill);
 		background: color-mix(in oklch, var(--c) 12%, transparent);
 		color: var(--c);
 		font-weight: 600;
@@ -341,7 +341,7 @@
 	.bar {
 		height: 6px;
 		background: var(--border);
-		border-radius: 999px;
+		border-radius: var(--radius-pill);
 		overflow: hidden;
 	}
 	.bar-fill {
@@ -406,7 +406,7 @@
 		align-items: center;
 		gap: 0.35rem;
 		padding: 0.15rem 0.55rem;
-		border-radius: 999px;
+		border-radius: var(--radius-pill);
 		font-size: 0.72rem;
 		text-transform: lowercase;
 		font-weight: 600;

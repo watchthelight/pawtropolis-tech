@@ -370,7 +370,7 @@
 		align-items: center;
 		gap: 0.2rem;
 		padding: 0.1rem 0.4rem;
-		border-radius: 999px;
+		border-radius: var(--radius-pill);
 		border: 1px solid;
 		font-size: 0.6rem;
 		font-weight: 500;

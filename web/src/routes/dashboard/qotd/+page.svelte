@@ -344,7 +344,7 @@
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
 		padding: 0.15rem 0.5rem;
-		border-radius: 999px;
+		border-radius: var(--radius-pill);
 	}
 	.pill-pending  { background: oklch(28% 0.06 60);  color: oklch(80% 0.12 60); }
 	.pill-approved { background: oklch(28% 0.06 145); color: oklch(80% 0.14 145); }

@@ -1040,7 +1040,7 @@
 		align-items: center;
 		gap: 0.375rem;
 		padding: 0.2rem 0.65rem;
-		border-radius: 999px;
+		border-radius: var(--radius-pill);
 		font-size: 0.7rem;
 		font-weight: 600;
 		letter-spacing: 0.02em;

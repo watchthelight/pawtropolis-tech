@@ -1329,7 +1329,7 @@
 	.filter-pills { display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap; }
 	.filter-label { font-size: 0.75rem; color: var(--text-secondary); font-weight: 500; margin-right: 0.25rem; }
 	.filter-pill {
-		padding: 0.2rem 0.6rem; border: 1px solid var(--border); border-radius: 999px;
+		padding: 0.2rem 0.6rem; border: 1px solid var(--border); border-radius: var(--radius-pill);
 		background: transparent; color: var(--text-secondary); font-size: 0.75rem; cursor: pointer;
 		transition: all 150ms;
 	}

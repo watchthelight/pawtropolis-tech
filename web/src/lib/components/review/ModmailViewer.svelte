@@ -350,7 +350,7 @@
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
 		padding: 0.15rem 0.5rem;
-		border-radius: 999px;
+		border-radius: var(--radius-pill);
 	}
 
 	.thread-status-open {

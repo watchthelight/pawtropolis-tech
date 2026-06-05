@@ -217,7 +217,7 @@
 		font-weight: 500;
 		background: var(--surface);
 		border: 1px solid var(--border);
-		border-radius: 999px;
+		border-radius: var(--radius-pill);
 		color: var(--text-secondary);
 		cursor: pointer;
 		transition: all var(--duration-fast);

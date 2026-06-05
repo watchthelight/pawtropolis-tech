@@ -176,7 +176,7 @@
 	.type-pill {
 		display: inline-block;
 		padding: 0.25rem 0.65rem;
-		border-radius: 999px;
+		border-radius: var(--radius-pill);
 		color: #fff;
 		font-size: 0.85rem;
 		font-weight: 600;

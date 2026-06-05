@@ -400,7 +400,7 @@
 		align-self: flex-start;
 		margin-top: calc(50vh - 20px);
 		border: 1px solid var(--border-holdfast);
-		border-radius: 999px;
+		border-radius: var(--radius-pill);
 		background: var(--surface);
 		color: var(--text-secondary);
 		cursor: pointer;

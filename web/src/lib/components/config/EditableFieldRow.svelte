@@ -395,7 +395,7 @@
 		position: relative;
 		width: 2rem;
 		height: 1.125rem;
-		border-radius: 999px;
+		border-radius: var(--radius-pill);
 		border: none;
 		background: oklch(30% 0.02 var(--hue));
 		cursor: pointer;
