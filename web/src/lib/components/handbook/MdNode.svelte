@@ -6,7 +6,9 @@
 	import Lists from './Lists.svelte';
 	import Table from './Table.svelte';
 	import CodeBlock from './CodeBlock.svelte';
+	import Mermaid from './Mermaid.svelte';
 	import Blockquote from './Blockquote.svelte';
+	import { isMermaidBlock } from '$lib/shared/mermaid';
 	import CommandSection from './CommandSection.svelte';
 	import SectionBlock from './SectionBlock.svelte';
 
@@ -26,6 +28,8 @@
 	<Lists token={token as Tokens.List} />
 {:else if token.type === 'table'}
 	<Table token={token as Tokens.Table} />
+{:else if token.type === 'code' && isMermaidBlock((token as Tokens.Code).lang)}
+	<Mermaid token={token as Tokens.Code} />
 {:else if token.type === 'code'}
 	<CodeBlock token={token as Tokens.Code} />
 {:else if token.type === 'blockquote'}
