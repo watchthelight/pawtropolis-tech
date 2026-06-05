@@ -2,7 +2,6 @@
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
 	import { applyTheme } from '$lib/stores/theme';
-	import { getStoredStyle, applyStyle } from '$lib/stores/style';
 	import { initViewport, getIsMobile } from '$lib/stores/viewport.svelte';
 
 	const TIER_LABELS: Record<string, string> = {
@@ -26,7 +25,6 @@
 	let docIndexOpen = $state(false);
 
 	onMount(() => {
-		applyStyle(getStoredStyle());
 		if (user?.accentColor != null) {
 			applyTheme(user.accentColor);
 		}

@@ -1,11 +1,11 @@
 /**
  * Cookie consent state management.
- * Preference cookies (paw-style, paw-hue) are only set when consent is accepted.
+ * Preference cookies (paw-hue) are only set when consent is accepted.
  * The consent cookie itself is essential (records regulatory choice).
  */
 
 const CONSENT_COOKIE = "paw-consent";
-const PREFERENCE_COOKIES = ["paw-style", "paw-hue"] as const;
+const PREFERENCE_COOKIES = ["paw-hue"] as const;
 const ONE_YEAR = 60 * 60 * 24 * 365;
 
 // ── Cookie helpers (client-side document.cookie) ──
