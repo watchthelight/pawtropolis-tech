@@ -38,7 +38,7 @@
 	.hb-table-wrap {
 		margin: 0.8em 0 1em;
 		overflow-x: auto;
-		border: 1px solid var(--border-holdfast);
+		border: 1px solid var(--line);
 		border-radius: var(--radius-md);
 		background: var(--surface);
 	}
@@ -50,14 +50,14 @@
 	.hb-table th,
 	.hb-table td {
 		padding: 0.6em 0.9em;
-		border-bottom: 1px solid var(--border);
+		border-bottom: 1px solid var(--line-soft);
 		text-align: left;
 		vertical-align: top;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 	}
 	.hb-table th {
-		background: var(--surface-raised);
-		color: var(--text-primary);
+		background: var(--surface-2);
+		color: var(--ink);
 		font-weight: 600;
 		font-size: 0.85rem;
 		letter-spacing: 0.02em;
@@ -79,7 +79,7 @@
 			width: 100%;
 		}
 		.hb-table tr {
-			border-bottom: 1px solid var(--border);
+			border-bottom: 1px solid var(--line-soft);
 			padding: 0.5em 0;
 		}
 		.hb-table td {
@@ -88,7 +88,7 @@
 		}
 		.hb-table td::before {
 			content: attr(data-label) ' \2014 ';
-			color: var(--text-tertiary);
+			color: var(--ink-3);
 			font-weight: 600;
 			font-size: 0.75rem;
 			text-transform: uppercase;

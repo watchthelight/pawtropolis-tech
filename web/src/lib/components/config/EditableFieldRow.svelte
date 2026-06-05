@@ -288,7 +288,7 @@
 		align-items: baseline;
 		gap: 1rem;
 		padding: 0.5rem 1rem;
-		border-bottom: 1px solid var(--border);
+		border-bottom: 1px solid var(--line-soft);
 		font-size: 0.8rem;
 		transition: background 100ms;
 	}
@@ -298,7 +298,7 @@
 	}
 
 	.field-row-editing {
-		background: var(--surface-raised);
+		background: var(--surface-2);
 	}
 
 	.field-row-saving {
@@ -307,14 +307,14 @@
 
 	@media (hover: hover) {
 		.field-row:hover {
-			background: var(--surface-raised);
+			background: var(--surface-2);
 		}
 	}
 
 	.field-label {
 		width: 12rem;
 		flex-shrink: 0;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		font-size: 0.75rem;
 		font-weight: 500;
 		display: flex;
@@ -330,7 +330,7 @@
 	.field-value {
 		flex: 1;
 		min-width: 0;
-		color: var(--text-primary);
+		color: var(--ink);
 		display: flex;
 		align-items: center;
 		gap: 0.25rem;
@@ -368,7 +368,7 @@
 
 	.edit-pencil {
 		opacity: 0;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		transition: opacity 150ms;
 		display: inline-flex;
 		flex-shrink: 0;
@@ -380,12 +380,12 @@
 	}
 
 	.value-null {
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		opacity: 0.5;
 	}
 
 	.separator {
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		margin: 0 0.125rem;
 	}
 
@@ -410,7 +410,7 @@
 	}
 
 	.toggle-on {
-		background: var(--status-success);
+		background: var(--good);
 	}
 
 	.toggle-knob {
@@ -435,12 +435,12 @@
 		padding: 0.1rem 0.375rem;
 		border-radius: var(--radius-sm);
 		background: oklch(25% 0.04 0);
-		color: var(--text-secondary);
+		color: var(--ink-2);
 	}
 
 	.toggle-label-on {
 		background: oklch(25% 0.06 145);
-		color: var(--status-success);
+		color: var(--good);
 	}
 
 	/* ─── Edit controls ─── */
@@ -459,16 +459,16 @@
 		padding: 0.35rem 0.5rem;
 		font-size: 0.8rem;
 		font-family: inherit;
-		background: var(--bg);
-		color: var(--text-primary);
-		border: 1px solid var(--border-holdfast);
+		background: var(--void);
+		color: var(--ink);
+		border: 1px solid var(--line);
 		border-radius: var(--radius-sm);
 		outline: none;
 		transition: border-color 150ms;
 	}
 
 	.edit-input:focus {
-		border-color: var(--accent);
+		border-color: var(--sage);
 	}
 
 	.edit-select {
@@ -484,7 +484,7 @@
 
 	.range-hint {
 		font-size: 0.65rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		opacity: 0.6;
 	}
 
@@ -500,10 +500,10 @@
 		justify-content: center;
 		width: 1.75rem;
 		height: 1.75rem;
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-radius: var(--radius-sm);
 		background: var(--surface);
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		cursor: pointer;
 		transition: all 100ms;
 	}
@@ -514,8 +514,8 @@
 	}
 
 	.save-btn:not(:disabled):hover {
-		border-color: var(--status-success);
-		color: var(--status-success);
+		border-color: var(--good);
+		color: var(--good);
 		background: oklch(25% 0.06 145);
 	}
 
@@ -535,7 +535,7 @@
 	.spinner {
 		width: 12px;
 		height: 12px;
-		border: 2px solid var(--text-secondary);
+		border: 2px solid var(--ink-2);
 		border-top-color: transparent;
 		border-radius: 50%;
 		animation: spin 600ms linear infinite;

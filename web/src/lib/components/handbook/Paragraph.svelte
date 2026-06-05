@@ -12,7 +12,7 @@
 	.hb-p {
 		margin: 0.6em 0;
 		line-height: 1.7;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		font-size: 0.97rem;
 	}
 </style>

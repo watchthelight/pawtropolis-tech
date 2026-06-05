@@ -36,10 +36,10 @@
 	});
 
 	function scoreColor(score: number | null): string {
-		if (score === null) return 'var(--text-muted)';
-		if (score >= 60) return 'var(--status-danger)';
-		if (score >= 30) return 'var(--status-warning)';
-		return 'var(--status-success)';
+		if (score === null) return 'var(--ink-faint)';
+		if (score >= 60) return 'var(--danger)';
+		if (score >= 30) return 'var(--warn)';
+		return 'var(--good)';
 	}
 
 	function scoreLabel(score: number | null, type: 'nsfw' | 'ai'): string {
@@ -179,7 +179,7 @@
 		background: oklch(60% 0.15 25 / 0.1);
 		border: 1px solid oklch(60% 0.15 25 / 0.25);
 		border-radius: var(--radius-sm);
-		color: var(--status-danger);
+		color: var(--danger);
 		font-size: 0.65rem;
 		font-weight: 600;
 	}
@@ -192,7 +192,7 @@
 
 	.score-cell {
 		padding: 0.4rem 0.5rem;
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-radius: var(--radius-sm);
 		display: flex;
 		flex-direction: column;
@@ -209,7 +209,7 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 	}
 
 	.score-value {
@@ -220,12 +220,12 @@
 
 	.score-reason {
 		font-size: 0.55rem;
-		color: var(--text-muted);
+		color: var(--ink-faint);
 	}
 
 	.score-sub {
 		font-size: 0.55rem;
-		color: var(--text-muted);
+		color: var(--ink-faint);
 		font-style: italic;
 	}
 
@@ -242,9 +242,9 @@
 		gap: 0.3rem;
 		padding: 0.35rem 0.5rem;
 		background: var(--surface);
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-radius: var(--radius-sm);
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		font-size: 0.65rem;
 		font-weight: 600;
 		cursor: pointer;
@@ -252,9 +252,9 @@
 	}
 
 	.scan-btn:hover:not(:disabled) {
-		background: var(--surface-raised);
-		border-color: var(--accent-dim);
-		color: var(--text-primary);
+		background: var(--surface-2);
+		border-color: var(--sage-deep);
+		color: var(--ink);
 	}
 
 	.scan-btn:disabled {
@@ -264,7 +264,7 @@
 
 	.scan-error {
 		font-size: 0.6rem;
-		color: var(--status-danger);
+		color: var(--danger);
 	}
 
 	:global(.spin) {

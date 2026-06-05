@@ -533,7 +533,7 @@
 		font-size: 0.7rem;
 		font-weight: 600;
 		letter-spacing: 0.06em;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		text-transform: uppercase;
 		margin-top: 0.5rem;
 	}
@@ -544,9 +544,9 @@
 		font-size: 0.9rem;
 		line-height: 1.5;
 		font-family: 'gg sans', 'Inter', system-ui, sans-serif;
-		background: var(--bg);
-		color: var(--text-primary);
-		border: 1px solid var(--border-holdfast);
+		background: var(--void);
+		color: var(--ink);
+		border: 1px solid var(--line);
 		border-radius: var(--radius-md);
 		outline: none;
 		transition: border-color 120ms;
@@ -555,12 +555,12 @@
 	}
 
 	.editor:focus {
-		border-color: var(--accent);
+		border-color: var(--sage);
 	}
 
 	.editor:empty::before {
 		content: attr(data-placeholder);
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		opacity: 0.4;
 	}
 
@@ -723,7 +723,7 @@
 		font-weight: 400;
 		text-transform: none;
 		letter-spacing: 0;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		font-size: 0.7rem;
 		opacity: 0.7;
 		margin-left: 0.4rem;
@@ -783,7 +783,7 @@
 		min-width: 16rem;
 		max-width: 22rem;
 		background: var(--surface);
-		border: 1px solid var(--border-holdfast);
+		border: 1px solid var(--line);
 		border-radius: var(--radius-md);
 		box-shadow: 0 8px 24px oklch(0% 0 0 / 0.4);
 		padding: 0.25rem;
@@ -794,7 +794,7 @@
 		font-size: 0.6rem;
 		font-weight: 700;
 		letter-spacing: 0.08em;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		padding: 0.4rem 0.5rem 0.25rem;
 		display: flex;
 		gap: 0.5rem;
@@ -816,7 +816,7 @@
 		border: none;
 		border-radius: var(--radius-sm);
 		background: none;
-		color: var(--text-primary);
+		color: var(--ink);
 		font-size: 0.85rem;
 		text-align: left;
 		cursor: pointer;
@@ -824,13 +824,13 @@
 	}
 
 	.ac-active {
-		background: var(--accent-dim);
+		background: var(--sage-deep);
 	}
 
 	.ac-glyph {
 		font-family: 'SF Mono', monospace;
 		font-size: 0.85rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		width: 1.2rem;
 		text-align: center;
 	}

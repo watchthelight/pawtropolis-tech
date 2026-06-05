@@ -43,9 +43,9 @@
 		font-weight: 600;
 		letter-spacing: 0.02em;
 		line-height: 1.2;
-		border: 1px solid var(--border-holdfast);
-		background: var(--surface-raised);
-		color: var(--text-secondary);
+		border: 1px solid var(--line);
+		background: var(--surface-2);
+		color: var(--ink-2);
 		white-space: nowrap;
 	}
 	.badge-run {
@@ -54,8 +54,8 @@
 		background: oklch(22% 0.06 145);
 	}
 	.badge-locked {
-		color: var(--text-tertiary);
-		border-color: var(--border);
+		color: var(--ink-3);
+		border-color: var(--line-soft);
 		background: var(--surface);
 	}
 	.dot {

@@ -174,7 +174,7 @@ ${topVoiceLine}`.trimEnd();
 <style>
 	.newsletter-card {
 		background: var(--surface);
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-radius: var(--radius-md);
 		padding: var(--space-card);
 		box-shadow: var(--shadow-sm);
@@ -192,7 +192,7 @@ ${topVoiceLine}`.trimEnd();
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 	}
 
 	.copy-btn {
@@ -200,8 +200,8 @@ ${topVoiceLine}`.trimEnd();
 		align-items: center;
 		gap: 0.35rem;
 		padding: 0.35rem 0.75rem;
-		background: var(--accent-soft);
-		color: var(--accent);
+		background: var(--sage-soft);
+		color: var(--sage);
 		border: 1px solid oklch(50% 0.04 var(--hue) / 0.3);
 		border-radius: var(--radius-sm);
 		font-size: 0.7rem;
@@ -211,13 +211,13 @@ ${topVoiceLine}`.trimEnd();
 	}
 
 	.copy-btn:hover {
-		background: var(--accent-dim);
-		border-color: var(--accent);
+		background: var(--sage-deep);
+		border-color: var(--sage);
 	}
 
 	.copy-btn.copied {
 		background: oklch(65% 0.15 145 / 0.15);
-		color: var(--status-success);
+		color: var(--good);
 		border-color: oklch(65% 0.15 145 / 0.3);
 	}
 
@@ -232,7 +232,7 @@ ${topVoiceLine}`.trimEnd();
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		color: var(--text-muted);
+		color: var(--ink-faint);
 		margin-top: 0.5rem;
 		margin-bottom: 0.15rem;
 	}
@@ -257,13 +257,13 @@ ${topVoiceLine}`.trimEnd();
 
 	.row-label {
 		font-size: 0.75rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 	}
 
 	.row-value {
 		font-size: 0.85rem;
 		font-weight: 700;
-		color: var(--text-primary);
+		color: var(--ink);
 		text-align: right;
 		font-variant-numeric: tabular-nums;
 	}
@@ -274,10 +274,10 @@ ${topVoiceLine}`.trimEnd();
 		min-width: 5rem;
 		text-align: right;
 		font-variant-numeric: tabular-nums;
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 	}
 
-	.delta-up { color: var(--status-success); }
-	.delta-down { color: var(--status-danger); }
-	.row-na { color: var(--text-muted); }
+	.delta-up { color: var(--good); }
+	.delta-down { color: var(--danger); }
+	.row-na { color: var(--ink-faint); }
 </style>

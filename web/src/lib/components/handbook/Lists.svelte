@@ -56,7 +56,7 @@
 		margin: 0.6em 0 0.8em;
 		padding-left: 1.4em;
 		line-height: 1.65;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		font-size: 0.97rem;
 	}
 	.hb-list li {
@@ -77,7 +77,7 @@
 		top: 0.75em;
 		width: 0.35em;
 		height: 0.35em;
-		background: var(--accent-dim);
+		background: var(--sage-deep);
 		border-radius: 1px;
 		transform: rotate(45deg);
 	}
@@ -85,7 +85,7 @@
 		list-style: decimal;
 	}
 	.hb-list-ol > li::marker {
-		color: var(--accent-dim);
+		color: var(--sage-deep);
 		font-weight: 600;
 	}
 </style>

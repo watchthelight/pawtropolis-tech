@@ -35,8 +35,8 @@
 	.hb-code {
 		margin: 0.8em 0 1em;
 		border-radius: var(--radius-md);
-		border: 1px solid var(--border-holdfast);
-		background: var(--bg);
+		border: 1px solid var(--line);
+		background: var(--void);
 		overflow: hidden;
 	}
 	.hb-code-bar {
@@ -45,12 +45,12 @@
 		justify-content: space-between;
 		padding: 0.4em 0.8em;
 		background: var(--surface);
-		border-bottom: 1px solid var(--border);
+		border-bottom: 1px solid var(--line-soft);
 		font-size: 0.78rem;
 	}
 	.hb-code-lang {
 		font-family: 'JetBrains Mono', ui-monospace, monospace;
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 		text-transform: lowercase;
 		letter-spacing: 0.04em;
 	}
@@ -58,16 +58,16 @@
 		font-size: 0.78rem;
 		font-family: inherit;
 		padding: 0.25em 0.7em;
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-radius: var(--radius-sm);
-		background: var(--surface-raised);
-		color: var(--text-secondary);
+		background: var(--surface-2);
+		color: var(--ink-2);
 		cursor: pointer;
 		min-height: 32px;
 	}
 	.hb-code-copy:hover {
-		color: var(--text-primary);
-		border-color: var(--accent-dim);
+		color: var(--ink);
+		border-color: var(--sage-deep);
 	}
 	pre {
 		margin: 0;
@@ -76,7 +76,7 @@
 		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 		font-size: 0.88rem;
 		line-height: 1.55;
-		color: var(--text-primary);
-		background: var(--bg);
+		color: var(--ink);
+		background: var(--void);
 	}
 </style>

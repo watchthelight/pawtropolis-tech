@@ -59,7 +59,7 @@
 			</div>
 			<div class="review-card-bottom">
 				<span class="review-card-status">
-					<span class="status-dot" style:background-color={status === 'needs_info' ? 'var(--status-warning)' : 'var(--accent)'}></span>
+					<span class="status-dot" style:background-color={status === 'needs_info' ? 'var(--warn)' : 'var(--sage)'}></span>
 					{statusLabel[status] ?? status}
 				</span>
 				<RiskAura variant="compact" {riskScore} />
@@ -92,7 +92,7 @@
 	.review-card {
 		padding: 0.75rem 1rem;
 		border-radius: var(--radius-md);
-		border: 1px solid var(--border-holdfast);
+		border: 1px solid var(--line);
 		background: var(--surface);
 		cursor: pointer;
 		transition: all 150ms var(--ease-smooth);
@@ -100,18 +100,18 @@
 
 	@media (hover: hover) {
 		.review-card:hover {
-			background: var(--surface-raised);
+			background: var(--surface-2);
 			box-shadow: var(--shadow-md);
 		}
 	}
 
 	.review-card:active {
-		background: var(--surface-raised);
+		background: var(--surface-2);
 	}
 
 	.review-card-selected {
-		border-left: 3px solid var(--accent);
-		background: var(--surface-raised);
+		border-left: 3px solid var(--sage);
+		background: var(--surface-2);
 		box-shadow: var(--shadow-sm);
 	}
 
@@ -142,8 +142,8 @@
 		width: 48px;
 		height: 48px;
 		border-radius: var(--radius-sm);
-		background: var(--accent-dim);
-		color: var(--accent);
+		background: var(--sage-deep);
+		color: var(--sage);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -167,7 +167,7 @@
 	.review-card-name {
 		font-size: 0.875rem;
 		font-weight: 500;
-		color: var(--text-primary);
+		color: var(--ink);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -175,7 +175,7 @@
 
 	.review-card-time {
 		font-size: 0.7rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		flex-shrink: 0;
 		margin-left: 0.5rem;
 	}
@@ -191,7 +191,7 @@
 		display: flex;
 		align-items: center;
 		gap: 0.375rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 	}
 
 	.status-dot {
@@ -203,7 +203,7 @@
 
 	.review-card-claimed {
 		font-size: 0.65rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		margin-top: 0.25rem;
 		opacity: 0.7;
 		display: flex;
@@ -231,7 +231,7 @@
 		width: 10px;
 		height: 10px;
 		border-radius: 50%;
-		background: var(--status-info);
+		background: var(--info);
 		border: 2px solid var(--surface);
 		animation: modmail-pulse 2s ease-in-out infinite;
 	}
@@ -250,12 +250,12 @@
 		align-items: center;
 		gap: 0.25rem;
 		font-size: 0.65rem;
-		color: var(--status-info);
+		color: var(--info);
 		margin-top: 0.25rem;
 	}
 
 	.review-card-stale {
-		border-left: 3px solid var(--status-danger);
+		border-left: 3px solid var(--danger);
 		background: oklch(0.25 0.04 25 / 0.15);
 	}
 
@@ -268,7 +268,7 @@
 		align-items: center;
 		gap: 0.25rem;
 		font-size: 0.65rem;
-		color: var(--status-danger);
+		color: var(--danger);
 		margin-top: 0.25rem;
 	}
 

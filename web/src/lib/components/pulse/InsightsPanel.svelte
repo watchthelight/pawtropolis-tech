@@ -35,17 +35,17 @@
 
 	const severityColors: Record<string, { text: string; bg: string; border: string }> = {
 		critical: {
-			text: 'var(--status-danger)',
+			text: 'var(--danger)',
 			bg: 'oklch(60% 0.15 25 / 0.1)',
 			border: 'oklch(60% 0.15 25 / 0.25)'
 		},
 		warning: {
-			text: 'var(--status-warning)',
+			text: 'var(--warn)',
 			bg: 'oklch(70% 0.15 85 / 0.08)',
 			border: 'oklch(70% 0.15 85 / 0.2)'
 		},
 		info: {
-			text: 'var(--status-info)',
+			text: 'var(--info)',
 			bg: 'oklch(65% 0.12 250 / 0.08)',
 			border: 'oklch(65% 0.12 250 / 0.15)'
 		}
@@ -61,7 +61,7 @@
 {#if insights.length === 0}
 	<div class="insight-card all-clear" transition:fade={{ duration: 200 }}>
 		<div class="all-clear-inner">
-			<CheckCircle size={20} color="var(--status-success)" />
+			<CheckCircle size={20} color="var(--good)" />
 			<div>
 				<span class="all-clear-title">All clear</span>
 				<span class="all-clear-body">No actionable insights detected. Everything looks healthy.</span>
@@ -122,7 +122,7 @@
 
 	.insight-card {
 		background: var(--surface);
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-radius: var(--radius-md);
 		padding: var(--space-card);
 		box-shadow: var(--shadow-sm);
@@ -145,13 +145,13 @@
 		display: block;
 		font-size: 0.85rem;
 		font-weight: 700;
-		color: var(--status-success);
+		color: var(--good);
 	}
 
 	.all-clear-body {
 		display: block;
 		font-size: 0.7rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 	}
 
 	.insight-top {
@@ -185,19 +185,19 @@
 	.insight-title {
 		font-size: 0.8rem;
 		font-weight: 700;
-		color: var(--text-primary);
+		color: var(--ink);
 		line-height: 1.3;
 	}
 
 	.insight-body {
 		font-size: 0.7rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		line-height: 1.5;
 	}
 
 	.insight-suggestion {
 		font-size: 0.65rem;
-		color: var(--text-muted);
+		color: var(--ink-faint);
 		line-height: 1.4;
 		font-style: italic;
 		margin-top: 0.15rem;
@@ -212,9 +212,9 @@
 		padding: 0.5rem;
 		margin-top: 0.5rem;
 		background: transparent;
-		border: 1px dashed var(--border);
+		border: 1px dashed var(--line-soft);
 		border-radius: var(--radius-sm);
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 		font-size: 0.7rem;
 		font-weight: 600;
 		cursor: pointer;
@@ -222,8 +222,8 @@
 	}
 
 	.show-more:hover {
-		color: var(--accent);
-		border-color: var(--accent-dim);
+		color: var(--sage);
+		border-color: var(--sage-deep);
 		background: var(--hover-bg);
 	}
 

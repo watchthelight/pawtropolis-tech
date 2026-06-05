@@ -27,7 +27,7 @@
 	.hb-h {
 		font-family: 'Inter Variable', system-ui, sans-serif;
 		font-weight: 700;
-		color: var(--text-primary);
+		color: var(--ink);
 		letter-spacing: -0.01em;
 		margin: 1.6em 0 0.5em;
 		scroll-margin-top: 5rem;
@@ -35,7 +35,7 @@
 	.hb-h1 {
 		font-size: clamp(1.75rem, 4vw, 2.4rem);
 		margin-top: 0;
-		border-bottom: 1px solid var(--border-holdfast);
+		border-bottom: 1px solid var(--line);
 		padding-bottom: 0.3em;
 	}
 	.hb-h2 {
@@ -43,15 +43,15 @@
 	}
 	.hb-h3 {
 		font-size: clamp(1.15rem, 2.5vw, 1.35rem);
-		color: var(--accent);
+		color: var(--sage);
 	}
 	.hb-h4 {
 		font-size: 1.05rem;
-		color: var(--text-primary);
+		color: var(--ink);
 	}
 	.hb-h5,
 	.hb-h6 {
 		font-size: 0.95rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 	}
 </style>

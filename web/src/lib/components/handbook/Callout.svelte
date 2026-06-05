@@ -51,15 +51,15 @@
 		margin: 0.8em 0 1em;
 		padding: 0.6em 0.9em 0.7em 1em;
 		border-radius: var(--radius-md);
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		background: var(--surface);
 		border-left-width: 3px;
 	}
 	.hb-callout[data-variant='warning'] {
-		border-left-color: var(--status-warning);
+		border-left-color: var(--warn);
 	}
 	.hb-callout[data-variant='tip'] {
-		border-left-color: var(--accent);
+		border-left-color: var(--sage);
 	}
 	.hb-callout[data-variant='note'] {
 		border-left-color: var(--tertiary);
@@ -75,7 +75,7 @@
 		font-weight: 700;
 		letter-spacing: 0.05em;
 		text-transform: uppercase;
-		color: var(--text-primary);
+		color: var(--ink);
 		margin-bottom: 0.35em;
 	}
 	.hb-callout-head svg {
@@ -83,10 +83,10 @@
 		height: 14px;
 	}
 	.hb-callout[data-variant='warning'] .hb-callout-head {
-		color: var(--status-warning);
+		color: var(--warn);
 	}
 	.hb-callout[data-variant='tip'] .hb-callout-head {
-		color: var(--accent);
+		color: var(--sage);
 	}
 	.hb-callout[data-variant='note'] .hb-callout-head {
 		color: var(--tertiary);
@@ -97,6 +97,6 @@
 	.hb-callout-body :global(p) {
 		margin: 0.25em 0;
 		font-size: 0.92rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 	}
 </style>

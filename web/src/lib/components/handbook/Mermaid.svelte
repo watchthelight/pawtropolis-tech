@@ -43,7 +43,7 @@
 		margin: 0.8em 0 1em;
 		padding: 1em;
 		border-radius: var(--radius-md);
-		border: 1px solid var(--border-holdfast);
+		border: 1px solid var(--line);
 		background: var(--surface);
 		overflow-x: auto;
 		display: flex;
@@ -56,8 +56,8 @@
 	.hb-code {
 		margin: 0.8em 0 1em;
 		border-radius: var(--radius-md);
-		border: 1px solid var(--border-holdfast);
-		background: var(--bg);
+		border: 1px solid var(--line);
+		background: var(--void);
 		overflow: hidden;
 	}
 	.hb-code-bar {
@@ -65,12 +65,12 @@
 		align-items: center;
 		padding: 0.4em 0.8em;
 		background: var(--surface);
-		border-bottom: 1px solid var(--border);
+		border-bottom: 1px solid var(--line-soft);
 		font-size: 0.78rem;
 	}
 	.hb-code-lang {
 		font-family: 'JetBrains Mono', ui-monospace, monospace;
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 		text-transform: lowercase;
 		letter-spacing: 0.04em;
 	}
@@ -81,7 +81,7 @@
 		font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 		font-size: 0.88rem;
 		line-height: 1.55;
-		color: var(--text-primary);
-		background: var(--bg);
+		color: var(--ink);
+		background: var(--void);
 	}
 </style>

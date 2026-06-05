@@ -53,18 +53,18 @@
 		font-size: 0.92em;
 		padding: 0.1em 0.4em;
 		border-radius: var(--radius-sm);
-		background: var(--surface-overlay);
-		color: var(--accent);
-		border: 1px solid var(--border);
+		background: var(--surface-3);
+		color: var(--sage);
+		border: 1px solid var(--line-soft);
 	}
 	a {
-		color: var(--accent);
+		color: var(--sage);
 		text-decoration: underline;
 		text-underline-offset: 2px;
 		text-decoration-thickness: 1px;
 	}
 	a:hover {
-		color: var(--accent-strong);
+		color: var(--sage-bright);
 	}
 	img {
 		max-width: 100%;

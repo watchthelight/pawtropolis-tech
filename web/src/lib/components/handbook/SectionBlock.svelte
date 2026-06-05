@@ -53,12 +53,12 @@
 		gap: 0.8rem;
 		flex-wrap: wrap;
 		margin-bottom: 0.3em;
-		border-bottom: 1px solid var(--border);
+		border-bottom: 1px solid var(--line-soft);
 		padding-bottom: 0.3em;
 	}
 	.hb-section-title {
 		margin: 0;
-		color: var(--text-primary);
+		color: var(--ink);
 		font-weight: 700;
 		letter-spacing: -0.01em;
 		font-family: 'Inter Variable', system-ui, sans-serif;
@@ -68,6 +68,6 @@
 	}
 	.hb-section-title-3 {
 		font-size: clamp(1.15rem, 2.5vw, 1.35rem);
-		color: var(--accent);
+		color: var(--sage);
 	}
 </style>

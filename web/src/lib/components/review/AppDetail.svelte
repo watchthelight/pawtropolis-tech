@@ -168,11 +168,11 @@
 	}
 
 	function claimAgeColor(claimedAt: number | null): string {
-		if (!claimedAt) return 'var(--text-secondary)';
+		if (!claimedAt) return 'var(--ink-2)';
 		const hours = (now - claimedAt) / 3_600_000;
-		if (hours < 2) return 'var(--status-success)';
-		if (hours < 8) return 'var(--status-warning)';
-		return 'var(--status-danger)';
+		if (hours < 2) return 'var(--good)';
+		if (hours < 8) return 'var(--warn)';
+		return 'var(--danger)';
 	}
 
 	// === Claim/Unclaim ===
@@ -470,7 +470,7 @@
 							{openingModmail ? 'Opening...' : !botOnline ? 'Bot offline' : 'Open Modmail'}
 						</button>
 						{#if openModmailError}
-							<span style="font-size:0.6rem;color:var(--status-danger)">{openModmailError}</span>
+							<span style="font-size:0.6rem;color:var(--danger)">{openModmailError}</span>
 						{/if}
 					{/if}
 				</div>
@@ -827,7 +827,7 @@
 		flex-shrink: 0;
 		padding: 0.5rem;
 		overflow-y: auto;
-		border-right: 1px solid var(--border-holdfast);
+		border-right: 1px solid var(--line);
 	}
 
 	.content-col {
@@ -843,7 +843,7 @@
 		align-items: center;
 		justify-content: space-between;
 		padding: 0.5rem 1rem;
-		border-bottom: 1px solid var(--border-holdfast);
+		border-bottom: 1px solid var(--line);
 		gap: 0.75rem;
 		flex-shrink: 0;
 	}
@@ -853,7 +853,7 @@
 		align-items: center;
 		gap: 0.4rem;
 		font-size: 0.7rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		flex: 1;
 		min-width: 0;
 		overflow: hidden;
@@ -869,9 +869,9 @@
 	.tab-btn {
 		padding: 0.25rem 0.6rem;
 		border-radius: var(--radius-sm);
-		border: 1px solid var(--border-holdfast);
-		background: var(--surface-raised);
-		color: var(--text-secondary);
+		border: 1px solid var(--line);
+		background: var(--surface-2);
+		color: var(--ink-2);
 		font-size: 0.7rem;
 		font-weight: 500;
 		cursor: pointer;
@@ -879,9 +879,9 @@
 	}
 
 	.tab-btn-active {
-		background: var(--accent-dim);
-		color: var(--accent);
-		border-color: var(--accent);
+		background: var(--sage-deep);
+		color: var(--sage);
+		border-color: var(--sage);
 	}
 
 	/* Content body (scrollable) */
@@ -915,10 +915,10 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		margin-bottom: 0.75rem;
 		padding-bottom: 0.35rem;
-		border-bottom: 1px solid var(--border-holdfast);
+		border-bottom: 1px solid var(--line);
 	}
 
 	.qa-block {
@@ -928,20 +928,20 @@
 	.qa-question {
 		font-size: 0.8rem;
 		font-weight: 500;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		margin-bottom: 0.25rem;
 	}
 
 	.qa-answer {
 		font-size: 0.95rem;
-		color: var(--text-primary);
+		color: var(--ink);
 		line-height: 1.5;
 	}
 
 	/* Action bar */
 	.action-bar {
 		padding: 0.75rem 1rem;
-		border-top: 1px solid var(--border-holdfast);
+		border-top: 1px solid var(--line);
 		display: flex;
 		align-items: center;
 		gap: 0.75rem;
@@ -950,7 +950,7 @@
 
 	.action-placeholder {
 		font-size: 0.8rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		opacity: 0.5;
 		display: inline-flex;
 		align-items: center;
@@ -959,7 +959,7 @@
 
 	.claim-error {
 		font-size: 0.75rem;
-		color: var(--status-danger);
+		color: var(--danger);
 	}
 
 	/* Buttons */
@@ -975,42 +975,42 @@
 
 	.btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-	.btn-claim { background: var(--accent); color: var(--bg); }
-	.btn-unclaim { background: var(--surface-raised); color: var(--text-secondary); border: 1px solid var(--border-holdfast); }
-	.btn-admin-unclaim { background: var(--surface-raised); color: var(--status-warning); border: 1px solid var(--status-warning); margin-left: auto; }
+	.btn-claim { background: var(--sage); color: var(--void); }
+	.btn-unclaim { background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line); }
+	.btn-admin-unclaim { background: var(--surface-2); color: var(--warn); border: 1px solid var(--warn); margin-left: auto; }
 
 	.decision-buttons { display: flex; gap: 0.5rem; margin-left: auto; }
 
-	.btn-approve { background: var(--status-success); color: var(--bg); }
-	.btn-reject { background: var(--status-warning); color: var(--bg); }
-	.btn-kick { background: var(--status-danger); color: var(--bg); }
-	.btn-stale-modmail { background: var(--status-danger); color: var(--bg); }
-	.btn-permreject { background: var(--bg); color: var(--status-danger); border: 2px solid var(--status-danger); font-weight: 700; }
-	.btn-vote-out { background: var(--bg); color: var(--status-danger); border: 2px solid var(--status-danger); }
-	.btn-cancel { background: var(--surface-raised); color: var(--text-secondary); border: 1px solid var(--border-holdfast); }
-	.btn-undo { background: var(--surface-raised); color: var(--status-danger); border: 1px solid var(--status-danger); }
+	.btn-approve { background: var(--good); color: var(--void); }
+	.btn-reject { background: var(--warn); color: var(--void); }
+	.btn-kick { background: var(--danger); color: var(--void); }
+	.btn-stale-modmail { background: var(--danger); color: var(--void); }
+	.btn-permreject { background: var(--void); color: var(--danger); border: 2px solid var(--danger); font-weight: 700; }
+	.btn-vote-out { background: var(--void); color: var(--danger); border: 2px solid var(--danger); }
+	.btn-cancel { background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line); }
+	.btn-undo { background: var(--surface-2); color: var(--danger); border: 1px solid var(--danger); }
 
 	.reason-input {
 		flex: 1;
 		padding: 0.5rem 0.75rem;
 		border-radius: var(--radius-sm);
-		border: 1px solid var(--border-holdfast);
+		border: 1px solid var(--line);
 		background: var(--surface);
-		color: var(--text-primary);
+		color: var(--ink);
 		font-size: 0.8rem;
 		outline: none;
 		transition: border-color 150ms;
 	}
 
-	.reason-input:focus { border-color: var(--accent); }
-	.reason-input::placeholder { color: var(--text-secondary); opacity: 0.6; }
+	.reason-input:focus { border-color: var(--sage); }
+	.reason-input::placeholder { color: var(--ink-2); opacity: 0.6; }
 
-	.kick-countdown { font-size: 0.85rem; font-weight: 600; color: var(--status-danger); animation: pulse-text 1s ease infinite; }
+	.kick-countdown { font-size: 0.85rem; font-weight: 600; color: var(--danger); animation: pulse-text 1s ease infinite; }
 	@keyframes pulse-text { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
 
-	.decision-done { font-size: 0.9rem; font-weight: 600; color: var(--status-success); }
-	.action-resolved { font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); opacity: 0.7; display: inline-flex; align-items: center; gap: 0.25rem; }
-	.vote-out-voters { font-size: 0.65rem; color: var(--text-secondary); opacity: 0.7; margin-left: auto; }
+	.decision-done { font-size: 0.9rem; font-weight: 600; color: var(--good); }
+	.action-resolved { font-size: 0.8rem; font-weight: 500; color: var(--ink-2); opacity: 0.7; display: inline-flex; align-items: center; gap: 0.25rem; }
+	.vote-out-voters { font-size: 0.65rem; color: var(--ink-2); opacity: 0.7; margin-left: auto; }
 
 	/* ── Mobile Review Dock (display:none on desktop, shown inside mobile @media below) ── */
 	.mobile-review-dock {
@@ -1022,8 +1022,8 @@
 		z-index: 10;
 		flex-shrink: 0;
 		padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
-		background: var(--surface-raised);
-		border-top: 1px solid var(--border-holdfast);
+		background: var(--surface-2);
+		border-top: 1px solid var(--line);
 		box-shadow: 0 -8px 24px oklch(0% 0 0 / 0.25);
 	}
 
@@ -1047,25 +1047,25 @@
 	}
 
 	.dock-status-success {
-		background: var(--status-success);
-		color: var(--bg);
+		background: var(--good);
+		color: var(--void);
 	}
 
 	.dock-status-claimed-me {
-		background: var(--accent-dim);
-		color: var(--accent);
+		background: var(--sage-deep);
+		color: var(--sage);
 	}
 
 	.dock-status-claimed-other {
-		background: var(--surface-overlay);
-		color: var(--text-secondary);
-		border: 1px solid var(--border-holdfast);
+		background: var(--surface-3);
+		color: var(--ink-2);
+		border: 1px solid var(--line);
 	}
 
 	.dock-status-resolved {
-		background: var(--surface-overlay);
-		color: var(--text-secondary);
-		border: 1px solid var(--border-holdfast);
+		background: var(--surface-3);
+		color: var(--ink-2);
+		border: 1px solid var(--line);
 	}
 
 	.dock-status-meta {
@@ -1073,12 +1073,12 @@
 		align-items: center;
 		gap: 0.3rem;
 		font-size: 0.7rem;
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 	}
 
 	.mobile-dock-hint {
 		font-size: 0.75rem;
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 		line-height: 1.4;
 	}
 
@@ -1087,7 +1087,7 @@
 		border-radius: var(--radius-sm);
 		background: oklch(25% 0.06 25 / 0.25);
 		border: 1px solid oklch(45% 0.08 25 / 0.5);
-		color: var(--status-danger);
+		color: var(--danger);
 		font-size: 0.8125rem;
 		line-height: 1.35;
 	}
@@ -1127,7 +1127,7 @@
 		font-weight: 600;
 		cursor: pointer;
 		background: var(--surface);
-		color: var(--text-primary);
+		color: var(--ink);
 		transition: transform 120ms var(--ease-smooth), filter 120ms, background 150ms;
 		-webkit-tap-highlight-color: transparent;
 	}
@@ -1142,16 +1142,16 @@
 	}
 
 	.mobile-btn-primary {
-		background: var(--accent);
-		color: var(--text-on-accent);
+		background: var(--sage);
+		color: var(--on-sage);
 		min-height: 56px;
 		font-size: 1rem;
 		box-shadow: var(--shadow-sm);
 	}
 
 	.mobile-btn-approve {
-		background: var(--status-success);
-		color: var(--bg);
+		background: var(--good);
+		color: var(--void);
 		min-height: 56px;
 		font-size: 1rem;
 		letter-spacing: 0.01em;
@@ -1160,40 +1160,40 @@
 
 	.mobile-btn-reject {
 		background: var(--surface);
-		color: var(--status-warning);
-		border: 1px solid var(--status-warning);
+		color: var(--warn);
+		border: 1px solid var(--warn);
 	}
 
 	.mobile-btn-more {
 		background: var(--surface);
-		color: var(--text-secondary);
-		border: 1px solid var(--border-holdfast);
+		color: var(--ink-2);
+		border: 1px solid var(--line);
 		font-weight: 500;
 	}
 
 	.mobile-btn-more[aria-expanded='true'] {
-		background: var(--surface-overlay);
-		color: var(--text-primary);
-		border-color: var(--accent);
+		background: var(--surface-3);
+		color: var(--ink);
+		border-color: var(--sage);
 	}
 
 	.mobile-btn-danger-outline {
 		background: transparent;
-		color: var(--status-danger);
-		border: 1px solid var(--status-danger);
+		color: var(--danger);
+		border: 1px solid var(--danger);
 	}
 
 	.mobile-btn-admin {
 		background: var(--surface);
-		color: var(--status-warning);
-		border: 1px solid var(--status-warning);
+		color: var(--warn);
+		border: 1px solid var(--warn);
 		min-height: 52px;
 	}
 
 	.mobile-btn-undo {
 		background: var(--surface);
-		color: var(--status-danger);
-		border: 1px solid var(--status-danger);
+		color: var(--danger);
+		border: 1px solid var(--danger);
 		min-height: 52px;
 		font-weight: 700;
 		padding-inline: 1.25rem;
@@ -1206,7 +1206,7 @@
 		gap: 0.5rem;
 		padding: 0.625rem;
 		background: var(--surface);
-		border: 1px solid var(--border-holdfast);
+		border: 1px solid var(--line);
 		border-radius: var(--radius-md);
 	}
 
@@ -1217,9 +1217,9 @@
 		min-height: 44px;
 		padding: 0.5rem 0.625rem;
 		border-radius: var(--radius-sm);
-		border: 1px solid var(--border-holdfast);
-		background: var(--surface-raised);
-		color: var(--text-primary);
+		border: 1px solid var(--line);
+		background: var(--surface-2);
+		color: var(--ink);
 		font-family: inherit;
 		font-size: 0.8125rem;
 		font-weight: 600;
@@ -1233,13 +1233,13 @@
 	.more-btn:active:not(:disabled) { transform: scale(0.98); }
 
 	.more-btn-warn {
-		color: var(--status-warning);
-		border-color: var(--status-warning);
+		color: var(--warn);
+		border-color: var(--warn);
 	}
 
 	.more-btn-danger {
-		color: var(--status-danger);
-		border-color: var(--status-danger);
+		color: var(--danger);
+		border-color: var(--danger);
 	}
 
 	.more-btn-full {
@@ -1253,14 +1253,14 @@
 		gap: 0.5rem;
 		padding: 0.75rem;
 		background: var(--surface);
-		border: 1px solid var(--border-holdfast);
+		border: 1px solid var(--line);
 		border-left-width: 3px;
 		border-radius: var(--radius-md);
 	}
 
-	.sheet-tone-success { border-left-color: var(--status-success); }
-	.sheet-tone-warning { border-left-color: var(--status-warning); }
-	.sheet-tone-danger  { border-left-color: var(--status-danger); }
+	.sheet-tone-success { border-left-color: var(--good); }
+	.sheet-tone-warning { border-left-color: var(--warn); }
+	.sheet-tone-danger  { border-left-color: var(--danger); }
 
 	.sheet-header {
 		display: flex;
@@ -1272,12 +1272,12 @@
 	.sheet-header strong {
 		font-size: 0.95rem;
 		font-weight: 700;
-		color: var(--text-primary);
+		color: var(--ink);
 	}
 
 	.sheet-hint {
 		font-size: 0.65rem;
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
 		font-weight: 600;
@@ -1288,10 +1288,10 @@
 		min-height: 88px;
 		max-height: 200px;
 		padding: 0.625rem 0.75rem;
-		background: var(--bg);
-		border: 1px solid var(--border-holdfast);
+		background: var(--void);
+		border: 1px solid var(--line);
 		border-radius: var(--radius-sm);
-		color: var(--text-primary);
+		color: var(--ink);
 		font-family: inherit;
 		font-size: 16px;
 		line-height: 1.4;
@@ -1302,11 +1302,11 @@
 	}
 
 	.sheet-textarea:focus {
-		border-color: var(--accent);
+		border-color: var(--sage);
 	}
 
 	.sheet-textarea::placeholder {
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 	}
 
 	.sheet-actions {
@@ -1335,14 +1335,14 @@
 	.sheet-btn:active:not(:disabled) { transform: scale(0.98); }
 
 	.sheet-btn-cancel {
-		background: var(--surface-raised);
-		color: var(--text-secondary);
-		border: 1px solid var(--border-holdfast);
+		background: var(--surface-2);
+		color: var(--ink-2);
+		border: 1px solid var(--line);
 	}
 
-	.sheet-btn-confirm-success { background: var(--status-success); color: var(--bg); }
-	.sheet-btn-confirm-warning { background: var(--status-warning); color: var(--bg); }
-	.sheet-btn-confirm-danger  { background: var(--status-danger); color: var(--bg); }
+	.sheet-btn-confirm-success { background: var(--good); color: var(--void); }
+	.sheet-btn-confirm-warning { background: var(--warn); color: var(--void); }
+	.sheet-btn-confirm-danger  { background: var(--danger); color: var(--void); }
 
 	/* Kick countdown (mobile) */
 	.mobile-kick-countdown {
@@ -1352,12 +1352,12 @@
 		gap: 0.5rem;
 		padding: 0.75rem 1rem;
 		background: oklch(25% 0.06 25 / 0.3);
-		border: 1px solid var(--status-danger);
+		border: 1px solid var(--danger);
 		border-radius: var(--radius-md);
 	}
 
 	.kick-countdown-label {
-		color: var(--status-danger);
+		color: var(--danger);
 		font-weight: 700;
 		font-size: 0.95rem;
 		animation: pulse-text 1s ease infinite;
@@ -1373,7 +1373,7 @@
 			width: 100%;
 			padding: 0.75rem;
 			border-right: none;
-			border-bottom: 1px solid var(--border-holdfast);
+			border-bottom: 1px solid var(--line);
 			overflow: hidden;
 			transition: max-height 300ms var(--ease-smooth);
 		}
@@ -1389,10 +1389,10 @@
 			width: 100%;
 			min-height: 44px;
 			padding: 0.4rem;
-			background: var(--surface-raised);
+			background: var(--surface-2);
 			border: none;
-			border-top: 1px solid var(--border-holdfast);
-			color: var(--accent);
+			border-top: 1px solid var(--line);
+			color: var(--sage);
 			font-size: 0.75rem;
 			font-weight: 500;
 			cursor: pointer;
@@ -1463,23 +1463,23 @@
 
 	@media (hover: hover) {
 		.btn-claim:hover:not(:disabled) { filter: brightness(1.1); box-shadow: var(--shadow-md); }
-		.btn-unclaim:hover:not(:disabled) { background: var(--surface); color: var(--text-primary); }
+		.btn-unclaim:hover:not(:disabled) { background: var(--surface); color: var(--ink); }
 		.btn-approve:hover:not(:disabled) { filter: brightness(1.15); box-shadow: var(--shadow-md); }
 		.btn-reject:hover:not(:disabled) { filter: brightness(1.15); box-shadow: var(--shadow-md); }
 		.btn-kick:hover:not(:disabled) { filter: brightness(1.15); box-shadow: var(--shadow-md); }
 		.btn-stale-modmail:hover:not(:disabled) { filter: brightness(1.15); box-shadow: var(--shadow-md); }
-		.btn-permreject:hover:not(:disabled) { background: var(--status-danger); color: var(--bg); box-shadow: var(--shadow-md); }
-		.btn-vote-out:hover:not(:disabled) { background: var(--status-danger); color: var(--bg); box-shadow: var(--shadow-md); }
-		.btn-cancel:hover:not(:disabled) { color: var(--text-primary); }
-		.btn-undo:hover { background: var(--status-danger); color: var(--bg); }
-		.btn-admin-unclaim:hover:not(:disabled) { background: var(--status-warning); color: var(--bg); }
-		.tab-btn:hover { color: var(--text-primary); border-color: var(--accent); }
+		.btn-permreject:hover:not(:disabled) { background: var(--danger); color: var(--void); box-shadow: var(--shadow-md); }
+		.btn-vote-out:hover:not(:disabled) { background: var(--danger); color: var(--void); box-shadow: var(--shadow-md); }
+		.btn-cancel:hover:not(:disabled) { color: var(--ink); }
+		.btn-undo:hover { background: var(--danger); color: var(--void); }
+		.btn-admin-unclaim:hover:not(:disabled) { background: var(--warn); color: var(--void); }
+		.tab-btn:hover { color: var(--ink); border-color: var(--sage); }
 	}
 
 	/* Prior decision warning banner */
 	.prior-warning {
-		border: 1px solid var(--status-warning);
-		border-left: 4px solid var(--status-warning);
+		border: 1px solid var(--warn);
+		border-left: 4px solid var(--warn);
 		background: oklch(25% 0.04 85 / 0.3);
 		border-radius: var(--radius-md);
 		padding: 0.75rem 1rem;
@@ -1487,8 +1487,8 @@
 	}
 
 	.prior-warning-severe {
-		border-color: var(--status-danger);
-		border-left-color: var(--status-danger);
+		border-color: var(--danger);
+		border-left-color: var(--danger);
 		background: oklch(22% 0.04 25 / 0.3);
 	}
 
@@ -1497,7 +1497,7 @@
 		align-items: center;
 		gap: 0.5rem;
 		font-size: 0.85rem;
-		color: var(--text-primary);
+		color: var(--ink);
 		margin-bottom: 0.5rem;
 	}
 
@@ -1507,7 +1507,7 @@
 
 	.prior-warning-count {
 		font-size: 0.7rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		margin-left: auto;
 	}
 
@@ -1537,30 +1537,30 @@
 	}
 
 	.prior-action-ban {
-		background: var(--status-danger);
-		color: var(--bg);
+		background: var(--danger);
+		color: var(--void);
 	}
 
 	.prior-action-reject {
 		background: oklch(50% 0.08 25);
-		color: var(--bg);
+		color: var(--void);
 	}
 
 	.prior-action-approve {
 		background: oklch(40% 0.08 145);
-		color: var(--bg);
+		color: var(--void);
 	}
 
 	.prior-reason {
-		color: var(--text-primary);
+		color: var(--ink);
 	}
 
 	.prior-mod {
-		color: var(--text-secondary);
+		color: var(--ink-2);
 	}
 
 	.prior-date {
-		color: var(--text-muted);
+		color: var(--ink-faint);
 		margin-left: auto;
 	}
 </style>

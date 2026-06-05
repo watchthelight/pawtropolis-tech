@@ -55,7 +55,7 @@
 	.pulse-skel-card {
 		padding: 1rem;
 		background: var(--surface);
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-radius: var(--radius-md);
 		display: flex;
 		flex-direction: column;
@@ -70,7 +70,7 @@
 	.pulse-skel-wide {
 		padding: 1rem;
 		background: var(--surface);
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-radius: var(--radius-md);
 	}
 	.row {

@@ -89,7 +89,7 @@
 			margin-bottom: 0.75rem;
 			background: var(--surface);
 			border-radius: var(--radius-md);
-			border: 1px solid var(--border-holdfast);
+			border: 1px solid var(--line);
 			border-bottom: none;
 		}
 		.tab {
@@ -101,7 +101,7 @@
 			font-size: 0.75rem;
 		}
 		.tab-active {
-			background: var(--surface-raised);
+			background: var(--surface-2);
 			box-shadow: var(--shadow-sm);
 		}
 	}

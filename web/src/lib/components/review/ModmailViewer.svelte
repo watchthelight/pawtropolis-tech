@@ -315,14 +315,14 @@
 
 	/* ── Member left warning ──────────────────────────────── */
 	.member-left-warning {
-		border: 1px solid var(--status-warning);
-		border-left: 4px solid var(--status-warning);
+		border: 1px solid var(--warn);
+		border-left: 4px solid var(--warn);
 		background: oklch(25% 0.04 85 / 0.3);
 		border-radius: var(--radius-sm);
 		padding: 0.4rem 0.6rem;
 		font-size: 0.7rem;
 		font-weight: 600;
-		color: var(--status-warning);
+		color: var(--warn);
 		margin-bottom: 0.5rem;
 		display: flex;
 		align-items: center;
@@ -339,7 +339,7 @@
 		align-items: center;
 		gap: 0.5rem;
 		padding: 0.5rem 0;
-		border-bottom: 1px solid var(--border-holdfast);
+		border-bottom: 1px solid var(--line);
 		margin-bottom: 0.5rem;
 		flex-wrap: wrap;
 	}
@@ -355,12 +355,12 @@
 
 	.thread-status-open {
 		background: oklch(0.45 0.15 145 / 0.2);
-		color: var(--status-success);
+		color: var(--good);
 	}
 
 	.thread-status-closed {
 		background: oklch(0.5 0 0 / 0.15);
-		color: var(--text-secondary);
+		color: var(--ink-2);
 	}
 
 	.action-btn {
@@ -368,16 +368,16 @@
 		font-weight: 600;
 		padding: 0.25rem 0.6rem;
 		border-radius: var(--radius-sm);
-		border: 1px solid var(--border-holdfast);
-		background: var(--surface-raised);
-		color: var(--text-secondary);
+		border: 1px solid var(--line);
+		background: var(--surface-2);
+		color: var(--ink-2);
 		cursor: pointer;
 		transition: all 150ms;
 	}
 
 	.action-btn:hover:not(:disabled) {
-		color: var(--text-primary);
-		border-color: var(--accent);
+		color: var(--ink);
+		border-color: var(--sage);
 	}
 
 	.action-btn:disabled {
@@ -386,42 +386,42 @@
 	}
 
 	.action-btn-danger {
-		color: var(--status-danger);
-		border-color: var(--status-danger);
+		color: var(--danger);
+		border-color: var(--danger);
 	}
 
 	.action-btn-danger:hover:not(:disabled) {
 		background: oklch(0.45 0.2 25 / 0.15);
-		color: var(--status-danger);
-		border-color: var(--status-danger);
+		color: var(--danger);
+		border-color: var(--danger);
 	}
 
 	.action-btn-new {
-		color: var(--accent);
-		border-color: var(--accent);
+		color: var(--sage);
+		border-color: var(--sage);
 	}
 
 	.action-btn-new:hover:not(:disabled) {
-		background: var(--accent-dim);
-		color: var(--accent);
-		border-color: var(--accent);
+		background: var(--sage-deep);
+		color: var(--sage);
+		border-color: var(--sage);
 	}
 
 	.stale-hint {
 		font-size: 0.6rem;
-		color: var(--status-warning);
+		color: var(--warn);
 		flex-basis: 100%;
 	}
 
 	.action-error {
 		font-size: 0.65rem;
-		color: var(--status-danger);
+		color: var(--danger);
 	}
 
 	/* ── Threads ──────────────────────────────────────────── */
 	.thread-separator {
 		height: 1px;
-		background: var(--border-holdfast);
+		background: var(--line);
 		margin: 0.75rem 0;
 	}
 
@@ -430,7 +430,7 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		margin-bottom: 0.5rem;
 	}
 
@@ -464,18 +464,18 @@
 	}
 
 	.message-user .message-bubble {
-		background: var(--surface-raised);
+		background: var(--surface-2);
 		border-bottom-left-radius: var(--radius-sm);
 	}
 
 	.message-staff .message-bubble {
-		background: var(--accent-dim);
+		background: var(--sage-deep);
 		border-bottom-right-radius: var(--radius-sm);
 	}
 
 	.message-content {
 		font-size: 0.85rem;
-		color: var(--text-primary);
+		color: var(--ink);
 		line-height: 1.45;
 		white-space: pre-wrap;
 		word-break: break-word;
@@ -483,7 +483,7 @@
 
 	.message-time {
 		font-size: 0.6rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		opacity: 0.6;
 		margin-top: 0.125rem;
 		padding: 0 0.25rem;
@@ -501,7 +501,7 @@
 		gap: 0.5rem;
 		margin-top: 0.75rem;
 		padding-top: 0.5rem;
-		border-top: 1px solid var(--border-holdfast);
+		border-top: 1px solid var(--line);
 		position: relative;
 	}
 
@@ -512,9 +512,9 @@
 
 	.template-btn {
 		background: none;
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		border-radius: var(--radius-sm);
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		padding: 0.375rem;
 		cursor: pointer;
 		transition: all 0.15s ease;
@@ -523,8 +523,8 @@
 	}
 
 	.template-btn:hover {
-		color: var(--accent);
-		border-color: var(--accent);
+		color: var(--sage);
+		border-color: var(--sage);
 	}
 
 	.template-dropdown {
@@ -532,8 +532,8 @@
 		bottom: 100%;
 		left: 0;
 		right: 0;
-		background: var(--surface-raised);
-		border: 1px solid var(--border);
+		background: var(--surface-2);
+		border: 1px solid var(--line-soft);
 		border-radius: var(--radius-md);
 		padding: 0.25rem;
 		margin-bottom: 0.375rem;
@@ -548,7 +548,7 @@
 		padding: 0.5rem 0.75rem;
 		border: none;
 		background: none;
-		color: var(--text-primary);
+		color: var(--ink);
 		font-size: 0.8rem;
 		cursor: pointer;
 		border-radius: var(--radius-sm);
@@ -556,16 +556,16 @@
 	}
 
 	.template-option:hover {
-		background: var(--accent-dim);
+		background: var(--sage-deep);
 	}
 
 	.send-input {
 		flex: 1;
-		background: var(--surface-raised);
-		border: 1px solid var(--border-holdfast);
+		background: var(--surface-2);
+		border: 1px solid var(--line);
 		border-radius: var(--radius-md);
 		padding: 0.5rem 0.75rem;
-		color: var(--text-primary);
+		color: var(--ink);
 		font: inherit;
 		font-size: 0.85rem;
 		resize: none;
@@ -576,13 +576,13 @@
 	}
 
 	.send-input::placeholder {
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		opacity: 0.5;
 	}
 
 	.send-input:focus {
 		outline: none;
-		border-color: var(--accent);
+		border-color: var(--sage);
 	}
 
 	.send-input:disabled {
@@ -594,7 +594,7 @@
 		height: 2.25rem;
 		border: none;
 		border-radius: var(--radius-md);
-		background: var(--accent);
+		background: var(--sage);
 		color: var(--surface);
 		cursor: pointer;
 		display: flex;
@@ -632,7 +632,7 @@
 		bottom: -1.2rem;
 		left: 0;
 		font-size: 0.6rem;
-		color: var(--status-danger);
+		color: var(--danger);
 	}
 
 	@media (max-width: 767px) {

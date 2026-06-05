@@ -17,10 +17,10 @@
 	}
 
 	const STATUS_COLORS: Record<string, string> = {
-		online: 'var(--status-success)',
-		idle: 'var(--status-warning)',
-		dnd: 'var(--status-danger)',
-		offline: 'var(--text-secondary)'
+		online: 'var(--good)',
+		idle: 'var(--warn)',
+		dnd: 'var(--danger)',
+		offline: 'var(--ink-2)'
 	};
 
 	let {
@@ -49,7 +49,7 @@
 	}
 
 	function accentHex(color: number | null): string {
-		if (!color) return 'var(--accent)';
+		if (!color) return 'var(--sage)';
 		return `#${color.toString(16).padStart(6, '0')}`;
 	}
 
@@ -178,7 +178,7 @@
 			{#if rolesExpanded}
 				<div class="dc-roles">
 					{#each profile.roles as role}
-						<span class="dc-role" style:border-color={role.color ?? 'var(--border-holdfast)'} style:color={role.color ?? 'var(--text-secondary)'}>
+						<span class="dc-role" style:border-color={role.color ?? 'var(--line)'} style:color={role.color ?? 'var(--ink-2)'}>
 							{#if role.color}<span class="dc-role-dot" style:background-color={role.color}></span>{/if}
 							{role.name}
 						</span>
@@ -205,7 +205,7 @@
 	.dc-card {
 		background: var(--surface);
 		border-radius: var(--radius-md);
-		border: 1px solid var(--border-holdfast);
+		border: 1px solid var(--line);
 		overflow: hidden;
 		display: flex;
 		flex-direction: column;
@@ -241,7 +241,7 @@
 		border-radius: 50%;
 		border: 3px solid var(--surface);
 		object-fit: cover;
-		background: var(--surface-raised);
+		background: var(--surface-2);
 	}
 
 	.dc-avatar-placeholder {
@@ -250,8 +250,8 @@
 		justify-content: center;
 		font-weight: 700;
 		font-size: 1.25rem;
-		color: var(--accent);
-		background: var(--accent-dim);
+		color: var(--sage);
+		background: var(--sage-deep);
 	}
 
 	.dc-status-dot {
@@ -271,27 +271,27 @@
 	.dc-displayname {
 		font-size: 1rem;
 		font-weight: 700;
-		color: var(--text-primary);
+		color: var(--ink);
 		margin: 0;
 		line-height: 1.3;
 	}
 
 	.dc-username {
 		font-size: 0.75rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		margin: 0;
 	}
 
 	.dc-custom-status {
 		font-size: 0.7rem;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		margin: 0.2rem 0 0;
 		font-style: italic;
 	}
 
 	.dc-divider {
 		height: 1px;
-		background: var(--border-holdfast);
+		background: var(--line);
 		margin: 0.5rem 0.75rem;
 	}
 
@@ -304,7 +304,7 @@
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		margin: 0 0 0.35rem;
 	}
 
@@ -317,7 +317,7 @@
 	}
 
 	.dc-section-label-toggle:hover {
-		color: var(--text-primary);
+		color: var(--ink);
 	}
 
 	.dc-expand-arrow {
@@ -331,7 +331,7 @@
 
 	.dc-bio {
 		font-size: 0.8rem;
-		color: var(--text-primary);
+		color: var(--ink);
 		line-height: 1.4;
 		margin: 0;
 		white-space: pre-wrap;
@@ -349,7 +349,7 @@
 		align-items: center;
 		gap: 0.35rem;
 		font-size: 0.7rem;
-		color: var(--text-primary);
+		color: var(--ink);
 	}
 
 	.dc-icon {
@@ -374,7 +374,7 @@
 		border: 1px solid;
 		font-size: 0.6rem;
 		font-weight: 500;
-		background: var(--surface-raised);
+		background: var(--surface-2);
 	}
 
 	.dc-role-dot {
@@ -396,8 +396,8 @@
 		font-size: 0.65rem;
 	}
 
-	.dc-loading { color: var(--text-secondary); }
-	.dc-error { color: var(--status-danger); }
+	.dc-loading { color: var(--ink-2); }
+	.dc-error { color: var(--danger); }
 
 	.dc-refresh {
 		margin-left: auto;
@@ -405,14 +405,14 @@
 		border: none;
 		border-radius: var(--radius-sm);
 		background: none;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 		cursor: pointer;
 		transition: all 150ms;
 	}
 
 	.dc-refresh:hover:not(:disabled) {
-		color: var(--text-primary);
-		background: var(--surface-raised);
+		color: var(--ink);
+		background: var(--surface-2);
 	}
 
 	.dc-refresh:disabled {

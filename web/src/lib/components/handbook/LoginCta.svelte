@@ -24,19 +24,19 @@
 		margin: 0.7em 0 1.2em;
 		padding: 1em 1.1em;
 		border-radius: var(--radius-md);
-		border: 1px dashed var(--border-strong);
+		border: 1px dashed var(--line-strong);
 		background: var(--surface);
 	}
 	.hb-login-cta-text {
 		max-width: 36ch;
 	}
 	.hb-login-cta-text strong {
-		color: var(--text-primary);
+		color: var(--ink);
 		font-size: 1rem;
 	}
 	.hb-login-cta-text p {
 		margin: 0.25em 0 0;
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 		font-size: 0.9rem;
 	}
 	.hb-login-cta-btn {
@@ -44,13 +44,13 @@
 		align-items: center;
 		padding: 0.55em 1.1em;
 		border-radius: var(--radius-sm);
-		background: var(--accent);
-		color: var(--text-on-accent);
+		background: var(--sage);
+		color: var(--on-sage);
 		font-weight: 600;
 		text-decoration: none;
 		min-height: 44px;
 	}
 	.hb-login-cta-btn:hover {
-		background: var(--accent-strong);
+		background: var(--sage-bright);
 	}
 </style>

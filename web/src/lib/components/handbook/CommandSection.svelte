@@ -41,14 +41,14 @@
 		margin: 1.8em 0 1.2em;
 		padding: 1em 1.1em 0.6em;
 		border-radius: var(--radius-md);
-		border: 1px solid var(--border);
+		border: 1px solid var(--line-soft);
 		background: var(--surface);
 		scroll-margin-top: 5rem;
 		position: relative;
 		transition: border-color 0.18s ease;
 	}
 	.hb-cmd:hover {
-		border-color: var(--border-strong);
+		border-color: var(--line-strong);
 	}
 	.hb-cmd[data-locked='true'] .hb-cmd-body {
 		opacity: 0.55;
@@ -64,13 +64,13 @@
 	.hb-cmd-title {
 		margin: 0;
 		font-size: clamp(1.15rem, 2.5vw, 1.35rem);
-		color: var(--accent);
+		color: var(--sage);
 		font-family: 'JetBrains Mono', ui-monospace, monospace;
 		font-weight: 700;
 		letter-spacing: -0.01em;
 	}
 	.hb-cmd-slash {
-		color: var(--text-tertiary);
+		color: var(--ink-3);
 		font-weight: 500;
 	}
 	.hb-cmd-body {

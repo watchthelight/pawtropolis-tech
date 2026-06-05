@@ -44,12 +44,12 @@
 	.hb-blockquote {
 		margin: 0.7em 0;
 		padding: 0.4em 1em;
-		border-left: 3px solid var(--accent-dim);
+		border-left: 3px solid var(--sage-deep);
 		background: var(--surface);
 		border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-		color: var(--text-secondary);
+		color: var(--ink-2);
 	}
 	.hb-blockquote :global(p) {
-		color: var(--text-secondary);
+		color: var(--ink-2);
 	}
 </style>

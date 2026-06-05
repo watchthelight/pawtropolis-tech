@@ -49,6 +49,6 @@
 		border: none;
 		margin: 1.8em 0;
 		height: 1px;
-		background: var(--border-holdfast);
+		background: var(--line);
 	}
 </style>
