@@ -11,6 +11,7 @@ import crypto from "node:crypto";
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { eventBus } from "$lib/server/events/bus";
+import { cachePrefixesForEvent } from "$lib/server/events/cacheBust";
 import { invalidatePrefix } from "$lib/server/cache";
 import type { SSEEvent } from "$lib/types/events";
 
@@ -81,16 +82,8 @@ export const POST: RequestHandler = async ({ request }) => {
   // coarse prefix drop cheap.
   const guildId = process.env.GUILD_ID;
   if (guildId) {
-    if (
-      event.type.startsWith("review:") ||
-      event.type.startsWith("modmail:") ||
-      event.type.startsWith("flag:")
-    ) {
-      invalidatePrefix(`pulse:guild:${guildId}`);
-      invalidatePrefix(`pulse:snapshot:${guildId}`);
-      invalidatePrefix("stats:");
-    } else if (event.type.startsWith("stats:")) {
-      invalidatePrefix("stats:");
+    for (const prefix of cachePrefixesForEvent(event.type, guildId)) {
+      invalidatePrefix(prefix);
     }
   }
 
