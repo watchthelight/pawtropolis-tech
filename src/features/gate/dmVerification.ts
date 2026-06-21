@@ -36,8 +36,6 @@ import {
   upsertAnswer,
   submitApplication,
   queueAvatarScan,
-  paginate,
-  buildModalForPage,
 } from "../gate.js";
 
 // ============================================================================
@@ -303,16 +301,14 @@ export async function startDmVerification(
       return;
     }
 
-    // DM mode (not deferred) — fall back to the modal flow so the user can
-    // still complete verification in pages.
-    try {
-      const pages = paginate(questions);
-      const modal = buildModalForPage(pages[0]!, existingAnswers, appId);
-      await interaction.showModal(modal);
-    } catch (modalErr) {
-      captureException(modalErr);
-      await respond("Something went wrong. Please try again.");
-    }
+    // DM mode — the user's DMs are closed (50007) or they're otherwise
+    // unreachable. Don't pop an in-server modal; verification questions belong
+    // in DMs. Ask the user to open their DMs and click Verify again.
+    await respond(
+      "I couldn't DM you the verification questions. Please enable **Direct Messages** " +
+        "from server members (Server name → Privacy Settings → Allow direct messages), " +
+        "then click **Verify** again."
+    );
     return;
   }
 
