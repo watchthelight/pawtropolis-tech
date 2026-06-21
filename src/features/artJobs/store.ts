@@ -402,7 +402,8 @@ const reassignJobTransaction = db.transaction(
       artistJobNumber,
       oldJob.recipient_id,
       oldJob.ticket_type,
-      null
+      null, // assignment_log_id
+      null // ticket_id
     );
 
     // 3. Cross-reference in new job's notes
