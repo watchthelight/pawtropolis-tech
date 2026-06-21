@@ -14,89 +14,25 @@ import type { GuildConfig } from "../lib/config.js";
 import { sleep } from "../lib/retry.js";
 import { renderWelcomeTemplate } from "./review/welcome.js";
 
+const BANNER_FILE = { attachment: "./assets/banner.webp", name: "banner.webp" };
+
 /**
- * postWelcomeCard
- * WHAT: Posts a standardized welcome card with banner attachment to the configured general channel.
- * WHY: Provides a consistent, rich welcome experience with server info, member count, and channel links.
- * PARAMS:
- *  - guild: Discord Guild instance
- *  - user: GuildMember being welcomed
- *  - config: GuildConfig with channel/role IDs
- *  - memberCount: Current server member count
- * RETURNS: The posted Message, or throws on failure.
- * THROWS: Error if channel is missing/invalid or bot lacks permissions.
+ * buildWelcomeEmbed
+ * WHAT: Constructs the rich welcome embed + banner attachment for a single user.
+ * WHY: Shared by the DM delivery path for both solo and batch welcomes so the
+ *      card stays identical regardless of how it was triggered.
  */
-export async function postWelcomeCard(opts: {
-  guild: Guild;
-  user: GuildMember;
-  config: GuildConfig;
-  memberCount: number;
-}): Promise<Message> {
-  const { guild, user, config, memberCount } = opts;
-
-  // 1) Validate channel configuration
-  const channelId = config.general_channel_id;
-  if (!channelId) {
-    throw new Error("general channel not configured");
-  }
-
-  // 2) Fetch and validate channel
-  // GOTCHA: guild.channels.fetch() can return null even for valid IDs if the bot
-  // was recently added or the cache is cold. The isTextBased() check is necessary
-  // because Voice channels also have IDs that look identical to text channel IDs.
-  let channel: GuildTextBasedChannel;
-  try {
-    const fetched = await guild.channels.fetch(channelId);
-    if (!fetched || !fetched.isTextBased()) {
-      throw new Error("general channel is not a valid text channel");
-    }
-    channel = fetched as GuildTextBasedChannel;
-  } catch (err) {
-    logger.warn({ err, guildId: guild.id, channelId }, "[welcome] failed to fetch general channel");
-    throw new Error("failed to fetch general channel");
-  }
-
-  // 3) Check bot permissions in target channel
-  // Pre-check all required permissions and provide a clear error message.
-  // Without this, Discord API returns a generic 50013 error that's hard to debug.
-  const me = guild.members.me;
-  if (me) {
-    const perms = channel.permissionsFor(me);
-    const missingPerms: string[] = [];
-
-    // EmbedLinks required for rich embed, AttachFiles for the banner.webp attachment
-    // WHY check all four? Because Discord's error messages are useless. If you're missing
-    // EmbedLinks, the API just says "Missing Permissions" with no indication of which one.
-    if (!perms?.has(PermissionFlagsBits.ViewChannel)) missingPerms.push("ViewChannel");
-    if (!perms?.has(PermissionFlagsBits.SendMessages)) missingPerms.push("SendMessages");
-    if (!perms?.has(PermissionFlagsBits.EmbedLinks)) missingPerms.push("EmbedLinks");
-    if (!perms?.has(PermissionFlagsBits.AttachFiles)) missingPerms.push("AttachFiles");
-
-    if (missingPerms.length > 0) {
-      logger.warn(
-        { guildId: guild.id, channelId, missingPerms },
-        "[welcome] missing permissions in general channel"
-      );
-      throw new Error(`missing permissions: ${missingPerms.join(", ")}`);
-    }
-  }
-
-  // 4) Build message content (pings for user + optional extra role)
-  // The ping happens here in content, NOT in the embed description. This is intentional:
-  // Discord only sends notifications for mentions in the content field, not embed text.
-  const contentParts = [`<@${user.id}>`];
-  if (config.welcome_ping_role_id) {
-    contentParts.push(`<@&${config.welcome_ping_role_id}>`);
-  }
-  const content = contentParts.join(" ");
-
-  // 5) Build description.
+function buildWelcomeEmbed(
+  guild: Guild,
+  user: GuildMember,
+  config: GuildConfig,
+  memberCount: number
+): { embed: APIEmbed; files: typeof BANNER_FILE[] } {
   // The first line ("greeting") is admin-controlled via config.welcome_template
   // when set. Token substitution lets legacy {applicant.mention}/{guild.name}
   // resolve; raw <@&id>/<#id> from the dashboard editor pass through Discord
-  // as real role pings and channel chips. Bot still owns the structural
-  // bits (member count, channel link list, signoff, footer) so admins can't
-  // accidentally strip the moderation-required information.
+  // as real role pings and channel chips. Bot still owns the structural bits
+  // (member count, channel link list, signoff, footer).
   const trimmedTemplate =
     typeof config.welcome_template === "string" ? config.welcome_template.trim() : "";
   const greeting = trimmedTemplate.length > 0
@@ -116,23 +52,17 @@ export async function postWelcomeCard(opts: {
     `This server now has **${memberCount.toLocaleString()} Users!**`,
   ];
 
-  // Add channel links section if at least one is configured
   const infoChannelMention = config.info_channel_id ? `<#${config.info_channel_id}>` : null;
   const rulesChannelMention = config.rules_channel_id ? `<#${config.rules_channel_id}>` : null;
-
   if (infoChannelMention || rulesChannelMention) {
     descriptionLines.push("", "🔗 Be sure to check out:");
     if (infoChannelMention) descriptionLines.push(`• ${infoChannelMention}`);
     if (rulesChannelMention) descriptionLines.push(`• ${rulesChannelMention}`);
   }
-
   descriptionLines.push("", "✅ Enjoy your stay!", "", "_Bot by watchthelight._");
 
-  // 6) Build embed matching screenshot requirements
-  // Using APIEmbed (plain object) instead of EmbedBuilder because we're constructing
-  // a static embed. EmbedBuilder is overkill when you're not chaining methods.
   const embed: APIEmbed = {
-    color: 0x00c2ff,  // This cyan matches the brand. Don't change it on a whim.
+    color: 0x00c2ff, // This cyan matches the brand. Don't change it on a whim.
     author: {
       name: guild.name,
       icon_url: guild.iconURL({ size: 128 }) ?? undefined,
@@ -144,72 +74,169 @@ export async function postWelcomeCard(opts: {
     footer: { text: "Pawtropolis Moderation Team" },
   };
 
-  // 7) Attach banner file
-  // Path is relative to working directory (project root). If the bot runs from a different cwd,
-  // this will fail. Consider using __dirname or an absolute path for robustness.
-  // GOTCHA: The file is sent with every welcome message. If the server is busy with approvals,
-  // this could be a lot of bandwidth. Discord does CDN the attachment, but the upload happens
-  // every time. For a high-volume server, consider hosting the banner externally and using a URL.
-  const files = [{ attachment: "./assets/banner.webp", name: "banner.webp" }];
+  return { embed, files: [BANNER_FILE] };
+}
 
-  // 8) Send message with allowed mentions limited to the specific user and role
-  // allowedMentions is a security measure: even if content contains @everyone or other role mentions,
-  // Discord will only actually ping the IDs we explicitly whitelist here.
-  const allowedMentions = {
-    users: [user.id],
-    roles: config.welcome_ping_role_id ? [config.welcome_ping_role_id] : [],
-  };
+/**
+ * fetchGeneralChannel
+ * WHAT: Resolves + permission-checks the configured general channel.
+ * WHY: The one-line chat shout-out only needs ViewChannel + SendMessages now
+ *      that the rich embed is delivered via DM, not posted in-channel.
+ */
+async function fetchGeneralChannel(guild: Guild, config: GuildConfig): Promise<GuildTextBasedChannel> {
+  const channelId = config.general_channel_id;
+  if (!channelId) {
+    throw new Error("general channel not configured");
+  }
 
-  // Retry logic for transient network errors (e.g., SocketError: other side closed)
-  // Discord's API can sometimes close connections unexpectedly; a simple retry usually succeeds.
+  // GOTCHA: guild.channels.fetch() can return null even for valid IDs if the bot
+  // was recently added or the cache is cold. The isTextBased() check is necessary
+  // because Voice channels also have IDs that look identical to text channel IDs.
+  let channel: GuildTextBasedChannel;
+  try {
+    const fetched = await guild.channels.fetch(channelId);
+    if (!fetched || !fetched.isTextBased()) {
+      throw new Error("general channel is not a valid text channel");
+    }
+    channel = fetched as GuildTextBasedChannel;
+  } catch (err) {
+    logger.warn({ err, guildId: guild.id, channelId }, "[welcome] failed to fetch general channel");
+    throw new Error("failed to fetch general channel");
+  }
+
+  const me = guild.members.me;
+  if (me) {
+    const perms = channel.permissionsFor(me);
+    const missingPerms: string[] = [];
+    if (!perms?.has(PermissionFlagsBits.ViewChannel)) missingPerms.push("ViewChannel");
+    if (!perms?.has(PermissionFlagsBits.SendMessages)) missingPerms.push("SendMessages");
+    if (missingPerms.length > 0) {
+      logger.warn(
+        { guildId: guild.id, channelId, missingPerms },
+        "[welcome] missing permissions in general channel"
+      );
+      throw new Error(`missing permissions: ${missingPerms.join(", ")}`);
+    }
+  }
+
+  return channel;
+}
+
+/**
+ * sendChannelLine
+ * WHAT: Posts a one-sentence, non-embed welcome line to the channel with pings.
+ * WHY: The visible shout-out in main chat. Retries transient network errors.
+ */
+async function sendChannelLine(
+  channel: GuildTextBasedChannel,
+  guild: Guild,
+  content: string,
+  allowedMentions: { users: string[]; roles: string[] }
+): Promise<Message> {
   const MAX_RETRIES = 3;
   const RETRY_DELAY_MS = 500;
 
   let lastError: unknown;
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      const message = await channel.send({
-        content,
-        embeds: [embed],
-        files,
-        allowedMentions,
-      });
-
-      logger.info(
-        {
-          guildId: guild.id,
-          channelId: channel.id,
-          messageId: message.id,
-          userId: user.id,
-          attempt,
-        },
-        "[welcome] posted welcome card"
-      );
-
-      return message;
+      return await channel.send({ content, allowedMentions });
     } catch (err) {
       lastError = err;
-      const isRetryable = isTransientError(err);
-
-      if (isRetryable && attempt < MAX_RETRIES) {
+      if (isTransientError(err) && attempt < MAX_RETRIES) {
         logger.warn(
-          { err, guildId: guild.id, channelId: channel.id, userId: user.id, attempt },
-          "[welcome] transient error, retrying..."
+          { err, guildId: guild.id, channelId: channel.id, attempt },
+          "[welcome] transient error on channel line, retrying..."
         );
-        await sleep(RETRY_DELAY_MS * attempt); // Linear backoff: 500ms, 1000ms, 1500ms
+        await sleep(RETRY_DELAY_MS * attempt);
         continue;
       }
-
       logger.error(
-        { err, guildId: guild.id, channelId: channel.id, userId: user.id, attempt },
-        "[welcome] failed to send welcome card"
+        { err, guildId: guild.id, channelId: channel.id, attempt },
+        "[welcome] failed to send welcome channel line"
       );
       throw err;
     }
   }
-
-  // Should not reach here, but TypeScript needs this for exhaustiveness
   throw lastError;
+}
+
+/**
+ * deliverWelcomeDm
+ * WHAT: DMs the rich welcome embed (with banner) to a single user.
+ * WHY: Per request, the embed is now a DM rather than an in-channel post.
+ * NOTE: Best-effort. Users can disable DMs from server members; we fail-soft so
+ *       the channel shout-out still goes out.
+ * RETURNS: true if the DM was delivered.
+ */
+async function deliverWelcomeDm(
+  guild: Guild,
+  user: GuildMember,
+  config: GuildConfig,
+  memberCount: number
+): Promise<boolean> {
+  const { embed, files } = buildWelcomeEmbed(guild, user, config, memberCount);
+  try {
+    await user.send({ embeds: [embed], files });
+    return true;
+  } catch (err) {
+    logger.warn(
+      { err, guildId: guild.id, userId: user.id },
+      "[welcome] failed to DM welcome embed (user likely has DMs closed)"
+    );
+    return false;
+  }
+}
+
+/**
+ * postWelcomeCard
+ * WHAT: DMs the rich welcome embed to the user and posts a one-sentence welcome
+ *       line (non-embed) to the configured general channel with the welcome ping.
+ * WHY: Members get the full card privately; the channel just gets a short, pinged
+ *      shout-out so the welcome ping role is notified without channel clutter.
+ * PARAMS:
+ *  - guild: Discord Guild instance
+ *  - user: GuildMember being welcomed
+ *  - config: GuildConfig with channel/role IDs
+ *  - memberCount: Current server member count
+ * RETURNS: The posted channel Message, or throws on failure.
+ * THROWS: Error if channel is missing/invalid or bot lacks permissions.
+ */
+export async function postWelcomeCard(opts: {
+  guild: Guild;
+  user: GuildMember;
+  config: GuildConfig;
+  memberCount: number;
+}): Promise<Message> {
+  const { guild, user, config, memberCount } = opts;
+
+  const channel = await fetchGeneralChannel(guild, config);
+
+  // DM the rich embed first (best-effort).
+  const dmDelivered = await deliverWelcomeDm(guild, user, config, memberCount);
+
+  // One-sentence channel shout-out with pings (user + optional welcome role).
+  // The ping lives in content, not an embed: Discord only notifies on content mentions.
+  const contentParts = [`<@${user.id}>`];
+  if (config.welcome_ping_role_id) {
+    contentParts.push(`<@&${config.welcome_ping_role_id}>`);
+  }
+  const content = `${contentParts.join(" ")} Welcome to **${guild.name}**! 🐾`;
+
+  // allowedMentions is a security measure: even if content somehow contained
+  // @everyone, Discord only pings the IDs we explicitly whitelist here.
+  const allowedMentions = {
+    users: [user.id],
+    roles: config.welcome_ping_role_id ? [config.welcome_ping_role_id] : [],
+  };
+
+  const message = await sendChannelLine(channel, guild, content, allowedMentions);
+
+  logger.info(
+    { guildId: guild.id, channelId: channel.id, messageId: message.id, userId: user.id, dmDelivered },
+    "[welcome] posted welcome (embed via DM, line in channel)"
+  );
+
+  return message;
 }
 
 /**
@@ -231,134 +258,47 @@ export async function postBatchWelcomeCard(opts: {
     return postWelcomeCard({ guild, user: users[0]!, config, memberCount });
   }
 
-  const channelId = config.general_channel_id;
-  if (!channelId) throw new Error("general channel not configured");
-
-  let channel: GuildTextBasedChannel;
-  try {
-    const fetched = await guild.channels.fetch(channelId);
-    if (!fetched || !fetched.isTextBased()) {
-      throw new Error("general channel is not a valid text channel");
-    }
-    channel = fetched as GuildTextBasedChannel;
-  } catch (err) {
-    logger.warn({ err, guildId: guild.id, channelId }, "[welcome] failed to fetch general channel (batch)");
-    throw new Error("failed to fetch general channel");
-  }
-
-  const me = guild.members.me;
-  if (me) {
-    const perms = channel.permissionsFor(me);
-    const missingPerms: string[] = [];
-    if (!perms?.has(PermissionFlagsBits.ViewChannel)) missingPerms.push("ViewChannel");
-    if (!perms?.has(PermissionFlagsBits.SendMessages)) missingPerms.push("SendMessages");
-    if (!perms?.has(PermissionFlagsBits.EmbedLinks)) missingPerms.push("EmbedLinks");
-    if (!perms?.has(PermissionFlagsBits.AttachFiles)) missingPerms.push("AttachFiles");
-    if (missingPerms.length > 0) {
-      throw new Error(`missing permissions: ${missingPerms.join(", ")}`);
-    }
-  }
+  const channel = await fetchGeneralChannel(guild, config);
 
   // Discord allowedMentions caps role mentions but user mentions are bounded by message length.
-  // We cap at 25 to keep the message readable and stay safely under any limits.
+  // We cap at 25 to keep the line readable and stay safely under any limits.
   const MAX_USERS_PER_CARD = 25;
   const cappedUsers = users.slice(0, MAX_USERS_PER_CARD);
   const userMentions = cappedUsers.map((u) => `<@${u.id}>`);
 
+  // DM the rich embed to each user individually (best-effort, in parallel).
+  const dmResults = await Promise.all(
+    cappedUsers.map((u) => deliverWelcomeDm(guild, u, config, memberCount))
+  );
+  const dmDelivered = dmResults.filter(Boolean).length;
+
+  // One-sentence channel shout-out mentioning everyone + optional welcome role.
   const contentParts = [...userMentions];
   if (config.welcome_ping_role_id) {
     contentParts.push(`<@&${config.welcome_ping_role_id}>`);
   }
-  const content = contentParts.join(" ");
+  const content = `${contentParts.join(" ")} Welcome to **${guild.name}**! 🐾`;
 
-  // Batch greeting: render the admin's template once per user and join, or
-  // fall back to the canonical multi-mention line.
-  const trimmedTemplate =
-    typeof config.welcome_template === "string" ? config.welcome_template.trim() : "";
-  const greeting = trimmedTemplate.length > 0
-    ? cappedUsers
-        .map((u) =>
-          renderWelcomeTemplate({
-            template: config.welcome_template,
-            guildName: guild.name,
-            applicant: {
-              id: u.id,
-              tag: u.user?.tag ?? u.user.username,
-              display: u.displayName,
-            },
-          })
-        )
-        .join("\n")
-    : `👋 Welcome ${userMentions.join(", ")}!`;
-
-  const descriptionLines: string[] = [
-    greeting,
-    `This server now has **${memberCount.toLocaleString()} Users!**`,
-  ];
-
-  const infoChannelMention = config.info_channel_id ? `<#${config.info_channel_id}>` : null;
-  const rulesChannelMention = config.rules_channel_id ? `<#${config.rules_channel_id}>` : null;
-  if (infoChannelMention || rulesChannelMention) {
-    descriptionLines.push("", "🔗 Be sure to check out:");
-    if (infoChannelMention) descriptionLines.push(`• ${infoChannelMention}`);
-    if (rulesChannelMention) descriptionLines.push(`• ${rulesChannelMention}`);
-  }
-  descriptionLines.push("", "✅ Enjoy your stay!", "", "_Bot by watchthelight._");
-
-  const embed: APIEmbed = {
-    color: 0x00c2ff,
-    author: {
-      name: guild.name,
-      icon_url: guild.iconURL({ size: 128 }) ?? undefined,
-    },
-    title: `Welcome to Pawtropolis 🐾 (${cappedUsers.length} new ${cappedUsers.length === 1 ? "member" : "members"})`,
-    description: descriptionLines.join("\n"),
-    image: { url: "attachment://banner.webp" },
-    footer: { text: "Pawtropolis Moderation Team" },
-  };
-
-  const files = [{ attachment: "./assets/banner.webp", name: "banner.webp" }];
   const allowedMentions = {
     users: cappedUsers.map((u) => u.id),
     roles: config.welcome_ping_role_id ? [config.welcome_ping_role_id] : [],
   };
 
-  const MAX_RETRIES = 3;
-  const RETRY_DELAY_MS = 500;
-  let lastError: unknown;
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    try {
-      const message = await channel.send({ content, embeds: [embed], files, allowedMentions });
-      logger.info(
-        {
-          guildId: guild.id,
-          channelId: channel.id,
-          messageId: message.id,
-          userCount: cappedUsers.length,
-          userIds: cappedUsers.map((u) => u.id),
-          attempt,
-        },
-        "[welcome] posted batch welcome card"
-      );
-      return message;
-    } catch (err) {
-      lastError = err;
-      if (isTransientError(err) && attempt < MAX_RETRIES) {
-        logger.warn(
-          { err, guildId: guild.id, channelId: channel.id, attempt },
-          "[welcome] transient error on batch, retrying..."
-        );
-        await sleep(RETRY_DELAY_MS * attempt);
-        continue;
-      }
-      logger.error(
-        { err, guildId: guild.id, channelId: channel.id, attempt },
-        "[welcome] failed to send batch welcome card"
-      );
-      throw err;
-    }
-  }
-  throw lastError;
+  const message = await sendChannelLine(channel, guild, content, allowedMentions);
+
+  logger.info(
+    {
+      guildId: guild.id,
+      channelId: channel.id,
+      messageId: message.id,
+      userCount: cappedUsers.length,
+      userIds: cappedUsers.map((u) => u.id),
+      dmDelivered,
+    },
+    "[welcome] posted batch welcome (embeds via DM, line in channel)"
+  );
+
+  return message;
 }
 
 /**
