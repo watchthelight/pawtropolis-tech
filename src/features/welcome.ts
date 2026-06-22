@@ -129,7 +129,7 @@ async function fetchGeneralChannel(guild: Guild, config: GuildConfig): Promise<G
  */
 async function sendChannelLine(
   channel: GuildTextBasedChannel,
-  guild: Guild,
+  guildId: string,
   content: string,
   allowedMentions: { users: string[]; roles: string[] }
 ): Promise<Message> {
@@ -144,20 +144,153 @@ async function sendChannelLine(
       lastError = err;
       if (isTransientError(err) && attempt < MAX_RETRIES) {
         logger.warn(
-          { err, guildId: guild.id, channelId: channel.id, attempt },
+          { err, guildId, channelId: channel.id, attempt },
           "[welcome] transient error on channel line, retrying..."
         );
         await sleep(RETRY_DELAY_MS * attempt);
         continue;
       }
       logger.error(
-        { err, guildId: guild.id, channelId: channel.id, attempt },
+        { err, guildId, channelId: channel.id, attempt },
         "[welcome] failed to send welcome channel line"
       );
       throw err;
     }
   }
   throw lastError;
+}
+
+// ============================================================================
+// Grouped, debounced welcome announcer
+// ============================================================================
+// The rich card is DMed per user; the main channel only gets a short, grouped
+// shout-out ("Please welcome @a, and @b!"). To avoid clogging the channel when
+// several people are approved in a burst, we buffer approvals per guild and
+// flush one combined line after a short quiet period (or once the group is
+// large enough / the max window elapses).
+
+interface AnnounceBuffer {
+  channel: GuildTextBasedChannel;
+  guildId: string;
+  rolePingId: string | null;
+  members: Map<string, GuildMember>;
+  timer: ReturnType<typeof setTimeout> | null;
+  firstAt: number;
+}
+
+const announceBuffers = new Map<string, AnnounceBuffer>();
+const ANNOUNCE_DEBOUNCE_MS = 10_000; // wait this long for more approvals
+const ANNOUNCE_MAX_WINDOW_MS = 60_000; // never delay the first person past this
+const ANNOUNCE_MAX_GROUP = 20; // flush immediately once this many are buffered
+
+/**
+ * formatWelcomeAnnounce
+ * WHAT: Builds the grouped welcome line, English-style comma/"and" joined.
+ * Examples: "Please welcome @a!", "Please welcome @a, and @b!",
+ *           "Please welcome @a, @b, and @c!". Role ping (if any) is prepended.
+ */
+export function formatWelcomeAnnounce(mentions: string[], rolePingId: string | null): string {
+  let names: string;
+  if (mentions.length <= 1) {
+    names = mentions[0] ?? "";
+  } else if (mentions.length === 2) {
+    names = `${mentions[0]}, and ${mentions[1]}`;
+  } else {
+    names = `${mentions.slice(0, -1).join(", ")}, and ${mentions[mentions.length - 1]}`;
+  }
+  const line = `Please welcome ${names}!`;
+  return rolePingId ? `<@&${rolePingId}> ${line}` : line;
+}
+
+function scheduleAnnounceFlush(buf: AnnounceBuffer): void {
+  if (buf.timer) clearTimeout(buf.timer);
+  const elapsed = Date.now() - buf.firstAt;
+  const wait = Math.max(0, Math.min(ANNOUNCE_DEBOUNCE_MS, ANNOUNCE_MAX_WINDOW_MS - elapsed));
+  buf.timer = setTimeout(() => {
+    void flushWelcomeAnnounce(buf.guildId);
+  }, wait);
+  // Don't keep the event loop alive just for a welcome flush.
+  if (typeof buf.timer === "object" && buf.timer && "unref" in buf.timer) {
+    (buf.timer as { unref: () => void }).unref();
+  }
+}
+
+/**
+ * enqueueWelcomeAnnounce
+ * WHAT: Adds a member to the guild's pending welcome group and (re)arms the
+ *       debounce timer. Flushes immediately once the group hits the cap.
+ */
+function enqueueWelcomeAnnounce(
+  channel: GuildTextBasedChannel,
+  guild: Guild,
+  member: GuildMember,
+  rolePingId: string | null
+): void {
+  let buf = announceBuffers.get(guild.id);
+  if (!buf) {
+    buf = {
+      channel,
+      guildId: guild.id,
+      rolePingId,
+      members: new Map(),
+      timer: null,
+      firstAt: Date.now(),
+    };
+    announceBuffers.set(guild.id, buf);
+  } else {
+    // Keep the freshest channel/role reference in case config changed.
+    buf.channel = channel;
+    buf.rolePingId = rolePingId;
+  }
+  buf.members.set(member.id, member);
+
+  if (buf.members.size >= ANNOUNCE_MAX_GROUP) {
+    void flushWelcomeAnnounce(guild.id);
+  } else {
+    scheduleAnnounceFlush(buf);
+  }
+}
+
+/**
+ * flushWelcomeAnnounce
+ * WHAT: Posts the grouped welcome line for a guild now, clearing the buffer.
+ * WHY: Exported so the manual /welcomebatch send path and graceful shutdown can
+ *      force an immediate flush instead of waiting on the debounce timer.
+ */
+export async function flushWelcomeAnnounce(guildId: string): Promise<void> {
+  const buf = announceBuffers.get(guildId);
+  if (!buf) return;
+  if (buf.timer) clearTimeout(buf.timer);
+  announceBuffers.delete(guildId);
+
+  const members = [...buf.members.values()];
+  if (members.length === 0) return;
+
+  const mentions = members.map((m) => `<@${m.id}>`);
+  const content = formatWelcomeAnnounce(mentions, buf.rolePingId);
+  const allowedMentions = {
+    users: members.map((m) => m.id),
+    roles: buf.rolePingId ? [buf.rolePingId] : [],
+  };
+
+  try {
+    const message = await sendChannelLine(buf.channel, guildId, content, allowedMentions);
+    logger.info(
+      {
+        guildId,
+        channelId: buf.channel.id,
+        messageId: message.id,
+        userCount: members.length,
+        userIds: members.map((m) => m.id),
+      },
+      "[welcome] posted grouped welcome line"
+    );
+  } catch (err) {
+    logger.error(
+      { err, guildId, channelId: buf.channel.id, userCount: members.length },
+      "[welcome] failed to post grouped welcome line"
+    );
+  }
 }
 
 /**
@@ -189,54 +322,35 @@ async function deliverWelcomeDm(
 
 /**
  * postWelcomeCard
- * WHAT: DMs the rich welcome embed to the user and posts a one-sentence welcome
- *       line (non-embed) to the configured general channel with the welcome ping.
- * WHY: Members get the full card privately; the channel just gets a short, pinged
- *      shout-out so the welcome ping role is notified without channel clutter.
+ * WHAT: DMs the rich welcome embed to the user, then adds them to the guild's
+ *       grouped channel shout-out (debounced; no embed in the channel).
+ * WHY: Members get the full card privately; the main channel only gets a short,
+ *      grouped "Please welcome @a, and @b!" line so welcomes don't clog chat.
  * PARAMS:
  *  - guild: Discord Guild instance
  *  - user: GuildMember being welcomed
  *  - config: GuildConfig with channel/role IDs
  *  - memberCount: Current server member count
- * RETURNS: The posted channel Message, or throws on failure.
- * THROWS: Error if channel is missing/invalid or bot lacks permissions.
+ * THROWS: Error if channel is missing/invalid or bot lacks permissions (so the
+ *         caller can surface a misconfiguration note at approval time).
  */
 export async function postWelcomeCard(opts: {
   guild: Guild;
   user: GuildMember;
   config: GuildConfig;
   memberCount: number;
-}): Promise<Message> {
+}): Promise<void> {
   const { guild, user, config, memberCount } = opts;
 
+  // Validate the channel up front so misconfig surfaces now, even though the
+  // actual channel line is posted later by the grouped announcer.
   const channel = await fetchGeneralChannel(guild, config);
 
-  // DM the rich embed first (best-effort).
-  const dmDelivered = await deliverWelcomeDm(guild, user, config, memberCount);
+  // DM the rich embed (best-effort; fails soft if the user has DMs closed).
+  await deliverWelcomeDm(guild, user, config, memberCount);
 
-  // One-sentence channel shout-out with pings (user + optional welcome role).
-  // The ping lives in content, not an embed: Discord only notifies on content mentions.
-  const contentParts = [`<@${user.id}>`];
-  if (config.welcome_ping_role_id) {
-    contentParts.push(`<@&${config.welcome_ping_role_id}>`);
-  }
-  const content = `${contentParts.join(" ")} Welcome to **${guild.name}**! 🐾`;
-
-  // allowedMentions is a security measure: even if content somehow contained
-  // @everyone, Discord only pings the IDs we explicitly whitelist here.
-  const allowedMentions = {
-    users: [user.id],
-    roles: config.welcome_ping_role_id ? [config.welcome_ping_role_id] : [],
-  };
-
-  const message = await sendChannelLine(channel, guild, content, allowedMentions);
-
-  logger.info(
-    { guildId: guild.id, channelId: channel.id, messageId: message.id, userId: user.id, dmDelivered },
-    "[welcome] posted welcome (embed via DM, line in channel)"
-  );
-
-  return message;
+  // Buffer the member for the grouped, debounced channel shout-out.
+  enqueueWelcomeAnnounce(channel, guild, user, config.welcome_ping_role_id ?? null);
 }
 
 /**
@@ -250,55 +364,25 @@ export async function postBatchWelcomeCard(opts: {
   users: GuildMember[];
   config: GuildConfig;
   memberCount: number;
-}): Promise<Message> {
+}): Promise<void> {
   const { guild, users, config, memberCount } = opts;
 
   if (users.length === 0) throw new Error("postBatchWelcomeCard: empty users");
-  if (users.length === 1) {
-    return postWelcomeCard({ guild, user: users[0]!, config, memberCount });
-  }
 
   const channel = await fetchGeneralChannel(guild, config);
 
-  // Discord allowedMentions caps role mentions but user mentions are bounded by message length.
-  // We cap at 25 to keep the line readable and stay safely under any limits.
-  const MAX_USERS_PER_CARD = 25;
-  const cappedUsers = users.slice(0, MAX_USERS_PER_CARD);
-  const userMentions = cappedUsers.map((u) => `<@${u.id}>`);
+  // Cap at 20 to match the grouped-line cap and keep the line readable.
+  const cappedUsers = users.slice(0, ANNOUNCE_MAX_GROUP);
 
   // DM the rich embed to each user individually (best-effort, in parallel).
-  const dmResults = await Promise.all(
-    cappedUsers.map((u) => deliverWelcomeDm(guild, u, config, memberCount))
-  );
-  const dmDelivered = dmResults.filter(Boolean).length;
+  await Promise.all(cappedUsers.map((u) => deliverWelcomeDm(guild, u, config, memberCount)));
 
-  // One-sentence channel shout-out mentioning everyone + optional welcome role.
-  const contentParts = [...userMentions];
-  if (config.welcome_ping_role_id) {
-    contentParts.push(`<@&${config.welcome_ping_role_id}>`);
+  // Buffer all of them, then flush immediately — this is an explicit "send now"
+  // (e.g. /welcomebatch send), so we don't wait on the debounce timer.
+  for (const u of cappedUsers) {
+    enqueueWelcomeAnnounce(channel, guild, u, config.welcome_ping_role_id ?? null);
   }
-  const content = `${contentParts.join(" ")} Welcome to **${guild.name}**! 🐾`;
-
-  const allowedMentions = {
-    users: cappedUsers.map((u) => u.id),
-    roles: config.welcome_ping_role_id ? [config.welcome_ping_role_id] : [],
-  };
-
-  const message = await sendChannelLine(channel, guild, content, allowedMentions);
-
-  logger.info(
-    {
-      guildId: guild.id,
-      channelId: channel.id,
-      messageId: message.id,
-      userCount: cappedUsers.length,
-      userIds: cappedUsers.map((u) => u.id),
-      dmDelivered,
-    },
-    "[welcome] posted batch welcome (embeds via DM, line in channel)"
-  );
-
-  return message;
+  await flushWelcomeAnnounce(guild.id);
 }
 
 /**

@@ -114,7 +114,7 @@ export function tryEnqueueWelcome(member: GuildMember): boolean {
 export type FlushResult =
   | { kind: "no_session" }
   | { kind: "empty"; openedBy: string }
-  | { kind: "sent"; userCount: number; messageId: string }
+  | { kind: "sent"; userCount: number }
   | { kind: "error"; userCount: number; error: string };
 
 export async function flushSession(
@@ -137,15 +137,16 @@ export async function flushSession(
   sessions.delete(guild.id);
 
   try {
-    const message =
-      usersToSend.length === 1
-        ? await postWelcomeCard({ guild, user: usersToSend[0]!, config, memberCount })
-        : await postBatchWelcomeCard({ guild, users: usersToSend, config, memberCount });
+    if (usersToSend.length === 1) {
+      await postWelcomeCard({ guild, user: usersToSend[0]!, config, memberCount });
+    } else {
+      await postBatchWelcomeCard({ guild, users: usersToSend, config, memberCount });
+    }
     logger.info(
-      { guildId: guild.id, userCount: usersToSend.length, messageId: message.id },
+      { guildId: guild.id, userCount: usersToSend.length },
       "[welcomeBatch] flushed batch welcome"
     );
-    return { kind: "sent", userCount: usersToSend.length, messageId: message.id };
+    return { kind: "sent", userCount: usersToSend.length };
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
     logger.error(
