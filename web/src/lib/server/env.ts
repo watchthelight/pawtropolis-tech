@@ -26,3 +26,13 @@ export function getSessionSecret(): string {
 export function getOAuth2RedirectUri(): string {
   return (_oauthRedirect ??= getRequired("OAUTH2_REDIRECT_URI"));
 }
+
+/**
+ * Cookie domain for the OAuth state cookie: the redirect URI's hostname, so
+ * the cookie is shared across www and apex. Undefined for localhost dev
+ * (browsers reject Domain=localhost).
+ */
+export function stateCookieDomain(): string | undefined {
+  const host = new URL(getOAuth2RedirectUri()).hostname;
+  return host === "localhost" || host === "127.0.0.1" ? undefined : host;
+}

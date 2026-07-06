@@ -1,15 +1,19 @@
 import { redirect } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import crypto from "node:crypto";
+import { stateCookieDomain } from "$lib/server/env";
 
 export const GET: RequestHandler = async ({ cookies }) => {
   const state = crypto.randomBytes(16).toString("hex");
+  // Domain-scoped so a login started on www.pawtropolis.tech survives the
+  // callback on the apex domain (redirect_uri is always apex).
   cookies.set("oauth_state", state, {
     path: "/",
     httpOnly: true,
     secure: true,
     sameSite: "lax",
     maxAge: 600, // 10 minutes
+    domain: stateCookieDomain(),
   });
 
   const params = new URLSearchParams({

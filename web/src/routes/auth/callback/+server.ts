@@ -9,15 +9,15 @@ import {
 } from "$lib/server/discord";
 import { detectTier, BOT_OWNER_UID } from "$lib/server/roles";
 import { setSession } from "$lib/server/session";
-import { getGuildId, getOAuth2RedirectUri } from "$lib/server/env";
+import { getGuildId, getOAuth2RedirectUri, stateCookieDomain } from "$lib/server/env";
 
 export const GET: RequestHandler = async ({ url, cookies }) => {
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
   const storedState = cookies.get("oauth_state");
 
-  // Clear state cookie
-  cookies.delete("oauth_state", { path: "/" });
+  // Clear state cookie (same domain scope as the set in /auth/login)
+  cookies.delete("oauth_state", { path: "/", domain: stateCookieDomain() });
 
   // Validate state
   if (!code || !state || state !== storedState) {
