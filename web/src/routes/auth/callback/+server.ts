@@ -7,7 +7,7 @@ import {
   avatarUrl,
   bannerUrl,
 } from "$lib/server/discord";
-import { detectTier } from "$lib/server/roles";
+import { detectTier, BOT_OWNER_UID } from "$lib/server/roles";
 import { setSession } from "$lib/server/session";
 import { getGuildId, getOAuth2RedirectUri } from "$lib/server/env";
 
@@ -33,17 +33,21 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
     // Note: accent_color=0 means Discord returned black (Nitro theme colors not in API)
     // Client-side avatar color extraction handles this as fallback
 
-    // Fetch guild member (includes roles)
-    let member;
+    // Fetch guild member (includes roles). Bot owner may not be in the guild:
+    // detectTier grants owner tier by user ID, so skip the membership gate for them.
+    let member = null;
     try {
       member = await fetchGuildMember(tokens.access_token, getGuildId());
     } catch {
-      error(403, "You must be a member of the Pawtropolis server to access this dashboard.");
+      if (user.id !== BOT_OWNER_UID) {
+        error(403, "You must be a member of the Pawtropolis server to access this dashboard.");
+      }
     }
 
     // Detect dashboard tier from roles
-    console.log(`[auth] user=${user.id} roles=${JSON.stringify(member.roles)}`);
-    const tier = detectTier(member.roles, user.id);
+    const roles = member?.roles ?? [];
+    console.log(`[auth] user=${user.id} roles=${JSON.stringify(roles)}`);
+    const tier = detectTier(roles, user.id);
     if (tier === "none") {
       error(403, "You do not have a staff role in Pawtropolis. Access denied.");
     }
@@ -59,7 +63,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
       avatarUrl: avatarUrl(user, 256),
       bannerUrl: bannerUrl(user, 600),
       tier,
-      roles: member.roles,
+      roles,
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token,
       expiresAt: Date.now() + tokens.expires_in * 1000,
