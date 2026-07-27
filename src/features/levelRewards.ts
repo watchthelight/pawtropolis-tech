@@ -20,6 +20,8 @@ import {
 } from "./roleAutomation.js";
 import { isPanicMode } from "./panicStore.js";
 import { logActionPretty } from "../logging/pretty.js";
+import { getConfig } from "../lib/config.js";
+import { levelRewardDmEnabled } from "./levelRewardDmPref.js";
 
 /**
  * Handle when a user receives a level role from Amaribot.
@@ -256,15 +258,19 @@ export async function handleLevelRoleAdded(
       // DM the user about their rewards first, so we can log the status
       const rewardList = grantedRewards.map(r => `**${r.name}**`).join(", ");
       let dmStatus = "✅ DM Sent";
-      const rewardEmbed = new EmbedBuilder()
-        .setColor(0xf59e0b)
-        .setTitle("Level Rewards Unlocked! 🎉")
-        .setDescription(`Thanks for being a part of our community! We slid ya ${rewardList} for reaching **Level ${level}**!`);
-      await member.send({ embeds: [rewardEmbed] }).catch((err) => {
-        dmStatus = "❌ DM Failed (closed)";
-        logger.debug({ err, guildId: guild.id, userId: member.id },
-          "[levelRewards] Could not DM user about rewards");
-      });
+      if (levelRewardDmEnabled(getConfig(guild.id))) {
+        const rewardEmbed = new EmbedBuilder()
+          .setColor(0xf59e0b)
+          .setTitle("Level Rewards Unlocked! 🎉")
+          .setDescription(`Thanks for being a part of our community! We slid ya ${rewardList} for reaching **Level ${level}**!`);
+        await member.send({ embeds: [rewardEmbed] }).catch((err) => {
+          dmStatus = "❌ DM Failed (closed)";
+          logger.debug({ err, guildId: guild.id, userId: member.id },
+            "[levelRewards] Could not DM user about rewards");
+        });
+      } else {
+        dmStatus = "➖ DM Disabled (config)";
+      }
 
       await logActionPretty(guild, {
         actorId: botId,
