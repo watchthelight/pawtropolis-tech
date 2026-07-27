@@ -152,6 +152,8 @@ export type GuildConfig = {
   nsfw_alert_role_id?: string | null;
   // Banner sync toggle
   banner_sync_enabled?: number | null; // 1=enabled, 0=disabled (default: 1)
+  // Level reward DM toggle (082 migration)
+  level_reward_dm_enabled?: number | null; // 1=DM on reward grant (default), 0=silent
   // QOTD suggestion system (056_qotd migration)
   qotd_review_channel_id?: string | null;
   qotd_role_id?: string | null;
@@ -664,6 +666,7 @@ export function upsertConfig(guildId: string, partial: Partial<Omit<GuildConfig,
       "circuit_breaker_threshold", "circuit_breaker_reset_ms",
       "avatar_scan_hard_threshold", "avatar_scan_soft_threshold", "avatar_scan_racy_threshold",
       "flag_rate_limit_ms", "flag_cooldown_ttl_ms", "nsfw_alert_role_id", "banner_sync_enabled",
+      "level_reward_dm_enabled",
       "qotd_review_channel_id", "qotd_role_id", "pulse_excluded_category_ids_json",
       "vote_out_threshold",
       "verify_thread_parent_id", "unverified_rules_channel_id",

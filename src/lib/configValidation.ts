@@ -127,6 +127,7 @@ export const CONFIG_FIELD_RULES: Record<string, FieldRule> = {
   notify_mode:             { type: "text",    section: "Notifications", label: "Notify Mode",    minTier: "admin", choices: ["post", "dm", "off"] },
   notify_cooldown_seconds: { type: "seconds", section: "Notifications", label: "Cooldown",       minTier: "sa",    min: 1, max: 60, integer: true },
   notify_max_per_hour:     { type: "number",  section: "Notifications", label: "Max Per Hour",   minTier: "sa",    min: 1, max: 100, integer: true },
+  level_reward_dm_enabled: { type: "bool",    section: "Notifications", label: "Level Reward DMs", minTier: "admin" },
 
   // ─── Artist (admin+) ──────────────────────────────────────────────
   artist_ticket_roles_json:  { type: "json", section: "Artist", label: "Ticket Roles",  minTier: "admin", nullable: true },

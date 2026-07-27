@@ -432,6 +432,12 @@ export const CONFIG_FIELD_RULES: Record<string, FieldRule> = {
     max: 100,
     integer: true,
   },
+  level_reward_dm_enabled: {
+    type: "bool",
+    section: "Notifications",
+    label: "Level Reward DMs",
+    minTier: "admin",
+  },
 
   // Artist
   artist_ticket_roles_json: {
