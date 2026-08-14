@@ -112,14 +112,21 @@ The hierarchy below lists every staff role in rank order. Each entry describes t
 - Provides training and mentorship to new mods.
 - Acts as liaison between Mods and Admins/Community Managers.
 
-### Moderator(s) / Junior Moderator(s)
+### Moderator(s)
 
 - Enforces rules fairly and consistently across the server.
 - Manages behavior in text and voice channels.
-- Uses appropriate tools (warn, mute, kick, ban) following the server's escalation guidelines.
+- Uses the full tool set (warn, mute, kick, ban) following the server's escalation guidelines.
 - Files proper modlogs and communicates issues internally.
 - Maintains a helpful, approachable presence within the community.
-- Junior Moderators handle the same day-to-day moderation work as Moderators with closer mentor oversight; they typically do not take lead on H-3 cases.
+
+### Junior Moderator(s)
+
+- Handles the same day-to-day moderation work as Moderators with closer mentor oversight.
+- **Warn and mute only. Junior Moderators cannot kick or ban.** Anything that removes a member from the server needs a full Moderator or above.
+- Warns still count toward the warn threshold, so the escalation ladder keeps running: once a user crosses the threshold, the bot applies the automated action on its own.
+- If a case needs a kick or ban before that point, log the evidence and pull in a Moderator+ instead of trying to run the command.
+- Does not take lead on H-3 cases.
 
 ### Gatekeeper
 
@@ -296,6 +303,8 @@ Mutes: Muting can be an effective tool to halt users in their tracks from commit
 *Please follow our escalation guidelines for duration.*
 
 #### Kicking/Banning
+
+**Rank requirement:** Moderator or above. Junior Moderators do not have kick or ban and must hand the case to a full Moderator.
 
 **Kicks:** Kicking removes a user from the server. However, the user can rejoin at anytime. Unlike where a ban is permanent. It can be used in scenarios where a user has violated a set of rules after an event. This is a much softer approach than a ban.
 
@@ -1362,13 +1371,13 @@ Flagged users show warning badges on their applications, alerting reviewers to l
 
 ### Commands
 
-| Action | Command |
-|--------|---------|
-| Warn | `/warn user: @user reason: text` |
-| Mute | `/mute user: @user limit: duration reason: text` |
-| Kick | `/kick user: @user reason: text` |
-| Ban | `/ban user: @user reason: text preserve_messages: true` |
-| Check AI Art | `/isitreal message: <id or link>` |
+| Action | Command | Minimum rank |
+|--------|---------|--------------|
+| Warn | `/warn user: @user reason: text` | Junior Moderator |
+| Mute | `/mute user: @user limit: duration reason: text` | Junior Moderator |
+| Kick | `/kick user: @user reason: text` | Moderator |
+| Ban | `/ban user: @user reason: text preserve_messages: true` | Moderator |
+| Check AI Art | `/isitreal message: <id or link>` | Junior Moderator |
 
 ---
 
