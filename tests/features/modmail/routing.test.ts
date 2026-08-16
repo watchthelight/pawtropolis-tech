@@ -85,6 +85,7 @@ import {
   routeDmToThread,
   handleInboundDmForModmail,
   handleInboundThreadMessageForModmail,
+  DELIVERY_ACK_EMOJI,
 } from "../../../src/features/modmail/routing.js";
 import {
   getTicketByThread,
@@ -1275,6 +1276,102 @@ describe("routeDmToThread — hardening additions", () => {
     expect(mockNotifyDashboard).toHaveBeenCalledWith(
       "modmail:message_sent",
       expect.objectContaining({ ticketId: 26, staffUserId: "user-99" }),
+    );
+  });
+
+  it("REGRESSION: acks the applicant DM with a check mark after a successful relay", async () => {
+    const mockThreadSend = vi.fn().mockResolvedValue({ id: "thread-msg-ack" });
+    const mockReact = vi.fn().mockResolvedValue(undefined);
+    const message = {
+      author: {
+        bot: false,
+        id: "user-1",
+        globalName: "User",
+        username: "user",
+        displayAvatarURL: vi.fn().mockReturnValue(null),
+      },
+      id: "dm-ack",
+      content: "here is my answer",
+      attachments: new Map(),
+      reference: null,
+      react: mockReact,
+    } as any;
+    const ticket = { id: 28, thread_id: "t-ack" } as any;
+    const client = {
+      channels: {
+        fetch: vi.fn().mockResolvedValue({
+          isThread: () => true,
+          send: mockThreadSend,
+        }),
+      },
+    } as any;
+
+    await routeDmToThread(message, ticket, client);
+
+    expect(mockReact).toHaveBeenCalledWith(DELIVERY_ACK_EMOJI);
+  });
+
+  it("REGRESSION: does not ack when the relay to the thread fails", async () => {
+    const mockReact = vi.fn().mockResolvedValue(undefined);
+    const message = {
+      author: {
+        bot: false,
+        id: "user-1",
+        globalName: "User",
+        username: "user",
+        displayAvatarURL: vi.fn().mockReturnValue(null),
+      },
+      id: "dm-no-ack",
+      content: "here is my answer",
+      attachments: new Map(),
+      reference: null,
+      react: mockReact,
+    } as any;
+    const ticket = { id: 29, thread_id: "t-no-ack" } as any;
+    const client = {
+      channels: {
+        fetch: vi.fn().mockResolvedValue({
+          isThread: () => true,
+          send: vi.fn().mockRejectedValue(new Error("forbidden")),
+        }),
+      },
+    } as any;
+
+    await routeDmToThread(message, ticket, client);
+
+    expect(mockReact).not.toHaveBeenCalled();
+  });
+
+  it("REGRESSION: still persists the relay when the ack reaction fails", async () => {
+    const mockThreadSend = vi.fn().mockResolvedValue({ id: "thread-msg-ack-fail" });
+    const message = {
+      author: {
+        bot: false,
+        id: "user-1",
+        globalName: "User",
+        username: "user",
+        displayAvatarURL: vi.fn().mockReturnValue(null),
+      },
+      id: "dm-ack-fail",
+      content: "here is my answer",
+      attachments: new Map(),
+      reference: null,
+      react: vi.fn().mockRejectedValue(new Error("cannot react")),
+    } as any;
+    const ticket = { id: 30, thread_id: "t-ack-fail" } as any;
+    const client = {
+      channels: {
+        fetch: vi.fn().mockResolvedValue({
+          isThread: () => true,
+          send: mockThreadSend,
+        }),
+      },
+    } as any;
+
+    await routeDmToThread(message, ticket, client);
+
+    expect(mockInsertModmailMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ ticketId: 30, direction: "to_staff" }),
     );
   });
 

@@ -29,6 +29,8 @@ import { appendTranscript, formatContentWithAttachments } from "./transcript.js"
 import { SAFE_ALLOWED_MENTIONS } from "../../lib/constants.js";
 import { notifyDashboard } from "../../web/notifyDashboard.js";
 
+export const DELIVERY_ACK_EMOJI = "✅";
+
 // ===== Embed Builders =====
 
 /**
@@ -415,6 +417,14 @@ export async function routeDmToThread(message: Message, ticket: ModmailTicket, c
     });
 
     markForwarded(threadMessage.id);
+
+    // Applicants have no other signal that the relay worked, so a check mark on
+    // their own DM is the delivery receipt. A failed reaction must not fail the relay.
+    try {
+      await message.react(DELIVERY_ACK_EMOJI);
+    } catch (err) {
+      logger.debug({ err, ticketId: ticket.id }, "[modmail] failed to ack DM relay");
+    }
 
     // Format content with attachments for complete audit trail
     const transcriptContent = formatContentWithAttachments(message.content, message.attachments);
