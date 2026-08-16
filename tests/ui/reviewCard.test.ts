@@ -255,6 +255,28 @@ describe("reviewCard", () => {
       expect(labels).toContain("Copy UID");
     });
 
+    it("REGRESSION: keeps Vote Out when member left with votes pending", () => {
+      const rows = buildActionRowsV2(baseApp, null, {
+        memberHasLeft: true,
+        voteOutCount: 1,
+        voteOutThreshold: 2,
+      });
+      expect(rows).toHaveLength(1);
+      const labels = rows[0].components.map((c) => (c as { data: { label: string } }).data.label);
+      expect(labels).toContain("Reject (Member Left)");
+      expect(labels).toContain("Vote Out (1/2)");
+      const voteBtn = rows[0].components.find(
+        (c) => (c as { data: { label: string } }).data.label === "Vote Out (1/2)"
+      ) as { data: { custom_id: string } };
+      expect(voteBtn.data.custom_id).toBe("review:vote_out:codeAPP123");
+    });
+
+    it("omits Vote Out when member left with no votes cast", () => {
+      const rows = buildActionRowsV2(baseApp, null, { memberHasLeft: true, voteOutCount: 0 });
+      const labels = rows[0].components.map((c) => (c as { data: { label: string } }).data.label);
+      expect(labels).toEqual(["Reject (Member Left)", "Copy UID"]);
+    });
+
     it("includes app code in button custom IDs", () => {
       const rows = buildActionRowsV2(baseApp, null);
       const btn = rows[0].components[0] as { data: { custom_id: string } };

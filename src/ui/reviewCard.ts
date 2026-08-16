@@ -177,6 +177,16 @@ export function buildActionRowsV2(
         .setLabel("Copy UID")
         .setStyle(ButtonStyle.Secondary)
     );
+    // Votes already cast must stay finishable, otherwise a vote out started
+    // before the applicant left is stranded below threshold forever.
+    if (voteOutCount > 0) {
+      row.addComponents(
+        new ButtonBuilder()
+          .setCustomId(`review:vote_out:${idSuffix}`)
+          .setLabel(`Vote Out (${voteOutCount}/${voteOutThreshold})`)
+          .setStyle(ButtonStyle.Danger)
+      );
+    }
     rows.push(row);
     return rows;
   }
