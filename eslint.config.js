@@ -5,7 +5,16 @@ import prettier from "eslint-config-prettier";
 
 export default [
   {
-    ignores: ["dist/**", "node_modules/**"],
+    // Generated output is not source. Without these the lint gate spends most of
+    // its findings on minified SvelteKit bundles, which drowns the real ones.
+    ignores: [
+      "dist/**",
+      "node_modules/**",
+      "web/.svelte-kit/**",
+      "web/build/**",
+      "coverage/**",
+      "graphify-out/**",
+    ],
   },
   js.configs.recommended,
   // Configuration for TypeScript files

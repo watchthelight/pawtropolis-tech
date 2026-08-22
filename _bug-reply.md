@@ -1,5 +1,5 @@
-**Problem found:** `/redeemreward` refused Junior Mods with "You need the Ambassador role or Manage Roles permission." The handler at `redeemreward.ts:133` gated on the Ambassador role OR Manage Roles only, and Junior Mods carry neither, so the refusal fired for the whole junior tier.
+**Problem found:** Replies sent to the bot in DMs during an open modmail thread were forwarded to staff silently. The applicant got no feedback, so a message that landed fine looked identical to one that failed. `src/features/modmail/routing.ts:409` sent the relay to the staff thread and stopped there.
 
-**Fix:** The gate now passes any staff at Junior Moderator and above, plus the Ambassador role, plus Manage Roles. Redeeming an art reward is a low-risk use of role management, so the full staff team can run it. Added 5 regression tests covering the Junior Mod, Moderator, Ambassador, and Manage Roles paths plus the bare-member denial. Perms matrix and api-contracts updated to match.
+**Fix:** The applicant's own DM now gets a check mark reaction once the message is confirmed in the staff thread. The reaction fires only after the thread send succeeds, so no check mark means the relay did not go through. A failed reaction cannot break the relay itself. Three regression tests cover the ack on success, the absence of an ack on failure, and delivery surviving a reaction error.
 
-Fixed in `616bd59`. Live on next restart.
+Fixed in `6e259409`. Deployed and live.

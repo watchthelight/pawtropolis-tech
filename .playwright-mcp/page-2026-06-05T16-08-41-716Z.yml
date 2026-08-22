@@ -1,0 +1,235 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - navigation "Main navigation" [ref=e5]:
+        - generic [ref=e7]:
+          - generic [ref=e8]: Pawtropolis
+          - generic [ref=e9]: Observatory
+        - generic [ref=e10]:
+          - img "Cassiopeia" [ref=e11]
+          - generic [ref=e12]:
+            - paragraph [ref=e13]: Cassiopeia
+            - paragraph [ref=e14]: Owner / Dev
+        - list [ref=e15]:
+          - listitem [ref=e16]: Operations
+          - listitem [ref=e17]:
+            - link "Home" [ref=e18] [cursor=pointer]:
+              - /url: /dashboard
+              - img [ref=e20]
+              - generic [ref=e23]: Home
+          - listitem [ref=e24]:
+            - link "Reviews" [ref=e25] [cursor=pointer]:
+              - /url: /dashboard/reviews
+              - img [ref=e27]
+              - generic [ref=e31]: Reviews
+          - listitem [ref=e32]:
+            - link "Stats" [ref=e33] [cursor=pointer]:
+              - /url: /dashboard/stats
+              - img [ref=e35]
+              - generic [ref=e37]: Stats
+          - listitem [ref=e38]:
+            - link "Modmail" [ref=e39] [cursor=pointer]:
+              - /url: /dashboard/modmail
+              - img [ref=e41]
+              - generic [ref=e44]: Modmail
+          - listitem [ref=e45]:
+            - link "Pulse" [ref=e46] [cursor=pointer]:
+              - /url: /dashboard/pulse
+              - img [ref=e48]
+              - generic [ref=e50]: Pulse
+          - listitem [ref=e51]:
+            - link "Heatmap" [ref=e52] [cursor=pointer]:
+              - /url: /dashboard/heatmap
+              - img [ref=e54]
+              - generic [ref=e56]: Heatmap
+          - listitem [ref=e57]:
+            - link "Art" [ref=e58] [cursor=pointer]:
+              - /url: /dashboard/art
+              - img [ref=e60]
+              - generic [ref=e66]: Art
+          - listitem [ref=e67]:
+            - link "QOTD" [ref=e68] [cursor=pointer]:
+              - /url: /dashboard/qotd
+              - img [ref=e70]
+              - generic [ref=e73]: QOTD
+          - listitem [ref=e74]: Administration
+          - listitem [ref=e75]:
+            - link "Config" [ref=e76] [cursor=pointer]:
+              - /url: /dashboard/config
+              - img [ref=e78]
+              - generic [ref=e81]: Config
+          - listitem [ref=e82]:
+            - link "Audit" [ref=e83] [cursor=pointer]:
+              - /url: /dashboard/audit
+              - img [ref=e85]
+              - generic [ref=e88]: Audit
+          - listitem [ref=e89]:
+            - link "System" [ref=e90] [cursor=pointer]:
+              - /url: /dashboard/system
+              - img [ref=e92]
+              - generic [ref=e95]: System
+          - listitem [ref=e96]:
+            - link "Backfill" [ref=e97] [cursor=pointer]:
+              - /url: /dashboard/backfill
+              - generic [ref=e98]: Backfill
+          - listitem [ref=e99]: Reference
+          - listitem [ref=e100]:
+            - link "Handbook" [ref=e101] [cursor=pointer]:
+              - /url: /handbook
+              - img [ref=e103]
+              - generic [ref=e105]: Handbook
+        - generic [ref=e106]:
+          - generic [ref=e107]:
+            - button "Night" [pressed] [ref=e108] [cursor=pointer]:
+              - img [ref=e109]
+              - text: Night
+            - button "Day" [ref=e111] [cursor=pointer]:
+              - img [ref=e112]
+              - text: Day
+          - button "Appearance" [ref=e118] [cursor=pointer]:
+            - img [ref=e119]
+            - text: Appearance
+          - generic [ref=e121]: Disconnected
+          - link "Sign out" [ref=e123] [cursor=pointer]:
+            - /url: /auth/logout
+    - button "Collapse sidebar" [ref=e124] [cursor=pointer]:
+      - generic [ref=e125]: ◂
+    - main [ref=e126]:
+      - generic [ref=e127]:
+        - generic [ref=e128]:
+          - img "Cassiopeia" [ref=e129]
+          - generic [ref=e130]:
+            - heading "Welcome back, Cassiopeia" [level=1] [ref=e131]
+            - generic [ref=e132]: Owner / Dev
+        - button "Inbox zero Inbox zero Nothing waiting on you." [disabled] [ref=e133]:
+          - img [ref=e135]
+          - generic [ref=e138]:
+            - generic [ref=e139]: Inbox zero
+            - generic [ref=e140]: Inbox zero
+            - generic [ref=e141]: Nothing waiting on you.
+        - generic [ref=e142]: Your queue
+        - generic [ref=e143]:
+          - button "Pending 0 1 2 3 4 5 6 7 8 9" [ref=e144] [cursor=pointer]:
+            - generic [ref=e145]:
+              - img [ref=e146]
+              - generic [ref=e149]: Pending
+            - generic [ref=e154]:
+              - generic [ref=e155]: "0"
+              - generic [ref=e156]: "1"
+              - generic [ref=e157]: "2"
+              - generic [ref=e158]: "3"
+              - generic [ref=e159]: "4"
+              - generic [ref=e160]: "5"
+              - generic [ref=e161]: "6"
+              - generic [ref=e162]: "7"
+              - generic [ref=e163]: "8"
+              - generic [ref=e164]: "9"
+          - button "Your claims 0 1 2 3 4 5 6 7 8 9" [ref=e165] [cursor=pointer]:
+            - generic [ref=e166]:
+              - img [ref=e167]
+              - generic [ref=e171]: Your claims
+            - generic [ref=e176]:
+              - generic [ref=e177]: "0"
+              - generic [ref=e178]: "1"
+              - generic [ref=e179]: "2"
+              - generic [ref=e180]: "3"
+              - generic [ref=e181]: "4"
+              - generic [ref=e182]: "5"
+              - generic [ref=e183]: "6"
+              - generic [ref=e184]: "7"
+              - generic [ref=e185]: "8"
+              - generic [ref=e186]: "9"
+          - button "Decided today 0 1 2 3 4 5 6 7 8 9" [ref=e187] [cursor=pointer]:
+            - generic [ref=e188]:
+              - img [ref=e189]
+              - generic [ref=e192]: Decided today
+            - generic [ref=e197]:
+              - generic [ref=e198]: "0"
+              - generic [ref=e199]: "1"
+              - generic [ref=e200]: "2"
+              - generic [ref=e201]: "3"
+              - generic [ref=e202]: "4"
+              - generic [ref=e203]: "5"
+              - generic [ref=e204]: "6"
+              - generic [ref=e205]: "7"
+              - generic [ref=e206]: "8"
+              - generic [ref=e207]: "9"
+          - button "This week 0 1 2 3 4 5 6 7 8 9" [ref=e208] [cursor=pointer]:
+            - generic [ref=e209]:
+              - img [ref=e210]
+              - generic [ref=e212]: This week
+            - generic [ref=e217]:
+              - generic [ref=e218]: "0"
+              - generic [ref=e219]: "1"
+              - generic [ref=e220]: "2"
+              - generic [ref=e221]: "3"
+              - generic [ref=e222]: "4"
+              - generic [ref=e223]: "5"
+              - generic [ref=e224]: "6"
+              - generic [ref=e225]: "7"
+              - generic [ref=e226]: "8"
+              - generic [ref=e227]: "9"
+        - generic [ref=e228]: Server status
+        - button "Open modmail 0 1 2 3 4 5 6 7 8 9" [ref=e230] [cursor=pointer]:
+          - generic [ref=e231]:
+            - img [ref=e232]
+            - generic [ref=e235]: Open modmail
+          - generic [ref=e240]:
+            - generic [ref=e241]: "0"
+            - generic [ref=e242]: "1"
+            - generic [ref=e243]: "2"
+            - generic [ref=e244]: "3"
+            - generic [ref=e245]: "4"
+            - generic [ref=e246]: "5"
+            - generic [ref=e247]: "6"
+            - generic [ref=e248]: "7"
+            - generic [ref=e249]: "8"
+            - generic [ref=e250]: "9"
+        - generic [ref=e251]: Your recent activity
+        - list [ref=e252]:
+          - listitem [ref=e253]:
+            - button "📩 Replied User 378408 229d ago" [ref=e254] [cursor=pointer]:
+              - generic [ref=e255]: 📩
+              - generic [ref=e256]:
+                - generic [ref=e257]: Replied
+                - generic [ref=e258]: User 378408
+              - generic [ref=e259]: 229d ago
+          - listitem [ref=e260]:
+            - button "📩 Replied User 862417 229d ago" [ref=e261] [cursor=pointer]:
+              - generic [ref=e262]: 📩
+              - generic [ref=e263]:
+                - generic [ref=e264]: Replied
+                - generic [ref=e265]: User 862417
+              - generic [ref=e266]: 229d ago
+          - listitem [ref=e267]:
+            - button "📩 Replied User 378408 229d ago" [ref=e268] [cursor=pointer]:
+              - generic [ref=e269]: 📩
+              - generic [ref=e270]:
+                - generic [ref=e271]: Replied
+                - generic [ref=e272]: User 378408
+              - generic [ref=e273]: 229d ago
+          - listitem [ref=e274]:
+            - button "📩 Replied User 378408 229d ago" [ref=e275] [cursor=pointer]:
+              - generic [ref=e276]: 📩
+              - generic [ref=e277]:
+                - generic [ref=e278]: Replied
+                - generic [ref=e279]: User 378408
+              - generic [ref=e280]: 229d ago
+          - listitem [ref=e281]:
+            - button "📩 Replied User 378408 229d ago" [ref=e282] [cursor=pointer]:
+              - generic [ref=e283]: 📩
+              - generic [ref=e284]:
+                - generic [ref=e285]: Replied
+                - generic [ref=e286]: User 378408
+              - generic [ref=e287]: 229d ago
+          - listitem [ref=e288]:
+            - button "📩 Replied User 862417 229d ago" [ref=e289] [cursor=pointer]:
+              - generic [ref=e290]: 📩
+              - generic [ref=e291]:
+                - generic [ref=e292]: Replied
+                - generic [ref=e293]: User 862417
+              - generic [ref=e294]: 229d ago
+  - button "Theme Sage Observatory" [ref=e295] [cursor=pointer]:
+    - generic [ref=e298]:
+      - generic [ref=e299]: Theme
+      - generic [ref=e300]: Sage Observatory

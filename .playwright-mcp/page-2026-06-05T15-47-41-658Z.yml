@@ -1,0 +1,138 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - link "Handbook home" [ref=e5] [cursor=pointer]:
+      - /url: /handbook
+      - img [ref=e6]
+      - generic [ref=e12]:
+        - text: Handbook
+        - generic [ref=e13]: Pawtropolis Tech
+    - link "Sign in with Discord" [ref=e15] [cursor=pointer]:
+      - /url: /auth/login?return=/handbook
+  - generic [ref=e16]:
+    - complementary [ref=e17]:
+      - navigation "Handbook contents" [ref=e18]:
+        - heading "Documents" [level=2] [ref=e19]
+        - list [ref=e20]:
+          - listitem [ref=e21]:
+            - link "Bot Handbook Every slash command, its options, who can run it, and how to use it." [ref=e22] [cursor=pointer]:
+              - /url: /handbook/bot-handbook
+              - generic [ref=e23]: Bot Handbook
+              - generic [ref=e24]: Every slash command, its options, who can run it, and how to use it.
+          - listitem [ref=e25]:
+            - link "Moderator Handbook Staff policies, verification procedures, escalation, cross-banning." [ref=e26] [cursor=pointer]:
+              - /url: /handbook/mod-handbook
+              - generic [ref=e27]: Moderator Handbook
+              - generic [ref=e28]: Staff policies, verification procedures, escalation, cross-banning.
+          - listitem [ref=e29]:
+            - link "Permissions Matrix Role hierarchy and which tier can run each command." [ref=e30] [cursor=pointer]:
+              - /url: /handbook/perms-matrix
+              - generic [ref=e31]: Permissions Matrix
+              - generic [ref=e32]: Role hierarchy and which tier can run each command.
+          - listitem [ref=e33]:
+            - 'link "Gatekeeper Guide Onboarding for Gatekeepers: accept, reject, listopen workflow." [ref=e34] [cursor=pointer]':
+              - /url: /handbook/gatekeeper-guide
+              - generic [ref=e35]: Gatekeeper Guide
+              - generic [ref=e36]: "Onboarding for Gatekeepers: accept, reject, listopen workflow."
+          - listitem [ref=e37]:
+            - link "Moderator Guide Day-to-day moderation tooling and policies." [ref=e38] [cursor=pointer]:
+              - /url: /handbook/moderator-guide
+              - generic [ref=e39]: Moderator Guide
+              - generic [ref=e40]: Day-to-day moderation tooling and policies.
+          - listitem [ref=e41]:
+            - link "Admin Guide Configuration, audit, cleanup, role recovery." [ref=e42] [cursor=pointer]:
+              - /url: /handbook/admin-guide
+              - generic [ref=e43]: Admin Guide
+              - generic [ref=e44]: Configuration, audit, cleanup, role recovery.
+          - listitem [ref=e45]:
+            - 'link "Leadership Guide Server-wide management: backfill, database recovery, migrations." [ref=e46] [cursor=pointer]':
+              - /url: /handbook/leadership-guide
+              - generic [ref=e47]: Leadership Guide
+              - generic [ref=e48]: "Server-wide management: backfill, database recovery, migrations."
+          - listitem [ref=e49]:
+            - link "Mod Quick Reference Cheat sheet for the most-used moderation commands." [ref=e50] [cursor=pointer]:
+              - /url: /handbook/mod-quickref
+              - generic [ref=e51]: Mod Quick Reference
+              - generic [ref=e52]: Cheat sheet for the most-used moderation commands.
+          - listitem [ref=e53]:
+            - 'link "Ticket System Guide First-party tickets: panel, close, manual reassign." [ref=e54] [cursor=pointer]':
+              - /url: /handbook/ticket-system
+              - generic [ref=e55]: Ticket System Guide
+              - generic [ref=e56]: "First-party tickets: panel, close, manual reassign."
+          - listitem [ref=e57]:
+            - link "Slash Commands (Quick) Short index pointing into the Bot Handbook." [ref=e58] [cursor=pointer]:
+              - /url: /handbook/slash-commands
+              - generic [ref=e59]: Slash Commands (Quick)
+              - generic [ref=e60]: Short index pointing into the Bot Handbook.
+        - paragraph [ref=e61]: Sign in to unlock the staff-only sections inline.
+    - main [ref=e62]:
+      - article [ref=e63]:
+        - generic [ref=e64]:
+          - heading "Pawtropolis Handbook" [level=1] [ref=e65]
+          - paragraph [ref=e66]: Every command, every policy, every escalation. Filtered by what your Discord role can actually run.
+        - generic [ref=e67]:
+          - generic [ref=e68]:
+            - generic [ref=e69]: Not signed in
+            - strong [ref=e70]: Reading public content only
+            - generic [ref=e71]: Sign in with Discord to unlock staff-only sections.
+          - link "Sign in with Discord" [ref=e72] [cursor=pointer]:
+            - /url: /auth/login?return=/handbook
+        - generic [ref=e73]:
+          - heading "All documents" [level=2] [ref=e74]
+          - list [ref=e75]:
+            - listitem [ref=e76]:
+              - link "Bot Handbook Every slash command, its options, who can run it, and how to use it." [ref=e77] [cursor=pointer]:
+                - /url: /handbook/bot-handbook
+                - heading "Bot Handbook" [level=3] [ref=e78]
+                - paragraph [ref=e79]: Every slash command, its options, who can run it, and how to use it.
+            - listitem [ref=e80]:
+              - link "Moderator Handbook Staff policies, verification procedures, escalation, cross-banning. Sign in to read" [ref=e81] [cursor=pointer]:
+                - /url: /handbook/mod-handbook
+                - heading "Moderator Handbook" [level=3] [ref=e82]
+                - paragraph [ref=e83]: Staff policies, verification procedures, escalation, cross-banning.
+                - generic [ref=e84]: Sign in to read
+            - listitem [ref=e85]:
+              - link "Permissions Matrix Role hierarchy and which tier can run each command." [ref=e86] [cursor=pointer]:
+                - /url: /handbook/perms-matrix
+                - heading "Permissions Matrix" [level=3] [ref=e87]
+                - paragraph [ref=e88]: Role hierarchy and which tier can run each command.
+            - listitem [ref=e89]:
+              - 'link "Gatekeeper Guide Onboarding for Gatekeepers: accept, reject, listopen workflow. Sign in to read" [ref=e90] [cursor=pointer]':
+                - /url: /handbook/gatekeeper-guide
+                - heading "Gatekeeper Guide" [level=3] [ref=e91]
+                - paragraph [ref=e92]: "Onboarding for Gatekeepers: accept, reject, listopen workflow."
+                - generic [ref=e93]: Sign in to read
+            - listitem [ref=e94]:
+              - link "Moderator Guide Day-to-day moderation tooling and policies. Sign in to read" [ref=e95] [cursor=pointer]:
+                - /url: /handbook/moderator-guide
+                - heading "Moderator Guide" [level=3] [ref=e96]
+                - paragraph [ref=e97]: Day-to-day moderation tooling and policies.
+                - generic [ref=e98]: Sign in to read
+            - listitem [ref=e99]:
+              - link "Admin Guide Configuration, audit, cleanup, role recovery. Sign in to read" [ref=e100] [cursor=pointer]:
+                - /url: /handbook/admin-guide
+                - heading "Admin Guide" [level=3] [ref=e101]
+                - paragraph [ref=e102]: Configuration, audit, cleanup, role recovery.
+                - generic [ref=e103]: Sign in to read
+            - listitem [ref=e104]:
+              - 'link "Leadership Guide Server-wide management: backfill, database recovery, migrations. Sign in to read" [ref=e105] [cursor=pointer]':
+                - /url: /handbook/leadership-guide
+                - heading "Leadership Guide" [level=3] [ref=e106]
+                - paragraph [ref=e107]: "Server-wide management: backfill, database recovery, migrations."
+                - generic [ref=e108]: Sign in to read
+            - listitem [ref=e109]:
+              - link "Mod Quick Reference Cheat sheet for the most-used moderation commands. Sign in to read" [ref=e110] [cursor=pointer]:
+                - /url: /handbook/mod-quickref
+                - heading "Mod Quick Reference" [level=3] [ref=e111]
+                - paragraph [ref=e112]: Cheat sheet for the most-used moderation commands.
+                - generic [ref=e113]: Sign in to read
+            - listitem [ref=e114]:
+              - 'link "Ticket System Guide First-party tickets: panel, close, manual reassign. Sign in to read" [ref=e115] [cursor=pointer]':
+                - /url: /handbook/ticket-system
+                - heading "Ticket System Guide" [level=3] [ref=e116]
+                - paragraph [ref=e117]: "First-party tickets: panel, close, manual reassign."
+                - generic [ref=e118]: Sign in to read
+            - listitem [ref=e119]:
+              - link "Slash Commands (Quick) Short index pointing into the Bot Handbook." [ref=e120] [cursor=pointer]:
+                - /url: /handbook/slash-commands
+                - heading "Slash Commands (Quick)" [level=3] [ref=e121]
+                - paragraph [ref=e122]: Short index pointing into the Bot Handbook.

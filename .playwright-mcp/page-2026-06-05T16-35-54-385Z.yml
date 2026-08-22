@@ -1,0 +1,613 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - navigation "Main navigation" [ref=e5]:
+        - generic [ref=e7]:
+          - generic [ref=e8]: Pawtropolis
+          - generic [ref=e9]: Observatory
+        - generic [ref=e10]:
+          - img "Cassiopeia" [ref=e11]
+          - generic [ref=e12]:
+            - paragraph [ref=e13]: Cassiopeia
+            - paragraph [ref=e14]: Owner / Dev
+        - list [ref=e15]:
+          - listitem [ref=e16]: Operations
+          - listitem [ref=e17]:
+            - link "Home" [ref=e18] [cursor=pointer]:
+              - /url: /dashboard
+              - img [ref=e20]
+              - generic [ref=e23]: Home
+          - listitem [ref=e24]:
+            - link "Reviews" [ref=e25] [cursor=pointer]:
+              - /url: /dashboard/reviews
+              - img [ref=e27]
+              - generic [ref=e31]: Reviews
+          - listitem [ref=e32]:
+            - link "Stats" [ref=e33] [cursor=pointer]:
+              - /url: /dashboard/stats
+              - img [ref=e35]
+              - generic [ref=e37]: Stats
+          - listitem [ref=e38]:
+            - link "Modmail" [ref=e39] [cursor=pointer]:
+              - /url: /dashboard/modmail
+              - img [ref=e41]
+              - generic [ref=e44]: Modmail
+          - listitem [ref=e45]:
+            - link "Pulse" [ref=e46] [cursor=pointer]:
+              - /url: /dashboard/pulse
+              - img [ref=e48]
+              - generic [ref=e50]: Pulse
+          - listitem [ref=e51]:
+            - link "Heatmap" [ref=e52] [cursor=pointer]:
+              - /url: /dashboard/heatmap
+              - img [ref=e54]
+              - generic [ref=e56]: Heatmap
+          - listitem [ref=e57]:
+            - link "Art" [ref=e58] [cursor=pointer]:
+              - /url: /dashboard/art
+              - img [ref=e60]
+              - generic [ref=e66]: Art
+          - listitem [ref=e67]:
+            - link "QOTD" [ref=e68] [cursor=pointer]:
+              - /url: /dashboard/qotd
+              - img [ref=e70]
+              - generic [ref=e73]: QOTD
+          - listitem [ref=e74]: Administration
+          - listitem [ref=e75]:
+            - link "Config" [ref=e76] [cursor=pointer]:
+              - /url: /dashboard/config
+              - img [ref=e78]
+              - generic [ref=e81]: Config
+          - listitem [ref=e82]:
+            - link "Audit" [ref=e83] [cursor=pointer]:
+              - /url: /dashboard/audit
+              - img [ref=e85]
+              - generic [ref=e88]: Audit
+          - listitem [ref=e89]:
+            - link "System" [ref=e90] [cursor=pointer]:
+              - /url: /dashboard/system
+              - img [ref=e92]
+              - generic [ref=e95]: System
+          - listitem [ref=e96]:
+            - link "Backfill" [ref=e97] [cursor=pointer]:
+              - /url: /dashboard/backfill
+              - generic [ref=e98]: Backfill
+          - listitem [ref=e99]: Reference
+          - listitem [ref=e100]:
+            - link "Handbook" [ref=e101] [cursor=pointer]:
+              - /url: /handbook
+              - img [ref=e103]
+              - generic [ref=e105]: Handbook
+        - generic [ref=e106]:
+          - generic [ref=e107]:
+            - button "Night" [pressed] [ref=e108] [cursor=pointer]:
+              - img [ref=e109]
+              - text: Night
+            - button "Day" [ref=e111] [cursor=pointer]:
+              - img [ref=e112]
+              - text: Day
+          - button "Appearance" [ref=e118] [cursor=pointer]:
+            - img [ref=e119]
+            - text: Appearance
+          - generic [ref=e121]: Disconnected
+          - link "Sign out" [ref=e123] [cursor=pointer]:
+            - /url: /auth/logout
+    - button "Collapse sidebar" [ref=e124] [cursor=pointer]:
+      - generic [ref=e125]: ◂
+    - main [ref=e126]:
+      - generic [ref=e127]:
+        - generic [ref=e128]:
+          - heading "Config" [level=1] [ref=e130]
+          - paragraph [ref=e131]: Bot and guild settings
+        - link "Welcome message editor Visual editor with channel and role autocomplete, live Discord preview" [ref=e132] [cursor=pointer]:
+          - /url: /dashboard/config/welcome
+          - img [ref=e134]
+          - generic [ref=e136]:
+            - generic [ref=e137]: Welcome message editor
+            - generic [ref=e138]: Visual editor with channel and role autocomplete, live Discord preview
+          - generic [ref=e139]: →
+        - generic [ref=e140]:
+          - generic [ref=e141]:
+            - button "Channels 15" [ref=e142] [cursor=pointer]:
+              - generic [ref=e143]: Channels
+              - generic [ref=e144]: "15"
+              - img [ref=e146]
+            - generic [ref=e148]:
+              - generic [ref=e149]:
+                - generic [ref=e150]: Review Channel
+                - generic [ref=e152] [cursor=pointer]:
+                  - button "1429319745605206082" [ref=e153]:
+                    - generic [ref=e154]: "1429319745605206082"
+                    - img [ref=e156]
+                  - generic "Click to edit" [ref=e159]:
+                    - img [ref=e160]
+              - generic [ref=e162]:
+                - generic [ref=e163]: Gate Channel
+                - generic [ref=e165] [cursor=pointer]:
+                  - button "1429319745605206078" [ref=e166]:
+                    - generic [ref=e167]: "1429319745605206078"
+                    - img [ref=e169]
+                  - generic "Click to edit" [ref=e172]:
+                    - img [ref=e173]
+              - generic [ref=e175]:
+                - generic [ref=e176]: Unverified Channel
+                - generic [ref=e178] [cursor=pointer]:
+                  - button "1429319785161822418" [ref=e179]:
+                    - generic [ref=e180]: "1429319785161822418"
+                    - img [ref=e182]
+                  - generic "Click to edit" [ref=e185]:
+                    - img [ref=e186]
+              - generic [ref=e188]:
+                - generic [ref=e189]: General Channel
+                - generic [ref=e191] [cursor=pointer]:
+                  - button "1429319745605206077" [ref=e192]:
+                    - generic [ref=e193]: "1429319745605206077"
+                    - img [ref=e195]
+                  - generic "Click to edit" [ref=e198]:
+                    - img [ref=e199]
+              - generic [ref=e201]:
+                - generic [ref=e202]: Info Channel
+                - generic [ref=e204] [cursor=pointer]:
+                  - generic [ref=e205]: —
+                  - generic "Click to edit" [ref=e206]:
+                    - img [ref=e207]
+              - generic [ref=e209]:
+                - generic [ref=e210]: Rules Channel
+                - generic [ref=e212] [cursor=pointer]:
+                  - generic [ref=e213]: —
+                  - generic "Click to edit" [ref=e214]:
+                    - img [ref=e215]
+              - generic [ref=e217]:
+                - generic [ref=e218]: Modmail Log Channel
+                - generic [ref=e220] [cursor=pointer]:
+                  - generic [ref=e221]: —
+                  - generic "Click to edit" [ref=e222]:
+                    - img [ref=e223]
+              - generic [ref=e225]:
+                - generic [ref=e226]: Logging Channel
+                - generic [ref=e228] [cursor=pointer]:
+                  - generic [ref=e229]: —
+                  - generic "Click to edit" [ref=e230]:
+                    - img [ref=e231]
+              - generic [ref=e233]:
+                - generic [ref=e234]: Flags Channel
+                - generic [ref=e236] [cursor=pointer]:
+                  - generic [ref=e237]: —
+                  - generic "Click to edit" [ref=e238]:
+                    - img [ref=e239]
+              - generic [ref=e241]:
+                - generic [ref=e242]: Forum Channel
+                - generic [ref=e244] [cursor=pointer]:
+                  - generic [ref=e245]: —
+                  - generic "Click to edit" [ref=e246]:
+                    - img [ref=e247]
+              - generic [ref=e249]:
+                - generic [ref=e250]: Notification Channel
+                - generic [ref=e252] [cursor=pointer]:
+                  - generic [ref=e253]: —
+                  - generic "Click to edit" [ref=e254]:
+                    - img [ref=e255]
+              - generic [ref=e257]:
+                - generic [ref=e258]: Server Artist Channel
+                - generic [ref=e260] [cursor=pointer]:
+                  - generic [ref=e261]: —
+                  - generic "Click to edit" [ref=e262]:
+                    - img [ref=e263]
+              - generic [ref=e265]:
+                - generic [ref=e266]: Support Channel
+                - generic [ref=e268] [cursor=pointer]:
+                  - generic [ref=e269]: —
+                  - generic "Click to edit" [ref=e270]:
+                    - img [ref=e271]
+              - generic [ref=e273]:
+                - generic [ref=e274]: Backfill Notification Channel
+                - generic [ref=e276] [cursor=pointer]:
+                  - generic [ref=e277]: —
+                  - generic "Click to edit" [ref=e278]:
+                    - img [ref=e279]
+              - generic [ref=e281]:
+                - generic [ref=e282]: Report Forum
+                - generic [ref=e284] [cursor=pointer]:
+                  - generic [ref=e285]: —
+                  - generic "Click to edit" [ref=e286]:
+                    - img [ref=e287]
+          - generic [ref=e289]:
+            - button "Roles 10" [ref=e290] [cursor=pointer]:
+              - generic [ref=e291]: Roles
+              - generic [ref=e292]: "10"
+              - img [ref=e294]
+            - generic [ref=e296]:
+              - generic [ref=e297]:
+                - generic [ref=e298]: Accepted Role
+                - generic [ref=e300] [cursor=pointer]:
+                  - button "1429319744061837457" [ref=e301]:
+                    - generic [ref=e302]: "1429319744061837457"
+                    - img [ref=e304]
+                  - generic "Click to edit" [ref=e307]:
+                    - img [ref=e308]
+              - generic [ref=e310]:
+                - generic [ref=e311]: Reviewer Role
+                - generic [ref=e313] [cursor=pointer]:
+                  - button "1429319744061837459" [ref=e314]:
+                    - generic [ref=e315]: "1429319744061837459"
+                    - img [ref=e317]
+                  - generic "Click to edit" [ref=e320]:
+                    - img [ref=e321]
+              - generic [ref=e323]:
+                - generic [ref=e324]: Welcome Ping Role
+                - generic [ref=e326] [cursor=pointer]:
+                  - generic [ref=e327]: —
+                  - generic "Click to edit" [ref=e328]:
+                    - img [ref=e329]
+              - generic [ref=e331]:
+                - generic [ref=e332]: Mod Roles
+                - generic [ref=e334] [cursor=pointer]:
+                  - generic [ref=e335]: —
+                  - generic "Click to edit" [ref=e336]:
+                    - img [ref=e337]
+              - generic [ref=e339]:
+                - generic [ref=e340]: Gatekeeper Role
+                - generic [ref=e342] [cursor=pointer]:
+                  - generic [ref=e343]: —
+                  - generic "Click to edit" [ref=e344]:
+                    - img [ref=e345]
+              - generic [ref=e347]:
+                - generic [ref=e348]: Notify Role
+                - generic [ref=e350] [cursor=pointer]:
+                  - generic [ref=e351]: —
+                  - generic "Click to edit" [ref=e352]:
+                    - img [ref=e353]
+              - generic [ref=e355]:
+                - generic [ref=e356]: Artist Role
+                - generic [ref=e358] [cursor=pointer]:
+                  - generic [ref=e359]: —
+                  - generic "Click to edit" [ref=e360]:
+                    - img [ref=e361]
+              - generic [ref=e363]:
+                - generic [ref=e364]: Ambassador Role
+                - generic [ref=e366] [cursor=pointer]:
+                  - generic [ref=e367]: —
+                  - generic "Click to edit" [ref=e368]:
+                    - img [ref=e369]
+              - generic [ref=e371]:
+                - generic [ref=e372]: Bot Dev Role
+                - generic [ref=e374] [cursor=pointer]:
+                  - generic [ref=e375]: —
+                  - generic "Click to edit" [ref=e376]:
+                    - img [ref=e377]
+              - generic [ref=e379]:
+                - generic [ref=e380]: NSFW Alert Role
+                - generic [ref=e382] [cursor=pointer]:
+                  - generic [ref=e383]: —
+                  - generic "Click to edit" [ref=e384]:
+                    - img [ref=e385]
+          - generic [ref=e387]:
+            - button "Gate 8" [ref=e388] [cursor=pointer]:
+              - generic [ref=e389]: Gate
+              - generic [ref=e390]: "8"
+              - img [ref=e392]
+            - generic [ref=e394]:
+              - generic [ref=e395]:
+                - generic [ref=e396]: Reapply Cooldown
+                - generic [ref=e398] [cursor=pointer]:
+                  - generic [ref=e399]: 24h
+                  - generic "Click to edit" [ref=e400]:
+                    - img [ref=e401]
+              - generic [ref=e403]:
+                - generic [ref=e404]: Min Account Age
+                - generic [ref=e406] [cursor=pointer]:
+                  - generic [ref=e407]: 0h
+                  - generic "Click to edit" [ref=e408]:
+                    - img [ref=e409]
+              - generic [ref=e411]:
+                - generic [ref=e412]: Min Join Age
+                - generic [ref=e414] [cursor=pointer]:
+                  - generic [ref=e415]: 0h
+                  - generic "Click to edit" [ref=e416]:
+                    - img [ref=e417]
+              - generic [ref=e419]:
+                - generic [ref=e420]: Review Roles Mode
+                - generic [ref=e422] [cursor=pointer]:
+                  - generic [ref=e423]: level_only
+                  - generic "Click to edit" [ref=e424]:
+                    - img [ref=e425]
+              - generic [ref=e427]:
+                - generic [ref=e428]: Silent First Msg Days
+                - generic [ref=e430] [cursor=pointer]:
+                  - generic [ref=e431]: "90"
+                  - generic "Click to edit" [ref=e432]:
+                    - img [ref=e433]
+              - generic [ref=e435]:
+                - generic [ref=e436]: Listopen Public Output
+                - generic [ref=e437]:
+                  - button "Click to disable" [ref=e438] [cursor=pointer]
+                  - generic [ref=e440]: Enabled
+              - generic [ref=e441]:
+                - generic [ref=e442]: Ping Dev on Application
+                - generic [ref=e443]:
+                  - button "Click to disable" [ref=e444] [cursor=pointer]
+                  - generic [ref=e446]: Enabled
+              - generic [ref=e447]:
+                - generic [ref=e448]: Max Answer Length
+                - generic [ref=e450] [cursor=pointer]:
+                  - generic [ref=e451]: —
+                  - generic "Click to edit" [ref=e452]:
+                    - img [ref=e453]
+          - generic [ref=e455]:
+            - button "Avatar Scanning 8" [ref=e456] [cursor=pointer]:
+              - generic [ref=e457]: Avatar Scanning
+              - generic [ref=e458]: "8"
+              - img [ref=e460]
+            - generic [ref=e462]:
+              - generic [ref=e463]:
+                - generic [ref=e464]: Scan Enabled
+                - generic [ref=e465]:
+                  - button "Click to disable" [ref=e466] [cursor=pointer]
+                  - generic [ref=e468]: Enabled
+              - generic [ref=e469]:
+                - generic [ref=e470]: NSFW Threshold
+                - generic [ref=e472] [cursor=pointer]:
+                  - generic [ref=e473]: 60%
+                  - generic "Click to edit" [ref=e474]:
+                    - img [ref=e475]
+              - generic [ref=e477]:
+                - generic [ref=e478]: Skin Edge Threshold
+                - generic [ref=e480] [cursor=pointer]:
+                  - generic [ref=e481]: 18%
+                  - generic "Click to edit" [ref=e482]:
+                    - img [ref=e483]
+              - generic [ref=e485]:
+                - generic [ref=e486]: Model Weight
+                - generic [ref=e488] [cursor=pointer]:
+                  - generic [ref=e489]: 70%
+                  - generic "Click to edit" [ref=e490]:
+                    - img [ref=e491]
+              - generic [ref=e493]:
+                - generic [ref=e494]: Edge Weight
+                - generic [ref=e496] [cursor=pointer]:
+                  - generic [ref=e497]: 30%
+                  - generic "Click to edit" [ref=e498]:
+                    - img [ref=e499]
+              - generic [ref=e501]:
+                - generic [ref=e502]: Hard Threshold
+                - generic [ref=e504] [cursor=pointer]:
+                  - generic [ref=e505]: —
+                  - generic "Click to edit" [ref=e506]:
+                    - img [ref=e507]
+              - generic [ref=e509]:
+                - generic [ref=e510]: Soft Threshold
+                - generic [ref=e512] [cursor=pointer]:
+                  - generic [ref=e513]: —
+                  - generic "Click to edit" [ref=e514]:
+                    - img [ref=e515]
+              - generic [ref=e517]:
+                - generic [ref=e518]: Racy Threshold
+                - generic [ref=e520] [cursor=pointer]:
+                  - generic [ref=e521]: —
+                  - generic "Click to edit" [ref=e522]:
+                    - img [ref=e523]
+          - generic [ref=e525]:
+            - button "Notifications 3" [ref=e526] [cursor=pointer]:
+              - generic [ref=e527]: Notifications
+              - generic [ref=e528]: "3"
+              - img [ref=e530]
+            - generic [ref=e532]:
+              - generic [ref=e533]:
+                - generic [ref=e534]: Notify Mode
+                - generic [ref=e536] [cursor=pointer]:
+                  - generic [ref=e537]: post
+                  - generic "Click to edit" [ref=e538]:
+                    - img [ref=e539]
+              - generic [ref=e541]:
+                - generic [ref=e542]: Cooldown
+                - generic [ref=e544] [cursor=pointer]:
+                  - generic [ref=e545]: 5s
+                  - generic "Click to edit" [ref=e546]:
+                    - img [ref=e547]
+              - generic [ref=e549]:
+                - generic [ref=e550]: Max Per Hour
+                - generic [ref=e552] [cursor=pointer]:
+                  - generic [ref=e553]: "10"
+                  - generic "Click to edit" [ref=e554]:
+                    - img [ref=e555]
+          - generic [ref=e557]:
+            - button "Artist 2" [ref=e558] [cursor=pointer]:
+              - generic [ref=e559]: Artist
+              - generic [ref=e560]: "2"
+              - img [ref=e562]
+            - generic [ref=e564]:
+              - generic [ref=e565]:
+                - generic [ref=e566]: Ticket Roles
+                - generic [ref=e568] [cursor=pointer]:
+                  - generic [ref=e569]: —
+                  - generic "Click to edit" [ref=e570]:
+                    - img [ref=e571]
+              - generic [ref=e573]:
+                - generic [ref=e574]: Ignored Users
+                - generic [ref=e576] [cursor=pointer]:
+                  - generic [ref=e577]: —
+                  - generic "Click to edit" [ref=e578]:
+                    - img [ref=e579]
+          - generic [ref=e581]:
+            - button "Modmail 2" [ref=e582] [cursor=pointer]:
+              - generic [ref=e583]: Modmail
+              - generic [ref=e584]: "2"
+              - img [ref=e586]
+            - generic [ref=e588]:
+              - generic [ref=e589]:
+                - generic [ref=e590]: Delete on Close
+                - generic [ref=e591]:
+                  - button "Click to disable" [ref=e592] [cursor=pointer]
+                  - generic [ref=e594]: Enabled
+              - generic [ref=e595]:
+                - generic [ref=e596]: Forward Max Size
+                - generic [ref=e598] [cursor=pointer]:
+                  - generic [ref=e599]: —
+                  - generic "Click to edit" [ref=e600]:
+                    - img [ref=e601]
+          - generic [ref=e603]:
+            - button "Fun Modes 4" [ref=e604] [cursor=pointer]:
+              - generic [ref=e605]: Fun Modes
+              - generic [ref=e606]: "4"
+              - img [ref=e608]
+            - generic [ref=e610]:
+              - generic [ref=e611]:
+                - generic [ref=e612]: Dad Mode
+                - generic [ref=e613]:
+                  - button "Click to enable" [ref=e614] [cursor=pointer]
+                  - generic [ref=e616]: Disabled
+              - generic [ref=e617]:
+                - generic [ref=e618]: Dad Mode Odds
+                - generic [ref=e620] [cursor=pointer]:
+                  - generic [ref=e621]: 1000%
+                  - generic "Click to edit" [ref=e622]:
+                    - img [ref=e623]
+              - generic [ref=e625]:
+                - generic [ref=e626]: Skull Mode
+                - generic [ref=e627]:
+                  - button "Click to enable" [ref=e628] [cursor=pointer]
+                  - generic [ref=e630]: Disabled
+              - generic [ref=e631]:
+                - generic [ref=e632]: Skull Mode Odds
+                - generic [ref=e634] [cursor=pointer]:
+                  - generic [ref=e635]: 1000%
+                  - generic "Click to edit" [ref=e636]:
+                    - img [ref=e637]
+          - generic [ref=e639]:
+            - button "Panic Mode 1" [ref=e640] [cursor=pointer]:
+              - generic [ref=e641]: Panic Mode
+              - generic [ref=e642]: "1"
+              - generic "Read-only for your role" [ref=e643]:
+                - img [ref=e644]
+              - img [ref=e647]
+            - generic [ref=e650]:
+              - generic [ref=e651]: Active
+              - generic [ref=e652]:
+                - button "Insufficient permissions" [disabled] [ref=e653]
+                - generic [ref=e655]: Disabled
+          - generic [ref=e656]:
+            - button "Templates 2" [ref=e657] [cursor=pointer]:
+              - generic [ref=e658]: Templates
+              - generic [ref=e659]: "2"
+              - img [ref=e661]
+            - generic [ref=e663]:
+              - generic [ref=e664]:
+                - generic [ref=e665]: Image Search URL
+                - generic [ref=e667] [cursor=pointer]:
+                  - generic [ref=e668]: "https://lens.google.com/uploadbyurl?url={avatarUrl}"
+                  - generic "Click to edit" [ref=e669]:
+                    - img [ref=e670]
+              - generic [ref=e672]:
+                - generic [ref=e673]: Welcome Template
+                - generic [ref=e675] [cursor=pointer]:
+                  - generic [ref=e676]: —
+                  - generic "Click to edit" [ref=e677]:
+                    - img [ref=e678]
+          - generic [ref=e680]:
+            - button "Advanced 9" [ref=e681] [cursor=pointer]:
+              - generic [ref=e682]: Advanced
+              - generic [ref=e683]: "9"
+              - img [ref=e685]
+            - generic [ref=e687]:
+              - generic [ref=e688]:
+                - generic [ref=e689]: Banner Sync Interval
+                - generic [ref=e691] [cursor=pointer]:
+                  - generic [ref=e692]: —
+                  - generic "Click to edit" [ref=e693]:
+                    - img [ref=e694]
+              - generic [ref=e696]:
+                - generic [ref=e697]: Retry Max Attempts
+                - generic [ref=e699] [cursor=pointer]:
+                  - generic [ref=e700]: —
+                  - generic "Click to edit" [ref=e701]:
+                    - img [ref=e702]
+              - generic [ref=e704]:
+                - generic [ref=e705]: Retry Initial Delay
+                - generic [ref=e707] [cursor=pointer]:
+                  - generic [ref=e708]: —
+                  - generic "Click to edit" [ref=e709]:
+                    - img [ref=e710]
+              - generic [ref=e712]:
+                - generic [ref=e713]: Retry Max Delay
+                - generic [ref=e715] [cursor=pointer]:
+                  - generic [ref=e716]: —
+                  - generic "Click to edit" [ref=e717]:
+                    - img [ref=e718]
+              - generic [ref=e720]:
+                - generic [ref=e721]: Circuit Breaker Threshold
+                - generic [ref=e723] [cursor=pointer]:
+                  - generic [ref=e724]: —
+                  - generic "Click to edit" [ref=e725]:
+                    - img [ref=e726]
+              - generic [ref=e728]:
+                - generic [ref=e729]: Circuit Breaker Reset
+                - generic [ref=e731] [cursor=pointer]:
+                  - generic [ref=e732]: —
+                  - generic "Click to edit" [ref=e733]:
+                    - img [ref=e734]
+              - generic [ref=e736]:
+                - generic [ref=e737]: Flag Rate Limit
+                - generic [ref=e739] [cursor=pointer]:
+                  - generic [ref=e740]: —
+                  - generic "Click to edit" [ref=e741]:
+                    - img [ref=e742]
+              - generic [ref=e744]:
+                - generic [ref=e745]: Flag Cooldown TTL
+                - generic [ref=e747] [cursor=pointer]:
+                  - generic [ref=e748]: —
+                  - generic "Click to edit" [ref=e749]:
+                    - img [ref=e750]
+              - generic [ref=e752]:
+                - generic [ref=e753]: Banner Sync Enabled
+                - generic [ref=e754]:
+                  - button "Click to disable" [ref=e755] [cursor=pointer]
+                  - generic [ref=e757]: Enabled
+          - generic [ref=e758]:
+            - button "Other 11" [ref=e759] [cursor=pointer]:
+              - generic [ref=e760]: Other
+              - generic [ref=e761]: "11"
+              - img [ref=e763]
+            - generic [ref=e765]:
+              - generic [ref=e766]:
+                - generic [ref=e767]: Created At
+                - generic [ref=e770]: 2025-10-19 04:23:31
+              - generic [ref=e771]:
+                - generic [ref=e772]: Updated At
+                - generic [ref=e775]: 2025-10-19 04:23:31
+              - generic [ref=e776]:
+                - generic [ref=e777]: Suggestion Channel Id
+                - generic [ref=e780]: —
+              - generic [ref=e781]:
+                - generic [ref=e782]: Suggestion Cooldown
+                - generic [ref=e785]: "3600"
+              - generic [ref=e786]:
+                - generic [ref=e787]: Qotd Review Channel Id
+                - generic [ref=e789] [cursor=pointer]:
+                  - generic [ref=e790]: —
+                  - generic "Click to edit" [ref=e791]:
+                    - img [ref=e792]
+              - generic [ref=e794]:
+                - generic [ref=e795]: Qotd Role Id
+                - generic [ref=e797] [cursor=pointer]:
+                  - generic [ref=e798]: —
+                  - generic "Click to edit" [ref=e799]:
+                    - img [ref=e800]
+              - generic [ref=e802]:
+                - generic [ref=e803]: Pulse Excluded Category Ids Json
+                - generic [ref=e806]: —
+              - generic [ref=e807]:
+                - generic [ref=e808]: Vote Out Threshold
+                - generic [ref=e811]: "2"
+              - generic [ref=e812]:
+                - generic [ref=e813]: Admin Role Id
+                - generic [ref=e816]: —
+              - generic [ref=e817]:
+                - generic [ref=e818]: Verify Thread Parent Id
+                - generic [ref=e821]: —
+              - generic [ref=e822]:
+                - generic [ref=e823]: Unverified Rules Channel Id
+                - generic [ref=e826]: —
+  - button "Theme Sage Observatory" [ref=e827] [cursor=pointer]:
+    - generic [ref=e830]:
+      - generic [ref=e831]: Theme
+      - generic [ref=e832]: Sage Observatory

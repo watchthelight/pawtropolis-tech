@@ -1,0 +1,9 @@
+- generic [ref=e4]:
+  - img "Pawtropolis" [ref=e5]
+  - heading "Pawtropolis" [level=1] [ref=e6]
+  - paragraph [ref=e7]: A Safe Place For Everyone
+  - link "Log In with Discord" [ref=e8] [cursor=pointer]:
+    - /url: /auth/login
+    - img [ref=e9]
+    - text: Log In with Discord
+  - paragraph [ref=e10]: staff access only
