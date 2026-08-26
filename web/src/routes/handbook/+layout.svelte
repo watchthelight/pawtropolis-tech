@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { applyTheme } from '$lib/stores/theme';
 	import { initViewport, getIsMobile } from '$lib/stores/viewport.svelte';
+	import { getBookmarks, initBookmarks, remove } from '$lib/stores/handbookBookmarks.svelte';
 
 	const TIER_LABELS: Record<string, string> = {
 		owner: 'Owner / Dev',
@@ -29,9 +30,11 @@
 			applyTheme(user.accentColor);
 		}
 		initViewport();
+		initBookmarks(data.bookmarks ?? [], data.user?.id ?? null);
 	});
 
 	let isMobile = $derived(getIsMobile());
+	let bookmarks = $derived(getBookmarks());
 </script>
 
 <div class="hb-shell" class:hb-mobile={isMobile}>
@@ -77,6 +80,32 @@
 	<div class="hb-body">
 		<aside class="hb-rail" class:hb-rail-open={docIndexOpen}>
 			<nav class="hb-rail-nav" aria-label="Handbook contents">
+				{#if bookmarks.length > 0}
+					<h2 class="hb-rail-title">Bookmarks</h2>
+					<ul class="hb-rail-list hb-rail-bookmarks">
+						{#each bookmarks as bm (bm.docSlug + '#' + bm.headingSlug)}
+							<li>
+								<a
+									href={`/handbook/${bm.docSlug}#${bm.headingSlug}`}
+									onclick={() => (docIndexOpen = false)}
+								>
+									<span class="hb-rail-doc-title">{bm.label}</span>
+									<span class="hb-rail-doc-tagline">{bm.docTitle}</span>
+								</a>
+								<button
+									type="button"
+									class="hb-rail-remove"
+									aria-label={`Remove bookmark for ${bm.label}`}
+									title="Remove bookmark"
+									onclick={() => remove(bm.docSlug, bm.headingSlug)}
+								>
+									×
+								</button>
+							</li>
+						{/each}
+					</ul>
+				{/if}
+
 				<h2 class="hb-rail-title">Documents</h2>
 				<ul class="hb-rail-list">
 					{#each docs as doc (doc.slug)}
@@ -242,6 +271,36 @@
 	}
 	.hb-rail-list li {
 		margin: 0;
+	}
+	.hb-rail-bookmarks {
+		margin-bottom: 1.2rem;
+		padding-bottom: 0.8rem;
+		border-bottom: 1px solid var(--line-soft);
+	}
+	.hb-rail-bookmarks li {
+		display: flex;
+		align-items: center;
+		gap: 0.15rem;
+	}
+	.hb-rail-bookmarks li a {
+		flex: 1;
+		min-width: 0;
+	}
+	.hb-rail-remove {
+		flex: none;
+		min-width: 32px;
+		min-height: 32px;
+		border: none;
+		background: none;
+		color: var(--ink-3);
+		font-size: 1.1rem;
+		line-height: 1;
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+	}
+	.hb-rail-remove:hover {
+		color: var(--ink);
+		background: var(--hover-bg);
 	}
 	.hb-rail-list a {
 		display: flex;

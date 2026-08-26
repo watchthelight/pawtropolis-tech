@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { getBookmarks } from '$lib/stores/handbookBookmarks.svelte';
+
 	const TIER_LABELS: Record<string, string> = {
 		owner: 'Owner / Dev',
 		cm: 'Community Manager',
@@ -17,6 +19,7 @@
 	let user = $derived(data.user);
 	let docs = $derived(data.docs);
 	let tier = $derived(data.tier);
+	let bookmarks = $derived(getBookmarks());
 
 	const STARTER: Record<string, string> = {
 		owner: 'leadership-guide',
@@ -73,6 +76,22 @@
 			<a class="hb-landing-cta" href="/auth/login?return=/handbook">Sign in with Discord</a>
 		{/if}
 	</section>
+
+	{#if bookmarks.length > 0}
+		<section class="hb-landing-docs">
+			<h2>Your bookmarks</h2>
+			<ul class="hb-doc-grid">
+				{#each bookmarks as bm (bm.docSlug + '#' + bm.headingSlug)}
+					<li>
+						<a class="hb-doc-card" href={`/handbook/${bm.docSlug}#${bm.headingSlug}`}>
+							<h3>{bm.label}</h3>
+							<p>{bm.docTitle}</p>
+						</a>
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/if}
 
 	<section class="hb-landing-docs">
 		<h2>All documents</h2>
