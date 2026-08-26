@@ -3,6 +3,7 @@
 	import MdNode from './MdNode.svelte';
 	import PermissionBadge from './PermissionBadge.svelte';
 	import LoginCta from './LoginCta.svelte';
+	import BookmarkToggle from './BookmarkToggle.svelte';
 
 	type Props = { token: CommandSectionToken };
 	let { token }: Props = $props();
@@ -18,11 +19,14 @@
 		<h3 class="hb-cmd-title">
 			<span class="hb-cmd-slash">/</span>{token.commandName}
 		</h3>
-		<PermissionBadge
-			tier={token.requiredTier}
-			canRun={token.canRun}
-			exactOnly={token.permission?.exactOnly ?? false}
-		/>
+		<div class="hb-cmd-head-right">
+			<PermissionBadge
+				tier={token.requiredTier}
+				canRun={token.canRun}
+				exactOnly={token.permission?.exactOnly ?? false}
+			/>
+			<BookmarkToggle headingSlug={token.headingSlug} label={'/' + token.commandName} />
+		</div>
 	</header>
 
 	{#if token.lockedForLoggedOut}
@@ -60,6 +64,11 @@
 		gap: 0.8rem;
 		flex-wrap: wrap;
 		margin-bottom: 0.4em;
+	}
+	.hb-cmd-head-right {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
 	}
 	.hb-cmd-title {
 		margin: 0;

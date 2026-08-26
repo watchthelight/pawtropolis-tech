@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import MdNode from '$lib/components/handbook/MdNode.svelte';
+	import BookmarkToggle from '$lib/components/handbook/BookmarkToggle.svelte';
 	import { HANDBOOK_TIER_LABELS } from '$lib/handbook-shared';
 
 	let { data } = $props();
@@ -91,6 +92,7 @@
 							{HANDBOOK_TIER_LABELS[entry.tier as keyof typeof HANDBOOK_TIER_LABELS]}
 						</span>
 					</button>
+					<BookmarkToggle headingSlug={entry.slug} label={entry.text} />
 				</li>
 			{/each}
 		</ul>
@@ -110,6 +112,7 @@
 				>
 					{entry.text}
 				</a>
+				<BookmarkToggle headingSlug={entry.slug} label={entry.text} compact />
 			</li>
 		{/each}
 	</ul>
@@ -188,8 +191,13 @@
 	}
 	.hb-toc-desktop li {
 		margin: 0;
+		display: flex;
+		align-items: center;
+		gap: 0.15rem;
 	}
 	.hb-toc-desktop a {
+		flex: 1;
+		min-width: 0;
 		display: block;
 		padding: 0.3rem 0.5rem;
 		border-radius: var(--radius-sm);
@@ -291,8 +299,15 @@
 		padding: 0.4rem 0.6rem 1rem;
 		overflow-y: auto;
 	}
+	.hb-toc-list li {
+		display: flex;
+		align-items: center;
+		gap: 0.2rem;
+	}
 	.hb-toc-list button {
 		display: flex;
+		flex: 1;
+		min-width: 0;
 		align-items: center;
 		justify-content: space-between;
 		gap: 0.6rem;

@@ -3,6 +3,7 @@
 	import MdNode from './MdNode.svelte';
 	import PermissionBadge from './PermissionBadge.svelte';
 	import LoginCta from './LoginCta.svelte';
+	import BookmarkToggle from './BookmarkToggle.svelte';
 
 	type Props = { token: SectionToken };
 	let { token }: Props = $props();
@@ -25,6 +26,7 @@
 		{#if showBadge}
 			<PermissionBadge tier={token.requiredTier} canRun={token.canRun} />
 		{/if}
+		<BookmarkToggle headingSlug={token.headingSlug} label={token.headingText} />
 	</header>
 
 	{#if token.lockedForLoggedOut}
@@ -55,6 +57,10 @@
 		margin-bottom: 0.3em;
 		border-bottom: 1px solid var(--line-soft);
 		padding-bottom: 0.3em;
+	}
+	.hb-section-head :global(.hb-bm) {
+		margin-left: auto;
+		align-self: center;
 	}
 	.hb-section-title {
 		margin: 0;
