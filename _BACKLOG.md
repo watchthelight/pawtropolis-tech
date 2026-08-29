@@ -16,6 +16,11 @@ _(none)_
 
 ## Backlog
 
+### Medium
+
+- [ ] [Actions workflows are red on main; get the commit check mark green](todo/00260.md) `Medium`
+
 ### Low
 
 - [ ] [Verification identity documents are retained indefinitely in the log channel with no deletion policy](todo/00258.md) `Low`
+- [ ] [Remove Claude from the GitHub contributors panel](todo/00259.md) `Low`
