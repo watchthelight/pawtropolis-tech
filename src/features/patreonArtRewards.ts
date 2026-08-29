@@ -309,7 +309,7 @@ export async function handlePatreonArtRewards(member: GuildMember): Promise<void
           `Thanks to your **${tier.name.replace("[Patreon] ", "")}** tier, ` +
           `you've received:\n${granted.map((g) => `• ${g}`).join("\n")}\n\n` +
           (inventoryEnabled(guild.id)
-            ? "Check `/inventory` to see them, then `/redeem` when you want to cash one in."
+            ? "Check `/stash` to see them, then `/redeem` when you want to cash one in."
             : "A staff member can redeem these for you with `/redeemreward`."),
       });
     } catch {
