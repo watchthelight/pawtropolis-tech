@@ -262,6 +262,15 @@ client.once(Events.ClientReady, async () => {
     await startSchedulers(client);
   }
 
+  // Inventory reconcile: queue catalogued reward roles granted while we were offline.
+  // Only queues; the capture scheduler still decides whether each one is banked.
+  try {
+    const { reconcileInventory } = await import("../features/inventory/reconcile.js");
+    await reconcileInventory(client);
+  } catch (err) {
+    logger.warn({ err }, "[startup] inventory reconcile failed - continuing");
+  }
+
   // Initialize banner sync (bot profile + website)
   try {
     await initializeBannerSync(client);
