@@ -145,6 +145,54 @@
 		return false;
 	}
 
+	// === Claim all open (owner only) ===
+	// Loops the existing per-app endpoint rather than adding a bulk route, so the
+	// permission gate, appId validation and already-claimed handling in
+	// /api/review/claim all apply unchanged. Sequential so a long queue cannot
+	// hammer the bot API.
+	let unclaimedItems = $derived(queue.filter((item) => !item.claimedBy));
+	let canClaimAll = $derived(data.user?.tier === 'owner');
+	let claimAllState = $state<'idle' | 'confirm' | 'running'>('idle');
+	let claimAllDone = $state(0);
+	let claimAllTotal = $state(0);
+	let claimAllResult = $state<string | null>(null);
+
+	async function runClaimAll() {
+		const targets = unclaimedItems.map((item) => item.id);
+		claimAllState = 'running';
+		claimAllResult = null;
+		claimAllDone = 0;
+		claimAllTotal = targets.length;
+
+		let claimed = 0;
+		let taken = 0;
+		let failed = 0;
+
+		for (const appId of targets) {
+			try {
+				const res = await fetch('/api/review/claim', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ appId })
+				});
+				const result = await res.json().catch(() => ({ success: false }));
+				if (result.success) claimed++;
+				else if (res.status === 409) taken++;
+				else failed++;
+			} catch {
+				failed++;
+			}
+			claimAllDone++;
+		}
+
+		const parts = [`Claimed ${claimed} of ${claimAllTotal}`];
+		if (taken > 0) parts.push(`${taken} already taken`);
+		if (failed > 0) parts.push(`${failed} failed`);
+		claimAllResult = parts.join(', ');
+		claimAllState = 'idle';
+		await invalidateAll();
+	}
+
 	let isMobile = $derived(getIsMobile());
 	let hasSelectedApp = $derived($page.url.pathname !== '/dashboard/reviews');
 </script>
@@ -175,6 +223,29 @@
 				<button class="filter-chip clear" onclick={() => { filterFlagged = false; filterHasModmail = false; filterStale = false; }}>
 					Clear
 				</button>
+			{/if}
+
+			{#if canClaimAll}
+				<div class="claim-all">
+					{#if claimAllState === 'running'}
+						<span class="claim-all-status">Claiming {claimAllDone} of {claimAllTotal}</span>
+					{:else if claimAllState === 'confirm'}
+						<span class="claim-all-status">Claim all {unclaimedItems.length}?</span>
+						<button class="filter-chip claim-go" onclick={runClaimAll}>Yes</button>
+						<button class="filter-chip" onclick={() => (claimAllState = 'idle')}>Cancel</button>
+					{:else}
+						<button
+							class="filter-chip claim-all-btn"
+							disabled={unclaimedItems.length === 0}
+							onclick={() => { claimAllResult = null; claimAllState = 'confirm'; }}
+						>
+							Claim all open{unclaimedItems.length > 0 ? ` (${unclaimedItems.length})` : ''}
+						</button>
+						{#if claimAllResult}
+							<span class="claim-all-status">{claimAllResult}</span>
+						{/if}
+					{/if}
+				</div>
 			{/if}
 		</div>
 	{/if}
@@ -307,6 +378,26 @@
 </div>
 
 <style>
+	.claim-all {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		margin-left: auto;
+	}
+	.claim-all-status {
+		font-size: 0.8rem;
+		color: var(--ink-3);
+		white-space: nowrap;
+	}
+	.claim-all-btn:disabled {
+		opacity: 0.45;
+		cursor: not-allowed;
+	}
+	.claim-go {
+		border-color: oklch(50% 0.11 145);
+		color: oklch(90% 0.06 145);
+	}
+
 	/* Reclaim container padding for the reviews page — extend into parent's p-8 */
 	.reviews-page {
 		margin: -0.75rem;
