@@ -13,7 +13,8 @@
 import type { Client, Guild } from "discord.js";
 import { logger } from "../../lib/logger.js";
 import { isPanicMode } from "../panicStore.js";
-import { getItemCatalog, inventoryEnabled } from "./catalog.js";
+import { getItemCatalog, inventoryEnabled, sourceBotAllowlist } from "./catalog.js";
+import { decideSource, listRecentRoleGrants } from "./executor.js";
 import { enqueueCapture } from "./store.js";
 
 export async function reconcileGuildInventory(guild: Guild): Promise<number> {
@@ -23,6 +24,15 @@ export async function reconcileGuildInventory(guild: Guild): Promise<number> {
   const catalog = getItemCatalog(guild.id);
   if (catalog.length === 0) return 0;
   const byRole = new Map(catalog.map((i) => [i.roleId, i]));
+
+  // One audit-log read for the whole guild, not one per held role. Members who have held
+  // a reward role since before the log window are unattributable and would be released
+  // anyway, so queueing them costs a REST call each and re-costs it on every restart.
+  const recentGrants = await listRecentRoleGrants(guild);
+  if (recentGrants.size === 0) return 0;
+
+  const selfId = guild.client.user?.id ?? "";
+  const allowlist = sourceBotAllowlist(guild.id);
 
   const members = await guild.members.fetch().catch((err) => {
     logger.warn({ err, guildId: guild.id }, "[inventory] reconcile could not fetch members");
@@ -39,6 +49,13 @@ export async function reconcileGuildInventory(guild: Guild): Promise<number> {
     for (const roleId of member.roles.cache.keys()) {
       const item = byRole.get(roleId);
       if (!item) continue;
+
+      // Only roles the audit log can still attribute to a reward bot are worth queueing.
+      // The scheduler re-checks before acting; this just keeps the queue to real work.
+      const executor = recentGrants.get(`${member.id}:${roleId}`);
+      if (!executor) continue;
+      if (!decideSource(executor, selfId, allowlist).ok) continue;
+
       const grantKey = item.policy === "once_per_key" ? `${item.itemKey}:${roleId}` : null;
       if (enqueueCapture(guild.id, member.id, roleId, item.itemKey, removeAtS, grantKey)) {
         queued++;

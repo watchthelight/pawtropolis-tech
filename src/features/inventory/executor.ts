@@ -64,6 +64,53 @@ export async function resolveRoleGrantExecutor(
   return null;
 }
 
+/**
+ * Every role add the audit log still remembers, keyed `${userId}:${roleId}`.
+ * WHY: the startup reconcile has to decide which of the roles members are holding could
+ *      plausibly have been granted while the bot was down. Asking per role costs one REST
+ *      call each and, on a guild with hundreds of reward-role holders, re-runs on every
+ *      restart without ever converging. One fetch per guild answers the same question.
+ * RETURNS: an empty map when audit logs are unreadable, so reconcile queues nothing
+ *          rather than queueing everything.
+ */
+export async function listRecentRoleGrants(
+  guild: Guild
+): Promise<Map<string, RoleGrantExecutor>> {
+  const grants = new Map<string, RoleGrantExecutor>();
+
+  let logs;
+  try {
+    logs = await guild.fetchAuditLogs({
+      type: AuditLogEvent.MemberRoleUpdate,
+      limit: AUDIT_LOG_FETCH_LIMIT,
+    });
+  } catch (err) {
+    logger.warn({ err, guildId: guild.id }, "[inventory] could not read audit logs for reconcile");
+    return grants;
+  }
+
+  const cutoff = Date.now() - AUDIT_LOG_LOOKBACK_MS;
+
+  for (const entry of logs.entries.values()) {
+    if (entry.createdTimestamp < cutoff) break; // newest first
+    if (!entry.target?.id || !entry.executor) continue;
+
+    const added = entry.changes.find((c) => c.key === "$add");
+    if (!added || !Array.isArray(added.new)) continue;
+
+    for (const role of added.new as Array<{ id?: string }>) {
+      if (!role?.id) continue;
+      const key = `${entry.target.id}:${role.id}`;
+      // Entries arrive newest first, so the first one wins.
+      if (!grants.has(key)) {
+        grants.set(key, { id: entry.executor.id, isBot: Boolean(entry.executor.bot) });
+      }
+    }
+  }
+
+  return grants;
+}
+
 export interface SourceVerdict {
   ok: boolean;
   reason: string;
