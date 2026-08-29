@@ -17,6 +17,7 @@ import {
   type PermissionRequirement,
 } from "./permissionResolver";
 import type { DocMeta } from "./loader";
+import { isWithinNewWindow, parseNewMarker } from "../../handbook-shared";
 
 /**
  * A "command_section" wraps the heading that introduces a slash command and
@@ -34,6 +35,10 @@ export type CommandSectionToken = {
   permission: PermissionRequirement | null;
   canRun: boolean;
   lockedForLoggedOut: boolean;
+  /** Date from the section's `<!-- new: YYYY-MM-DD -->` marker, if it has one. */
+  newSince: string | null;
+  /** Whether that date is still inside the highlight window, evaluated per request. */
+  isNew: boolean;
   body: DecoratedToken[];
 };
 
@@ -50,6 +55,8 @@ export type SectionToken = {
   requiredTier: HandbookTier;
   canRun: boolean;
   lockedForLoggedOut: boolean;
+  newSince: string | null;
+  isNew: boolean;
   body: DecoratedToken[];
 };
 
@@ -57,7 +64,13 @@ export type DecoratedToken = Token | CommandSectionToken | SectionToken;
 
 export type DecoratedDoc = {
   tokens: DecoratedToken[];
-  tocEntries: Array<{ depth: number; slug: string; text: string; tier: HandbookTier }>;
+  tocEntries: Array<{
+    depth: number;
+    slug: string;
+    text: string;
+    tier: HandbookTier;
+    newSince: string | null;
+  }>;
 };
 
 /**
@@ -109,6 +122,8 @@ export function decorate(
 
     // Try to find a "Who can use it:" line in the first paragraph of the body.
     const permission = findPermissionInBody(body);
+    const newSince = findNewMarkerInBody(body);
+    const isNew = isWithinNewWindow(newSince);
     const requiredTier = permission?.tier ?? meta.defaultTier;
     const canRun = meetsTier(viewerTier, requiredTier);
     const lockedForLoggedOut = isLoggedOut && requiredTier !== "public";
@@ -125,6 +140,8 @@ export function decorate(
         permission,
         canRun,
         lockedForLoggedOut,
+        newSince,
+        isNew,
         body: body as DecoratedToken[],
       } satisfies CommandSectionToken);
     } else if (heading.depth <= 3) {
@@ -136,6 +153,8 @@ export function decorate(
         requiredTier,
         canRun,
         lockedForLoggedOut,
+        newSince,
+        isNew,
         body: body as DecoratedToken[],
       } satisfies SectionToken);
     } else {
@@ -150,12 +169,29 @@ export function decorate(
       slug,
       text: headingPlain || headingText,
       tier: requiredTier,
+      newSince,
     });
 
     i = j;
   }
 
   return { tokens: out, tocEntries };
+}
+
+/**
+ * Look for a `<!-- new: YYYY-MM-DD -->` marker in a section body.
+ * `marked` emits html comments as `html` tokens and the renderer already skips those, so
+ * the marker never appears on the page. Only the run of tokens before the first block of
+ * real content is searched, so a comment buried further down cannot flag a section.
+ */
+function findNewMarkerInBody(body: Token[]): string | null {
+  for (const t of body) {
+    if (t.type === "space") continue;
+    if (t.type !== "html") break;
+    const since = parseNewMarker((t as Tokens.HTML).raw ?? "");
+    if (since) return since;
+  }
+  return null;
 }
 
 function findPermissionInBody(body: Token[]): PermissionRequirement | null {

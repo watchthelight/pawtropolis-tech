@@ -1,6 +1,7 @@
 import { redirect } from "@sveltejs/kit";
 import { hasMinTier, ROLE_IDS } from "$lib/server/roles";
 import { getHomeMetrics } from "$lib/server/queries/home";
+import { getWhatsNew } from "$lib/server/handbook/whatsNew";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -16,6 +17,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
   const includeModTier = hasMinTier(user.tier, "mod");
   const metrics = getHomeMetrics(user.id, process.env.GUILD_ID, includeModTier);
+  const whatsNew = getWhatsNew({ tier: user.tier });
 
-  return { metrics };
+  return { metrics, whatsNew };
 };

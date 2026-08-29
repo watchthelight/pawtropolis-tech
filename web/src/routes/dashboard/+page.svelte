@@ -11,10 +11,12 @@
 		ArrowRight, Activity, Sparkles
 	} from 'lucide-svelte';
 	import { relativeTime } from '$lib/utils/time';
+	import WhatsNewBanner from '$lib/components/handbook/WhatsNewBanner.svelte';
 
 	let { data } = $props();
 	let user = $derived(data.user);
 	let metrics = $derived(data.metrics);
+	let whatsNew = $derived(data.whatsNew ?? []);
 
 	$effect(() => {
 		if (getIsMobile()) goto('/dashboard/reviews', { replaceState: true });
@@ -80,6 +82,8 @@
 		<h1 class="greet-title">Welcome back to the Observatory</h1>
 		<p class="greet-sub">{subline}</p>
 	</header>
+
+	<WhatsNewBanner entries={whatsNew} compact />
 
 	<!-- Next action hero -->
 	{#if primary}

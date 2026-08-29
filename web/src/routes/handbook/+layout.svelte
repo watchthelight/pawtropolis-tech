@@ -4,6 +4,7 @@
 	import { applyTheme } from '$lib/stores/theme';
 	import { initViewport, getIsMobile } from '$lib/stores/viewport.svelte';
 	import { getBookmarks, initBookmarks, remove } from '$lib/stores/handbookBookmarks.svelte';
+	import WhatsNewBanner from '$lib/components/handbook/WhatsNewBanner.svelte';
 
 	const TIER_LABELS: Record<string, string> = {
 		owner: 'Owner / Dev',
@@ -35,6 +36,7 @@
 
 	let isMobile = $derived(getIsMobile());
 	let bookmarks = $derived(getBookmarks());
+	let whatsNew = $derived(data.whatsNew ?? []);
 </script>
 
 <div class="hb-shell" class:hb-mobile={isMobile}>
@@ -131,6 +133,7 @@
 		</aside>
 
 		<main class="hb-main">
+			<WhatsNewBanner entries={whatsNew} />
 			{@render children?.()}
 		</main>
 	</div>

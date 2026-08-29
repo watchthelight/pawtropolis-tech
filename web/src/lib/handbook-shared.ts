@@ -82,6 +82,51 @@ export function rewriteHandbookHref(href: string | undefined | null): string {
   return href;
 }
 
+/**
+ * How long a section stays flagged as new after the date in its marker.
+ * A section is marked by putting `<!-- new: YYYY-MM-DD -->` directly under its heading.
+ * The renderer already skips html tokens, so the marker is invisible on the page and on
+ * GitHub, and it expires on its own: nothing has to be removed later.
+ */
+export const NEW_WINDOW_DAYS = 7;
+
+/** One handbook section currently flagged as new. Shared so client components can type it. */
+export type WhatsNewEntry = {
+  docSlug: string;
+  docTitle: string;
+  headingSlug: string;
+  headingText: string;
+  since: string;
+  tier: HandbookTier;
+  href: string;
+};
+
+const NEW_MARKER_RE = /^<!--\s*new:\s*(\d{4}-\d{2}-\d{2})\s*-->$/i;
+
+/** Pull the date out of a `<!-- new: YYYY-MM-DD -->` marker. Null if it is not one. */
+export function parseNewMarker(raw: string): string | null {
+  const m = raw.trim().match(NEW_MARKER_RE);
+  if (!m) return null;
+  const date = m[1]!;
+  return Number.isNaN(Date.parse(`${date}T00:00:00Z`)) ? null : date;
+}
+
+/**
+ * Whether a marker date is still inside the highlight window.
+ * Evaluated per request rather than at build time, because the docs are bundled into the
+ * build as string literals: a build that shipped three weeks ago must still let its
+ * markers expire on schedule.
+ * A future date counts as new, which makes it easy to stage a marker ahead of an announcement.
+ */
+export function isWithinNewWindow(since: string | null, now: number = Date.now()): boolean {
+  if (!since) return false;
+  const ts = Date.parse(`${since}T00:00:00Z`);
+  if (Number.isNaN(ts)) return false;
+  const ageMs = now - ts;
+  if (ageMs < 0) return true;
+  return ageMs < NEW_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+}
+
 export const HANDBOOK_TIER_LABELS: Record<HandbookTier, string> = {
   owner: "Owner / Dev",
   cm: "Community Manager",

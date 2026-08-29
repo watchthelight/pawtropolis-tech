@@ -4,6 +4,7 @@
 	import PermissionBadge from './PermissionBadge.svelte';
 	import LoginCta from './LoginCta.svelte';
 	import BookmarkToggle from './BookmarkToggle.svelte';
+	import NewBadge from './NewBadge.svelte';
 
 	type Props = { token: CommandSectionToken };
 	let { token }: Props = $props();
@@ -20,6 +21,9 @@
 			<span class="hb-cmd-slash">/</span>{token.commandName}
 		</h3>
 		<div class="hb-cmd-head-right">
+			{#if token.isNew && token.newSince}
+				<NewBadge since={token.newSince} />
+			{/if}
 			<PermissionBadge
 				tier={token.requiredTier}
 				canRun={token.canRun}

@@ -4,6 +4,7 @@
 	import PermissionBadge from './PermissionBadge.svelte';
 	import LoginCta from './LoginCta.svelte';
 	import BookmarkToggle from './BookmarkToggle.svelte';
+	import NewBadge from './NewBadge.svelte';
 
 	type Props = { token: SectionToken };
 	let { token }: Props = $props();
@@ -22,6 +23,9 @@
 			<h2 class="hb-section-title hb-section-title-2">{token.headingText}</h2>
 		{:else}
 			<h3 class="hb-section-title hb-section-title-3">{token.headingText}</h3>
+		{/if}
+		{#if token.isNew && token.newSince}
+			<NewBadge since={token.newSince} />
 		{/if}
 		{#if showBadge}
 			<PermissionBadge tier={token.requiredTier} canRun={token.canRun} />

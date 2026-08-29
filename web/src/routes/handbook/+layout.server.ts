@@ -7,11 +7,13 @@
 import type { LayoutServerLoad } from "./$types";
 import { listDocs } from "$lib/server/handbook";
 import { listBookmarks } from "$lib/server/handbook/bookmarksDb";
+import { getWhatsNew } from "$lib/server/handbook/whatsNew";
 
 export const load: LayoutServerLoad = async ({ locals }) => {
   const user = locals.user ?? null;
   const tier = user?.tier ?? null;
   const docs = listDocs({ tier });
   const bookmarks = user ? listBookmarks(user.id) : [];
-  return { user, tier, docs, bookmarks };
+  const whatsNew = getWhatsNew({ tier });
+  return { user, tier, docs, bookmarks, whatsNew };
 };
