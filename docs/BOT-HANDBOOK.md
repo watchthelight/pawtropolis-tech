@@ -1972,15 +1972,15 @@ The help system organizes commands into 9 categories:
 |----------|--------------|
 | Gate & Verification | accept, reject, kick, unclaim, gate |
 | Configuration | config (with 24+ subcommands) |
-| Moderation | audit, flag, isitreal, unblock |
+| Moderation | audit, flag, isitreal, unblock, report, cleanup, purge |
 | Queue Management | listopen, search, sample |
 | Analytics | stats (activity, approval-rate, leaderboard, user, export, reset, history) |
 | Messaging | send, poke, modmail, qotd |
 | Role Automation | roles, restoreroles, panic |
 | Artist System | artistqueue, art, redeemreward, usebyte |
+| Rewards & Inventory | stash, redeem |
 | Events | movie, event, attendance, verify |
 | Tickets | postticketpanel, closeticket, assignticket |
-| Moderation | audit, flag, isitreal, unblock, report, cleanup, purge |
 | System | help, health, update, database, resetdata, backfill |
 
 Click any category button to see all commands in that category. From there, use the select menu to dive into specific commands.
@@ -2050,6 +2050,63 @@ Redeem your Byte Token for an XP multiplier. This is a self-service command: no 
 ```
 
 ---
+
+### `/stash`
+<!-- new: 2026-08-29 -->
+**Who can use it:** Everyone
+
+See the reward items you are holding. Reward roles do not stack in Discord: you either have a role or you don't, so a second copy of the same ticket used to vanish. The bot now takes the role off you about a minute after you earn it and banks it here instead, where it stacks properly.
+
+Not to be confused with Mimu's `/inventory`, which holds currency items. `/stash` is only for Pawtropolis Tech reward items: art tickets and Byte Tokens.
+
+| Option | Required? | What it does |
+|--------|-----------|--------------|
+| `user` | No | Staff only: view someone else's stash |
+
+**How it works:**
+
+1. You earn a reward role the usual way (Patreon, level up, a Mimu purchase, a giveaway)
+2. The bot waits about a minute, so the bot that granted it can finish its own checks
+3. The role comes off and the item lands in your stash, stacking with any you already had
+4. `/redeem` takes one back out when you want to use it
+
+**What lands here:** art tickets (headshot, half-body, emoji, full-body) and Byte Tokens. A role handed to you directly by a staff member stays on you and is not banked.
+
+**Examples:**
+```
+/stash
+/stash user:@Someone
+```
+
+---
+
+### `/redeem`
+<!-- new: 2026-08-29 -->
+**Who can use it:** Everyone
+
+Take one item out of your stash. The role goes back on you, and from there the normal flow applies: staff run `/redeemreward` to cash in an art ticket, and `/usebyte` activates a Byte Token.
+
+| Option | Required? | What it does |
+|--------|-----------|--------------|
+| `item` | Yes | Which item to use. The list autocompletes from what you actually hold |
+
+**How it works:**
+
+1. Run `/redeem` and pick an item from the autocomplete list
+2. Your stack drops by one and the matching role is added back to you
+3. Use the role as normal
+4. If the role cannot be handed over for any reason, the item is refunded automatically
+
+**One at a time:** you cannot redeem a second copy of an item while the first is still out. Finish the one you have before pulling the next.
+
+**Examples:**
+```
+/redeem item:emoji
+/redeem item:byte:mythic
+```
+
+---
+
 
 ### `/update`
 **Who can use it:** Bot Owner only

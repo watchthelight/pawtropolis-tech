@@ -103,7 +103,7 @@ AllBytes only come in Epic rarity or higher.
 
 ### How to Redeem
 
-1. Check your inventory with `/inventory` to confirm the Byte is there.
+1. Check your inventory with `/inventory` to confirm the Byte is there. (`/inventory` is Mimu's currency inventory. Pawtropolis Tech reward items live in `/stash`, which is a separate list.)
 2. Run `/shop use <item>` to consume it. This adds a role to your profile matching the Byte's level and duration.
 3. With the role applied, run `/byte` in channel `896070890457018384` to activate it.
 4. For AllBytes, a staff member activates it; the global XP boost is announced in the staff-managed AllByte announcement thread (link in the live `「🔍」server-info` Reward System post).

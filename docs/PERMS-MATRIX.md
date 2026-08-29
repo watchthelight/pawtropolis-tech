@@ -83,6 +83,9 @@ Commands available to all server members:
 | `/art getstatus` | Check progress of your personal art reward |
 | `/qotd suggest` | Submit a QOTD question for staff review (1/hour, max 5 pending) |
 | `/sample` | Preview UI components for training purposes |
+| `/stash` | See the reward items you are holding (art tickets, Byte Tokens) |
+| `/redeem` | Take one item out of your stash; the role goes back on you |
+| `/usebyte` | Redeem a Byte Token for an XP multiplier |
 
 ---
 
@@ -212,7 +215,6 @@ Commands restricted to Server Dev role or Bot Owner user ID only:
 |---------|-------------|
 | `/database check` | Run database integrity checks |
 | `/database recover` | Attempt to recover corrupted data |
-| `/sync` | Sync slash commands to Discord |
 | `/poke @user` | Ping a user across multiple category channels |
 
 ---
