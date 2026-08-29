@@ -226,6 +226,9 @@ export function registerInteractionCreate(
             const { commandName } = interaction;
             if (commandName === "help") {
               await help.handleAutocomplete(interaction);
+            } else if (commandName === "redeem") {
+              const { handleAutocomplete } = await import("../commands/redeem.js");
+              await handleAutocomplete(interaction);
             }
             return;
           }

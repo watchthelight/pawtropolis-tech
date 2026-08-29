@@ -711,8 +711,59 @@ export const COMMAND_REGISTRY: CommandMetadata[] = [
       "Higher rarity tokens give better multipliers and longer durations",
       "Upgrading to a higher multiplier replaces your current one (remaining time is lost)",
     ],
-    relatedCommands: ["roles"],
-    aliases: ["byte", "redeem", "multiplier"],
+    relatedCommands: ["roles", "inventory"],
+    aliases: ["byte", "multiplier"],
+  },
+  {
+    name: "inventory",
+    description: "See the reward items you are holding",
+    category: "roles",
+    permissionLevel: "public",
+    usage: "/inventory [user:<member>]",
+    options: [
+      {
+        name: "user",
+        description: "Staff only: view someone else's inventory",
+        type: "user",
+        required: false,
+      },
+    ],
+    examples: ["/inventory", "/inventory user:@Someone"],
+    notes:
+      "Reward roles do not stack, so the bot banks them here instead. " +
+      "Items arrive automatically about a minute after you earn the role.",
+    workflowTips: [
+      "Stacks show as x2, x3 and so on",
+      "Use /redeem to take one back out",
+    ],
+    relatedCommands: ["redeem", "usebyte", "redeemreward"],
+    aliases: ["inv", "items"],
+  },
+  {
+    name: "redeem",
+    description: "Take one item out of your inventory",
+    category: "roles",
+    permissionLevel: "public",
+    usage: "/redeem item:<item>",
+    options: [
+      {
+        name: "item",
+        description: "Which item to use",
+        type: "string",
+        required: true,
+      },
+    ],
+    examples: ["/redeem item:emoji", "/redeem item:byte:mythic"],
+    notes:
+      "Hands the role back so the normal flow can consume it: staff run /redeemreward " +
+      "for art tickets, and /usebyte activates a byte token. One item at a time.",
+    workflowTips: [
+      "The item list autocompletes from what you actually hold",
+      "Finish the item you have out before redeeming the next one",
+      "A failed hand-off refunds the item automatically",
+    ],
+    relatedCommands: ["inventory", "usebyte", "redeemreward"],
+    aliases: ["use", "claim"],
   },
   {
     name: "panic",
@@ -793,8 +844,8 @@ export const COMMAND_REGISTRY: CommandMetadata[] = [
       "Artists earn tickets through the rotation system",
       "Different ticket types have different rewards",
     ],
-    relatedCommands: ["artistqueue", "art"],
-    aliases: ["redeem", "ticket"],
+    relatedCommands: ["artistqueue", "art", "inventory"],
+    aliases: ["ticket"],
   },
 
   // ============================================================================

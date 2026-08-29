@@ -228,6 +228,10 @@ commands.set(skullmode.data.name, wrapCommand("skullmode", skullmode.execute));
 // Byte token self-service redemption
 import * as usebyte from "./commands/usebyte.js";
 commands.set(usebyte.data.name, wrapCommand("usebyte", usebyte.execute));
+import * as inventory from "./commands/inventory.js";
+commands.set(inventory.data.name, wrapCommand("inventory", inventory.execute));
+import * as redeem from "./commands/redeem.js";
+commands.set(redeem.data.name, wrapCommand("redeem", redeem.execute));
 
 // Content report command (ambassador violation reports)
 import * as report from "./commands/report.js";
