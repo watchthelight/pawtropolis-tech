@@ -25,4 +25,3 @@ _(none)_
 
 - [ ] [Verification identity documents are retained indefinitely in the log channel with no deletion policy](todo/00258.md) `Low`
 - [ ] [Remove Claude from the GitHub contributors panel](todo/00259.md) `Low`
-- [ ] [Claim all open button on the reviews page](todo/00262.md) `Low`

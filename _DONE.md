@@ -4,6 +4,10 @@ One-line dated ledger. Detail in [`done/`](./done/). Pair of [`_BACKLOG.md`](./_
 
 Reverse chronological by completion date.
 
+## 2026-08-29
+
+- [x] [Claim all open button on the reviews page](done/00262.md) `Low` Owner-only button on the reviews queue that loops the unclaimed applications through the existing `POST /api/review/claim`, so the permission gate, appId validation and 409 already-claimed handling all still apply. Confirm step with a count, progress while running, result line, queue refresh at the end. No new endpoint and no bot API change.
+
 ## 2026-05-31
 
 - [x] [PM2 self-stop kills the process mid-restore](done/00068.md) `High` restoreCandidate no longer stops its own PM2 process (which killed this event loop mid-restore). It replaces (atomic temp+rename, WAL-sidecar cleanup) and verifies while running, then schedules a detached `pm2 restart` so the success reply flushes first. Atomic rename isolates the old connection on the unlinked inode, so the live restore cannot corrupt the new file.
