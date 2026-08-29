@@ -34,7 +34,7 @@ jobs:
     env:
       # Dummy values for test environment validation
       DISCORD_TOKEN: test_token_for_ci
-      CLIENT_ID: 123456789012345678
+      CLIENT_ID: "123456789012345678"
       RESET_PASSWORD: test_password
       DB_PATH: ./data/data.db
     steps:

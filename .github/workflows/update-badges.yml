@@ -28,7 +28,7 @@ jobs:
       # Same dummy values as the CI test job. Without these the suite aborts
       # on env validation and the coverage badge silently reports 0%.
       DISCORD_TOKEN: test_token_for_ci
-      CLIENT_ID: 123456789012345678
+      CLIENT_ID: "123456789012345678"
       RESET_PASSWORD: test_password
       DB_PATH: ./data/data.db
 
@@ -49,6 +49,14 @@ jobs:
         run: |
           mkdir -p data
           npx tsx scripts/init-test-db.ts
+
+      - name: Install web deps + sync SvelteKit
+        # Mirrors the CI test job: tests/web/*.test.ts needs
+        # web/.svelte-kit/tsconfig.json, which only svelte-kit sync generates.
+        run: |
+          cd web
+          npm ci
+          npx svelte-kit sync
 
       - name: Run tests with coverage
         run: npm run test -- --coverage
