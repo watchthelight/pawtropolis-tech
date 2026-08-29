@@ -490,7 +490,7 @@ CREATE TABLE IF NOT EXISTS guild_config (
   min_join_age_hours       INTEGER NOT NULL DEFAULT 0 CHECK (min_join_age_hours >= 0),
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-, avatar_scan_enabled INTEGER NOT NULL DEFAULT 0, avatar_scan_nsfw_threshold REAL NOT NULL DEFAULT 0.60, avatar_scan_skin_edge_threshold REAL NOT NULL DEFAULT 0.18, avatar_scan_weight_model REAL NOT NULL DEFAULT 0.7, avatar_scan_weight_edge REAL NOT NULL DEFAULT 0.3, welcome_template TEXT, info_channel_id TEXT, rules_channel_id TEXT, welcome_ping_role_id TEXT, mod_role_ids TEXT, gatekeeper_role_id TEXT, modmail_log_channel_id TEXT, review_roles_mode TEXT NOT NULL DEFAULT 'level_only', modmail_delete_on_close INTEGER DEFAULT 1, logging_channel_id TEXT, flags_channel_id TEXT, silent_first_msg_days INTEGER DEFAULT 90, dadmode_enabled INTEGER DEFAULT 0, dadmode_odds INTEGER DEFAULT 1000, listopen_public_output INTEGER DEFAULT 1, forum_channel_id TEXT, notify_role_id TEXT, notify_mode TEXT DEFAULT 'post', notification_channel_id TEXT, notify_cooldown_seconds INTEGER DEFAULT 5, notify_max_per_hour INTEGER DEFAULT 10, ping_dev_on_app INTEGER NOT NULL DEFAULT 1, panic_mode INTEGER NOT NULL DEFAULT 0, panic_enabled_at INTEGER, panic_enabled_by TEXT, updated_at_s INTEGER, suggestion_channel_id TEXT, suggestion_cooldown INTEGER DEFAULT 3600, artist_role_id TEXT, ambassador_role_id TEXT, server_artist_channel_id TEXT, artist_ticket_roles_json TEXT, support_channel_id TEXT, artist_ignored_users_json TEXT, backfill_notification_channel_id TEXT, bot_dev_role_id TEXT, gate_answer_max_length INTEGER, banner_sync_interval_minutes INTEGER, modmail_forward_max_size INTEGER, retry_max_attempts INTEGER, retry_initial_delay_ms INTEGER, retry_max_delay_ms INTEGER, circuit_breaker_threshold INTEGER, circuit_breaker_reset_ms INTEGER, avatar_scan_hard_threshold REAL, avatar_scan_soft_threshold REAL, avatar_scan_racy_threshold REAL, flag_rate_limit_ms INTEGER, flag_cooldown_ttl_ms INTEGER, banner_sync_enabled INTEGER DEFAULT 1, skullmode_enabled INTEGER DEFAULT 0, skullmode_odds INTEGER DEFAULT 1000, report_forum_id TEXT, nsfw_alert_role_id TEXT, qotd_review_channel_id TEXT, qotd_role_id TEXT, pulse_excluded_category_ids_json TEXT, vote_out_threshold INTEGER DEFAULT 2, admin_role_id TEXT, verify_thread_parent_id TEXT, unverified_rules_channel_id TEXT, level_reward_dm_enabled INTEGER DEFAULT 1);
+, avatar_scan_enabled INTEGER NOT NULL DEFAULT 0, avatar_scan_nsfw_threshold REAL NOT NULL DEFAULT 0.60, avatar_scan_skin_edge_threshold REAL NOT NULL DEFAULT 0.18, avatar_scan_weight_model REAL NOT NULL DEFAULT 0.7, avatar_scan_weight_edge REAL NOT NULL DEFAULT 0.3, welcome_template TEXT, info_channel_id TEXT, rules_channel_id TEXT, welcome_ping_role_id TEXT, mod_role_ids TEXT, gatekeeper_role_id TEXT, modmail_log_channel_id TEXT, review_roles_mode TEXT NOT NULL DEFAULT 'level_only', modmail_delete_on_close INTEGER DEFAULT 1, logging_channel_id TEXT, flags_channel_id TEXT, silent_first_msg_days INTEGER DEFAULT 90, dadmode_enabled INTEGER DEFAULT 0, dadmode_odds INTEGER DEFAULT 1000, listopen_public_output INTEGER DEFAULT 1, forum_channel_id TEXT, notify_role_id TEXT, notify_mode TEXT DEFAULT 'post', notification_channel_id TEXT, notify_cooldown_seconds INTEGER DEFAULT 5, notify_max_per_hour INTEGER DEFAULT 10, ping_dev_on_app INTEGER NOT NULL DEFAULT 1, panic_mode INTEGER NOT NULL DEFAULT 0, panic_enabled_at INTEGER, panic_enabled_by TEXT, updated_at_s INTEGER, suggestion_channel_id TEXT, suggestion_cooldown INTEGER DEFAULT 3600, artist_role_id TEXT, ambassador_role_id TEXT, server_artist_channel_id TEXT, artist_ticket_roles_json TEXT, support_channel_id TEXT, artist_ignored_users_json TEXT, backfill_notification_channel_id TEXT, bot_dev_role_id TEXT, gate_answer_max_length INTEGER, banner_sync_interval_minutes INTEGER, modmail_forward_max_size INTEGER, retry_max_attempts INTEGER, retry_initial_delay_ms INTEGER, retry_max_delay_ms INTEGER, circuit_breaker_threshold INTEGER, circuit_breaker_reset_ms INTEGER, avatar_scan_hard_threshold REAL, avatar_scan_soft_threshold REAL, avatar_scan_racy_threshold REAL, flag_rate_limit_ms INTEGER, flag_cooldown_ttl_ms INTEGER, banner_sync_enabled INTEGER DEFAULT 1, skullmode_enabled INTEGER DEFAULT 0, skullmode_odds INTEGER DEFAULT 1000, report_forum_id TEXT, nsfw_alert_role_id TEXT, qotd_review_channel_id TEXT, qotd_role_id TEXT, pulse_excluded_category_ids_json TEXT, vote_out_threshold INTEGER DEFAULT 2, admin_role_id TEXT, verify_thread_parent_id TEXT, unverified_rules_channel_id TEXT, level_reward_dm_enabled INTEGER DEFAULT 1, inventory_enabled TEXT, inventory_grace_seconds INTEGER, inventory_debounce_seconds INTEGER, inventory_source_bot_ids_json TEXT, inventory_extra_roles_json TEXT);
 CREATE TABLE IF NOT EXISTS guild_game_config (
         guild_id TEXT PRIMARY KEY,
         qualification_percentage INTEGER DEFAULT 50,
@@ -1186,3 +1186,52 @@ CREATE INDEX IF NOT EXISTS idx_vote_out_app ON vote_out(app_id);
 CREATE INDEX IF NOT EXISTS idx_vs_guild_joined ON voice_session(guild_id, joined_at_s);
 CREATE INDEX IF NOT EXISTS idx_vs_guild_user ON voice_session(guild_id, user_id);
 CREATE UNIQUE INDEX IF NOT EXISTS ux_avatar_scan_application ON avatar_scan(application_id);
+
+-- ---------------------------------------------------------------------------
+-- Stackable reward inventory (migration 083_inventory).
+-- Added by hand for the same reason as the 078 block above: gen:test-schema needs a
+-- fully-migrated source DB. A future regen reproduces these in sorted order.
+-- No foreign keys, so their position in the file is safe.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS inventory_items (
+      guild_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      item_key TEXT NOT NULL,
+      quantity INTEGER NOT NULL DEFAULT 0,
+      updated_at_s INTEGER NOT NULL DEFAULT (unixepoch()),
+      UNIQUE(guild_id, user_id, item_key)
+    );
+CREATE TABLE IF NOT EXISTS inventory_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      guild_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      item_key TEXT NOT NULL,
+      delta INTEGER NOT NULL,
+      source TEXT NOT NULL,
+      actor_id TEXT,
+      reason TEXT,
+      created_at_s INTEGER NOT NULL DEFAULT (unixepoch())
+    );
+CREATE TABLE IF NOT EXISTS pending_item_capture (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      guild_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      role_id TEXT NOT NULL,
+      item_key TEXT NOT NULL,
+      grant_key TEXT,
+      detected_at_s INTEGER NOT NULL DEFAULT (unixepoch()),
+      remove_at_s INTEGER NOT NULL,
+      attempts INTEGER NOT NULL DEFAULT 0,
+      UNIQUE(guild_id, user_id, role_id)
+    );
+CREATE TABLE IF NOT EXISTS inventory_grant_keys (
+      guild_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      grant_key TEXT NOT NULL,
+      created_at_s INTEGER NOT NULL DEFAULT (unixepoch()),
+      UNIQUE(guild_id, user_id, grant_key)
+    );
+CREATE INDEX IF NOT EXISTS idx_pending_item_capture_due
+    ON pending_item_capture(remove_at_s);
+CREATE INDEX IF NOT EXISTS idx_inventory_log_user
+    ON inventory_log(guild_id, user_id, created_at_s DESC);
