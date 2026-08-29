@@ -19,31 +19,25 @@ const __dirname = dirname(__filename);
 const rootDir = resolve(__dirname, "..");
 
 /**
- * Count total commands by parsing buildCommands.ts output
+ * Count total commands from the local command spec.
+ *
+ * This used to shell out to `npm run print:cmds`, which needs a live Discord
+ * login. In CI that always failed and the hardcoded fallback published a wrong
+ * count, so read the offline spec and fail loudly instead.
  */
 function countCommands() {
-  try {
-    // Run the print:cmds script and count lines
-    const output = execSync("npm run print:cmds 2>/dev/null || echo ''", {
-      cwd: rootDir,
-      encoding: "utf-8",
-    });
+  const output = execSync("npx tsx scripts/print-command-count.ts", {
+    cwd: rootDir,
+    encoding: "utf-8",
+  });
 
-    // Count command names (lines that start with /)
-    const commands = output.split("\n").filter((line) => line.trim().startsWith("/"));
-    return commands.length || 36; // Fallback to known count
-  } catch {
-    // Fallback: count .ts files in src/commands/ (rough estimate)
-    try {
-      const commandsDir = join(rootDir, "src/commands");
-      const files = readdirSync(commandsDir).filter(
-        (f) => f.endsWith(".ts") && !f.includes("index") && !f.includes("README")
-      );
-      return files.length;
-    } catch {
-      return 36; // Known count as fallback
-    }
+  const match = output.match(/COMMAND_COUNT=(\d+)/);
+  if (!match) {
+    console.error("scripts/print-command-count.ts printed no COMMAND_COUNT line. Output:");
+    console.error(output);
+    process.exit(1);
   }
+  return Number(match[1]);
 }
 
 /**
@@ -108,17 +102,22 @@ function getTestMetrics() {
 
   countTests(join(rootDir, "tests"));
 
-  // Parse coverage summary if available
+  // Parse coverage summary. A missing or unreadable summary means the test
+  // run never completed, and publishing 0% would be a lie, so stop instead.
+  const coveragePath = join(rootDir, "coverage/coverage-summary.json");
+  let coverageData;
   try {
-    const coveragePath = join(rootDir, "coverage/coverage-summary.json");
-    const coverageData = JSON.parse(readFileSync(coveragePath, "utf-8"));
-    if (coverageData.total && coverageData.total.lines) {
-      coverage = Math.round(coverageData.total.lines.pct);
-    }
-  } catch {
-    // Coverage not available
-    coverage = 0;
+    coverageData = JSON.parse(readFileSync(coveragePath, "utf-8"));
+  } catch (err) {
+    console.error(`Cannot read ${coveragePath}: ${err.message}`);
+    console.error("Run `npm run test -- --coverage` before generating badges.");
+    process.exit(1);
   }
+  if (!coverageData.total || !coverageData.total.lines) {
+    console.error(`${coveragePath} has no total.lines section.`);
+    process.exit(1);
+  }
+  coverage = Math.round(coverageData.total.lines.pct);
 
   return { testCount, coverage };
 }

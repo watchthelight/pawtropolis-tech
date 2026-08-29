@@ -24,6 +24,13 @@ jobs:
     if: >
       github.event_name != 'workflow_run' ||
       github.event.workflow_run.conclusion == 'success'
+    env:
+      # Same dummy values as the CI test job. Without these the suite aborts
+      # on env validation and the coverage badge silently reports 0%.
+      DISCORD_TOKEN: test_token_for_ci
+      CLIENT_ID: 123456789012345678
+      RESET_PASSWORD: test_password
+      DB_PATH: ./data/data.db
 
     steps:
       - uses: actions/checkout@v4
@@ -35,6 +42,13 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Prepare test database
+        # Mirrors the CI test job: the suite expects ./data/data.db to carry
+        # the production schema from tests/fixtures/schema.sql.
+        run: |
+          mkdir -p data
+          npx tsx scripts/init-test-db.ts
 
       - name: Run tests with coverage
         run: npm run test -- --coverage
