@@ -163,6 +163,12 @@ export type GuildConfig = {
   vote_out_threshold?: number | null; // Votes needed to reject via Vote Out (default: 2)
   // Patreon art reward automation toggle (062 migration)
   patreon_art_rewards_enabled?: string | null; // "true" = enabled, default off
+  // Stackable reward inventory (083 migration)
+  inventory_enabled?: string | null; // "true" = enabled, default off
+  inventory_grace_seconds?: number | null; // Delay before a granted role is banked (default 60)
+  inventory_debounce_seconds?: number | null; // Repeat-credit suppression window (default 120)
+  inventory_source_bot_ids_json?: string | null; // Allowlist of granting bots; empty = any bot but us
+  inventory_extra_roles_json?: string | null; // [{roleId,itemKey,display,policy}] beyond tickets/tokens
   // Per-user verify thread infrastructure (066 migration)
   // Hidden parent text channel where private verify threads are created. When NULL,
   // the threadGate feature short-circuits and the bot's behavior is unchanged.
