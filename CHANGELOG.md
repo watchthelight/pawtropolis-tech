@@ -6,12 +6,42 @@ All changes to Pawtropolis Tech are tracked here.
 
 ## [Unreleased]
 
-Everything landed since 6.0.0 (2026-05-15). The headline is the public Stats
-Observatory page; the rest is a deep correctness, security, and tooling pass:
+Everything landed since 6.0.0 (2026-05-15). Three headlines: the public Stats
+Observatory page, the Sage Observatory redesign of the whole dashboard, and a
+196-finding multi-agent codebase audit worked end to end. Underneath that,
 TypeScript strict mode finished, the test framework upgraded, large modules
-split apart, and the May security findings cleared.
+split apart, and every May security finding cleared.
 
 ### Added
+
+- **Sage Observatory design system**: a token-based visual language adopted across
+  every dashboard route and component, with three themes plus a Night/Day toggle, a
+  Legacy switch, and an Appearance panel. The old four-style switcher and its alias
+  token layer are gone. The public Observatory page also gained an optional classic
+  Windows 95/98 desktop theme.
+- **Handbook bookmarks**: star any section from its heading or from the table of
+  contents; saved sections appear in a rail alongside the doc and persist per user
+  rather than living in the browser.
+- **Handbook diagrams**: ```mermaid fences render as diagrams instead of literal
+  source, which fixes the Mod Handbook decision-flow chart.
+- **Handbook what's-new highlights**: a section marked with an HTML comment carries a
+  "New" badge and appears in a banner on the handbook and the dashboard home for a
+  week, then drops off on its own.
+- **Stackable reward inventory** (`/stash`, `/redeem`, migration 083): a Discord role
+  is binary, so a second copy of a reward role used to be lost. Reward roles are now
+  captured into a per-user ledger that stacks. Capture waits out a grace window so
+  Mimu and Amari can finish their own post-grant checks, queues in SQLite so a restart
+  mid-window still banks the item, and reads the audit log so a role handed out by a
+  member of staff is left alone. `/redeem` hands one role back for the existing
+  `/redeemreward` and `/usebyte` flows to consume.
+- **Claim all open** on the reviews queue, for the bot developer.
+- **Level reward DM toggle** (migration 082, wired into `/config`): silence reward DMs
+  per guild.
+- **Welcome flow**: the welcome embed is sent by DM and chat gets a single grouped
+  ping line instead of one message per member.
+- **Modmail** acknowledges relayed applicant DMs.
+- **`/redeemreward` opened to all staff** (Junior Moderator and above).
+- **Verified YCH role** wired into the art channel ping.
 
 - **Stats Observatory** (`/observatory`): a public, zero-JavaScript stats page
   with its own fixed night-sky theme, separate from the rest of the site. Fourteen
@@ -30,6 +60,22 @@ split apart, and the May security findings cleared.
   schema. (#00045)
 
 ### Changed
+
+- **196-finding codebase audit** from a full multi-agent pass, filed as tracked issues
+  and worked through in batches across commands, core and schedulers, modmail, review
+  handlers, verify and gate, scripts and migrations, and the web dashboard.
+- **Tautological tests replaced**, in two waves: suites that asserted against string
+  literals now exercise the real modules.
+- **Migration runner owns stamping** and supports an optional `verify<Version><Name>`
+  post-condition, so a body that half-applies without throwing rolls back instead of
+  being recorded as applied (#00141).
+- **Observatory churn, cohort and pulse figures** derive from the append-only
+  `action_log`, and member departures are logged as events.
+- **Byte token config** extracted to `src/constants/byteTokens.ts` so modules needing
+  only the role IDs no longer pull in prepared statements at import time.
+- **Dead code removed**: the unregistered `/analytics` and `/approval-rate` modules,
+  the duplicate review barrel, the help search-session and nonce machinery, the Xenova
+  embed pipeline and its production cron entry, and a long tail of unused exports.
 
 - **TypeScript strict mode completed.** Enabled `noUncheckedIndexedAccess`
   (354 errors cleared across `src/lib`, `src/web`, `src/features`, `src/commands`,
@@ -53,6 +99,36 @@ split apart, and the May security findings cleared.
   production install footprint (#00038).
 
 ### Fixed
+
+- **Byte tokens**: redemption is grant-then-consume with rollback, the confirm button
+  is guarded against double-clicks, overlapping multipliers resolve longest-wins, and
+  expiry reconciles per row (#00062, #00064, #00146, #00166, #00170).
+- **Patreon art tickets**: redemptions are tracked, so a tier granting more than one
+  ticket re-issues the role instead of permanently under-paying the top tier (#00077,
+  #00085).
+- **`/redeemreward`**: the next artist is claimed atomically at confirm time, closing a
+  race where two back-to-back confirms drew the same artist; a spend now hard-fails
+  when the recipient does not hold the ticket role.
+- **Modmail**: the 7-day reopen window parses `closed_at` as UTC, threads resolve
+  before reopening in place, and `modmail_delete_on_close` is honored (#00114, #00116).
+- **Review**: ephemeral claim feedback no longer clobbers the public card, post-defer
+  error handlers stay ephemeral, duplicate review cards are guarded, and vote-out
+  survives the member leaving (#00073, #00074, #00078, #00079, #00138, #00142).
+- **Art**: `art_job` timestamps parse as UTC, the monthly leaderboard boundary is
+  computed in SQLite UTC, and the reassign INSERT binds `ticket_id` so the transaction
+  commits.
+- **Push notifications**: a stale cached tier is no longer trusted at send time, and
+  demoted subscriptions are pruned, closing a tier-gated PII leak.
+- **Verify**: the Finalize button is acknowledged, and the identity-document log
+  channel resolves from per-guild config with an env override (#00162).
+- **Gate**: `fetchPins().items` is treated as an array, and DM verification sessions
+  are scoped by guild (#00164, #00239).
+- **Timers**: the health-check timeout and the rate-limit cleanup interval are cleared
+  and unref'd (#00189, #00238).
+- **Retention**: the daily `message_activity` prune is actually scheduled (#00250).
+- **Stats**: permanent rejections are counted via the `permanently_rejected` flag.
+- **Web**: the OAuth state cookie is scoped to the apex domain, the bot owner can log
+  in without guild membership, and the review queue cache busts on review events.
 
 - **Error-card "Ping developer" is now rate limited per trace** (10 minutes). One
   error pings the bot dev once no matter how many times the button is clicked;
@@ -90,6 +166,13 @@ split apart, and the May security findings cleared.
   (#00031).
 
 ### Internal
+
+- **Performance**: SSE-driven cache invalidation plus bounded review, modmail, heatmap
+  and pulse queries (#00094, #00149, #00176, #00177, #00244).
+- **Documentation**: `/stash` and `/redeem` documented in the bot handbook, the
+  permissions matrix and the slash-command reference; the stale `/sync` row removed
+  (it is not a registered command); the missing `/usebyte` row added; and the
+  Moderation category row that appeared twice with different contents merged.
 
 - **Test coverage expanded** without booting the bot: web API route and dashboard
   page tests (about 125 tests, new `tests/web/` helpers) (#00012); SSE handler tests
