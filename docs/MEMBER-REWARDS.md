@@ -95,11 +95,13 @@ AllBytes only come in Epic rarity or higher.
 
 | Rarity | Multiplier | Duration |
 |--------|------------|----------|
-| Common | 2x | 2 hours |
-| Rare | 3x | 6 hours |
-| Epic | 4x | 12 hours |
-| Legendary | 4x | 24 hours |
-| Mythic | 6x | up to 3 days |
+| Common | 2x | 12 hours |
+| Rare | 3x | 24 hours |
+| Epic | 5x | 48 hours |
+| Legendary | 5x | 72 hours (3 days) |
+| Mythic | 10x | 168 hours (7 days) |
+
+These are the values the bot actually applies, from `src/constants/byteTokens.ts`. They match the choice labels shown by `/usebyte` in Discord. If the `#server-info` forum post still shows the older figures (2x/2h through 6x/3 days), the forum post is the one that needs updating.
 
 ### How to Redeem
 

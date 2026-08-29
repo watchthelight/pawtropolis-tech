@@ -2032,11 +2032,11 @@ Redeem your Byte Token for an XP multiplier. This is a self-service command: no 
 
 | Token | Multiplier | Duration |
 |-------|------------|----------|
-| Byte Token [Common] | 2x XP | 2 hours |
-| Byte Token [Rare] | 3x XP | 6 hours |
-| Byte Token [Epic] | 4x XP | 12 hours |
-| Byte Token [Legendary] | 4x XP | 24 hours |
-| Byte Token [Mythic] | 6x XP | 72 hours (3 days) |
+| Byte Token [Common] | 2x XP | 12 hours |
+| Byte Token [Rare] | 3x XP | 24 hours |
+| Byte Token [Epic] | 5x XP | 48 hours |
+| Byte Token [Legendary] | 5x XP | 72 hours (3 days) |
+| Byte Token [Mythic] | 10x XP | 168 hours (7 days) |
 
 **Upgrading:** If you already have an active multiplier and use another token, the new one replaces the old one. Time remaining on the old multiplier is lost: you'll see a warning before confirming.
 
@@ -2410,7 +2410,7 @@ Batch multiple newly accepted users into one welcome message instead of one-per-
 
 | Subcommand | What it does |
 |------------|--------------|
-| `start` | Open a session — subsequent `/accept` results are queued, not posted |
+| `start` | Open a session: subsequent `/accept` results are queued, not posted |
 | `send` | Post one combined welcome and close the session |
 | `cancel` | Drop the queued welcomes and close the session |
 | `status` | Show how many users are queued and time remaining |
@@ -2429,7 +2429,7 @@ Replaces Ticket Tool for art commissions, modmail-overflow, and general first-pa
 ### `/postticketpanel`
 **Who can use it:** Manage Guild
 
-Posts (or refreshes in place) the ticket-system panel embeds in the configured panel channel. Idempotent — re-run after the ticket type registry changes to refresh the embeds without spamming the channel.
+Posts (or refreshes in place) the ticket-system panel embeds in the configured panel channel. Idempotent, so re-run it after the ticket type registry changes to refresh the embeds without spamming the channel.
 
 ### `/closeticket`
 **Who can use it:** Community Ambassador or Mod Team (also requires Manage Messages)
@@ -2468,7 +2468,7 @@ Triggers an intentional exception. Used to verify the error card, the wide-event
 ### `/testidea`
 **Who can use it:** Bot Owner
 
-The rotating bot-dev experiment slot. Toggles a single mass-server action on or off. The behavior changes from one release to the next — current implementation lives in `src/commands/testidea/currentAction.ts`. Snapshot of pre-toggle state is persisted to `testidea_state` and is scoped by `ACTION_ID` so a swap of the action body cannot revert with a mismatched snapshot. Read the source before running it.
+The rotating bot-dev experiment slot. Toggles a single mass-server action on or off. The behavior changes from one release to the next; the current implementation lives in `src/commands/testidea/currentAction.ts`. Snapshot of pre-toggle state is persisted to `testidea_state` and is scoped by `ACTION_ID` so a swap of the action body cannot revert with a mismatched snapshot. Read the source before running it.
 
 ### `/skullmode`
 **Who can use it:** Bot Owner, Senior Moderator+
