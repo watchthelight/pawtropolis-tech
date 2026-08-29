@@ -152,6 +152,18 @@ export async function startSchedulers(client: Client): Promise<void> {
     },
     { level: "warn" },
   );
+
+  // Inventory capture: banks reward roles once their grace window expires, every 10s
+  await runStartupTask(
+    "scheduler_item_capture",
+    async () => {
+      const { startItemCaptureScheduler } = await import(
+        "../scheduler/itemCaptureScheduler.js"
+      );
+      startItemCaptureScheduler(client);
+    },
+    { level: "warn" },
+  );
 }
 
 /**
@@ -209,4 +221,9 @@ export async function stopSchedulers(): Promise<void> {
     "../scheduler/messageActivityPruneScheduler.js"
   );
   stopMessageActivityPruneScheduler();
+
+  const { stopItemCaptureScheduler } = await import(
+    "../scheduler/itemCaptureScheduler.js"
+  );
+  stopItemCaptureScheduler();
 }
