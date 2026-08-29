@@ -63,7 +63,7 @@ export const SLASH_COMMAND_NAMES = [
 
   // Byte tokens
   "usebyte",
-  "inventory",
+  "stash",
   "redeem",
 
   // Admin tooling

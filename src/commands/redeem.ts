@@ -27,7 +27,7 @@ import { creditItem, debitItem, getInventory } from "../features/inventory/store
 
 export const data = new SlashCommandBuilder()
   .setName("redeem")
-  .setDescription("Take one item out of your inventory")
+  .setDescription("Take one item out of your stash")
   .addStringOption((opt) =>
     opt
       .setName("item")
@@ -85,7 +85,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   const item = getItemByKey(guild.id, itemKey);
   if (!item) {
     await interaction.reply({
-      content: "That item does not exist. Pick one from the list `/inventory` shows you.",
+      content: "That item does not exist. Pick one from the list `/stash` shows you.",
       flags: MessageFlags.Ephemeral,
     });
     return;

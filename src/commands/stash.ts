@@ -1,11 +1,11 @@
 /**
- * Pawtropolis Tech -- src/commands/inventory.ts
- * WHAT: /inventory shows the reward items a member is holding.
+ * Pawtropolis Tech -- src/commands/stash.ts
+ * WHAT: /stash shows the reward items a member is holding.
  * WHY: Reward roles do not stack, so a second copy used to vanish. The ledger holds the
  *      real count and this is how a member reads it back.
  * FLOWS:
- *  - /inventory            -> your own stacks
- *  - /inventory user:@Them -> staff view of someone else
+ *  - /stash            -> your own stacks
+ *  - /stash user:@Them -> staff view of someone else
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
@@ -24,12 +24,12 @@ import { displayForKey, inventoryEnabled } from "../features/inventory/catalog.j
 import { getInventory } from "../features/inventory/store.js";
 
 export const data = new SlashCommandBuilder()
-  .setName("inventory")
+  .setName("stash")
   .setDescription("See the reward items you are holding")
   .addUserOption((opt) =>
     opt
       .setName("user")
-      .setDescription("Staff only: view someone else's inventory")
+      .setDescription("Staff only: view someone else's stash")
       .setRequired(false)
   )
   .setDMPermission(false);
@@ -63,7 +63,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
 
   if (requested && requested.id !== interaction.user.id && !isStaffViewer(viewer, guild.id, canManageRoles)) {
     await interaction.reply({
-      content: "You can only view your own inventory.",
+      content: "You can only view your own stash.",
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -74,7 +74,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   const rows = await withStep(ctx, "read_inventory", () => getInventory(guild.id, target.id));
 
   const embed = new EmbedBuilder()
-    .setTitle(target.id === interaction.user.id ? "Your Inventory" : `Inventory: ${target.username}`)
+    .setTitle(target.id === interaction.user.id ? "Your Stash" : `Stash: ${target.username}`)
     .setColor(0xf59e0b);
 
   if (rows.length === 0) {

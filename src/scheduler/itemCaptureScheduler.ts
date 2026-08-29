@@ -199,7 +199,7 @@ async function processCapture(client: Client, row: PendingCapture): Promise<bool
     .send({
       content:
         `**${item.display}** was added to your inventory (now **x${quantity}**).\n` +
-        "Use `/inventory` to see everything you're holding, and `/redeem` when you want to use one.",
+        "Use `/stash` to see everything you're holding, and `/redeem` when you want to use one.",
     })
     .catch(() => undefined);
 

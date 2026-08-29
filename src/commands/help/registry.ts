@@ -711,37 +711,38 @@ export const COMMAND_REGISTRY: CommandMetadata[] = [
       "Higher rarity tokens give better multipliers and longer durations",
       "Upgrading to a higher multiplier replaces your current one (remaining time is lost)",
     ],
-    relatedCommands: ["roles", "inventory"],
+    relatedCommands: ["roles", "stash"],
     aliases: ["byte", "multiplier"],
   },
   {
-    name: "inventory",
+    name: "stash",
     description: "See the reward items you are holding",
     category: "roles",
     permissionLevel: "public",
-    usage: "/inventory [user:<member>]",
+    usage: "/stash [user:<member>]",
     options: [
       {
         name: "user",
-        description: "Staff only: view someone else's inventory",
+        description: "Staff only: view someone else's stash",
         type: "user",
         required: false,
       },
     ],
-    examples: ["/inventory", "/inventory user:@Someone"],
+    examples: ["/stash", "/stash user:@Someone"],
     notes:
       "Reward roles do not stack, so the bot banks them here instead. " +
-      "Items arrive automatically about a minute after you earn the role.",
+      "Items arrive automatically about a minute after you earn the role. " +
+      "Not to be confused with Mimu's /inventory, which holds currency items.",
     workflowTips: [
       "Stacks show as x2, x3 and so on",
       "Use /redeem to take one back out",
     ],
     relatedCommands: ["redeem", "usebyte", "redeemreward"],
-    aliases: ["inv", "items"],
+    aliases: ["inv", "items", "locker"],
   },
   {
     name: "redeem",
-    description: "Take one item out of your inventory",
+    description: "Take one item out of your stash",
     category: "roles",
     permissionLevel: "public",
     usage: "/redeem item:<item>",
@@ -762,7 +763,7 @@ export const COMMAND_REGISTRY: CommandMetadata[] = [
       "Finish the item you have out before redeeming the next one",
       "A failed hand-off refunds the item automatically",
     ],
-    relatedCommands: ["inventory", "usebyte", "redeemreward"],
+    relatedCommands: ["stash", "usebyte", "redeemreward"],
     aliases: ["use", "claim"],
   },
   {
@@ -844,7 +845,7 @@ export const COMMAND_REGISTRY: CommandMetadata[] = [
       "Artists earn tickets through the rotation system",
       "Different ticket types have different rewards",
     ],
-    relatedCommands: ["artistqueue", "art", "inventory"],
+    relatedCommands: ["artistqueue", "art", "stash"],
     aliases: ["ticket"],
   },
 

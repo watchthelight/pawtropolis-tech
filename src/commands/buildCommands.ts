@@ -49,7 +49,7 @@ import { data as searchData } from "./search.js";
 import { data as artistqueueData } from "./artistqueue.js";
 import { data as redeemrewardData } from "./redeemreward.js";
 import { data as usebyteData } from "./usebyte.js";
-import { data as inventoryData } from "./inventory.js";
+import { data as stashData } from "./stash.js";
 import { data as redeemData } from "./redeem.js";
 import { data as artData } from "./art.js";
 import { data as auditData } from "./audit.js";
@@ -120,7 +120,7 @@ export function buildCommands() {
 
     // Byte token redemption - self-service XP multipliers
     usebyteData.toJSON(),
-    inventoryData.toJSON(),
+    stashData.toJSON(),
     redeemData.toJSON(),
 
     // Admin utilities
