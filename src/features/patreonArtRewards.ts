@@ -20,6 +20,8 @@ import { isPanicMode } from "./panicStore.js";
 import { logActionPretty } from "../logging/pretty.js";
 import { getTicketRoles, ART_TYPE_DISPLAY } from "./artistRotation/constants.js";
 import type { ArtType } from "./artistRotation/constants.js";
+import { getItemByRoleId, inventoryEnabled } from "./inventory/catalog.js";
+import { creditItem } from "./inventory/store.js";
 
 // ---------------------------------------------------------------------------
 // Patreon tier → art ticket entitlements
@@ -118,6 +120,20 @@ export function recordArtTicketRedemption(guildId: string, userId: string, artTy
      WHERE guild_id = ? AND user_id = ? AND art_type = ?
   `).run(guildId, userId, artType);
   return res.changes;
+}
+
+/**
+ * Mark a Patreon grant as handed off to the inventory ledger.
+ * WHY: with inventory enabled the ticket role is never issued, so `remaining` must read
+ *      zero. Otherwise this handler would re-add the role on every guildMemberUpdate and
+ *      the capture scheduler would take it straight back off, forever.
+ */
+function markDeliveredToInventory(guildId: string, userId: string, artType: string): void {
+  db.prepare(`
+    UPDATE patreon_art_granted
+       SET quantity_redeemed = quantity_granted
+     WHERE guild_id = ? AND user_id = ? AND art_type = ?
+  `).run(guildId, userId, artType);
 }
 
 function upsertGrant(guildId: string, userId: string, artType: string, newQuantity: number): void {
@@ -221,6 +237,24 @@ export async function handlePatreonArtRewards(member: GuildMember): Promise<void
       );
     }
 
+    // With the inventory live, tickets are banked directly and the role is never issued.
+    // Stacking is the ledger's job, so a quantity > 1 tier no longer has to collapse
+    // onto one binary role.
+    if (inventoryEnabled(guild.id)) {
+      const item = getItemByRoleId(guild.id, roleId);
+      if (item) {
+        if (newlyCredited > 0) {
+          const total = creditItem(
+            guild.id, fresh.id, item.itemKey, newlyCredited, "art", botId,
+            `Patreon ${tier.name}`
+          );
+          granted.push(`${newlyCredited}x ${ART_TYPE_DISPLAY[artType]} (inventory: x${total})`);
+        }
+        markDeliveredToInventory(guild.id, fresh.id, artType);
+        continue;
+      }
+    }
+
     // The ticket role is a single binary "you hold an unredeemed ticket" marker.
     // Re-grant it whenever tickets remain (granted - redeemed > 0) and the user
     // lacks it. This is what lets a quantity > 1 tier re-issue the role after each
@@ -274,7 +308,9 @@ export async function handlePatreonArtRewards(member: GuildMember): Promise<void
         content: `🎨 **Patreon Art Tickets Granted!**\n\n` +
           `Thanks to your **${tier.name.replace("[Patreon] ", "")}** tier, ` +
           `you've received:\n${granted.map((g) => `• ${g}`).join("\n")}\n\n` +
-          `A staff member can redeem these for you with \`/redeemreward\`.`,
+          (inventoryEnabled(guild.id)
+            ? "Check `/inventory` to see them, then `/redeem` when you want to cash one in."
+            : "A staff member can redeem these for you with `/redeemreward`."),
       });
     } catch {
       // DMs closed — not critical

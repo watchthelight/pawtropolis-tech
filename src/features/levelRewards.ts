@@ -22,6 +22,8 @@ import { isPanicMode } from "./panicStore.js";
 import { logActionPretty } from "../logging/pretty.js";
 import { getConfig } from "../lib/config.js";
 import { levelRewardDmEnabled } from "./levelRewardDmPref.js";
+import { getItemByRoleId, inventoryEnabled } from "./inventory/catalog.js";
+import { creditItem } from "./inventory/store.js";
 
 /**
  * Handle when a user receives a level role from Amaribot.
@@ -182,6 +184,22 @@ export async function handleLevelRoleAdded(
 
     for (let i = 0; i < rewards.length; i++) {
       const reward = rewards[i]!;
+
+      // Inventory items are banked directly rather than issued as a role. Handing out
+      // the role first would only have the capture scheduler take it back a minute
+      // later, and a second copy of a role the user already holds would be lost.
+      if (inventoryEnabled(guild.id)) {
+        const item = getItemByRoleId(guild.id, reward.role_id);
+        if (item) {
+          const total = creditItem(
+            guild.id, member.id, item.itemKey, 1, item.source, botId, `Level ${level} reward`
+          );
+          results.push({ success: true, roleId: reward.role_id, roleName: reward.role_name, action: "add" });
+          grantedRewards.push({ name: `${reward.role_name} (inventory: x${total})`, id: reward.role_id });
+          continue;
+        }
+      }
+
       const result = await assignRole(
         guild,
         member.id,
