@@ -290,6 +290,19 @@ client.on("guildMemberUpdate", wrapEvent("guildMemberUpdate", async (oldMember, 
 
   if (addedRoles.size === 0) return;
 
+  // Inventory capture: queue catalogued reward roles for banking after a grace window,
+  // so Mimu and Amari finish their own post-grant checks before the role disappears.
+  try {
+    const { handleItemRoleAdded } = await import("../features/inventory/capture.js");
+    handleItemRoleAdded(oldMember, newMember);
+  } catch (err) {
+    logger.error({
+      err,
+      userId: newMember.id,
+      guildId: newMember.guild.id,
+    }, "[guildMemberUpdate] Failed to queue inventory capture");
+  }
+
   // Patreon donor role dedup: if a donor role was just added, strip lower-tier stacks
   if (addedRoles.some((role) => isPatreonDonorRole(role.id))) {
     try {
