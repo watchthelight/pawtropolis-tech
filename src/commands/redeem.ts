@@ -100,7 +100,16 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   }
 
   const member = await guild.members.fetch(interaction.user.id).catch(() => null);
-  if (member?.roles.cache.has(item.roleId)) {
+  if (!member) {
+    // Without the member we cannot tell whether they already hold the role, and
+    // spending the item on a role add that turns into a no-op loses it outright.
+    await interaction.reply({
+      content: "Could not read your roles just now. Try again in a moment.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+  if (member.roles.cache.has(item.roleId)) {
     await interaction.reply({
       content: `You already have a **${item.display}** out. Use that one first, then redeem the next.`,
       flags: MessageFlags.Ephemeral,
@@ -131,12 +140,15 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
       guild.client.user?.id ?? "system")
   );
 
-  if (!result.success) {
+  // assignRole reports success with action "skipped" when the member already had the
+  // role, which is a no-op on Discord. Treating that as a win spends the item for
+  // nothing, so it refunds like any other failure.
+  if (!result.success || result.action === "skipped") {
     clearSuppression(guild.id, interaction.user.id, item.roleId);
     creditItem(guild.id, interaction.user.id, itemKey, 1, item.source, interaction.user.id,
       "refund: role could not be issued");
     logger.warn(
-      { guildId: guild.id, userId: interaction.user.id, itemKey, error: result.error },
+      { guildId: guild.id, userId: interaction.user.id, itemKey, action: result.action, error: result.error },
       "[inventory] redeem failed, item refunded"
     );
     await interaction.reply({
