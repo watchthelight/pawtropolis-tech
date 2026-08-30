@@ -199,10 +199,12 @@ export function renderBadgeSvg(badge: ResolvedBadge): string {
   const titleText = svgEscape(
     suffix ? `${prefix}${name} - ${suffix}` : `${prefix}${name}`,
   );
+  // No resolve timestamp in here. These SVGs are committed, and stamping the clock into
+  // every one made all 82 files byte-different on every run, which is what kept the
+  // nightly refresh trying to commit badges that had not actually changed. The manifest
+  // still records resolvedAt for anyone who needs it.
   const descText = svgEscape(
-    isStale
-      ? `Discord ${badge.kind} (stale cache); resolved at ${badge.resolvedAt}`
-      : `Discord ${badge.kind}; resolved at ${badge.resolvedAt}`,
+    isStale ? `Discord ${badge.kind} (stale cache)` : `Discord ${badge.kind}`,
   );
 
   const mainTextX = PADDING_X;

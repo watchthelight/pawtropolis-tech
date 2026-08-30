@@ -116,10 +116,36 @@ export function manifestEntryUrl(
   return `${base}/badges/${badgeId}.svg`;
 }
 
+/** Fields that move on every run whether or not the badge itself changed. */
+const VOLATILE_FIELDS = new Set(["generatedAt", "resolvedAt"]);
+
+/** JSON with object keys sorted, so key order from disk cannot fake a difference. */
+function stableShape(value: unknown): string {
+  return JSON.stringify(value, (key, val) => {
+    if (VOLATILE_FIELDS.has(key)) return undefined;
+    if (val && typeof val === "object" && !Array.isArray(val)) {
+      return Object.fromEntries(
+        Object.entries(val as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b)),
+      );
+    }
+    return val;
+  });
+}
+
+/**
+ * Add or replace one badge, leaving the manifest untouched when nothing real changed.
+ *
+ * The two timestamps move on every run, so writing them unconditionally made the
+ * manifest a new file each time. The nightly refresh workflow then always had a diff to
+ * commit, for badges that were byte-identical.
+ */
 export function upsertManifestEntry(
   manifest: BadgeManifest,
   entry: BadgeManifestEntry,
 ): BadgeManifest {
+  const existing = manifest.entries[entry.id];
+  if (existing && stableShape(existing) === stableShape(entry)) return manifest;
+
   return {
     ...manifest,
     generatedAt: new Date().toISOString(),

@@ -42,17 +42,17 @@ Two URLs serve the same content:
 Use the registry id as the file name:
 
 ```markdown
-![@Red Carpet Guest - 1+ movies](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-1.svg?v=feb0626c)
+![@Red Carpet Guest - 1+ movies](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-1.svg?v=08b6b471)
 ```
 
 Examples:
-- ![@Red Carpet Guest - 1+ movies](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-1.svg?v=feb0626c)
-- ![@Popcorn Club - 5+ movies](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-2.svg?v=100e6f74)
-- ![@Director's Cut - 10+ movies](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-3.svg?v=2dc09f33)
-- ![@Cinematic Royalty - 20+ movies](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-4.svg?v=0ef9382e)
-- ![@Server Artist](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/role-server-artist.svg?v=ebc22500)
-- ![#「✍️」writing](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/channel-writing.svg?v=48b00c64)
-- ![@Holographic](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/role-holographic.svg?v=23cf2800) (animated gradient shimmer)
+- ![@Red Carpet Guest - 1+ movies](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-1.svg?v=08b6b471)
+- ![@Popcorn Club - 5+ movies](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-2.svg?v=0b26af80)
+- ![@Director's Cut - 10+ movies](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-3.svg?v=226fda98)
+- ![@Cinematic Royalty - 20+ movies](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/movie-tier-4.svg?v=ae9fbb61)
+- ![@Server Artist](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/role-server-artist.svg?v=42136ee0)
+- ![#「✍️」writing](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/channel-writing.svg?v=a9387be4)
+- ![@Holographic](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/role-holographic.svg?v=fcaa6cb3) (animated gradient shimmer)
 
 ## Gradient + holographic roles
 

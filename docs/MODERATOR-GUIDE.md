@@ -1,6 +1,6 @@
 # Moderator Guide
 
-![@Moderator](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/role-moderator.svg?v=d3c1e645) ![@Senior Moderator](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/role-senior-mod.svg?v=60b34b60)
+![@Moderator](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/role-moderator.svg?v=a7851845) ![@Senior Moderator](https://raw.githubusercontent.com/watchthelight/pawtropolis-tech/main/docs/badges/svg/role-senior-mod.svg?v=e3f969b6)
 
 Movie and game nights, the activity heatmap, and the bot's presence/skull-mode controls.
 
