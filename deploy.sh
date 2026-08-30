@@ -361,6 +361,23 @@ if [ "$DEPLOY_BOT" = true ]; then
     echo "  -> Bot dependencies unchanged, skipping npm ci"
   fi
 
+  # Step 4.5: refuse to restart new code against a schema that has not caught up.
+  # --bot uploads neither migrations/ nor scripts/ and never runs the migrator, so a
+  # commit that adds a migration would otherwise restart against the old schema and
+  # throw at runtime on the missing column. The full deploy guards this at step 6.5;
+  # this is the same guard, checking rather than applying.
+  echo "Step 4.5/5: Checking remote schema is current..."
+  LOCAL_MIGRATIONS=$(find migrations -maxdepth 1 -name '[0-9][0-9][0-9]_*.ts' -exec basename {} \; | cut -c1-3 | sort -u)
+  REMOTE_MIGRATIONS=$(ssh_remote "cd ${REMOTE_PATH} && sqlite3 -readonly data/data.db 'SELECT version FROM schema_migrations;'" | tr -d '' | sort -u)
+  MISSING_MIGRATIONS=$(comm -23 <(echo "${LOCAL_MIGRATIONS}") <(echo "${REMOTE_MIGRATIONS}"))
+  if [ -n "${MISSING_MIGRATIONS}" ]; then
+    echo "ERROR: remote schema is behind. Unapplied migrations:" >&2
+    echo "${MISSING_MIGRATIONS}" | sed 's/^/  /' >&2
+    echo "--bot does not ship or run migrations. Use a full ./deploy.sh instead." >&2
+    exit 1
+  fi
+  echo "  -> schema up to date"
+
   # Step 5: Restart bot process + cleanup
   echo "Step 5/5: Restarting bot..."
   ssh_remote "cd ${REMOTE_PATH} && pm2 restart ${PM2_PROCESS_BOT} && rm -f ${TARBALL}"
@@ -466,10 +483,12 @@ fi
 # deployment. This step syncs the local command definitions to Discord.
 # Without this, new commands will show "Unknown interaction" errors.
 # ─────────────────────────────────────────────────────────────────────────────
+# Run this on the remote against the compiled spec, not locally through tsx. Locally it
+# hangs, and the tsx path reads src/ at runtime, which a --bot deploy never refreshes.
 echo "Step 6.6/9: Registering slash commands with Discord..."
-npx dotenvx run -- tsx scripts/commands.ts --all || {
-  echo "WARNING: Command registration failed. Run 'npm run deploy:cmds' manually."
-}
+if ! ssh_remote "cd ${REMOTE_PATH} && node dist/scripts/commands.js --all"; then
+  echo "WARNING: Command registration failed. Run 'npm run deploy:cmds' on the remote."
+fi
 
 # Step 7: Restart PM2
 if [ "${GRACEFUL:-false}" = true ]; then
