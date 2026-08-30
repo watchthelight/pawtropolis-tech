@@ -96,7 +96,11 @@ export const client = new Client({
     ...Options.DefaultMakeCacheSettings,
     // Keep reasonable limits for commonly accessed data
     MessageManager: 200,        // Recent messages per channel
-    GuildMemberManager: 500,    // Members per guild (we need members for role checks)
+    // Members must be cached for the whole guild, not capped. A capped member cache
+    // evicts FIFO, and PresenceUpdate re-adds an evicted member with an empty role
+    // list. The next guildMemberUpdate then reports every role they already hold as
+    // newly added, which fired phantom inventory captures and duplicate level rewards.
+    GuildMemberManager: Infinity,
     UserManager: 500,           // Users across all guilds
     PresenceManager: 500,       // For dashboard profile status display
     VoiceStateManager: 200,     // For movie night tracking
@@ -138,6 +142,8 @@ commands.set(send.data.name, wrapCommand("send", send.execute));
 // Resetdata command (metrics epoch reset)
 import * as resetdata from "./commands/resetdata.js";
 commands.set(resetdata.data.name, wrapCommand("resetdata", resetdata.execute));
+import * as resetprofile from "./commands/resetprofile.js";
+commands.set(resetprofile.data.name, wrapCommand("resetprofile", resetprofile.execute));
 
 // Flag command (manual user flagging)
 import * as flag from "./commands/flag.js";

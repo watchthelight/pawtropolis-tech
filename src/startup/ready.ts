@@ -29,6 +29,19 @@ client.once(Events.ClientReady, async () => {
   const { runSchemaSelfHeal } = await import("../startup/schema.js");
   await runSchemaSelfHeal();
 
+  // Warm the member cache before presences start arriving. PresenceUpdate re-adds an
+  // uncached member with an empty role list, and the next guildMemberUpdate then reads
+  // every role they already hold as newly added. Fetching up front means every member is
+  // already cached with real roles, so that path never runs.
+  for (const guild of client.guilds.cache.values()) {
+    try {
+      const members = await guild.members.fetch();
+      logger.info({ guildId: guild.id, members: members.size }, "[startup] member cache warmed");
+    } catch (err) {
+      logger.warn({ err, guildId: guild.id }, "[startup] member cache warm failed - role diffs may be unreliable");
+    }
+  }
+
   // Load panic mode state from database (survives restarts now)
   try {
     const { loadPanicState } = await import("../features/panicStore.js");

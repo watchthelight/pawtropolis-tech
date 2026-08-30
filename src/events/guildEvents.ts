@@ -267,6 +267,18 @@ client.on("threadDelete", wrapEvent("threadDelete", async (thread) => {
 // DOCS: https://discord.js.org/#/docs/discord.js/main/class/Client?scrollTo=e-guildMemberUpdate
 
 client.on("guildMemberUpdate", wrapEvent("guildMemberUpdate", async (oldMember, newMember) => {
+  // A partial oldMember carries no role list, so every role the member already holds
+  // would read as newly added. The startup cache warm should make this unreachable;
+  // if it fires, the previous role set is genuinely unknown and acting on it is worse
+  // than skipping the event.
+  if (oldMember.partial) {
+    logger.warn({
+      userId: newMember.id,
+      guildId: newMember.guild.id,
+    }, "[guildMemberUpdate] partial oldMember, skipping role diff");
+    return;
+  }
+
   // Server Artist role detection (handles both add and remove)
   await handleArtistRoleChange(oldMember, newMember);
 
