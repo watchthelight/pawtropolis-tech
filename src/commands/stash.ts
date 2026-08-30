@@ -21,7 +21,8 @@ import { withStep, type CommandContext } from "../lib/cmdWrap.js";
 import { hasRoleOrAbove, ROLE_IDS } from "../lib/roles.js";
 import { getAmbassadorRoleId } from "../features/artistRotation/index.js";
 import { displayForKey, inventoryEnabled } from "../features/inventory/catalog.js";
-import { getInventory } from "../features/inventory/store.js";
+import { getInventory, pendingCapturesForUser } from "../features/inventory/store.js";
+import { buildStashView } from "../features/inventory/stashView.js";
 
 export const data = new SlashCommandBuilder()
   .setName("stash")
@@ -73,27 +74,26 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
 
   const rows = await withStep(ctx, "read_inventory", () => getInventory(guild.id, target.id));
 
-  const embed = new EmbedBuilder()
-    .setTitle(target.id === interaction.user.id ? "Your Stash" : `Stash: ${target.username}`)
-    .setColor(0xf59e0b);
+  const pending = await withStep(ctx, "read_pending_captures", () =>
+    pendingCapturesForUser(guild.id, target.id)
+  );
 
-  if (rows.length === 0) {
-    embed.setDescription(
-      target.id === interaction.user.id
-        ? "Nothing stored yet. Reward items land here automatically when you earn them."
-        : `<@${target.id}> is not holding any reward items.`
-    );
-  } else {
-    const total = rows.reduce((sum, r) => sum + r.quantity, 0);
-    embed.setDescription(
-      rows.map((r) => `**x${r.quantity}** ${displayForKey(guild.id, r.item_key)}`).join("\n")
-    );
-    embed.setFooter({
-      text:
-        `${total} item${total === 1 ? "" : "s"} across ${rows.length} stack${rows.length === 1 ? "" : "s"}` +
-        " | /redeem to cash one in",
-    });
-  }
+  const isSelf = target.id === interaction.user.id;
+  const view = buildStashView(
+    rows.map((r) => ({ itemKey: r.item_key, quantity: r.quantity })),
+    pending.map((p) => ({ itemKey: p.item_key, removeAtS: p.remove_at_s })),
+    (key) => displayForKey(guild.id, key),
+    isSelf,
+    target.id,
+    Math.floor(Date.now() / 1000)
+  );
+
+  const embed = new EmbedBuilder()
+    .setTitle(isSelf ? "Your Stash" : `Stash: ${target.username}`)
+    .setColor(0xf59e0b)
+    .setDescription(view.description);
+
+  if (view.footer) embed.setFooter({ text: view.footer });
 
   await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }

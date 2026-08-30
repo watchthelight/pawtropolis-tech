@@ -197,6 +197,19 @@ export function deferCapture(id: number, retryDelayS: number): number {
   return row?.attempts ?? 0;
 }
 
+/**
+ * Every capture still queued for a member, oldest first.
+ * WHY: /stash reads the settled ledger, so an item inside its grace window looks like
+ *      nothing was earned at all. The command needs the in-flight rows to say otherwise.
+ */
+export function pendingCapturesForUser(guildId: string, userId: string): PendingCapture[] {
+  return db.prepare(`
+    SELECT * FROM pending_item_capture
+     WHERE guild_id = ? AND user_id = ?
+     ORDER BY remove_at_s ASC
+  `).all(guildId, userId) as PendingCapture[];
+}
+
 export function pendingCaptureFor(guildId: string, userId: string, roleId: string): PendingCapture | null {
   return (db.prepare(`
     SELECT * FROM pending_item_capture
