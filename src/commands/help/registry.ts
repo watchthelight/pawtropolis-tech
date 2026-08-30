@@ -1058,6 +1058,25 @@ export const COMMAND_REGISTRY: CommandMetadata[] = [
     aliases: ["reset"],
   },
   {
+    name: "resetprofile",
+    description: "Clear a member's reward history so they can earn it again",
+    category: "system",
+    permissionLevel: "admin",
+    usage: "/resetprofile user:<@member> password:<text>",
+    options: [
+      { name: "user", description: "Member to reset", type: "user", required: true },
+      { name: "password", description: "Reset password for confirmation", type: "string", required: true },
+    ],
+    examples: ["/resetprofile user:@Taylor password:secretpass"],
+    notes: "Clears level reward markers, item stacks, the ledger, grant keys and queued captures for one member. Roles are not touched.",
+    workflowTips: [
+      "Use on a test account to re-run a level reward or an inventory grant",
+      "Level rewards are granted once per level forever, so a reset is the only way to test one twice",
+    ],
+    relatedCommands: ["stash", "redeem", "resetdata"],
+    aliases: ["resetuser", "clearrewards"],
+  },
+  {
     name: "backfill",
     description: "Backfill message activity data for heatmap",
     category: "system",

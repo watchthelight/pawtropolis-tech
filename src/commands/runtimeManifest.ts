@@ -40,6 +40,7 @@ export const SLASH_COMMAND_NAMES = [
   "event",
   "send",
   "resetdata",
+  "resetprofile",
   "purge",
   "cleanup",
   "flag",

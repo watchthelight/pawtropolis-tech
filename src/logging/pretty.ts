@@ -64,6 +64,7 @@ export type ActionType =
   | "movie_credit"
   | "movie_bump"
   | "metrics_reset"
+  | "profile_reset"
   | "flag_added"
   | "flag_removed"
   | "message_purge"
@@ -316,6 +317,11 @@ function getActionMeta(action: ActionType): ActionMeta {
       title: "Metrics Data Reset",
       color: 0xfbbf24, // Amber (warning - admin action)
       emoji: "🔄",
+    },
+    profile_reset: {
+      title: "Reward History Cleared",
+      color: 0xfbbf24, // Amber (warning - admin action)
+      emoji: "🧹",
     },
     flag_added: {
       title: "User Flagged",

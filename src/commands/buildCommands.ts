@@ -30,6 +30,7 @@ import { data as statsData } from "./stats/index.js";
 import { data as eventData } from "./event/index.js";
 import { data as sendData } from "./send.js";
 import { data as resetdataData } from "./resetdata.js";
+import { data as resetprofileData } from "./resetprofile.js";
 import { data as purgeData } from "./purge.js";
 import { data as cleanupData } from "./cleanup.js";
 import { data as flagData } from "./flag.js";
@@ -97,6 +98,7 @@ export function buildCommands() {
     eventData.toJSON(),
     sendData.toJSON(),
     resetdataData.toJSON(),
+    resetprofileData.toJSON(),
     purgeData.toJSON(),
     cleanupData.toJSON(),
     flagData.toJSON(),
