@@ -17,7 +17,7 @@ import { env } from "./env.js";
 // SECURITY: These IDs bypass ALL permission checks. Keep this list minimal.
 // If you're adding someone here "temporarily for debugging," set a calendar
 // reminder to remove them. You will forget otherwise. Ask me how I know.
-const ownerIds = env.OWNER_IDS
+export const OWNER_IDS = env.OWNER_IDS
   ? env.OWNER_IDS.split(",")
       .map((id) => id.trim())
       .filter((id) => id.length > 0)
@@ -32,7 +32,7 @@ const ownerIds = env.OWNER_IDS
  * RETURNS: true if user is an owner, false otherwise
  */
 export function isOwner(userId: string): boolean {
-  // O(n) lookup is fine - ownerIds is typically 1-3 entries.
+  // O(n) lookup is fine - OWNER_IDS is typically 1-3 entries.
   // If you somehow have 1000 bot owners, you have bigger problems than performance.
-  return ownerIds.includes(userId);
+  return OWNER_IDS.includes(userId);
 }

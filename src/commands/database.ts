@@ -274,8 +274,10 @@ async function executeCheck(ctx: CommandContext<ChatInputCommandInteraction>) {
 
   try {
     // Check if we have remote config from env
-    const remoteAliasRaw = process.env.REMOTE_ALIAS || "pawtropolis";
-    const remotePathRaw = process.env.REMOTE_PATH || "/home/ubuntu/pawtropolis-tech";
+    // Read through env, which already refuses unsafe values at startup. The
+    // validate* calls below still run: two checks, one source.
+    const remoteAliasRaw = env.REMOTE_ALIAS || "pawtropolis";
+    const remotePathRaw = env.REMOTE_PATH || "/home/ubuntu/pawtropolis-tech";
 
     // Skip remote checks if we're already running on remote
     if (runningOnRemote) {

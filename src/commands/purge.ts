@@ -21,6 +21,7 @@ import {
 } from "discord.js";
 import { type CommandContext, withStep } from "../lib/cmdWrap.js";
 import { logger } from "../lib/logger.js";
+import { env } from "../lib/env.js";
 import { secureCompare } from "../lib/secureCompare.js";
 import { checkCooldown, formatCooldown, COOLDOWNS } from "../lib/rateLimiter.js";
 import { logActionPretty } from "../logging/pretty.js";
@@ -98,7 +99,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   }
 
   // Validate password
-  const correctPassword = process.env.RESET_PASSWORD;
+  const correctPassword = env.RESET_PASSWORD;
 
   if (!correctPassword) {
     logger.error("[purge] RESET_PASSWORD not configured in environment");

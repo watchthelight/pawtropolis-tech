@@ -17,6 +17,11 @@ vi.mock("../../src/lib/logger.js", () => ({
   logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
+const envHolder = vi.hoisted(() => ({
+  env: { RESET_PASSWORD: "test-password" as string | undefined, ADMIN_ROLE_ID: "" as string | undefined },
+}));
+vi.mock("../../src/lib/env.js", () => envHolder);
+
 vi.mock("../../src/lib/secureCompare.js", () => ({
   secureCompare: vi.fn((a: string, b: string) => a === b),
 }));
@@ -62,6 +67,8 @@ describe("/resetprofile", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     process.env = { ...originalEnv, RESET_PASSWORD: "test-password", ADMIN_ROLE_ID: "" };
+    envHolder.env.RESET_PASSWORD = "test-password";
+    envHolder.env.ADMIN_ROLE_ID = "";
 
     const { secureCompare } = await import("../../src/lib/secureCompare.js");
     (secureCompare as never as { mockImplementation: (f: unknown) => void }).mockImplementation(

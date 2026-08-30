@@ -45,11 +45,9 @@ export const TRACE_INTERACTIONS = process.env.TRACE_INTERACTIONS === "1";
  * Whitespace around IDs is trimmed, empty strings are filtered out, so
  * "123, 456, " parses to ["123", "456"].
  */
-export const OWNER_IDS = process.env.OWNER_IDS
-  ? process.env.OWNER_IDS.split(",")
-      .map((id) => id.trim())
-      .filter((id) => id.length > 0)
-  : [];
+import { env } from "./lib/env.js";
+
+export { OWNER_IDS } from "./lib/owner.js";
 
 /**
  * WHAT: Admin password required for /modstats reset command.
@@ -59,4 +57,4 @@ export const OWNER_IDS = process.env.OWNER_IDS
  * Set RESET_PASSWORD in .env to a strong random string. If unset, the
  * reset command will fail with "not configured" error.
  */
-export const RESET_PASSWORD = process.env.RESET_PASSWORD;
+export const RESET_PASSWORD = env.RESET_PASSWORD;

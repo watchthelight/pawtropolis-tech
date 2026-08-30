@@ -23,6 +23,7 @@ import { __test__clearModMetricsCache as clearModMetricsCache } from "../feature
 import { db } from "../db/db.js";
 import { logger } from "../lib/logger.js";
 import { logActionPretty } from "../logging/pretty.js";
+import { env } from "../lib/env.js";
 import { secureCompare } from "../lib/secureCompare.js";
 import { checkCooldown, formatCooldown, COOLDOWNS } from "../lib/rateLimiter.js";
 
@@ -75,7 +76,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   }
 
   // Validate password
-  const correctPassword = process.env.RESET_PASSWORD;
+  const correctPassword = env.RESET_PASSWORD;
 
   if (!correctPassword) {
     logger.error("[resetdata] RESET_PASSWORD not configured in environment");
@@ -99,7 +100,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   // but we double-check at runtime because permissions can change between
   // command registration and execution.
   const member = interaction.member as GuildMember | null;
-  const adminRoleIds = (process.env.ADMIN_ROLE_ID || "")
+  const adminRoleIds = (env.ADMIN_ROLE_ID || "")
     .split(",")
     .map((id) => id.trim())
     .filter(Boolean);

@@ -22,6 +22,13 @@ vi.mock("../../src/lib/logger.js", () => ({
   },
 }));
 
+// Mock the validated env object. The command now reads env.RESET_PASSWORD rather than
+// process.env, so the stub has to live here for the password gate to see it.
+const envHolder = vi.hoisted(() => ({
+  env: { RESET_PASSWORD: "test-password" as string | undefined },
+}));
+vi.mock("../../src/lib/env.js", () => envHolder);
+
 // Mock secure compare
 vi.mock("../../src/lib/secureCompare.js", () => ({
   secureCompare: vi.fn((a: string, b: string) => a === b),
@@ -51,6 +58,7 @@ describe("/purge command", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     process.env = { ...originalEnv, RESET_PASSWORD: "test-password" };
+    envHolder.env.RESET_PASSWORD = "test-password";
 
     const { secureCompare } = await import("../../src/lib/secureCompare.js");
     (secureCompare as any).mockImplementation((a: string, b: string) => a === b);
@@ -138,6 +146,7 @@ describe("/purge command", () => {
 
     it("rejects when RESET_PASSWORD is not configured", async () => {
       delete process.env.RESET_PASSWORD;
+      envHolder.env.RESET_PASSWORD = undefined;
 
       const guild = createMockGuild({ id: "guild-123" });
       const channel = createMockChannel({ id: "channel-123" });

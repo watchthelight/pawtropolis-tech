@@ -19,6 +19,7 @@ import {
 import { withStep, type CommandContext } from "../lib/cmdWrap.js";
 import { logger } from "../lib/logger.js";
 import { logActionPretty } from "../logging/pretty.js";
+import { env } from "../lib/env.js";
 import { secureCompare } from "../lib/secureCompare.js";
 import { checkCooldown, formatCooldown, COOLDOWNS } from "../lib/rateLimiter.js";
 import { resetMemberRewardState, totalRowsCleared } from "../features/rewardReset.js";
@@ -73,7 +74,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
     return;
   }
 
-  const correctPassword = process.env.RESET_PASSWORD;
+  const correctPassword = env.RESET_PASSWORD;
 
   if (!correctPassword) {
     logger.error("[resetprofile] RESET_PASSWORD not configured in environment");
@@ -94,7 +95,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
   // Two-layer auth: setDefaultMemberPermissions controls visibility, but permissions
   // can change between registration and execution, so check again here.
   const member = interaction.member as GuildMember | null;
-  const adminRoleIds = (process.env.ADMIN_ROLE_ID || "")
+  const adminRoleIds = (env.ADMIN_ROLE_ID || "")
     .split(",")
     .map((id) => id.trim())
     .filter(Boolean);
