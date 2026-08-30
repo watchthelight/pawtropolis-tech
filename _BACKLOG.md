@@ -18,7 +18,6 @@ _(none)_
 
 ### Medium
 
-- [ ] [Actions workflows are red on main; get the commit check mark green](todo/00260.md) `Medium`
 - [ ] [Tighten .gitignore; generated artifact directories are tracked](todo/00261.md) `Medium`
 
 ### Low

@@ -4,6 +4,10 @@ One-line dated ledger. Detail in [`done/`](./done/). Pair of [`_BACKLOG.md`](./_
 
 Reverse chronological by completion date.
 
+## 2026-08-30
+
+- [x] [Actions workflows are red on main; get the commit check mark green](done/00260.md) `Medium` Three separate causes. CI failed at `npm ci` on a lockfile that was regenerated locally but never committed. Update Badges ran the suite without the env vars, test DB or SvelteKit sync the CI test job sets up, so it published a fabricated 0% coverage. Refresh Discord Badges failed nightly trying to open a PR the repo forbids Actions to create, on a diff that was never real: every SVG embedded its own resolve timestamp, so all 82 changed on every run. Deprecated action pins bumped in the same pass.
+
 ## 2026-08-29
 
 - [x] [Claim all open button on the reviews page](done/00262.md) `Low` Owner-only button on the reviews queue that loops the unclaimed applications through the existing `POST /api/review/claim`, so the permission gate, appId validation and 409 already-claimed handling all still apply. Confirm step with a count, progress while running, result line, queue refresh at the end. No new endpoint and no bot API change.
