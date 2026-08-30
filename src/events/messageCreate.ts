@@ -192,6 +192,16 @@ client.on("messageCreate", wrapEvent("messageCreate", async (message) => {
   }
 }));
 
+// Mimu shop purchases: bank the item from Mimu's confirmation message.
+// WHY: a separate listener because the handler above drops bot messages, and this one
+// only cares about bot messages. Granting a role a member already holds fires no
+// guildMemberUpdate, so this is the only signal that the purchase happened.
+client.on("messageCreate", wrapEvent("messageCreate.mimuGrants", async (message) => {
+  if (!message.author.bot) return;
+  const { handleMimuShopGrant } = await import("../features/inventory/mimuGrants.js");
+  await handleMimuShopGrant(message);
+}));
+
 // Forum post notification: alert moderators of new forum posts (threadCreate event)
 // WHAT: Pings admin thread ONCE when a new forum thread (post) is created
 // WHY: Ensure timely response to member feedback without duplicate pings for each message
