@@ -27,7 +27,7 @@ import {
   checkWouldReplace,
   type TokenRarity,
 } from "../store/byteMultiplierStore.js";
-import { BYTE_TOKEN_CONFIG } from "../commands/usebyte.js";
+import { BYTE_TOKEN_CONFIG } from "../constants/byteTokens.js";
 
 // ============================================================================
 // Constants

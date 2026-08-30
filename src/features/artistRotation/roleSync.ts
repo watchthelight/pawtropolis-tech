@@ -127,10 +127,11 @@ export async function handleArtistRoleRemoved(
  * WHY: Called from guildMemberUpdate to route to appropriate handler.
  * @returns 'added' | 'removed' | null
  *
- * GOTCHA: oldMember might be a PartialGuildMember if the member wasn't cached.
- * Discord.js will have an incomplete role cache in that case. If the bot just
- * started and someone loses a role, we might miss it. The sync command exists
- * to fix these edge cases.
+ * The caller in events/guildEvents.ts returns before this runs when oldMember is
+ * partial, because a partial carries an empty role cache and every role the member
+ * already holds would read as newly added. The member cache is unbounded and warmed at
+ * startup, so that path should never be reached. The sync command remains the repair
+ * tool for drift from any other cause, such as roles changing while the bot was down.
  */
 export function detectArtistRoleChange(
   oldMember: GuildMember | PartialGuildMember,

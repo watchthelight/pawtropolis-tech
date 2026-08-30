@@ -6,7 +6,7 @@
  *      removed and banked, and each entry carries its own dedup policy.
  * SOURCES:
  *  - art tickets: getTicketRoles() from artistRotation/constants.ts
- *  - byte tokens: BYTE_TOKEN_CONFIG from commands/usebyte.ts
+ *  - byte tokens: BYTE_TOKEN_CONFIG from constants/byteTokens.ts
  *  - anything else: inventory_extra_roles_json guild config
  *
  * Level reward roles need no separate seeding: level_rewards points at the same ticket

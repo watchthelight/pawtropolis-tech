@@ -26,7 +26,6 @@ finances.md
 FINANCES.md
 
 # Local-only docs (personal notes, AI workspace, generated artifacts)
-CLAUDE.md
 changelog-qotd.md
 _bmad-output/implementation-artifacts/
 .claude/commands/
@@ -92,3 +91,7 @@ graphify-out/exports/graph-connectome-fa2-raw-24000.png
 # Throwaway working dir (per CLAUDE.md), should never be committed
 scratch/
 .loop-state.md
+
+# Skill scratch output, rewritten on every run
+_bug-reply.md
+_announcement-*.md

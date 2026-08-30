@@ -65,10 +65,21 @@ When all three are done, drop `continue-on-error: true` from the Lint step.
 
 ## What CI does not check
 
-- Real production deploy (handled by `deploy.sh`, run manually).
+- Bot production deploy (handled by `deploy.sh`, run manually). The **web dashboard is
+  not manual**: `.github/workflows/deploy-handbook.yml` ships `web/` to EC2 and restarts
+  `pawtropolis-web` on every push to `main` touching `docs/**` or `web/**`.
 - Vulnerability scanning (no Dependabot or `npm audit` step today).
 - Migration dry-run (`npm run migrate:dry`): could be added cheaply.
-- Coverage thresholds beyond the artifact upload (Vitest config has thresholds at lines:50, functions:45, branches:40, statements:50 but these are not enforced as a CI failure).
+
+## Coverage thresholds are a hard gate
+
+`vitest.config.ts` sets `lines: 20, functions: 40, branches: 35, statements: 20`. The test
+job runs `npm run test -- --coverage` with no `continue-on-error`, and vitest exits non-zero
+when a threshold is unmet, so an unmet threshold fails CI.
+
+These numbers sit well below actual coverage (lines and statements are around 43%), so today
+they catch only a severe regression rather than a small one. Re-baselining them belongs on a
+fresh coverage run.
 
 ## Why we keep soft gates
 

@@ -543,7 +543,7 @@ export function getArtistStats(
  * Call this when you suspect the queue has drifted from reality. Common causes:
  * - Bot was offline when roles changed
  * - Manual database edits
- * - Discord's PartialGuildMember nonsense (see roleSync.ts GOTCHA)
+ * - Role changes the gateway never delivered, for instance a partial member event
  */
 export function syncWithRoleMembers(guildId: string, roleHolderIds: string[]): SyncResult {
   const currentQueue = getAllArtists(guildId);

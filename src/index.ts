@@ -90,7 +90,8 @@ export const client = new Client({
     GatewayIntentBits.GuildMessageReactions, // Message archive reactor events
   ],
   partials: [Partials.Channel, Partials.Message, Partials.Reaction, Partials.User],
-  // Cache limits to prevent unbounded memory growth in large servers
+  // Per-manager cache limits. Members are deliberately uncapped, see below; the rest
+  // are bounded to keep memory flat on a large server.
   // See: https://discordjs.guide/popular-topics/caching.html#limiting-cache-size
   makeCache: Options.cacheWithLimits({
     ...Options.DefaultMakeCacheSettings,

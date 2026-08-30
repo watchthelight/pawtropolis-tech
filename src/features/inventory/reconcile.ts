@@ -34,11 +34,9 @@ export async function reconcileGuildInventory(guild: Guild): Promise<number> {
   const selfId = guild.client.user?.id ?? "";
   const allowlist = sourceBotAllowlist(guild.id);
 
-  const members = await guild.members.fetch().catch((err) => {
-    logger.warn({ err, guildId: guild.id }, "[inventory] reconcile could not fetch members");
-    return null;
-  });
-  if (!members) return 0;
+  // Read the cache rather than refetching. ready.ts warms every member at startup and
+  // nothing evicts them, so a fetch here would be a second full-guild round trip.
+  const members = guild.members.cache;
 
   // No grace here: the grant already happened, possibly hours ago, so there is no reward
   // bot mid-verification to wait for.

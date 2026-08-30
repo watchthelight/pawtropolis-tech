@@ -2,6 +2,8 @@
 /**
  * Pawtropolis Tech -- src/scheduler/itemCaptureScheduler.ts
  * WHAT: Drains pending_item_capture once each grace window expires.
+ * NOTE: not the only way an item is banked. inventory/mimuGrants.ts credits Mimu
+ *       purchases directly, and this path then absorbs rather than double-credits.
  * WHY: The grace window is the whole point of the delay Taylor asked for: Mimu and Amari
  *      get to finish verifying their own grant before the role disappears. Doing the work
  *      here rather than in a setTimeout means a restart mid-window still banks the item.

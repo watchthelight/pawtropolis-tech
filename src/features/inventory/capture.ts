@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 /**
  * Pawtropolis Tech -- src/features/inventory/capture.ts
- * WHAT: Detects catalogued reward roles landing on a member and queues them for banking.
+ * WHAT: Queues catalogued reward roles for banking when one lands on a member.
+ * NOTE: this sees a role only when it actually changes. Granting a role the member
+ *       already holds is a no-op on Discord and fires no event, so those purchases are
+ *       picked up by inventory/mimuGrants.ts instead.
  * WHY: Taylor asked for a delay before the role is taken, so Mimu and Amari can finish
  *      their own post-grant verification. The queue lives in SQLite rather than a
  *      setTimeout so a restart mid-window does not lose the item.
@@ -10,7 +13,7 @@
  *  - itemCaptureScheduler drains the queue once the window expires
  */
 
-import type { GuildMember, PartialGuildMember } from "discord.js";
+import type { GuildMember } from "discord.js";
 import { logger } from "../../lib/logger.js";
 import { isPanicMode } from "../panicStore.js";
 import { getItemByRoleId, graceSeconds, inventoryEnabled } from "./catalog.js";
@@ -82,7 +85,7 @@ export function decideDedup(
  * role removal both happen later, in the scheduler.
  */
 export function handleItemRoleAdded(
-  oldMember: GuildMember | PartialGuildMember,
+  oldMember: GuildMember,
   newMember: GuildMember
 ): void {
   const guildId = newMember.guild.id;

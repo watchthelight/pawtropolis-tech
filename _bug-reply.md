@@ -1,5 +1,5 @@
-**Problem found:** Replies sent to the bot in DMs during an open modmail thread were forwarded to staff silently. The applicant got no feedback, so a message that landed fine looked identical to one that failed. `src/features/modmail/routing.ts:409` sent the relay to the staff thread and stopped there.
+**Problem found:** Buying a token you already wear is a no-op on Discord. No role event fires and no audit entry is written, so the bot never learned the purchase happened and the copy was lost. That is why the first test came back empty. The 60s window I blamed earlier had nothing to do with it. Separately, the member cache only held 500 of 8,235 members, so roles people already had kept reading as newly added and fired phantom captures.
 
-**Fix:** The applicant's own DM now gets a check mark reaction once the message is confirmed in the staff thread. The reaction fires only after the thread send succeeds, so no check mark means the relay did not go through. A failed reaction cannot break the relay itself. Three regression tests cover the ack on success, the absence of an ack on failure, and delivery surviving a reaction error.
+**Fix:** Mimu's shop confirmation is now the source of truth. The bot reads the granted role out of it and banks the item while leaving the role you already have. Repeat buys stack, including two in quick succession, which the old debounce quietly ate. The cache now covers the whole server. `/resetprofile user:<member> password:<pw>` clears one member's reward history so testing can start from zero. 42 new tests.
 
-Fixed in `6e259409`. Deployed and live.
+Fixed in `e8369706`. Deployed and live.

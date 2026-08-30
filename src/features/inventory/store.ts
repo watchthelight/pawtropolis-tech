@@ -5,8 +5,10 @@
  * WHY: A Discord role is binary, so a second copy of a reward role is silently lost.
  *      The ledger holds the real count and the role becomes a delivery vehicle.
  * FLOWS:
- *  - capture path: enqueueCapture -> dueCaptures -> creditItem
- *  - redeem path: debitItem -> role re-issued by the command
+ *  - capture path:  enqueueCapture -> dueCaptures -> creditItem
+ *  - mimu path:     mimuGrants reads Mimu's shop message -> creditItem
+ *  - reward paths:  levelRewards and patreonArtRewards credit directly
+ *  - redeem path:   debitItem -> role re-issued by the command
  *
  * No discord.js imports live here on purpose: everything below is directly testable
  * against an in-memory SQLite database.
