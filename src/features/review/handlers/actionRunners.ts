@@ -155,8 +155,9 @@ export async function runApproveAction(
     });
   }
 
+  let reviewMessageId: string | undefined;
   try {
-    await ensureReviewMessage(interaction.client, app.id);
+    reviewMessageId = (await ensureReviewMessage(interaction.client, app.id)).messageId;
   } catch (err) {
     logger.warn({ err, appId: app.id }, "Failed to refresh review card after approval");
     captureException(err, { area: "approve:ensureReviewMessage", appId: app.id });
@@ -231,25 +232,28 @@ export async function runApproveAction(
 
   // Auto-close modmail on approval
   const code = shortCode(app.id);
+  let modmailClosed = false;
   try {
-    await closeModmailForApplication(guild.id, app.user_id, code, {
+    modmailClosed = await closeModmailForApplication(guild.id, app.user_id, code, {
       reason: "approved",
       client: interaction.client,
       guild,
     });
-    logger.info({ code, reason: "approved" }, "[review] decision -> modmail auto-close");
+    logger.info({ code, reason: "approved", modmailClosed }, "[review] decision -> modmail auto-close");
   } catch (err) {
     logger.warn({ err, code }, "[review] failed to auto-close modmail on approval");
   }
 
-  // Refresh review card after modmail close
-  let reviewMessageId: string | undefined;
-  try {
-    const refreshResult = await ensureReviewMessage(interaction.client, app.id);
-    reviewMessageId = refreshResult.messageId;
-    logger.info({ code, appId: app.id }, "[review] card refreshed");
-  } catch (err) {
-    logger.warn({ err, appId: app.id }, "[review] failed to refresh card after modmail close");
+  // Refresh the card so it carries the DM result. Closing a modmail ticket already
+  // re-rendered it after the meta update above, so that case skips the extra render.
+  if (!modmailClosed) {
+    try {
+      const refreshResult = await ensureReviewMessage(interaction.client, app.id);
+      reviewMessageId = refreshResult.messageId;
+      logger.debug({ code, appId: app.id }, "[review] card refreshed");
+    } catch (err) {
+      logger.warn({ err, appId: app.id }, "[review] failed to refresh card after modmail close");
+    }
   }
 
   // Post public approval message as a reply to the review card

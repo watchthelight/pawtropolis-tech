@@ -12,7 +12,7 @@
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
-import type { Guild, GuildMember } from "discord.js";
+import { EmbedBuilder, type Guild, type GuildMember } from "discord.js";
 import { db } from "../../../db/db.js";
 import { logger } from "../../../lib/logger.js";
 import { captureException } from "../../../lib/sentry.js";
@@ -30,7 +30,7 @@ const ROLE_GRANT_RETRY_DELAY_MS = 2000;
 // ===== Helpers =====
 
 async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, operationName: string): Promise<T> {
-  let timer: NodeJS.Timeout | undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     return await Promise.race([
       promise,
@@ -225,7 +225,6 @@ export async function deliverApprovalDm(
   reason?: string | null
 ): Promise<boolean> {
   try {
-    const { EmbedBuilder } = await import("discord.js");
     const embed = new EmbedBuilder()
       .setTitle("Application Approved!")
       .setColor(0x00cc00)

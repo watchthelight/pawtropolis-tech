@@ -13,7 +13,7 @@
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
-import type { Guild, GuildMember } from "discord.js";
+import { EmbedBuilder, type Guild, type GuildMember } from "discord.js";
 import { db } from "../../../db/db.js";
 import { logger } from "../../../lib/logger.js";
 import { captureException } from "../../../lib/sentry.js";
@@ -138,7 +138,6 @@ export async function kickFlow(guild: Guild, memberId: string, reason?: string |
   }
 
   // Build DM embed
-  const { EmbedBuilder } = await import("discord.js");
   const embed = new EmbedBuilder()
     .setTitle("Removed from Server")
     .setColor(0xff8800)

@@ -11,7 +11,7 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import type { User, MessageActionRowComponentBuilder } from "discord.js";
-import { ActionRowBuilder } from "discord.js";
+import { ActionRowBuilder, EmbedBuilder } from "discord.js";
 import { db } from "../../../db/db.js";
 import { logger } from "../../../lib/logger.js";
 import { nowUtc } from "../../../lib/time.js";
@@ -114,7 +114,6 @@ export async function rejectFlow(
   // DM might fail. we tried.
   const result = { dmDelivered: false };
 
-  const { EmbedBuilder } = await import("discord.js");
   const embed = new EmbedBuilder()
     .setColor(options.permanent ? 0x800000 : 0xff4444);
 

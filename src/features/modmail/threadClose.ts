@@ -460,7 +460,9 @@ export async function closeModmailForApplication(
     client: Client;
     guild: Guild;
   }
-): Promise<void> {
+): Promise<boolean> {
+  // Resolves true when an open ticket was closed here (which also refreshes the review
+  // card), false when there was nothing to close or the close failed part way.
   const { reason, client, guild } = options;
 
   logger.info({ guildId, userId, appCode, reason }, "[modmail] close:start auto-close on decision");
@@ -471,7 +473,7 @@ export async function closeModmailForApplication(
   const ticket = getOpenTicketByUser(guildId, userId);
   if (!ticket) {
     logger.debug({ guildId, userId }, "[modmail] close:start no open ticket (idempotent)");
-    return;
+    return false;
   }
 
   const ticketId = ticket.id;
@@ -484,7 +486,7 @@ export async function closeModmailForApplication(
   // the thread is not archived/deleted again.
   if (closeTicket(ticketId) === 0) {
     logger.debug({ guildId, userId, ticketId }, "[modmail] close:start lost race (already closed)");
-    return;
+    return false;
   }
 
   try {
@@ -656,6 +658,7 @@ export async function closeModmailForApplication(
       e.addAttr("archiveAction", archiveResult.action);
       if (ticket.app_code) e.addAttr("appCode", ticket.app_code);
     });
+    return true;
   } catch (err) {
     logger.error({ err, ticketId, threadId, reason }, "[modmail] close:fatal unexpected error");
     captureException(err, { area: "modmail:autoClose", ticketId });
@@ -670,5 +673,6 @@ export async function closeModmailForApplication(
     } catch (cleanupErr) {
       logger.error({ err: cleanupErr, ticketId }, "[modmail] close:cleanup failed");
     }
+    return false;
   }
 }
