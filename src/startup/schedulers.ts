@@ -185,7 +185,7 @@ export async function startSchedulers(client: Client): Promise<void> {
       const { startRetentionScheduler } = await import(
         "../scheduler/retentionScheduler.js"
       );
-      startRetentionScheduler();
+      startRetentionScheduler(client);
     },
     { level: "warn" },
   );

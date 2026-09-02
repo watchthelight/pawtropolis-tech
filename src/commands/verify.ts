@@ -21,14 +21,16 @@ import {
 import { withStep, type CommandContext } from "../lib/cmdWrap.js";
 import { db } from "../db/db.js";
 import { logger } from "../lib/logger.js";
-import { env } from "../lib/env.js";
+import {
+  getVerifyLogChannelId,
+  VERIFY_LOG_DOCUMENT_TITLE_PREFIX,
+  VERIFY_LOG_EMBED_TITLE,
+} from "../features/verifyLog.js";
 
 const VERIFIED_ROLE_ID = process.env.IDME_VERIFIED_ROLE_ID;
-// Channel where uploaded badges/IDs are posted for staff review. Configurable via
-// VERIFY_LOG_CHANNEL_ID so a deleted/moved channel can be repointed without a code
-// change; falls back to the original hardcoded channel to preserve current behavior.
-const DEFAULT_LOG_CHANNEL_ID = "1430015254053654599";
-const LOG_CHANNEL_ID = env.VERIFY_LOG_CHANNEL_ID ?? DEFAULT_LOG_CHANNEL_ID;
+// Channel where uploaded badges/IDs are posted for staff review (VERIFY_LOG_CHANNEL_ID);
+// the retention scheduler prunes the same channel, see features/verifyLog.ts.
+const LOG_CHANNEL_ID = getVerifyLogChannelId();
 
 const CATEGORIES = [
   { label: "Firefighter", value: "firefighter" },
@@ -276,7 +278,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
     }
     if (logChannel) {
       const embed = new EmbedBuilder()
-        .setTitle("Thin Line Verification")
+        .setTitle(VERIFY_LOG_EMBED_TITLE)
         .setColor(0x2b5797)
         .addFields(
           { name: "User", value: `<@${userId}> (${interaction.user.username})`, inline: true },
@@ -297,7 +299,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
       // Send additional images as follow-up embeds (Discord limits 1 image per embed)
       for (let i = 1; i < uploadedImages.length; i++) {
         const extraEmbed = new EmbedBuilder()
-          .setTitle(`Document ${i + 1} — ${interaction.user.username}`)
+          .setTitle(`${VERIFY_LOG_DOCUMENT_TITLE_PREFIX}${i + 1} — ${interaction.user.username}`)
           .setColor(0x2b5797)
           .setImage(uploadedImages[i]!.url);
         await logChannel.send({ embeds: [extraEmbed] });

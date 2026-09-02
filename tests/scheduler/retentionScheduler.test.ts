@@ -104,3 +104,60 @@ describe("scheduler/retentionScheduler", () => {
     }
   });
 });
+
+describe("pruneDeployBackups", () => {
+  async function makeDir(ages: number[], now: number): Promise<string> {
+    const fs = await import("node:fs");
+    const os = await import("node:os");
+    const path = await import("node:path");
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "pt-backups-"));
+    ages.forEach((days, i) => {
+      const file = path.join(dir, `data.db.2026090${i}`);
+      fs.writeFileSync(file, "x".repeat(10));
+      const t = new Date(now - days * 86_400_000);
+      fs.utimesSync(file, t, t);
+    });
+    fs.writeFileSync(path.join(dir, "unrelated.txt"), "keep");
+    return dir;
+  }
+
+  it("keeps the three newest, deletes older groups with their siblings only when enabled", async () => {
+    const fs = await import("node:fs");
+    const path = await import("node:path");
+    const { pruneDeployBackups } = await import("../../src/scheduler/retentionScheduler.js");
+    const now = Date.UTC(2026, 8, 1);
+    const dir = await makeDir([0, 10, 20, 30, 40, 50], now);
+    const sibling = path.join(dir, "data.db.20260905-wal");
+    fs.writeFileSync(sibling, "wal");
+    fs.utimesSync(sibling, new Date(now - 50 * 86_400_000), new Date(now - 50 * 86_400_000));
+
+    const dry = pruneDeployBackups(dir, false, now);
+    expect(dry).toMatchObject({ candidates: 3, candidateBytes: 33, deleted: 0 });
+    expect(fs.readdirSync(dir)).toHaveLength(8);
+
+    const wet = pruneDeployBackups(dir, true, now);
+    expect(wet.deleted).toBe(3);
+    expect(fs.readdirSync(dir).sort()).toEqual([
+      "data.db.20260900",
+      "data.db.20260901",
+      "data.db.20260902",
+      "unrelated.txt",
+    ]);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it("never touches backups younger than seven days", async () => {
+    const fs = await import("node:fs");
+    const { pruneDeployBackups } = await import("../../src/scheduler/retentionScheduler.js");
+    const now = Date.UTC(2026, 8, 1);
+    const dir = await makeDir([0, 1, 2, 3, 4], now);
+    expect(pruneDeployBackups(dir, true, now)).toMatchObject({ candidates: 0, deleted: 0 });
+    expect(fs.readdirSync(dir)).toHaveLength(6);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it("returns zeros for a missing directory", async () => {
+    const { pruneDeployBackups } = await import("../../src/scheduler/retentionScheduler.js");
+    expect(pruneDeployBackups("tests/.tmp/does-not-exist", true)).toMatchObject({ candidates: 0, deleted: 0 });
+  });
+});

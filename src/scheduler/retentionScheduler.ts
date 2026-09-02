@@ -10,15 +10,34 @@
  *      with uptime and were never pruned.
  */
 
+import { readdirSync, statSync, unlinkSync } from "node:fs";
+import path from "node:path";
+import { SnowflakeUtil, type Client } from "discord.js";
 import { db } from "../db/db.js";
+import { env } from "../lib/env.js";
 import { logger } from "../lib/logger.js";
 import { recordSchedulerRun } from "../lib/schedulerHealth.js";
+import {
+  getVerifyLogChannelId,
+  VERIFY_LOG_DOCUMENT_TITLE_PREFIX,
+  VERIFY_LOG_EMBED_TITLE,
+} from "../features/verifyLog.js";
 
 const TICK_MS = 60 * 60 * 1000;
 const INITIAL_DELAY_MS = 10 * 60 * 1000;
 const DAY_S = 86400;
 const CHUNK = 5000;
 const MAX_CHUNKS_PER_RUN = 20;
+// Deploy backups: keep this many newest plus anything younger than the age limit.
+const BACKUPS_KEEP_NEWEST = 3;
+const BACKUPS_KEEP_DAYS = 7;
+// Verification review posts (identity documents) are removed after this long.
+const VERIFY_LOG_KEEP_DAYS = 30;
+const VERIFY_LOG_MAX_DELETES_PER_RUN = 50;
+
+function retentionEnabled(): boolean {
+  return process.env.RETENTION_ENABLED === "true";
+}
 
 interface RetentionRule {
   table: string;
@@ -60,7 +79,7 @@ export interface RetentionResult {
   deleted: number;
 }
 
-export function runRetention(enabled = process.env.RETENTION_ENABLED === "true"): RetentionResult[] {
+export function runRetention(enabled = retentionEnabled()): RetentionResult[] {
   const results: RetentionResult[] = [];
   for (const rule of RETENTION_RULES) {
     if (!tableExists(rule.table)) continue;
@@ -141,9 +160,112 @@ export function catchUpActionLogFts(): number {
   return total;
 }
 
+export interface BackupPruneResult {
+  dir: string;
+  candidates: number;
+  candidateBytes: number;
+  deleted: number;
+}
+
+/**
+ * Deploy backups (`data/backups/data.db.<timestamp>` plus their -wal/-shm siblings). Keep
+ * the newest BACKUPS_KEEP_NEWEST database copies and anything younger than
+ * BACKUPS_KEEP_DAYS; delete the rest when retention is enabled. The host filled to 83%
+ * because nothing ever pruned these.
+ */
+export function pruneDeployBackups(
+  dir: string = env.DB_BACKUPS_DIR,
+  enabled = retentionEnabled(),
+  now = Date.now()
+): BackupPruneResult {
+  const result: BackupPruneResult = { dir, candidates: 0, candidateBytes: 0, deleted: 0 };
+  let names: string[];
+  try {
+    names = readdirSync(dir).filter((n) => n.startsWith("data.db."));
+  } catch {
+    return result;
+  }
+  // Group a backup with its -wal/-shm siblings so they are kept or removed together.
+  const groups = new Map<string, { files: string[]; mtimeMs: number; bytes: number }>();
+  for (const name of names) {
+    const base = name.replace(/-(wal|shm)$/, "");
+    const full = path.join(dir, name);
+    let st;
+    try {
+      st = statSync(full);
+    } catch {
+      continue;
+    }
+    const g = groups.get(base) ?? { files: [], mtimeMs: 0, bytes: 0 };
+    g.files.push(full);
+    g.bytes += st.size;
+    g.mtimeMs = Math.max(g.mtimeMs, st.mtimeMs);
+    groups.set(base, g);
+  }
+  const ordered = [...groups.values()].sort((a, b) => b.mtimeMs - a.mtimeMs);
+  const cutoff = now - BACKUPS_KEEP_DAYS * DAY_S * 1000;
+  ordered.slice(BACKUPS_KEEP_NEWEST).forEach((g) => {
+    if (g.mtimeMs >= cutoff) return;
+    result.candidates++;
+    result.candidateBytes += g.bytes;
+    if (!enabled) return;
+    for (const file of g.files) {
+      try {
+        unlinkSync(file);
+      } catch (err) {
+        logger.warn({ err, file }, "[retention] failed to delete backup file");
+      }
+    }
+    result.deleted++;
+  });
+  logger.info(
+    { evt: "retention_backups", ...result, enabled },
+    enabled ? "[retention] pruned deploy backups" : "[retention] backup dry run"
+  );
+  return result;
+}
+
+/**
+ * Verification review posts carry identity document images; remove the bot's own posts
+ * older than VERIFY_LOG_KEEP_DAYS. Bulk delete cannot reach messages older than 14 days, so
+ * they go one at a time, capped per run. Runs only when retention is enabled.
+ */
+export async function pruneVerifyLog(client: Client, enabled = retentionEnabled()): Promise<number> {
+  if (!enabled || !client.user) return 0;
+  const channelId = getVerifyLogChannelId();
+  const channel = await client.channels.fetch(channelId).catch(() => null);
+  if (!channel || !channel.isTextBased() || channel.isDMBased()) return 0;
+
+  const cutoff = SnowflakeUtil.generate({
+    timestamp: Date.now() - VERIFY_LOG_KEEP_DAYS * DAY_S * 1000,
+  }).toString();
+  const messages = await channel.messages.fetch({ limit: 100, before: cutoff }).catch(() => null);
+  if (!messages) return 0;
+
+  let deleted = 0;
+  for (const message of messages.values()) {
+    if (deleted >= VERIFY_LOG_MAX_DELETES_PER_RUN) break;
+    if (message.author.id !== client.user.id) continue;
+    const title = message.embeds[0]?.title ?? "";
+    if (title !== VERIFY_LOG_EMBED_TITLE && !title.startsWith(VERIFY_LOG_DOCUMENT_TITLE_PREFIX)) continue;
+    try {
+      await message.delete();
+      deleted++;
+    } catch (err) {
+      logger.warn({ err, messageId: message.id }, "[retention] failed to delete verification post");
+    }
+  }
+  if (deleted > 0) {
+    logger.info({ evt: "retention_verify_log", deleted, channelId }, "[retention] pruned verification posts");
+  }
+  return deleted;
+}
+
 let lastDailyAt = 0;
 let interval: NodeJS.Timeout | null = null;
 let initialTimer: NodeJS.Timeout | null = null;
+let clientRef: Client | null = null;
+let running = false;
 
 function tick(): void {
   const startedAt = Date.now();
@@ -152,6 +274,7 @@ function tick(): void {
     if (Date.now() - lastDailyAt >= 24 * 60 * 60 * 1000) {
       lastDailyAt = Date.now();
       runRetention();
+      pruneDeployBackups();
       try {
         db.pragma("analysis_limit = 400");
         db.pragma("optimize");
@@ -164,17 +287,28 @@ function tick(): void {
     recordSchedulerRun("retention", false, Date.now() - startedAt);
     logger.error({ err }, "[retention] tick failed");
   }
+
+  // The Discord side runs after the synchronous work and never overlaps itself.
+  if (clientRef && !running) {
+    running = true;
+    pruneVerifyLog(clientRef)
+      .catch((err) => logger.warn({ err }, "[retention] verification log prune failed"))
+      .finally(() => {
+        running = false;
+      });
+  }
 }
 
-export function startRetentionScheduler(): void {
+export function startRetentionScheduler(client?: Client): void {
   if (process.env.RETENTION_SCHEDULER_DISABLED === "1") return;
   stopRetentionScheduler();
+  clientRef = client ?? null;
   initialTimer = setTimeout(tick, INITIAL_DELAY_MS);
   initialTimer.unref();
   interval = setInterval(tick, TICK_MS);
   interval.unref();
   logger.info(
-    { tickMs: TICK_MS, deletesEnabled: process.env.RETENTION_ENABLED === "true" },
+    { tickMs: TICK_MS, deletesEnabled: retentionEnabled() },
     "[retention] scheduler started"
   );
 }
@@ -194,4 +328,6 @@ export function stopRetentionScheduler(): void {
 export function _resetRetentionStateForTests(): void {
   ftsHighWater = null;
   lastDailyAt = 0;
+  clientRef = null;
+  running = false;
 }
