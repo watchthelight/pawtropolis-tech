@@ -115,6 +115,12 @@ export async function ensureModsCanSpeakInThread(
     if (parent) {
       for (const roleId of modRoleIds) {
         try {
+          // One REST edit per role on every thread open adds up; skip when the overwrite
+          // already grants it.
+          const existing = (parent as TextChannel | ForumChannel).permissionOverwrites.cache?.get(roleId);
+          if (existing?.allow.has(PermissionFlagsBits.SendMessagesInThreads)) {
+            continue;
+          }
           await (parent as TextChannel | ForumChannel).permissionOverwrites.edit(roleId, {
             SendMessagesInThreads: true,
           });
@@ -182,39 +188,36 @@ export async function ensureModsCanSpeakInThread(
     // 3. Add all mod role members to thread
     const guild = thread.guild;
     if (guild) {
+      // One pass over the member cache instead of role.members per role (each of those
+      // filters the whole cache), then one add per distinct member.
+      const modRoleSet = new Set(modRoleIds);
       for (const roleId of modRoleIds) {
+        if (!guild.roles.cache.has(roleId)) {
+          logger.warn({ threadId: thread.id, roleId }, "[modmail] mod role not found in guild");
+        }
+      }
+      const memberIds = new Set<string>();
+      for (const member of guild.members.cache.values()) {
+        for (const roleId of member.roles.cache.keys()) {
+          if (modRoleSet.has(roleId)) {
+            memberIds.add(member.id);
+            break;
+          }
+        }
+      }
+      logger.debug(
+        { threadId: thread.id, memberCount: memberIds.size },
+        "[modmail] adding mod role members to private thread"
+      );
+
+      for (const memberId of memberIds) {
         try {
-          const role = await guild.roles.fetch(roleId);
-          if (!role) {
-            logger.warn({ threadId: thread.id, roleId }, "[modmail] mod role not found in guild");
-            continue;
-          }
-
-          // Fetch all members with this role
-          const members = role.members;
-          logger.debug(
-            { threadId: thread.id, roleId, memberCount: members.size },
-            "[modmail] adding mod role members to private thread"
-          );
-
-          for (const [memberId] of members) {
-            try {
-              await thread.members.add(memberId);
-              logger.debug(
-                { threadId: thread.id, memberId },
-                "[modmail] added mod to private thread"
-              );
-            } catch (err) {
-              logger.warn(
-                { err, threadId: thread.id, memberId },
-                "[modmail] failed to add mod to private thread"
-              );
-            }
-          }
+          await thread.members.add(memberId);
+          logger.debug({ threadId: thread.id, memberId }, "[modmail] added mod to private thread");
         } catch (err) {
           logger.warn(
-            { err, threadId: thread.id, roleId },
-            "[modmail] failed to fetch role or add members to private thread"
+            { err, threadId: thread.id, memberId },
+            "[modmail] failed to add mod to private thread"
           );
         }
       }

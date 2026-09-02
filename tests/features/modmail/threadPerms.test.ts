@@ -267,11 +267,10 @@ describe("features/modmail/threadPerms", () => {
         guild: {
           members: {
             me: { id: "bot-id" },
+            cache: new Map(),
           },
           roles: {
-            fetch: vi.fn().mockResolvedValue({
-              members: new Map(),
-            }),
+            cache: new Map([["role1", { id: "role1" }]]),
           },
         },
         members: {
@@ -289,10 +288,10 @@ describe("features/modmail/threadPerms", () => {
       mockGetConfig.mockReturnValue({ mod_role_ids: "role1" });
 
       const mockMembersAdd = vi.fn().mockResolvedValue(undefined);
-      const modMembers = new Map([
-        ["mod1", { id: "mod1" }],
-        ["mod2", { id: "mod2" }],
-      ]);
+      const withRoles = (id: string, roleIds: string[]) => ({
+        id,
+        roles: { cache: new Map(roleIds.map((r) => [r, { id: r }])) },
+      });
 
       const mockThread = {
         id: "thread-123",
@@ -306,11 +305,14 @@ describe("features/modmail/threadPerms", () => {
         guild: {
           members: {
             me: { id: "bot-id" },
+            cache: new Map([
+              ["mod1", withRoles("mod1", ["role1"])],
+              ["mod2", withRoles("mod2", ["role1", "other"])],
+              ["user1", withRoles("user1", ["other"])],
+            ]),
           },
           roles: {
-            fetch: vi.fn().mockResolvedValue({
-              members: modMembers,
-            }),
+            cache: new Map([["role1", { id: "role1" }]]),
           },
         },
         members: {
@@ -322,6 +324,7 @@ describe("features/modmail/threadPerms", () => {
 
       expect(mockMembersAdd).toHaveBeenCalledWith("mod1");
       expect(mockMembersAdd).toHaveBeenCalledWith("mod2");
+      expect(mockMembersAdd).not.toHaveBeenCalledWith("user1");
     });
 
     it("handles parent permission error gracefully", async () => {

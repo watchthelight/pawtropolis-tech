@@ -315,25 +315,26 @@ export class TicketService {
         getSetStaffThreadStmt().run(thread.id, ticketId);
 
         // Add staff role members (Community Ambassador / Mod Team, per type).
-        // Private threads need explicit membership; matches modmail pattern.
-        for (const roleId of type.permTemplate.roles.map((r) => r.id)) {
-          try {
-            const role = await guild.roles.fetch(roleId);
-            if (!role) continue;
-            for (const [memberId] of role.members) {
-              try {
-                await thread.members.add(memberId);
-              } catch (err) {
-                logger.debug(
-                  { err, threadId: thread.id, memberId },
-                  "[tickets/service] failed to add member to staff thread (non-fatal)"
-                );
-              }
+        // Private threads need explicit membership; matches modmail pattern. One pass
+        // over the member cache instead of role.members per role (each of those filters
+        // the whole cache), and one add per distinct member.
+        const staffRoleIds = new Set(type.permTemplate.roles.map((r) => r.id));
+        const staffMemberIds = new Set<string>();
+        for (const member of guild.members.cache.values()) {
+          for (const roleId of member.roles.cache.keys()) {
+            if (staffRoleIds.has(roleId)) {
+              staffMemberIds.add(member.id);
+              break;
             }
+          }
+        }
+        for (const memberId of staffMemberIds) {
+          try {
+            await thread.members.add(memberId);
           } catch (err) {
-            logger.warn(
-              { err, threadId: thread.id, roleId },
-              "[tickets/service] failed to populate staff thread for role"
+            logger.debug(
+              { err, threadId: thread.id, memberId },
+              "[tickets/service] failed to add member to staff thread (non-fatal)"
             );
           }
         }
