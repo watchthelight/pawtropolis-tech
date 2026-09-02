@@ -9,12 +9,23 @@ import {
   Message,
   PermissionFlagsBits,
 } from "discord.js";
+import { readFileSync } from "node:fs";
 import { logger } from "../lib/logger.js";
 import type { GuildConfig } from "../lib/config.js";
 import { sleep } from "../lib/retry.js";
 import { renderWelcomeTemplate } from "./review/welcome.js";
 
-const BANNER_FILE = { attachment: "./assets/banner.webp", name: "banner.webp" };
+const BANNER_PATH = "./assets/banner.webp";
+const BANNER_NAME = "banner.webp";
+type BannerFile = { attachment: Buffer; name: string };
+let bannerBuffer: Buffer | null = null;
+
+// discord.js re-reads a path attachment from disk on every send; every welcome DM
+// carries the banner, so it is read once per process.
+function bannerFile(): BannerFile {
+  bannerBuffer ??= readFileSync(BANNER_PATH);
+  return { attachment: bannerBuffer, name: BANNER_NAME };
+}
 
 /**
  * buildWelcomeEmbed
@@ -27,7 +38,7 @@ function buildWelcomeEmbed(
   user: GuildMember,
   config: GuildConfig,
   memberCount: number
-): { embed: APIEmbed; files: typeof BANNER_FILE[] } {
+): { embed: APIEmbed; files: BannerFile[] } {
   // The first line ("greeting") is admin-controlled via config.welcome_template
   // when set. Token substitution lets legacy {applicant.mention}/{guild.name}
   // resolve; raw <@&id>/<#id> from the dashboard editor pass through Discord
@@ -74,7 +85,7 @@ function buildWelcomeEmbed(
     footer: { text: "Pawtropolis Moderation Team" },
   };
 
-  return { embed, files: [BANNER_FILE] };
+  return { embed, files: [bannerFile()] };
 }
 
 /**

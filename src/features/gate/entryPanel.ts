@@ -20,12 +20,26 @@ import {
   type GuildTextBasedChannel,
   type Message,
 } from "discord.js";
+import fs from "node:fs";
 import path from "node:path";
 import { logger } from "../../lib/logger.js";
 import { getConfig, type GuildConfig } from "../../lib/config.js";
 import type { CmdCtx } from "../../lib/cmdWrap.js";
 import { getQuestions as getQuestionsShared } from "./questions.js";
 import { BRAND_COLOR, GATE_ENTRY_FOOTER, GATE_ENTRY_FOOTER_MATCHES } from "./constants.js";
+
+// A path attachment is re-read from disk by discord.js on every upload; the banner is
+// posted with every verify thread, so read it once per process.
+const bannerCache = new Map<string, Buffer>();
+function bannerBuffer(bannerPath: string): Buffer {
+  const abs = path.resolve(bannerPath);
+  let buf = bannerCache.get(abs);
+  if (!buf) {
+    buf = fs.readFileSync(abs);
+    bannerCache.set(abs, buf);
+  }
+  return buf;
+}
 
 export type EnsureGateEntryResult = {
   created: boolean;
@@ -96,7 +110,7 @@ export function buildGateEntryPayload(options: {
   if (guildBanner) {
     embed.setImage(guildBanner);
   } else {
-    const banner = new AttachmentBuilder(path.resolve(content.bannerPath)).setName(
+    const banner = new AttachmentBuilder(bannerBuffer(content.bannerPath)).setName(
       content.bannerName
     );
     embed.setImage(`attachment://${content.bannerName}`);
