@@ -24,7 +24,14 @@ import {
 import { db } from "../../db/db.js";
 import { logger } from "../../lib/logger.js";
 import { enqueuePending } from "./attachments.js";
+import { LRUCache } from "../../lib/lruCache.js";
 import type { Ticket, TicketRow } from "./types.js";
+
+// Channels already known not to belong to any ticket. Every guild message used to run the
+// two lookups in resolveTicketForMessage; ticket channels and staff threads are always
+// created fresh, so a channel that was not a ticket stays that way and the miss can be
+// remembered for a while.
+const nonTicketChannels = new LRUCache<string, true>(5_000, 10 * 60 * 1000);
 
 const findTicketByChannelStmt = db.prepare(
   `SELECT * FROM ticket WHERE channel_id = ?`
@@ -99,6 +106,7 @@ function resolveTicketForMessage(
 ): { ticket: Ticket; inThread: boolean } | null {
   const channelId = msg.channelId;
   if (!channelId) return null;
+  if (nonTicketChannels.get(channelId)) return null;
 
   // 1. Direct hit: message is in the main ticket channel.
   let row = findTicketByChannelStmt.get(channelId) as TicketRow | undefined;
@@ -112,6 +120,7 @@ function resolveTicketForMessage(
     return { ticket: rowToTicket(row), inThread: true };
   }
 
+  nonTicketChannels.set(channelId, true);
   return null;
 }
 

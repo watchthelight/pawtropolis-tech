@@ -16,7 +16,20 @@ import { db } from "../db/db.js";
 import { logger } from "../lib/logger.js";
 import { getFlaggerConfig } from "../config/flaggerStore.js";
 import { getLoggingChannel } from "./logger.js";
+import { LRUCache } from "../lib/lruCache.js";
 import type { Client, Message } from "discord.js";
+
+// Users whose first_message_at is already recorded. Every human guild message used to run
+// the SELECT in trackFirstMessage; a hit here skips it. Entries expire so a manual reset of
+// the row still takes effect within the TTL.
+const FIRST_MESSAGE_SEEN_MAX = 50_000;
+const FIRST_MESSAGE_SEEN_TTL_MS = 6 * 60 * 60 * 1000;
+const firstMessageSeen = new LRUCache<string, true>(FIRST_MESSAGE_SEEN_MAX, FIRST_MESSAGE_SEEN_TTL_MS);
+
+/** Test hook: tests reuse the same guild/user ids across cases. */
+export function _resetFirstMessageCacheForTests(): void {
+  firstMessageSeen.clear();
+}
 
 /**
  * WHAT: Track user join event in user_activity table.
@@ -99,6 +112,9 @@ export async function trackFirstMessage(client: Client, message: Message): Promi
   const userId = message.author.id;
   const messageTimestamp = Math.floor(message.createdTimestamp / 1000); // Convert ms to seconds
 
+  const seenKey = `${guildId}:${userId}`;
+  if (firstMessageSeen.get(seenKey)) return;
+
   try {
     // Check if user already has first_message_at recorded
     const row = db
@@ -127,11 +143,13 @@ export async function trackFirstMessage(client: Client, message: Message): Promi
       `
       ).run(guildId, userId, messageTimestamp, messageTimestamp);
 
+      firstMessageSeen.set(seenKey, true);
       return; // No threshold evaluation (unknown join time)
     }
 
     if (row.first_message_at !== null) {
       // User already has first_message_at recorded, skip
+      firstMessageSeen.set(seenKey, true);
       return;
     }
 
@@ -143,6 +161,7 @@ export async function trackFirstMessage(client: Client, message: Message): Promi
       WHERE guild_id = ? AND user_id = ?
     `
     ).run(messageTimestamp, guildId, userId);
+    firstMessageSeen.set(seenKey, true);
 
     logger.debug({ guildId, userId, messageTimestamp }, "[activity] first_message_at recorded");
 

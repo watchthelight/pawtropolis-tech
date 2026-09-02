@@ -84,6 +84,7 @@ import {
   trackJoin,
   trackLeave,
   trackFirstMessage,
+  _resetFirstMessageCacheForTests,
 } from "../../src/features/activityTracker.js";
 
 // ---------------------------------------------------------------------------
@@ -145,6 +146,7 @@ function makeMessage(over: Partial<{
 beforeEach(() => {
   vi.clearAllMocks();
   resetDbState();
+  _resetFirstMessageCacheForTests();
   mockGetFlaggerConfig.mockReturnValue({ channelId: null, silentDays: 7 });
 });
 
