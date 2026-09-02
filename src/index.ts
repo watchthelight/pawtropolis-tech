@@ -88,7 +88,9 @@ export const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildVoiceStates, // For movie night attendance + voice session tracking
-    GatewayIntentBits.GuildPresences,   // For dashboard profile status display + online count
+    // GuildPresences is deliberately absent: nothing reads member presence (the online
+    // count comes from approximatePresenceCount in the guild snapshot), and presence
+    // updates are the highest-volume gateway stream for a large guild.
     GatewayIntentBits.GuildInvites,     // For invite usage tracking (growth source attribution)
     GatewayIntentBits.GuildMessageReactions, // Message archive reactor events
   ],
@@ -108,7 +110,7 @@ export const client = new Client({
     // newly added, which fired phantom inventory captures and duplicate level rewards.
     GuildMemberManager: Infinity,
     UserManager: 500,           // Users across all guilds
-    PresenceManager: 500,       // For dashboard profile status display
+    PresenceManager: 0,         // No presence intent, nothing to cache
     VoiceStateManager: 200,     // For movie night tracking
     ReactionManager: 0,         // We don't use reactions
     ReactionUserManager: 0,     // We don't use reaction users
