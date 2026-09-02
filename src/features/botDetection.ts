@@ -159,9 +159,14 @@ export function checkActivityLevel(guildId: string, userId: string): ActivityChe
       .prepare(`SELECT first_message_at FROM user_activity WHERE guild_id = ? AND user_id = ?`)
       .get(guildId, userId) as { first_message_at: number | null } | undefined;
 
-    // Count messages in message_activity
+    // Only "has any message" is consumed, so stop at the first matching row instead of
+    // counting every message the user ever sent.
     const messageCount = db
-      .prepare(`SELECT COUNT(*) as count FROM message_activity WHERE guild_id = ? AND user_id = ?`)
+      .prepare(
+        `SELECT COUNT(*) as count FROM (
+           SELECT 1 FROM message_activity WHERE guild_id = ? AND user_id = ? LIMIT 1
+         )`
+      )
       .get(guildId, userId) as { count: number } | undefined;
 
     const count = messageCount?.count ?? 0;

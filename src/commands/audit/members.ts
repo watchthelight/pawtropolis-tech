@@ -55,39 +55,11 @@ export async function runMembersAudit(
   const alreadyScanned = resumeSession ? getScannedUserIds(resumeSession.id) : new Set<string>();
 
   try {
-    // Paginate through members using list() - much faster than fetch() for large guilds
-    // WHY list() instead of fetch(): fetch() loads ALL members into memory at once.
-    // list() with pagination keeps memory usage constant regardless of guild size.
-    // For a 50k member guild, this is the difference between 500MB RAM spike vs ~10MB.
-    logger.info({ guildId: guild.id, resuming: !!resumeSession }, "[audit:members] Starting paginated member scan...");
+    // The member cache is complete (GuildMembers intent, uncapped cache, fetched at boot),
+    // so the scan reads it directly instead of paging the whole guild over REST again.
+    logger.info({ guildId: guild.id, resuming: !!resumeSession }, "[audit:members] Starting member scan...");
 
-    // Collect all members first for accurate totalToScan
-    const allMembers: GuildMember[] = [];
-    let lastMemberId: string | undefined;
-    let processedBatches = 0;
-    const BATCH_SIZE = 1000; // Discord's max for guild.members.list()
-
-    while (true) {
-      const batch = await guild.members.list({
-        limit: BATCH_SIZE,
-        after: lastMemberId,
-      });
-
-      if (batch.size === 0) break;
-
-      processedBatches++;
-      logger.info({
-        guildId: guild.id,
-        batchNumber: processedBatches,
-        batchSize: batch.size,
-      }, "[audit:members] Fetching batch");
-
-      for (const member of batch.values()) {
-        allMembers.push(member);
-        lastMemberId = member.id;
-      }
-    }
-
+    const allMembers: GuildMember[] = [...guild.members.cache.values()];
     const totalMembers = allMembers.length;
 
     // Create or reuse session
