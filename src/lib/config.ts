@@ -21,60 +21,35 @@ import { isOwner } from "./owner.js";
 import { touchSyncMarker } from "./syncMarker.js";
 import { isGuildMember } from "./typeGuards.js";
 import { LRUCache } from "./lruCache.js";
-import {
-  postPermissionDenied,
-  type PermissionDenialOptions,
-  type PermissionRequirement,
-} from "./permissionCard.js";
-import {
-  ROLE_IDS,
-  BOT_OWNER_UID,
-  isBotOwner,
-  isServerDev,
-  shouldBypass,
-  hasRole,
-  hasAnyRole,
-  hasRoleOrAbove,
-  getRolesAtOrAbove,
-  getMinRoleDescription,
-  GATEKEEPER_ONLY,
-  GATEKEEPER_PLUS,
-  JUNIOR_MOD_PLUS,
-  MODERATOR_PLUS,
-  SENIOR_MOD_PLUS,
-  ADMIN_PLUS,
-  SENIOR_ADMIN_PLUS,
-  COMMUNITY_MANAGER_PLUS,
-  SERVER_ARTIST,
-  ARTIST_OR_ADMIN,
-} from "./roles.js";
+import { postPermissionDenied, type PermissionDenialOptions } from "./permissionCard.js";
+import { ROLE_IDS, shouldBypass, hasRole, hasAnyRole, hasRoleOrAbove, GATEKEEPER_ONLY } from "./roles.js";
 
 // Re-export permission types for convenient imports
-export type { PermissionDenialOptions, PermissionRequirement };
+export type { PermissionDenialOptions,  };
 export { postPermissionDenied };
 
 // Re-export role system for convenient imports
 export {
   ROLE_IDS,
-  BOT_OWNER_UID,
-  isBotOwner,
-  isServerDev,
+  
+  
+  
   shouldBypass,
   hasRole,
-  hasAnyRole,
+  
   hasRoleOrAbove,
-  getRolesAtOrAbove,
-  getMinRoleDescription,
+  
+  
   GATEKEEPER_ONLY,
-  GATEKEEPER_PLUS,
-  JUNIOR_MOD_PLUS,
-  MODERATOR_PLUS,
-  SENIOR_MOD_PLUS,
-  ADMIN_PLUS,
-  SENIOR_ADMIN_PLUS,
-  COMMUNITY_MANAGER_PLUS,
-  SERVER_ARTIST,
-  ARTIST_OR_ADMIN,
+  
+  
+  
+  
+  
+  
+  
+  
+  
 };
 
 // GOTCHA: This type is essentially a SQL row disguised as TypeScript.
@@ -647,36 +622,6 @@ export function upsertConfig(guildId: string, partial: Partial<Omit<GuildConfig,
     const keys = Object.keys(partial) as Array<keyof typeof partial>;
     if (keys.length === 0) return;
 
-    // Allowlist of valid guild_config columns to prevent SQL injection via column names.
-    // Even though keys come from typed partial, we add explicit validation for defense in depth.
-    // "But TypeScript already validates this!" Sure, until someone does an `as any` cast.
-    // Trust no one. Not even yourself from six months ago.
-    const ALLOWED_CONFIG_COLUMNS = new Set([
-      "review_channel_id", "gate_channel_id", "general_channel_id", "unverified_channel_id",
-      "accepted_role_id", "reviewer_role_id", "welcome_template", "info_channel_id",
-      "rules_channel_id", "welcome_ping_role_id", "mod_role_ids", "gatekeeper_role_id",
-      "modmail_log_channel_id", "modmail_delete_on_close", "review_roles_mode",
-      "dadmode_enabled", "dadmode_odds", "skullmode_enabled", "skullmode_odds",
-      "listopen_public_output", "leadership_role_id",
-      "ping_dev_on_app", "image_search_url_template", "reapply_cooldown_hours",
-      "min_account_age_hours", "min_join_age_hours", "avatar_scan_enabled",
-      "avatar_scan_nsfw_threshold", "avatar_scan_skin_edge_threshold",
-      "avatar_scan_weight_model", "avatar_scan_weight_edge", "flags_channel_id",
-      "silent_first_msg_days", "logging_channel_id", "notify_mode", "notify_role_id",
-      "forum_channel_id", "notification_channel_id", "notify_cooldown_seconds",
-      "notify_max_per_hour", "support_channel_id", "poke_category_ids_json", "poke_excluded_channel_ids_json",
-      "artist_role_id", "ambassador_role_id", "server_artist_channel_id", "artist_ticket_roles_json",
-      "report_forum_id", "artist_ignored_users_json", "backfill_notification_channel_id", "bot_dev_role_id",
-      "gate_answer_max_length", "banner_sync_interval_minutes", "modmail_forward_max_size",
-      "retry_max_attempts", "retry_initial_delay_ms", "retry_max_delay_ms",
-      "circuit_breaker_threshold", "circuit_breaker_reset_ms",
-      "avatar_scan_hard_threshold", "avatar_scan_soft_threshold", "avatar_scan_racy_threshold",
-      "flag_rate_limit_ms", "flag_cooldown_ttl_ms", "nsfw_alert_role_id", "banner_sync_enabled",
-      "level_reward_dm_enabled",
-      "qotd_review_channel_id", "qotd_role_id", "pulse_excluded_category_ids_json",
-      "vote_out_threshold",
-      "verify_thread_parent_id", "unverified_rules_channel_id",
-    ]);
 
     const validKeys = keys.filter((k) => ALLOWED_CONFIG_COLUMNS.has(k as string));
     if (validKeys.length !== keys.length) {
@@ -1206,7 +1151,7 @@ export function requireMinRole(
  * @param roleIds - Array of role IDs that grant access (OR logic)
  * @param options - Permission denial options for error display
  */
-export function requireExactRoles(
+function requireExactRoles(
   interaction: ChatInputCommandInteraction,
   roleIds: string[],
   options: PermissionDenialOptions
@@ -1262,24 +1207,6 @@ export function requireGatekeeper(
 }
 
 /**
- * requireArtist
- * WHAT: Convenience function for Server Artist OR Admin+ commands
- * WHY: Artist commands allow both artists and admins to manage jobs.
- * RETURNS: true if allowed; false if denied
- */
-export function requireArtist(
-  interaction: ChatInputCommandInteraction,
-  commandName: string,
-  description: string
-): boolean {
-  return requireExactRoles(interaction, ARTIST_OR_ADMIN, {
-    command: commandName,
-    description,
-    requirements: [{ type: "roles", roleIds: ARTIST_OR_ADMIN }],
-  });
-}
-
-/**
  * requireOwnerOnly
  * WHAT: Guards commands that only Bot Owner or Server Dev can use.
  * WHY: For sensitive commands like /database, /sync.
@@ -1307,3 +1234,34 @@ export function requireOwnerOnly(
   );
   return false;
 }
+
+/**
+ * guild_config columns upsertConfig may write. The dashboard editor mirrors this set;
+ * tests/docs/config-editor.test.ts fails when the two drift.
+ */
+export const ALLOWED_CONFIG_COLUMNS: ReadonlySet<string> = new Set([
+    "review_channel_id", "gate_channel_id", "general_channel_id", "unverified_channel_id",
+    "accepted_role_id", "reviewer_role_id", "welcome_template", "info_channel_id",
+    "rules_channel_id", "welcome_ping_role_id", "mod_role_ids", "gatekeeper_role_id",
+    "modmail_log_channel_id", "modmail_delete_on_close", "review_roles_mode",
+    "dadmode_enabled", "dadmode_odds", "skullmode_enabled", "skullmode_odds",
+    "listopen_public_output", "leadership_role_id",
+    "ping_dev_on_app", "image_search_url_template", "reapply_cooldown_hours",
+    "min_account_age_hours", "min_join_age_hours", "avatar_scan_enabled",
+    "avatar_scan_nsfw_threshold", "avatar_scan_skin_edge_threshold",
+    "avatar_scan_weight_model", "avatar_scan_weight_edge", "flags_channel_id",
+    "silent_first_msg_days", "logging_channel_id", "notify_mode", "notify_role_id",
+    "forum_channel_id", "notification_channel_id", "notify_cooldown_seconds",
+    "notify_max_per_hour", "support_channel_id", "poke_category_ids_json", "poke_excluded_channel_ids_json",
+    "artist_role_id", "ambassador_role_id", "server_artist_channel_id", "artist_ticket_roles_json",
+    "report_forum_id", "artist_ignored_users_json", "backfill_notification_channel_id", "bot_dev_role_id",
+    "gate_answer_max_length", "banner_sync_interval_minutes", "modmail_forward_max_size",
+    "retry_max_attempts", "retry_initial_delay_ms", "retry_max_delay_ms",
+    "circuit_breaker_threshold", "circuit_breaker_reset_ms",
+    "avatar_scan_hard_threshold", "avatar_scan_soft_threshold", "avatar_scan_racy_threshold",
+    "flag_rate_limit_ms", "flag_cooldown_ttl_ms", "nsfw_alert_role_id", "banner_sync_enabled",
+    "level_reward_dm_enabled",
+    "qotd_review_channel_id", "qotd_role_id", "pulse_excluded_category_ids_json",
+    "vote_out_threshold",
+    "verify_thread_parent_id", "unverified_rules_channel_id",
+  ]);

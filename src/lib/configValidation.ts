@@ -10,7 +10,7 @@
 
 // ── Types ────────────────────────────────────────────────────────────────
 
-export type ValueType =
+type ValueType =
   | "channel"
   | "role"
   | "roles"
@@ -27,7 +27,7 @@ export type ValueType =
   | "template";
 
 /** Dashboard tier — mirrors web/src/lib/server/roles.ts */
-export type DashboardTier =
+type DashboardTier =
   | "owner"
   | "cm"
   | "cdl"
@@ -159,11 +159,15 @@ export const CONFIG_FIELD_RULES: Record<string, FieldRule> = {
   banner_sync_enabled:          { type: "bool",    section: "Advanced", label: "Banner Sync Enabled",     minTier: "admin" },
   poke_category_ids_json:       { type: "json",    section: "Advanced", label: "Poke Categories",         minTier: "admin", nullable: true },
   poke_excluded_channel_ids_json:{ type: "json",   section: "Advanced", label: "Poke Excluded Channels",  minTier: "admin", nullable: true },
+  pulse_excluded_category_ids_json:{ type: "json",  section: "Advanced", label: "Pulse Excluded Categories", minTier: "admin", nullable: true },
+  vote_out_threshold:           { type: "number",  section: "Advanced", label: "Vote Out Threshold",      minTier: "admin", min: 1,     max: 10,     integer: true },
+  verify_thread_parent_id:      { type: "channel", section: "Channels", label: "Verify Thread Parent",    minTier: "admin", nullable: true },
+  unverified_rules_channel_id:  { type: "channel", section: "Channels", label: "Unverified Rules Channel", minTier: "admin", nullable: true },
 };
 
 // ── Validators ───────────────────────────────────────────────────────────
 
-export function validateConfigField(
+function validateConfigField(
   key: string,
   value: unknown
 ): { valid: boolean; error?: string } {

@@ -602,6 +602,36 @@ export const CONFIG_FIELD_RULES: Record<string, FieldRule> = {
     minTier: "admin",
     nullable: true,
   },
+  pulse_excluded_category_ids_json: {
+    type: "json",
+    section: "Advanced",
+    label: "Pulse Excluded Categories",
+    minTier: "admin",
+    nullable: true,
+  },
+  vote_out_threshold: {
+    type: "number",
+    section: "Advanced",
+    label: "Vote Out Threshold",
+    minTier: "admin",
+    min: 1,
+    max: 10,
+    integer: true,
+  },
+  verify_thread_parent_id: {
+    type: "channel",
+    section: "Channels",
+    label: "Verify Thread Parent",
+    minTier: "admin",
+    nullable: true,
+  },
+  unverified_rules_channel_id: {
+    type: "channel",
+    section: "Channels",
+    label: "Unverified Rules Channel",
+    minTier: "admin",
+    nullable: true,
+  },
 };
 
 // ── Validators ───────────────────────────────────────────────────────────

@@ -165,6 +165,23 @@ const FIELD_META: Record<string, { section: string } & FieldMeta> = {
     type: "json",
   },
 
+  // Columns the bot accepts that the editor could not show before (#00273)
+  qotd_review_channel_id: { section: "Channels", label: "QOTD Review Channel", type: "channel" },
+  verify_thread_parent_id: { section: "Channels", label: "Verify Thread Parent", type: "channel" },
+  unverified_rules_channel_id: {
+    section: "Channels",
+    label: "Unverified Rules Channel",
+    type: "channel",
+  },
+  qotd_role_id: { section: "Roles", label: "QOTD Role", type: "role" },
+  level_reward_dm_enabled: { section: "Notifications", label: "Level Reward DMs", type: "bool" },
+  pulse_excluded_category_ids_json: {
+    section: "Advanced",
+    label: "Pulse Excluded Categories",
+    type: "json",
+  },
+  vote_out_threshold: { section: "Advanced", label: "Vote Out Threshold", type: "number" },
+
   // Templates
   welcome_template: { section: "Templates", label: "Welcome Template", type: "template" },
   image_search_url_template: { section: "Templates", label: "Image Search URL", type: "template" },
