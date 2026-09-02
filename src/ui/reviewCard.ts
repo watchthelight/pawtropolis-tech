@@ -30,7 +30,7 @@ export type { ApplicationStatus, ReviewAnswer, ReviewClaimRow, AvatarScanRow, Re
  * The full ModmailTicket type lives in src/features/modmail/types.ts
  * Note: status is typed as string here to accept raw database values.
  */
-export type ModmailTicketDisplay = {
+type ModmailTicketDisplay = {
   id: number;
   thread_id: string | null;
   status: string;
@@ -38,14 +38,14 @@ export type ModmailTicketDisplay = {
   log_message_id?: string | null;
 };
 
-export interface ReviewAction {
+interface ReviewAction {
   action: string;
   moderator_id: string;
   reason: string | null;
   created_at: number;
 }
 
-export interface PreviousApplication {
+interface PreviousApplication {
   id: string;
   status: string;
   submitted_at: string | null;
