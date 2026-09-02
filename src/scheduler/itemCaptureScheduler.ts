@@ -25,7 +25,12 @@ import {
   sourceBotAllowlist,
 } from "../features/inventory/catalog.js";
 import { decideDedup, isSuppressed, clearSuppression } from "../features/inventory/capture.js";
-import { decideSource, resolveRoleGrantExecutor } from "../features/inventory/executor.js";
+import {
+  decideSource,
+  listRecentRoleGrants,
+  resolveRoleGrantExecutor,
+  type RoleGrantExecutor,
+} from "../features/inventory/executor.js";
 import {
   claimGrantKey,
   creditItem,
@@ -52,7 +57,11 @@ function sleep(ms: number): Promise<void> {
  * Process one queued capture.
  * RETURNS: true when a role write happened, so the caller knows to pace the next one.
  */
-async function processCapture(client: Client, row: PendingCapture): Promise<boolean> {
+async function processCapture(
+  client: Client,
+  row: PendingCapture,
+  grants?: Map<string, RoleGrantExecutor>
+): Promise<boolean> {
   const guild = client.guilds.cache.get(row.guild_id) ?? null;
   if (!guild) {
     logger.warn({ guildId: row.guild_id, captureId: row.id }, "[inventory] guild not cached, dropping capture");
@@ -92,7 +101,11 @@ async function processCapture(client: Client, row: PendingCapture): Promise<bool
     return false;
   }
 
-  const executor = await resolveRoleGrantExecutor(guild, row.user_id, row.role_id);
+  // With several captures due in one tick the drain fetched the audit log once per guild;
+  // a single due capture still resolves on its own.
+  const executor = grants
+    ? (grants.get(`${row.user_id}:${row.role_id}`) ?? null)
+    : await resolveRoleGrantExecutor(guild, row.user_id, row.role_id);
   const verdict = decideSource(executor, client.user?.id ?? "", sourceBotAllowlist(row.guild_id));
 
   if (!verdict.ok) {
@@ -218,11 +231,22 @@ export async function drainDueCaptures(client: Client): Promise<number> {
     const rows = dueCaptures(Math.floor(Date.now() / 1000));
     if (rows.length === 0) return 0;
 
+    // One audit-log fetch per guild when more than one capture is due there, instead of
+    // one REST call per capture.
+    const dueByGuild = new Map<string, number>();
+    for (const row of rows) dueByGuild.set(row.guild_id, (dueByGuild.get(row.guild_id) ?? 0) + 1);
+    const grantsByGuild = new Map<string, Map<string, RoleGrantExecutor>>();
+    for (const [guildId, count] of dueByGuild) {
+      if (count < 2) continue;
+      const guild = client.guilds.cache.get(guildId);
+      if (guild) grantsByGuild.set(guildId, await listRecentRoleGrants(guild));
+    }
+
     let processed = 0;
     for (const row of rows) {
       let didRoleWrite = false;
       try {
-        didRoleWrite = await processCapture(client, row);
+        didRoleWrite = await processCapture(client, row, grantsByGuild.get(row.guild_id));
       } catch (err) {
         logger.error({ err, captureId: row.id }, "[inventory] capture failed");
         deferCapture(row.id, RETRY_DELAY_S);
