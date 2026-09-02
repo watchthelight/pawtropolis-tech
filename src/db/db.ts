@@ -47,27 +47,22 @@ logger.info({ dbPath, dbTraceEnabled }, "SQLite opened");
 
 const legacyRe = /__old|ALTER\s+TABLE\s+.+\s+RENAME/i;
 const originalPrepare = db.prepare.bind(db);
-(db as any).prepare = function tracedPrepare(sql: string) {
-  if (legacyRe.test(sql)) {
-    const err = new Error(`Legacy SQL detected in prepare(): ${sql.slice(0, 180)}`);
-    logger.error(
-      {
-        evt: "db_legacy_sql",
-        sql,
-        err: { name: err.name, message: err.message, stack: err.stack },
-      },
-      "blocked legacy SQL"
-    );
-    throw err;
-  }
 
-  const statement = originalPrepare(sql);
+// Statement cache. Preparing a statement is a full SQL parse and planner run plus a native
+// allocation, and most call sites prepare on every call. Statements handed out by
+// db.prepare are therefore shared: never call .pluck/.raw/.expand/.safeIntegers/.bind on
+// one, those mutate it for every other caller. Bounded so dynamically built SQL (IN lists,
+// interpolated LIMITs) cannot grow it without limit.
+const STMT_CACHE_MAX = 1024;
+const stmtCache = new Map<string, Database.Statement>();
+
+function wrapStatement(statement: Database.Statement, sql: string): Database.Statement {
   for (const method of ["run", "get", "all"] as const) {
     const base = (statement as any)[method];
     if (typeof base !== "function") continue;
     (statement as any)[method] = function wrappedMethod(this: unknown, ...args: any[]) {
       try {
-        if (process.env.DB_TRACE === "1") {
+        if (dbTraceEnabled) {
           logger.debug({ evt: "db_call", m: method, sql }, "db call");
         }
         return base.apply(statement, args);
@@ -87,6 +82,32 @@ const originalPrepare = db.prepare.bind(db);
       }
     };
   }
+  return statement;
+}
+
+(db as any).prepare = function cachedPrepare(sql: string) {
+  const hit = stmtCache.get(sql);
+  if (hit) return hit;
+
+  if (legacyRe.test(sql)) {
+    const err = new Error(`Legacy SQL detected in prepare(): ${sql.slice(0, 180)}`);
+    logger.error(
+      {
+        evt: "db_legacy_sql",
+        sql,
+        err: { name: err.name, message: err.message, stack: err.stack },
+      },
+      "blocked legacy SQL"
+    );
+    throw err;
+  }
+
+  const statement = wrapStatement(originalPrepare(sql), sql);
+  if (stmtCache.size >= STMT_CACHE_MAX) {
+    const oldest = stmtCache.keys().next().value;
+    if (oldest !== undefined) stmtCache.delete(oldest);
+  }
+  stmtCache.set(sql, statement);
   return statement;
 };
 
