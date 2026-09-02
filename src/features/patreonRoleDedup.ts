@@ -14,6 +14,7 @@ import { logger } from "../lib/logger.js";
 import { removeRole } from "./roleAutomation.js";
 import { isPanicMode } from "./panicStore.js";
 import { logActionPretty } from "../logging/pretty.js";
+import { handlePatreonArtRewards } from "./patreonArtRewards.js";
 
 // Patreon donor roles ordered highest → lowest tier.
 // IDs from docs/internal-info/ROLES.md
@@ -40,7 +41,8 @@ export function isPatreonDonorRole(roleId: string): boolean {
  * Called from guildMemberUpdate when a Patreon donor role is added.
  */
 export async function handlePatreonRoleDedup(
-  member: GuildMember
+  member: GuildMember,
+  options: { refetch?: boolean } = {}
 ): Promise<void> {
   const guild = member.guild;
 
@@ -53,9 +55,11 @@ export async function handlePatreonRoleDedup(
     return;
   }
 
-  // Re-fetch member from API to avoid stale cache (external Patreon bot may
-  // have modified roles since our last gateway event)
-  const fresh = await guild.members.fetch(member.id).catch(() => null);
+  // The event path re-fetches the member so an external Patreon bot's role edits that
+  // raced our gateway event are visible. The periodic sweep reads the cache instead: a
+  // REST fetch per Patreon member per sweep was most of what the sweep cost.
+  const fresh =
+    options.refetch === false ? member : await guild.members.fetch(member.id).catch(() => null);
   if (!fresh) return;
 
   // Find all Patreon donor roles this member currently has
@@ -129,34 +133,27 @@ async function sweepOnce(client: Client): Promise<number> {
   for (const [, guild] of client.guilds.cache) {
     if (isPanicMode(guild.id)) continue;
 
-    // Track members we've already processed to avoid duplicate art reward checks
-    const processed = new Set<string>();
+    // One pass over the member cache: role.members per tier filtered the whole cache six
+    // times per sweep. Gateway events keep the cache current.
+    for (const member of guild.members.cache.values()) {
+      let tierCount = 0;
+      for (const tier of PATREON_TIERS) {
+        if (member.roles.cache.has(tier.roleId)) tierCount++;
+      }
+      if (tierCount === 0) continue;
 
-    // Fetch members with any Patreon role from the API (not cache)
-    for (const tier of PATREON_TIERS) {
-      const role = guild.roles.cache.get(tier.roleId);
-      if (!role) continue;
+      // Dedup stacked roles
+      if (tierCount > 1) {
+        await handlePatreonRoleDedup(member, { refetch: false });
+        totalFixed++;
+      }
 
-      for (const [, member] of role.members) {
-        const memberTiers = PATREON_TIERS.filter((t) => member.roles.cache.has(t.roleId));
-
-        // Dedup stacked roles
-        if (memberTiers.length > 1) {
-          await handlePatreonRoleDedup(member);
-          totalFixed++;
-        }
-
-        // Also check art rewards for every Patreon member (handler has its own toggle/dedup)
-        if (!processed.has(member.id)) {
-          processed.add(member.id);
-          try {
-            const { handlePatreonArtRewards } = await import("./patreonArtRewards.js");
-            await handlePatreonArtRewards(member);
-          } catch (err) {
-            logger.warn({ err, userId: member.id, guildId: guild.id },
-              "[patreonRoleDedup] Failed to check art rewards in sweep");
-          }
-        }
+      // Also check art rewards for every Patreon member (handler has its own toggle/dedup)
+      try {
+        await handlePatreonArtRewards(member);
+      } catch (err) {
+        logger.warn({ err, userId: member.id, guildId: guild.id },
+          "[patreonRoleDedup] Failed to check art rewards in sweep");
       }
     }
   }
@@ -175,8 +172,10 @@ export async function sweepPatreonRoleStacks(client: Client): Promise<void> {
   const totalFixed = await sweepOnce(client);
   logger.info({ totalFixed }, "[patreonRoleDedup] Startup sweep complete");
 
-  // Periodic sweep every 10 minutes to catch roles re-added by external Patreon bots
-  const SWEEP_INTERVAL_MS = 10 * 60 * 1000;
+  // Periodic sweep (hourly by default, PATREON_SWEEP_INTERVAL_MINUTES overrides) to catch
+  // roles re-added by external Patreon bots; guildMemberUpdate handles the live cases.
+  const minutes = parseInt(process.env.PATREON_SWEEP_INTERVAL_MINUTES ?? "", 10);
+  const SWEEP_INTERVAL_MS = (Number.isFinite(minutes) && minutes > 0 ? minutes : 60) * 60 * 1000;
   _sweepInterval = setInterval(async () => {
     try {
       const fixed = await sweepOnce(client);
