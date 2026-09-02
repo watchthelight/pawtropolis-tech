@@ -95,3 +95,6 @@ scratch/
 # Skill scratch output, rewritten on every run
 _bug-reply.md
 _announcement-*.md
+
+# vitest per-worker databases (tests/setup.ts)
+tests/.tmp/
