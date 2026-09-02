@@ -109,12 +109,23 @@ export function wrapEvent<T extends unknown[]>(
     try {
       // Run handler within context that carries the wide event
       await runWithCtx({ traceId, kind: "event", wideEvent }, async () => {
-        await Promise.race([
-          handler(...args),
-          new Promise<void>((_, reject) =>
-            setTimeout(() => reject(new Error(`Event handler timeout after ${timeoutMs}ms`)), timeoutMs)
-          ),
-        ]);
+        // The timer must not outlive the handler: an uncleared 10s timeout keeps the
+        // handler args (full Message / GuildMember objects) reachable for every event.
+        let timer: NodeJS.Timeout | undefined;
+        try {
+          await Promise.race([
+            handler(...args),
+            new Promise<void>((_, reject) => {
+              timer = setTimeout(
+                () => reject(new Error(`Event handler timeout after ${timeoutMs}ms`)),
+                timeoutMs
+              );
+              timer.unref();
+            }),
+          ]);
+        } finally {
+          if (timer) clearTimeout(timer);
+        }
       });
 
       // Success

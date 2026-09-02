@@ -423,3 +423,27 @@ describe("eventWrap", () => {
     });
   });
 });
+
+describe("wrapEvent timer hygiene", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("clears the timeout timer once the handler resolves", async () => {
+    const wrapped = wrapEvent("testEvent", async () => {});
+    await wrapped();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("clears the timeout timer when the handler throws", async () => {
+    const wrapped = wrapEvent("testEvent", async () => {
+      throw new Error("boom");
+    });
+    await wrapped();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+});
