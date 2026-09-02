@@ -21,6 +21,7 @@
 
 import http from "node:http";
 import crypto from "node:crypto";
+import fs from "node:fs";
 import { logger } from "../lib/logger.js";
 import {
   BADGE_REGISTRY,
@@ -31,8 +32,48 @@ import {
   readManifest,
   renderBadgeSvg,
   renderUnknownBadgeSvg,
+  svgPathFor,
 } from "../features/badges/index.js";
-import type { BadgeStoreConfig } from "../features/badges/index.js";
+import type { BadgeManifest, BadgeStoreConfig } from "../features/badges/index.js";
+
+// Rendered files are served from memory and revalidated with one stat() per request
+// instead of a full read plus a SHA-256 per request. The daily refresh and the live
+// listeners rewrite the files in place, which moves the mtime and refills the entry.
+const svgCache = new Map<string, { mtimeMs: number; body: string; etag: string }>();
+let manifestCache: { mtimeMs: number; manifest: BadgeManifest } | null = null;
+
+function cachedSvg(
+  config: BadgeStoreConfig,
+  badgeId: string,
+): { body: string; etag: string } | null {
+  let mtimeMs: number;
+  try {
+    mtimeMs = fs.statSync(svgPathFor(config, badgeId)).mtimeMs;
+  } catch {
+    return null;
+  }
+  const hit = svgCache.get(badgeId);
+  if (hit && hit.mtimeMs === mtimeMs) return hit;
+  const body = readBadgeSvg(config, badgeId);
+  if (!body) return null;
+  const entry = { mtimeMs, body, etag: etagFor(body) };
+  svgCache.set(badgeId, entry);
+  return entry;
+}
+
+function cachedManifest(config: BadgeStoreConfig): BadgeManifest {
+  let mtimeMs = 0;
+  try {
+    mtimeMs = fs.statSync(config.manifestPath).mtimeMs;
+  } catch {
+    // Missing manifest: readManifest returns the empty shape; do not cache it.
+    return readManifest(config);
+  }
+  if (manifestCache && manifestCache.mtimeMs === mtimeMs) return manifestCache.manifest;
+  const manifest = readManifest(config);
+  manifestCache = { mtimeMs, manifest };
+  return manifest;
+}
 
 const BADGE_PORT = parseInt(process.env.BADGE_PORT ?? "3004", 10);
 const BADGE_ENDPOINT_ENABLED =
@@ -61,8 +102,9 @@ function sendSvg(
   body: string,
   status = 200,
   ifNoneMatch?: string,
+  precomputedEtag?: string,
 ): void {
-  const etag = etagFor(body);
+  const etag = precomputedEtag ?? etagFor(body);
   if (ifNoneMatch && ifNoneMatch === etag) {
     res.writeHead(304, { ETag: etag });
     res.end();
@@ -94,12 +136,12 @@ function tryServeRegistryBadge(
 ): boolean {
   const def = getBadgeDefinition(badgeId);
   if (!def) return false;
-  const cached = readBadgeSvg(config, badgeId);
+  const cached = cachedSvg(config, badgeId);
   if (cached) {
-    sendSvg(res, cached, 200, ifNoneMatch);
+    sendSvg(res, cached.body, 200, ifNoneMatch, cached.etag);
     return true;
   }
-  const manifest = readManifest(config);
+  const manifest = cachedManifest(config);
   const entry = manifest.entries[badgeId];
   if (entry) {
     const svg = renderBadgeSvg(entry);
@@ -141,8 +183,7 @@ export function handleBadgeRequest(
   }
 
   if (pathname === "/api/badges/manifest.json") {
-    const manifest = readManifest(config);
-    sendJson(res, manifest);
+    sendJson(res, cachedManifest(config));
     return true;
   }
 
@@ -174,7 +215,7 @@ export function handleBadgeRequest(
       sendSvg(res, fallbackSvgFor("invalid id"), 200);
       return true;
     }
-    const manifest = readManifest(config);
+    const manifest = cachedManifest(config);
     const entry =
       manifest.entries[synthId] ??
       Object.values(manifest.entries).find((e) => e.discordId === discordId);
