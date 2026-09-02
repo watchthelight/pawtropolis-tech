@@ -272,10 +272,36 @@ function rebuildDailyMetrics(
     (db.prepare(`SELECT COUNT(*) AS n FROM action_log WHERE guild_id = ? AND action = 'member_leave' AND created_at_s < ?`).get(guildId, windowStartS) as Row).n
   );
 
-  const wauStmt = db.prepare(
-    `SELECT COUNT(DISTINCT user_id) AS n FROM message_activity
-     WHERE guild_id = ? AND created_at_s >= ? AND created_at_s < ?`
-  );
+  // Rolling 7-day active authors: one query for the distinct (day, user) pairs across the
+  // window plus six days of lookback, then a sliding union in memory. This replaced one
+  // COUNT(DISTINCT) over seven days of message_activity for every day of the window.
+  const wauLookbackStartS = windowStartS - 6 * DAY_S;
+  const authorsByDay = new Map<number, Set<string>>();
+  for (const r of db
+    .prepare(
+      `SELECT (created_at_s - ?) / ? AS d, user_id
+       FROM message_activity
+       WHERE guild_id = ? AND created_at_s >= ?
+       GROUP BY d, user_id`
+    )
+    .all(wauLookbackStartS, DAY_S, guildId, wauLookbackStartS) as Row[]) {
+    const d = num(r.d);
+    let set = authorsByDay.get(d);
+    if (!set) {
+      set = new Set();
+      authorsByDay.set(d, set);
+    }
+    set.add(String(r.user_id));
+  }
+  // Day i of the window is lookback index i + 6; its 7-day window is indexes i..i+6.
+  const wauForDay = (i: number): number => {
+    const union = new Set<string>();
+    for (let k = i; k <= i + 6; k++) {
+      const set = authorsByDay.get(k);
+      if (set) for (const u of set) union.add(u);
+    }
+    return union.size;
+  };
 
   const upsert = db.prepare(
     `INSERT INTO daily_metrics
@@ -304,8 +330,7 @@ function rebuildDailyMetrics(
     running += a.joins - a.leaves;
     const memberDelta = a.member_count != null && prevMember != null ? a.member_count - prevMember : null;
     const prev7 = i >= 7 ? acc.get(dayList[i - 7]!)!.message_count : null;
-    const dayStartS = windowStartS + i * DAY_S;
-    const wau = num((wauStmt.get(guildId, dayStartS - 6 * DAY_S, dayStartS + DAY_S) as Row).n);
+    const wau = wauForDay(i);
     upsert.run({
       guild_id: guildId,
       day,
@@ -374,20 +399,26 @@ function rebuildCohortRetention(db: Database, guildId: string, nowS: number): nu
     .all(guildId, lookbackStartS) as Row[];
 
   // Per-user "currently present" flag: the user's MOST RECENT membership event
-  // (latest created_at_s among member_join / member_leave) is a member_join.
-  const presentStmt = db.prepare(
-    `SELECT action FROM action_log
-     WHERE guild_id = ? AND actor_id = ? AND action IN ('member_join','member_leave')
-     ORDER BY created_at_s DESC, id DESC
-     LIMIT 1`
-  );
+  // (latest created_at_s among member_join / member_leave) is a member_join. Every
+  // cohort member's first join is inside the lookback, so all of their events are too;
+  // one newest-first pass (first hit per member wins) replaced one query per member.
+  const latestByActor = new Map<string, string>();
+  for (const r of db
+    .prepare(
+      `SELECT actor_id, action FROM action_log
+       WHERE guild_id = ? AND action IN ('member_join','member_leave') AND created_at_s >= ?
+       ORDER BY created_at_s DESC, id DESC`
+    )
+    .all(guildId, lookbackStartS) as Row[]) {
+    const actor = String(r.actor_id);
+    if (!latestByActor.has(actor)) latestByActor.set(actor, String(r.action));
+  }
 
   // Group cohort members by their first-join week and tally presence.
   const cohorts = new Map<number, { size: number; present: number }>();
   for (const u of firstJoins) {
     const weekStart = mondayStartS(num(u.first_join));
-    const latest = presentStmt.get(guildId, String(u.actor_id)) as Row | undefined;
-    const isPresent = latest != null && String(latest.action) === "member_join";
+    const isPresent = latestByActor.get(String(u.actor_id)) === "member_join";
     const c = cohorts.get(weekStart) ?? { size: 0, present: 0 };
     c.size++;
     if (isPresent) c.present++;
