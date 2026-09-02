@@ -119,6 +119,21 @@
 			<span class="db-dot" style:background={health.dbIntegrity.ok ? 'var(--good)' : 'var(--danger)'} aria-hidden="true"></span>
 			<span class="db-label">Database: {health.dbIntegrity.message}</span>
 		</div>
+		{#if health.storage}
+			<div class="db-status">
+				<span class="db-label">
+					Storage: data.db {formatBytesMB(Math.round((health.storage.dbBytes ?? 0) / 1048576))}
+					· WAL {formatBytesMB(Math.round((health.storage.walBytes ?? 0) / 1048576))}
+					· free pages {formatBytesMB(Math.round((health.storage.freelistBytes ?? 0) / 1048576))}
+					{#if health.storage.archivedMessages != null}
+						· archive {health.storage.archivedMessages.toLocaleString()} messages
+					{/if}
+					{#if health.loopLag}
+						· loop lag p99 {health.loopLag.p99Ms} ms
+					{/if}
+				</span>
+			</div>
+		{/if}
 
 		<!-- Host metrics -->
 		{#if health.host}

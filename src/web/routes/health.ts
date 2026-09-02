@@ -92,6 +92,8 @@ export function registerHealthRoutes(server: FastifyInstance, _ctx: DashboardRou
           activeAlertCount: summary.activeAlerts.length,
           pm2: summary.pm2,
           dbIntegrity: summary.db,
+          storage: summary.storage,
+          loopLag: summary.loopLag,
           host: {
             loadavg,
             cpuCount,

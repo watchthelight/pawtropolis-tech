@@ -20,6 +20,13 @@ export interface SystemHealth {
     uptimeSeconds?: number;
   }>;
   dbIntegrity: { ok: boolean; message: string; checkedAt: number };
+  storage?: {
+    dbBytes: number | null;
+    walBytes: number | null;
+    freelistBytes: number | null;
+    archivedMessages: number | null;
+  };
+  loopLag?: { p50Ms: number; p95Ms: number; p99Ms: number; maxMs: number; samples: number; windowS: number };
   host?: {
     loadavg: [number, number, number];
     cpuCount: number;

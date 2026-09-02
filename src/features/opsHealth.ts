@@ -17,7 +17,8 @@ import type { Client } from "discord.js";
 import { db } from "../db/db.js";
 import { logger } from "../lib/logger.js";
 import { getPM2Status, type PM2ProcessStatus } from "../lib/pm2.js";
-import { getLastDbIntegrity } from "../lib/dbIntegrityCheck.js";
+import { statSync } from "node:fs";
+import { dbFilePath, getLastDbIntegrity } from "../lib/dbIntegrityCheck.js";
 import { snapshotLoopLag, type LoopLagSnapshot } from "../lib/loopLag.js";
 import { env } from "../lib/env.js";
 import { logActionPretty } from "../logging/pretty.js";
@@ -86,6 +87,44 @@ export interface HealthSummary {
   lastActions: ActionLogRow[];
   activeAlerts: HealthAlert[];
   loopLag: LoopLagSnapshot;
+  storage: StorageSnapshot;
+}
+
+/** Database footprint, so growth is visible on the dashboard instead of in a shell. */
+export interface StorageSnapshot {
+  dbBytes: number | null;
+  walBytes: number | null;
+  freelistBytes: number | null;
+  archivedMessages: number | null;
+}
+
+function storageSnapshot(): StorageSnapshot {
+  const size = (p: string): number | null => {
+    try {
+      return statSync(p).size;
+    } catch {
+      return null;
+    }
+  };
+  const dbPath = dbFilePath();
+  let freelistBytes: number | null = null;
+  try {
+    const pages = db.pragma("freelist_count", { simple: true }) as number;
+    const pageSize = db.pragma("page_size", { simple: true }) as number;
+    freelistBytes = pages * pageSize;
+  } catch {
+    /* pragma unavailable on a mocked connection */
+  }
+  let archivedMessages: number | null = null;
+  try {
+    const row = db.prepare("SELECT messages_total FROM backfill_stats WHERE id = 1").get() as
+      | { messages_total: number }
+      | undefined;
+    archivedMessages = row?.messages_total ?? null;
+  } catch {
+    /* table absent before migration 075 */
+  }
+  return { dbBytes: size(dbPath), walBytes: size(`${dbPath}-wal`), freelistBytes, archivedMessages };
 }
 
 export interface SummaryOptions {
@@ -326,6 +365,7 @@ export async function getSummary(
   const activeAlerts = getActiveAlerts();
 
   const loopLag = snapshotLoopLag(opts.resetLoopLag === true);
+  const storage = storageSnapshot();
 
   return {
     wsPingMs,
@@ -335,6 +375,7 @@ export async function getSummary(
     lastActions,
     activeAlerts,
     loopLag,
+    storage,
   };
 }
 
