@@ -56,7 +56,7 @@ function isoCutoff(days: number): string {
 // Every rule deletes in chunks through rowid so no single statement holds the write lock
 // for long. Tables are checked for existence first: test databases and fresh installs may
 // not have all of them.
-export const RETENTION_RULES: RetentionRule[] = [
+const RETENTION_RULES: RetentionRule[] = [
   { table: "security_issue_history", where: "recorded_at < ?", params: () => [nowS() - 90 * DAY_S] },
   { table: "consumed_confirmations", where: "consumed_at_s < ?", params: () => [nowS() - DAY_S] },
   { table: "config_audit_log", where: "created_at < ?", params: () => [isoCutoff(365)] },
@@ -230,7 +230,7 @@ export function pruneDeployBackups(
  * older than VERIFY_LOG_KEEP_DAYS. Bulk delete cannot reach messages older than 14 days, so
  * they go one at a time, capped per run. Runs only when retention is enabled.
  */
-export async function pruneVerifyLog(client: Client, enabled = retentionEnabled()): Promise<number> {
+async function pruneVerifyLog(client: Client, enabled = retentionEnabled()): Promise<number> {
   if (!enabled || !client.user) return 0;
   const channelId = getVerifyLogChannelId();
   const channel = await client.channels.fetch(channelId).catch(() => null);

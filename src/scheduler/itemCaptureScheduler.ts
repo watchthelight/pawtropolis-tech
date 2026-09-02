@@ -221,7 +221,7 @@ async function processCapture(
   return true;
 }
 
-export async function drainDueCaptures(client: Client): Promise<number> {
+async function drainDueCaptures(client: Client): Promise<number> {
   if (_draining) {
     logger.debug("[inventory] drain already running, skipping overlapping tick");
     return 0;
