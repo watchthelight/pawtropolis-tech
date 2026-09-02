@@ -40,25 +40,6 @@ module.exports = {
         ADDRESS_HEADER: 'X-Forwarded-For',
         XFF_DEPTH: '2'
       }
-    },
-    {
-      // One-shot resumable backfill of every message in primary guild.
-      // autorestart:false — exits cleanly when done; resume cursor in DB means
-      // a manual `pm2 restart pawtropolis-backfill` picks up where it left off.
-      name: 'pawtropolis-backfill',
-      script: 'scripts/backfill/run.ts',
-      cwd: '/home/ubuntu/pawtropolis-tech',
-      interpreter: 'node',
-      interpreter_args: '--env-file=.env --import=tsx',
-      exec_mode: 'fork',
-      instances: 1,
-      autorestart: false,
-      max_restarts: 3,
-      restart_delay: 30000,
-      kill_timeout: 30000,
-      env: {
-        NODE_ENV: 'production'
-      }
     }
   ]
 };
