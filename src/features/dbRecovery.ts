@@ -15,7 +15,7 @@
 
 import Database from "better-sqlite3";
 import { createHash } from "node:crypto";
-import { promises as fs } from "node:fs";
+import { createReadStream, promises as fs } from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { env } from "../lib/env.js";
@@ -399,13 +399,15 @@ export async function validateCandidate(candidateId: string): Promise<Validation
  * Compute SHA256 checksum of a file
  */
 async function computeChecksum(filePath: string): Promise<string> {
-  // SHA256 checksum for integrity verification.
-  // We read the entire file into memory here - this is fine for SQLite DBs which
-  // are typically <100MB, but would need streaming for larger files.
-  const fileBuffer = await fs.readFile(filePath);
-  const hashSum = createHash("sha256");
-  hashSum.update(fileBuffer);
-  return hashSum.digest("hex");
+  // SHA256 checksum for integrity verification, streamed: backups are multi-GB and
+  // reading one whole into memory is more than the production host has.
+  return new Promise((resolve, reject) => {
+    const hashSum = createHash("sha256");
+    createReadStream(filePath)
+      .on("data", (chunk) => hashSum.update(chunk))
+      .on("error", reject)
+      .on("end", () => resolve(hashSum.digest("hex")));
+  });
 }
 
 // ============================================================================
