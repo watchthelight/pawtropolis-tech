@@ -49,8 +49,8 @@ const ARTIST_TYPE_KEYS = new Set([
   "fursuit-creator",
 ]);
 
-export const ASSIGN_CONFIRM_PREFIX = "tk:asncf:";
-export const ASSIGN_CANCEL_PREFIX = "tk:asncx:";
+const ASSIGN_CONFIRM_PREFIX = "tk:asncf:";
+const ASSIGN_CANCEL_PREFIX = "tk:asncx:";
 
 export const data = new SlashCommandBuilder()
   .setName("assignticket")

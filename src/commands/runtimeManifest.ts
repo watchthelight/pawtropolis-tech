@@ -106,9 +106,6 @@ export const CONTEXT_MENU_NAMES = [
   "Welcome Batch",
 ] as const;
 
-export type SlashCommandName = (typeof SLASH_COMMAND_NAMES)[number];
-export type ContextMenuName = (typeof CONTEXT_MENU_NAMES)[number];
-
 export const ALL_REGISTERED_NAMES = [
   ...SLASH_COMMAND_NAMES,
   ...CONTEXT_MENU_NAMES,

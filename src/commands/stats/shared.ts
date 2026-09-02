@@ -11,12 +11,12 @@ export {
   EmbedBuilder,
   AttachmentBuilder,
   MessageFlags,
-  PermissionFlagsBits,
+  
   type GuildMember,
 } from "discord.js";
 
 export type { CommandContext } from "../../lib/cmdWrap.js";
-export { withStep, withSql, ensureDeferred, replyOrEdit } from "../../lib/cmdWrap.js";
+export { withStep, withSql, ensureDeferred,  } from "../../lib/cmdWrap.js";
 export { db } from "../../db/db.js";
 export { nowUtc } from "../../lib/time.js";
 export { logger } from "../../lib/logger.js";

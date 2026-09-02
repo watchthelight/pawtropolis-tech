@@ -109,7 +109,7 @@ export const CATEGORY_INFO: Record<CommandCategory, CategoryInfo> = {
  */
 // These map 1:1 with Discord's ApplicationCommandOptionType enum values.
 // We use string literals because the numeric values are meaningless in docs.
-export type OptionType =
+type OptionType =
   | "string"
   | "integer"
   | "boolean"
@@ -123,7 +123,7 @@ export type OptionType =
 /**
  * Command option definition for documentation.
  */
-export interface CommandOption {
+interface CommandOption {
   name: string;
   description: string;
   type: OptionType;
@@ -134,7 +134,7 @@ export interface CommandOption {
 /**
  * Subcommand metadata for commands with subcommands.
  */
-export interface SubcommandMetadata {
+interface SubcommandMetadata {
   name: string;
   description: string;
   options?: CommandOption[];
@@ -145,7 +145,7 @@ export interface SubcommandMetadata {
 /**
  * Subcommand group metadata for nested command structures.
  */
-export interface SubcommandGroupMetadata {
+interface SubcommandGroupMetadata {
   name: string;
   description: string;
   subcommands: SubcommandMetadata[];

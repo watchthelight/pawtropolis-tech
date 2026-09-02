@@ -198,10 +198,3 @@ export async function handleToggleApiButton(interaction: ButtonInteraction) {
   });
 }
 
-// ============================================================================
-// Interaction Router
-// ============================================================================
-
-export function isToggleApiInteraction(customId: string): boolean {
-  return customId.startsWith(BUTTON_PREFIX);
-}

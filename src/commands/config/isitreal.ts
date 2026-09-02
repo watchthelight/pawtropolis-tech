@@ -230,7 +230,7 @@ function buildSetupButtons(services: ServiceHealth[]): ActionRowBuilder<ButtonBu
 // Button Handlers
 // ============================================================================
 
-export async function handleIsitRealButton(interaction: ButtonInteraction) {
+async function handleIsitRealButton(interaction: ButtonInteraction) {
   const customId = interaction.customId;
 
   // Server owner or leadership only
@@ -315,7 +315,7 @@ export async function handleIsitRealButton(interaction: ButtonInteraction) {
 // Temporary storage for pending saves (key: `${userId}_${service}`)
 const pendingSaves = new Map<string, { envVars: Record<string, string>; expiresAt: number }>();
 
-export async function handleIsitRealModal(interaction: ModalSubmitInteraction) {
+async function handleIsitRealModal(interaction: ModalSubmitInteraction) {
   const customId = interaction.customId;
   const service = customId.replace(MODAL_PREFIX, "");
 
@@ -415,7 +415,7 @@ export async function handleIsitRealModal(interaction: ModalSubmitInteraction) {
 // Save/Cancel Handlers
 // ============================================================================
 
-export async function handleIsitRealSave(interaction: ButtonInteraction) {
+async function handleIsitRealSave(interaction: ButtonInteraction) {
   const customId = interaction.customId;
   const service = customId.replace(SAVE_PREFIX, "");
   const saveKey = `${interaction.user.id}_${service}`;
@@ -510,7 +510,7 @@ export async function handleIsitRealSave(interaction: ButtonInteraction) {
   }
 }
 
-export async function handleIsitRealCancel(interaction: ButtonInteraction) {
+async function handleIsitRealCancel(interaction: ButtonInteraction) {
   const customId = interaction.customId;
   const service = customId.replace(CANCEL_PREFIX, "");
   const saveKey = `${interaction.user.id}_${service}`;

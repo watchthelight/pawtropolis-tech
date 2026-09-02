@@ -34,8 +34,8 @@ import {
 // only need the mapping do not pull byteMultiplierStore's prepared statements in with it.
 // Re-exported here because plenty of callers already import them from this module.
 import { BYTE_TOKEN_CONFIG, type ByteTokenConfig } from "../constants/byteTokens.js";
-export { BYTE_TOKEN_CONFIG };
-export type { ByteTokenConfig };
+;
+;
 
 // Rarity order from lowest to highest value
 const RARITY_ORDER: TokenRarity[] = ["common", "rare", "epic", "legendary", "mythic"];
