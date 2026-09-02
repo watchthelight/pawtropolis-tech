@@ -1,0 +1,31 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": [
+        "src/index.ts",
+        "src/ops/*.ts",
+        "scripts/**/*.{ts,mjs,cjs,js}",
+        "migrations/*.ts",
+        "tests/setup.ts"
+      ],
+      "project": ["src/**/*.ts", "scripts/**/*.{ts,mjs,cjs,js}", "migrations/*.ts", "tests/**/*.ts"],
+      "ignore": [
+        "graphify-out/**",
+        "_charts_out/**",
+        "charts/**",
+        "design_handoff/**",
+        "audit/**",
+        "docs-audit/**",
+        "context/**",
+        "dist/**",
+        "web/**"
+      ]
+    },
+    "web": {
+      "entry": ["src/hooks.server.ts", "src/hooks.client.ts", "src/service-worker.ts"],
+      "project": ["src/**/*.{ts,svelte,js}"],
+      "ignore": ["build/**", ".svelte-kit/**"]
+    }
+  }
+}
