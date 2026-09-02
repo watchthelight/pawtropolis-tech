@@ -11,7 +11,9 @@ import {
   getArchiveCounts,
 } from "$lib/server/queries/backfill";
 
-const TICK_MS = 1000;
+// 3s is plenty for a progress view; the backfill heartbeat itself only moves every few
+// seconds, and each tick is three queries per connected owner tab.
+const TICK_MS = 3000;
 const HEARTBEAT_MS = 25_000;
 
 export const GET: RequestHandler = ({ locals }) => {
@@ -30,6 +32,7 @@ export const GET: RequestHandler = ({ locals }) => {
   const stream = new ReadableStream({
     start(controller) {
       let lastChannelsHash = "";
+      let lastStatsJson = "";
 
       const send = (event: string, data: unknown) => {
         try {
@@ -42,7 +45,13 @@ export const GET: RequestHandler = ({ locals }) => {
       const tick = () => {
         const stats = getBackfillStats();
         const counts = getArchiveCounts();
-        send("stats", { ...stats, ...counts });
+        // Only push when something moved; an idle backfill otherwise re-sends the same
+        // payload on every tick.
+        const statsJson = JSON.stringify({ ...stats, ...counts });
+        if (statsJson !== lastStatsJson) {
+          lastStatsJson = statsJson;
+          send("stats", { ...stats, ...counts });
+        }
 
         // Channels change less often — only emit when something differs
         const channels = getBackfillChannels();

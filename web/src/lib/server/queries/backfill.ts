@@ -145,29 +145,44 @@ export function getBackfillChannels(): BackfillChannelRow[] {
   }
 }
 
+// dbstat walks every page of the named tables, so the footprint is refreshed at most
+// once per minute rather than on every page load and every stream tick.
+const SIZE_CACHE_MS = 60_000;
+let sizeCache: { at: number; sizeBytes: number | null } | null = null;
+
+function archiveSizeBytes(): number | null {
+  if (sizeCache && Date.now() - sizeCache.at < SIZE_CACHE_MS) return sizeCache.sizeBytes;
+  let sizeBytes: number | null = null;
+  try {
+    const sz = db()
+      .prepare(
+        `SELECT SUM(pgsize) s FROM dbstat WHERE name IN ('messages_archive', 'message_reactions_archive')`
+      )
+      .get() as { s: number | null } | undefined;
+    sizeBytes = sz?.s ?? null;
+  } catch {
+    /* dbstat extension may not be enabled */
+  }
+  sizeCache = { at: Date.now(), sizeBytes };
+  return sizeBytes;
+}
+
 export function getArchiveCounts(): {
   messages: number;
   reactions: number;
   sizeBytes: number | null;
 } {
   try {
-    const m = db().prepare(`SELECT COUNT(*) c FROM messages_archive`).get() as { c: number };
-    const r = db().prepare(`SELECT COUNT(*) c FROM message_reactions_archive`).get() as {
-      c: number;
+    // The backfill process maintains running totals; COUNT(*) over the archive walked the
+    // whole primary key on every load once the table held millions of rows.
+    const totals = db()
+      .prepare(`SELECT messages_total, reactions_total FROM backfill_stats WHERE id = 1`)
+      .get() as { messages_total: number; reactions_total: number } | undefined;
+    return {
+      messages: totals?.messages_total ?? 0,
+      reactions: totals?.reactions_total ?? 0,
+      sizeBytes: archiveSizeBytes(),
     };
-    // Approximate table footprint via dbstat if available; fallback to null
-    let sizeBytes: number | null = null;
-    try {
-      const sz = db()
-        .prepare(
-          `SELECT SUM(pgsize) s FROM dbstat WHERE name IN ('messages_archive', 'message_reactions_archive')`
-        )
-        .get() as { s: number | null } | undefined;
-      sizeBytes = sz?.s ?? null;
-    } catch {
-      /* dbstat extension may not be enabled */
-    }
-    return { messages: m.c, reactions: r.c, sizeBytes };
   } catch {
     return { messages: 0, reactions: 0, sizeBytes: null };
   }

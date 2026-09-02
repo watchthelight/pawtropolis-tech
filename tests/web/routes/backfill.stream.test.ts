@@ -5,8 +5,9 @@
  * WHY: Owner-only SSE feed of backfill progress. The hashed channels guard
  *      prevents emitting noisy `channels` events when nothing changed; pin
  *      that the same channels payload between ticks emits the row exactly
- *      once. The 1s tick + 25s heartbeat cadence is also pinned so a
- *      cleanup-on-cancel regression would surface.
+ *      once, and the same goes for an unchanged stats payload. The 3s tick +
+ *      25s heartbeat cadence is also pinned so a cleanup-on-cancel regression
+ *      would surface.
  */
 
 import {
@@ -108,16 +109,18 @@ describe("GET /api/backfill/stream", () => {
     await reader.cancel();
   });
 
-  it("after 1s a second stats event is emitted", async () => {
+  it("after one tick a changed stats payload is emitted", async () => {
     const res = await GET(evt(ownerUser));
     const reader = res.body!.getReader();
     // Drain initial: :ok + stats + channels (hash changed from "" to "[]")
     await pullN(reader, 3);
 
-    vi.advanceTimersByTime(1000);
+    mockStats.mockReturnValue({ totalMessages: 150 });
+    vi.advanceTimersByTime(3000);
     // Second tick: stats only (channels hash unchanged).
     const second = await pullN(reader, 1);
     expect(second[0]).toContain("event: stats");
+    expect(second[0]).toContain("150");
     expect(mockStats).toHaveBeenCalledTimes(2);
     await reader.cancel();
   });
@@ -133,7 +136,8 @@ describe("GET /api/backfill/stream", () => {
     const initial = await pullN(reader, 3);
     expect(initial.filter((c) => c.includes("event: channels"))).toHaveLength(1);
 
-    vi.advanceTimersByTime(1000);
+    mockStats.mockReturnValue({ totalMessages: 101 });
+    vi.advanceTimersByTime(3000);
     // Second tick: only stats; the channels hash hasn't changed.
     const second = await pullN(reader, 1);
     expect(second[0]).toContain("event: stats");
@@ -152,23 +156,25 @@ describe("GET /api/backfill/stream", () => {
     mockChannels.mockReturnValueOnce([
       { channelId: "c1", status: "done", messagesFetched: 50, reactionsFetched: 10 },
     ]);
-    vi.advanceTimersByTime(1000);
+    mockStats.mockReturnValue({ totalMessages: 150 });
+    vi.advanceTimersByTime(3000);
     const after = await pullN(reader, 2);
     expect(after.some((c) => c.includes("event: stats"))).toBe(true);
     expect(after.some((c) => c.includes("event: channels"))).toBe(true);
     await reader.cancel();
   });
 
-  it("after 25s a :heartbeat chunk is emitted", async () => {
+  it("unchanged stats between ticks are not re-sent; after 25s only the :heartbeat arrives", async () => {
     const res = await GET(evt(ownerUser));
     const reader = res.body!.getReader();
     await pullN(reader, 3); // initial
 
-    // Advance 25s: 25 tick events (stats only; channels hash unchanged)
-    // + 1 heartbeat = 26 chunks.
+    // Advance 25s: 8 ticks poll the queries but emit nothing because nothing
+    // changed, so the next chunk on the wire is the heartbeat.
     vi.advanceTimersByTime(25_000);
-    const chunks = await pullN(reader, 26);
-    expect(chunks.some((c) => c.includes(":heartbeat"))).toBe(true);
+    const chunks = await pullN(reader, 1);
+    expect(chunks[0]).toContain(":heartbeat");
+    expect(mockStats).toHaveBeenCalledTimes(9);
     await reader.cancel();
   });
 
