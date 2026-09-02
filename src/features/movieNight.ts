@@ -295,48 +295,52 @@ export async function finalizeMovieAttendance(guild: Guild): Promise<void> {
     ) VALUES (?, ?, ?, ?, ?, ?, ?)
   `);
 
-  // Process each session
-  for (const [key, session] of movieSessions) {
-    const [guildId, userId] = key.split(":");
-    if (guildId !== guild.id) continue;
+  // Process each session. One transaction: one fsync for the whole event instead of one
+  // per attendee.
+  const recordAll = db.transaction(() => {
+    for (const [key, session] of movieSessions) {
+      const [guildId, userId] = key.split(":");
+      if (guildId !== guild.id) continue;
 
-    // Close any open session
-    if (session.currentSessionStart) {
-      const sessionDurationMs = Date.now() - session.currentSessionStart;
-      const sessionMinutes = Math.floor(sessionDurationMs / 60000);
-      session.totalMinutes += sessionMinutes;
-      session.longestSessionMinutes = Math.max(session.longestSessionMinutes, sessionMinutes);
-      session.currentSessionStart = null;
+      // Close any open session
+      if (session.currentSessionStart) {
+        const sessionDurationMs = Date.now() - session.currentSessionStart;
+        const sessionMinutes = Math.floor(sessionDurationMs / 60000);
+        session.totalMinutes += sessionMinutes;
+        session.longestSessionMinutes = Math.max(session.longestSessionMinutes, sessionMinutes);
+        session.currentSessionStart = null;
+      }
+
+      // Qualification based on configured threshold (default 30 minutes)
+      const qualified =
+        mode === "continuous"
+          ? session.longestSessionMinutes >= threshold
+          : session.totalMinutes >= threshold;
+
+      stmt.run(
+        guildId,
+        userId,
+        event.eventDate,
+        event.channelId,
+        session.totalMinutes,
+        session.longestSessionMinutes,
+        qualified ? 1 : 0
+      );
+
+      logger.info({
+        evt: "attendance_recorded",
+        guildId,
+        userId,
+        eventDate: event.eventDate,
+        totalMinutes: session.totalMinutes,
+        longestSession: session.longestSessionMinutes,
+        qualified,
+        mode,
+        threshold,
+      }, `Attendance recorded: ${qualified ? "Qualified" : "Not qualified"}`);
     }
-
-    // Qualification based on configured threshold (default 30 minutes)
-    const qualified =
-      mode === "continuous"
-        ? session.longestSessionMinutes >= threshold
-        : session.totalMinutes >= threshold;
-
-    stmt.run(
-      guildId,
-      userId,
-      event.eventDate,
-      event.channelId,
-      session.totalMinutes,
-      session.longestSessionMinutes,
-      qualified ? 1 : 0
-    );
-
-    logger.info({
-      evt: "attendance_recorded",
-      guildId,
-      userId,
-      eventDate: event.eventDate,
-      totalMinutes: session.totalMinutes,
-      longestSession: session.longestSessionMinutes,
-      qualified,
-      mode,
-      threshold,
-    }, `Attendance recorded: ${qualified ? "Qualified" : "Not qualified"}`);
-  }
+  });
+  recordAll();
 
   // Clear ALL sessions, not just this guild's. This is a simplification since
   // we typically only have one guild active. If multi-guild support is needed,

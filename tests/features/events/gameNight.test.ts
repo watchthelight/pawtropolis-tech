@@ -41,7 +41,7 @@ mockPrepare.mockReturnValue({
 });
 
 vi.mock("../../../src/db/db.js", () => ({
-  db: { prepare: mockPrepare },
+  db: { prepare: mockPrepare, transaction: (fn: (...args: unknown[]) => unknown) => fn },
 }));
 
 vi.mock("../../../src/lib/logger.js", () => ({

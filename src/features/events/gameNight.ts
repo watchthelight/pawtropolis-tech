@@ -252,54 +252,58 @@ export async function finalizeGameAttendance(guild: Guild): Promise<GameAttendan
     ) VALUES (?, ?, ?, ?, ?, ?, ?, 'game', ?, ?)
   `);
 
-  // Process each session
-  for (const [key, session] of gameSessions) {
-    const [guildId, userId] = key.split(":") as [string, string];
-    if (guildId !== guild.id) continue;
+  // Process each session. One transaction: one fsync for the whole event instead of one
+  // per attendee.
+  const recordAll = db.transaction(() => {
+    for (const [key, session] of gameSessions) {
+      const [guildId, userId] = key.split(":") as [string, string];
+      if (guildId !== guild.id) continue;
 
-    // Close any open session
-    if (session.currentSessionStart) {
-      const sessionDurationMs = Date.now() - session.currentSessionStart;
-      const sessionMinutes = Math.floor(sessionDurationMs / 60000);
-      session.totalMinutes += sessionMinutes;
-      session.longestSessionMinutes = Math.max(session.longestSessionMinutes, sessionMinutes);
-      session.currentSessionStart = null;
+      // Close any open session
+      if (session.currentSessionStart) {
+        const sessionDurationMs = Date.now() - session.currentSessionStart;
+        const sessionMinutes = Math.floor(sessionDurationMs / 60000);
+        session.totalMinutes += sessionMinutes;
+        session.longestSessionMinutes = Math.max(session.longestSessionMinutes, sessionMinutes);
+        session.currentSessionStart = null;
+      }
+
+      // Calculate percentage-based qualification
+      const qualification = calculateGameSessionQualification(
+        session,
+        event.startedAt,
+        eventEndTime,
+        config
+      );
+
+      stmt.run(
+        guildId,
+        userId,
+        event.eventDate,
+        event.channelId,
+        session.totalMinutes,
+        session.longestSessionMinutes,
+        qualification.qualified ? 1 : 0,
+        event.startedAt,
+        eventEndTime
+      );
+
+      results.push({ userId, session, qualification });
+
+      logger.info({
+        evt: "game_attendance_recorded",
+        guildId,
+        userId,
+        eventDate: event.eventDate,
+        totalMinutes: session.totalMinutes,
+        eventDuration: qualification.eventDurationMinutes,
+        attendancePercent: qualification.attendancePercentage,
+        requiredPercent: config.qualificationPercentage,
+        qualified: qualification.qualified,
+      }, `Game attendance: ${qualification.qualified ? "Qualified" : "Not qualified"}`);
     }
-
-    // Calculate percentage-based qualification
-    const qualification = calculateGameSessionQualification(
-      session,
-      event.startedAt,
-      eventEndTime,
-      config
-    );
-
-    stmt.run(
-      guildId,
-      userId,
-      event.eventDate,
-      event.channelId,
-      session.totalMinutes,
-      session.longestSessionMinutes,
-      qualification.qualified ? 1 : 0,
-      event.startedAt,
-      eventEndTime
-    );
-
-    results.push({ userId, session, qualification });
-
-    logger.info({
-      evt: "game_attendance_recorded",
-      guildId,
-      userId,
-      eventDate: event.eventDate,
-      totalMinutes: session.totalMinutes,
-      eventDuration: qualification.eventDurationMinutes,
-      attendancePercent: qualification.attendancePercentage,
-      requiredPercent: config.qualificationPercentage,
-      qualified: qualification.qualified,
-    }, `Game attendance: ${qualification.qualified ? "Qualified" : "Not qualified"}`);
-  }
+  });
+  recordAll();
 
   // Clear state
   for (const key of gameSessions.keys()) {
