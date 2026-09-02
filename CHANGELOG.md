@@ -2,11 +2,33 @@
 
 All changes to Pawtropolis Tech are tracked here.
 
-**Versions:** [Unreleased](#unreleased) | [6.2.1](#621---2026-09-02) | [6.2.0](#620---2026-09-01) | [6.1.0](#610---2026-08-29) | [6.0.0](#600---2026-05-15) | [5.2.0](#520---2026-05-02) | [5.1.1](#511---2026-01-27) | [5.1.0](#510---2026-01-17) | [5.0.0](#500---2026-01-12) | [4.9.2](#492---2026-01-07) | [4.9.1](#491---2026-01-07) | [4.9.0](#490---2026-01-04) | [4.8.0](#480---2025-12-08) | [4.7.1](#471---2025-12-03) | [4.7.0](#470---2025-12-03) | [4.6.0](#460---2025-12-03) | [4.5.0](#450---2025-12-02) | [4.4.4](#444---2025-12-03) | [4.4.3](#443---2025-12-03) | [4.4.2](#442---2025-12-03) | [4.4.1](#441---2025-12-03) | [4.4.0](#440---2025-12-03) | [4.3.0](#430---2025-12-02) | [4.2.0](#420---2025-12-01) | [4.1.0](#410---2025-12-01) | [4.0.3](#403---2025-12-01) | [4.0.2](#402---2025-12-01) | [4.0.1](#401---2025-12-01) | [4.0.0](#400---2025-12-01) | [Earlier versions](#earlier-versions)
+**Versions:** [Unreleased](#unreleased) | [7.0.0](#700---2026-09-02) | [6.2.1](#621---2026-09-02) | [6.2.0](#620---2026-09-01) | [6.1.0](#610---2026-08-29) | [6.0.0](#600---2026-05-15) | [5.2.0](#520---2026-05-02) | [5.1.1](#511---2026-01-27) | [5.1.0](#510---2026-01-17) | [5.0.0](#500---2026-01-12) | [4.9.2](#492---2026-01-07) | [4.9.1](#491---2026-01-07) | [4.9.0](#490---2026-01-04) | [4.8.0](#480---2025-12-08) | [4.7.1](#471---2025-12-03) | [4.7.0](#470---2025-12-03) | [4.6.0](#460---2025-12-03) | [4.5.0](#450---2025-12-02) | [4.4.4](#444---2025-12-03) | [4.4.3](#443---2025-12-03) | [4.4.2](#442---2025-12-03) | [4.4.1](#441---2025-12-03) | [4.4.0](#440---2025-12-03) | [4.3.0](#430---2025-12-02) | [4.2.0](#420---2025-12-01) | [4.1.0](#410---2025-12-01) | [4.0.3](#403---2025-12-01) | [4.0.2](#402---2025-12-01) | [4.0.1](#401---2025-12-01) | [4.0.0](#400---2025-12-01) | [Earlier versions](#earlier-versions)
 
 ## [Unreleased]
 
 Nothing yet.
+
+## [7.0.0] - 2026-09-02
+
+Major version for the September performance and housekeeping passes. 6.2.0 and 6.2.1 are the code already running in production; 7.0.0 is that code with the version raised, because the operational contract changed in ways a patch number hides: environment keys and scripts are gone, the retention scheduler deletes data once enabled, the gateway asks for less, and the process list on the host is different. Nothing in this section is new code beyond the version bump. The detail is in the two sections below.
+
+### Breaking
+
+- Environment: `TRUST_PROXY`, `CORS_ORIGIN`, `NSFW_TAGGER_ENABLE`, `SSH_HOSTS` and `REMOTE_SSH` are removed from `.env.example`; nothing ever read them. The example now defaults `LOG_LEVEL` to `info` (#00272).
+- Retention: with `RETENTION_ENABLED=true` the bot deletes security issue history older than 90 days, consumed confirmations older than 1 day, config audit log rows older than 365 days, restored role snapshots older than 180 days, deploy backups beyond the 3 newest plus 7 days, and its own verification review posts older than 30 days. The default stays `false`, which logs a daily dry run (#00265, #00269, #00258).
+- Gateway: the `GuildPresences` intent is no longer requested. Anything that read member presence sees nothing (#00266).
+- Scripts: 20 one-off scripts are deleted; `scripts/README.md` lists what remains (#00271).
+- pm2: `pawtropolis-backfill` is no longer in `ecosystem.config.cjs`. Run `scripts/backfill/run.ts` by hand when an archive backfill is needed (#00276).
+- Internal exports: 196 unused exports and 103 unused types are gone from `src/`. Code outside this repository that imported them breaks (#00271).
+- Tests: the suite creates `tests/.tmp/vitest-<pid>-<pool>.db` from the fixture schema and never opens `data/data.db` (#00274).
+- Docs: the generated snapshots (`docs/index.md`, `architecture.md`, `SLASH-COMMANDS.md` and five more) moved to `docs/_archive/2026-scan/`; links to the old paths are dead (#00272).
+
+### Upgrade notes
+
+- Production `.env`: `LOG_LEVEL=info`, no `*_SCHEDULER_DISABLED=1` lines, `SENTRY_PROFILES_SAMPLE_RATE=0`. The 6.2.0 deploy already applied this on the host (`.env.bak-6.2.0` holds the previous file).
+- One day after running with `RETENTION_ENABLED` unset, read the `retention` and `retention_backups` dry-run lines, then set `RETENTION_ENABLED=true` and restart the bot.
+- Live pm2 logs are `~/.pm2/logs/pawtropolis-out-<pm_id>.log`; the id-less `pawtropolis-out.log` is a stale file from an earlier process id.
+- Regenerate `docs/reference/database-schema.md` with `npm run docs:schema` after any migration; `npm run knip` reports dead code.
 
 ## [6.2.1] - 2026-09-02
 
