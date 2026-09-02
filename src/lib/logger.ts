@@ -63,6 +63,21 @@ const wantPretty =
 const MAX_LOG_SIZE = parseInt(process.env.MAX_LOG_SIZE_MB ?? "100", 10) * 1024 * 1024;
 const MAX_LOG_FILES = parseInt(process.env.MAX_LOG_FILES ?? "5", 10);
 
+// Plain JSON to stdout (the production path under PM2) goes through an asynchronous
+// destination so a burst of log lines does not block the event loop on stdout writes.
+// The transport branches below run in a worker thread already, so they get no stream.
+const asyncStdout =
+  wantPretty || process.env.LOG_FILE ? undefined : pino.destination({ sync: false });
+
+/** Flush buffered log lines; call right before the process exits. */
+export function flushLogger(): void {
+  try {
+    logger.flush();
+  } catch {
+    // Nothing useful to do if the destination is already gone.
+  }
+}
+
 export const logger = pino({
   level: logLevel,
   // Conditional pretty-printing. When disabled, outputs newline-delimited JSON
@@ -151,7 +166,7 @@ export const logger = pino({
       return method.apply(this, args);
     },
   },
-});
+}, asyncStdout);
 
 // Startup log showing which debug flags are active. Helps diagnose
 // "why isn't X logging" questions without checking .env directly.

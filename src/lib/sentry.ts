@@ -16,7 +16,20 @@
  */
 
 import * as Sentry from "@sentry/node";
-import { nodeProfilingIntegration } from "@sentry/profiling-node";
+import { createRequire } from "node:module";
+// Only loaded when profiling is enabled: @sentry/profiling-node is a native module.
+const PROFILES_SAMPLE_RATE = parseFloat(process.env.SENTRY_PROFILES_SAMPLE_RATE ?? "0") || 0;
+
+type IntegrationList = Extract<NonNullable<Sentry.NodeOptions["integrations"]>, unknown[]>;
+
+function profilingIntegrations(): IntegrationList {
+  if (PROFILES_SAMPLE_RATE <= 0) return [];
+  const { nodeProfilingIntegration } = createRequire(import.meta.url)(
+    "@sentry/profiling-node"
+  ) as typeof import("@sentry/profiling-node");
+  return [nodeProfilingIntegration()];
+}
+
 import {
   consoleIntegration,
   httpIntegration,
@@ -77,15 +90,14 @@ export function initializeSentry() {
       environment: env.SENTRY_ENVIRONMENT || env.NODE_ENV,
       release: buildInfo.sentryRelease,
 
-      // Performance monitoring - using same rate for traces and profiles means
-      // every traced transaction also gets profiled. Tune these independently
-      // if profiling overhead becomes noticeable or you need different sampling.
+      // Performance monitoring. Profiling is opt-in through SENTRY_PROFILES_SAMPLE_RATE:
+      // it loads a native module and samples every traced transaction, which is
+      // measurable RSS and CPU on the 2GB host.
       tracesSampleRate: env.SENTRY_TRACES_SAMPLE_RATE,
-      profilesSampleRate: env.SENTRY_TRACES_SAMPLE_RATE,
+      profilesSampleRate: PROFILES_SAMPLE_RATE,
 
       integrations: [
-        // Profiling integration
-        nodeProfilingIntegration(),
+        ...profilingIntegrations(),
 
         // Capture console logs in breadcrumbs
         consoleIntegration({
