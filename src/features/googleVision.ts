@@ -67,8 +67,22 @@ function likelihoodToScore(likelihood: SafeSearchLikelihood): number {
  * @param imageUrl - Public URL to the image
  * @returns VisionResult with adult/racy/violence scores (0-1)
  */
+// A 403 (billing disabled, key revoked) or 429 answers every image the same way for hours.
+// Production logged 9,400 identical warnings in four months, one per member join, each
+// after a full round trip. Pause the vendor after the first one instead.
+const REJECTION_PAUSE_MS = 6 * 60 * 60 * 1000;
+let pausedUntil = 0;
+
+/** Test hook. */
+export function _resetVisionPauseForTests(): void {
+  pausedUntil = 0;
+}
+
 export async function detectNsfwVision(imageUrl: string): Promise<VisionResult | null> {
   if (!GOOGLE_VISION_ENABLED) {
+    return null;
+  }
+  if (Date.now() < pausedUntil) {
     return null;
   }
 
@@ -121,7 +135,15 @@ export async function detectNsfwVision(imageUrl: string): Promise<VisionResult |
 
     if (!response.ok) {
       const errorText = await response.text();
-      logger.warn({ status: response.status, error: errorText }, "[googleVision] API request failed");
+      if (response.status === 403 || response.status === 429) {
+        pausedUntil = Date.now() + REJECTION_PAUSE_MS;
+        logger.warn(
+          { status: response.status, error: errorText.slice(0, 400), pausedForMs: REJECTION_PAUSE_MS },
+          "[googleVision] API rejected the request; avatar scans paused"
+        );
+      } else {
+        logger.warn({ status: response.status, error: errorText }, "[googleVision] API request failed");
+      }
       return null;
     }
 
