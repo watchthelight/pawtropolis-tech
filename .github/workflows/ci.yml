@@ -27,6 +27,9 @@ jobs:
       - name: Format Check
         run: npm run format:check
         continue-on-error: true  # SOFT — large web/ Prettier drift tracked in TODO.md
+      - name: Dead code (knip)
+        run: npm run knip
+        continue-on-error: true  # SOFT: report only until the export backlog is gone (#00271)
 
   test:
     name: Tests

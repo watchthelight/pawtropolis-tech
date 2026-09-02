@@ -2,13 +2,7 @@
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "workspaces": {
     ".": {
-      "entry": [
-        "src/index.ts",
-        "src/ops/*.ts",
-        "scripts/**/*.{ts,mjs,cjs,js}",
-        "migrations/*.ts",
-        "tests/setup.ts"
-      ],
+      "entry": ["src/index.ts", "src/ops/*.ts", "scripts/**/*.{ts,mjs,cjs,js}", "migrations/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.{ts,mjs,cjs,js}", "migrations/*.ts", "tests/**/*.ts"],
       "ignore": [
         "graphify-out/**",
@@ -20,10 +14,13 @@
         "context/**",
         "dist/**",
         "web/**"
+      ],
+      "ignoreDependencies": [
+        "pino-pretty",
+        "@sveltejs/kit"
       ]
     },
     "web": {
-      "entry": ["src/hooks.server.ts", "src/hooks.client.ts", "src/service-worker.ts"],
       "project": ["src/**/*.{ts,svelte,js}"],
       "ignore": ["build/**", ".svelte-kit/**"]
     }

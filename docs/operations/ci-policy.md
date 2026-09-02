@@ -9,6 +9,7 @@ This doc explains what CI enforces, what it tolerates, and the conditions for pr
 | Typecheck | HARD | check | `npm run typecheck` |
 | Lint | SOFT | check | `npm run lint` |
 | Format | SOFT | check | `npm run format:check` |
+| Dead code | SOFT | check | `npm run knip` |
 | Tests | HARD | test | `npm run test -- --coverage` |
 | Build | HARD | build | `npm run build` (depends on check + test passing or soft-skipped) |
 
@@ -62,6 +63,10 @@ When all three are done, drop `continue-on-error: true` from the Lint step.
 1. Open `web/` PRs are merged or rebased.
 2. Run `npm run format` against the whole repo and commit the result.
 3. Drop `continue-on-error: true` from the Format Check step.
+
+### Dead code (knip)
+
+Added 2026-09-01 (#00271). `npm run knip` reports unused files, exports, types and dependencies across the bot and the dashboard (config in `knip.json`). Soft because the first run stripped 196 exports and 103 types and the remaining report has to reach zero before it can fail a build. Promotion condition: a clean `npx knip` on `main` for two consecutive releases.
 
 ## What CI does not check
 
