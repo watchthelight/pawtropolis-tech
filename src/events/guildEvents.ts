@@ -473,34 +473,17 @@ client.on("messageDelete", wrapEvent("messageDelete.archive", async (msg) => {
   archive.markMessageDeleted(msg);
 }));
 
+// The archive only needs message id, emoji and user id, all present on a partial reaction
+// (the ReactionManager cache limit is 0, so nearly every reaction arrives partial).
+// Fetching it first cost one REST round-trip per reaction for nothing.
 client.on("messageReactionAdd", wrapEvent("messageReactionAdd.archive", async (reaction, user) => {
-  let r: import("discord.js").MessageReaction;
-  if (reaction.partial) {
-    try {
-      r = await reaction.fetch();
-    } catch {
-      return;
-    }
-  } else {
-    r = reaction;
-  }
-  if (!r.message.guildId) return;
-  archive.recordReaction(r, user, "live");
+  if (!reaction.message.guildId) return;
+  archive.recordReaction(reaction, user, "live");
 }));
 
 client.on("messageReactionRemove", wrapEvent("messageReactionRemove.archive", async (reaction, user) => {
-  let r: import("discord.js").MessageReaction;
-  if (reaction.partial) {
-    try {
-      r = await reaction.fetch();
-    } catch {
-      return;
-    }
-  } else {
-    r = reaction;
-  }
-  if (!r.message.guildId) return;
-  archive.removeReaction(r, user);
+  if (!reaction.message.guildId) return;
+  archive.removeReaction(reaction, user);
 }));
 
 // Invite tracking: detect which invite each new member used

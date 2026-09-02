@@ -13,7 +13,14 @@
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
-import type { Message, PartialMessage, MessageReaction, User, PartialUser } from "discord.js";
+import type {
+  Message,
+  PartialMessage,
+  MessageReaction,
+  PartialMessageReaction,
+  User,
+  PartialUser,
+} from "discord.js";
 import { db } from "../db/db.js";
 import { logger } from "../lib/logger.js";
 
@@ -70,7 +77,7 @@ function serializeEmbeds(msg: Message | PartialMessage): string | null {
 }
 
 /** Encode reaction emoji into stable string form */
-function emojiKey(reaction: MessageReaction): string {
+function emojiKey(reaction: MessageReaction | PartialMessageReaction): string {
   const e = reaction.emoji;
   if (e.id) return `<${e.animated ? "a" : ""}:${e.name ?? "_"}:${e.id}>`;
   return e.name ?? "?";
@@ -167,7 +174,7 @@ export function markMessageDeleted(msg: Message | PartialMessage): void {
 }
 
 export function recordReaction(
-  reaction: MessageReaction,
+  reaction: MessageReaction | PartialMessageReaction,
   user: User | PartialUser,
   source: "live" | "backfill" = "live"
 ): void {
@@ -181,7 +188,10 @@ export function recordReaction(
   scheduleFlush();
 }
 
-export function removeReaction(reaction: MessageReaction, user: User | PartialUser): void {
+export function removeReaction(
+  reaction: MessageReaction | PartialMessageReaction,
+  user: User | PartialUser
+): void {
   try {
     db.prepare(
       `DELETE FROM message_reactions_archive WHERE message_id = ? AND emoji = ? AND user_id = ?`
