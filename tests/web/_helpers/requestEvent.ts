@@ -9,7 +9,7 @@
 
 import type { RequestEvent } from "@sveltejs/kit";
 
-export interface FakeUser {
+interface FakeUser {
   id: string;
   tier: string;
   username?: string;

@@ -116,7 +116,7 @@ export function createMockChannel(overrides: Partial<TextChannel> = {}): TextCha
 /**
  * Creates a minimal Message mock.
  */
-export function createMockMessage(overrides: Partial<Message> = {}): Message {
+function createMockMessage(overrides: Partial<Message> = {}): Message {
   return {
     id: "message-123",
     content: "Test message",
@@ -170,7 +170,7 @@ export function createMockGuild(overrides: Partial<Guild> = {}): Guild {
 /**
  * Creates a minimal Client mock.
  */
-export function createMockClient(overrides: Partial<Client> = {}): Client {
+function createMockClient(overrides: Partial<Client> = {}): Client {
   const usersCache = new Map<string, User>();
   const guildsCache = new Map<string, Guild>();
 
@@ -320,7 +320,7 @@ export function createMockInteraction(
 /**
  * Creates a minimal ButtonInteraction mock.
  */
-export function createMockButtonInteraction(
+function createMockButtonInteraction(
   overrides: Partial<ButtonInteraction> = {}
 ): ButtonInteraction {
   const { user: userOverride, guild: guildOverride, member: memberOverride, ...rest } = overrides;
@@ -367,7 +367,7 @@ export function createMockButtonInteraction(
 /**
  * Creates a minimal ModalSubmitInteraction mock.
  */
-export function createMockModalInteraction(
+function createMockModalInteraction(
   overrides: Partial<ModalSubmitInteraction> & { fields?: Record<string, string> } = {}
 ): ModalSubmitInteraction {
   const {

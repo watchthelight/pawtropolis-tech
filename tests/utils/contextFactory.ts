@@ -73,7 +73,7 @@ export function createTestCommandContext<I extends InstrumentedInteraction = Cha
  * await someHandler(ctx);
  * expect(stepSpy).toHaveBeenCalledWith("validate_input");
  */
-export function createSpiedCommandContext<I extends InstrumentedInteraction = ChatInputCommandInteraction>(
+function createSpiedCommandContext<I extends InstrumentedInteraction = ChatInputCommandInteraction>(
   interaction: I,
   options: { traceId?: string } = {}
 ): {
@@ -103,7 +103,7 @@ export function createSpiedCommandContext<I extends InstrumentedInteraction = Ch
 /**
  * Creates a CommandContext specifically for ChatInputCommandInteraction.
  */
-export function createSlashCommandContext(
+function createSlashCommandContext(
   interaction: ChatInputCommandInteraction,
   options: { traceId?: string } = {}
 ): CommandContext<ChatInputCommandInteraction> {
@@ -113,7 +113,7 @@ export function createSlashCommandContext(
 /**
  * Creates a CommandContext specifically for ButtonInteraction.
  */
-export function createButtonContext(
+function createButtonContext(
   interaction: ButtonInteraction,
   options: { traceId?: string } = {}
 ): CommandContext<ButtonInteraction> {
@@ -123,7 +123,7 @@ export function createButtonContext(
 /**
  * Creates a CommandContext specifically for ModalSubmitInteraction.
  */
-export function createModalContext(
+function createModalContext(
   interaction: ModalSubmitInteraction,
   options: { traceId?: string } = {}
 ): CommandContext<ModalSubmitInteraction> {
@@ -136,7 +136,7 @@ export function createModalContext(
  * Creates a minimal SQL tracking context for testing database utilities.
  * Use this when you only need setLastSql functionality.
  */
-export function createSqlTrackingContext(): {
+function createSqlTrackingContext(): {
   ctx: { setLastSql: (sql: string | null) => void };
   getLastSql: () => string | null;
   sqlHistory: string[];
