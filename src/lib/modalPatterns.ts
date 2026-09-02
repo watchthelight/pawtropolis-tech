@@ -72,12 +72,12 @@ export const MODAL_VOTE_OUT_RE = /^v1:modal:vote_out:code([0-9A-F]{6})$/;
 
 // Content report system - ambassador reports with resolve workflow
 export const BTN_REPORT_RESOLVE_RE = /^v1:report:resolve:([0-9A-F]{6})$/;
-export const MODAL_REPORT_RESOLVE_RE = /^v1:modal:report:resolve:([0-9A-F]{6})$/;
+const MODAL_REPORT_RESOLVE_RE = /^v1:modal:report:resolve:([0-9A-F]{6})$/;
 
 // QOTD suggestion system - approve/reject buttons and suggest/reject modals
 export const BTN_QOTD_RE = /^qotd:(approve|reject):code([0-9A-F]{6})$/;
-export const MODAL_QOTD_SUGGEST_RE = /^v1:modal:qotd:suggest$/;
-export const MODAL_QOTD_REJECT_RE = /^v1:modal:qotd:reject:([0-9A-F]{6})$/;
+const MODAL_QOTD_SUGGEST_RE = /^v1:modal:qotd:suggest$/;
+const MODAL_QOTD_REJECT_RE = /^v1:modal:qotd:reject:([0-9A-F]{6})$/;
 
 /**
  * Discriminated union for routed modal types. Allows type-safe handling

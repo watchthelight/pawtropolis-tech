@@ -195,7 +195,6 @@ function formatExecutionPath(phases: PhaseRecord[], failedPhase?: string): strin
     .join(" \u2192 ");
 }
 
-
 // ===== SQL Formatting =====
 
 /**
@@ -470,12 +469,6 @@ export async function postErrorCardV2(
   }
 }
 
-/**
- * customId prefix for buttons attached to error cards.
- * Format: ec:<action>:<traceId> — 14 chars + 11-char trace = 25 chars, well under Discord's 100-char cap.
- * Routed in src/index.ts → src/handlers/errorCardButtons.ts.
- */
-export const ERROR_CARD_BUTTON_PREFIX = "ec:";
 export const ERROR_CARD_BUTTON_RE = /^ec:(ping|copy|trace):([A-Za-z0-9]+)$/;
 
 /**
@@ -484,7 +477,7 @@ export const ERROR_CARD_BUTTON_RE = /^ec:(ping|copy|trace):([A-Za-z0-9]+)$/;
  *  - Copy trace:    ephemeral reply with the trace ID in a code block.
  *  - Run trace:     ephemeral reply with the full /developer trace embeds (staff-gated).
  */
-export function buildErrorCardActionRow(traceId: string): ActionRowBuilder<ButtonBuilder> {
+function buildErrorCardActionRow(traceId: string): ActionRowBuilder<ButtonBuilder> {
   return new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(`ec:ping:${traceId}`)
@@ -501,52 +494,5 @@ export function buildErrorCardActionRow(traceId: string): ActionRowBuilder<Butto
   );
 }
 
-/**
- * Build an error card embed without sending (for testing or custom handling).
- */
-export function buildErrorCardEmbed(details: ErrorCardV2Details): EmbedBuilder {
-  const { wideEvent, classified, sentryEventId } = details;
-  const error = wideEvent.error;
-
-  const severity = getErrorSeverity(error, classified?.kind);
-  const color = SEVERITY_COLORS[severity];
-  const emoji = SEVERITY_EMOJI[severity];
-
-  const embed = new EmbedBuilder()
-    .setColor(color)
-    .setTitle(`${emoji} Command Failed`)
-    .setDescription(getExplanation(error, classified?.message))
-    .setTimestamp();
-
-  if (wideEvent.phases.length > 0) {
-    embed.addFields({
-      name: "\uD83D\uDCCD Execution Path",
-      value: `${formatExecutionPath(wideEvent.phases, error?.phase)}\nDuration: ${wideEvent.durationMs}ms`,
-      inline: false,
-    });
-  }
-
-  if (wideEvent.queries.length > 0) {
-    embed.addFields({
-      name: "\uD83D\uDDC4\uFE0F Database",
-      value: `${wideEvent.queries.length} queries, ${wideEvent.totalDbTimeMs}ms total`,
-      inline: true,
-    });
-  }
-
-  embed.addFields({
-    name: "\uD83D\uDC64 Your Context",
-    value: formatUserContext(wideEvent),
-    inline: true,
-  });
-
-  const traceInfo = sentryEventId
-    ? `Trace: ${wideEvent.traceId} | Sentry: ${sentryEventId.slice(0, 8)}`
-    : `Trace: ${wideEvent.traceId}`;
-  embed.setFooter({ text: traceInfo });
-
-  return embed;
-}
-
 // Re-export severity types for use elsewhere
-export { type ErrorSeverity, SEVERITY_COLORS, SEVERITY_EMOJI };
+;

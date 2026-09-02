@@ -426,15 +426,3 @@ export function getBuildAge(): string | null {
   return `${diffSec}s ago`;
 }
 
-/**
- * Reset the build info cache.
- *
- * This is primarily for testing - you shouldn't need to call this in
- * production code. It allows tests to verify behavior with different
- * environment variables.
- *
- * @internal
- */
-export function _resetBuildInfoCache(): void {
-  _buildInfoCache = null;
-}

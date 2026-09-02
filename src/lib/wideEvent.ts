@@ -94,7 +94,7 @@ export interface EntityRef {
  *   3. If error, did the user at least see an error message?
  *   4. If nothing worked, why?
  */
-export interface ResponseState {
+interface ResponseState {
   /**
    * Timestamp when deferReply() was called.
    * Null if we didn't defer (either replied directly or failed before deferring).

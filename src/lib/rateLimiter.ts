@@ -148,11 +148,6 @@ function cleanupOldCooldowns(): void {
 const cleanupTimer = setInterval(cleanupOldCooldowns, CLEANUP_INTERVAL_MS);
 cleanupTimer.unref?.();
 
-/** Stop the cooldown cleanup interval (for graceful shutdown / tests). */
-export function stopRateLimiterCleanup(): void {
-  clearInterval(cleanupTimer);
-}
-
 /*
  * Export cooldown constants for commands to use.
  * These values are somewhat arbitrary but based on operational experience:

@@ -9,14 +9,14 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import type { CanvasRenderingContext2D } from 'canvas';
-import { writeFile } from 'fs/promises';
+
 import { logger } from './logger.js';
 import { db } from '../db/db.js';
 
 /**
  * Single week activity data
  */
-export interface WeekData {
+interface WeekData {
   /** 2D array: [day 0-6][hour 0-23] where day 0 = Monday */
   grid: number[][];
   /** Week start date (Monday) */
@@ -372,7 +372,6 @@ function drawWeekHeatmap(
   return currentY + gridHeight;
 }
 
-
 /**
  * Generate multi-week activity heatmap with trends as PNG buffer
  */
@@ -640,15 +639,3 @@ export function generateSampleData(weeks: number = 1): ActivityData {
   return activityData;
 }
 
-/**
- * Save heatmap to file (for testing/debugging)
- */
-export async function saveHeatmap(
-  data: ActivityData,
-  outputPath: string,
-  config?: HeatmapConfig
-): Promise<void> {
-  const buffer = await generateHeatmap(data, config);
-  await writeFile(outputPath, buffer);
-  logger.info({ outputPath, size: buffer.length, weeks: data.weeks.length }, '[heatmap] saved to file');
-}

@@ -43,7 +43,7 @@ const HEALTH_THRESHOLDS = {
  * scheduler (src/scheduler/dbIntegrityScheduler.ts) and `/database check` cover the rest.
  * DB_HEALTHCHECK_MODE overrides in either direction.
  */
-export function resolveHealthCheckMode(): "full" | "quick" | "skip" {
+function resolveHealthCheckMode(): "full" | "quick" | "skip" {
   const raw = process.env.DB_HEALTHCHECK_MODE;
   if (raw === "full" || raw === "quick" || raw === "skip") return raw;
   return process.env.NODE_ENV === "production" ? "quick" : "full";

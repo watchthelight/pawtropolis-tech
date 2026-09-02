@@ -25,7 +25,7 @@
  * in switch statements. This is more type-safe than instanceof checks because
  * it works across module boundaries and doesn't depend on prototype chains.
  */
-export interface AppError {
+interface AppError {
   kind: string;
   message: string;
   cause?: Error;
@@ -39,7 +39,7 @@ export interface AppError {
  * - SQLITE_CONSTRAINT_*: Logic error, don't retry
  * - SQLITE_CORRUPT/SQLITE_NOTADB: Fatal, alert ops immediately
  */
-export interface DbError extends AppError {
+interface DbError extends AppError {
   kind: "db_error";
   code: string; // SQLITE_CONSTRAINT, SQLITE_BUSY, SQLITE_CORRUPT, etc.
   sql?: string;
@@ -58,7 +58,7 @@ export interface DbError extends AppError {
  *
  * See: https://discord.com/developers/docs/topics/opcodes-and-status-codes
  */
-export interface DiscordApiError extends AppError {
+interface DiscordApiError extends AppError {
   kind: "discord_api";
   code: number; // 10062, 50013, 40060, etc.
   httpStatus?: number;
@@ -67,14 +67,14 @@ export interface DiscordApiError extends AppError {
 }
 
 /** Validation errors (user input) */
-export interface ValidationError extends AppError {
+interface ValidationError extends AppError {
   kind: "validation";
   field: string;
   value?: unknown;
 }
 
 /** Permission errors (Discord permissions) */
-export interface PermissionError extends AppError {
+interface PermissionError extends AppError {
   kind: "permission";
   needed: string[];
   channelId?: string;
@@ -88,21 +88,21 @@ export interface PermissionError extends AppError {
  * never reached the server or the connection dropped mid-flight. Almost always
  * worth retrying after a short delay.
  */
-export interface NetworkError extends AppError {
+interface NetworkError extends AppError {
   kind: "network";
   code: string; // ECONNRESET, ETIMEDOUT, ENOTFOUND, ECONNREFUSED
   host?: string;
 }
 
 /** Configuration errors */
-export interface ConfigError extends AppError {
+interface ConfigError extends AppError {
   kind: "config";
   key: string;
   expected?: string;
 }
 
 /** Unknown/unclassified errors */
-export interface UnknownError extends AppError {
+interface UnknownError extends AppError {
   kind: "unknown";
 }
 
@@ -117,16 +117,6 @@ export type ClassifiedError =
   | UnknownError;
 
 export type ErrorKind = ClassifiedError['kind'];
-
-export const ERROR_KINDS = [
-  'db_error',
-  'discord_api',
-  'validation',
-  'permission',
-  'network',
-  'config',
-  'unknown',
-] as const satisfies readonly ErrorKind[];
 
 // ===== Error Classification =====
 

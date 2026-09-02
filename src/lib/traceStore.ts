@@ -86,7 +86,7 @@ export function getTrace(traceId: string): WideEvent | null {
 /**
  * Remove all expired traces from the cache.
  */
-export function pruneExpired(): void {
+function pruneExpired(): void {
   const now = Date.now();
   const keysToDelete: string[] = [];
 
@@ -118,7 +118,7 @@ export function getTraceStats(): { size: number; maxSize: number; ttlMinutes: nu
 // This prevents memory growth from long-lived bot instances
 let pruneInterval: ReturnType<typeof setInterval> | null = null;
 
-export function startAutoPrune(): void {
+function startAutoPrune(): void {
   if (pruneInterval) return; // Already running
   pruneInterval = setInterval(pruneExpired, PRUNE_INTERVAL_MS);
   // Don't prevent Node from exiting

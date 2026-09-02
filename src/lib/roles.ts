@@ -230,5 +230,3 @@ export const SERVER_ARTIST = [ROLE_IDS.SERVER_ARTIST];
 /** Server Artist OR Admin+ (for art management) */
 export const ARTIST_OR_ADMIN = [ROLE_IDS.SERVER_ARTIST, ...ADMIN_PLUS];
 
-/** Event Host or Events Manager (for event commands) */
-export const EVENT_STAFF = [ROLE_IDS.EVENT_HOST, ROLE_IDS.EVENTS_MANAGER];
