@@ -328,15 +328,21 @@ export class TicketService {
             }
           }
         }
-        for (const memberId of staffMemberIds) {
-          try {
-            await thread.members.add(memberId);
-          } catch (err) {
-            logger.debug(
-              { err, threadId: thread.id, memberId },
-              "[tickets/service] failed to add member to staff thread (non-fatal)"
-            );
-          }
+        // Four adds in flight at a time; discord.js serialises per route under the hood.
+        const staffIds = [...staffMemberIds];
+        for (let i = 0; i < staffIds.length; i += 4) {
+          await Promise.all(
+            staffIds.slice(i, i + 4).map(async (memberId) => {
+              try {
+                await thread.members.add(memberId);
+              } catch (err) {
+                logger.debug(
+                  { err, threadId: thread.id, memberId },
+                  "[tickets/service] failed to add member to staff thread (non-fatal)"
+                );
+              }
+            })
+          );
         }
       } catch (err) {
         logger.error(

@@ -210,16 +210,23 @@ export async function ensureModsCanSpeakInThread(
         "[modmail] adding mod role members to private thread"
       );
 
-      for (const memberId of memberIds) {
-        try {
-          await thread.members.add(memberId);
-          logger.debug({ threadId: thread.id, memberId }, "[modmail] added mod to private thread");
-        } catch (err) {
-          logger.warn(
-            { err, threadId: thread.id, memberId },
-            "[modmail] failed to add mod to private thread"
-          );
-        }
+      // Four adds in flight at a time: discord.js queues the REST calls per route and
+      // honours the rate-limit headers, so this only removes the round-trip serialisation.
+      const ids = [...memberIds];
+      for (let i = 0; i < ids.length; i += 4) {
+        await Promise.all(
+          ids.slice(i, i + 4).map(async (memberId) => {
+            try {
+              await thread.members.add(memberId);
+              logger.debug({ threadId: thread.id, memberId }, "[modmail] added mod to private thread");
+            } catch (err) {
+              logger.warn(
+                { err, threadId: thread.id, memberId },
+                "[modmail] failed to add mod to private thread"
+              );
+            }
+          })
+        );
       }
     }
 
