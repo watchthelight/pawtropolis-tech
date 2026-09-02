@@ -21,11 +21,24 @@ export type { WhatsNewEntry };
  * stale set after a marker expires. The walk is over already-tokenised docs, the same
  * work `getSearchIndex` does, so it is cheap enough to redo per request.
  */
+// Keyed by viewer tier and UTC day: the result only changes when a marker crosses the
+// window boundary (a date change) or the docs are rebuilt (a deploy), so the per-request
+// walk over every handbook document on /dashboard and /handbook is remembered per day.
+const whatsNewCache = new Map<string, WhatsNewEntry[]>();
+
 export function getWhatsNew(viewer: { tier: DashboardTier | null }): WhatsNewEntry[] {
   preloadAll();
 
   const isLoggedOut = viewer.tier === null;
   const viewerTier: HandbookTier = viewer.tier === null ? "public" : viewer.tier;
+
+  const day = new Date().toISOString().slice(0, 10);
+  const cacheKey = `${day}|${viewerTier}|${isLoggedOut ? "out" : "in"}`;
+  const hit = whatsNewCache.get(cacheKey);
+  if (hit) return hit;
+  if (whatsNewCache.size > 0 && ![...whatsNewCache.keys()][0]!.startsWith(day)) {
+    whatsNewCache.clear();
+  }
 
   const entries: WhatsNewEntry[] = [];
 
@@ -53,6 +66,7 @@ export function getWhatsNew(viewer: { tier: DashboardTier | null }): WhatsNewEnt
   }
 
   entries.sort((a, b) => (a.since === b.since ? 0 : a.since < b.since ? 1 : -1));
+  whatsNewCache.set(cacheKey, entries);
   return entries;
 }
 
