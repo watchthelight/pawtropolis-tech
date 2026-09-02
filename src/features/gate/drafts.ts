@@ -13,6 +13,7 @@ import { randomUUID } from "node:crypto";
 import { logger } from "../../lib/logger.js";
 import { getConfig } from "../../lib/config.js";
 import { shortCode } from "../../lib/ids.js";
+import { recordShortCodeMapping } from "../appLookup.js";
 import { touchSyncMarker } from "../../lib/syncMarker.js";
 import type { CmdCtx } from "../../lib/cmdWrap.js";
 import { withSql } from "../../lib/cmdWrap.js";
@@ -191,19 +192,20 @@ export function getOrCreateDraft(db: BetterSqliteDatabase, guildId: string, user
   // Only deletes terminal statuses (approved, rejected, kicked)
   // Active apps (draft, submitted, needs_info) are never deleted
   // Note: Permanently rejected apps have status='rejected' with permanently_rejected=1
-  const resolvedApps = db.prepare(
-    `SELECT id FROM application
-     WHERE guild_id = ?
-     AND status IN ('approved', 'rejected', 'kicked')`
-  ).all(guildId) as Array<{ id: string }>;
-
-  // Prepare statement once outside loop to avoid N+1 query pattern
-  const deleteStmt = db.prepare(`DELETE FROM application WHERE id = ?`);
-  for (const app of resolvedApps) {
-    if (shortCode(app.id) === code) {
-      deleteStmt.run(app.id);
-      break; // Only one collision possible per code
-    }
+  // The app_short_codes mapping (written at creation and by the startup backfill) answers
+  // the collision question with one indexed lookup instead of hashing every resolved
+  // application in the guild.
+  const holder = db
+    .prepare(
+      `SELECT a.id, a.status
+         FROM app_short_codes m
+         JOIN application a ON a.id = m.app_id
+        WHERE m.guild_id = ? AND m.code = ?`
+    )
+    .get(guildId, code) as { id: string; status: string } | undefined;
+  if (holder && (holder.status === "approved" || holder.status === "rejected" || holder.status === "kicked")) {
+    db.prepare(`DELETE FROM application WHERE id = ?`).run(holder.id);
+    db.prepare(`DELETE FROM app_short_codes WHERE app_id = ?`).run(holder.id);
   }
 
   db.prepare(
@@ -212,6 +214,7 @@ export function getOrCreateDraft(db: BetterSqliteDatabase, guildId: string, user
       VALUES (?, ?, ?, 'draft')
     `
   ).run(id, guildId, userId);
+  recordShortCodeMapping(db, id, guildId, code);
   touchSyncMarker("application_create");
   return { application_id: id };
 }

@@ -48,10 +48,13 @@ import {
   findAppByShortCode,
   findAppByCodeOrMessage,
   syncShortCodeMappings,
+  _resetShortCodeStateForTests,
 } from "../../src/features/appLookup.js";
 
 describe("features/appLookup", () => {
   beforeEach(() => {
+    // The mapping-table probe is remembered per process; each case decides afresh.
+    _resetShortCodeStateForTests();
     // v4: clearAllMocks does NOT drain mockReturnValueOnce queues, and
     // restoreMocks now strips module-scope vi.fn() implementations between
     // tests. resetAllMocks clears the once-queues AND implementations so no

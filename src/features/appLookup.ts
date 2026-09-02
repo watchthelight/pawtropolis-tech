@@ -9,10 +9,51 @@
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
+import type { Database } from "better-sqlite3";
 import { db } from "../db/db.js";
 import { shortCode } from "../lib/ids.js";
 import { logger } from "../lib/logger.js";
 import type { ApplicationRow } from "./review/types.js";
+
+// Migration 019 created the mapping table and nothing drops it, so one positive probe per
+// process is enough. The probe repeats only while the table has not been seen (fresh
+// test databases created after this module loaded).
+let mappingTableSeen = false;
+
+function hasMappingTable(handle: Database = db): boolean {
+  if (mappingTableSeen) return true;
+  mappingTableSeen = !!handle
+    .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='app_short_codes'")
+    .get();
+  return mappingTableSeen;
+}
+
+/** Test hook: a fresh database may lack the mapping table again. */
+export function _resetShortCodeStateForTests(): void {
+  mappingTableSeen = false;
+}
+
+/**
+ * recordShortCodeMapping
+ * WHAT: Remember a code -> application mapping so the next lookup is an index hit.
+ * WHY: Rows were only ever written by the startup backfill, so every application created
+ *      since boot fell through to the full scan in findAppByShortCode on each button click.
+ */
+export function recordShortCodeMapping(
+  handle: Database,
+  appId: string,
+  guildId: string,
+  code: string
+): void {
+  if (!hasMappingTable(handle)) return;
+  try {
+    handle
+      .prepare("INSERT OR IGNORE INTO app_short_codes (app_id, guild_id, code) VALUES (?, ?, ?)")
+      .run(appId, guildId, code);
+  } catch (err) {
+    logger.warn({ err, appId, code }, "[appLookup] failed to record short code mapping");
+  }
+}
 
 /** Internal type for application row from database (extended for optional fields) */
 type AppRow = {
@@ -61,14 +102,7 @@ export function findAppByShortCode(guildId: string, code: string): ApplicationRo
   }
 
   // Try mapping table first (O(1) lookup)
-  // We check for table existence each time rather than caching because:
-  // 1. The table might be created by a migration mid-session
-  // 2. This check is fast (sqlite_master is always indexed)
-  const hasMapping = db
-    .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='app_short_codes'")
-    .get();
-
-  if (hasMapping) {
+  if (hasMappingTable()) {
     const row = db
       .prepare("SELECT app_id FROM app_short_codes WHERE guild_id=? AND code=? LIMIT 1")
       .get(guildId, normalized) as { app_id: string } | undefined;
@@ -98,6 +132,8 @@ export function findAppByShortCode(guildId: string, code: string): ApplicationRo
     try {
       if (shortCode(r.id) === normalized) {
         logger.debug({ code: normalized, appId: r.id }, "[appLookup] found via full scan");
+        // Write the mapping back so this code never needs the scan again.
+        recordShortCodeMapping(db, r.id, r.guild_id, normalized);
         // Cast AppRow to ApplicationRow (compatible types)
         return r as ApplicationRow;
       }
@@ -178,12 +214,7 @@ export function syncShortCodeMappings(guildId?: string): number {
   // Called on startup and can be triggered manually via CLI.
   // Uses INSERT OR IGNORE so it's idempotent - safe to run multiple times.
 
-  // Check if mapping table exists
-  const hasMapping = db
-    .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='app_short_codes'")
-    .get();
-
-  if (!hasMapping) {
+  if (!hasMappingTable()) {
     logger.warn("[appLookup] app_short_codes table does not exist, skipping sync");
     return 0;
   }
