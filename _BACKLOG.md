@@ -8,7 +8,7 @@ See [`docs/issue-system.md`](./docs/issue-system.md) for the file format, label 
 
 ## In progress
 
-- [ ] [Perf pass T0: unblock the event loop and stop timer leaks](todo/00262.md) `High` `WIP`
+- [ ] [Perf pass T0: unblock the event loop and stop timer leaks](todo/00277.md) `High` `WIP`
 - [ ] [Perf pass T1: per-message and per-interaction hot path](todo/00263.md) `High` `WIP`
 - [ ] [Perf pass T2: schedulers and background jobs](todo/00264.md) `Medium` `WIP`
 - [ ] [Perf pass T3: DB layer, pragmas, indexes, retention](todo/00265.md) `Medium` `WIP`

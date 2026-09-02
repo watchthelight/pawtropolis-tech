@@ -46,7 +46,7 @@ Performance release. Nothing here changes what the bot does for members; it chan
 - Reviewer permissions read from the config cache; short-code lookups and draft collision checks use indexes (#00263).
 - The gate reads its banner asset once per process and waits for the review card event instead of polling (#00263).
 - Invite tracking writes only changed invites; leave classification does one audit-log fetch (#00263).
-- Mod metrics recalculate hourly; the Patreon sweep, security audit and NSFW audit read the member cache instead of fetching, and the security audit only posts when something changed (#00262, #00264).
+- Mod metrics recalculate hourly; the Patreon sweep, security audit and NSFW audit read the member cache instead of fetching, and the security audit only posts when something changed (#00277, #00264).
 - The NSFW avatar audit skips Vision calls for avatars it has already scored and found clean (#00264).
 - Observatory rolling-author and cohort queries are set-based; search resolves usernames from `user_cache` instead of REST (#00264).
 - Attendance is recorded in one transaction; inventory capture fetches the audit log once per guild per drain (#00264).
@@ -61,11 +61,11 @@ Performance release. Nothing here changes what the bot does for members; it chan
 
 ### Operations
 
-- The database integrity check runs in a child process every 6 hours instead of inline on every 60 second health tick; the boot check defaults to `quick` in production (#00262).
-- Event handler timeout timers are cleared when the handler finishes (#00262).
+- The database integrity check runs in a child process every 6 hours instead of inline on every 60 second health tick; the boot check defaults to `quick` in production (#00277).
+- Event handler timeout timers are cleared when the handler finishes (#00277).
 - New retention scheduler: hourly full-text catch-up for the action log, daily `PRAGMA optimize`, and pruning of expired rows, deploy backups and 30-day-old verification review posts. Deletes run only with `RETENTION_ENABLED=true`; otherwise the scheduler logs what it would remove (#00265, #00269, #00258).
 - Slow transaction warnings name the calling file and line (#00270).
-- The system page shows database file, WAL and free-page sizes, the archived message count and event-loop lag; `/health` reports the last off-process integrity result (#00262).
+- The system page shows database file, WAL and free-page sizes, the archived message count and event-loop lag; `/health` reports the last off-process integrity result (#00277).
 - `scripts/cleanup-backups.sh` looks in `data/backups` and matches the names `deploy.sh` writes (#00269).
 - New optional environment knobs: `SENTRY_PROFILES_SAMPLE_RATE`, `DB_INTEGRITY_INTERVAL_HOURS`, `SECURITY_AUDIT_INTERVAL_MINUTES`, `PATREON_SWEEP_INTERVAL_MINUTES`, `MOD_METRICS_INTERVAL_MINUTES`, `LOOP_LAG_WARN_P99_MS`, `RETENTION_ENABLED`. The example file now defaults `LOG_LEVEL` to `info` and the Sentry trace rate to 0.05.
 - Dropped the unused `@google-cloud/vision` and `adapter-auto` dependencies; `@types/node` moved to dev dependencies (#00266).
