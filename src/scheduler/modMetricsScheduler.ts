@@ -15,11 +15,13 @@ import { recalcModMetrics } from "../features/modPerformance.js";
 import { logger } from "../lib/logger.js";
 import { recordSchedulerRun } from "../lib/schedulerHealth.js";
 
-// WHY 15 minutes? It's a Goldilocks number. 5 min would be too aggressive
-// (these recalcs touch a lot of rows), 30 min means stale leaderboards.
-// Also, 15 min intervals mean the scheduler fires at :00, :15, :30, :45
-// which is predictable for debugging. "When did metrics last update?" -> "Quarter past."
-const REFRESH_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
+// Hourly by default (MOD_METRICS_INTERVAL_MINUTES overrides). The recalc aggregates the
+// whole epoch of action_log per run; the dashboard's own stats queries are live, so this
+// table only feeds the slash-command leaderboards.
+const REFRESH_INTERVAL_MS = (() => {
+  const minutes = parseInt(process.env.MOD_METRICS_INTERVAL_MINUTES ?? "", 10);
+  return (Number.isFinite(minutes) && minutes > 0 ? minutes : 60) * 60 * 1000;
+})();
 
 let _activeInterval: NodeJS.Timeout | null = null;
 

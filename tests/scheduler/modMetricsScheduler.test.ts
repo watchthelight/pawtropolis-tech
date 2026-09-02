@@ -74,7 +74,7 @@ describe("modMetricsScheduler", () => {
       startModMetricsScheduler(mockClient as any);
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.objectContaining({ intervalMinutes: 15 }),
+        expect.objectContaining({ intervalMinutes: 60 }),
         expect.stringContaining("starting")
       );
     });
