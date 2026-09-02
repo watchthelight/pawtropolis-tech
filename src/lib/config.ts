@@ -768,11 +768,9 @@ export function isReviewer(guildId: string, member: GuildMember | null): boolean
    * WHY: Allows servers to control staff via channel perms without explicit role.
    */
   if (!member) return false;
-  const row = db
-    .prepare("SELECT review_channel_id, reviewer_role_id FROM guild_config WHERE guild_id = ?")
-    .get(guildId) as
-    | { review_channel_id?: string | null; reviewer_role_id?: string | null }
-    | undefined;
+  // getConfig is cached and invalidated on every config write; the raw SELECT this
+  // replaced ran on every interaction through hasStaffPermissions.
+  const row = getConfig(guildId);
 
   const reviewerRoleId = row?.reviewer_role_id ?? null;
   const reviewChannelId = row?.review_channel_id ?? null;
@@ -878,18 +876,21 @@ export function canRunAllCommands(member: GuildMember | null, guildId: string): 
     }
   }
 
-  logger.debug(
-    {
-      evt: "permission_check",
-      userId,
-      guildId,
-      modRoleIds: modRoleIdList,
-      userRoles: Array.from(member.roles.cache.keys()),
-      result: false,
-      reason: "no_matching_role",
-    },
-    "[canRunAllCommands] user does not have any configured mod role"
-  );
+  // The role-list copy is only worth building when debug logging is actually on.
+  if (logger.isLevelEnabled?.("debug") ?? true) {
+    logger.debug(
+      {
+        evt: "permission_check",
+        userId,
+        guildId,
+        modRoleIds: modRoleIdList,
+        userRoles: Array.from(member.roles.cache.keys()),
+        result: false,
+        reason: "no_matching_role",
+      },
+      "[canRunAllCommands] user does not have any configured mod role"
+    );
+  }
   return false;
 }
 

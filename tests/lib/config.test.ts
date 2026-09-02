@@ -55,8 +55,14 @@ import {
   isReviewer,
   canRunAllCommands,
   hasStaffPermissions,
+  clearConfigCache,
 } from "../../src/lib/config.js";
 import { isOwner } from "../../src/lib/owner.js";
+
+// isReviewer reads through the getConfig cache; each case sets up its own mock row.
+beforeEach(() => {
+  clearConfigCache("guild-123");
+});
 
 // ===== Test Helpers =====
 
