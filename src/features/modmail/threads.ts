@@ -25,18 +25,18 @@
 export {
   OPEN_MODMAIL_THREADS,
   hydrateOpenModmailThreadsOnStartup,
-  addOpenThread,
-  removeOpenThread,
-  isOpenModmailThread,
+  
+  
+  
 } from "./threadState.js";
 
 // Re-export permission functions
 // Discord thread permissions are a special kind of hell. These functions exist
 // because "inherit from parent" means something different every other Tuesday.
 export {
-  NEEDED_FOR_PUBLIC_THREAD_FROM_MESSAGE,
-  missingPermsForStartThread,
-  ensureModsCanSpeakInThread,
+  
+  
+  
   ensureParentPermsForMods,
   retrofitModmailParentsForGuild,
   retrofitAllGuildsOnStartup,

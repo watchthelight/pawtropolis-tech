@@ -7,17 +7,7 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 // Re-export types
-export type {
-  ModmailTicketStatus,
-  ModmailTicket,
-  TranscriptLine,
-  ModmailMessageMap,
-  StaffToUserEmbedArgs,
-  UserToStaffEmbedArgs,
-  OpenPublicModmailThreadParams,
-  CloseModmailThreadParams,
-  ReopenModmailThreadParams,
-} from "./types.js";
+;
 
 // Re-export tickets
 export {
@@ -91,12 +81,7 @@ export {
 } from "./commands.js";
 
 // Re-export dashboard bridge (interaction-free wrappers)
-export {
-  dashboardSendMessage,
-  dashboardOpenThread,
-  dashboardCloseThread,
-  dashboardReopenThread,
-} from "./dashboardBridge.js";
+;
 
 // Note: The parent modmail.ts now re-exports from this index file.
 // Import from either "../modmail.js" or "./modmail/index.js" for the same API.
