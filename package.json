@@ -50,10 +50,8 @@
     "check": "npm run typecheck && npm run lint && npm run format:check && npm run test"
   },
   "dependencies": {
-    "@google-cloud/vision": "^5.3.4",
     "@sentry/node": "^10.53.1",
     "@sentry/profiling-node": "^10.53.1",
-    "@types/node": "^24.10.1",
     "better-sqlite3": "^12.4.1",
     "canvas": "^3.2.0",
     "discord.js": "^14.26.4",
@@ -79,6 +77,7 @@
     "@dotenvx/dotenvx": "^1.51.0",
     "@eslint/js": "^9.38.0",
     "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^24.13.3",
     "@typescript-eslint/eslint-plugin": "^8.59.4",
     "@typescript-eslint/parser": "^8.59.4",
     "@vitest/coverage-v8": "^4.1.7",
