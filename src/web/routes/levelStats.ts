@@ -47,8 +47,9 @@ export function registerLevelStatsRoutes(server: FastifyInstance, ctx: Dashboard
         return { success: true, data: { roles: [], totalMembers: guild.memberCount } } satisfies ApiSuccess;
       }
 
-      // Fetch all members via gateway for accurate counts
-      const members = await guild.members.fetch();
+      // The member cache is complete (GuildMembers intent, uncapped cache, fetched at boot),
+      // so a gateway re-fetch here only re-instantiated every member.
+      const members = guild.members.cache;
       const totalMembers = members.size;
 
       const roles = uniqueTiers

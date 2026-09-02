@@ -26,8 +26,18 @@ import { logger } from "../lib/logger.js";
 import { env } from "../lib/env.js";
 import { recordSchedulerRun } from "../lib/schedulerHealth.js";
 
-// 30 minutes - frequent enough to catch issues quickly, infrequent enough to not spam
-const AUDIT_INTERVAL_MS = 30 * 60 * 1000;
+// Every 6 hours by default (SECURITY_AUDIT_INTERVAL_MINUTES overrides). The audit reads
+// the member cache and skips its writes when nothing changed, so the cadence only sets
+// how quickly a dangerous permission change gets flagged in the logging channel.
+const AUDIT_INTERVAL_MS = (() => {
+  const minutes = parseInt(process.env.SECURITY_AUDIT_INTERVAL_MINUTES ?? "", 10);
+  return (Number.isFinite(minutes) && minutes > 0 ? minutes : 360) * 60 * 1000;
+})();
+
+function describeInterval(): string {
+  const minutes = AUDIT_INTERVAL_MS / 60_000;
+  return minutes % 60 === 0 ? `${minutes / 60} hour(s)` : `${minutes} minutes`;
+}
 
 // Logging channel for security audit results
 const LOGGING_CHANNEL_ID = "1430015254053654599";
@@ -243,7 +253,7 @@ function buildAuditSummaryEmbed(result: AuditResult, criticalIssues: SecurityIss
   const embed = new EmbedBuilder()
     .setTitle("Security Audit Results")
     .setTimestamp()
-    .setFooter({ text: "Automated security scan • Runs every 30 minutes" });
+    .setFooter({ text: `Automated security scan • Runs every ${describeInterval()}` });
 
   const totalActive = result.issueCount;
 
@@ -337,11 +347,12 @@ export function startSecurityAuditScheduler(client: Client): void {
 
   // Initial run after 30 seconds (give caches time to populate)
   setTimeout(async () => {
+    const startedAt = Date.now();
     try {
       await runSecurityAudit(client);
-      recordSchedulerRun("securityAudit", true);
+      recordSchedulerRun("securityAudit", true, Date.now() - startedAt);
     } catch (err: any) {
-      recordSchedulerRun("securityAudit", false);
+      recordSchedulerRun("securityAudit", false, Date.now() - startedAt);
       logger.error({ err: err.message }, "[security-audit:scheduler] Initial audit failed");
     }
   }, 30000);
@@ -357,11 +368,12 @@ export function startSecurityAuditScheduler(client: Client): void {
       return;
     }
     _running = true;
+    const startedAt = Date.now();
     try {
       await runSecurityAudit(client);
-      recordSchedulerRun("securityAudit", true);
+      recordSchedulerRun("securityAudit", true, Date.now() - startedAt);
     } catch (err: any) {
-      recordSchedulerRun("securityAudit", false);
+      recordSchedulerRun("securityAudit", false, Date.now() - startedAt);
       logger.error({ err: err.message }, "[security-audit:scheduler] Scheduled audit failed");
     } finally {
       _running = false;

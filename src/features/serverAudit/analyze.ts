@@ -23,13 +23,21 @@ import {
 } from "./types.js";
 
 export async function fetchRoles(guild: Guild): Promise<RoleData[]> {
-  const roles = await guild.roles.fetch();
-  const members = await guild.members.fetch();
+  // Read caches, not the API. With the GuildMembers intent and an uncapped member cache the
+  // bot already holds every member, so members.fetch() here re-chunked the whole guild over
+  // the gateway on every run. One pass over members replaces a filter per role.
+  const roles = guild.roles.cache;
+  const countByRole = new Map<string, number>();
+  for (const member of guild.members.cache.values()) {
+    for (const roleId of member.roles.cache.keys()) {
+      countByRole.set(roleId, (countByRole.get(roleId) ?? 0) + 1);
+    }
+  }
 
   const roleData: RoleData[] = [];
 
   for (const role of roles.values()) {
-    const memberCount = members.filter((m) => m.roles.cache.has(role.id)).size;
+    const memberCount = countByRole.get(role.id) ?? 0;
 
     const data: RoleData = {
       id: role.id,
@@ -60,13 +68,15 @@ export async function fetchRoles(guild: Guild): Promise<RoleData[]> {
 
 // Fetch all channel data
 export async function fetchChannels(guild: Guild, roles: RoleData[]): Promise<ChannelData[]> {
-  const channels = await guild.channels.fetch();
+  // The channel cache is complete for guilds the bot is in; threads are skipped because the
+  // REST fetch this replaced never returned them and the docs and diffs are keyed on channels.
+  const channels = guild.channels.cache;
   const roleMap = new Map(roles.map((r) => [r.id, r.name]));
 
   const channelData: ChannelData[] = [];
 
   for (const channel of channels.values()) {
-    if (!channel) continue;
+    if (!channel || channel.isThread()) continue;
 
     const overwrites: ChannelOverwrite[] = [];
     if ("permissionOverwrites" in channel) {
@@ -83,11 +93,16 @@ export async function fetchChannels(guild: Guild, roles: RoleData[]): Promise<Ch
           name = roleMap.get(id) || `Unknown Role (${id})`;
           type = "role";
         } else {
-          try {
-            const member = await guild.members.fetch(id);
-            name = member.user.tag;
-          } catch {
-            name = `Unknown Member (${id})`;
+          const cachedMember = guild.members.cache.get(id);
+          if (cachedMember) {
+            name = cachedMember.user.tag;
+          } else {
+            try {
+              const member = await guild.members.fetch(id);
+              name = member.user.tag;
+            } catch {
+              name = `Unknown Member (${id})`;
+            }
           }
           type = "member";
         }

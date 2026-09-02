@@ -287,10 +287,9 @@ async function handleSync(
     if (!role) {
       return null;
     }
-    // members.fetch() sends REQUEST_GUILD_MEMBERS over the gateway and
-    // refreshes the cache. Filter members.cache directly rather than
-    // role.members so the result reflects the latest fetch.
-    const members = await guild.members.fetch();
+    // The member cache is complete (GuildMembers intent, uncapped cache, fetched at boot)
+    // and stays current through gateway events, so no re-fetch is needed.
+    const members = guild.members.cache;
     const ignoredUsers = getIgnoredArtistUsers(guild.id);
     return members
       .filter((m) => m.roles.cache.has(artistConfig.artistRoleId) && !ignoredUsers.has(m.id))
@@ -682,8 +681,8 @@ async function handleSetup(
     try {
       const role = await guild.roles.fetch(artistConfig.artistRoleId, { force: true });
       if (role) {
-        // Same full-member-fetch as in handleSync. Yes, we hit the API hard here.
-        const members = await guild.members.fetch();
+        // Same cache read as in handleSync.
+        const members = guild.members.cache;
         const ignoredUsers = getIgnoredArtistUsers(guild.id);
         const roleHolderIds = members
           .filter((m) => m.roles.cache.has(artistConfig.artistRoleId) && !ignoredUsers.has(m.id))

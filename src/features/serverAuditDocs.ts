@@ -12,8 +12,12 @@ import { type Guild } from "discord.js";
 import { writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { notifyDashboard } from "../web/notifyDashboard.js";
-import { getAcknowledgedIssues, clearStaleAcknowledgments } from "../store/acknowledgedSecurityStore.js";
+import {
+  getAcknowledgedIssues,
+  clearStaleAcknowledgments,
+} from "../store/acknowledgedSecurityStore.js";
 import {
   saveSnapshot,
   getLatestSnapshot,
@@ -52,6 +56,16 @@ import {
 
 export type { SecurityIssue, AuditResult, GitPushResult };
 
+// Per guild, a digest of what the last run saw. When roles, channels, issues and
+// acknowledgements all match, the docs, snapshot row and issue-history row are skipped:
+// the scheduler used to rewrite five files and insert two rows every 30 minutes whether
+// or not anything had changed.
+const lastRunKey = new Map<string, string>();
+
+function computeRunKey(parts: unknown): string {
+  return createHash("sha1").update(JSON.stringify(parts)).digest("hex");
+}
+
 export async function generateAuditDocs(guild: Guild, outputDir?: string): Promise<AuditResult> {
   const OUTPUT_DIR = outputDir || join(process.cwd(), "docs/internal-info");
 
@@ -76,17 +90,29 @@ export async function generateAuditDocs(guild: Guild, outputDir?: string): Promi
   const validKeys = new Set(issues.map((i) => i.issueKey));
   clearStaleAcknowledgments(guild.id, validKeys);
 
-  // Ensure output directory exists
-  if (!existsSync(OUTPUT_DIR)) {
-    mkdirSync(OUTPUT_DIR, { recursive: true });
-  }
+  // Snapshot shapes come first so the whole run can be gated on them.
+  const rolesSnapshot = roles.map(roleToSnapshot);
+  const channelsSnapshot = channels.map(channelToSnapshot);
+  const issuesSnapshot = issues.map(issueToSnapshot);
+  const previousSnapshot = getLatestSnapshot(guild.id);
+  const runKey = computeRunKey({ rolesSnapshot, channelsSnapshot, issuesSnapshot, acknowledged });
+  const unchanged = lastRunKey.get(guild.id) === runKey;
+  lastRunKey.set(guild.id, runKey);
 
-  // Generate and write docs
-  writeFileSync(join(OUTPUT_DIR, "ROLES.md"), generateRolesDoc(roles, serverInfo));
-  writeFileSync(join(OUTPUT_DIR, "CHANNELS.md"), generateChannelsDoc(channels, serverInfo));
-  writeFileSync(join(OUTPUT_DIR, "CONFLICTS.md"), generateConflictsDoc(partitioned, serverInfo));
-  writeFileSync(join(OUTPUT_DIR, "SERVER-INFO.md"), generateServerInfoDoc(serverInfo, roles, channels));
-  writeFileSync(join(OUTPUT_DIR, "HIERARCHY.md"), generateHierarchyDoc(roles, serverInfo));
+  if (!unchanged) {
+    if (!existsSync(OUTPUT_DIR)) {
+      mkdirSync(OUTPUT_DIR, { recursive: true });
+    }
+
+    writeFileSync(join(OUTPUT_DIR, "ROLES.md"), generateRolesDoc(roles, serverInfo));
+    writeFileSync(join(OUTPUT_DIR, "CHANNELS.md"), generateChannelsDoc(channels, serverInfo));
+    writeFileSync(join(OUTPUT_DIR, "CONFLICTS.md"), generateConflictsDoc(partitioned, serverInfo));
+    writeFileSync(
+      join(OUTPUT_DIR, "SERVER-INFO.md"),
+      generateServerInfoDoc(serverInfo, roles, channels)
+    );
+    writeFileSync(join(OUTPUT_DIR, "HIERARCHY.md"), generateHierarchyDoc(roles, serverInfo));
+  }
 
   // Count active issues only (not acknowledged ones)
   const active = partitioned.active;
@@ -97,82 +123,75 @@ export async function generateAuditDocs(guild: Guild, outputDir?: string): Promi
 
   // --- Snapshot and Diff Tracking ---
 
-  // Convert data to snapshot format
-  const rolesSnapshot = roles.map(roleToSnapshot);
-  const channelsSnapshot = channels.map(channelToSnapshot);
-  const issuesSnapshot = issues.map(issueToSnapshot);
-
-  // Get previous snapshot for diff computation
-  const previousSnapshot = getLatestSnapshot(guild.id);
-
-  // Save new snapshot
-  let snapshotId: number | undefined;
+  let snapshotId: number | undefined = unchanged ? previousSnapshot?.id : undefined;
   let diff: SnapshotDiff | undefined;
   let dangerousChangeCount = 0;
 
-  try {
-    snapshotId = saveSnapshot({
-      guildId: guild.id,
-      roleCount: roles.length,
-      channelCount: channels.length,
-      issueCount: active.length,
-      criticalCount: critical,
-      highCount: high,
-      mediumCount: medium,
-      lowCount: low,
-      rolesSnapshot,
-      channelsSnapshot,
-      issuesSnapshot,
-    });
-
-    // Compute diff if we have a previous snapshot
-    if (previousSnapshot) {
-      const newSnapshot = getLatestSnapshot(guild.id);
-      if (newSnapshot) {
-        diff = computeSnapshotDiff(previousSnapshot, newSnapshot);
-        dangerousChangeCount = getDangerousChanges(diff).length;
-
-        // Generate DIFF.md if there are meaningful changes
-        if (hasMeaningfulChanges(diff)) {
-          const diffMarkdown = generateDiffMarkdown(diff, serverInfo.name);
-          writeFileSync(join(OUTPUT_DIR, "DIFF.md"), diffMarkdown);
-        }
-      }
-    }
-
-    // Record issue history for trend tracking
-    // Count issues by category
-    const roleIssues = issues.filter((i) => i.issueKey.startsWith("role:")).length;
-    const channelIssues = issues.filter((i) => i.issueKey.startsWith("channel:")).length;
-    const hierarchyIssues = issues.filter((i) => i.issueKey.includes("hierarchy")).length;
-    const verificationIssues = issues.filter((i) => i.issueKey.includes("verification")).length;
-
-    recordIssueHistory({
-      guildId: guild.id,
-      criticalCount: critical,
-      highCount: high,
-      mediumCount: medium,
-      lowCount: low,
-      acknowledgedCount: partitioned.acknowledged.length,
-      roleIssues,
-      channelIssues,
-      hierarchyIssues,
-      verificationIssues,
-    });
-
-    // Prune old snapshots to prevent unbounded growth (keep last 30)
-    pruneOldSnapshots(guild.id, 30);
-
-    // Notify dashboard so Security tab auto-refreshes
-    if (snapshotId) {
-      notifyDashboard("audit:security_snapshot", {
-        snapshotId,
+  if (!unchanged) {
+    try {
+      snapshotId = saveSnapshot({
+        guildId: guild.id,
+        roleCount: roles.length,
+        channelCount: channels.length,
         issueCount: active.length,
         criticalCount: critical,
+        highCount: high,
+        mediumCount: medium,
+        lowCount: low,
+        rolesSnapshot,
+        channelsSnapshot,
+        issuesSnapshot,
       });
+
+      // Compute diff if we have a previous snapshot
+      if (previousSnapshot) {
+        const newSnapshot = getLatestSnapshot(guild.id);
+        if (newSnapshot) {
+          diff = computeSnapshotDiff(previousSnapshot, newSnapshot);
+          dangerousChangeCount = getDangerousChanges(diff).length;
+
+          // Generate DIFF.md if there are meaningful changes
+          if (hasMeaningfulChanges(diff)) {
+            const diffMarkdown = generateDiffMarkdown(diff, serverInfo.name);
+            writeFileSync(join(OUTPUT_DIR, "DIFF.md"), diffMarkdown);
+          }
+        }
+      }
+
+      // Record issue history for trend tracking
+      // Count issues by category
+      const roleIssues = issues.filter((i) => i.issueKey.startsWith("role:")).length;
+      const channelIssues = issues.filter((i) => i.issueKey.startsWith("channel:")).length;
+      const hierarchyIssues = issues.filter((i) => i.issueKey.includes("hierarchy")).length;
+      const verificationIssues = issues.filter((i) => i.issueKey.includes("verification")).length;
+
+      recordIssueHistory({
+        guildId: guild.id,
+        criticalCount: critical,
+        highCount: high,
+        mediumCount: medium,
+        lowCount: low,
+        acknowledgedCount: partitioned.acknowledged.length,
+        roleIssues,
+        channelIssues,
+        hierarchyIssues,
+        verificationIssues,
+      });
+
+      // Prune old snapshots to prevent unbounded growth (keep last 30)
+      pruneOldSnapshots(guild.id, 30);
+
+      // Notify dashboard so Security tab auto-refreshes
+      if (snapshotId) {
+        notifyDashboard("audit:security_snapshot", {
+          snapshotId,
+          issueCount: active.length,
+          criticalCount: critical,
+        });
+      }
+    } catch {
+      // Snapshot storage is non-critical, don't fail the audit
     }
-  } catch {
-    // Snapshot storage is non-critical, don't fail the audit
   }
 
   return {
@@ -248,7 +267,8 @@ export async function commitAndPushDocs(
   if (!token || !username || !email || !repo) {
     return {
       success: false,
-      error: "Missing GitHub configuration (GITHUB_BOT_TOKEN, GITHUB_BOT_USERNAME, GITHUB_BOT_EMAIL, GITHUB_REPO)",
+      error:
+        "Missing GitHub configuration (GITHUB_BOT_TOKEN, GITHUB_BOT_USERNAME, GITHUB_BOT_EMAIL, GITHUB_REPO)",
     };
   }
 
@@ -258,7 +278,10 @@ export async function commitAndPushDocs(
   try {
     // Step 1: Check if there are changes to commit
     await progress("Checking for changes", "git status");
-    const status = execSync("git status --porcelain docs/internal-info/", { cwd, encoding: "utf-8" });
+    const status = execSync("git status --porcelain docs/internal-info/", {
+      cwd,
+      encoding: "utf-8",
+    });
     if (!status.trim()) {
       return {
         success: true,

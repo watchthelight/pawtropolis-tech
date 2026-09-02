@@ -443,14 +443,8 @@ export async function runThreadMigrationForUnverified(
 
   logger.info({ guildId }, "[threadMigration] starting bulk migration of unverified members");
 
-  // Fetch all guild members. Requires GUILD_MEMBERS privileged intent (already on).
-  let allMembers: ReturnType<typeof guild.members.fetch> extends Promise<infer T> ? T : never;
-  try {
-    allMembers = await guild.members.fetch();
-  } catch (err) {
-    logger.error({ err, guildId }, "[threadMigration] failed to fetch members");
-    return { created: 0, skipped: 0, failed: 0, total: 0 };
-  }
+  // The member cache is complete (GuildMembers intent, uncapped cache, fetched at boot).
+  const allMembers = guild.members.cache;
 
   const acceptedRoleId = cfg.accepted_role_id;
   const targets: GuildMember[] = [];
