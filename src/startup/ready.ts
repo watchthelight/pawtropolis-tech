@@ -8,7 +8,7 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import { type Client, Events } from "discord.js";
-import { logger } from "../lib/logger.js";
+import { logger, flushLogger } from "../lib/logger.js";
 import { db } from "../db/db.js";
 import { env } from "../lib/env.js";
 import { setTag, addBreadcrumb } from "../lib/sentry.js";
@@ -126,22 +126,6 @@ client.once(Events.ClientReady, async () => {
     logger.error({ err }, "[startup] Role cache sync failed");
   }
 
-  // One-time sweep: strip stacked Patreon donor roles (retroactive fix)
-  try {
-    const { sweepPatreonRoleStacks } = await import("../features/patreonRoleDedup.js");
-    await sweepPatreonRoleStacks(client);
-  } catch (err) {
-    logger.error({ err }, "[startup] Patreon role dedup sweep failed");
-  }
-
-  // Initialize invite tracking cache (growth source attribution)
-  try {
-    const { initInviteCache } = await import("../features/inviteTracker.js");
-    await initInviteCache(client);
-  } catch (err) {
-    logger.error({ err }, "[startup] Invite cache init failed");
-  }
-
   // Hydrate open modmail threads from database into memory
   // WHAT: Populates OPEN_MODMAIL_THREADS set from open_modmail table
   // WHY: Enables efficient O(1) lookups in messageCreate to route modmail messages
@@ -152,16 +136,39 @@ client.once(Events.ClientReady, async () => {
     logger.error({ err }, "[startup] modmail thread hydration failed");
   }
 
-  // Heal legacy parent overwrites so moderators can speak in older modmail threads
-  // WHAT: Ensures parent channels grant SendMessagesInThreads to configured mod roles
-  // WHY: Private threads require BOTH thread membership AND parent channel permissions
-  // WHEN: Run once at startup to retrofit existing threads
-  // DOCS: See retrofitAllGuildsOnStartup in src/features/modmail.ts
-  try {
-    await retrofitAllGuildsOnStartup(client);
-  } catch (err) {
-    logger.error({ err }, "[startup] modmail retrofit failed");
-  }
+  // The three REST-bound warm-ups below are independent of each other, so they run
+  // concurrently instead of back to back; each keeps its own failure logging.
+  await Promise.all([
+    // One-time sweep: strip stacked Patreon donor roles (retroactive fix)
+    (async () => {
+      try {
+        const { sweepPatreonRoleStacks } = await import("../features/patreonRoleDedup.js");
+        await sweepPatreonRoleStacks(client);
+      } catch (err) {
+        logger.error({ err }, "[startup] Patreon role dedup sweep failed");
+      }
+    })(),
+    // Initialize invite tracking cache (growth source attribution)
+    (async () => {
+      try {
+        const { initInviteCache } = await import("../features/inviteTracker.js");
+        await initInviteCache(client);
+      } catch (err) {
+        logger.error({ err }, "[startup] Invite cache init failed");
+      }
+    })(),
+    // Heal legacy parent overwrites so moderators can speak in older modmail threads
+    // WHAT: Ensures parent channels grant SendMessagesInThreads to configured mod roles
+    // WHY: Private threads require BOTH thread membership AND parent channel permissions
+    // DOCS: See retrofitAllGuildsOnStartup in src/features/modmail.ts
+    (async () => {
+      try {
+        await retrofitAllGuildsOnStartup(client);
+      } catch (err) {
+        logger.error({ err }, "[startup] modmail retrofit failed");
+      }
+    })(),
+  ]);
 
   // Refresh review cards after bot identity change
   // WHAT: Re-posts all pending review cards so buttons work with the current bot application
@@ -420,8 +427,16 @@ client.once(Events.ClientReady, async () => {
       client.destroy();
       logger.debug("[shutdown] Discord client destroyed");
 
-      // 9. Close database
+      // 9. Close database. `optimize` refreshes planner statistics for tables whose
+      // shape changed since the last run; analysis_limit bounds how much of each
+      // index it samples so this stays sub-second on the production file.
       try {
+        try {
+          db.pragma("analysis_limit = 400");
+          db.pragma("optimize");
+        } catch (err) {
+          logger.debug({ err }, "[shutdown] PRAGMA optimize skipped");
+        }
         db.close();
         logger.debug("[shutdown] Database closed");
       } catch (err) {
@@ -429,9 +444,11 @@ client.once(Events.ClientReady, async () => {
       }
 
       logger.info("[shutdown] Graceful shutdown complete");
+      flushLogger();
       process.exit(0);
     } catch (err) {
       logger.error({ err }, "[shutdown] Error during graceful shutdown");
+      flushLogger();
       process.exit(1);
     }
   };

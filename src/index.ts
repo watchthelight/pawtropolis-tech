@@ -34,7 +34,7 @@ import {
   Options,
   type ChatInputCommandInteraction,
 } from "discord.js";
-import { logger } from "./lib/logger.js";
+import { logger, flushLogger } from "./lib/logger.js";
 
 // ===== Global Error Handlers =====
 // WHAT: Catch unhandled rejections and exceptions at process level
@@ -59,7 +59,10 @@ process.on("uncaughtException", (error, origin) => {
   captureException(error, { context: "uncaughtException", origin });
   // For uncaught exceptions, we should exit after logging
   // Give Sentry time to flush, then exit
-  setTimeout(() => process.exit(1), UNCAUGHT_EXCEPTION_EXIT_DELAY_MS);
+  setTimeout(() => {
+    flushLogger();
+    process.exit(1);
+  }, UNCAUGHT_EXCEPTION_EXIT_DELAY_MS);
 });
 
 import { env } from "./lib/env.js";
@@ -95,8 +98,10 @@ export const client = new Client({
   // See: https://discordjs.guide/popular-topics/caching.html#limiting-cache-size
   makeCache: Options.cacheWithLimits({
     ...Options.DefaultMakeCacheSettings,
-    // Keep reasonable limits for commonly accessed data
-    MessageManager: 200,        // Recent messages per channel
+    // Keep reasonable limits for commonly accessed data. 50 per channel: every edit,
+    // delete and reaction handler already fetches on a partial, and 200 per channel
+    // across hundreds of channels and threads was the largest cache after members.
+    MessageManager: 50,         // Recent messages per channel
     // Members must be cached for the whole guild, not capped. A capped member cache
     // evicts FIFO, and PresenceUpdate re-adds an evicted member with an empty role
     // list. The next guildMemberUpdate then reports every role they already hold as
@@ -112,6 +117,12 @@ export const client = new Client({
     StageInstanceManager: 0,    // We don't use stages
     ThreadMemberManager: 50,    // Minimal thread member caching
   }),
+  // Cached messages older than 15 minutes are swept every 10 minutes (discord.js only
+  // sweeps hourly by default), so a quiet channel does not pin its last 50 messages.
+  sweepers: {
+    ...Options.DefaultSweeperSettings,
+    messages: { interval: 600, lifetime: 900 },
+  },
 });
 
 const commands = new Collection<
