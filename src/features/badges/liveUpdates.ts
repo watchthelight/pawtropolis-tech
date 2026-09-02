@@ -156,16 +156,6 @@ export function attachBadgeLiveListeners(
   );
 }
 
-export function detachBadgeLiveListeners(client: Client): void {
-  for (const t of pending.values()) clearTimeout(t);
-  pending.clear();
-  // discord.js does not have removeAll for selected handlers; production
-  // teardown happens via client.destroy(). This stub keeps the API
-  // symmetric for tests that need it.
-  void client;
-  attached = false;
-}
-
 export function _resetForTests(): void {
   for (const t of pending.values()) clearTimeout(t);
   pending.clear();

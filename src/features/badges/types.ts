@@ -7,9 +7,9 @@
  *      that GitHub can embed via <img>.
  */
 
-export type BadgeKind = "role" | "channel" | "user" | "custom";
+type BadgeKind = "role" | "channel" | "user" | "custom";
 
-export type BadgeStyle =
+type BadgeStyle =
   | "discord-role"
   | "discord-channel"
   | "discord-user"
@@ -17,7 +17,7 @@ export type BadgeStyle =
   | "compact"
   | "shield";
 
-export type RoleGradient = {
+type RoleGradient = {
   primary: string;
   secondary: string;
   tertiary?: string;

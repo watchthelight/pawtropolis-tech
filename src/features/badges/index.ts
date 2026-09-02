@@ -9,17 +9,10 @@ export {
   BADGE_REGISTRY,
   getBadgeDefinition,
   listBadgeDefinitions,
-  assertNoDuplicateIds,
+  
 } from "./registry.js";
-export { svgEscape, isSafeBadgeId } from "./svgEscape.js";
-export {
-  intToHex,
-  normalizeHex,
-  readableTextOn,
-  relativeLuminance,
-  tintForPill,
-  accentForRole,
-} from "./color.js";
+export {  isSafeBadgeId } from "./svgEscape.js";
+;
 export { renderBadgeSvg, renderUnknownBadgeSvg } from "./renderSvg.js";
 export {
   defaultStoreConfig,
@@ -33,4 +26,4 @@ export {
 } from "./store.js";
 export type { BadgeStoreConfig } from "./store.js";
 export { resolveBadge } from "./resolve.js";
-export type { ResolveContext } from "./resolve.js";
+;

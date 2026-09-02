@@ -22,8 +22,8 @@ import {
 } from "./color.js";
 import type { BadgeDefinition, ResolvedBadge } from "./types.js";
 
-export type RoleSnapshotEntry = { name: string; colorHex: string };
-export type ChannelSnapshotEntry = { name: string };
+type RoleSnapshotEntry = { name: string; colorHex: string };
+type ChannelSnapshotEntry = { name: string };
 
 export type SnapshotData = {
   rolesById: Map<string, RoleSnapshotEntry>;
@@ -35,7 +35,7 @@ export type SnapshotData = {
  * Role IDs (for reference)" table for the canonical name -> id mapping.
  * Returns a discord-id keyed map.
  */
-export function parseRolesSnapshot(markdown: string): Map<string, RoleSnapshotEntry> {
+function parseRolesSnapshot(markdown: string): Map<string, RoleSnapshotEntry> {
   const colorByName = new Map<string, string>();
   const hierMatch = /## Role Hierarchy[^\n]*\n([\s\S]*?)(?:\n## |$)/.exec(markdown);
   if (hierMatch) {
@@ -77,7 +77,7 @@ export function parseRolesSnapshot(markdown: string): Map<string, RoleSnapshotEn
  * Parse the channel hierarchy. Each `### Category` block contains a
  * `| Channel | Type | ID | NSFW | Slowmode |` table.
  */
-export function parseChannelsSnapshot(
+function parseChannelsSnapshot(
   markdown: string,
 ): Map<string, ChannelSnapshotEntry> {
   const out = new Map<string, ChannelSnapshotEntry>();

@@ -16,16 +16,7 @@
  */
 
 import { svgEscape } from "./svgEscape.js";
-import {
-  DISCORD_BLURPLE,
-  DISCORD_DARK_BG,
-  DISCORD_NEUTRAL_PILL,
-  DISCORD_STALE,
-  accentForRole,
-  normalizeHex,
-  readableTextOn,
-  tintForPill,
-} from "./color.js";
+import { DISCORD_BLURPLE, DISCORD_NEUTRAL_PILL, DISCORD_STALE, accentForRole, normalizeHex, readableTextOn, tintForPill } from "./color.js";
 import type { ResolvedBadge } from "./types.js";
 
 const FONT_FAMILY =
@@ -254,6 +245,4 @@ export function renderUnknownBadgeSvg(label = "unknown badge"): string {
   ].join("");
 }
 
-export const BADGE_HEIGHT = PILL_HEIGHT;
-export const BADGE_FONT_FAMILY = FONT_FAMILY;
-export { DISCORD_DARK_BG };
+;

@@ -8,8 +8,8 @@
 
 export const DISCORD_BLURPLE = "#5865F2";
 export const DISCORD_DARK_BG = "#2B2D31";
-export const DISCORD_TEXT_LIGHT = "#FFFFFF";
-export const DISCORD_TEXT_DARK = "#0D0D0D";
+const DISCORD_TEXT_LIGHT = "#FFFFFF";
+const DISCORD_TEXT_DARK = "#0D0D0D";
 export const DISCORD_NEUTRAL_PILL = "#404249";
 export const DISCORD_STALE = "#6E6E6E";
 
@@ -25,10 +25,6 @@ export function intToHex(value: number | null | undefined): string {
   }
   const clamped = Math.max(0, Math.min(0xffffff, Math.floor(value)));
   return "#" + clamped.toString(16).padStart(6, "0").toUpperCase();
-}
-
-export function intToHexOrBlurple(value: number | null | undefined): string {
-  return intToHex(value) || DISCORD_BLURPLE;
 }
 
 export function normalizeHex(hex: string | undefined | null): string {
