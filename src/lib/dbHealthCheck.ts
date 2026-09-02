@@ -37,6 +37,18 @@ const HEALTH_THRESHOLDS = {
  * WHY: Catches corruption early before it causes data loss.
  * RETURNS: HealthCheckResult with detailed status.
  */
+/**
+ * `full` (PRAGMA integrity_check) scans every page: minutes on the production file, with
+ * the bot offline the whole time. Production therefore defaults to `quick`; the off-process
+ * scheduler (src/scheduler/dbIntegrityScheduler.ts) and `/database check` cover the rest.
+ * DB_HEALTHCHECK_MODE overrides in either direction.
+ */
+export function resolveHealthCheckMode(): "full" | "quick" | "skip" {
+  const raw = process.env.DB_HEALTHCHECK_MODE;
+  if (raw === "full" || raw === "quick" || raw === "skip") return raw;
+  return process.env.NODE_ENV === "production" ? "quick" : "full";
+}
+
 export function checkDatabaseHealth(): HealthCheckResult {
   const result: HealthCheckResult = {
     healthy: false,
@@ -50,9 +62,9 @@ export function checkDatabaseHealth(): HealthCheckResult {
     // Step 1: Integrity check. `full` runs PRAGMA integrity_check which scans
     // every page (minutes on a multi-GB DB); `quick` runs PRAGMA quick_check
     // which only verifies the index structure (sub-second even at 10 GB).
-    // Choose via DB_HEALTHCHECK_MODE env var. Default `full` preserves prior
-    // behavior; production with a large DB should set `quick`.
-    const mode = process.env.DB_HEALTHCHECK_MODE ?? "full";
+    // Mode resolution (env override, production defaults to quick) lives in
+    // resolveHealthCheckMode.
+    const mode = resolveHealthCheckMode();
     const pragma = mode === "quick" ? "PRAGMA quick_check" : "PRAGMA integrity_check";
     const columnKey = mode === "quick" ? "quick_check" : "integrity_check";
     logger.info({ mode, pragma }, "[healthcheck] Running SQLite integrity check...");
@@ -174,7 +186,7 @@ export function checkDatabaseHealth(): HealthCheckResult {
  * WHY: Prevents bot from running with corrupted data.
  */
 export function requireHealthyDatabase(): void {
-  const mode = process.env.DB_HEALTHCHECK_MODE ?? "full";
+  const mode = resolveHealthCheckMode();
   if (mode === "skip") {
     logger.warn("[healthcheck] SKIPPED (DB_HEALTHCHECK_MODE=skip)");
     return;

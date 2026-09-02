@@ -15,7 +15,9 @@ module.exports = {
       kill_timeout: 15000,
       env: {
         NODE_ENV: 'production',
-        DB_HEALTHCHECK_MODE: 'full'
+        // `full` scanned every page of the multi-GB file at every boot, minutes with the
+        // bot offline. The off-process scheduler runs the periodic check instead.
+        DB_HEALTHCHECK_MODE: 'quick'
       }
     },
     {
