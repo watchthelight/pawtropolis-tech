@@ -86,6 +86,7 @@ Commands available to all server members:
 | `/stash` | See the reward items you are holding (art tickets, Byte Tokens) |
 | `/redeem` | Take one item out of your stash; the role goes back on you |
 | `/usebyte` | Redeem a Byte Token for an XP multiplier |
+| `/attendance` | View event attendance stats and leaderboards |
 
 ---
 
@@ -232,7 +233,9 @@ These check Discord's built-in permissions instead of role hierarchy:
 | `/redeemreward` | Junior Mod+ OR Ambassador Role OR ManageRoles | Assign an art reward to a user |
 | `/report` | Ambassador Role OR Gatekeeper+ | Report content violations with evidence |
 | `/resetdata` | ManageGuild + Password | Reset metrics data from now forward |
+| `/resetprofile` | ManageGuild + Password | Clear a member reward history so it can be earned again |
 | `/review-set-listopen-output` | ManageGuild | Configure listopen visibility |
+| `/modmail` | Mod roles OR ManageGuild OR Reviewer | Close or reopen modmail threads |
 | `/stats history` | Administrator | View detailed mod action history |
 | `/stats approval-rate` | Staff | Server-wide approval analytics |
 

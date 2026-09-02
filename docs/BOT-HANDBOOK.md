@@ -417,6 +417,19 @@ This creates an audit trail. If someone gets unblocked and perm rejected again, 
 
 ---
 
+### `/modmail`
+
+Manage modmail threads from inside the thread or by id. Mod roles, anyone with Manage Server, and reviewers can use it.
+
+| Subcommand | What it does |
+|---|---|
+| `/modmail close [thread]` | Close a modmail thread (the current thread when `thread` is omitted) |
+| `/modmail reopen [user] [thread]` | Reopen a closed thread for a user, or a specific thread by id |
+
+Threads are opened with the **Modmail: Open** context-menu action on a user, or from the Modmail button on a review card. Closing archives the thread and, when `modmail_delete_on_close` is set, deletes it after the archive is written.
+
+---
+
 ## Moderator Tools
 
 These commands help you track how mods are doing, spot patterns, and keep an eye on things. The bot automatically tracks every action moderators take: claims, accepts, rejects, kicks: and turns that data into useful insights.
@@ -863,6 +876,17 @@ Once you reset, give the system time to accumulate new data. Your leaderboards w
 ```
 
 ---
+
+### `/resetprofile`
+
+Clear one member's reward history so they can earn it again. Needs the Manage Server permission and the reset password (the same one `/gate reset` uses); failed passwords are rate limited.
+
+| Option | Meaning |
+|---|---|
+| `user` | Member to reset |
+| `password` | Reset password |
+
+Every reward table row for that member in this server is deleted, the action is written to the audit log, and the reply lists how many rows each table lost.
 
 ### `/sample`
 **Who can use it:** Staff (Reviewer role or Manage Guild)
@@ -1521,6 +1545,42 @@ Use `/config get game_config` to view current settings.
 | Works for | Fixed-length events | Variable-length events |
 | Command | `/event movie` or `/movie` | `/event game` |
 | Tier roles | Has tier system | Not yet (just tracks attendance) |
+
+### `/movie`
+
+Movie night attendance, tracked from the voice channel you name. Moderator and above.
+
+| Subcommand | What it does |
+|---|---|
+| `/movie start channel:<voice channel>` | Start tracking attendance for the movie in that voice channel |
+| `/movie end` | End the movie and finalize everyone's minutes |
+| `/movie attendance [user]` | Attendance for one user, or for everyone when `user` is omitted |
+| `/movie add user:<member> minutes:<1-300> [reason]` | Add minutes to a user's attendance for the current event |
+| `/movie credit user:<member> date:<YYYY-MM-DD> minutes:<1-300> [reason]` | Credit minutes to a past event date |
+| `/movie bump user:<member> [date] [reason]` | Give a user full qualified credit (compensation) |
+| `/movie resume` | Status of a session recovered after a bot restart |
+
+`/movie` is the short form of `/event movie`; both run the same handlers.
+
+### `/event`
+
+Attendance tracking grouped by event type. Moderator and above, plus the Event Host and Events Manager roles.
+
+| Group | Subcommands |
+|---|---|
+| `/event movie ...` | `start`, `end`, `attendance`, `add`, `credit`, `bump`, `resume` (same options as `/movie`) |
+| `/event game ...` | `start channel:<voice channel>`, `end`, `attendance [user]`, `add`, `credit`, `bump` |
+
+Game nights qualify attendees by the share of the event they attended rather than a fixed number of minutes (see the table above).
+
+### `/attendance`
+
+Attendance statistics for members. Available to everyone.
+
+| Subcommand | What it does |
+|---|---|
+| `/attendance user [user]` | Your own attendance stats, or another member's |
+| `/attendance leaderboard [type]` | The attendance leaderboard, optionally filtered by event type |
 
 ---
 
