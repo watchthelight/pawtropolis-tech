@@ -53,12 +53,3 @@ export function allocateNextNumber(counterKey: string): number {
   })();
 }
 
-/**
- * Read the current counter value without incrementing. Useful for display.
- */
-export function peekCurrentValue(counterKey: string): number | null {
-  const row = db
-    .prepare(`SELECT current_value FROM ticket_counter WHERE key = ?`)
-    .get(counterKey) as { current_value: number } | undefined;
-  return row ? row.current_value : null;
-}

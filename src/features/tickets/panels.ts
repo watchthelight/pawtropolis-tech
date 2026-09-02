@@ -87,7 +87,7 @@ export function buildAllPanels(): PanelMessagePayload[] {
  * Build the embed + action rows for one panel stack.
  * Returns null if no active types exist for that stack.
  */
-export function buildPanel(stack: PanelStack): PanelMessagePayload {
+function buildPanel(stack: PanelStack): PanelMessagePayload {
   const types = listActiveTypesByStack(stack);
   const isTickets = stack === "tickets";
 

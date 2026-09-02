@@ -23,7 +23,7 @@ import type { TicketTypeConfig } from "./types.js";
  * leading / trailing hyphens, cap at maxLen. Used for the {artist} segment of
  * an art-redeem channel name.
  */
-export function sanitizeIdentity(raw: string, maxLen = 50): string {
+function sanitizeIdentity(raw: string, maxLen = 50): string {
   return raw
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")

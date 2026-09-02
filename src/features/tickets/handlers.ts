@@ -29,7 +29,7 @@ import { getTicketType } from "./registry.js";
 // opening two channels / burning two numbers / firing duplicate staff pings.
 const TICKET_OPEN_COOLDOWN_MS = 5000;
 
-export const CLOSE_MODAL_ID_PREFIX = "tk:closemod:";
+const CLOSE_MODAL_ID_PREFIX = "tk:closemod:";
 
 /** True if the actor holds Community Ambassador OR Mod Team. */
 function actorIsStaff(member: GuildMember | null): boolean {

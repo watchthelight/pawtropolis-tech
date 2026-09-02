@@ -8,7 +8,7 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 /** Ticket subjective lifecycle. closed is terminal — there is no reopen. */
-export type TicketStatus = "open" | "closed";
+type TicketStatus = "open" | "closed";
 
 /** Which panel embed surfaces a button for this type. */
 export type PanelStack = "tickets" | "verification";
@@ -133,38 +133,3 @@ export type TicketEventType =
   | "closed"
   | "archived";
 
-export interface TicketEventRow {
-  id: number;
-  ticket_id: string;
-  event_type: string;
-  actor_user_id: string | null;
-  payload_json: string | null;
-  created_at: number;
-}
-
-export interface TicketMessageRow {
-  id: string;
-  ticket_id: string;
-  in_thread: number;
-  author_user_id: string;
-  author_is_bot: number;
-  content: string | null;
-  embeds_json: string | null;
-  reply_to_message_id: string | null;
-  created_at: number;
-  edited_at: number | null;
-  deleted_at: number | null;
-}
-
-export interface TicketAttachmentRow {
-  id: string;
-  message_id: string;
-  ticket_id: string;
-  filename: string;
-  mime: string | null;
-  size_bytes: number;
-  local_path: string | null;
-  sha256: string | null;
-  original_url: string;
-  created_at: number;
-}

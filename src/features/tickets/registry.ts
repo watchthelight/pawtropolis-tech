@@ -120,14 +120,9 @@ function load(): Map<string, TicketTypeConfig> {
 }
 
 /** Returns the cached registry, loading from DB on first call. */
-export function getRegistry(): Map<string, TicketTypeConfig> {
+function getRegistry(): Map<string, TicketTypeConfig> {
   if (!cache) cache = load();
   return cache;
-}
-
-/** Forces a fresh load from the database. Call after admin edits to ticket_type. */
-export function reloadRegistry(): void {
-  cache = load();
 }
 
 /** Returns config for a single type key, or null if unknown. */
@@ -136,7 +131,7 @@ export function getTicketType(key: string): TicketTypeConfig | null {
 }
 
 /** All active types, ordered by panel_stack then panel_position. */
-export function listActiveTypes(): TicketTypeConfig[] {
+function listActiveTypes(): TicketTypeConfig[] {
   const all = [...getRegistry().values()].filter((t) => t.isActive);
   all.sort((a, b) => {
     if (a.panelStack !== b.panelStack) return a.panelStack.localeCompare(b.panelStack);
