@@ -20,7 +20,7 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import Database from "better-sqlite3";
-import { readdirSync, copyFileSync, existsSync, statSync, unlinkSync } from "node:fs";
+import { readdirSync, existsSync, statSync, unlinkSync } from "node:fs";
 import { join, dirname, basename } from "node:path";
 import { fileURLToPath, pathToFileURL } from "url";
 import dotenv from "dotenv";
@@ -153,7 +153,7 @@ function scanMigrations(): Array<{ version: string; name: string; path: string }
 /**
  * Create database backup before applying migrations
  */
-function createBackup(): void {
+async function createBackup(): Promise<void> {
   if (dryRun) return;
 
   // This backup saved my bacon exactly once. Worth every byte.
@@ -161,7 +161,10 @@ function createBackup(): void {
   const backupPath = `${dbPath}.backup-${timestamp}`;
 
   console.log(`📦 Creating backup: ${backupPath}`);
-  copyFileSync(dbPath, backupPath);
+  // The online backup API copies a consistent snapshot through the connection, so the
+  // WAL tail is included without a checkpoint; a plain file copy of a WAL-mode database
+  // can miss committed writes that still live in the -wal file.
+  await db.backup(backupPath);
   console.log(`✅ Backup created successfully\n`);
 
   pruneBackups();
@@ -172,7 +175,9 @@ function createBackup(): void {
  * Without this, backups accumulate until the disk fills — exactly what happened 2026-04-17.
  */
 function pruneBackups(): void {
-  const retention = Number(process.env.MIGRATION_BACKUP_RETENTION ?? 5);
+  // Two copies of a multi-GB file is already most of the free disk on the production host;
+  // deploy.sh keeps its own pre-deploy backup as well.
+  const retention = Number(process.env.MIGRATION_BACKUP_RETENTION ?? 2);
   if (!Number.isFinite(retention) || retention < 1) return;
 
   const dbDir = dirname(dbPath);
@@ -306,7 +311,7 @@ async function runMigrations(): Promise<void> {
 
     // Create backup before applying migrations
     if (pendingMigrations.length > 0) {
-      createBackup();
+      await createBackup();
     }
 
     // Apply each pending migration
