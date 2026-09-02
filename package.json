@@ -1,6 +1,6 @@
 {
   "name": "pawtropolis-tech",
-  "version": "6.1.0",
+  "version": "6.2.0",
   "description": "Server-owned Discord gatekeeping bot. Transparent, auditable, and minimal. Built by watchthelight (Bash).",
   "private": true,
   "type": "module",

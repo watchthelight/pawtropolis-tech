@@ -2,11 +2,56 @@
 
 All changes to Pawtropolis Tech are tracked here.
 
-**Versions:** [Unreleased](#unreleased) | [6.1.0](#610---2026-08-29) | [6.0.0](#600---2026-05-15) | [5.2.0](#520---2026-05-02) | [5.1.1](#511---2026-01-27) | [5.1.0](#510---2026-01-17) | [5.0.0](#500---2026-01-12) | [4.9.2](#492---2026-01-07) | [4.9.1](#491---2026-01-07) | [4.9.0](#490---2026-01-04) | [4.8.0](#480---2025-12-08) | [4.7.1](#471---2025-12-03) | [4.7.0](#470---2025-12-03) | [4.6.0](#460---2025-12-03) | [4.5.0](#450---2025-12-02) | [4.4.4](#444---2025-12-03) | [4.4.3](#443---2025-12-03) | [4.4.2](#442---2025-12-03) | [4.4.1](#441---2025-12-03) | [4.4.0](#440---2025-12-03) | [4.3.0](#430---2025-12-02) | [4.2.0](#420---2025-12-01) | [4.1.0](#410---2025-12-01) | [4.0.3](#403---2025-12-01) | [4.0.2](#402---2025-12-01) | [4.0.1](#401---2025-12-01) | [4.0.0](#400---2025-12-01) | [Earlier versions](#earlier-versions)
+**Versions:** [Unreleased](#unreleased) | [6.2.0](#620---2026-09-01) | [6.1.0](#610---2026-08-29) | [6.0.0](#600---2026-05-15) | [5.2.0](#520---2026-05-02) | [5.1.1](#511---2026-01-27) | [5.1.0](#510---2026-01-17) | [5.0.0](#500---2026-01-12) | [4.9.2](#492---2026-01-07) | [4.9.1](#491---2026-01-07) | [4.9.0](#490---2026-01-04) | [4.8.0](#480---2025-12-08) | [4.7.1](#471---2025-12-03) | [4.7.0](#470---2025-12-03) | [4.6.0](#460---2025-12-03) | [4.5.0](#450---2025-12-02) | [4.4.4](#444---2025-12-03) | [4.4.3](#443---2025-12-03) | [4.4.2](#442---2025-12-03) | [4.4.1](#441---2025-12-03) | [4.4.0](#440---2025-12-03) | [4.3.0](#430---2025-12-02) | [4.2.0](#420---2025-12-01) | [4.1.0](#410---2025-12-01) | [4.0.3](#403---2025-12-01) | [4.0.2](#402---2025-12-01) | [4.0.1](#401---2025-12-01) | [4.0.0](#400---2025-12-01) | [Earlier versions](#earlier-versions)
 
 ## [Unreleased]
 
 Nothing yet.
+
+## [6.2.0] - 2026-09-01
+
+Performance release. Nothing here changes what the bot does for members; it changes how much work each event, command and scheduler costs, and it makes that cost visible.
+
+### Performance
+
+- Interaction and member-event handlers import their modules statically instead of with `await import()` inside the click path (#00263).
+- Prepared statements are cached in both the bot and the dashboard, so repeated SQL no longer compiles per call (#00263).
+- The message path checks in-memory state (open modmail threads, active DM sessions, first-message and non-ticket channel caches) before touching the database (#00263).
+- Modmail and ticket private threads add staff four members at a time; overwrites that are already granted are skipped (#00263).
+- Reviewer permissions read from the config cache; short-code lookups and draft collision checks use indexes (#00263).
+- The gate reads its banner asset once per process and waits for the review card event instead of polling (#00263).
+- Invite tracking writes only changed invites; leave classification does one audit-log fetch (#00263).
+- Mod metrics recalculate hourly; the Patreon sweep, security audit and NSFW audit read the member cache instead of fetching, and the security audit only posts when something changed (#00262, #00264).
+- The NSFW avatar audit skips Vision calls for avatars it has already scored and found clean (#00264).
+- Observatory rolling-author and cohort queries are set-based; search resolves usernames from `user_cache` instead of REST (#00264).
+- Attendance is recorded in one transaction; inventory capture fetches the audit log once per guild per drain (#00264).
+- The database is memory-mapped, the WAL is capped at 64 MB, and the dashboard page cache is smaller (#00265).
+- Migrations back up with the online backup API and keep two copies (#00265).
+- Startup warm-ups run concurrently, the message cache is smaller, `PRAGMA optimize` runs before close, and canvas and sharp load on demand (#00266).
+- Logging writes through an asynchronous stream that is flushed on shutdown and fatal errors; Sentry profiling is opt-in (#00266).
+- Badge SVGs and the manifest are served from memory; backup checksums stream instead of reading whole files (#00266).
+- The dashboard streams backfill progress every 3 seconds with change-only payloads, caches the handbook what's-new walk per tier and day, streams ticket attachments from disk, and decodes one art upload at a time (#00267).
+- The `GuildPresences` intent is gone: nothing reads presence, and the online count comes from the guild snapshot (#00266).
+- User identity upserts are skipped when nothing changed (#00267).
+
+### Operations
+
+- The database integrity check runs in a child process every 6 hours instead of inline on every 60 second health tick; the boot check defaults to `quick` in production (#00262).
+- Event handler timeout timers are cleared when the handler finishes (#00262).
+- New retention scheduler: hourly full-text catch-up for the action log, daily `PRAGMA optimize`, and pruning of expired rows, deploy backups and 30-day-old verification review posts. Deletes run only with `RETENTION_ENABLED=true`; otherwise the scheduler logs what it would remove (#00265, #00269, #00258).
+- Slow transaction warnings name the calling file and line (#00270).
+- The system page shows database file, WAL and free-page sizes, the archived message count and event-loop lag; `/health` reports the last off-process integrity result (#00262).
+- `scripts/cleanup-backups.sh` looks in `data/backups` and matches the names `deploy.sh` writes (#00269).
+- New optional environment knobs: `SENTRY_PROFILES_SAMPLE_RATE`, `DB_INTEGRITY_INTERVAL_HOURS`, `SECURITY_AUDIT_INTERVAL_MINUTES`, `PATREON_SWEEP_INTERVAL_MINUTES`, `MOD_METRICS_INTERVAL_MINUTES`, `LOOP_LAG_WARN_P99_MS`, `RETENTION_ENABLED`. The example file now defaults `LOG_LEVEL` to `info` and the Sentry trace rate to 0.05.
+- Dropped the unused `@google-cloud/vision` and `adapter-auto` dependencies; `@types/node` moved to dev dependencies (#00266).
+
+### Fixed
+
+- The dashboard modmail filter is whitelisted and bound as a parameter (#00267).
+
+### Tests
+
+- The suite runs against a per-worker temporary database seeded from the fixture schema instead of `data/data.db` (#00274).
 
 ## [6.1.0] - 2026-08-29
 
