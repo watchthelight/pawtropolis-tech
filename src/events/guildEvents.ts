@@ -38,6 +38,23 @@ import * as archive from "../features/messageArchive.js";
 import { handleInviteCreate, handleInviteDelete } from "../features/inviteTracker.js";
 import { handleItemRoleAdded } from "../features/inventory/capture.js";
 import { handlePatreonArtRewards } from "../features/patreonArtRewards.js";
+// Member join/leave handlers, imported statically: they used to be `await import()`ed on
+// every join and leave although the modules are resident after boot.
+import { clearPanicCache } from "../features/panicStore.js";
+import { clearConfigCache } from "../lib/config.js";
+import { clearLoggingCache } from "../config/loggingStore.js";
+import { clearFlaggerCache } from "../config/flaggerStore.js";
+import { cacheUser } from "../lib/userCache.js";
+import { trackJoin, trackLeave } from "../features/activityTracker.js";
+import { handleMemberJoin as scanAvatarOnJoin } from "../features/avatarNsfwMonitor.js";
+import { trackMemberInvite } from "../features/inviteTracker.js";
+import {
+  handleMemberJoin as openVerifyThreadOnJoin,
+  cleanupVerifyThreadForUser,
+} from "../features/gate/threadGate.js";
+import { snapshotMemberRoles, classifyRemoval } from "../features/roleSnapshot.js";
+import { cleanupSession } from "../features/gate/dmVerification.js";
+import { ensureReviewMessage } from "../features/review/card.js";
 
 export function registerGuildEvents(client: Client): void {
 client.on("guildCreate", wrapEvent("guildCreate", async (guild) => {
@@ -67,11 +84,6 @@ client.on("guildDelete", wrapEvent("guildDelete", async (guild) => {
   // WHY: Prevents unbounded memory growth from accumulating stale entries
   // NOTE: DB rows are preserved in case bot rejoins the guild
   try {
-    const { clearPanicCache } = await import("../features/panicStore.js");
-    const { clearConfigCache } = await import("../lib/config.js");
-    const { clearLoggingCache } = await import("../config/loggingStore.js");
-    const { clearFlaggerCache } = await import("../config/flaggerStore.js");
-
     clearPanicCache(guild.id);
     clearConfigCache(guild.id);
     clearLoggingCache(guild.id);
@@ -99,22 +111,19 @@ client.on("guildMemberAdd", wrapEvent("guildMemberAdd", async (member) => {
 
   // Cache user identity for dashboard display
   try {
-    const { cacheUser } = await import("../lib/userCache.js");
     cacheUser(member.user, member.guild.id, member);
   } catch (err) {
     logger.debug({ err, userId: member.id }, "[guildMemberAdd] failed to cache user");
   }
 
   // Track join for Silent-Since-Join detection (PR8)
-  const { trackJoin } = await import("../features/activityTracker.js");
   const joinedAt = Math.floor((member.joinedTimestamp || Date.now()) / 1000);
   trackJoin(member.guild.id, member.id, joinedAt);
 
   // Scan avatar for NSFW content on join
   // WHY: Catch NSFW avatars immediately when members join
   try {
-    const { handleMemberJoin } = await import("../features/avatarNsfwMonitor.js");
-    await handleMemberJoin(member);
+    await scanAvatarOnJoin(member);
   } catch (err) {
     logger.error({
       err,
@@ -125,7 +134,6 @@ client.on("guildMemberAdd", wrapEvent("guildMemberAdd", async (member) => {
 
   // Track which invite the new member used (growth source attribution)
   try {
-    const { trackMemberInvite } = await import("../features/inviteTracker.js");
     await trackMemberInvite(member);
   } catch (err) {
     logger.debug({ err, userId: member.id }, "[guildMemberAdd] Invite tracking failed (non-fatal)");
@@ -136,8 +144,7 @@ client.on("guildMemberAdd", wrapEvent("guildMemberAdd", async (member) => {
   // the lobby's member sidebar). Short-circuits if verify_thread_parent_id
   // isn't configured for this guild.
   try {
-    const { handleMemberJoin } = await import("../features/gate/threadGate.js");
-    await handleMemberJoin(member);
+    await openVerifyThreadOnJoin(member);
   } catch (err) {
     logger.error(
       { err, userId: member.id, guildId: member.guild.id },
@@ -157,7 +164,6 @@ client.on("guildMemberRemove", wrapEvent("guildMemberRemove", async (member) => 
   // ROLE SNAPSHOT: capture roles before any later code runs, so a downstream
   // failure can't lose the snapshot. Audit-log classification runs async.
   try {
-    const { snapshotMemberRoles, classifyRemoval } = await import("../features/roleSnapshot.js");
     const snapshotId = snapshotMemberRoles(member);
     if (snapshotId) {
       classifyRemoval(member.guild, userId, snapshotId).catch((err) =>
@@ -169,7 +175,6 @@ client.on("guildMemberRemove", wrapEvent("guildMemberRemove", async (member) => 
   }
 
   // Clean up any active DM verification session
-  const { cleanupSession } = await import("../features/gate/dmVerification.js");
   cleanupSession(guildId, userId);
 
   // Append-only leave event (mirrors member_join): one immutable row per leave
@@ -180,7 +185,6 @@ client.on("guildMemberRemove", wrapEvent("guildMemberRemove", async (member) => 
   });
 
   // Track member departure in user_activity
-  const { trackLeave } = await import("../features/activityTracker.js");
   trackLeave(guildId, userId);
 
   // Auto-dismiss flags for departed members — no point reviewing flags for users who left/were banned
@@ -211,7 +215,6 @@ client.on("guildMemberRemove", wrapEvent("guildMemberRemove", async (member) => 
   }, "[guildMemberRemove] refreshing review cards for departed user");
 
   // Refresh each pending application's review card
-  const { ensureReviewMessage } = await import("../features/review/card.js");
   for (const app of pendingApps) {
     try {
       await ensureReviewMessage(client, app.id);
@@ -227,7 +230,6 @@ client.on("guildMemberRemove", wrapEvent("guildMemberRemove", async (member) => 
 
   // Clean up per-user verify thread if the user had one open
   try {
-    const { cleanupVerifyThreadForUser } = await import("../features/gate/threadGate.js");
     await cleanupVerifyThreadForUser(client, guildId, userId, "left_server");
   } catch (err) {
     logger.warn(

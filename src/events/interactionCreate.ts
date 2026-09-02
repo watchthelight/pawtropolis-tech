@@ -59,6 +59,31 @@ import * as help from "../commands/help/index.js";
 import * as listopen from "../commands/listopen.js";
 import * as audit from "../commands/audit.js";
 import * as isitreal from "../commands/isitreal.js";
+// Every handler below used to be loaded with `await import()` inside the click path. The
+// modules are all resident after boot, so the dynamic form only added a promise and a
+// module-map lookup to each interaction's ack window.
+import * as redeem from "../commands/redeem.js";
+import { matchErrorCardButton, handleErrorCardButton } from "../handlers/errorCardButtons.js";
+import { handleDmButton } from "../features/gate/dmVerification.js";
+import {
+  handleQotdButton,
+  handleQotdSuggestModal,
+  handleQotdRejectModal,
+} from "../features/qotd/handlers.js";
+import {
+  isIsitRealInteraction,
+  routeIsitRealInteraction,
+} from "../commands/config/isitreal.js";
+import { handleToggleApiButton } from "../commands/config/toggleapis.js";
+import { handleTicketButton, handleCloseModal } from "../features/tickets/handlers.js";
+import { handleRedeemRewardButton } from "../features/artistRotation/index.js";
+import { handleUseByteButton, handleUseByteSelectMenu } from "../features/byteTokenHandler.js";
+import {
+  handleReportResolveButton,
+  handleReportResolveModal,
+} from "../features/report/handlers.js";
+import { handleResetModal } from "../commands/gate.js";
+import { handleWelcomeBatchContextMenu } from "../commands/welcomeBatchContext.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // INTERACTION DEDUPLICATION
@@ -227,8 +252,7 @@ export function registerInteractionCreate(
             if (commandName === "help") {
               await help.handleAutocomplete(interaction);
             } else if (commandName === "redeem") {
-              const { handleAutocomplete } = await import("../commands/redeem.js");
-              await handleAutocomplete(interaction);
+              await redeem.handleAutocomplete(interaction);
             }
             return;
           }
@@ -297,7 +321,7 @@ export function registerInteractionCreate(
 
             // Error card buttons (Ping bot dev / Copy trace / Run trace).
             // Attached to every "Command Failed" embed by lib/errorCardV2.ts.
-            const errorCardMatch = (await import("../handlers/errorCardButtons.js")).matchErrorCardButton(customId);
+            const errorCardMatch = matchErrorCardButton(customId);
             if (errorCardMatch) {
               logger.info(
                 {
@@ -309,7 +333,6 @@ export function registerInteractionCreate(
                 },
                 "route: errorcard"
               );
-              const { handleErrorCardButton } = await import("../handlers/errorCardButtons.js");
               await handleErrorCardButton(interaction, errorCardMatch.action, errorCardMatch.traceId);
               return;
             }
@@ -410,7 +433,6 @@ export function registerInteractionCreate(
 
             // DM verification buttons (submit/cancel in DMs)
             if (customId.startsWith("v1:dm:")) {
-              const { handleDmButton } = await import("../features/gate/dmVerification.js");
               await handleDmButton(interaction);
               return;
             }
@@ -462,7 +484,6 @@ export function registerInteractionCreate(
                 },
                 "route: qotd button"
               );
-              const { handleQotdButton } = await import("../features/qotd/handlers.js");
               await handleQotdButton(interaction);
               return;
             }
@@ -557,7 +578,6 @@ export function registerInteractionCreate(
                 },
                 "route: isitreal config"
               );
-              const { isIsitRealInteraction, routeIsitRealInteraction } = await import("../commands/config/isitreal.js");
               if (isIsitRealInteraction(customId)) {
                 await routeIsitRealInteraction(interaction);
               }
@@ -576,7 +596,6 @@ export function registerInteractionCreate(
                 },
                 "route: toggle api"
               );
-              const { handleToggleApiButton } = await import("../commands/config/toggleapis.js");
               await handleToggleApiButton(interaction);
               return;
             }
@@ -593,7 +612,6 @@ export function registerInteractionCreate(
                 },
                 "route: tickets"
               );
-              const { handleTicketButton } = await import("../features/tickets/handlers.js");
               await handleTicketButton(interaction);
               return;
             }
@@ -610,7 +628,6 @@ export function registerInteractionCreate(
                 },
                 "route: redeem reward"
               );
-              const { handleRedeemRewardButton } = await import("../features/artistRotation/index.js");
               await handleRedeemRewardButton(interaction);
               return;
             }
@@ -627,7 +644,6 @@ export function registerInteractionCreate(
                 },
                 "route: use byte token"
               );
-              const { handleUseByteButton } = await import("../features/byteTokenHandler.js");
               await handleUseByteButton(interaction);
               return;
             }
@@ -645,7 +661,6 @@ export function registerInteractionCreate(
                 },
                 "route: report resolve"
               );
-              const { handleReportResolveButton } = await import("../features/report/handlers.js");
               await handleReportResolveButton(interaction);
               return;
             }
@@ -718,7 +733,6 @@ export function registerInteractionCreate(
                 },
                 "route: use byte token select"
               );
-              const { handleUseByteSelectMenu } = await import("../features/byteTokenHandler.js");
               await handleUseByteSelectMenu(interaction);
               return;
             }
@@ -745,7 +759,6 @@ export function registerInteractionCreate(
                 },
                 "route: ticket close modal"
               );
-              const { handleCloseModal } = await import("../features/tickets/handlers.js");
               await handleCloseModal(interaction);
               return;
             }
@@ -938,7 +951,6 @@ export function registerInteractionCreate(
                   },
                   "route: report resolve modal"
                 );
-                const { handleReportResolveModal } = await import("../features/report/handlers.js");
                 const executor = wrapCommand<ModalSubmitInteraction>(
                   "report_resolve",
                   async (commandCtx) => {
@@ -954,7 +966,6 @@ export function registerInteractionCreate(
                   { evt: "ix_route_match", kind: "modal", route: "qotd_suggest", id: customId, traceId },
                   "route: qotd suggest modal"
                 );
-                const { handleQotdSuggestModal } = await import("../features/qotd/handlers.js");
                 const executor = wrapCommand<ModalSubmitInteraction>(
                   "qotd_suggest",
                   async (commandCtx) => {
@@ -970,7 +981,6 @@ export function registerInteractionCreate(
                   { evt: "ix_route_match", kind: "modal", route: "qotd_reject", id: customId, code: route.code, traceId },
                   "route: qotd reject modal"
                 );
-                const { handleQotdRejectModal } = await import("../features/qotd/handlers.js");
                 const executor = wrapCommand<ModalSubmitInteraction>(
                   "qotd_reject",
                   async (commandCtx) => {
@@ -1004,7 +1014,6 @@ export function registerInteractionCreate(
             }
 
             if (customId.startsWith("v1:gate:reset:")) {
-              const { handleResetModal } = await import("../commands/gate.js");
               await handleResetModal(interaction);
               return;
             }
@@ -1021,7 +1030,6 @@ export function registerInteractionCreate(
                 },
                 "route: isitreal config modal"
               );
-              const { routeIsitRealInteraction } = await import("../commands/config/isitreal.js");
               await routeIsitRealInteraction(interaction);
               return;
             }
@@ -1061,7 +1069,6 @@ export function registerInteractionCreate(
                 },
                 "route: welcome batch context menu"
               );
-              const { handleWelcomeBatchContextMenu } = await import("../commands/welcomeBatchContext.js");
               await handleWelcomeBatchContextMenu(interaction);
               return;
             }
