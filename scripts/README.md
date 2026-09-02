@@ -21,6 +21,7 @@ What each script is for and where it runs. One-off scripts that finished their j
 | `scan-legacy.ts` (`npm run scan:legacy`) | Build gate that fails on `__old*` tokens. |
 | `auth-check.ts` (`npm run auth:whoami`) | Confirms the bot token and application id. |
 | `init-test-db.ts`, `gen-test-schema.ts` (`npm run gen:test-schema`) | Regenerate `tests/fixtures/schema.sql` from a real database. |
+| `gen-schema-doc.mjs` (`npm run docs:schema`) | Regenerates `docs/reference/database-schema.md` from the fixture schema. |
 | `refresh-public-stats.ts` (`npm run stats:refresh`) | Rebuilds the public stats snapshot. |
 | `register-role-metadata.ts` (`npm run linked-roles:register`) | Registers Discord linked-role metadata. |
 | `perf-baseline.py` | Aggregates `slow_transaction`, timeouts and durations from the pm2 logs into a baseline table (used for #00275). |
