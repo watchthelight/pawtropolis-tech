@@ -11,18 +11,35 @@
  */
 
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { Readable } from "node:stream";
 
 import { makeEvent } from "../_helpers/requestEvent.js";
 
-const { mockReadFile, dbRef } = vi.hoisted(() => ({
-  mockReadFile: vi.fn(),
+// The route stats the file, then streams it; both filesystem calls are mocked so the
+// tests never touch disk and the traversal guard is still proven to run before either.
+const { mockStat, mockCreateReadStream, dbRef } = vi.hoisted(() => ({
+  mockStat: vi.fn(),
+  mockCreateReadStream: vi.fn(),
   dbRef: {
     current: null as null | import("better-sqlite3").Database,
   },
 }));
 
-vi.mock("node:fs/promises", () => ({ readFile: mockReadFile }));
+vi.mock("node:fs/promises", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("node:fs/promises")>()),
+  stat: mockStat,
+}));
+vi.mock("node:fs", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("node:fs")>()),
+  createReadStream: mockCreateReadStream,
+}));
 vi.mock("$lib/server/db", () => ({ db: () => dbRef.current! }));
+
+/** Pretend `bytes` is on disk for the next request. */
+function fileOnDisk(bytes: Buffer) {
+  mockStat.mockResolvedValueOnce({ size: bytes.length });
+  mockCreateReadStream.mockReturnValueOnce(Readable.from([bytes]));
+}
 
 const { makeDb } = await import("../_helpers/db.js");
 const { GET } = await import(
@@ -41,7 +58,8 @@ beforeEach(() => {
   // enforcement so those minimal inserts succeed. (#00045 replaced the FK-free
   // MISSING_DDL ticket shims with the real schema.)
   dbRef.current.pragma("foreign_keys = OFF");
-  mockReadFile.mockReset();
+  mockStat.mockReset();
+  mockCreateReadStream.mockReset();
 });
 
 afterAll(() => {
@@ -119,7 +137,7 @@ describe("GET /api/tickets/[ticketId]/attachments/[attachmentId]", () => {
   it("200 viewer can view non-report attachment", async () => {
     seedTicket({ typeKey: "support" });
     seedAttachment({});
-    mockReadFile.mockResolvedValueOnce(Buffer.from("hello"));
+    fileOnDisk(Buffer.from("hello"));
     const res = await GET(evt(viewerUser));
     expect(res.status).toBe(200);
   });
@@ -128,7 +146,7 @@ describe("GET /api/tickets/[ticketId]/attachments/[attachmentId]", () => {
     seedTicket({ typeKey: "report-user" });
     seedAttachment({});
     await expect(GET(evt(viewerUser))).rejects.toMatchObject({ status: 403 });
-    expect(mockReadFile).not.toHaveBeenCalled();
+    expect(mockStat).not.toHaveBeenCalled();
   });
 
   it("403 viewer denied report-staff attachment", async () => {
@@ -140,7 +158,7 @@ describe("GET /api/tickets/[ticketId]/attachments/[attachmentId]", () => {
   it("200 mod can view report-user attachment", async () => {
     seedTicket({ typeKey: "report-user" });
     seedAttachment({});
-    mockReadFile.mockResolvedValueOnce(Buffer.from("hello"));
+    fileOnDisk(Buffer.from("hello"));
     const res = await GET(evt(modUser));
     expect(res.status).toBe(200);
   });
@@ -149,31 +167,34 @@ describe("GET /api/tickets/[ticketId]/attachments/[attachmentId]", () => {
     seedTicket({});
     seedAttachment({ local_path: null });
     await expect(GET(evt(viewerUser))).rejects.toMatchObject({ status: 410 });
-    expect(mockReadFile).not.toHaveBeenCalled();
+    expect(mockStat).not.toHaveBeenCalled();
   });
 
-  it("404 when local_path escapes ATTACHMENTS_ROOT (path traversal blocked BEFORE readFile)", async () => {
+  it("404 when local_path escapes ATTACHMENTS_ROOT (path traversal blocked BEFORE any disk access)", async () => {
     seedTicket({});
     seedAttachment({ local_path: "../../etc/passwd" });
     await expect(GET(evt(viewerUser))).rejects.toMatchObject({ status: 404 });
-    expect(mockReadFile).not.toHaveBeenCalled();
+    expect(mockStat).not.toHaveBeenCalled();
+    expect(mockCreateReadStream).not.toHaveBeenCalled();
   });
 
-  it("404 when readFile throws (file missing on disk)", async () => {
+  it("404 when stat throws (file missing on disk)", async () => {
     seedTicket({});
     seedAttachment({});
-    mockReadFile.mockRejectedValueOnce(new Error("ENOENT"));
+    mockStat.mockRejectedValueOnce(new Error("ENOENT"));
     await expect(GET(evt(viewerUser))).rejects.toMatchObject({ status: 404 });
-    expect(mockReadFile).toHaveBeenCalledTimes(1);
+    expect(mockStat).toHaveBeenCalledTimes(1);
+    expect(mockCreateReadStream).not.toHaveBeenCalled();
   });
 
-  it("200 happy path returns bytes with mime + private cache header", async () => {
+  it("200 happy path streams bytes with mime, length and private cache header", async () => {
     seedTicket({});
     seedAttachment({ mime: "image/png", filename: "shot.png" });
-    mockReadFile.mockResolvedValueOnce(Buffer.from("pixels"));
+    fileOnDisk(Buffer.from("pixels"));
     const res = await GET(evt(viewerUser));
     expect(res.status).toBe(200);
     expect(res.headers.get("Content-Type")).toBe("image/png");
+    expect(res.headers.get("Content-Length")).toBe("6");
     expect(res.headers.get("Cache-Control")).toBe("private, max-age=3600");
     const text = await res.text();
     expect(text).toBe("pixels");
@@ -182,7 +203,7 @@ describe("GET /api/tickets/[ticketId]/attachments/[attachmentId]", () => {
   it("200 with mime=null falls back to application/octet-stream", async () => {
     seedTicket({});
     seedAttachment({ mime: null });
-    mockReadFile.mockResolvedValueOnce(Buffer.from("x"));
+    fileOnDisk(Buffer.from("x"));
     const res = await GET(evt(viewerUser));
     expect(res.headers.get("Content-Type")).toBe("application/octet-stream");
   });
@@ -190,7 +211,7 @@ describe("GET /api/tickets/[ticketId]/attachments/[attachmentId]", () => {
   it("200 URL-encodes filename in Content-Disposition", async () => {
     seedTicket({});
     seedAttachment({ filename: "weird name & sym.png" });
-    mockReadFile.mockResolvedValueOnce(Buffer.from("x"));
+    fileOnDisk(Buffer.from("x"));
     const res = await GET(evt(viewerUser));
     const disp = res.headers.get("Content-Disposition") ?? "";
     expect(disp).toMatch(/^inline; filename="/);

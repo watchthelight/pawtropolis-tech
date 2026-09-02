@@ -15,8 +15,10 @@
 import { error } from "@sveltejs/kit";
 import { db } from "$lib/server/db";
 import { hasMinTier } from "$lib/server/roles";
-import { readFile } from "node:fs/promises";
+import { createReadStream } from "node:fs";
+import { stat } from "node:fs/promises";
 import { join, normalize, sep } from "node:path";
+import { Readable } from "node:stream";
 import type { RequestHandler } from "./$types";
 
 const ATTACHMENTS_ROOT = join(process.cwd(), "data", "ticket-attachments");
@@ -73,18 +75,21 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     error(404, "Bad attachment path");
   }
 
-  let buf: Buffer;
+  // Streamed rather than read into memory: attachments run to tens of megabytes and a
+  // few concurrent downloads would otherwise hold all of them in the web process at once.
+  let size: number;
   try {
-    buf = await readFile(fullPath);
+    size = (await stat(fullPath)).size;
   } catch {
     error(404, "File missing on disk");
   }
 
-  const arrayBuf = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer;
+  const body = Readable.toWeb(createReadStream(fullPath)) as ReadableStream;
 
-  return new Response(arrayBuf, {
+  return new Response(body, {
     headers: {
       "Content-Type": row.mime ?? "application/octet-stream",
+      "Content-Length": String(size),
       "Content-Disposition": `inline; filename="${encodeURIComponent(row.filename)}"`,
       "Cache-Control": "private, max-age=3600",
     },
