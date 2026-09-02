@@ -2,11 +2,36 @@
 
 All changes to Pawtropolis Tech are tracked here.
 
-**Versions:** [Unreleased](#unreleased) | [6.2.0](#620---2026-09-01) | [6.1.0](#610---2026-08-29) | [6.0.0](#600---2026-05-15) | [5.2.0](#520---2026-05-02) | [5.1.1](#511---2026-01-27) | [5.1.0](#510---2026-01-17) | [5.0.0](#500---2026-01-12) | [4.9.2](#492---2026-01-07) | [4.9.1](#491---2026-01-07) | [4.9.0](#490---2026-01-04) | [4.8.0](#480---2025-12-08) | [4.7.1](#471---2025-12-03) | [4.7.0](#470---2025-12-03) | [4.6.0](#460---2025-12-03) | [4.5.0](#450---2025-12-02) | [4.4.4](#444---2025-12-03) | [4.4.3](#443---2025-12-03) | [4.4.2](#442---2025-12-03) | [4.4.1](#441---2025-12-03) | [4.4.0](#440---2025-12-03) | [4.3.0](#430---2025-12-02) | [4.2.0](#420---2025-12-01) | [4.1.0](#410---2025-12-01) | [4.0.3](#403---2025-12-01) | [4.0.2](#402---2025-12-01) | [4.0.1](#401---2025-12-01) | [4.0.0](#400---2025-12-01) | [Earlier versions](#earlier-versions)
+**Versions:** [Unreleased](#unreleased) | [6.2.1](#621---2026-09-02) | [6.2.0](#620---2026-09-01) | [6.1.0](#610---2026-08-29) | [6.0.0](#600---2026-05-15) | [5.2.0](#520---2026-05-02) | [5.1.1](#511---2026-01-27) | [5.1.0](#510---2026-01-17) | [5.0.0](#500---2026-01-12) | [4.9.2](#492---2026-01-07) | [4.9.1](#491---2026-01-07) | [4.9.0](#490---2026-01-04) | [4.8.0](#480---2025-12-08) | [4.7.1](#471---2025-12-03) | [4.7.0](#470---2025-12-03) | [4.6.0](#460---2025-12-03) | [4.5.0](#450---2025-12-02) | [4.4.4](#444---2025-12-03) | [4.4.3](#443---2025-12-03) | [4.4.2](#442---2025-12-03) | [4.4.1](#441---2025-12-03) | [4.4.0](#440---2025-12-03) | [4.3.0](#430---2025-12-02) | [4.2.0](#420---2025-12-01) | [4.1.0](#410---2025-12-01) | [4.0.3](#403---2025-12-01) | [4.0.2](#402---2025-12-01) | [4.0.1](#401---2025-12-01) | [4.0.0](#400---2025-12-01) | [Earlier versions](#earlier-versions)
 
 ## [Unreleased]
 
 Nothing yet.
+
+## [6.2.1] - 2026-09-02
+
+Housekeeping release after the 6.2.0 performance pass: dead code out, documentation checked against the code by tests, the dashboard config editor completed.
+
+### Added
+
+- Dashboard config editor covers every column the bot accepts: QOTD review channel and role, verify thread parent, unverified rules channel, level reward DMs, pulse excluded categories and the vote-out threshold (#00273).
+- Documentation parity tests under `tests/docs/`: handbook and command reference against the registered commands, permission matrix against `roles.ts`, both env example files against the variables the code reads, and the config editor against the bot's allowlist (#00272).
+- `npm run knip` dead-code report, also a soft CI step; `npm run docs:schema` regenerates the database schema reference from the fixture schema (#00271, #00272).
+- Handbook sections for `/modmail`, `/movie`, `/event`, `/attendance` and `/resetprofile`; permission matrix rows for `/attendance`, `/modmail` and `/resetprofile` (#00272).
+
+### Changed
+
+- Google Vision pauses avatar scans for six hours after a 403 or 429 instead of failing every member join (#00275).
+- The public handbook page no longer shifts its layout when the Inter web font loads (#00275).
+- `.env.example` documents every variable the bot reads (38 operator knobs were missing) and drops five keys nothing read; `web/.env.example` gains the twelve dashboard keys it lacked (#00272).
+- README, deployment and troubleshooting docs describe the current deploy flow, the operator knobs, backup pruning, the VACUUM procedure and how to read the performance log events (#00272).
+
+### Removed
+
+- 196 unused exports and 103 unused types across 60 files, found by knip and confirmed by `tsc` (#00271).
+- 20 finished one-off scripts; `scripts/README.md` indexes what remains (#00271).
+- The `pawtropolis-backfill` pm2 app, whose run completed (#00276).
+- Generated documentation snapshots from March to June (moved to `docs/_archive/2026-scan/`) and the tracked `graphify-out`, `_charts_out`, `charts` and `design_handoff` output directories (#00272, #00261).
 
 ## [6.2.0] - 2026-09-01
 
