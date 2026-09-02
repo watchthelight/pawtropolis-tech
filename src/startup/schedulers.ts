@@ -177,6 +177,18 @@ export async function startSchedulers(client: Client): Promise<void> {
     },
     { level: "warn" },
   );
+
+  // Retention: hourly FTS catch-up, daily optimize and (flag-gated) expired-row pruning
+  await runStartupTask(
+    "scheduler_retention",
+    async () => {
+      const { startRetentionScheduler } = await import(
+        "../scheduler/retentionScheduler.js"
+      );
+      startRetentionScheduler();
+    },
+    { level: "warn" },
+  );
 }
 
 /**
@@ -244,4 +256,9 @@ export async function stopSchedulers(): Promise<void> {
     "../scheduler/dbIntegrityScheduler.js"
   );
   stopDbIntegrityScheduler();
+
+  const { stopRetentionScheduler } = await import(
+    "../scheduler/retentionScheduler.js"
+  );
+  stopRetentionScheduler();
 }
