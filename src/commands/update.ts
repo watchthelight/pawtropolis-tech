@@ -27,7 +27,6 @@ import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
 import { logger } from "../lib/logger.js";
-import sharp from "sharp";
 
 /**
  * Commit and push asset changes to GitHub
@@ -377,6 +376,10 @@ async function handleBannerUpdate(ctx: CommandContext<ChatInputCommandInteractio
 
   // Process into two formats: PNG for Discord API, WebP for web embeds
   const [pngBuffer, webpBuffer] = await withStep(ctx, "process_images", async () => {
+    // sharp is a native module used only here; loading it on demand keeps it out of the
+    // bot's boot path and resident memory.
+    const { default: sharp } = await import("sharp");
+
     // PNG: Full quality for Discord's profile banner endpoint.
     // Discord will re-encode anyway, but starting with lossless gives best results.
     const png = await sharp(imageBuffer).png({ quality: 100, compressionLevel: 6 }).toBuffer();
@@ -515,6 +518,7 @@ async function handleAvatarUpdate(ctx: CommandContext<ChatInputCommandInteractio
 
     // Discord avatars are displayed as circles, so we crop to square from center.
     // 1024x1024 is Discord's max avatar resolution.
+    const { default: sharp } = await import("sharp");
     const png = await sharp(imageBuffer)
       .resize({ width: 1024, height: 1024, fit: "cover", position: "center" })
       .png({ quality: 100, compressionLevel: 6 })

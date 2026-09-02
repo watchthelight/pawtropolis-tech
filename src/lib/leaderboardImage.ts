@@ -7,7 +7,7 @@
 
 // node-canvas: Native canvas bindings for server-side rendering.
 // Requires system libs (cairo, pango) - see README for install instructions.
-import { createCanvas, CanvasRenderingContext2D } from "canvas";
+import type { CanvasRenderingContext2D } from "canvas";
 
 // ============================================================================
 // Types
@@ -312,6 +312,9 @@ export async function generateLeaderboardImage(stats: ModStats[]): Promise<Buffe
   const paddingY = CONFIG.basePaddingY * s;
   const height = paddingY + headerHeight + rowHeight * stats.length + paddingY;
 
+  // canvas is a native module used only by this command; loading it here keeps it out
+  // of the bot's boot path and resident memory until a leaderboard is actually drawn.
+  const { createCanvas } = await import("canvas");
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
 

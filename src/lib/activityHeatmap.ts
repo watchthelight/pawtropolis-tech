@@ -8,7 +8,7 @@
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
-import { createCanvas, type CanvasRenderingContext2D } from 'canvas';
+import type { CanvasRenderingContext2D } from 'canvas';
 import { writeFile } from 'fs/promises';
 import { logger } from './logger.js';
 import { db } from '../db/db.js';
@@ -395,6 +395,9 @@ export async function generateHeatmap(
 
   const totalHeight = cfg.padding.top + allWeeksHeight + legendHeight + cfg.padding.bottom;
 
+  // canvas is a native module used only by the stats commands; loading it here keeps it
+  // out of the bot's boot path and resident memory until a heatmap is actually drawn.
+  const { createCanvas } = await import('canvas');
   const canvas = createCanvas(cfg.width, totalHeight);
   const ctx = canvas.getContext('2d');
 
