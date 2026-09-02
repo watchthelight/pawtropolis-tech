@@ -117,7 +117,17 @@ function extraItems(guildId: string): CatalogItem[] {
  * Later entries win on roleId collision, so inventory_extra_roles_json can override the
  * display name or policy of a built-in ticket or token role.
  */
+// Keyed by the cached GuildConfig object: getConfig hands out the same object until a
+// config write or the cache TTL replaces it, and every input to the catalog comes from
+// that row. handleItemRoleAdded calls getItemByRoleId once per role on every member
+// update, which re-parsed the config JSON each time without this.
+const catalogByConfig = new WeakMap<object, CatalogItem[]>();
+
 export function getItemCatalog(guildId: string): CatalogItem[] {
+  const cfg = getConfig(guildId);
+  const cached = cfg ? catalogByConfig.get(cfg) : undefined;
+  if (cached) return cached;
+
   const byRole = new Map<string, CatalogItem>();
 
   const ticketRoles = getTicketRoles(guildId);
@@ -146,7 +156,9 @@ export function getItemCatalog(guildId: string): CatalogItem[] {
     byRole.set(item.roleId, item);
   }
 
-  return [...byRole.values()];
+  const items = [...byRole.values()];
+  if (cfg) catalogByConfig.set(cfg, items);
+  return items;
 }
 
 export function getItemByRoleId(guildId: string, roleId: string): CatalogItem | null {

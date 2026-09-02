@@ -34,22 +34,22 @@ const DEFAULT_EVENT_TIMEOUT_MS = parseInt(process.env.EVENT_TIMEOUT_MS ?? "10000
  * Infer the feature from an event name.
  * Used to set the feature field in wide events.
  */
-function inferFeatureFromEvent(eventName: string): string | null {
-  // Map common events to features
-  const eventFeatureMap: Record<string, string> = {
-    guildMemberAdd: "gate",
-    guildMemberUpdate: "member",
-    messageCreate: "message",
-    messageDelete: "message",
-    messageUpdate: "message",
-    interactionCreate: "interaction",
-    guildCreate: "guild",
-    guildDelete: "guild",
-    userUpdate: "user",
-    presenceUpdate: "presence",
-  };
+// Map common events to features
+const EVENT_FEATURE_MAP: Record<string, string> = {
+  guildMemberAdd: "gate",
+  guildMemberUpdate: "member",
+  messageCreate: "message",
+  messageDelete: "message",
+  messageUpdate: "message",
+  interactionCreate: "interaction",
+  guildCreate: "guild",
+  guildDelete: "guild",
+  userUpdate: "user",
+  presenceUpdate: "presence",
+};
 
-  return eventFeatureMap[eventName] ?? null;
+function inferFeatureFromEvent(eventName: string): string | null {
+  return EVENT_FEATURE_MAP[eventName] ?? null;
 }
 
 /**
@@ -111,7 +111,7 @@ export function wrapEvent<T extends unknown[]>(
       await runWithCtx({ traceId, kind: "event", wideEvent }, async () => {
         // The timer must not outlive the handler: an uncleared 10s timeout keeps the
         // handler args (full Message / GuildMember objects) reachable for every event.
-        let timer: NodeJS.Timeout | undefined;
+        let timer: ReturnType<typeof setTimeout> | undefined;
         try {
           await Promise.race([
             handler(...args),

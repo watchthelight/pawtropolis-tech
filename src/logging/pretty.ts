@@ -117,10 +117,14 @@ interface ActionMeta {
  * WHAT: Get display metadata for each action type.
  * WHY: Consistent colors, titles, and emojis across logging embeds.
  */
+let ACTION_META: Record<ActionType, ActionMeta> | null = null;
+
 function getActionMeta(action: ActionType): ActionMeta {
-  // GOTCHA: This object is recreated on every call. Could be a const at module level,
-  // but the performance hit is negligible and this keeps it close to the function.
-  // If you're processing 10,000 actions per second, you have bigger problems.
+  ACTION_META ??= buildActionMeta();
+  return ACTION_META[action];
+}
+
+function buildActionMeta(): Record<ActionType, ActionMeta> {
   const meta: Record<ActionType, ActionMeta> = {
     app_submitted: {
       title: "Application Submitted",
@@ -454,7 +458,7 @@ function getActionMeta(action: ActionType): ActionMeta {
   // TypeScript guarantees exhaustiveness here since meta is Record<ActionType, ActionMeta>.
   // If you add a new ActionType but forget the meta entry, TypeScript will scream at you.
   // That's the whole point of this pattern.
-  return meta[action];
+  return meta;
 }
 
 /**

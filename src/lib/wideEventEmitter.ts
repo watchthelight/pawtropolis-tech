@@ -56,26 +56,43 @@ import { storeTrace } from "./traceStore.js";
 // Default 10% sampling for successful requests, configurable via env
 const DEFAULT_SAMPLE_RATE = 0.1;
 
+// Both settings are re-parsed only when the raw env string changes (tests flip them per
+// case); every emitted event used to parse and validate them again.
+let sampleRateRaw: string | undefined;
+let sampleRate = DEFAULT_SAMPLE_RATE;
+
 function getSampleRate(): number {
   const envRate = process.env.WIDE_EVENT_SAMPLE_RATE;
-  if (!envRate) return DEFAULT_SAMPLE_RATE;
+  if (envRate === sampleRateRaw) return sampleRate;
+  sampleRateRaw = envRate;
 
+  if (!envRate) {
+    sampleRate = DEFAULT_SAMPLE_RATE;
+    return sampleRate;
+  }
   const parsed = parseFloat(envRate);
   if (isNaN(parsed) || parsed < 0 || parsed > 1) {
     logger.warn(
       { envRate, defaultRate: DEFAULT_SAMPLE_RATE },
       "[wideEvent] Invalid WIDE_EVENT_SAMPLE_RATE, using default"
     );
-    return DEFAULT_SAMPLE_RATE;
+    sampleRate = DEFAULT_SAMPLE_RATE;
+    return sampleRate;
   }
-  return parsed;
+  sampleRate = parsed;
+  return sampleRate;
 }
 
+let enabledRaw: string | undefined;
+let enabled = true;
+
 function isEnabled(): boolean {
-  const enabled = process.env.WIDE_EVENT_ENABLED;
+  const raw = process.env.WIDE_EVENT_ENABLED;
+  if (raw === enabledRaw) return enabled;
+  enabledRaw = raw;
   // Default to enabled
-  if (!enabled) return true;
-  return enabled.toLowerCase() !== "false" && enabled !== "0";
+  enabled = !raw || (raw.toLowerCase() !== "false" && raw !== "0");
+  return enabled;
 }
 
 // ===== Sampling Logic =====

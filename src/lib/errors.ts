@@ -278,19 +278,19 @@ export function isRecoverable(err: ClassifiedError): boolean {
  *
  * If you're getting paged at 3am for 10062 errors, add them here.
  */
+// Expected/common Discord API errors: operational, not bugs. Logged, never alerted on.
+const IGNORED_DISCORD_CODES = new Set([
+  10062, // Unknown interaction (expired, 3s timeout) - VERY common
+  40060, // Interaction already acknowledged - harmless race
+  10008, // Unknown message (deleted before we could act)
+  10003, // Unknown channel (deleted channel)
+  50013, // Missing permissions (guild admin changed bot perms)
+]);
+
 export function shouldReportToSentry(err: ClassifiedError): boolean {
   switch (err.kind) {
     case "discord_api":
-      // Ignore expected/common Discord API errors - these are operational,
-      // not bugs. We log them for debugging but don't alert on them.
-      const ignoredCodes = [
-        10062, // Unknown interaction (expired, 3s timeout) - VERY common
-        40060, // Interaction already acknowledged - harmless race
-        10008, // Unknown message (deleted before we could act)
-        10003, // Unknown channel (deleted channel)
-        50013, // Missing permissions (guild admin changed bot perms)
-      ];
-      return !ignoredCodes.includes(err.code);
+      return !IGNORED_DISCORD_CODES.has(err.code);
 
     case "network":
       return false; // Transient, don't spam Sentry
