@@ -121,14 +121,29 @@ function wrapStatement(statement: Database.Statement, sql: string): Database.Sta
 // Tagged with evt:"slow_transaction" so jq pipelines can grep cleanly.
 const SLOW_TX_THRESHOLD_MS = 50;
 const originalTransaction = db.transaction.bind(db);
+
+// Nearly every transaction in the tree is an anonymous arrow, so the slow log used to say
+// "(anonymous)" for all of them. The call site is captured once, when the transaction is
+// created, from the first stack frame outside this file.
+function transactionSite(): string {
+  const frames = new Error().stack?.split("\n") ?? [];
+  for (const frame of frames.slice(2)) {
+    if (frame.includes("db/db.") || frame.includes("node:internal")) continue;
+    const match = /\(?([^\s()]+):(\d+):\d+\)?\s*$/.exec(frame);
+    if (match) return `${match[1]!.replace(/\\/g, "/").split("/").slice(-2).join("/")}:${match[2]}`;
+  }
+  return "(anonymous)";
+}
+
 (db as any).transaction = function timedTransaction<T>(fn: (...args: any[]) => T) {
+  const site = fn.name || transactionSite();
   const wrapped = originalTransaction((...args: any[]) => {
     const start = performance.now();
     const result = fn(...args);
     const elapsed = performance.now() - start;
     if (elapsed > SLOW_TX_THRESHOLD_MS) {
       logger.warn(
-        { evt: "slow_transaction", elapsedMs: Math.round(elapsed), fn: fn.name || "(anonymous)" },
+        { evt: "slow_transaction", elapsedMs: Math.round(elapsed), fn: site },
         "[db] Slow transaction detected"
       );
     }
