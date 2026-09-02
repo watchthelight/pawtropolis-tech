@@ -39,7 +39,9 @@ export function getModmailThreads(
   statusFilter: "open" | "closed" | "all" = "all",
   limit = 50
 ): ModmailListItem[] {
-  const statusClause = statusFilter === "all" ? "" : `AND t.status = '${statusFilter}'`;
+  // Bound as a parameter rather than interpolated so the value can never reach SQL as text.
+  const statusClause = statusFilter === "all" ? "" : "AND t.status = ?";
+  const params: unknown[] = statusFilter === "all" ? [guildId, limit] : [guildId, statusFilter, limit];
 
   const rows = db()
     .prepare(
@@ -71,7 +73,7 @@ export function getModmailThreads(
 		LIMIT ?
 	`
     )
-    .all(guildId, limit) as ListRow[];
+    .all(...params) as ListRow[];
 
   return rows.map((row) => ({
     id: row.id,

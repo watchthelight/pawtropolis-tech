@@ -11,15 +11,20 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
   if (!process.env.GUILD_ID) throw new Error("GUILD_ID environment variable is required");
 
   const guildId = process.env.GUILD_ID;
-  const filter = (url.searchParams.get("filter") ?? "all") as "open" | "closed" | "all";
+  // The filter is user input and reaches SQL; only the three known values pass through.
+  const rawFilter = url.searchParams.get("filter") ?? "all";
+  const filter: "open" | "closed" | "all" =
+    rawFilter === "open" || rawFilter === "closed" ? rawFilter : "all";
   // Recomputed on every modmail navigation; short TTL collapses the repeated
   // per-ticket lookups. Modmail mutations bust the cache via the SSE webhook.
-  const threads = await cached(
+  const { threads, stats } = await cached(
     cacheKey(["modmail:threads", guildId, filter]),
     CACHE_TTL.short,
-    () => getModmailThreads(guildId, filter)
+    () => ({
+      threads: getModmailThreads(guildId, filter),
+      stats: getModmailStats(guildId),
+    })
   );
-  const stats = getModmailStats(guildId);
 
   return { threads, stats, filter };
 };
