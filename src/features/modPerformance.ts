@@ -22,7 +22,7 @@ import { LRUCache } from "../lib/lruCache.js";
  * If you add new mod actions to action_log, remember to add them here too
  * or they won't show up in performance metrics.
  */
-export const MOD_ACTIONS = new Set([
+const MOD_ACTIONS = new Set([
   "claim",
   "approve",
   "reject",

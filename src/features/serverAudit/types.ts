@@ -18,7 +18,7 @@ import type {
 import type { SnapshotDiff } from "../securityDiff.js";
 
 // All permission flags we care about for the matrix
-export const PERMISSION_FLAGS = [
+const PERMISSION_FLAGS = [
   "Administrator",
   "ManageGuild",
   "ManageRoles",

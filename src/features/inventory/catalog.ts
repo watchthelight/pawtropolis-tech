@@ -20,7 +20,7 @@ import { getTicketRoles, ART_TYPE_DISPLAY } from "../artistRotation/constants.js
 import type { ArtType } from "../artistRotation/constants.js";
 import { BYTE_TOKEN_CONFIG } from "../../constants/byteTokens.js";
 
-export type ItemSource = "art" | "byte" | "extra";
+type ItemSource = "art" | "byte" | "extra";
 
 /**
  * once_per_key: the grant counts once per grant key, ever. For reward bots that re-sync

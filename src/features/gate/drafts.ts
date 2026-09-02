@@ -35,7 +35,7 @@ const INPUT_MAX_LENGTH = 1000;
  * WHAT: Get the max character length for gate answers
  * WHY: Now configurable via /config set gate_answer_length (100-4000)
  */
-export function getAnswerMaxLength(guildId: string): number {
+function getAnswerMaxLength(guildId: string): number {
   const cfg = getConfig(guildId);
   return cfg?.gate_answer_max_length ?? DEFAULT_ANSWER_MAX_LENGTH;
 }

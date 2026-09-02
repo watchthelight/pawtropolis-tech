@@ -50,19 +50,6 @@ export interface LevelReward {
   role_name: string;
 }
 
-export interface RoleAssignment {
-  id: number;
-  guild_id: string;
-  user_id: string;
-  role_id: string;
-  role_name: string | null;
-  action: "add" | "remove" | "skipped";
-  reason: string | null;
-  triggered_by: string;
-  details: string | null;
-  created_at: number;
-}
-
 // ============================================================================
 // Permission & Hierarchy Checks
 // ============================================================================

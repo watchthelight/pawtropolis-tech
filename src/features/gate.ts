@@ -16,10 +16,10 @@ export { BRAND_COLOR } from "./gate/constants.js";
 export { queueAvatarScan } from "./gate/scan.js";
 export {
   buildGateEntryPayload,
-  findExistingGateEntry,
+  
   ensureGateEntry,
   ensureGateEntryStartup,
   refreshGateEntry,
-  type EnsureGateEntryResult,
+  
 } from "./gate/entryPanel.js";
 export { handleStartButton, handleGateModalSubmit, handleDoneButton } from "./gate/handlers.js";

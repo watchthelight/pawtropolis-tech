@@ -66,7 +66,7 @@ export function getCurrentBannerURL(): string | null {
  *  - force: Skip rate limiting (default: false)
  * RETURNS: Promise<void>
  */
-export async function syncBannerFromGuild(
+async function syncBannerFromGuild(
   client: Client,
   guild: Guild,
   force = false

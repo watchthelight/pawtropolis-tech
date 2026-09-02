@@ -24,10 +24,6 @@ type Session = {
 
 const sessions = new Map<string, Session>();
 
-export function isSessionActive(guildId: string): boolean {
-  return sessions.has(guildId);
-}
-
 export function getSessionStatus(guildId: string): {
   active: boolean;
   openedBy?: string;

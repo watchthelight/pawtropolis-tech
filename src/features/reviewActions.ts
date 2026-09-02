@@ -20,10 +20,9 @@ import { db } from "../db/db.js";
 import { logger } from "../lib/logger.js";
 import { nowUtc } from "../lib/time.js";
 import { isPanicMode } from "./panicStore.js";
-import type { ReviewClaimRow } from "./review/types.js";
 
 // Re-export for backward compatibility
-export type { ReviewClaimRow };
+;
 
 /**
  * ClaimError - Typed errors for claim/unclaim operations
@@ -196,66 +195,3 @@ export function unclaimTx(appId: string, moderatorId: string, guildId: string): 
   })();
 }
 
-/**
- * getClaim
- * WHAT: Retrieve current claim for an application (non-transactional read)
- * WHY: Check claim status without acquiring locks
- * PARAMS:
- *  - appId: Application ID
- * RETURNS: ReviewClaimRow or null if not claimed
- */
-export function getClaim(appId: string): ReviewClaimRow | null {
-  const row = db
-    .prepare("SELECT app_id, reviewer_id, claimed_at FROM review_claim WHERE app_id = ?")
-    .get(appId) as ReviewClaimRow | undefined;
-
-  return row || null;
-}
-
-/**
- * clearClaim
- * WHAT: Force-remove a claim without ownership validation (admin function)
- * WHY: Allow admins to reset stuck claims
- * PARAMS:
- *  - appId: Application ID
- * RETURNS: boolean - true if claim was removed, false if no claim existed
- * WARNING: This bypasses ownership checks. Use with caution.
- */
-export function clearClaim(appId: string): boolean {
-  const result = db.prepare("DELETE FROM review_claim WHERE app_id = ?").run(appId);
-
-  if (result.changes > 0) {
-    logger.info({ appId, changes: result.changes }, "[reviewActions] clearClaim: claim removed (admin override)");
-    return true;
-  }
-
-  logger.debug({ appId }, "[reviewActions] clearClaim: no claim to remove");
-  return false;
-}
-
-/**
- * claimGuard
- * WHAT: Validate claim ownership for user actions
- * WHY: Reusable guard for button interactions and slash commands
- * PARAMS:
- *  - claim: Current claim record (or null if unclaimed)
- *  - userId: User ID attempting action
- * RETURNS: Error message string or null if authorized
- * USAGE:
- *  const errorMsg = claimGuard(claim, interaction.user.id);
- *  if (errorMsg) return interaction.reply({ content: errorMsg, flags: MessageFlags.Ephemeral });
- */
-// Guard function for button handlers. Returns error message if user can't act, null if authorized.
-// Usage pattern: const err = claimGuard(claim, user.id); if (err) return reply(err);
-// Returns user-facing Discord markdown - the <@id> syntax renders as a clickable mention.
-export function claimGuard(claim: ReviewClaimRow | null, userId: string): string | null {
-  if (!claim) {
-    return "❌ This application is not claimed. Use the **Claim Application** button first.";
-  }
-
-  if (claim.reviewer_id !== userId) {
-    return `❌ This application is claimed by <@${claim.reviewer_id}>. You cannot modify it.`;
-  }
-
-  return null;
-}

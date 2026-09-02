@@ -30,7 +30,7 @@ import { logger } from "../lib/logger.js";
  * @param guildId - Discord guild ID
  * @returns Date object representing epoch start time, or null if no epoch set
  */
-export function getMetricsEpoch(guildId: string): Date | null {
+function getMetricsEpoch(guildId: string): Date | null {
   try {
     const row = db.prepare(`SELECT start_at FROM metrics_epoch WHERE guild_id = ?`).get(guildId) as
       | { start_at: string }

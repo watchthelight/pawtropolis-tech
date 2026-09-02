@@ -10,7 +10,7 @@
  * - 'movie': Movie night - qualification based on fixed minute threshold
  * - 'game': Game night - qualification based on percentage of event duration
  */
-export type EventType = "movie" | "game";
+type EventType = "movie" | "game";
 
 /**
  * In-memory session state for a user during an active event.
@@ -69,38 +69,3 @@ export interface GameQualificationResult {
   requiredMinutes: number;
 }
 
-/**
- * Attendance record as stored in the database.
- */
-export interface AttendanceRecord {
-  id?: number;
-  guildId: string;
-  userId: string;
-  eventDate: string;
-  eventType: EventType;
-  voiceChannelId: string;
-  durationMinutes: number;
-  longestSessionMinutes: number;
-  qualified: boolean;
-  /** Event start time (ms) - used for game night percentage calculation */
-  eventStartTime?: number;
-  /** Event end time (ms) - used for game night percentage calculation */
-  eventEndTime?: number;
-  /** 'automatic' or 'manual' */
-  adjustmentType?: string;
-  /** User ID of mod who made adjustment */
-  adjustedBy?: string;
-  /** Reason for manual adjustment */
-  adjustmentReason?: string;
-  createdAt?: number;
-}
-
-/**
- * Summary statistics for a user's event attendance.
- */
-export interface AttendanceStats {
-  totalEvents: number;
-  qualifiedEvents: number;
-  totalMinutes: number;
-  eventType: EventType;
-}

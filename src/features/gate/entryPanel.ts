@@ -168,7 +168,7 @@ function isGateEntryCandidate(message: Message, botId: string | null) {
  *
  * Returns null if no gate entry found - caller will create a new one.
  */
-export async function findExistingGateEntry(channel: GuildTextBasedChannel, botId: string | null) {
+async function findExistingGateEntry(channel: GuildTextBasedChannel, botId: string | null) {
   // discord.js 14.24.x fetchPins() returns { items: Array<{ pinnedTimestamp, pinnedAt, message }>, hasMore }.
   // `items` is a plain Array — iterate directly. Do NOT call .values() on it.
   const pinned = await channel.messages.fetchPins().catch(() => null);

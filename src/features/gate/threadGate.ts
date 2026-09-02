@@ -57,7 +57,7 @@ interface VerifyThreadRow {
   resolved_at: number | null;
 }
 
-export function getVerifyThreadForUser(
+function getVerifyThreadForUser(
   guildId: string,
   userId: string
 ): VerifyThreadRow | undefined {
@@ -197,7 +197,7 @@ export async function handleMemberJoin(member: GuildMember): Promise<void> {
 // Thread creation
 // ============================================================================
 
-export async function createVerifyThreadForUser(
+async function createVerifyThreadForUser(
   member: GuildMember,
   parentChannelId: string,
   rulesChannelId: string | null

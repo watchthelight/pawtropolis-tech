@@ -47,7 +47,7 @@ export const REASON_CODES = {
   BOT_USERNAME: "bot_username",
 } as const;
 
-export type ReasonCode = typeof REASON_CODES[keyof typeof REASON_CODES];
+type ReasonCode = typeof REASON_CODES[keyof typeof REASON_CODES];
 
 export interface AuditReason {
   code: ReasonCode;

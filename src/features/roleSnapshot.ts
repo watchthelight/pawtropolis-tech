@@ -22,7 +22,7 @@ const DEDUPE_WINDOW_SEC = 5;
 // Audit log entries up to ~10s old can plausibly belong to this removal event.
 const AUDIT_LOOKUP_WINDOW_MS = 10_000;
 
-export type RemovalType = "left" | "kicked" | "banned" | "unknown";
+type RemovalType = "left" | "kicked" | "banned" | "unknown";
 
 export interface SnapshotRow {
   id: number;

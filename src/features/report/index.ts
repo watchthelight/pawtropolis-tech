@@ -48,7 +48,7 @@ export function generateReportCode(reporterId: string): string {
  * Build the report embed for display in the forum thread.
  * Shows reporter, target, reason, actions taken, and awaiting resolution status.
  */
-export function buildReportEmbed(data: ReportData): EmbedBuilder {
+function buildReportEmbed(data: ReportData): EmbedBuilder {
   const now = new Date();
 
   const embed = new EmbedBuilder()

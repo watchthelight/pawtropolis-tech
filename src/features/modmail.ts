@@ -22,57 +22,40 @@
 // ===== Re-exports from submodules =====
 
 // Re-export types
-export type {
-  ModmailTicketStatus,
-  ModmailTicket,
-  TranscriptLine,
-  ModmailMessageMap,
-  StaffToUserEmbedArgs,
-  UserToStaffEmbedArgs,
-  OpenPublicModmailThreadParams,
-  CloseModmailThreadParams,
-  ReopenModmailThreadParams,
-} from "./modmail/types.js";
+;
 
 // Re-export tickets
 export {
-  createTicket,
-  getOpenTicketByUser,
+  
+  
   getTicketByThread,
-  getTicketById,
-  findModmailTicketForApplication,
-  updateTicketThread,
-  closeTicket,
-  reopenTicket,
-  insertModmailMessage,
-  getThreadIdForDmReply,
-  getDmIdForThreadReply,
+  
+  
+  
+  
+  
+  
+  
+  
 } from "./modmail/tickets.js";
 
 // Re-export transcript functions
-export {
-  appendTranscript,
-  getTranscriptBuffer,
-  clearTranscriptBuffer,
-  formatTranscript,
-  formatContentWithAttachments,
-  flushTranscript,
-} from "./modmail/transcript.js";
+;
 
 // Re-export routing functions
 export {
   // Embed builders
-  buildStaffToUserEmbed,
-  buildUserToStaffEmbed,
+  
+  
   // Message forwarding tracking
-  isForwarded,
-  markForwarded,
+  
+  
   // Routing
   routeThreadToDm,
   routeDmToThread,
   // Inbound message handlers
-  handleInboundDmForModmail,
-  handleInboundThreadMessageForModmail,
+  
+  
 } from "./modmail/routing.js";
 
 // Re-export thread operations
@@ -83,11 +66,11 @@ export {
   hydrateOpenModmailThreadsOnStartup,
   retrofitAllGuildsOnStartup,
   retrofitModmailParentsForGuild,
-  ensureParentPermsForMods,
+  
   // Thread operations
   openPublicModmailThreadFor,
-  closeModmailThread,
-  reopenModmailThread,
+  
+  
   closeModmailForApplication,
 } from "./modmail/threads.js";
 

@@ -4,7 +4,7 @@
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
-export type QotdSuggestionStatus = "pending" | "approved" | "rejected" | "used";
+type QotdSuggestionStatus = "pending" | "approved" | "rejected" | "used";
 
 export interface QotdSuggestionRow {
   id: number;

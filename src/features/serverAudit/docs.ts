@@ -44,7 +44,7 @@ export function partitionIssues(
 // Build a See Also footer that links to the other auto-generated docs in
 // docs/internal-info/ plus the parent audit-security-flow guide. The current
 // file is excluded so each doc only links to its siblings.
-export function generateSeeAlsoFooter(currentFile: string): string {
+function generateSeeAlsoFooter(currentFile: string): string {
   const all: { file: string; description: string }[] = [
     { file: "ROLES.md", description: "full role permission matrix and staff/bot role details" },
     { file: "CHANNELS.md", description: "channel hierarchy and permission overwrites" },

@@ -31,7 +31,7 @@ function errMsg(err: unknown): string {
 /**
  * Database integrity check result
  */
-export interface DbIntegrity {
+interface DbIntegrity {
   ok: boolean;
   message: string;
   checkedAt: number;
@@ -40,7 +40,7 @@ export interface DbIntegrity {
 /**
  * Queue metrics snapshot
  */
-export interface QueueMetrics {
+interface QueueMetrics {
   backlog: number;
   p50Ms: number;
   p95Ms: number;
@@ -51,7 +51,7 @@ export interface QueueMetrics {
 /**
  * Health alert
  */
-export interface HealthAlert {
+interface HealthAlert {
   id: number;
   alert_type: string;
   severity: "warn" | "critical";
@@ -91,7 +91,7 @@ export interface HealthSummary {
 }
 
 /** Database footprint, so growth is visible on the dashboard instead of in a shell. */
-export interface StorageSnapshot {
+interface StorageSnapshot {
   dbBytes: number | null;
   walBytes: number | null;
   freelistBytes: number | null;
@@ -735,68 +735,3 @@ async function notifyAlert(guildId: string, alert: HealthAlert, client: Client):
   }
 }
 
-/**
- * WHAT: Acknowledge an alert.
- * WHY: Record human acknowledgement of alert.
- */
-export async function ackAlert(alertId: number, actorId: string, guildId: string, client: Client): Promise<void> {
-  const now = Math.floor(Date.now() / 1000);
-
-  try {
-    db.prepare(
-      `
-      UPDATE health_alerts
-      SET acknowledged_by = ?, acknowledged_at = ?
-      WHERE id = ?
-    `
-    ).run(actorId, now, alertId);
-
-    logger.info({ alertId, actorId }, "[opshealth] alert acknowledged");
-
-    // Log action
-    const guild = client.guilds.cache.get(guildId);
-    if (guild) {
-      await logActionPretty(guild, {
-        actorId,
-        action: "ops_health_ack",
-        meta: { alert_id: alertId },
-      });
-    }
-  } catch (err) {
-    logger.error({ err: errMsg(err), alertId }, "[opshealth] failed to acknowledge alert");
-    throw err;
-  }
-}
-
-/**
- * WHAT: Resolve an alert.
- * WHY: Mark alert as resolved (no longer active).
- */
-export async function resolveAlert(alertId: number, actorId: string, guildId: string, client: Client): Promise<void> {
-  const now = Math.floor(Date.now() / 1000);
-
-  try {
-    db.prepare(
-      `
-      UPDATE health_alerts
-      SET resolved_by = ?, resolved_at = ?
-      WHERE id = ?
-    `
-    ).run(actorId, now, alertId);
-
-    logger.info({ alertId, actorId }, "[opshealth] alert resolved");
-
-    // Log action
-    const guild = client.guilds.cache.get(guildId);
-    if (guild) {
-      await logActionPretty(guild, {
-        actorId,
-        action: "ops_health_resolve",
-        meta: { alert_id: alertId },
-      });
-    }
-  } catch (err) {
-    logger.error({ err: errMsg(err), alertId }, "[opshealth] failed to resolve alert");
-    throw err;
-  }
-}

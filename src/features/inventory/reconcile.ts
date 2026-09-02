@@ -17,7 +17,7 @@ import { getItemCatalog, inventoryEnabled, sourceBotAllowlist } from "./catalog.
 import { decideSource, listRecentRoleGrants } from "./executor.js";
 import { enqueueCapture } from "./store.js";
 
-export async function reconcileGuildInventory(guild: Guild): Promise<number> {
+async function reconcileGuildInventory(guild: Guild): Promise<number> {
   if (!inventoryEnabled(guild.id)) return 0;
   if (isPanicMode(guild.id)) return 0;
 

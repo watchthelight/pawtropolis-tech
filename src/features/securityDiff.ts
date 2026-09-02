@@ -53,7 +53,7 @@ export interface SnapshotDiff {
   summary: DiffSummary;
 }
 
-export interface RoleChange {
+interface RoleChange {
   roleId: string;
   roleName: string;
   oldPosition: number;
@@ -62,7 +62,7 @@ export interface RoleChange {
   permissionsRemoved: string[];
 }
 
-export interface ChannelChange {
+interface ChannelChange {
   channelId: string;
   channelName: string;
   overwritesAdded: OverwriteChange[];
@@ -70,7 +70,7 @@ export interface ChannelChange {
   overwritesModified: OverwriteModification[];
 }
 
-export interface OverwriteChange {
+interface OverwriteChange {
   targetId: string;
   targetType: "role" | "member";
   targetName?: string;
@@ -78,7 +78,7 @@ export interface OverwriteChange {
   deny: string[];
 }
 
-export interface OverwriteModification {
+interface OverwriteModification {
   targetId: string;
   targetType: "role" | "member";
   targetName?: string;
@@ -88,7 +88,7 @@ export interface OverwriteModification {
   denyRemoved: string[];
 }
 
-export interface DiffSummary {
+interface DiffSummary {
   rolesModified: number;
   channelsModified: number;
   issuesNew: number;

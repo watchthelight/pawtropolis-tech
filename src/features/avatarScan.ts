@@ -12,7 +12,7 @@ import { logger } from "../lib/logger.js";
 import { db } from "../db/db.js";
 
 // Types for NSFW risk assessment
-export type RiskReason = "hard_evidence" | "soft_evidence" | "suggestive" | "none";
+type RiskReason = "hard_evidence" | "soft_evidence" | "suggestive" | "none";
 type EvidenceEntry = { tag: string; p: number };
 type RiskSummary = {
   evidence: {
@@ -47,7 +47,7 @@ export type ScanResult = {
  * Database row representation of avatar scan (snake_case, matches SQLite schema).
  * For UI representation, see AvatarScanRow in src/features/review/types.ts
  */
-export type AvatarScanDbRow = {
+type AvatarScanDbRow = {
   application_id: string;
   avatar_url: string;
   nsfw_score: number | null;

@@ -43,23 +43,6 @@ export interface ArtistAssignmentRow {
   override: number;
 }
 
-/*
- * TicketInspection answers the existential question: "What art does this
- * person deserve, and do we have a role to prove it?"
- */
-
-/** Result of inspecting a user's ticket roles */
-export interface TicketInspection {
-  hasHeadshot: boolean;
-  hasHalfbody: boolean;
-  hasEmoji: boolean;
-  hasFullbody: boolean;
-  hasRequestedType: boolean;
-  requestedType: ArtType;
-  matchingRoleId: string | null;
-  allTicketRoles: string[];
-}
-
 /** Result of getting the next artist from queue */
 export interface NextArtistResult {
   userId: string;

@@ -191,10 +191,3 @@ export async function sweepPatreonRoleStacks(client: Client): Promise<void> {
   _sweepInterval.unref?.();
 }
 
-/** Stop the periodic Patreon role-dedup sweep (graceful shutdown / tests). */
-export function stopPatreonRoleDedup(): void {
-  if (_sweepInterval) {
-    clearInterval(_sweepInterval);
-    _sweepInterval = null;
-  }
-}

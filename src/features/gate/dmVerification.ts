@@ -91,7 +91,7 @@ export function hasActiveSession(userId: string): boolean {
   return false;
 }
 
-export function getSessionForUser(userId: string): DmSession | undefined {
+function getSessionForUser(userId: string): DmSession | undefined {
   for (const session of activeSessions.values()) {
     if (session.userId === userId) return session;
   }
