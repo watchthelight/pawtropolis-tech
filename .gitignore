@@ -98,3 +98,9 @@ _announcement-*.md
 
 # vitest per-worker databases (tests/setup.ts)
 tests/.tmp/
+
+# Regenerable output directories (untracked 2026-09-01, #00261): graph exports, chart renders, design handoff bundles
+graphify-out/
+_charts_out/
+charts/
+design_handoff/
