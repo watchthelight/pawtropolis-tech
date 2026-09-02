@@ -42,6 +42,12 @@ db.pragma(`busy_timeout = ${DB_BUSY_TIMEOUT_MS}`);
 db.pragma("cache_size = -32768");
 // Temp tables in RAM keeps large GROUP BY / ORDER BY off disk.
 db.pragma("temp_store = MEMORY");
+// Memory-map the first 256MB of the file. Mapped pages are the OS page cache, shared with
+// the dashboard's reader and not private RSS, so hot index pages stop being copied into
+// the 32MB private cache on every read.
+db.pragma("mmap_size = 268435456");
+// Let the WAL file shrink back to 64MB after a checkpoint instead of keeping its high-water size.
+db.pragma("journal_size_limit = 67108864");
 const dbTraceEnabled = process.env.DB_TRACE === "1";
 logger.info({ dbPath, dbTraceEnabled }, "SQLite opened");
 

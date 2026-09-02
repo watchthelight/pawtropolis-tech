@@ -37,8 +37,11 @@ export function db(): Database.Database {
     _db.pragma("foreign_keys = ON");
     _db.pragma(`busy_timeout = ${DB_BUSY_TIMEOUT_MS}`);
     _db.pragma("query_only = ON");
-    _db.pragma("cache_size = -262144");
-    _db.pragma("mmap_size = 1073741824");
+    // 64MB private page cache plus a 256MB memory map. The previous 256MB cache and 1GB
+    // map competed with the bot's member cache for the host's 2GB; mapped pages are the
+    // shared OS page cache, so the smaller private cache costs little.
+    _db.pragma("cache_size = -65536");
+    _db.pragma("mmap_size = 268435456");
     _db.pragma("temp_store = MEMORY");
     installStatementCache(_db);
   }
