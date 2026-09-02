@@ -109,9 +109,11 @@ npm run dev
 - One-click Google Lens reverse image search
 
 ### Operations
-- Health monitoring with uptime checks
-- Sentry integration for error tracking
-- Pino-based structured JSON logging
+- Health monitoring with uptime checks, an off-process database integrity check every 6 hours, and event-loop lag tracking on the dashboard system page
+- Retention scheduler: hourly action-log search index catch-up, daily `PRAGMA optimize`, and flag-gated pruning of expired rows, deploy backups and 30-day-old verification posts (`RETENTION_ENABLED=true`)
+- Sentry integration for error tracking (profiling is opt-in)
+- Pino-based structured JSON logging (asynchronous, flushed on shutdown)
+- Documentation parity tests: the handbook, command reference, permission matrix, env examples and dashboard config editor are checked against the code by `npm test`
 
 ---
 
@@ -130,8 +132,13 @@ npm run dev
 |----------|-------------|
 | `GUILD_ID` | Guild ID for per-guild command registration |
 | `SENTRY_DSN` | Sentry error tracking DSN |
-| `LOG_LEVEL` | Pino log level (trace/debug/info/warn/error) |
+| `LOG_LEVEL` | Pino log level (trace/debug/info/warn/error); production runs `info` |
 | `RESET_PASSWORD` | Password for admin reset commands |
+| `DB_HEALTHCHECK_MODE` | Boot-time integrity check: `quick` (production default), `full` or `skip` |
+| `RETENTION_ENABLED` | Lets the retention scheduler delete instead of logging a dry run |
+| `SENTRY_PROFILES_SAMPLE_RATE` | Opt-in CPU profiling (0 disables and skips loading the profiler) |
+
+Every variable the code reads, with its default, is in [`.env.example`](.env.example) (bot) and [`web/.env.example`](web/.env.example) (dashboard); `tests/docs/env-example.test.ts` fails when either file and the code disagree.
 
 ---
 

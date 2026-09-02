@@ -75,15 +75,19 @@ Output: `dist/index.js`
 
 ### Optional
 
-| Variable          | Type   | Description                                 | Default / Notes            |
-| ----------------- | ------ | ------------------------------------------- | -------------------------- |
-| `LOGGING_CHANNEL` | string | Fallback logging channel ID                 | Used if DB column missing  |
-| `OWNER_IDS`       | string | Comma-separated owner user IDs (superusers) | `123456789,987654321`      |
-| `SENTRY_DSN`      | string | Sentry project DSN for error tracking       | ⚠️ Currently returns 403   |
-| `ENVIRONMENT`     | string | `production` or `development`               | Controls logging verbosity |
-| `PORT`            | number | HTTP health check port (if enabled)         | `3000` (optional)          |
-| `OTEL_ENABLED`    | bool   | Enable OpenTelemetry tracing                | `false` (default)          |
-| `LOG_LEVEL`       | string | Minimum log level (`debug`, `info`, `warn`) | `info`                     |
+Every optional variable is listed with its default in [`.env.example`](../../.env.example), and `tests/docs/env-example.test.ts` fails when the code reads a name that file does not document. The ones an operator touches most:
+
+| Variable | Description | Default |
+|---|---|---|
+| `LOG_LEVEL` | Pino level. Production runs `info`; `trace` multiplies log volume and CPU | `info` |
+| `SENTRY_DSN`, `SENTRY_TRACES_SAMPLE_RATE`, `SENTRY_PROFILES_SAMPLE_RATE` | Error tracking, trace sampling, opt-in profiling (0 skips loading the profiler) | unset, `0.05`, `0` |
+| `DB_HEALTHCHECK_MODE` | Boot-time integrity check: `quick`, `full` or `skip` | `quick` in production |
+| `DB_INTEGRITY_INTERVAL_HOURS` | Off-process `PRAGMA quick_check` cadence | `6` |
+| `RETENTION_ENABLED` | Lets the retention scheduler delete expired rows, old deploy backups and 30-day-old verification posts; otherwise it logs a dry run | `false` |
+| `DB_BACKUPS_DIR` | Where `deploy.sh` and the pruner keep database backups | `data/backups` |
+| `*_SCHEDULER_DISABLED=1` | Turns one scheduler off. Tests use these; production should run with none set | unset |
+| `LOGGING_CHANNEL` / `LOGGING_CHANNEL_ID` | Fallback logging channel for `/send` | unset |
+| `EVENT_TIMEOUT_MS`, `LOOP_LAG_WARN_P99_MS` | Event handler watchdog and event-loop lag warning thresholds | `10000`, `250` |
 
 ### Example `.env` File
 
@@ -569,11 +573,25 @@ aws ec2 start-instances --instance-ids i-0b5c5db57b50ff74b --region us-east-1
 
 ### Disk Space Management
 
+`data/backups/` is the usual culprit: every deploy writes a `data.db.<timestamp>` copy plus its `-wal` and `-shm` siblings (about 1.8 GB per group in September 2026). The retention scheduler prunes the directory to the 3 newest groups plus anything under 7 days once `RETENTION_ENABLED=true`; `scripts/cleanup-backups.sh` applies the same policy by hand. The dashboard system page shows database, WAL and free-page sizes so growth is visible before the disk fills.
+
 ```bash
 # Check disk usage
 ssh bash-ec2 "df -h /"
 
-# Clean PM2 logs
+# Backup groups and their total size
+ssh bash-ec2 "ls -lt /home/ubuntu/pawtropolis-tech/data/backups | head; du -sh /home/ubuntu/pawtropolis-tech/data/backups"
+
+# Prune backups by hand (keeps the 3 newest groups plus 7 days)
+ssh bash-ec2 "cd /home/ubuntu/pawtropolis-tech && bash scripts/cleanup-backups.sh"
+
+# Reclaim free pages after large deletes. Everything that writes the file is stopped first.
+# 2026-09-01: 1636 MB to 1210 MB in 28 seconds.
+ssh bash-ec2 "cd /home/ubuntu/pawtropolis-tech && pm2 stop pawtropolis pawtropolis-web && sudo systemctl stop litestream \
+  && node -e \"require('better-sqlite3')('data/data.db').exec('VACUUM')\" \
+  && sudo systemctl start litestream && pm2 start pawtropolis pawtropolis-web"
+
+# Clean PM2 logs (pm2-logrotate already keeps 7 files of 10 MB per process)
 ssh bash-ec2 "pm2 flush"
 
 # Clean journal logs (keep 7 days)
@@ -590,23 +608,24 @@ ssh bash-ec2 "sudo du -sh /* 2>/dev/null | sort -h"
 
 | Resource | Cost |
 |----------|------|
-| t3a.small instance | ~$14/month |
-| 32GB gp3 EBS | ~$2.56/month |
+| t3.large instance (2 vCPU, 8 GB) | ~$61/month at $0.0832/hour |
+| 64GB gp3 EBS | ~$5.12/month |
 | Elastic IP | Free (while attached) |
-| **Total** | ~$17/month |
+| **Total** | ~$66/month |
+
+The dashboard system page computes the same estimate from `EC2_INSTANCE_TYPE`, `EC2_HOURLY_USD`, `EC2_STORAGE_GB` and `EC2_STORAGE_USD_PER_MO`.
 
 ## Deployment Steps
 
-1. `git pull origin main` - Get latest code
-2. `npm ci` - Install dependencies
-3. `npm run typecheck` - Check for errors
-4. `npm run build` - Build the bot
-5. `cp data.db data.db.backup` - Backup database
-6. `npm run migrate` - Update database
-7. `npm run commands` - Register commands
-8. `systemctl restart pawtropolis` - Restart bot
-9. Run `/health` in Discord - Test bot
-10. `journalctl -u pawtropolis -f` - Watch logs
+Deploys run from a developer machine with `./deploy.sh` (lock, backup, dry run and rollback details in [deployment-hardening.md](deployment-hardening.md)). The host has no git checkout; the script ships the working tree.
+
+1. On `main` with a clean tree: `npm run typecheck && npm test` (the script runs them again unless `--fast`).
+2. `./deploy.sh --dry-run` to see the remote steps, then `./deploy.sh`. It ships `dist`, `src`, `migrations`, `scripts`, `assets`, `ecosystem.config.cjs` and `web/build`, runs `npm ci` and pending migrations on the host, syncs slash commands, restarts both pm2 apps and health-checks them.
+3. Watch `pm2 logs pawtropolis --lines 200 --nostream` for `Bot ready` and the `scheduler started` lines; `/dashboard/system` shows the integrity result, storage and event-loop lag.
+4. When a release changes `.env` keys, edit the host file by key (`sed -i` after `cp .env .env.bak-<version>`); never print it.
+5. Rollback: `git revert` on `main`, then `./deploy.sh --fast`.
+
+The 6.2.0 release (2026-09-01) additionally normalised the host `.env` (`LOG_LEVEL=info`, scheduler toggles removed), pruned `data/backups`, removed the finished `pawtropolis-backfill` pm2 app and ran the VACUUM above.
 
 ---
 

@@ -71,15 +71,15 @@ If you are sure no other deploy is running, ssh to bash-ec2 and remove the lock:
 
 Override the lock path with `DEPLOY_LOCK_DIR=/tmp/other-lock` if you ever need to.
 
-### Optional pre-deploy DB backup
+### Pre-deploy DB backup
 
-Set `BACKUP_BEFORE_DEPLOY=1` to copy the remote DB to a timestamped file inside `data/backups/` on the remote before the new tarball lands:
+By default the script copies the remote DB to a timestamped group inside `data/backups/` on the remote before the new tarball lands. Set `BACKUP_BEFORE_DEPLOY=0` to skip it for a deploy that touches no migration:
 
 ```bash
-BACKUP_BEFORE_DEPLOY=1 ./deploy.sh
+BACKUP_BEFORE_DEPLOY=0 ./deploy.sh
 ```
 
-The backup runs after lock acquisition and before any tarball upload. Filename pattern: `data/data.db.<UTC_YYYYMMDD-HHMMSS>`. Default is off so existing scripts and CI jobs are unaffected.
+The backup runs after lock acquisition and before any tarball upload. Filename pattern: `data/backups/data.db.<UTC_YYYYMMDD-HHMMSS>` plus `-wal` and `-shm` siblings, about 1.8 GB per group. Nothing pruned these until September 2026 (41 files, 25 GB, disk at 83%); the bot's retention scheduler now keeps the 3 newest groups plus anything under 7 days once `RETENTION_ENABLED=true`, and `scripts/cleanup-backups.sh` applies the same policy by hand.
 
 ### Dry run
 

@@ -407,6 +407,36 @@ npm run commands
 
 ---
 
+## Reading the Performance Log Events
+
+Production logs at `LOG_LEVEL=info`. The live files are `~/.pm2/logs/pawtropolis-out-<pm_id>.log` and `pawtropolis-error-<pm_id>.log` (`pm2 describe pawtropolis` prints the exact paths); an older `pawtropolis-out.log` without the id belongs to a previous process id and is no longer written, so do not count events in it. pm2-logrotate keeps 7 files of 10 MB per process.
+
+| Line | Fields | Healthy |
+|---|---|---|
+| `"evt":"slow_transaction"` | `elapsedMs`, `fn` (the `file:line` that created the transaction) | none above 250 ms; every longer one gets a fix or a reason in #00270 |
+| `Event handler timeout` (warn) | event name, `EVENT_TIMEOUT_MS` (10 s) | none |
+| `"evt":"loop_lag"` (warn) | `p50Ms`, `p95Ms`, `p99Ms`, `maxMs`, `samples`, `windowS` | none; the system page shows the live percentiles |
+| `"evt":"scheduler_run"` | `scheduler`, `success`, `ms` (info when 100 ms or more, or failed; debug otherwise) | `success: true`, `ms` far below the tick interval |
+| `"evt":"db_integrity_check"` | `ok`, `mode`, `ms` (error level when the check fails) | `ok: true` every 6 hours |
+| `"evt":"retention"` | `table`, `candidates`, `deleted`, `enabled` | with `enabled: false` it is a dry run; `deleted` equals `candidates` once enabled |
+| `"evt":"retention_backups"` | `dir`, `candidates`, `candidateBytes`, `deleted`, `enabled` | `candidates: 0` after pruning is enabled |
+| `"evt":"retention_verify_log"` | `deleted`, `channelId` | small hourly counts |
+| `"evt":"fts_catch_up"` | `indexed`, `highWater` | `indexed` roughly equals the hour's new action_log rows |
+| `[healthcheck] SKIPPED` | boot integrity check skipped (`DB_HEALTHCHECK_MODE=skip`) | only on a deliberate hot restart |
+
+Counts since a restart (replace the timestamp with the restart time in ms and the file with the live path):
+
+```bash
+ssh bash-ec2 'node -e "
+const fs=require(\"fs\");const since=1788315400000;const c={};
+for(const l of fs.readFileSync(\"/home/ubuntu/.pm2/logs/pawtropolis-out-7.log\",\"utf8\").split(\"\\n\")){
+  const i=l.indexOf(\"{\");if(i<0)continue;let o;try{o=JSON.parse(l.slice(i))}catch{continue}
+  if(o.time<since)continue;const k=o.evt||(o.msg||\"\").slice(0,40);c[k]=(c[k]||0)+1}
+console.log(c)"'
+```
+
+---
+
 ## Diagnostic Commands
 
 ### Check Database
