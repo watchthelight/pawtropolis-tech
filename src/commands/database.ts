@@ -23,6 +23,7 @@ import {
 } from "../lib/cmdWrap.js";
 import { logger } from "../lib/logger.js";
 import { checkDatabaseHealth } from "../lib/dbHealthCheck.js";
+import { refreshDbIntegrity } from "../lib/dbIntegrityCheck.js";
 import fs from "fs";
 import path from "path";
 import { exec } from "child_process";
@@ -232,6 +233,9 @@ async function executeCheck(ctx: CommandContext<ChatInputCommandInteraction>) {
 
   // Get local database health
   const localHealth = checkDatabaseHealth();
+
+  // Also refresh the off-process result the dashboard shows (never blocks this handler).
+  void refreshDbIntegrity("quick");
 
   // Get database file info
   const dbPath = path.resolve("./data/data.db");

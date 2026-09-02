@@ -24,6 +24,11 @@ const DEFAULT_INTERVAL_SECONDS = 60;
 // a better idea for interval management that doesn't involve dependency injection hell.
 let _activeInterval: NodeJS.Timeout | null = null;
 
+// PM2 status spawns the PM2 CLI. Poll it on every 15th tick (15 min at the default
+// interval) rather than every minute; the process-down alert still fires within that window.
+const PM2_CHECK_EVERY_N_TICKS = 15;
+let _tick = 0;
+
 /**
  * WHAT: Run health check for all guilds the bot is in.
  * WHY: Automated monitoring across all guilds.
@@ -47,7 +52,9 @@ async function runHealthCheckForAllGuilds(client: Client): Promise<number> {
   }
 
   try {
-    const result = await runCheck(guildId, client);
+    _tick++;
+    const includePm2 = _tick % PM2_CHECK_EVERY_N_TICKS === 1;
+    const result = await runCheck(guildId, client, { includePm2, resetLoopLag: true });
     logger.debug(
       {
         guildId,
@@ -66,7 +73,7 @@ async function runHealthCheckForAllGuilds(client: Client): Promise<number> {
   }
 
   if (processedCount > 0 || errorCount > 0) {
-    logger.info(
+    logger.debug(
       { processedCount, errorCount },
       "[opshealth:scheduler] batch health check completed"
     );
@@ -115,22 +122,24 @@ export function startOpsHealthScheduler(client: Client): void {
    * checks at t=0 gives false positives like "oh no, ping is undefined!"
    */
   setTimeout(async () => {
+    const startedAt = Date.now();
     try {
       await runHealthCheckForAllGuilds(client);
-      recordSchedulerRun("opsHealth", true);
+      recordSchedulerRun("opsHealth", true, Date.now() - startedAt);
     } catch (err: any) {
-      recordSchedulerRun("opsHealth", false);
+      recordSchedulerRun("opsHealth", false, Date.now() - startedAt);
       logger.error({ err: err.message }, "[opshealth:scheduler] initial check failed");
     }
   }, 10000); // 10s delay
 
   // Set up periodic refresh
   const interval = setInterval(async () => {
+    const startedAt = Date.now();
     try {
       await runHealthCheckForAllGuilds(client);
-      recordSchedulerRun("opsHealth", true);
+      recordSchedulerRun("opsHealth", true, Date.now() - startedAt);
     } catch (err: any) {
-      recordSchedulerRun("opsHealth", false);
+      recordSchedulerRun("opsHealth", false, Date.now() - startedAt);
       logger.error({ err: err.message }, "[opshealth:scheduler] scheduled check failed");
     }
   }, intervalMs);

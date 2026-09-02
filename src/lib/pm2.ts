@@ -55,12 +55,30 @@ interface PM2Process {
  * const statuses = await getPM2Status(['pawtropolis', 'other-service']);
  * // => [{ name: 'pawtropolis', status: 'online', uptimeSeconds: 123456, ... }]
  */
-export async function getPM2Status(processNames: string[]): Promise<PM2ProcessStatus[]> {
+export async function getPM2Status(
+  processNames: string[],
+  maxAgeMs: number = CACHE_TTL_MS
+): Promise<PM2ProcessStatus[]> {
   if (processNames.length === 0) {
     logger.debug("[pm2] no process names provided, returning empty array");
     return [];
   }
 
+  // `pm2 jlist` spawns the PM2 CLI (hundreds of ms of CPU and a transient ~100 MB on the
+  // production host). Every caller within the TTL shares one spawn.
+  const key = processNames.join(",");
+  if (cached && cached.key === key && Date.now() - cached.at < maxAgeMs) {
+    return cached.statuses;
+  }
+  const statuses = await fetchPM2Status(processNames);
+  cached = { key, at: Date.now(), statuses };
+  return statuses;
+}
+
+const CACHE_TTL_MS = 60_000;
+let cached: { key: string; at: number; statuses: PM2ProcessStatus[] } | null = null;
+
+async function fetchPM2Status(processNames: string[]): Promise<PM2ProcessStatus[]> {
   try {
     // Shell out to pm2 rather than using the programmatic API because:
     // 1. pm2 programmatic API requires connecting to the daemon, which is flaky

@@ -164,6 +164,19 @@ export async function startSchedulers(client: Client): Promise<void> {
     },
     { level: "warn" },
   );
+
+  // DB integrity: off-process PRAGMA quick_check every 6 hours (was inline on each
+  // 60s ops health tick)
+  await runStartupTask(
+    "scheduler_db_integrity",
+    async () => {
+      const { startDbIntegrityScheduler } = await import(
+        "../scheduler/dbIntegrityScheduler.js"
+      );
+      startDbIntegrityScheduler();
+    },
+    { level: "warn" },
+  );
 }
 
 /**
@@ -226,4 +239,9 @@ export async function stopSchedulers(): Promise<void> {
     "../scheduler/itemCaptureScheduler.js"
   );
   stopItemCaptureScheduler();
+
+  const { stopDbIntegrityScheduler } = await import(
+    "../scheduler/dbIntegrityScheduler.js"
+  );
+  stopDbIntegrityScheduler();
 }

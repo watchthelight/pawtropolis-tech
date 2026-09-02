@@ -17,6 +17,8 @@ import type { Client } from "discord.js";
 import { db } from "../db/db.js";
 import { logger } from "../lib/logger.js";
 import { getPM2Status, type PM2ProcessStatus } from "../lib/pm2.js";
+import { getLastDbIntegrity } from "../lib/dbIntegrityCheck.js";
+import { snapshotLoopLag, type LoopLagSnapshot } from "../lib/loopLag.js";
 import { env } from "../lib/env.js";
 import { logActionPretty } from "../logging/pretty.js";
 
@@ -83,6 +85,14 @@ export interface HealthSummary {
   queue: QueueMetrics;
   lastActions: ActionLogRow[];
   activeAlerts: HealthAlert[];
+  loopLag: LoopLagSnapshot;
+}
+
+export interface SummaryOptions {
+  /** Spawn `pm2 jlist` (cached 60s). Off by default; the dashboard route asks for it. */
+  includePm2?: boolean;
+  /** Start a new loop-lag window after reading it (the 60s scheduler tick does this). */
+  resetLoopLag?: boolean;
 }
 
 /**
@@ -115,30 +125,13 @@ function getWsPing(): number {
 }
 
 /**
- * WHAT: Run PRAGMA quick_check on database.
- * WHY: Fast integrity check (seconds vs minutes for full check).
- * NOTE: quick_check only verifies B-tree structure, not foreign keys or
- * indexes. For full validation, use PRAGMA integrity_check (but it's SLOW).
+ * WHAT: Last result of the off-process integrity check (src/lib/dbIntegrityCheck.ts).
+ * WHY: quick_check walks every page of the file. Running it inline here on every 60s
+ *      tick blocked the event loop for seconds on the production database.
  */
 function checkDbIntegrity(): DbIntegrity {
-  try {
-    // pluck() returns just the value, not {quick_check: 'ok'}
-    const result = db.prepare("PRAGMA quick_check").pluck().get() as string;
-    const ok = result === "ok";
-
-    return {
-      ok,
-      message: ok ? "ok" : result,
-      checkedAt: Math.floor(Date.now() / 1000),
-    };
-  } catch (err) {
-    logger.error({ err: errMsg(err) }, "[opshealth] DB integrity check failed");
-    return {
-      ok: false,
-      message: errMsg(err) || "DB check failed",
-      checkedAt: Math.floor(Date.now() / 1000),
-    };
-  }
+  const last = getLastDbIntegrity();
+  return { ok: last.ok, message: last.message, checkedAt: last.checkedAt };
 }
 
 /**
@@ -309,12 +302,16 @@ function getActiveAlerts(): HealthAlert[] {
  * WHAT: Get current health summary (no alert evaluation).
  * WHY: Fast snapshot for dashboard polling.
  */
-export async function getSummary(guildId: string): Promise<HealthSummary> {
+export async function getSummary(
+  guildId: string,
+  opts: SummaryOptions = {}
+): Promise<HealthSummary> {
   const wsPingMs = getWsPing();
 
-  // PM2 status (parse from env)
+  // PM2 status (parse from env). Spawning the PM2 CLI costs real CPU on this host, so
+  // callers opt in; the scheduler asks every 15th tick, the dashboard route every time.
   const pm2ProcessNames = env.PM2_PROCESS_NAME.split(",").map((n) => n.trim()).filter(Boolean);
-  const pm2 = await getPM2Status(pm2ProcessNames);
+  const pm2 = opts.includePm2 ? await getPM2Status(pm2ProcessNames) : [];
 
   // DB integrity
   const db = checkDbIntegrity();
@@ -328,6 +325,8 @@ export async function getSummary(guildId: string): Promise<HealthSummary> {
   // Active alerts
   const activeAlerts = getActiveAlerts();
 
+  const loopLag = snapshotLoopLag(opts.resetLoopLag === true);
+
   return {
     wsPingMs,
     pm2,
@@ -335,6 +334,7 @@ export async function getSummary(guildId: string): Promise<HealthSummary> {
     queue,
     lastActions,
     activeAlerts,
+    loopLag,
   };
 }
 
@@ -342,10 +342,14 @@ export async function getSummary(guildId: string): Promise<HealthSummary> {
  * WHAT: Run full health check + evaluate alert thresholds.
  * WHY: Automated checks trigger alerts when thresholds crossed.
  */
-export async function runCheck(guildId: string, client: Client): Promise<HealthCheckResult> {
-  logger.info({ guildId }, "[opshealth] running health check");
+export async function runCheck(
+  guildId: string,
+  client: Client,
+  opts: SummaryOptions = {}
+): Promise<HealthCheckResult> {
+  logger.debug({ guildId }, "[opshealth] running health check");
 
-  const summary = await getSummary(guildId);
+  const summary = await getSummary(guildId, opts);
   const triggeredAlerts: HealthAlert[] = [];
 
   // Threshold defaults are conservative. 200 backlog is a problem for most

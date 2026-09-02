@@ -25,7 +25,7 @@ export function registerHealthRoutes(server: FastifyInstance, _ctx: DashboardRou
 
     try {
       const { getSummary } = await import("../../features/opsHealth.js");
-      const summary = await getSummary(GUILD_ID);
+      const summary = await getSummary(GUILD_ID, { includePm2: true });
 
       // Process memory. heapTotal grows lazily so heapUsed/heapTotal hovers
       // near 100% even when there's gigabytes of headroom — report against the

@@ -331,6 +331,10 @@ async function main() {
   const { requireHealthyDatabase } = await import("./lib/dbHealthCheck.js");
   requireHealthyDatabase();
 
+  // Event-loop delay percentiles feed the ops health summary and the loop_lag warn log.
+  const { startLoopLagMonitor } = await import("./lib/loopLag.js");
+  startLoopLagMonitor();
+
   // Step 2: Fail fast if critical env vars are missing
   // env from lib/env.js validates required vars at import time (fail-fast)
   const DISCORD_TOKEN = env.DISCORD_TOKEN;

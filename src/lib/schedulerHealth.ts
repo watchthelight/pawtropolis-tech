@@ -56,8 +56,19 @@ const schedulerHealth = new Map<string, SchedulerHealth>();
  *   logger.error({ err }, "[myScheduler] failed");
  * }
  */
-export function recordSchedulerRun(name: string, success: boolean): void {
+export function recordSchedulerRun(name: string, success: boolean, durationMs?: number): void {
   const now = Date.now();
+
+  // Duration is optional so existing callers keep working; schedulers that pass it get a
+  // per-run log line that makes their cost visible in production logs.
+  if (durationMs !== undefined) {
+    const entry = { evt: "scheduler_run", scheduler: name, success, ms: Math.round(durationMs) };
+    if (durationMs >= 100 || !success) {
+      logger.info(entry, "[scheduler] run finished");
+    } else {
+      logger.debug(entry, "[scheduler] run finished");
+    }
+  }
 
   const existing = schedulerHealth.get(name);
   const health: SchedulerHealth = existing ?? {
