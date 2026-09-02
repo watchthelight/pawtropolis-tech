@@ -6,6 +6,11 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join, extname } from "node:path";
 import sharp from "sharp";
 
+// One decode at a time and no libvips operation cache: a burst of uploads would otherwise
+// take several hundred MB in the web process.
+sharp.concurrency(1);
+sharp.cache(false);
+
 const MAX_FILE_SIZE = 8 * 1024 * 1024; // 8 MB
 const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/gif", "image/webp"]);
 const UPLOADS_DIR = process.env.ART_UPLOADS_DIR ?? join(process.cwd(), "data", "art-uploads");
