@@ -87,3 +87,29 @@ export function upsertNsfwFlag(params: {
   }
 }
 
+
+/**
+ * Score Vision already produced for this exact avatar, from this audit's own flags or the
+ * application-time scan. Avatar URLs embed the avatar hash, so a hash match means the
+ * image is unchanged and another Vision call would only repeat the answer.
+ */
+export function findKnownAvatarScore(guildId: string, userId: string, avatarHash: string): number | null {
+  const pattern = `%/${avatarHash}.%`;
+  const flagged = db
+    .prepare(
+      "SELECT nsfw_score FROM nsfw_flags WHERE guild_id = ? AND user_id = ? AND avatar_url LIKE ? LIMIT 1"
+    )
+    .get(guildId, userId, pattern) as { nsfw_score: number } | undefined;
+  if (flagged) return flagged.nsfw_score;
+  const scanned = db
+    .prepare(
+      `SELECT s.nsfw_score AS score
+         FROM avatar_scan s
+         JOIN application a ON a.id = COALESCE(s.app_id, s.application_id)
+        WHERE a.guild_id = ? AND a.user_id = ? AND s.avatar_url LIKE ? AND s.nsfw_score IS NOT NULL
+        ORDER BY s.scanned_at DESC
+        LIMIT 1`
+    )
+    .get(guildId, userId, pattern) as { score: number } | undefined;
+  return scanned?.score ?? null;
+}

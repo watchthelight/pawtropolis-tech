@@ -14,7 +14,7 @@ import { logger } from "../../lib/logger.js";
 import { renderProgressBar } from "../../features/botDetection.js";
 import { getFlaggedUserIds } from "../../store/flagsStore.js";
 import { detectNsfwVision } from "../../features/googleVision.js";
-import { upsertNsfwFlag } from "../../store/nsfwFlagsStore.js";
+import { findKnownAvatarScore, upsertNsfwFlag } from "../../store/nsfwFlagsStore.js";
 import { sleep } from "../../lib/retry.js";
 import { googleReverseImageUrl } from "../../ui/reviewCard.js";
 import {
@@ -48,6 +48,7 @@ export async function runNsfwAudit(
   let totalScanned = resumeSession?.scanned_count ?? 0;
   let apiCallCount = resumeSession?.api_calls ?? 0;
   let skippedNoAvatar = 0;
+  let skippedUnchanged = 0;
   let skippedAlreadyScanned = 0;
 
   const NSFW_THRESHOLD = 0.8; // 80% = hard evidence (see doc comment above)
@@ -164,6 +165,17 @@ export async function runNsfwAudit(
 
       if (!avatarUrl) {
         skippedNoAvatar++;
+        totalScanned++;
+        markUserScanned(sessionId, member.id);
+        continue;
+      }
+
+      // Vision has already scored this exact avatar (application scan or an earlier audit)
+      // and found it clean: nothing to learn, so no paid call. Flagged-and-unchanged
+      // avatars still go through so the flag and embed are refreshed as before.
+      const known = findKnownAvatarScore(guild.id, member.id, member.user.avatar!);
+      if (known !== null && known < NSFW_THRESHOLD) {
+        skippedUnchanged++;
         totalScanned++;
         markUserScanned(sessionId, member.id);
         continue;
@@ -306,6 +318,7 @@ export async function runNsfwAudit(
         { name: "Avatars Scanned", value: totalScanned.toLocaleString(), inline: true },
         { name: "NSFW Flagged", value: flaggedCount.toString(), inline: true },
         { name: "No Avatar", value: skippedNoAvatar.toString(), inline: true },
+        { name: "Unchanged Avatar", value: skippedUnchanged.toString(), inline: true },
         { name: "Duration", value: `${durationSec}s`, inline: true },
         { name: "API Calls", value: apiCallCount.toString(), inline: true }
       )
@@ -339,6 +352,7 @@ export async function runNsfwAudit(
         flaggedCount,
         apiCallCount,
         skippedNoAvatar,
+        skippedUnchanged,
         skippedAlreadyScanned,
         durationSec,
         resumed: !!resumeSession,
