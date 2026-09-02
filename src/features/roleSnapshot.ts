@@ -119,30 +119,24 @@ export async function classifyRemoval(
   snapshotId: number
 ): Promise<void> {
   try {
-    // Check ban audit first (more severe; takes precedence over kick).
-    const banLogs = await guild.fetchAuditLogs({
-      type: AuditLogEvent.MemberBanAdd,
-      limit: 5,
-    });
-    const banEntry = banLogs.entries.find(
-      (e) =>
-        e.target?.id === userId &&
-        Date.now() - e.createdTimestamp <= AUDIT_LOOKUP_WINDOW_MS
-    );
+    // One untyped fetch covers both ban and kick entries (this used to be two REST calls
+    // per member leave). Ban is checked first: more severe, takes precedence over kick.
+    const logs = await guild.fetchAuditLogs({ limit: 10 });
+    const matches = (action: AuditLogEvent) =>
+      logs.entries.find(
+        (e) =>
+          e.action === action &&
+          (e.target as { id?: string } | null)?.id === userId &&
+          Date.now() - e.createdTimestamp <= AUDIT_LOOKUP_WINDOW_MS
+      );
+
+    const banEntry = matches(AuditLogEvent.MemberBanAdd);
     if (banEntry) {
       updateClassification(snapshotId, "banned", banEntry.reason ?? null, banEntry.executor?.id ?? null);
       return;
     }
 
-    const kickLogs = await guild.fetchAuditLogs({
-      type: AuditLogEvent.MemberKick,
-      limit: 5,
-    });
-    const kickEntry = kickLogs.entries.find(
-      (e) =>
-        e.target?.id === userId &&
-        Date.now() - e.createdTimestamp <= AUDIT_LOOKUP_WINDOW_MS
-    );
+    const kickEntry = matches(AuditLogEvent.MemberKick);
     if (kickEntry) {
       updateClassification(snapshotId, "kicked", kickEntry.reason ?? null, kickEntry.executor?.id ?? null);
       return;

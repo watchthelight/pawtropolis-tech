@@ -65,17 +65,36 @@ function loadSnapshotFromDb(guildId: string): Map<string, number> {
   }
 }
 
+// What the DB snapshot currently holds per guild (code -> "uses|inviter"), so a join only
+// writes the invite whose count moved instead of every invite in the guild.
+const persistedShape = new Map<string, Map<string, string>>();
+
 /** Persist current invite cache to DB for restart resilience. */
 function persistSnapshot(guildId: string, invites: Map<string, { uses: number; inviterId: string | null }>): void {
   const now = Math.floor(Date.now() / 1000);
   const upsert = snapshotUpsertStmt();
+  let known = persistedShape.get(guildId);
+  if (!known) {
+    known = new Map();
+    persistedShape.set(guildId, known);
+  }
+  const changed: Array<[string, { uses: number; inviterId: string | null }]> = [];
+  for (const [code, data] of invites) {
+    const shape = `${data.uses}|${data.inviterId ?? ""}`;
+    if (known.get(code) !== shape) changed.push([code, data]);
+  }
+  if (changed.length === 0) return;
+
   const tx = db.transaction(() => {
-    for (const [code, data] of invites) {
+    for (const [code, data] of changed) {
       upsert.run(guildId, code, data.uses, data.inviterId, now);
     }
   });
   try {
     tx();
+    for (const [code, data] of changed) {
+      known.set(code, `${data.uses}|${data.inviterId ?? ""}`);
+    }
   } catch (err) {
     logger.debug({ err, guildId }, "[invite-tracker] Failed to persist snapshot");
   }
