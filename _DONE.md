@@ -4,6 +4,22 @@ One-line dated ledger. Detail in [`done/`](./done/). Pair of [`_BACKLOG.md`](./_
 
 Reverse chronological by completion date.
 
+## 2026-09-02
+
+- [x] [Remove Claude from the GitHub contributors panel](done/00259.md) `Low` Declined: needs a history rewrite and force push of a repository other systems track; the no-trailer rule already holds for new commits.
+- [x] [Tighten .gitignore; generated artifact directories are tracked](done/00261.md) `Medium` graphify-out, _charts_out, charts and design_handoff ignored and untracked (177 MB of regenerable output out of the index); audit, docs-audit and context stay tracked.
+- [x] [Perf pass T1: per-message and per-interaction hot path](done/00263.md) `High` Static imports on the interaction, message and member paths, statement cache, in-memory guards, concurrent thread member adds. Shipped in 6.2.0 and 6.2.1.
+- [x] [Perf pass T2: schedulers and background jobs](done/00264.md) `Medium` Cache-first audits and sweeps, set-based observatory queries, Vision skipped for avatars already scored clean. Shipped in 6.2.0 and 6.2.1.
+- [x] [Perf pass T3: DB layer, pragmas, indexes, retention](done/00265.md) `Medium` mmap, WAL cap, smaller dashboard page cache, online migration backups, retention scheduler. Shipped in 6.2.0.
+- [x] [Perf pass T4: startup, process, dependencies, deploy](done/00266.md) `Medium` Concurrent warm-ups, smaller caches, presence intent dropped, async logging, on-demand native modules, memory-served badges. Shipped in 6.2.0 and 6.2.1.
+- [x] [Perf pass T5: web dashboard queries and streaming](done/00267.md) `Medium` Change-only backfill stream, cached handbook walk, streamed attachments, single-decode uploads, unchanged-identity upsert skip. Shipped in 6.2.0 and 6.2.1.
+- [x] [Dead code and dependency audit with knip; script index](done/00271.md) `Medium` knip adopted as a soft CI step, 196 exports and 103 types removed, 20 one-off scripts deleted, scripts/README.md indexes the rest.
+- [x] [Documentation truth: parity tests for commands, env, permissions and config; archive stale generated docs](done/00272.md) `High` Parity tests for the handbook, command reference, permission matrix, env examples and config editor; stale generated docs archived; README, operations and schema docs refreshed; 6.2.0 and 6.2.1 changelogs.
+- [x] [Dashboard config editor is missing 17 bot-editable columns](done/00273.md) `Medium` Seven columns gained field metadata and four gained validation rules; a test holds the bot allowlist, both rule sets and the metadata together. Shipped in 6.2.1.
+- [x] [Test suite must not open data/data.db](done/00274.md) `High` tests/setup.ts points DB_PATH at a per-worker temp file seeded from the fixture schema; nothing opens data/data.db any more.
+- [x] [Backfill process stuck in waiting restart](done/00276.md) `Medium` The run had completed; app removed from ecosystem.config.cjs and pm2, script kept as a manual tool.
+
+
 ## 2026-08-30
 
 - [x] [Actions workflows are red on main; get the commit check mark green](done/00260.md) `Medium` Three separate causes. CI failed at `npm ci` on a lockfile that was regenerated locally but never committed. Update Badges ran the suite without the env vars, test DB or SvelteKit sync the CI test job sets up, so it published a fabricated 0% coverage. Refresh Discord Badges failed nightly trying to open a PR the repo forbids Actions to create, on a diff that was never real: every SVG embedded its own resolve timestamp, so all 82 changed on every run. Deprecated action pins bumped in the same pass.
