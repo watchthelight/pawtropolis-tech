@@ -191,7 +191,7 @@ function invalidateCache(guildId: string): void {
  * Compute a content hash for change detection.
  * Uses MD5 of roles + channels JSON for quick "did anything change?" check.
  */
-export function computeContentHash(roles: RoleSnapshot[], channels: ChannelSnapshot[]): string {
+function computeContentHash(roles: RoleSnapshot[], channels: ChannelSnapshot[]): string {
   const content = JSON.stringify({ roles, channels });
   return crypto.createHash("md5").update(content).digest("hex");
 }
@@ -437,19 +437,3 @@ export function getIssueHistory(guildId: string, days: number = 30): IssueHistor
   }
 }
 
-/**
- * Check if content has changed since last snapshot.
- * Quick check using hash comparison.
- */
-export function hasContentChanged(guildId: string, newHash: string): boolean {
-  const latest = getLatestSnapshot(guildId);
-  if (!latest) return true; // No previous snapshot = definitely changed
-  return latest.contentHash !== newHash;
-}
-
-/**
- * Clear cache for a guild (e.g., on guildDelete).
- */
-export function clearSnapshotCache(guildId: string): void {
-  snapshotCache.delete(guildId);
-}

@@ -18,11 +18,11 @@ import { logger } from "../lib/logger.js";
 // Types
 // ============================================================================
 
-export type TestStatus = "pass" | "fail" | "error" | "skipped" | "not_tested";
-export type TestType = "live" | "mock" | "manual" | "api_limited";
-export type IssueSeverity = "critical" | "high" | "medium" | "low" | "info";
+type TestStatus = "pass" | "fail" | "error" | "skipped" | "not_tested";
+type TestType = "live" | "mock" | "manual" | "api_limited";
+type IssueSeverity = "critical" | "high" | "medium" | "low" | "info";
 
-export interface AuditFinding {
+interface AuditFinding {
   id: number;
   audit_run_id: string;
   command_name: string;
@@ -143,18 +143,6 @@ const getPermMismatchesStmt = db.prepare(`
   ORDER BY command_name
 `);
 
-const listAuditRunsStmt = db.prepare(`
-  SELECT
-    audit_run_id,
-    MIN(created_at) as started_at,
-    COUNT(*) as command_count,
-    SUM(CASE WHEN test_status = 'pass' THEN 1 ELSE 0 END) as pass_count,
-    SUM(CASE WHEN test_status = 'fail' THEN 1 ELSE 0 END) as fail_count
-  FROM audit_findings
-  GROUP BY audit_run_id
-  ORDER BY started_at DESC
-`);
-
 // ============================================================================
 // Functions
 // ============================================================================
@@ -225,7 +213,7 @@ export function insertFinding(params: InsertFindingParams): number {
 /**
  * Get all findings for an audit run.
  */
-export function getFindingsByRun(runId: string): AuditFinding[] {
+function getFindingsByRun(runId: string): AuditFinding[] {
   try {
     return getFindingsByRunStmt.all(runId) as AuditFinding[];
   } catch (err) {
@@ -237,7 +225,7 @@ export function getFindingsByRun(runId: string): AuditFinding[] {
 /**
  * Get findings filtered by severity.
  */
-export function getFindingsBySeverity(runId: string, severity: IssueSeverity): AuditFinding[] {
+function getFindingsBySeverity(runId: string, severity: IssueSeverity): AuditFinding[] {
   try {
     return getFindingsBySeverityStmt.all(runId, severity) as AuditFinding[];
   } catch (err) {
@@ -296,38 +284,6 @@ export function generateReportData(runId: string): ReportData {
     permissionMismatches,
     allFindings,
   };
-}
-
-/**
- * List all audit runs with summary info.
- */
-export function listAuditRuns(): Array<{
-  auditRunId: string;
-  startedAt: number;
-  commandCount: number;
-  passCount: number;
-  failCount: number;
-}> {
-  try {
-    const rows = listAuditRunsStmt.all() as Array<{
-      audit_run_id: string;
-      started_at: number;
-      command_count: number;
-      pass_count: number;
-      fail_count: number;
-    }>;
-
-    return rows.map((r) => ({
-      auditRunId: r.audit_run_id,
-      startedAt: r.started_at,
-      commandCount: r.command_count,
-      passCount: r.pass_count,
-      failCount: r.fail_count,
-    }));
-  } catch (err) {
-    logger.error({ err }, "[auditFindingsStore] Failed to list audit runs");
-    return [];
-  }
 }
 
 /**

@@ -30,31 +30,6 @@ const upsertNsfwFlagStmt = db.prepare(
      flagged_at = datetime('now'),
      reviewed = 0`
 );
-// WHY reviewed = 0 on conflict: If someone changes their avatar to a new NSFW one,
-// we want mods to look at it again. They don't get credit for their previous clean bill of health.
-
-/*
- * The shape of what comes back from the database. Yes, snake_case.
- * We could map this to camelCase but honestly life is short.
- *
- * NOTE: No "getNsfwFlag" function exists because we never need to read
- * individual flags. Mods view them through /audit nsfw review, which
- * queries the table directly in the command handler. If you need
- * single-flag retrieval, add it here rather than scattering raw SQL.
- */
-export interface NsfwFlagRow {
-  id: number;
-  guild_id: string;
-  user_id: string;
-  avatar_url: string;
-  nsfw_score: number;  // 0-1 probability, where 0.8+ means "you need to explain this to HR"
-  reason: string;
-  flagged_by: string;
-  flagged_at: string;
-  reviewed: number;    // SQLite doesn't have booleans. 0 = false, 1 = true. Welcome to 1985.
-  reviewed_by: string | null;  // Discord user ID of who dismissed the flag
-  reviewed_at: string | null;  // ISO datetime of when the flag was dismissed
-}
 
 /**
  * Upsert NSFW flag for a user's avatar.
@@ -86,7 +61,6 @@ export function upsertNsfwFlag(params: {
     throw err;
   }
 }
-
 
 /**
  * Score Vision already produced for this exact avatar, from this audit's own flags or the
