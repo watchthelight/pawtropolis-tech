@@ -36,6 +36,8 @@ import { syncRole, removeRole } from "../features/roleCacheSync.js";
 import { captureMessage, markMessageDeleted } from "../features/tickets/transcript.js";
 import * as archive from "../features/messageArchive.js";
 import { handleInviteCreate, handleInviteDelete } from "../features/inviteTracker.js";
+import { handleItemRoleAdded } from "../features/inventory/capture.js";
+import { handlePatreonArtRewards } from "../features/patreonArtRewards.js";
 
 export function registerGuildEvents(client: Client): void {
 client.on("guildCreate", wrapEvent("guildCreate", async (guild) => {
@@ -305,7 +307,6 @@ client.on("guildMemberUpdate", wrapEvent("guildMemberUpdate", async (oldMember, 
   // Inventory capture: queue catalogued reward roles for banking after a grace window,
   // so Mimu and Amari finish their own post-grant checks before the role disappears.
   try {
-    const { handleItemRoleAdded } = await import("../features/inventory/capture.js");
     handleItemRoleAdded(oldMember, newMember);
   } catch (err) {
     logger.error({
@@ -329,7 +330,6 @@ client.on("guildMemberUpdate", wrapEvent("guildMemberUpdate", async (oldMember, 
 
     // Grant art ticket rewards for the user's (now-deduped) Patreon tier
     try {
-      const { handlePatreonArtRewards } = await import("../features/patreonArtRewards.js");
       await handlePatreonArtRewards(newMember);
     } catch (err) {
       logger.error({

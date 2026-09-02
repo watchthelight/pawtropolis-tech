@@ -94,6 +94,7 @@ import {
   getThreadIdForDmReply,
 } from "../../../src/features/modmail/tickets.js";
 import { appendTranscript } from "../../../src/features/modmail/transcript.js";
+import { addOpenThread, removeOpenThread } from "../../../src/features/modmail/threadState.js";
 
 const mockGetTicketByThread = getTicketByThread as ReturnType<typeof vi.fn>;
 
@@ -791,6 +792,8 @@ describe("handleInboundThreadMessageForModmail", () => {
       user_id: "user-123",
       thread_id: "thread-123",
     });
+    // The in-memory open-thread set gates the lookup; open threads register on open.
+    addOpenThread("thread-123");
 
     const message = {
       author: { bot: false, id: "staff-1" },
@@ -802,9 +805,25 @@ describe("handleInboundThreadMessageForModmail", () => {
     } as any;
     const client = {} as any;
 
-    await handleInboundThreadMessageForModmail(message, client);
+    try {
+      await handleInboundThreadMessageForModmail(message, client);
+    } finally {
+      removeOpenThread("thread-123");
+    }
 
     expect(mockGetTicketByThread).toHaveBeenCalledWith("thread-123");
+  });
+
+  it("skips the lookup for threads that are not open modmail threads", async () => {
+    const message = {
+      author: { bot: false, id: "staff-1" },
+      channel: { isThread: () => true, id: "thread-999" },
+      guildId: "guild-123",
+    } as any;
+
+    await handleInboundThreadMessageForModmail(message, {} as any);
+
+    expect(mockGetTicketByThread).not.toHaveBeenCalled();
   });
 
   it("skips closed tickets", async () => {

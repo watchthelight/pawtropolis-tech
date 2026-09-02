@@ -15,6 +15,7 @@ import {
   type ThreadChannel,
 } from "discord.js";
 import { db } from "../../db/db.js";
+import { isOpenModmailThread } from "./threadState.js";
 import { logger } from "../../lib/logger.js";
 import { captureException } from "../../lib/sentry.js";
 import { enrichEvent } from "../../lib/reqctx.js";
@@ -510,9 +511,9 @@ export async function handleInboundThreadMessageForModmail(message: Message, cli
   if (!message.channel.isThread()) return;
   if (!message.guildId) return;
 
-  // The getTicketByThread lookup is fast (indexed query), so we can afford to
-  // check every thread message. False positives (messages in non-modmail threads)
-  // just return null and exit early.
+  // The open-thread set is hydrated at boot and maintained on open/close, so messages
+  // in other threads skip the database entirely.
+  if (!isOpenModmailThread(message.channel.id)) return;
   const ticket = getTicketByThread(message.channel.id);
   if (ticket && ticket.status === "open") {
     await routeThreadToDm(message, ticket, client);

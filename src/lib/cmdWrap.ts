@@ -24,6 +24,8 @@ import {
   type GuildMember,
 } from "discord.js";
 import { logger, redact } from "./logger.js";
+import { isOwner } from "./owner.js";
+import { hasStaffPermissions, hasManageGuild } from "./config.js";
 import { addBreadcrumb, captureException, setContext, setTag } from "./sentry.js";
 import { ctx as reqCtx, newTraceId, runWithCtx, enrichEvent } from "./reqctx.js";
 import { classifyError, errorContext, shouldReportToSentry } from "./errors.js";
@@ -233,8 +235,6 @@ export function wrapCommand<I extends InstrumentedInteraction>(
 
     // Enrich with user context
     const member = interaction.member as GuildMember | null;
-    const { isOwner } = await import("./owner.js");
-    const { hasStaffPermissions, hasManageGuild } = await import("./config.js");
 
     // Extract role IDs defensively - test mocks may not have a proper Collection
     let roleIds: string[] = [];
