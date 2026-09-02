@@ -11,6 +11,7 @@ import { db } from "../../db/db.js";
 import { logger } from "../../lib/logger.js";
 import { scanAvatar, type ScanResult } from "../avatarScan.js";
 import { ensureReviewMessage } from "../review.js";
+import { waitForReviewCardMapped } from "../review/cardEvents.js";
 import type { GuildConfig } from "../../lib/config.js";
 
 function upsertScan(
@@ -75,13 +76,8 @@ function upsertScan(
  * 5s timeout is generous - review card creation typically takes <500ms. If we
  * timeout, we still try to refresh (it might exist by then anyway).
  */
-async function waitForReviewCardMapping(
-  appId: string,
-  timeoutMs = 5000,
-  pollMs = 200
-): Promise<boolean> {
-  const start = Date.now();
-  while (Date.now() - start < timeoutMs) {
+async function waitForReviewCardMapping(appId: string, timeoutMs = 5000): Promise<boolean> {
+  const hasMapping = () => {
     const row = db
       .prepare(
         `
@@ -91,14 +87,15 @@ async function waitForReviewCardMapping(
       `
       )
       .get(appId) as { message_id: string | null } | undefined;
+    return !!row && typeof row.message_id === "string" && row.message_id.length > 0;
+  };
 
-    if (row && typeof row.message_id === "string" && row.message_id.length > 0) {
-      return true;
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, pollMs));
-  }
-  return false;
+  if (hasMapping()) return true;
+  // ensureReviewMessage signals the mapping the moment it is written, so waiting on the
+  // event replaces the 200ms polling loop this used to be. The final read covers a card
+  // written between the first check and the subscription.
+  if (await waitForReviewCardMapped(appId, timeoutMs)) return true;
+  return hasMapping();
 }
 
 /**

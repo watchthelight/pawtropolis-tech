@@ -50,6 +50,7 @@ import type {
   AvatarScanRow,
 } from "./types.js";
 import { getClaim } from "./claims.js";
+import { emitReviewCardMapped } from "./cardEvents.js";
 
 // ===== Constants =====
 
@@ -967,6 +968,7 @@ export async function ensureReviewMessage(
     });
 
     upsert(currentMapping, message);
+    emitReviewCardMapped(appId);
     return { channelId: message.channelId, messageId: message.id };
   } catch (err) {
     // Never block the flow on review card errors
