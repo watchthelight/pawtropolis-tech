@@ -267,38 +267,37 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
            *
            * If this becomes a problem, we could cache username->user_id mappings.
            */
+          // user_cache holds the names of everyone the bot has seen, so this is one
+          // indexed query instead of 25 REST user fetches with a sleep between each.
           const usernameSearchQuery = `
-            SELECT DISTINCT a.user_id
-            FROM application a
-            WHERE a.guild_id = ?
-            LIMIT 25
+            SELECT user_id, username, display_name, global_name, avatar_url
+            FROM user_cache
+            WHERE guild_id = ?
+              AND (username LIKE ? OR display_name LIKE ? OR global_name LIKE ?)
+            LIMIT 1
           `;
-          const candidateUserIds = withSql(ctx, usernameSearchQuery, () =>
-            db.prepare(usernameSearchQuery).all(guildId) as { user_id: string }[]
+          const pattern = `%${trimmedQuery.replace(/[%_]/g, "")}%`;
+          const cachedUser = withSql(ctx, usernameSearchQuery, () =>
+            db.prepare(usernameSearchQuery).get(guildId, pattern, pattern, pattern) as
+              | {
+                  user_id: string;
+                  username: string | null;
+                  display_name: string | null;
+                  global_name: string | null;
+                  avatar_url: string | null;
+                }
+              | undefined
           );
 
-          // Helper for delay between API calls
-          const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-          // Try to resolve each user and check username
           let foundUserId: string | null = null;
-          for (const { user_id } of candidateUserIds) {
-            try {
-              // 50ms delay between API calls to prevent rate limit abuse
-              await delay(50);
-              const user = await interaction.client.users.fetch(user_id);
-              if (
-                user.username.toLowerCase().includes(trimmedQuery.toLowerCase()) ||
-                user.tag.toLowerCase().includes(trimmedQuery.toLowerCase())
-              ) {
-                foundUserId = user_id;
-                displayName = user.tag;
-                avatarUrl = user.displayAvatarURL({ size: 128 });
-                break;
-              }
-            } catch {
-              // User can't be fetched, skip
-            }
+          if (cachedUser) {
+            foundUserId = cachedUser.user_id;
+            displayName =
+              cachedUser.username ??
+              cachedUser.global_name ??
+              cachedUser.display_name ??
+              `User ${cachedUser.user_id}`;
+            avatarUrl = cachedUser.avatar_url;
           }
 
           if (!foundUserId) {
