@@ -153,7 +153,7 @@
 		min-height: 100vh;
 		background: var(--void);
 		color: var(--ink);
-		font-family: 'Inter Variable', system-ui, sans-serif;
+		font-family: 'Inter Variable', 'Inter Fallback', system-ui, sans-serif;
 		display: flex;
 		flex-direction: column;
 	}

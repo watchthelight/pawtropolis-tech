@@ -8,6 +8,20 @@
 @import "tailwindcss";
 
 /*
+ * Metric-matched stand-in for Inter while the woff2 loads. Without it the swap moved
+ * every line on the public handbook (Lighthouse CLS 0.142). Values are Inter's metrics
+ * expressed against Arial, the same numbers next/font and Fontaine derive.
+ */
+@font-face {
+  font-family: "Inter Fallback";
+  src: local("Arial"), local("Helvetica"), local("Liberation Sans");
+  size-adjust: 107.12%;
+  ascent-override: 90.44%;
+  descent-override: 22.52%;
+  line-gap-override: 0%;
+}
+
+/*
  * Pawtropolis Dashboard: Sage Observatory Design System
  *
  * Three themes, one token vocabulary:
@@ -254,8 +268,8 @@
     0 16px 32px oklch(0% 0 0 / 0.2);
   --shadow: var(--shadow-md);
 
-  --font-head: "Inter Variable", system-ui, sans-serif;
-  --font-body: "Inter Variable", system-ui, sans-serif;
+  --font-head: "Inter Variable", "Inter Fallback", system-ui, sans-serif;
+  --font-body: "Inter Variable", "Inter Fallback", system-ui, sans-serif;
 }
 
 /* ── Base ── */
