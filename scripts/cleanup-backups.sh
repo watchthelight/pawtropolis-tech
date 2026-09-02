@@ -6,7 +6,7 @@
 
 set -euo pipefail
 
-BACKUP_DIR="${BACKUP_DIR:-/home/ubuntu/pawtropolis-tech/data}"
+BACKUP_DIR="${BACKUP_DIR:-/home/ubuntu/pawtropolis-tech/data/backups}"
 KEEP_NEWEST="${KEEP_NEWEST:-3}"
 RETAIN_DAYS="${RETAIN_DAYS:-7}"
 BACKUP_LOG="${BACKUP_LOG:-/tmp/backup-cleanup.log}"
@@ -17,7 +17,7 @@ log() { echo "[$(ts)] $*" | tee -a "$BACKUP_LOG"; }
 cd "$BACKUP_DIR"
 
 # Newest N backup paths (won't be touched).
-mapfile -t KEEP < <(ls -1t data.db.backup-* 2>/dev/null | head -n "$KEEP_NEWEST")
+mapfile -t KEEP < <(ls -1t data.db.* 2>/dev/null | head -n "$KEEP_NEWEST")
 
 # Files to inspect = all backups not in KEEP list.
 to_delete=()
