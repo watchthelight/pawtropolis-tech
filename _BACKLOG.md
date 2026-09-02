@@ -14,6 +14,15 @@ See [`docs/issue-system.md`](./docs/issue-system.md) for the file format, label 
 - [ ] [Perf pass T3: DB layer, pragmas, indexes, retention](todo/00265.md) `Medium` `WIP`
 - [ ] [Perf pass T4: startup, process, dependencies, deploy](todo/00266.md) `Medium` `WIP`
 - [ ] [Perf pass T5: web dashboard queries and streaming](todo/00267.md) `Medium` `WIP`
+- [ ] [Release 6.2.0: normalise production env, deploy runbook, post-deploy soak](todo/00268.md) `High` `WIP`
+- [ ] [Deploy backups fill the disk: prune data/backups, fix the cleanup script, prune from the bot](todo/00269.md) `Critical` `WIP`
+- [ ] [Slow transactions up to 13 s: name the culprit, batch the backfill writer, checkpoint and VACUUM](todo/00270.md) `High` `WIP`
+- [ ] [Dead code and dependency audit with knip; script index](todo/00271.md) `Medium` `WIP`
+- [ ] [Documentation truth: parity tests for commands, env, permissions and config; archive stale generated docs](todo/00272.md) `High` `WIP`
+- [ ] [Dashboard config editor is missing 17 bot-editable columns](todo/00273.md) `Medium` `WIP`
+- [ ] [Test suite must not open data/data.db](todo/00274.md) `High` `WIP`
+- [ ] [Old-code speed sweep from production signals and static patterns; Lighthouse budget for public pages](todo/00275.md) `Medium` `WIP`
+- [ ] [Backfill process stuck in waiting restart](todo/00276.md) `Medium` `WIP`
 
 ## Blocked
 
