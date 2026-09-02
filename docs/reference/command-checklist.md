@@ -60,4 +60,4 @@ await interaction.reply({
 
 - [Command Patterns](command-patterns.md): `withStep`, `withSql`, permission helpers, and subcommand routing
 - [Refactoring Checklist](command-refactor-checklist.md): full step-by-step when bringing an old command up to current standards
-- [Slash Commands Guide](../SLASH-COMMANDS.md): how to register and deploy commands
+- [Slash Commands](slash-commands.md) and the [command checklist](command-checklist.md): how to register and deploy commands

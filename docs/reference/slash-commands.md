@@ -54,6 +54,6 @@ If `deploy:cmds` hangs locally on Windows, run it on the EC2 host instead. See [
 
 - [Bot Handbook](../BOT-HANDBOOK.md) — full per-command guide
 - [PERMS-MATRIX.md](../PERMS-MATRIX.md) — permission tiers per command
-- [SLASH-COMMANDS.md](../SLASH-COMMANDS.md) — developer guide for *creating* commands
+- [command-checklist.md](command-checklist.md) and [command-patterns.md](command-patterns.md): creating and registering commands
 - [TICKET-SYSTEM-GUIDE.md](../TICKET-SYSTEM-GUIDE.md) — first-party ticket flow
 - [Command Patterns](command-patterns.md) — shared command-level patterns

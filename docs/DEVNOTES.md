@@ -126,5 +126,5 @@ Bot writes live Discord gateway data to SQLite every 5 minutes so the web dashbo
 - [Architecture: System Overview](architecture/system-overview.md): where these subsystems fit in the runtime topology
 - [Database Schema](reference/database-schema.md): `voice_session`, `guild_snapshot`, `avatar_scan`, `ai_detection_toggles` table definitions
 - [Bot Handbook: `/isitreal`](BOT-HANDBOOK.md#isitreal): user-facing AI detection command
-- [Slash Commands System](SLASH-COMMANDS.md): how the `/isitreal` command and its config sub-commands are wired up
+- [Slash Commands](reference/slash-commands.md): how the `/isitreal` command and its config sub-commands are wired up
 - [Deployment Config](operations/deployment-config.md): env vars and where to set them on the server
