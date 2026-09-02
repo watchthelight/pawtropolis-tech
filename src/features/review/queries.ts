@@ -10,7 +10,7 @@
 
 import { db } from "../../db/db.js";
 import { logger } from "../../lib/logger.js";
-import type { ApplicationRow, ApplicationStatus } from "./types.js";
+import type { ApplicationRow } from "./types.js";
 
 // ============================================================================
 // Prepared Statements (cached at module load for performance)
@@ -87,17 +87,6 @@ export function findPendingAppByUserId(guildId: string, userId: string): Applica
  */
 export function updateReviewActionMeta(id: number, meta: unknown) {
   updateReviewActionMetaStmt.run(JSON.stringify(meta), id);
-}
-
-/**
- * isClaimable
- * WHAT: Helper to determine if an application is in a claimable state.
- * WHY: Prevents claim attempts on terminal states (kicked, approved, rejected).
- * @param status - The application status
- * @returns true if the application can be claimed
- */
-export function isClaimable(status: ApplicationStatus): boolean {
-  return status === "submitted" || status === "needs_info";
 }
 
 /**

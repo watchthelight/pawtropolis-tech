@@ -30,7 +30,7 @@ import type {
 
 // ===== Constants =====
 
-export const DEFAULT_WELCOME_TEMPLATE = "Welcome {applicant.mention} to {guild.name}! wave";
+const DEFAULT_WELCOME_TEMPLATE = "Welcome {applicant.mention} to {guild.name}! wave";
 
 // These Sets act as in-memory deduplication to avoid log spam. The tradeoff is they
 // grow unbounded for the lifetime of the process. In practice, the number of guilds
@@ -367,27 +367,6 @@ export async function postWelcomeMessage(options: {
       ? "missing_permissions"
       : "send_failed";
     return { ok: false, reason, error: err };
-  }
-}
-
-/**
- * buildWelcomeNotice
- * WHAT: Returns a user-friendly error message for welcome failures.
- * WHY: Provides actionable feedback when welcome messages fail.
- */
-export function buildWelcomeNotice(reason: WelcomeFailureReason): string {
-  switch (reason) {
-    case "missing_channel":
-      return "Welcome message not posted: general channel not configured.";
-    case "invalid_channel":
-      return "Welcome message not posted: configured general channel is unavailable.";
-    case "missing_permissions":
-      return "Welcome message not posted: missing permissions in the configured channel.";
-    case "fetch_failed":
-      return "Welcome message not posted: failed to resolve the configured general channel.";
-    case "send_failed":
-    default:
-      return "Welcome message not posted: failed to send to the configured general channel.";
   }
 }
 

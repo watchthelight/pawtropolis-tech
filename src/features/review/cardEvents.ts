@@ -11,7 +11,7 @@ import { EventEmitter } from "node:events";
 
 const MAPPED = "mapped";
 
-export const reviewCardEvents = new EventEmitter();
+const reviewCardEvents = new EventEmitter();
 reviewCardEvents.setMaxListeners(500);
 
 export function emitReviewCardMapped(appId: string): void {

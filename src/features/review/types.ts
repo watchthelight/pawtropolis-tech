@@ -69,38 +69,6 @@ export type ReviewClaimRow = {
   claimed_at: string;
 };
 
-/**
- * Parse a claimed_at value to epoch milliseconds, tolerating the formats the
- * column has held over time: epoch seconds (e.g. "1748600000"), epoch ms, and
- * ISO / SQLite datetime text. Returns NaN if unparseable.
- */
-function claimedAtToMs(claimed_at: string): number {
-  const n = Number(claimed_at);
-  if (Number.isFinite(n)) {
-    // Heuristic: values < 1e12 are seconds, otherwise milliseconds.
-    return n < 1e12 ? n * 1000 : n;
-  }
-  return Date.parse(claimed_at);
-}
-
-/**
- * Convert claimed_at to a Date object.
- * @param claimed_at - epoch-seconds string (or ISO/datetime text) from database
- * @returns Date object
- */
-export function claimedAtToDate(claimed_at: string): Date {
-  return new Date(claimedAtToMs(claimed_at));
-}
-
-/**
- * Convert claimed_at to Unix epoch seconds.
- * @param claimed_at - epoch-seconds string (or ISO/datetime text) from database
- * @returns Unix epoch seconds
- */
-export function claimedAtToEpoch(claimed_at: string): number {
-  return Math.floor(claimedAtToMs(claimed_at) / 1000);
-}
-
 // ===== Review Card Types =====
 
 export type ReviewCardApplication = {
