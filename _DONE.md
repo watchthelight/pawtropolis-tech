@@ -4,6 +4,10 @@ One-line dated ledger. Detail in [`done/`](./done/). Pair of [`_BACKLOG.md`](./_
 
 Reverse chronological by completion date.
 
+## 2026-10-14
+
+- [x] [Handbook: 2026-10 gatekeeper review rules, ticket deadlines, conduct rewrite](done/00278.md) `Medium` Gatekeeper Guide review rules and Staff Handbook ticket deadlines and conduct sections updated from the 10/10 meeting; regression tests lock them.
+
 ## 2026-09-02
 
 - [x] [Remove Claude from the GitHub contributors panel](done/00259.md) `Low` Declined: needs a history rewrite and force push of a repository other systems track; the no-trailer rule already holds for new commits.
