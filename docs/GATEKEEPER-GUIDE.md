@@ -15,11 +15,12 @@ You review applications and decide who gets into the server.
 When someone wants to join the server, they fill out an application. You review it and decide whether to accept, reject, or kick.
 
 **How it works:**
-1. Someone clicks Verify in the gate channel
-2. A review card appears in your staff channel
-3. You claim it (so others know you're handling it)
-4. You make the call: Accept, Reject, or Kick
-5. The bot handles the rest (roles, DMs, welcome messages)
+1. A new member clicks the Verify button in 「❓」verify
+2. They answer the questions the bot asks them
+3. The application lands in the staff channel as a review card for the Gatekeeper team
+4. A Gatekeeper claims it (so others know it's being handled) and reviews it
+5. The Gatekeeper makes the call: Accept, Reject, Kick, or question them through Modmail
+6. The bot handles the rest (roles, DMs, welcome messages)
 
 **Commands:**
 - `/accept`: Approve an application (they get the member role)
@@ -128,12 +129,53 @@ Stats include:
 
 ---
 
+## Rules for Application Review
+
+### Age Ranges Are Not Okay
+
+We don't accept age ranges, for safety reasons. If a minor answers the age question with something like `16-18`, we have no way of knowing when they turn 18. That matters a lot when a report comes in about that user: their age is part of the context we moderate with.
+
+The only exception is a range that is entirely 18 or over. Whatever the range, they're an adult, unless they're lying about their age (which is its own moderation issue).
+
+You will also see ranges like `12-15`, which are not okay under Discord ToS, and joke ranges like `18-99`. Have them narrow it down to one age. Some people troll this question, and it's our job to rule that out.
+
+### Verify Their Profile
+
+Checking the applicant's profile is one of the easiest and most effective ways to tell whether someone needs moderation. Look at all of it:
+
+- Profile picture
+- Banner
+- Bio
+- Status
+- Server Tag
+
+Statuses and Server Tags are the two people miss most. Check them anyway: they have to follow our rules too. Server profiles are fine as long as they follow Discord's ToS.
+
+**AI content:** No AI-generated content on accounts, including profile pictures and banners. They have to change it before they can be approved. `/isitreal` (see AI Detection above) helps when you're unsure.
+
+**NSFW or suggestive content:** No adult content anywhere on the profile. This is the most common problem, and it often hides in the status or Server Tag.
+
+### Response Time
+
+Applications should be reviewed within **6 hours** of submission. The applications channel can get clogged fast, so use the dashboard's Reviews page or `/listopen` to find applications that slipped past.
+
+If someone has claimed an application but hasn't acted on it, ping that Gatekeeper.
+
+### Communicate With Your Team
+
+This is the big one. If you have a question or you aren't sure about an application, ask your team. Asking for help doesn't make you any less of a Gatekeeper, and it's encouraged.
+
+---
+
 ## Common Mistakes to Avoid
 
 1. Forgetting to claim. Always claim first: otherwise two people end up reviewing the same application.
 2. Mixing identifiers. Pick one of `app:`, `user:`, or `uid:` per command and stick with it.
 3. Treating `perm:true` like a regular reject. It's permanent and irreversible without `/unblock`. Save it for spam, bots, and clear rule violations.
 4. Skipping the password check. Most "rejects" are people who guessed the password wrong: they can just try again.
+5. Accepting an age range. Ask for a single age unless the whole range is 18 or over.
+6. Only checking the avatar. Status and Server Tag need the same look as the picture, banner, and bio.
+7. Letting a claim sit. Applications are due within 6 hours: act on it or `/unclaim`.
 
 ---
 
