@@ -174,19 +174,31 @@ You're held to a higher standard than regular members because the rest of the co
 
 ### Professionalism
 
-Stay composed during heated conversations. Emotional reactions escalate situations that could have ended quietly.
+As a team member you're held to a higher standard than a regular member. That doesn't mean losing your personality, but people come to you expecting professionalism, and that's the goal.
 
-Use discretion with sensitive topics. Bans, reports, and member disputes stay in staff channels.
+Keep your composure during any conflict that happens in public view. De-escalate, and handle ANY moderation action in the appropriate channels (the mod action channels).
+
+Keep moderation conversations out of public channels. Part of keeping the community safe is not sharing details of moderation actions. We may say an incident was handled, but we never share the details.
+
+You can still have personality while talking with members, but you're a role model and expected to be mature when it's appropriate.
 
 ### Attitude & Demeanor
+
+**Attitude** is your perspective and emotional disposition toward the community and its members: the why and the intent behind what you do. The goal is a positive or constructive attitude, not a negative one.
+
+**Demeanor** is the outward behavior and tone you show when interacting with others: how you text, how you use emojis, how you talk in voice channels. A member can be frustrated (attitude) and still keep their language professional (demeanor). Hold yourself to the same.
 
 Treat every member the same regardless of how long they've been around or how popular they are. Lead by example: your tone sets the tone for everyone watching.
 
 ### Responsiveness & Engagement
 
+Being engaged with the community is how you stay connected to it. How you interact, and how often, shapes how members look up to you, and they notice.
+
 Respond to mod pings reasonably quickly. If you can't be available, set your status or tell the team.
 
-Stay involved in everyday activity. Greeting people, cleaning up spam, answering questions in general: that's most of the job.
+Stay involved in everyday activity. Greeting new folks, cleaning up spam, answering questions in general: that's most of the job. Community Ambassadors exist to interact directly, but you can do the same. You're still a community member like everyone else; you're also a volunteer.
+
+Check bot logs and tickets now and then for anything that was missed and needs a follow-up. Come back to this handbook when you forget something. Nobody expects you to memorize it, but you are expected to understand it.
 
 Track tasks where the team can see them: Trello, bot logs, or the dedicated staff channels. Don't just remember things in your head.
 
@@ -214,6 +226,16 @@ Don't clutter moderation channels with casual chatter. They exist for tracking a
 - Don't vent about users or other staff in public channels. Keep that for DMs or staff chat.
 
 ### Transparency
+
+This community is big on transparency. It's one of the main ways we stay connected to members: when we're honest and upfront, people can rely on us and trust us to be there when needed. A lot of communities struggle because members end up holding grudges against staff; this is how we avoid that. In practice it means:
+
+- Weekly statistic reports
+- Monday newsletters
+- Letting members vote on changes
+- Admitting fault in announcements when we're in the wrong
+- Being open about our moderation (within the limits in Professionalism above: an incident was handled, never the details)
+
+Members can report team members, without fear of backlash. Everyone makes mistakes, and staff are no exception.
 
 Log decisions accurately. Reports should include the time, the user, and what actually happened.
 
@@ -745,6 +767,15 @@ In many communities like this one, there will be disagreements or arguments that
 Tickets are how members get private support from staff. This section covers how to handle them.
 
 ### Rules for Handling Tickets
+
+**Response times.**
+- A new ticket needs a team response within **2 to 3 hours** of being opened.
+- Close a ticket within **12 hours** of it being resolved.
+- If a claimed ticket hasn't been handled or updated by its team member within 2 to 3 hours, ping that team member and ask to take it over. If they don't answer within 6 hours of the request, you can take over the ticket yourself.
+
+**Stay professional.** Follow the [Conduct & Expectations](#conduct--expectations) guidelines. For example, when a member asks for a change to the community:
+
+> Hello! Sorry to keep you waiting, unfortunately all community changes are through our member voting system. You can see how that works in our City Hall > 「💡」member-feedback section. It'll explain the ropes there.
 
 **One staff member per ticket.**
 Don't pile on. If you need a second opinion, get it in staff chat first, then bring the answer back into the ticket. Multiple staff in a single ticket creates confusion and crossed wires.
