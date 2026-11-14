@@ -64,15 +64,16 @@ export default defineConfig({
         "scripts/**",
         "dist/**",
       ],
-      // Thresholds sit just under the measured numbers with include: src/**
-      // (lines 39.82, statements 39.49, functions 44.72, branches 34.71), rounded
-      // down to the whole percent, so the gate is real but green. Raise them as
-      // coverage improves; never lower them to make a run pass.
+      // Measured for v26 with include: src/** (lines 44.11, statements 44.05,
+      // functions 49.64, branches 38.99). Each threshold is one point under,
+      // rounded down: v8 counts differ slightly between Node versions and CI
+      // runs two. Raise them as coverage improves; never lower them to make a
+      // run pass.
       thresholds: {
-        lines: 39,
-        functions: 44,
-        branches: 34,
-        statements: 39,
+        lines: 43,
+        functions: 48,
+        branches: 37,
+        statements: 43,
       },
     },
   },
