@@ -73,20 +73,10 @@ export function getSession(cookies: Cookies): SessionData | null {
   const raw = cookies.get(SESSION_COOKIE);
   if (!raw) return null;
 
-  // Try encrypted format first
   const decrypted = decrypt(raw);
-  if (decrypted) {
-    try {
-      return JSON.parse(decrypted) as SessionData;
-    } catch {
-      return null;
-    }
-  }
-
-  // Fallback: try reading as plain JSON (pre-encryption sessions)
-  // These will be re-encrypted on next setSession call
+  if (!decrypted) return null;
   try {
-    return JSON.parse(raw) as SessionData;
+    return JSON.parse(decrypted) as SessionData;
   } catch {
     return null;
   }
