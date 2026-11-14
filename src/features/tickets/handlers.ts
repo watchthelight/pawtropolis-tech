@@ -252,13 +252,16 @@ async function handleOpenButton(
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
-    const { ticket, channel } = await TicketService.create({
+    const { ticket, channel, greetingFailed } = await TicketService.create({
       typeKey,
       guild: interaction.guild,
       openerUserId: interaction.user.id,
     });
+    const opened = `Ticket opened: <#${channel.id}> (\`${type.key}-${String(ticket.number).padStart(4, "0")}\`)`;
     await interaction.editReply({
-      content: `Ticket opened: <#${channel.id}> (\`${type.key}-${String(ticket.number).padStart(4, "0")}\`)`,
+      content: greetingFailed
+        ? `${opened}\nThe welcome message could not be posted; staff can still see the ticket.`
+        : opened,
     });
   } catch (err) {
     logger.error(

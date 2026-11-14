@@ -199,6 +199,7 @@ export interface CreateTicketInput {
 export interface CreateTicketResult {
   ticket: Ticket;
   channel: TextChannel;
+  greetingFailed?: boolean;
 }
 
 export class TicketService {
@@ -289,16 +290,25 @@ export class TicketService {
     });
     const actionRow = buildGreetingActionRow(ticketId, false);
 
-    const greeting = await channel.send({
-      content: pingMentions,
-      embeds: [embed],
-      components: [actionRow],
-      allowedMentions: {
-        users: [openerUserId],
-        roles: type.pingRoleIds,
-      },
-    });
-    getSetGreetingMessageStmt().run(greeting.id, ticketId);
+    let greetingFailed = false;
+    try {
+      const greeting = await channel.send({
+        content: pingMentions,
+        embeds: [embed],
+        components: [actionRow],
+        allowedMentions: {
+          users: [openerUserId],
+          roles: type.pingRoleIds,
+        },
+      });
+      getSetGreetingMessageStmt().run(greeting.id, ticketId);
+    } catch (err) {
+      greetingFailed = true;
+      logger.error(
+        { err, ticketId, channelId: channel.id },
+        "[tickets/service] greeting send failed (ticket and channel exist)"
+      );
+    }
 
     // Spawn staff-only private thread if the type wants one.
     // GOTCHA: message.startThread() can only create public threads. For a
@@ -367,7 +377,7 @@ export class TicketService {
       .prepare(`SELECT * FROM ticket WHERE id = ?`)
       .get(ticketId) as TicketRow;
 
-    return { ticket: rowToTicket(row), channel };
+    return { ticket: rowToTicket(row), channel, ...(greetingFailed ? { greetingFailed } : {}) };
   }
 
   /**
