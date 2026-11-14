@@ -37,6 +37,18 @@ import { notifyDashboard } from "../../web/notifyDashboard.js";
 import { addOpenThread } from "./threadState.js";
 import { missingPermsForStartThread, ensureModsCanSpeakInThread } from "./threadPerms.js";
 
+// A 'pending' guard row older than this is treated as abandoned (the opener crashed
+// or was killed before registering a thread) and may be replaced.
+const PENDING_STALE_AFTER_S = 120;
+
+function clearStalePending(guildId: string, userId: string): void {
+  db.prepare(
+    `DELETE FROM open_modmail
+     WHERE guild_id = ? AND applicant_id = ? AND thread_id = 'pending'
+       AND created_at < strftime('%s','now') - ?`
+  ).run(guildId, userId, PENDING_STALE_AFTER_S);
+}
+
 // ===== Thread Registration =====
 
 /**
@@ -140,6 +152,7 @@ export async function openPublicModmailThreadFor(params: {
   // ======================================================================
 
   // Fast path check - avoids transaction overhead for common "already exists" case
+  clearStalePending(interaction.guildId, userId);
   const existingRow = db
     .prepare(`SELECT thread_id FROM open_modmail WHERE guild_id = ? AND applicant_id = ?`)
     .get(interaction.guildId, userId) as { thread_id: string } | undefined;
@@ -162,6 +175,8 @@ export async function openPublicModmailThreadFor(params: {
   let user: User;
   let thread: ThreadChannel;
   let ticketId: number;
+  let createdThread: ThreadChannel | undefined;
+  let registered = false;
 
   try {
     // Fetch user
@@ -228,6 +243,7 @@ export async function openPublicModmailThreadFor(params: {
       // Double-check guard INSIDE transaction. The fast path check above doesn't
       // hold a lock, so another mod could have snuck in between then and now.
       // This check happens under SQLite's write lock, so it's authoritative.
+      clearStalePending(interaction.guildId!, userId);
       const guardCheck = db
         .prepare(`SELECT thread_id FROM open_modmail WHERE guild_id = ? AND applicant_id = ?`)
         .get(interaction.guildId, userId) as { thread_id: string } | undefined;
@@ -302,6 +318,8 @@ export async function openPublicModmailThreadFor(params: {
       });
     }
 
+    createdThread = thread;
+
     // Add loud assertion logs after thread creation
     logger.info(
       {
@@ -328,6 +346,7 @@ export async function openPublicModmailThreadFor(params: {
         ticketId,
       });
     })();
+    registered = true;
 
     // Add to open threads set
     addOpenThread(thread.id);
@@ -470,6 +489,13 @@ export async function openPublicModmailThreadFor(params: {
           message: "Modmail thread is being created by another moderator. Please wait a moment and try again.",
         };
       }
+    }
+
+    // A thread created but never registered would be orphaned: remove it.
+    if (createdThread && !registered) {
+      await createdThread.delete("Modmail open failed before registration").catch((delErr) => {
+        logger.warn({ delErr, threadId: createdThread!.id }, "[modmail] failed to delete orphan thread");
+      });
     }
 
     // CRITICAL CLEANUP: If we fail for any reason, we must remove our 'pending' entry.
