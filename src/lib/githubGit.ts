@@ -16,7 +16,7 @@ function basicCredential(username: string, token: string): string {
   return Buffer.from(`${username}:${token}`).toString("base64");
 }
 
-export function githubAuthEnv(username: string, token: string): NodeJS.ProcessEnv {
+function githubAuthEnv(username: string, token: string): NodeJS.ProcessEnv {
   return {
     ...process.env,
     GIT_TERMINAL_PROMPT: "0",
@@ -44,7 +44,7 @@ export function gitAuthed(
 }
 
 /** Strip the token, its base64 credential and any URL userinfo from text bound for logs. */
-export function scrubGitSecrets(text: string, username: string, token: string): string {
+function scrubGitSecrets(text: string, username: string, token: string): string {
   let out = text;
   for (const secret of [token, basicCredential(username, token)]) {
     if (secret) out = out.split(secret).join("[redacted]");

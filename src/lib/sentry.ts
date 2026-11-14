@@ -295,6 +295,3 @@ export async function inSpan<T>(name: string, fn: () => Promise<T> | T): Promise
     return Promise.resolve(fn());
   }
 }
-
-// Export Sentry for advanced usage
-export { Sentry };
