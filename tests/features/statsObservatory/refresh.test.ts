@@ -374,3 +374,29 @@ describe("refreshPublicStats churn from append-only action_log (rejoin regressio
     expect(rejoinRows.length).toBe(0);
   });
 });
+
+describe("refreshPublicStats rolling 7-day active authors (integer day buckets)", () => {
+  it("counts distinct authors across the trailing 7 days for timestamps that are not day-aligned", () => {
+    const ma = db.prepare(
+      `INSERT INTO message_activity (guild_id, channel_id, user_id, created_at_s, hour_bucket) VALUES (?, ?, ?, ?, ?)`
+    );
+    const put = (user: string, s: number) => ma.run(G, "c1", user, s, s - (s % 3600));
+    put("ua", at(2026, 4, 22, 13, 17) + 41);
+    put("ua", at(2026, 4, 25, 9, 2) + 7);
+    put("ub", at(2026, 4, 28, 3, 5) + 9);
+    put("uc", at(2026, 4, 21, 23, 59) + 58);
+
+    refreshPublicStats(db, G, NOW_S);
+
+    const wau = (day: string) =>
+      (
+        db
+          .prepare(`SELECT active_authors_7d AS n FROM daily_metrics WHERE guild_id = ? AND day = ?`)
+          .get(G, day) as { n: number }
+      ).n;
+    expect(wau("2026-05-28")).toBe(2);
+    expect(wau("2026-05-27")).toBe(2);
+    expect(wau("2026-05-21")).toBe(1);
+    expect(wau("2026-05-20")).toBe(0);
+  });
+});

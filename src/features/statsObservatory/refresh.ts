@@ -279,7 +279,7 @@ function rebuildDailyMetrics(
   const authorsByDay = new Map<number, Set<string>>();
   for (const r of db
     .prepare(
-      `SELECT (created_at_s - ?) / ? AS d, user_id
+      `SELECT CAST((created_at_s - ?) / ? AS INTEGER) AS d, user_id
        FROM message_activity
        WHERE guild_id = ? AND created_at_s >= ?
        GROUP BY d, user_id`

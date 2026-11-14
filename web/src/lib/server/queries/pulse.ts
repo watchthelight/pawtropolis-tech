@@ -133,7 +133,7 @@ export function getPulseMetrics(guildId: string, range?: ResolvedRange): PulseMe
   const dailyDistribution = new Array(windowDays).fill(0);
   const dayRows = db()
     .prepare(
-      `SELECT (created_at_s - ?) / 86400 AS day_idx, COUNT(*) AS count
+      `SELECT CAST((created_at_s - ?) / 86400 AS INTEGER) AS day_idx, COUNT(*) AS count
 		 FROM message_activity
 		 WHERE guild_id = ? AND created_at_s >= ? AND created_at_s < ?
 		 GROUP BY day_idx`
