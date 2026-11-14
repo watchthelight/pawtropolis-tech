@@ -86,6 +86,7 @@ Every optional variable is listed with its default in [`.env.example`](../../.en
 | `RETENTION_ENABLED` | Lets the retention scheduler delete expired rows, old deploy backups and 30-day-old verification posts; otherwise it logs a dry run | `false` |
 | `DB_BACKUPS_DIR` | Where `deploy.sh` and the pruner keep database backups | `data/backups` |
 | `*_SCHEDULER_DISABLED=1` | Turns one scheduler off. Tests use these; production should run with none set | unset |
+| `DASHBOARD_API_PORT`, `DASHBOARD_API_HOST` | Port and bind address of the bot-side dashboard API. The host defaults to loopback; set `DASHBOARD_API_HOST=0.0.0.0` to listen on all interfaces (the previous behaviour) | `3003`, `127.0.0.1` |
 | `LOGGING_CHANNEL` / `LOGGING_CHANNEL_ID` | Fallback logging channel for `/send` | unset |
 | `EVENT_TIMEOUT_MS`, `LOOP_LAG_WARN_P99_MS` | Event handler watchdog and event-loop lag warning thresholds | `10000`, `250` |
 

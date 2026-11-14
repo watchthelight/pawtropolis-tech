@@ -9,6 +9,7 @@
 import Fastify, { type FastifyInstance } from "fastify";
 import type { Client } from "discord.js";
 import { logger } from "../lib/logger.js";
+import { secureCompare } from "../lib/secureCompare.js";
 import { registerAuditRoutes } from "./routes/audit.js";
 import { createRouteContext } from "./routes/context.js";
 import { registerReviewRoutes } from "./routes/review.js";
@@ -30,6 +31,7 @@ import type { ApiError } from "./dashboardApiTypes.js";
 let server: FastifyInstance | null = null;
 
 const DASHBOARD_API_PORT = parseInt(process.env.DASHBOARD_API_PORT ?? "3003", 10);
+const DASHBOARD_API_HOST = process.env.DASHBOARD_API_HOST || "127.0.0.1";
 const DASHBOARD_API_SECRET = process.env.DASHBOARD_API_SECRET;
 
 export async function startDashboardApi(client: Client): Promise<void> {
@@ -41,9 +43,10 @@ export async function startDashboardApi(client: Client): Promise<void> {
   server = Fastify({ logger: false });
 
   // Auth hook — validate X-Dashboard-Secret on every request
+  const apiSecret = DASHBOARD_API_SECRET;
   server.addHook("onRequest", async (request, reply) => {
     const secret = request.headers["x-dashboard-secret"];
-    if (secret !== DASHBOARD_API_SECRET) {
+    if (typeof secret !== "string" || !secureCompare(secret, apiSecret)) {
       return reply.code(401).send({ success: false, error: "Unauthorized" } satisfies ApiError);
     }
   });
@@ -97,8 +100,8 @@ export async function startDashboardApi(client: Client): Promise<void> {
   registerConfigRoutes(server, ctx);
   registerHealthRoutes(server, ctx);
 
-  await server.listen({ port: DASHBOARD_API_PORT, host: "0.0.0.0" });
-  logger.info({ port: DASHBOARD_API_PORT }, "[dashboardApi] Dashboard API started");
+  await server.listen({ port: DASHBOARD_API_PORT, host: DASHBOARD_API_HOST });
+  logger.info({ host: DASHBOARD_API_HOST, port: DASHBOARD_API_PORT },"[dashboardApi] Dashboard API started");
 }
 
 export async function stopDashboardApi(): Promise<void> {
