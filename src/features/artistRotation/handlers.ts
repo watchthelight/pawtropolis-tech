@@ -19,6 +19,7 @@ import {
   incrementAssignments,
   logAssignment,
   claimNextArtist,
+  getNextArtist,
 } from "./index.js";
 import { createJob } from "../artJobs/index.js";
 import { TicketService } from "../tickets/service.js";
@@ -179,6 +180,14 @@ async function handleConfirm(
     await abort(
       `<@${data.recipientId}> does not hold a **${ART_TYPE_DISPLAY[data.artType]}** ticket. ` +
         "It may have already been redeemed. Nothing was assigned."
+    );
+    return;
+  }
+
+  // Peek at the queue before spending the ticket so an empty queue leaves the role intact.
+  if (!data.isOverride && !getNextArtist(guild.id)) {
+    await abort(
+      "The artist rotation queue is empty, so no artist could be assigned. Nothing was redeemed; run `/artistqueue sync` and try again."
     );
     return;
   }

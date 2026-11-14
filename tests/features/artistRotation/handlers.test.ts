@@ -17,6 +17,7 @@ const {
   mockGetAllArtists,
   mockProcessAssignment,
   mockClaimNextArtist,
+  mockGetNextArtist,
   mockCreateJob,
 } = vi.hoisted(() => ({
   mockLogger: {
@@ -32,6 +33,7 @@ const {
   mockGetAllArtists: vi.fn(),
   mockProcessAssignment: vi.fn(),
   mockClaimNextArtist: vi.fn(),
+  mockGetNextArtist: vi.fn(() => ({ userId: "artist-1", position: 1, assignmentsCount: 0 })),
   mockCreateJob: vi.fn(),
 }));
 
@@ -56,6 +58,7 @@ vi.mock("../../../src/features/artistRotation/index.js", () => ({
   getAllArtists: mockGetAllArtists,
   processAssignment: mockProcessAssignment,
   claimNextArtist: mockClaimNextArtist,
+  getNextArtist: mockGetNextArtist,
 }));
 
 vi.mock("../../../src/features/artJobs/index.js", () => ({
@@ -262,6 +265,32 @@ describe("artistRotation/handlers", () => {
         expect(mockLogAssignment).toHaveBeenCalled();
         expect(mockCreateJob).toHaveBeenCalled();
         expect(mockEditReply).toHaveBeenCalled();
+      });
+
+      it("keeps the ticket role when the artist queue is empty", async () => {
+        const mockRolesRemove = vi.fn().mockResolvedValue(undefined);
+        const mockEditReply = vi.fn().mockResolvedValue(undefined);
+        const mockMember = {
+          roles: { cache: { has: vi.fn().mockReturnValue(true) }, remove: mockRolesRemove },
+        };
+        const interaction = {
+          customId: "redeemreward:123:confirm:recipient-1:headshot:artist-1:0",
+          guild: { id: "guild-123", members: { fetch: vi.fn().mockResolvedValue(mockMember) } },
+          deferUpdate: vi.fn().mockResolvedValue(undefined),
+          editReply: mockEditReply,
+          user: { id: "mod-1" },
+          channel: { send: vi.fn(), id: "channel-1" },
+        } as any;
+
+        mockGetTicketRoles.mockReturnValue({ headshot: "role-123", halfbody: null, emoji: null, fullbody: null });
+        mockGetNextArtist.mockReturnValueOnce(null);
+
+        await handleRedeemRewardButton(interaction);
+
+        expect(mockRolesRemove).not.toHaveBeenCalled();
+        expect(mockClaimNextArtist).not.toHaveBeenCalled();
+        expect(mockCreateJob).not.toHaveBeenCalled();
+        expect(mockEditReply).toHaveBeenCalledTimes(1);
       });
 
       it("handles member not having ticket role", async () => {
