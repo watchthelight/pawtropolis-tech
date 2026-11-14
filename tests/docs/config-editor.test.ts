@@ -22,7 +22,7 @@ function fieldMetaKeys(): string[] {
   const text = readFileSync(path.join(ROOT, "web/src/lib/server/queries/config.ts"), "utf8");
   const start = text.indexOf("const FIELD_META");
   const end = text.indexOf("\n};", start);
-  return [...text.slice(start, end).matchAll(/^  ([a-z_]+): \{/gm)].map((m) => m[1]!);
+  return [...text.slice(start, end).matchAll(/^ {2}([a-z_]+): \{/gm)].map((m) => m[1]!);
 }
 
 // Shown on the dashboard but toggled through /panic, never through the editor.

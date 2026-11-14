@@ -62,7 +62,7 @@ function normalizeForBank(s) {
 	return s.toLowerCase().replace(URL_RE, ' ').replace(MENTION_RE, ' ').replace(EMOJI_RE, ' ').replace(/\s+/g, ' ').trim().replace(PUNCT_TRAIL, '');
 }
 function contentTokens(s) {
-	return s.toLowerCase().replace(URL_RE, ' ').replace(MENTION_RE, ' ').replace(EMOJI_RE, ' ').split(/[\s.,!?;:()\[\]'"~`]+/).filter((t) => t && !STOP.has(t));
+	return s.toLowerCase().replace(URL_RE, ' ').replace(MENTION_RE, ' ').replace(EMOJI_RE, ' ').split(/[\s.,!?;:()[\]'"~`]+/).filter((t) => t && !STOP.has(t));
 }
 
 function vec(buf) {

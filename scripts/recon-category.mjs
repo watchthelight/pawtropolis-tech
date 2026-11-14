@@ -109,7 +109,7 @@ client.once('ready', async () => {
               md += `- \`${t.id}\` **${t.name}** — ${t.archived ? 'archived' : 'active'}${t.locked ? ' locked' : ''}\n`;
             }
           }
-        } catch {}
+        } catch { /* best effort probe */ }
       } else if (c.type === ChannelType.GuildForum) {
         try {
           const active = await c.threads.fetchActive();

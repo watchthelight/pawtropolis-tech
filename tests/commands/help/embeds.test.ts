@@ -136,6 +136,7 @@ describe("help/embeds", () => {
       const embed = buildOverviewEmbed(counts, 2);
 
       // Check that emojis are present (they're defined in CATEGORY_INFO)
+      // eslint-disable-next-line no-control-regex -- intentional: asserts the text has non-ASCII chars
       expect(embed.data.description).toMatch(/[^\x00-\x7F]/); // Non-ASCII chars
     });
   });

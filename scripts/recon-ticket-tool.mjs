@@ -74,7 +74,7 @@ client.once('ready', async () => {
         permissions: tt.permissions.toArray(),
       };
     }
-  } catch {}
+  } catch { /* best effort probe */ }
 
   // 4. Role summary of mentioned roles in greeting embeds (896070888762535967, 987662057069482024)
   const interesting = ['896070888762535967', '987662057069482024'];

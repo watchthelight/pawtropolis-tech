@@ -30,7 +30,7 @@ tx(drop);
 
 // Drop orphan indexes
 for (const r of db.prepare(`SELECT name, tbl_name FROM sqlite_master WHERE type='index'`).all()) {
-  if (!KEEP.has(r.tbl_name)) try { db.exec(`DROP INDEX IF EXISTS "${r.name}"`); } catch {}
+  if (!KEEP.has(r.tbl_name)) try { db.exec(`DROP INDEX IF EXISTS "${r.name}"`); } catch { /* index may already be gone */ }
 }
 
 console.log('[vacuum] reclaiming...');

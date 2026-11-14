@@ -221,7 +221,7 @@ export function applyTheme(
     try {
       localStorage.removeItem("theme-last-uid");
       if (userId) localStorage.removeItem(`theme-hue-${userId}`);
-    } catch {}
+    } catch { /* storage unavailable (private mode) */ }
   }
 
   // Try accent color first (skip 0 = black, which Discord returns when theme isn't in API)
