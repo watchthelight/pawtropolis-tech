@@ -84,6 +84,10 @@ export default [
     files: ["tests/**/*.ts"],
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
+      // vi.hoisted() factories run before ESM imports resolve, so they use
+      // require(); handler-capture mocks are typed as Function.
+      "@typescript-eslint/no-require-imports": "off",
+      "@typescript-eslint/no-unsafe-function-type": "off",
     },
   },
   {
