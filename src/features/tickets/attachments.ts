@@ -30,6 +30,7 @@ const ATTACHMENTS_DIR = join(process.cwd(), "data", "ticket-attachments");
 const DEFAULT_QUOTA_BYTES = 5 * 1024 * 1024 * 1024; // 5 GiB
 const MAX_RETRIES = 3;
 const RETRY_BASE_MS = 500;
+const FETCH_TIMEOUT_MS = 30_000;
 
 const quotaBytes = (() => {
   const raw = process.env.TICKET_ATTACHMENT_QUOTA_BYTES?.trim();
@@ -222,7 +223,7 @@ async function mirrorOne(item: PendingItem): Promise<void> {
 }
 
 async function fetchToBuffer(url: string): Promise<Buffer> {
-  const res = await fetch(url);
+  const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
   if (!res.ok) {
     throw new Error(`fetch ${url} failed: HTTP ${res.status}`);
   }
