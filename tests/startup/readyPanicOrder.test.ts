@@ -25,6 +25,16 @@ vi.mock("../../src/features/panicStore.js", () => ({
 
 import { registerReady } from "../../src/startup/ready.js";
 
+describe("registerReady error listener", () => {
+  it("registers a client error listener", () => {
+    const client = { once: vi.fn(), on: vi.fn() };
+
+    registerReady(client as never);
+
+    expect(client.on).toHaveBeenCalledWith(Events.Error, expect.any(Function));
+  });
+});
+
 describe("registerReady startup order", () => {
   it("loads panic state before fetching guild members", async () => {
     let handler: (() => Promise<void>) | undefined;
@@ -38,6 +48,7 @@ describe("registerReady startup order", () => {
       },
     };
     const client = {
+      on: vi.fn(),
       once: vi.fn((event: string, fn: () => Promise<void>) => {
         if (event === Events.ClientReady) handler = fn;
       }),

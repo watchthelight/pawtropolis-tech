@@ -20,6 +20,10 @@ import { readdirSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
 export function registerReady(client: Client): void {
+client.on(Events.Error, (err) => {
+  logger.error({ err }, "[client] discord.js client error");
+});
+
 client.once(Events.ClientReady, async () => {
   // schema self-heal before anything else
   // sudo make it work
