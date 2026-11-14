@@ -7,7 +7,7 @@
  *      warn log carry p50/p95/p99 so before/after comparisons come straight from prod logs.
  */
 
-import { monitorEventLoopDelay, type IntervalHistogram } from "node:perf_hooks";
+import { monitorEventLoopDelay } from "node:perf_hooks";
 import { logger } from "./logger.js";
 
 export interface LoopLagSnapshot {
@@ -22,7 +22,7 @@ export interface LoopLagSnapshot {
 const RESOLUTION_MS = 10;
 const WARN_P99_MS = parseInt(process.env.LOOP_LAG_WARN_P99_MS ?? "250", 10);
 
-let histogram: IntervalHistogram | null = null;
+let histogram: ReturnType<typeof monitorEventLoopDelay> | null = null;
 let windowStartedAt = 0;
 
 export function startLoopLagMonitor(): void {
