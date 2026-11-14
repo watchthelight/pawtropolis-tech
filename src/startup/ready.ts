@@ -29,6 +29,15 @@ client.once(Events.ClientReady, async () => {
   const { runSchemaSelfHeal } = await import("../startup/schema.js");
   await runSchemaSelfHeal();
 
+  // Load panic mode state from database (survives restarts now). Runs before the
+  // member fetch below so panic mode is already on while the cache warms.
+  try {
+    const { loadPanicState } = await import("../features/panicStore.js");
+    loadPanicState();
+  } catch (err) {
+    logger.error({ err }, "[startup] panic state load failed");
+  }
+
   // Warm the member cache before presences start arriving. PresenceUpdate re-adds an
   // uncached member with an empty role list, and the next guildMemberUpdate then reads
   // every role they already hold as newly added. Fetching up front means every member is
@@ -40,14 +49,6 @@ client.once(Events.ClientReady, async () => {
     } catch (err) {
       logger.warn({ err, guildId: guild.id }, "[startup] member cache warm failed - role diffs may be unreliable");
     }
-  }
-
-  // Load panic mode state from database (survives restarts now)
-  try {
-    const { loadPanicState } = await import("../features/panicStore.js");
-    loadPanicState();
-  } catch (err) {
-    logger.error({ err }, "[startup] panic state load failed");
   }
 
   // Recover movie night sessions from database (crash recovery)
