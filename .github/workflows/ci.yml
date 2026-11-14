@@ -2,22 +2,27 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, "release/**"]
   pull_request:
     branches: [main]
 
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     name: Typecheck & Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "24"
           cache: "npm"
       - run: npm ci
       - name: Typecheck
@@ -35,8 +40,15 @@ jobs:
         continue-on-error: true  # SOFT: report only until the export backlog is gone (#00271)
 
   test:
-    name: Tests
+    name: Tests (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        # Node 24 is the primary target. Node 20 is end of life but stays as a
+        # second leg because the production host's Node version is unconfirmed.
+        node: ["24", "20"]
     env:
       # Dummy values for test environment validation
       DISCORD_TOKEN: test_token_for_ci
@@ -44,10 +56,10 @@ jobs:
       RESET_PASSWORD: test_password
       DB_PATH: ./data/data.db
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: ${{ matrix.node }}
           cache: "npm"
       - run: npm ci
       - name: Prepare test database
@@ -71,21 +83,22 @@ jobs:
         # failures (artistRotation handlers + roles rename). See
         # docs/operations/ci-policy.md for the gate hierarchy.
         run: npm run test -- --coverage
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
-          name: coverage
+          name: coverage-node${{ matrix.node }}
           path: coverage/
           retention-days: 7
 
   build:
     name: Build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: [check, test]
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "24"
           cache: "npm"
       - run: npm ci
       - run: npm run build
@@ -94,7 +107,7 @@ jobs:
       # so it does not need Discord credentials or a real DB.
       - name: Smoke check built artifact
         run: node --check dist/index.js
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist/
