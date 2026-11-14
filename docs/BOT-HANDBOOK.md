@@ -2398,7 +2398,7 @@ A private second opinion on a 2D artist verification ticket. Run it inside the a
 | `applicant` | No | The applicant. Only needed when the bot cannot tell who opened the ticket |
 
 **What it looks at:**
-1. Every message in the ticket: text, images, other attachments, links and gallery handles
+1. Every message in the ticket: text, images, links and gallery handles. Videos and other files are listed by name only, and links are not opened
 2. What the server knows about the applicant: account age, join date, roles, recent activity, their gate application, their other 2D artist tickets and the Verify Blacklist thread
 3. Reverse image search for each image on Fluffle, e621 and SauceNAO. A service with no API key configured is skipped, and the report names it as skipped
 4. Claude's read of the images and the ticket text, rated against each handbook rule
@@ -2414,7 +2414,8 @@ A private second opinion on a 2D artist verification ticket. Run it inside the a
 - The score is advisory. The command never approves, denies, assigns roles or messages the applicant
 - Stolen, traced and AI-generated art cannot be detected reliably. A match is not proof of theft, and no match is not proof of originality. Treat every finding as a lead to check yourself
 - It only works in a 2D artist ticket (`2d-artist-NNNN` in the Tickets category, or a first-party ticket of that type). Anywhere else it says so
-- A run can take a few minutes and costs real money. The command refuses to start when the month's tracked spend would pass `INVESTIGATE_MONTHLY_CAP_USD`
+- A run takes a minute or two for a small ticket and longer with many images. It costs real money: a ticket with four images came to about $0.18 with the default model. The command refuses to start when the month's tracked spend would pass `INVESTIGATE_MONTHLY_CAP_USD`
+- A timelapse or a layered source file is the strongest proof the workflow asks for, and the command cannot open either. Watch the video and open the file yourself
 - Images are capped per run (`INVESTIGATE_MAX_IMAGES`, 12 by default) and large ones are downscaled before they are sent anywhere
 - One run at a time
 
