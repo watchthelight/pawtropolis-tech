@@ -14,6 +14,13 @@ import { join } from "node:path";
 import { execSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { notifyDashboard } from "../web/notifyDashboard.js";
+import { logger } from "../lib/logger.js";
+import {
+  GIT_PUSH_FAILED_MESSAGE,
+  gitAuthed,
+  githubHttpsUrl,
+  scrubbedErrorMessage,
+} from "../lib/githubGit.js";
 import {
   getAcknowledgedIssues,
   clearStaleAcknowledgments,
@@ -273,7 +280,8 @@ export async function commitAndPushDocs(
   }
 
   const cwd = process.cwd();
-  const remoteUrl = `https://${username}:${token}@github.com/${repo}.git`;
+  const remoteUrl = githubHttpsUrl(repo);
+  const git = (args: string[]) => gitAuthed(args, { cwd, username, token });
 
   try {
     // Step 1: Check if there are changes to commit
@@ -297,7 +305,7 @@ export async function commitAndPushDocs(
     // Step 3: Fetch latest from remote (to detect conflicts)
     await progress("Fetching remote", "git fetch origin main");
     try {
-      execSync(`git fetch ${remoteUrl} main`, { cwd, encoding: "utf-8", stdio: "pipe" });
+      git(["fetch", remoteUrl, "main"]);
     } catch {
       // Fetch failed - might be network issue, continue anyway
     }
@@ -309,7 +317,7 @@ export async function commitAndPushDocs(
     // Step 5: Pull and rebase to sync with remote
     await progress("Syncing with remote", "git pull --rebase");
     try {
-      execSync(`git pull ${remoteUrl} main --rebase`, { cwd, encoding: "utf-8", stdio: "pipe" });
+      git(["pull", remoteUrl, "main", "--rebase"]);
     } catch (pullErr) {
       // Pull failed - try to recover by resetting to remote
       await progress("Recovering from conflict", "git reset --hard origin/main");
@@ -356,10 +364,7 @@ Issues: ${result.issueCount} (${result.criticalCount} critical, ${result.highCou
 
     // Step 10: Push to remote
     await progress("Pushing to GitHub", `${repo}`);
-    execSync(`git push ${remoteUrl} HEAD:main`, { cwd, encoding: "utf-8", stdio: "pipe" });
-
-    // Reset remote to not expose token
-    execSync(`git remote set-url origin https://github.com/${repo}.git`, { cwd });
+    git(["push", remoteUrl, "HEAD:main"]);
 
     const commitUrl = `https://github.com/${repo}/commit/${commitHash}`;
     const docsUrl = `https://github.com/${repo}/blob/main/docs/internal-info/CONFLICTS.md`;
@@ -388,9 +393,10 @@ Issues: ${result.issueCount} (${result.criticalCount} critical, ${result.highCou
       // Ignore - no stash to drop
     }
 
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Unknown error during git push",
-    };
+    logger.warn(
+      { err: scrubbedErrorMessage(err, username, token) },
+      "[audit] Failed to push audit docs to GitHub"
+    );
+    return { success: false, error: GIT_PUSH_FAILED_MESSAGE };
   }
 }

@@ -27,12 +27,18 @@ import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
 import { logger } from "../lib/logger.js";
+import {
+  GIT_PUSH_FAILED_MESSAGE,
+  gitAuthed,
+  githubHttpsUrl,
+  scrubbedErrorMessage,
+} from "../lib/githubGit.js";
 
 /**
  * Commit and push asset changes to GitHub
  * Uses the same credentials as /audit security
  */
-async function commitAndPushAssets(assetType: "banner" | "avatar"): Promise<{ success: boolean; commitUrl?: string; error?: string }> {
+export async function commitAndPushAssets(assetType: "banner" | "avatar"): Promise<{ success: boolean; commitUrl?: string; error?: string }> {
   const token = process.env.GITHUB_BOT_TOKEN;
   const username = process.env.GITHUB_BOT_USERNAME;
   const email = process.env.GITHUB_BOT_EMAIL;
@@ -72,12 +78,7 @@ async function commitAndPushAssets(assetType: "banner" | "avatar"): Promise<{ su
     // Get the commit hash
     const commitHash = execSync("git rev-parse HEAD", { cwd, encoding: "utf-8" }).trim();
 
-    // Push using token authentication
-    const remoteUrl = `https://${username}:${token}@github.com/${repo}.git`;
-    execSync(`git push ${remoteUrl} HEAD:main`, { cwd, encoding: "utf-8" });
-
-    // Reset remote to not expose token
-    execSync(`git remote set-url origin https://github.com/${repo}.git`, { cwd });
+    gitAuthed(["push", githubHttpsUrl(repo), "HEAD:main"], { cwd, username, token });
 
     const commitUrl = `https://github.com/${repo}/commit/${commitHash}`;
     logger.info({ assetType, commitHash }, "[update] Assets pushed to GitHub");
@@ -92,11 +93,11 @@ async function commitAndPushAssets(assetType: "banner" | "avatar"): Promise<{ su
       // Ignore reset errors
     }
 
-    logger.warn({ err, assetType }, "[update] Failed to push assets to GitHub");
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Unknown error during git push",
-    };
+    logger.warn(
+      { err: scrubbedErrorMessage(err, username, token), assetType },
+      "[update] Failed to push assets to GitHub"
+    );
+    return { success: false, error: GIT_PUSH_FAILED_MESSAGE };
   }
 }
 
