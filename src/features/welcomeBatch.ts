@@ -4,11 +4,12 @@
  * WHAT: In-memory session manager for batched welcome cards.
  * WHY: Lets a Gatekeeper open a session, accept multiple users, then send one combined
  *      welcome card with /welcomebatch send. Auto-expires after 30 min idle.
- * NOTE: State is process-local. Bot restart drops any open session and discards buffer.
+ * NOTE: State is process-local. Shutdown flushes open sessions (flushAllSessions); a crash
+ *       still drops the buffer.
  */
-import type { Guild, GuildMember } from "discord.js";
+import type { Client, Guild, GuildMember } from "discord.js";
 import { logger } from "../lib/logger.js";
-import type { GuildConfig } from "../lib/config.js";
+import { getConfig, type GuildConfig } from "../lib/config.js";
 import { postBatchWelcomeCard, postWelcomeCard } from "./welcome.js";
 
 export const WELCOME_BATCH_EXPIRY_MS = 30 * 60 * 1000;
@@ -150,6 +151,18 @@ export async function flushSession(
       "[welcomeBatch] flush failed"
     );
     return { kind: "error", userCount: usersToSend.length, error: errorMsg };
+  }
+}
+
+export async function flushAllSessions(client: Client): Promise<void> {
+  for (const guildId of [...sessions.keys()]) {
+    const guild = client.guilds.cache.get(guildId);
+    const config = getConfig(guildId);
+    if (!guild || !config?.general_channel_id) {
+      logger.warn({ guildId }, "[welcomeBatch] cannot flush on shutdown, buffer discarded");
+      continue;
+    }
+    await flushSession(guild, config);
   }
 }
 

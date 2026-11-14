@@ -375,6 +375,22 @@ client.once(Events.ClientReady, async () => {
         logger.warn({ err }, "[shutdown] Archive flush failed (non-fatal)");
       }
 
+      // 2c. Send any buffered batch welcome before the client goes away
+      try {
+        const { flushAllSessions } = await import("../features/welcomeBatch.js");
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        await Promise.race([
+          flushAllSessions(client),
+          new Promise<void>((resolve) => {
+            timer = setTimeout(resolve, 5000);
+          }),
+        ]);
+        clearTimeout(timer);
+        logger.debug("[shutdown] Welcome batch flushed");
+      } catch (err) {
+        logger.warn({ err }, "[shutdown] Welcome batch flush failed (non-fatal)");
+      }
+
       // 3. Cleanup banner sync listeners
       try {
         const { cleanupBannerSync } = await import("../features/bannerSync.js");
