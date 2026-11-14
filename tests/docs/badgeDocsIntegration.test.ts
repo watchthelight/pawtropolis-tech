@@ -43,6 +43,7 @@ const EXCLUDE_DIRS = new Set([
   "_recon",
   "docs-audit",
   "data",
+  ".claude",
 ]);
 
 const EXCLUDE_REL_PREFIXES = [

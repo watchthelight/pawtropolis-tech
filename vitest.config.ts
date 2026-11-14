@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 import path from "node:path";
 
 export default defineConfig({
@@ -11,6 +11,9 @@ export default defineConfig({
     globals: true,
     environment: "node",
     setupFiles: ["tests/setup.ts"],
+    // Agent worktrees under .claude/ are full copies of the repo. Left in, their
+    // tests run alongside ours and every count is multiplied.
+    exclude: [...configDefaults.exclude, ".claude/**"],
     restoreMocks: true,
     clearMocks: true,
     unstubGlobals: true,
