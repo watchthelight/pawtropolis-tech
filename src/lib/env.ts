@@ -106,6 +106,18 @@ const raw = {
   // Wide Events configuration (optional)
   WIDE_EVENT_ENABLED: process.env.WIDE_EVENT_ENABLED?.trim(),
   WIDE_EVENT_SAMPLE_RATE: process.env.WIDE_EVENT_SAMPLE_RATE?.trim(),
+
+  // /investigate-artist (all optional). `|| undefined` so a blank line copied from
+  // .env.example falls back to the default instead of parsing as 0.
+  ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY?.trim(),
+  ANTHROPIC_WORKSPACE_ID: process.env.ANTHROPIC_WORKSPACE_ID?.trim(),
+  INVESTIGATE_MODEL: process.env.INVESTIGATE_MODEL?.trim() || undefined,
+  INVESTIGATE_MONTHLY_CAP_USD: process.env.INVESTIGATE_MONTHLY_CAP_USD?.trim() || undefined,
+  INVESTIGATE_MAX_IMAGES: process.env.INVESTIGATE_MAX_IMAGES?.trim() || undefined,
+  SAUCENAO_API_KEY: process.env.SAUCENAO_API_KEY?.trim(),
+  E621_LOGIN: process.env.E621_LOGIN?.trim(),
+  E621_API_KEY: process.env.E621_API_KEY?.trim(),
+  PROVENANCE_USER_AGENT: process.env.PROVENANCE_USER_AGENT?.trim(),
 };
 
 /**
@@ -216,6 +228,20 @@ const schema = z.object({
   // Errors and timeouts are always kept regardless of sampling rate
   WIDE_EVENT_ENABLED: z.string().optional().default("true"),
   WIDE_EVENT_SAMPLE_RATE: z.string().optional().default("0.1"),
+
+  // /investigate-artist (optional). Without ANTHROPIC_API_KEY the command explains what is
+  // missing; lookup services without a key are skipped and named in the report.
+  ANTHROPIC_API_KEY: z.string().optional(),
+  ANTHROPIC_WORKSPACE_ID: z.string().optional(),
+  INVESTIGATE_MODEL: z.string().default("claude-opus-5-5"),
+  // Monthly spend cap in USD for this command's own tracked usage. 0 turns the command off.
+  INVESTIGATE_MONTHLY_CAP_USD: z.coerce.number().min(0).default(200),
+  // Images analyzed per run. The API accepts more, but cost grows with every image.
+  INVESTIGATE_MAX_IMAGES: z.coerce.number().int().min(1).max(20).default(12),
+  SAUCENAO_API_KEY: z.string().optional(),
+  E621_LOGIN: z.string().optional(),
+  E621_API_KEY: z.string().optional(),
+  PROVENANCE_USER_AGENT: z.string().optional(),
 });
 
 /**

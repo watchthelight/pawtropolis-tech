@@ -89,6 +89,24 @@ Every optional variable is listed with its default in [`.env.example`](../../.en
 | `LOGGING_CHANNEL` / `LOGGING_CHANNEL_ID` | Fallback logging channel for `/send` | unset |
 | `EVENT_TIMEOUT_MS`, `LOOP_LAG_WARN_P99_MS` | Event handler watchdog and event-loop lag warning thresholds | `10000`, `250` |
 
+### `/investigate-artist`
+
+The owner-only review aid for 2D artist verification tickets needs migration 084 (`deploy.sh` runs it), a command sync (`npm run deploy:cmds` on the host), and the variables below. Every one is optional: the command says what is missing instead of failing.
+
+| Variable | Description | Default |
+|---|---|---|
+| `OWNER_IDS` | The only user IDs allowed to run the command | unset (nobody can run it) |
+| `ANTHROPIC_API_KEY` | Claude API key. Without it the report has the lookups but no assessment | unset |
+| `ANTHROPIC_WORKSPACE_ID` | Workspace ID (`wrkspc_...`). Required when the key is not scoped to one workspace: the API rejects such a key without it | unset |
+| `INVESTIGATE_MODEL` | Model that writes the assessment | `claude-opus-5-5` |
+| `INVESTIGATE_MONTHLY_CAP_USD` | Monthly cap in USD on this command's tracked spend. `0` switches the command off | `200` |
+| `INVESTIGATE_MAX_IMAGES` | Images analyzed per run, 1 to 20 | `12` |
+| `SAUCENAO_API_KEY` | SauceNAO reverse image search. Skipped when unset | unset |
+| `E621_LOGIN`, `E621_API_KEY` | e621 reverse image search. Skipped unless both are set | unset |
+| `PROVENANCE_USER_AGENT` | User-Agent sent to the lookup services | `pawtropolis-tech/<version>` plus the repo URL |
+
+Fluffle needs no key. The cap counts only the runs this command records in `artist_investigation_run`. Anything else that uses the same key is not counted, and the Claude Console stays the billing record. Lookup results are cached by image hash for 7 days in `artist_provenance_cache`.
+
 ### Example `.env` File
 
 ```bash
