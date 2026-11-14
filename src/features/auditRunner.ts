@@ -11,6 +11,7 @@ import type { Guild, GuildMember } from "discord.js";
 import { logger } from "../lib/logger.js";
 import {
   analyzeMember,
+  loadMessageAuthors,
   createEmptyStats,
   updateStats,
   type AuditStats,
@@ -79,6 +80,8 @@ async function runMemberScanHeadless(
   try {
     logger.info({ guildId: guild.id, sessionId }, "[auditRunner:members] Starting headless member scan");
 
+    const messageAuthors = loadMessageAuthors(guild.id);
+
     // Paginate through all members
     let lastMemberId: string | undefined;
     const BATCH_SIZE = 1000;
@@ -105,7 +108,7 @@ async function runMemberScanHeadless(
         if (member.user.bot) continue;
         if (isAlreadyFlagged(guild.id, member.user.id)) continue;
 
-        const result = analyzeMember(member, guild.id);
+        const result = analyzeMember(member, guild.id, messageAuthors);
 
         if (result.shouldFlag) {
           const joinedAtSec = member.joinedTimestamp

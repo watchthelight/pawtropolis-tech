@@ -150,9 +150,25 @@ export function hasLevelRole(member: GuildMember, minLevel: number = DETECTION_C
 }
 
 /**
+ * Every user id with at least one recorded message in the guild. message_activity has no
+ * index that starts with (guild_id, user_id), so a per-member lookup scans the guild's rows;
+ * a scan pass loads this set once instead.
+ */
+export function loadMessageAuthors(guildId: string): Set<string> {
+  const rows = db
+    .prepare(`SELECT DISTINCT user_id FROM message_activity WHERE guild_id = ?`)
+    .all(guildId) as Array<{ user_id: string }>;
+  return new Set(rows.map((r) => r.user_id));
+}
+
+/**
  * Check user's activity level from database
  */
-export function checkActivityLevel(guildId: string, userId: string): ActivityCheckResult {
+export function checkActivityLevel(
+  guildId: string,
+  userId: string,
+  messageAuthors?: ReadonlySet<string>
+): ActivityCheckResult {
   try {
     // Check user_activity for first_message_at
     const userActivity = db
@@ -161,15 +177,19 @@ export function checkActivityLevel(guildId: string, userId: string): ActivityChe
 
     // Only "has any message" is consumed, so stop at the first matching row instead of
     // counting every message the user ever sent.
-    const messageCount = db
-      .prepare(
-        `SELECT COUNT(*) as count FROM (
-           SELECT 1 FROM message_activity WHERE guild_id = ? AND user_id = ? LIMIT 1
-         )`
-      )
-      .get(guildId, userId) as { count: number } | undefined;
-
-    const count = messageCount?.count ?? 0;
+    let count: number;
+    if (messageAuthors) {
+      count = messageAuthors.has(userId) ? 1 : 0;
+    } else {
+      const messageCount = db
+        .prepare(
+          `SELECT COUNT(*) as count FROM (
+             SELECT 1 FROM message_activity WHERE guild_id = ? AND user_id = ? LIMIT 1
+           )`
+        )
+        .get(guildId, userId) as { count: number } | undefined;
+      count = messageCount?.count ?? 0;
+    }
     const firstMessageAt = userActivity?.first_message_at ?? null;
 
     return {
@@ -189,7 +209,11 @@ export function checkActivityLevel(guildId: string, userId: string): ActivityChe
 /**
  * Analyze a member for bot-like characteristics
  */
-export function analyzeMember(member: GuildMember, guildId: string): AuditResult {
+export function analyzeMember(
+  member: GuildMember,
+  guildId: string,
+  messageAuthors?: ReadonlySet<string>
+): AuditResult {
   const reasons: AuditReason[] = [];
   let score = 0;
 
@@ -211,7 +235,7 @@ export function analyzeMember(member: GuildMember, guildId: string): AuditResult
   }
 
   // 3. Low server activity
-  const activity = checkActivityLevel(guildId, user.id);
+  const activity = checkActivityLevel(guildId, user.id, messageAuthors);
   if (!activity.hasActivity) {
     score += SCORING.NO_ACTIVITY;
     reasons.push({ code: REASON_CODES.NO_ACTIVITY, label: "No recorded message activity" });

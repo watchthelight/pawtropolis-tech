@@ -13,6 +13,7 @@ import {
 import { logger } from "../../lib/logger.js";
 import {
   analyzeMember,
+  loadMessageAuthors,
   createEmptyStats,
   updateStats,
   MAX_SCORE,
@@ -84,6 +85,8 @@ export async function runMembersAudit(
       startedBy: interaction.user.id,
     });
 
+    const messageAuthors = loadMessageAuthors(guild.id);
+
     // Process members
     for (const member of allMembers) {
       // Skip if already scanned in this session (for resume)
@@ -106,7 +109,7 @@ export async function runMembersAudit(
       }
 
       // Analyze member
-      const result = analyzeMember(member, guild.id);
+      const result = analyzeMember(member, guild.id, messageAuthors);
 
       if (result.shouldFlag) {
         // Flag the user
