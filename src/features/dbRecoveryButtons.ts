@@ -37,7 +37,7 @@ export async function handleDbRecoveryButton(interaction: ButtonInteraction): Pr
   // Parse custom ID with strict regex to prevent injection.
   // The nonce is 8 hex chars - short enough for Discord's customId limit,
   // long enough to be impractical to brute force within button expiry.
-  const match = customId.match(/^dbrecover:([a-zA-Z\-]+):([a-zA-Z0-9\-]+):([a-f0-9]{8})$/);
+  const match = customId.match(/^dbrecover:([a-zA-Z-]+):([a-zA-Z0-9-]+):([a-f0-9]{8})$/);
   if (!match) {
     logger.warn({ customId }, "[dbRecovery] Invalid button custom ID format");
     await interaction.reply({

@@ -51,7 +51,7 @@ export const BTN_VOTE_OUT_RE = /^(?:v1:decide|review):vote_out:code([0-9A-F]{6})
 
 // Database recovery buttons - completely separate namespace (no v1: prefix).
 // The 8-char hex suffix is a nonce to prevent accidental re-clicks.
-export const BTN_DBRECOVER_RE = /^dbrecover:(validate|restore-dry|restore-confirm):([a-zA-Z0-9\-]+):([a-f0-9]{8})$/;
+export const BTN_DBRECOVER_RE = /^dbrecover:(validate|restore-dry|restore-confirm):([a-zA-Z0-9-]+):([a-f0-9]{8})$/;
 
 // Audit buttons - subcommand-based audit system
 // - audit:members:confirm:nonce - bot detection audit

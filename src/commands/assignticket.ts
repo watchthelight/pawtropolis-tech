@@ -107,7 +107,7 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   }
   if (ticket.legacySource !== null) {
     await interaction.reply({
-      content: `<#${channel.id}> is a legacy Ticket Tool channel (legacy_source=${ticket.legacySource}). Use \$add / \$remove on it instead.`,
+      content: `<#${channel.id}> is a legacy Ticket Tool channel (legacy_source=${ticket.legacySource}). Use $add / $remove on it instead.`,
       flags: MessageFlags.Ephemeral,
     });
     return;

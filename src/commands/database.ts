@@ -53,7 +53,7 @@ const SAFE_REMOTE_ALIAS_REGEX = /^[a-zA-Z0-9_-]+$/;
  * Only allows absolute paths with alphanumeric, underscore, hyphen, and forward slash.
  * Must start with / to ensure it's an absolute path.
  */
-const SAFE_REMOTE_PATH_REGEX = /^\/[a-zA-Z0-9_\/-]+$/;
+const SAFE_REMOTE_PATH_REGEX = /^\/[a-zA-Z0-9_/-]+$/;
 
 /**
  * Validate SSH remote alias to prevent shell injection.
@@ -322,7 +322,7 @@ async function executeCheck(ctx: CommandContext<ChatInputCommandInteraction>) {
 
     // Try to get remote backup info
     try {
-      const backupCmd = `ssh -o ConnectTimeout=5 -o BatchMode=yes ${remoteAlias} "bash -c 'cd ${remotePath}/data/backups && find . -maxdepth 1 -name \"*.db\" -type f -exec stat -c \"%n|%s|%Y\" {} \\; 2>/dev/null || true'"`;
+      const backupCmd = `ssh -o ConnectTimeout=5 -o BatchMode=yes ${remoteAlias} "bash -c 'cd ${remotePath}/data/backups && find . -maxdepth 1 -name "*.db" -type f -exec stat -c "%n|%s|%Y" {} \\; 2>/dev/null || true'"`;
       const { stdout: backupStdout } = await execAsync(backupCmd, { timeout: 10000 });
 
       if (backupStdout) {

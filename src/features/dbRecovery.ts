@@ -205,7 +205,7 @@ export async function listCandidates(): Promise<BackupCandidate[]> {
         // The ID needs to be stable across calls so we can reference candidates by ID.
         // Using mtime means if a file is modified, it gets a new ID - this is intentional
         // because a modified backup should be re-validated before restore.
-        const shortName = filename.replace(/\.db$/, "").replace(/[^a-zA-Z0-9\-]/g, "-");
+        const shortName = filename.replace(/\.db$/, "").replace(/[^a-zA-Z0-9-]/g, "-");
         const id = `cand-${stats.mtimeMs.toFixed(0)}-${shortName}`.substring(0, 64);
 
         // Check if metadata exists in db_backups table

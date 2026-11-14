@@ -33,7 +33,7 @@ import { DADMODE_ODDS_MIN, DADMODE_ODDS_MAX } from "../lib/constants.js";
  * Don't simplify it. Someone already tried. It did not go well.
  * The leading character class catches Discord's creative formatting.
  */
-const DAD_RE = /^(?:[\s"'`(\[\{<~\-:*_]*)(?:i\s*'?m|i\s*am)\s+(.+?)\s*([.!?]|$)/i;
+const DAD_RE = /^(?:[\s"'`([{<~\-:*_]*)(?:i\s*'?m|i\s*am)\s+(.+?)\s*([.!?]|$)/i;
 
 export const name = Events.MessageCreate;
 
