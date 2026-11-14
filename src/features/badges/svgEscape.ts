@@ -18,6 +18,7 @@ const ESCAPE_MAP: Record<string, string> = {
 export function svgEscape(input: string): string {
   if (typeof input !== "string") return "";
   // Strip control chars except tab/newline/CR; XML 1.0 forbids most C0 codes.
+  // eslint-disable-next-line no-control-regex -- intentional: the class is the set of control characters to strip
   const cleaned = input.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
   return cleaned.replace(/[&<>"']/g, (c) => ESCAPE_MAP[c] ?? c);
 }
