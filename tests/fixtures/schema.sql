@@ -1235,3 +1235,35 @@ CREATE INDEX IF NOT EXISTS idx_pending_item_capture_due
     ON pending_item_capture(remove_at_s);
 CREATE INDEX IF NOT EXISTS idx_inventory_log_user
     ON inventory_log(guild_id, user_id, created_at_s DESC);
+
+-- ---------------------------------------------------------------------------
+-- /investigate-artist usage ledger and lookup cache (migration 084_artist_investigation).
+-- Added by hand for the same reason as the 083 block above.
+-- No foreign keys, so their position in the file is safe.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS artist_investigation_run (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      guild_id TEXT NOT NULL,
+      channel_id TEXT NOT NULL,
+      invoked_by TEXT NOT NULL,
+      model TEXT NOT NULL,
+      status TEXT NOT NULL,
+      input_tokens INTEGER NOT NULL DEFAULT 0,
+      output_tokens INTEGER NOT NULL DEFAULT 0,
+      cache_read_tokens INTEGER NOT NULL DEFAULT 0,
+      cache_write_tokens INTEGER NOT NULL DEFAULT 0,
+      cost_usd REAL NOT NULL DEFAULT 0,
+      image_count INTEGER NOT NULL DEFAULT 0,
+      lookup_count INTEGER NOT NULL DEFAULT 0,
+      created_at_s INTEGER NOT NULL DEFAULT (unixepoch())
+    );
+CREATE TABLE IF NOT EXISTS artist_provenance_cache (
+      image_sha256 TEXT NOT NULL,
+      service TEXT NOT NULL,
+      variant TEXT NOT NULL DEFAULT 'original',
+      result_json TEXT NOT NULL,
+      fetched_at_s INTEGER NOT NULL DEFAULT (unixepoch()),
+      PRIMARY KEY (image_sha256, service, variant)
+    );
+CREATE INDEX IF NOT EXISTS idx_artist_investigation_run_created
+    ON artist_investigation_run(created_at_s);

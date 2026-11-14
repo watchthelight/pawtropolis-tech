@@ -14,6 +14,7 @@ const RETENTION = {
   member_role_snapshots: "restored snapshots older than 180 days (retention scheduler)",
   message_activity: "rows older than 90 days (messageActivityPrune scheduler, daily)",
   action_log_fts: "external-content index over action_log, rebuilt hourly for new rows",
+  artist_provenance_cache: "rows older than 7 days (pruned at the start of each /investigate-artist run)",
 };
 
 const sql = fs.readFileSync(SCHEMA, "utf8");

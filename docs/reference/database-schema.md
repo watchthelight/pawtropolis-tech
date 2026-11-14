@@ -4,7 +4,7 @@ Generated from `tests/fixtures/schema.sql` by `scripts/gen-schema-doc.mjs` (`npm
 
 SQLite in WAL mode at `DB_PATH` (default `data/data.db`). Discord ids are TEXT snowflakes. Timestamps are either ISO 8601 TEXT (`*_at`) or Unix seconds INTEGER (`*_at_s`, `*_ts`), as named. The bot opens the file with a 64 MB page cache, a 256 MB memory map and a 64 MB WAL cap; the dashboard opens the same file read-mostly.
 
-101 tables, 0 virtual tables, 119 indexes.
+103 tables, 0 virtual tables, 120 indexes.
 
 ## Retention
 
@@ -16,6 +16,7 @@ SQLite in WAL mode at `DB_PATH` (default `data/data.db`). Discord ids are TEXT s
 | `member_role_snapshots` | restored snapshots older than 180 days (retention scheduler) |
 | `message_activity` | rows older than 90 days (messageActivityPrune scheduler, daily) |
 | `action_log_fts` | external-content index over action_log, rebuilt hourly for new rows |
+| `artist_provenance_cache` | rows older than 7 days (pruned at the start of each /investigate-artist run) |
 
 Everything else is kept. `messages_archive` (the full message backfill) is deliberately unbounded. Deploy backups in `data/backups` are pruned to the 3 newest plus 7 days by the same retention scheduler.
 
@@ -188,6 +189,39 @@ Indexes: `idx_art_job_artist`, `idx_art_job_artist_number`, `idx_art_job_artist_
 | `override` | INTEGER |  |
 
 Indexes: `idx_artist_assignment_log_artist`, `idx_artist_assignment_log_guild`
+
+### artist_investigation_run
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | INTEGER | pk |
+| `guild_id` | TEXT | not null |
+| `channel_id` | TEXT | not null |
+| `invoked_by` | TEXT | not null |
+| `model` | TEXT | not null |
+| `status` | TEXT | not null |
+| `input_tokens` | INTEGER | not null |
+| `output_tokens` | INTEGER | not null |
+| `cache_read_tokens` | INTEGER | not null |
+| `cache_write_tokens` | INTEGER | not null |
+| `cost_usd` | REAL | not null |
+| `image_count` | INTEGER | not null |
+| `lookup_count` | INTEGER | not null |
+| `created_at_s` | INTEGER | not null |
+
+Indexes: `idx_artist_investigation_run_created`
+
+### artist_provenance_cache
+
+Retention: rows older than 7 days (pruned at the start of each /investigate-artist run).
+
+| Column | Type | Notes |
+|---|---|---|
+| `image_sha256` | TEXT | not null |
+| `service` | TEXT | not null |
+| `variant` | TEXT | not null |
+| `result_json` | TEXT | not null |
+| `fetched_at_s` | INTEGER | not null |
 
 ### artist_queue
 
