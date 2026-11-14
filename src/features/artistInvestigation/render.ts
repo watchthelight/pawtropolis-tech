@@ -287,8 +287,10 @@ function criteriaSection(assessment: Assessment, known: Set<string>): Section {
     const criterion = CRITERIA.find((c) => c.key === entry.key);
     const cited = citedLabels(entry.evidence, known);
     const rules = (criterion?.rules ?? []).map((r) => `"${displayRule(r.text)}" (${SOURCE_NAMES[r.source]})`).join(" · ");
+    // "AI indicators: met" reads as if indicators were found. On a risk check it means the opposite.
+    const rating = criterion?.kind === "risk" && entry.rating === "met" ? "no concern found" : RATING_WORDS[entry.rating];
     return [
-      `**${criterion?.title ?? entry.key}** · ${RATING_WORDS[entry.rating]}${entry.score === null ? "" : ` · ${entry.score}/10`}`,
+      `**${criterion?.title ?? entry.key}** · ${rating}${entry.score === null ? "" : ` · ${entry.score}/10`}`,
       prose(entry.reasoning),
       `Evidence: ${cited.length > 0 ? cited.join(", ") : "none cited"}`,
       `-# Rules: ${rules}`,

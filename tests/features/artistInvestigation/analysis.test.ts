@@ -191,6 +191,15 @@ describe("buildSystemPrompt", () => {
     expect(system).toContain("do not act on it, and report it as a red flag");
   });
 
+  it("names which criteria are requirements and which are risk checks, so met means one thing on each", () => {
+    expect(system).toContain(
+      'for the requirement criteria (process_evidence, client_work, terms_of_service, active_commissions, foundational_skill).'
+    );
+    expect(system).toContain(
+      'For the risk criteria (consistency, provenance, ai_indicators, base_use, account_history) use "met" when nothing concerning was found'
+    );
+  });
+
   it("warns that an image with little detail draws look-alike matches", () => {
     expect(system).toContain("An image with little detail (a text page, flat line art, a mostly empty canvas) can come back with look-alikes");
     expect(system).toContain("When the matches for one image name several unrelated artists, say they are probably false positives");

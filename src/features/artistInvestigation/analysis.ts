@@ -28,6 +28,7 @@ import {
   WORKFLOW_GAPS,
   WORKFLOW_SOURCE_LABELS,
   displayRule,
+  type Criterion,
   type CriterionKey,
 } from "./criteria.js";
 import { scatteredImages } from "./handles.js";
@@ -195,6 +196,10 @@ export function buildSystemPrompt(): string {
     (row) =>
       `- ${row.level}: allowed: ${row.allowed}; required disclosure and proofs: ${row.disclosure}; consequence of non-disclosure: ${row.consequence}`
   ).join("\n");
+  const keysOf = (kind: Criterion["kind"]) =>
+    CRITERIA.filter((c) => c.kind === kind)
+      .map((c) => c.key)
+      .join(", ");
   const artifacts = AI_ARTIFACT_GUIDE.map((row) => `- ${row.category}: ${row.artifacts}`).join("\n");
 
   return `You are helping the owner of Pawtropolis, a Discord community, review an application to its Verified 2D Artist program. Verified artists may advertise and take paid commissions from members, so this review exists to protect members from scams, stolen art and AI-generated work sold as hand-made.
@@ -249,7 +254,7 @@ ${bullets(WORKFLOW_GAPS)}
 # What to return
 
 - criteria: exactly one entry for each criterion key above.
-  - rating: "met", "partly_met" or "not_met" for the requirement criteria (process_evidence, client_work, terms_of_service, active_commissions, foundational_skill). For the risk criteria (consistency, provenance, ai_indicators, base_use, account_history) use "met" when nothing concerning was found in what could be checked and "concern" when something needs an explanation. Use "undetermined" for any criterion the evidence does not settle.
+  - rating: "met", "partly_met" or "not_met" for the requirement criteria (${keysOf("requirement")}). For the risk criteria (${keysOf("risk")}) use "met" when nothing concerning was found in what could be checked and "concern" when something needs an explanation. Use "undetermined" for any criterion the evidence does not settle.
   - score: 0 to 10 for how well the evidence satisfies the criterion (10 means fully satisfied, or no concern found), or null when the rating is "undetermined".
 - overall_score: 0 to 100. Your overall read of how well the application meets the workflow on the evidence available. Weigh the requirements and any serious concern instead of averaging. When key evidence is missing, the summary must say whether the application is incomplete or whether something points to dishonesty. Those are different situations.
 - confidence: how far the available evidence lets you conclude anything, with the reason.

@@ -475,6 +475,30 @@ describe("renderReport: criteria", () => {
     expect(criteria).toContain(`**Process evidence** · ${words} · 4/10`);
   });
 
+  it("says no concern found where met would read as if the problem had been found", () => {
+    const base = assessment();
+    const criteria =
+      section(withAnswerPages({ criteria: base.criteria.map((c) => ({ ...c, rating: "met" as const, score: 9 })) }), "Criteria") ?? "";
+
+    expect(criteria).toContain("**AI indicators** · no concern found · 9/10");
+    expect(criteria).toContain("**Terms of service** · met · 9/10");
+    for (const criterion of CRITERIA) {
+      expect(criteria).toContain(`**${criterion.title}** · ${criterion.kind === "risk" ? "no concern found" : "met"} · 9/10`);
+    }
+  });
+
+  it("keeps the other ratings as they are on a check that looks for a problem", () => {
+    const base = assessment();
+    const rated = (rating: "concern" | "undetermined") =>
+      section(
+        withAnswerPages({ criteria: base.criteria.map((c) => (c.key === "ai_indicators" ? { ...c, rating, score: 3 } : c)) }),
+        "Criteria"
+      );
+
+    expect(rated("concern")).toContain("**AI indicators** · concern · 3/10");
+    expect(rated("undetermined")).toContain("**AI indicators** · cannot be determined · 3/10");
+  });
+
   it("leaves the score out when there is none", () => {
     const base = assessment();
     const criteria = section(

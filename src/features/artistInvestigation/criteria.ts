@@ -39,6 +39,11 @@ export type CriterionKey =
 export interface Criterion {
   key: CriterionKey;
   title: string;
+  /**
+   * A requirement asks the applicant for something. A risk check looks for a
+   * problem, so "met" there means nothing concerning was found.
+   */
+  kind: "requirement" | "risk";
   rules: WorkflowRule[];
   /** How to read the rules against a ticket. Guidance for the reviewer, not policy. */
   guidance: string;
@@ -48,6 +53,7 @@ export const CRITERIA: readonly Criterion[] = [
   {
     key: "process_evidence",
     title: "Process evidence",
+    kind: "requirement",
     rules: [
       { text: "3 different WIP/Layers to previous work", source: "requirements" },
       { text: "Speed-paints also help your verification", source: "requirements" },
@@ -68,6 +74,7 @@ export const CRITERIA: readonly Criterion[] = [
   {
     key: "client_work",
     title: "Finished client work",
+    kind: "requirement",
     rules: [
       { text: "Previous finished work with a client", source: "requirements" },
       { text: "Specific, verifiable client feedback", source: "handbook" },
@@ -78,6 +85,7 @@ export const CRITERIA: readonly Criterion[] = [
   {
     key: "terms_of_service",
     title: "Terms of service",
+    kind: "requirement",
     rules: [
       { text: "Need a form of ToS", source: "requirements" },
       { text: "Commissions >$200 require written or clearly documented terms", source: "handbook" },
@@ -88,6 +96,7 @@ export const CRITERIA: readonly Criterion[] = [
   {
     key: "active_commissions",
     title: "Active commissions",
+    kind: "requirement",
     rules: [
       { text: "Have to be an artist that actively does commissions", source: "requirements" },
       {
@@ -101,6 +110,7 @@ export const CRITERIA: readonly Criterion[] = [
   {
     key: "foundational_skill",
     title: "Foundational skill",
+    kind: "requirement",
     rules: [
       {
         text: "Rendering Skills is not a requirement however we do require that you understand a level of shading to prove foundational artistic competence",
@@ -113,6 +123,7 @@ export const CRITERIA: readonly Criterion[] = [
   {
     key: "consistency",
     title: "Style and skill consistency",
+    kind: "risk",
     rules: [
       { text: "Sudden style/quality jumps between pieces", source: "handbook" },
       { text: "Style not consistent across portfolio", source: "handbook" },
@@ -124,6 +135,7 @@ export const CRITERIA: readonly Criterion[] = [
   {
     key: "provenance",
     title: "Provenance",
+    kind: "risk",
     rules: [
       { text: "Reasonable proof of authorship must be provided upon request", source: "handbook" },
       { text: "Reverse-image search (TinEye, SauceNAO)", source: "handbook" },
@@ -135,6 +147,7 @@ export const CRITERIA: readonly Criterion[] = [
   {
     key: "ai_indicators",
     title: "AI indicators",
+    kind: "risk",
     rules: [
       { text: "AI detection triggers", source: "handbook" },
       { text: "Visual artifact checks (symmetrical errors, melting details)", source: "handbook" },
@@ -150,6 +163,7 @@ export const CRITERIA: readonly Criterion[] = [
   {
     key: "base_use",
     title: "Base use",
+    kind: "risk",
     rules: [
       {
         text: "Users may post artwork with P2U (Pay to Use) and F2U (Free to Use) bases as long as proper credit is given.",
@@ -166,6 +180,7 @@ export const CRITERIA: readonly Criterion[] = [
   {
     key: "account_history",
     title: "Account and history",
+    kind: "risk",
     rules: [
       { text: "Account <6 months old with no traceable history", source: "handbook" },
       { text: "Resistance to standard proof requests", source: "handbook" },

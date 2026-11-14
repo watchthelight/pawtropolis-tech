@@ -122,6 +122,22 @@ describe("artist criteria: shape", () => {
     }
   });
 
+  it("marks which criteria ask for something and which look for a problem", () => {
+    // The report and the prompt word a rating by this: "met" on a risk check means nothing was found.
+    expect(Object.fromEntries(CRITERIA.map((criterion) => [criterion.key, criterion.kind]))).toEqual({
+      process_evidence: "requirement",
+      client_work: "requirement",
+      terms_of_service: "requirement",
+      active_commissions: "requirement",
+      foundational_skill: "requirement",
+      consistency: "risk",
+      provenance: "risk",
+      ai_indicators: "risk",
+      base_use: "risk",
+      account_history: "risk",
+    });
+  });
+
   it("ties every rule to a source the report can name", () => {
     const sources = new Set(CRITERIA.flatMap((criterion) => criterion.rules.map((rule) => rule.source)));
 
