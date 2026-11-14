@@ -85,6 +85,10 @@ import {
 import { handleResetModal } from "../commands/gate.js";
 import { handleWelcomeBatchContextMenu } from "../commands/welcomeBatchContext.js";
 
+// Discord interaction tokens live 15 minutes; slow commands that already deferred must not
+// be reported as 10 s event timeouts.
+const INTERACTION_EVENT_TIMEOUT_MS = 15 * 60 * 1000;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // INTERACTION DEDUPLICATION
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1171,5 +1175,5 @@ export function registerInteractionCreate(
         }
       }
     );
-  }));
+  }, INTERACTION_EVENT_TIMEOUT_MS));
 }
