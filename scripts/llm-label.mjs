@@ -94,7 +94,6 @@ async function labelOne(row) {
       const resp = await client.messages.create({
         model: MODEL,
         max_tokens: 200,
-        temperature: 0,
         system: [
           { type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } },
         ],
