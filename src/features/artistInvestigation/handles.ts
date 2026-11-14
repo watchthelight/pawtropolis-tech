@@ -246,3 +246,24 @@ export function matchNames(match: RawMatch): string[] {
 export function classifyOwnership(match: RawMatch, claimed: ClaimedHandle[]): OwnershipResult {
   return compareNames(matchNames(match), claimed);
 }
+
+/** How many different artists the matches for one image must name before they read as noise. */
+const SCATTER_THRESHOLD = 4;
+
+/**
+ * Images whose matches name several unrelated artists, with how many. A real
+ * source turns up under one or two names: the artist, cross-posted. A lookup
+ * service that answers a text page or flat line art has little detail to
+ * compare, and returns look-alikes by a different artist each time.
+ */
+export function scatteredImages(matches: ReadonlyArray<RawMatch & { imageKey: string }>): Map<string, number> {
+  const names = new Map<string, Set<string>>();
+  for (const match of matches) {
+    const name = normalizeHandle(matchNames(match)[0] ?? "");
+    if (!name) continue;
+    names.set(match.imageKey, (names.get(match.imageKey) ?? new Set<string>()).add(name));
+  }
+  return new Map(
+    [...names].filter(([, seen]) => seen.size >= SCATTER_THRESHOLD).map(([imageKey, seen]) => [imageKey, seen.size])
+  );
+}

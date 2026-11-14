@@ -17,8 +17,9 @@ import {
   handleFromUrl,
   matchNames,
   normalizeHandle,
+  scatteredImages,
 } from "../../../src/features/artistInvestigation/handles.js";
-import type { ClaimedHandle } from "../../../src/features/artistInvestigation/types.js";
+import type { ClaimedHandle, RawMatch } from "../../../src/features/artistInvestigation/types.js";
 import { rawMatch } from "./fixtures.js";
 
 const claim = (platform: string, handle: string, origin: ClaimedHandle["origin"] = "link"): ClaimedHandle => ({
@@ -229,5 +230,57 @@ describe("matchNames and classifyOwnership", () => {
   it("supports the applicant when an e621 artist tag is their handle", () => {
     const match = rawMatch({ service: "e621", platform: "e621", artists: ["foxyartz_(artist)"], uploader: "archiver" });
     expect(classifyOwnership(match, claimed).ownership).toBe("applicant");
+  });
+});
+
+describe("scatteredImages", () => {
+  const on = (imageKey: string, overrides: Partial<RawMatch>) => ({ ...rawMatch(overrides), imageKey });
+  /** Matches for one image, each credited to a different artist. */
+  const strangers = (imageKey: string, count: number) =>
+    Array.from({ length: count }, (_, i) => on(imageKey, { artists: [`artist${i}`], uploader: `artist${i}` }));
+
+  it("flags an image whose matches name four or more different artists, with the count", () => {
+    expect(scatteredImages(strangers("img4", 4))).toEqual(new Map([["img4", 4]]));
+    expect(scatteredImages(strangers("img4", 6))).toEqual(new Map([["img4", 6]]));
+  });
+
+  it("does not flag an image whose matches name fewer", () => {
+    expect(scatteredImages(strangers("img1", 3)).size).toBe(0);
+    expect(scatteredImages([]).size).toBe(0);
+  });
+
+  it("counts one artist once however the name is written", () => {
+    const matches = ["FoxyArtz", "foxy_artz", "foxyartz_(artist)", "@Foxy-Artz", "FOXYARTZ"].map((name) =>
+      on("img1", { artists: [name] })
+    );
+    expect(scatteredImages(matches).size).toBe(0);
+  });
+
+  it("looks at each image on its own", () => {
+    const matches = [...strangers("img1", 2), ...strangers("img2", 5), ...strangers("img3", 3)];
+    expect(scatteredImages(matches)).toEqual(new Map([["img2", 5]]));
+  });
+
+  it("goes by the same names the ownership check compares", () => {
+    // Without a credited artist the uploader counts, except on e621, where the uploader only archived the post.
+    const uploads = Array.from({ length: 4 }, (_, i) => on("img1", { artists: [], uploader: `uploader${i}` }));
+    const archived = Array.from({ length: 4 }, (_, i) =>
+      on("img2", {
+        service: "e621",
+        platform: "e621",
+        sourceUrl: `https://e621.net/posts/${i}`,
+        artists: [],
+        uploader: `archiver${i}`,
+      })
+    );
+
+    expect(scatteredImages([...uploads, ...archived])).toEqual(new Map([["img1", 4]]));
+  });
+
+  it("ignores matches that carry no name", () => {
+    const nameless = Array.from({ length: 6 }, (_, i) =>
+      on("img1", { artists: [], uploader: null, sourceUrl: `https://example.com/art/${i}` })
+    );
+    expect(scatteredImages(nameless).size).toBe(0);
   });
 });

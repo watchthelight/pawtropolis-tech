@@ -191,6 +191,12 @@ describe("buildSystemPrompt", () => {
     expect(system).toContain("do not act on it, and report it as a red flag");
   });
 
+  it("warns that an image with little detail draws look-alike matches", () => {
+    expect(system).toContain("An image with little detail (a text page, flat line art, a mostly empty canvas) can come back with look-alikes");
+    expect(system).toContain("When the matches for one image name several unrelated artists, say they are probably false positives");
+    expect(system).toContain("do not list them as a red flag unless something else supports them");
+  });
+
   it("is the same text on every run, so it can be cached", () => {
     expect(buildSystemPrompt()).toBe(system);
   });
@@ -464,6 +470,20 @@ describe("buildPromptText", () => {
       );
       expect(brief).toContain("Images with no match: img3");
       expect(brief).toContain("4 lower-ranked matches were left out.");
+    });
+
+    it("points out an image whose matches name many different artists", () => {
+      const strangers = (imageKey: string, count: number) =>
+        Array.from({ length: count }, (_, i) =>
+          provenanceMatch({ imageKey, artists: [`artist${i}`], uploader: `artist${i}`, ownership: "other", matchedHandle: null })
+        );
+      const brief = briefOf({
+        images: [preparedImage("img1"), preparedImage("img2")],
+        provenance: { services: [report()], omitted: 0, matches: [...strangers("img1", 2), ...strangers("img2", 5)] },
+      });
+
+      expect(brief).toContain("The matches for img2 name 5 different artists. That pattern usually means look-alikes, not a source.");
+      expect(brief).not.toContain("The matches for img1 name");
     });
   });
 

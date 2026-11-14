@@ -30,6 +30,7 @@ import {
   displayRule,
   type CriterionKey,
 } from "./criteria.js";
+import { scatteredImages } from "./handles.js";
 import type {
   ApplicantContext,
   ImageFailure,
@@ -217,6 +218,7 @@ Cite evidence by label wherever you make a claim. Images are img1, img2 and so o
 - Videos and source files are listed by name only. Their contents were not inspected. Treat one as "the applicant supplied a file with this name", not as proof of what it contains.
 - Links were not opened. A linked ToS, gallery or commission page stays unconfirmed until someone opens it.
 - Each reverse image match carries an ownership label. Code produced it by comparing the uploader or credited artist with the handles the applicant claimed in the ticket. It is a name comparison only, so check it against the transcript. A match under a claimed handle shows the art is posted under that account. It does not show that the applicant controls the account or drew the piece. When nothing in the ticket shows the applicant controls an account they point to, suggest a proof of control step, such as a temporary edit to that profile.
+- Reverse image search compares overall shapes. An image with little detail (a text page, flat line art, a mostly empty canvas) can come back with look-alikes that have nothing to do with it. When the matches for one image name several unrelated artists, say they are probably false positives, name what would confirm it, and do not list them as a red flag unless something else supports them.
 - File metadata notes come from the image files themselves. Metadata is easy to strip or fake, so a generator tag is worth a question and a clean file proves nothing.
 - Images were downscaled before you received them, and an animated file shows only its first frame. Do not read compression artifacts as generation artifacts.
 
@@ -425,6 +427,9 @@ function provenanceSection(input: AnalysisInput): string {
   } else {
     lines.push("Matches:");
     lines.push(...provenance.matches.map(matchLine));
+    for (const [imageKey, artists] of scatteredImages(provenance.matches)) {
+      lines.push(`The matches for ${imageKey} name ${artists} different artists. That pattern usually means look-alikes, not a source.`);
+    }
     const matched = new Set(provenance.matches.map((m) => m.imageKey));
     const unmatched = images.filter((image) => !matched.has(image.key)).map((image) => image.key);
     if (unmatched.length > 0) lines.push(`Images with no match: ${unmatched.join(", ")}`);

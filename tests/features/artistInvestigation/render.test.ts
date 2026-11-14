@@ -780,6 +780,32 @@ describe("renderReport: reverse image search", () => {
     expect(text).toContain("**No match found:** img2");
   });
 
+  it("warns when the matches for one image name many different artists", () => {
+    const strangers = (imageKey: string, count: number) =>
+      Array.from({ length: count }, (_, i) =>
+        provenanceMatch({ imageKey, artists: [`artist${i}`], uploader: `artist${i}`, ownership: "other", matchedHandle: null })
+      );
+    const text =
+      section(
+        render({
+          evidence: ticketEvidence({ images: [image(1), image(2)] }),
+          images: [1, 2].map((n) => ({ key: `img${n}`, metadataNotes: [] })),
+          provenance: {
+            matches: [...strangers("img1", 3), ...strangers("img2", 6)],
+            services: [service({ matches: 9 })],
+            omitted: 0,
+          },
+        }),
+        "Reverse image search"
+      ) ?? "";
+
+    expect(text).toContain(
+      "**img2** piece-2.png\n-# These matches name 6 different artists. One artwork is rarely posted under that many names, so most of them are probably look-alikes, which is common for text pages and flat line art. Open them before reading anything into a match.\n`p4` "
+    );
+    expect(text).toContain("**img1** piece-1.png\n`p1` ");
+    expect(text.match(/These matches name/g)).toHaveLength(1);
+  });
+
   it("does not count an image that failed to load as searched", () => {
     const text = section(
       render({

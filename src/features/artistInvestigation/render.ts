@@ -16,6 +16,7 @@ import { escapeMarkdown, type APIEmbed } from "discord.js";
 import { describeAge, describeOwnership, matchLabel, type AnalysisOutcome, type Assessment, type Rating } from "./analysis.js";
 import { formatFooter, type TokenUsage } from "./budget.js";
 import { CRITERIA, WORKFLOW_GAPS, displayRule, findRequirementDrift, type WorkflowSource } from "./criteria.js";
+import { scatteredImages } from "./handles.js";
 import type {
   ApplicantContext,
   ImageFailure,
@@ -337,13 +338,23 @@ function provenanceSection(report: InvestigationReport): Section {
   const blocks = [`**Services**\n${services.length > 0 ? services.join("\n") : "No lookup ran."}`];
 
   const analyzed = evidence.images.filter((image) => report.images.some((i) => i.key === image.key));
+  const scattered = scatteredImages(provenance.matches);
   for (const image of analyzed) {
     const matches = provenance.matches
       .map((match, index) => ({ match, index }))
       .filter(({ match }) => match.imageKey === image.key);
     if (matches.length === 0) continue;
+    const artists = scattered.get(image.key);
     blocks.push(
-      [`**${image.key}** ${safe(image.name, 60)}`, ...matches.map(({ match, index }) => matchBlock(match, index))].join("\n")
+      [
+        `**${image.key}** ${safe(image.name, 60)}`,
+        artists
+          ? `-# These matches name ${artists} different artists. One artwork is rarely posted under that many names, so most of them are probably look-alikes, which is common for text pages and flat line art. Open them before reading anything into a match.`
+          : null,
+        ...matches.map(({ match, index }) => matchBlock(match, index)),
+      ]
+        .filter(Boolean)
+        .join("\n")
     );
   }
 
