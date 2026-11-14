@@ -101,6 +101,16 @@ export async function commitAndPushAssets(assetType: "banner" | "avatar"): Promi
   }
 }
 
+const IMAGE_DOWNLOAD_TIMEOUT_MS = 30_000;
+
+export async function downloadImage(url: string): Promise<Buffer> {
+  const response = await fetch(url, { signal: AbortSignal.timeout(IMAGE_DOWNLOAD_TIMEOUT_MS) });
+  if (!response.ok) {
+    throw new Error(`Failed to download image: ${response.statusText}`);
+  }
+  return Buffer.from(await response.arrayBuffer());
+}
+
 export const data = new SlashCommandBuilder()
   .setName("update")
   .setDescription("Update bot activity, status, banner, or avatar")
@@ -367,13 +377,9 @@ async function handleBannerUpdate(ctx: CommandContext<ChatInputCommandInteractio
   });
 
   // Download image
-  const imageBuffer = await withStep(ctx, "download_image", async () => {
-    const response = await fetch(attachment.url);
-    if (!response.ok) {
-      throw new Error(`Failed to download image: ${response.statusText}`);
-    }
-    return Buffer.from(await response.arrayBuffer());
-  });
+  const imageBuffer = await withStep(ctx, "download_image", () =>
+    downloadImage(attachment.url)
+  );
 
   // Process into two formats: PNG for Discord API, WebP for web embeds
   const [pngBuffer, webpBuffer] = await withStep(ctx, "process_images", async () => {
@@ -499,13 +505,9 @@ async function handleAvatarUpdate(ctx: CommandContext<ChatInputCommandInteractio
   });
 
   // Download image
-  const imageBuffer = await withStep(ctx, "download_image", async () => {
-    const response = await fetch(attachment.url);
-    if (!response.ok) {
-      throw new Error(`Failed to download image: ${response.statusText}`);
-    }
-    return Buffer.from(await response.arrayBuffer());
-  });
+  const imageBuffer = await withStep(ctx, "download_image", () =>
+    downloadImage(attachment.url)
+  );
 
   // Process image - GIFs pass through unchanged, others get cropped/converted
   const isAnimated = attachment.contentType === "image/gif";
