@@ -166,6 +166,10 @@ export interface TicketFacts {
   historyComplete: boolean;
 }
 
+/**
+ * Another ticket by the same applicant. Usually an earlier one, but a ticket
+ * opened after the one under review is listed too.
+ */
 export interface PriorTicket {
   name: string;
   /** ISO 8601 time the record refers to (opened for first-party, closed for Ticket Tool). */

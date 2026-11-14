@@ -2399,7 +2399,7 @@ A private second opinion on a 2D artist verification ticket. Run it inside the a
 
 **What it looks at:**
 1. Every message in the ticket: text, images, other attachments, links and gallery handles
-2. What the server knows about the applicant: account age, join date, roles, recent activity, their gate application, earlier 2D artist tickets and the Verify Blacklist thread
+2. What the server knows about the applicant: account age, join date, roles, recent activity, their gate application, their other 2D artist tickets and the Verify Blacklist thread
 3. Reverse image search for each image on Fluffle, e621 and SauceNAO. A service with no API key configured is skipped, and the report names it as skipped
 4. Claude's read of the images and the ticket text, rated against each handbook rule
 

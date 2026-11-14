@@ -258,7 +258,7 @@ describe("buildPromptText", () => {
       expect(brief).toContain("Messages recorded in the last 90 days: 42 (latest on 2026-10-31)");
       expect(brief).toContain("Gate application on record: approved, submitted 2025-06-01");
       expect(brief).toContain("Staff Verify Blacklist: not listed");
-      expect(brief).toContain("Earlier 2D artist tickets: none found");
+      expect(brief).toContain("Other 2D artist tickets by this applicant: none found");
       expect(brief).not.toContain("Checks that could not run:");
     });
 
@@ -288,7 +288,7 @@ describe("buildPromptText", () => {
       );
     });
 
-    it("says when the applicant left, is on the blacklist, or has earlier tickets", () => {
+    it("says when the applicant left, is on the blacklist, or has other tickets", () => {
       const brief = briefOf({
         applicant: applicantContext({
           inServer: false,
@@ -299,8 +299,9 @@ describe("buildPromptText", () => {
           onVerifyBlacklist: true,
           blacklistNote: "2026-10-05: sold traced art",
           priorTickets: [
-            { name: "2d-artist-0031", when: "2026-08-01T10:00:00.000Z", note: "closed, transcript on file in the ticket log", source: "ticket-tool-log" },
-            { name: "2d-artist-0007", when: null, note: "still open", source: "first-party" },
+            { name: "2d-artist-0031", when: "2026-08-01T10:00:00.000Z", note: "transcript on file in the ticket log", source: "ticket-tool-log" },
+            { name: "2d-artist-0007", when: "2025-10-09T12:00:00.000Z", note: "still open", source: "first-party" },
+            { name: "2d-artist-0003", when: null, note: "closed: did not answer", source: "first-party" },
           ],
         }),
       });
@@ -309,8 +310,9 @@ describe("buildPromptText", () => {
       expect(brief).toContain("Messages recorded in the last 90 days: 0\n");
       expect(brief).toContain("Gate application on record: needs_info\n");
       expect(brief).toContain("Staff Verify Blacklist: listed (2026-10-05: sold traced art)");
+      // The date of a Ticket Tool ticket is the day it closed. The bot's own tickets record the day they opened.
       expect(brief).toContain(
-        "Earlier 2D artist tickets:\n- 2d-artist-0031 (2026-08-01): closed, transcript on file in the ticket log\n- 2d-artist-0007: still open"
+        "Other 2D artist tickets by this applicant (one with a higher number than this ticket was opened after it):\n- 2d-artist-0031 (closed 2026-08-01), transcript on file in the ticket log\n- 2d-artist-0007 (opened 2025-10-09), still open\n- 2d-artist-0003, closed: did not answer"
       );
     });
 

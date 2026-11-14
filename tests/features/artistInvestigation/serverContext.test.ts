@@ -5,7 +5,7 @@
  *       the Ticket Tool log and the Verify Blacklist thread.
  * WHY: Each source can fail without the others. A source that could not be read
  *      has to show up as a gap in the report, never as "nothing found", because
- *      "no earlier tickets" and "could not check" mean different things to the owner.
+ *      "no other tickets" and "could not check" mean different things to the owner.
  */
 import type { Guild } from "discord.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -41,7 +41,7 @@ import { APPLICANT_ID, CHANNEL_ID, GUILD_ID, OTHER_MEMBER_ID, T0, memoryDb, sche
 
 const DAY_MS = 86_400_000;
 const CHANNEL_NAME = "2d-artist-0042";
-const NO_LOG_GAP = "No ticket log channel is configured for this server, so earlier Ticket Tool tickets are unknown.";
+const NO_LOG_GAP = "No ticket log channel is configured for this server, so their other Ticket Tool tickets are unknown.";
 const NO_BLACKLIST_GAP = "No Verify Blacklist thread is configured for this server.";
 
 /** A staff-channel message. Higher n is newer, in both id and time. */
@@ -126,7 +126,7 @@ describe("snowflakeToMs", () => {
 });
 
 describe("priorTicketsFromLog", () => {
-  it("lists the applicant's earlier tickets and nobody else's", () => {
+  it("lists the applicant's other tickets and nobody else's", () => {
     const log = [
       transcript(3, OTHER_MEMBER_ID, "2d-artist-0040"),
       transcript(2, APPLICANT_ID, "2d-artist-0031"),
@@ -137,7 +137,7 @@ describe("priorTicketsFromLog", () => {
       {
         name: "2d-artist-0031",
         when: new Date(staffMessage(2).createdTimestamp).toISOString(),
-        note: "closed, transcript on file in the ticket log",
+        note: "transcript on file in the ticket log",
         source: "ticket-tool-log",
       },
       expect.objectContaining({ name: "2d-artist-0012", source: "ticket-tool-log" }),
@@ -161,7 +161,7 @@ describe("priorTicketsFromLog", () => {
       {
         name: "2d-artist-0031",
         when: new Date(staffMessage(3).createdTimestamp).toISOString(),
-        note: "closed, transcript on file in the ticket log",
+        note: "transcript on file in the ticket log",
         source: "ticket-tool-log",
       },
     ];
@@ -289,7 +289,7 @@ describe("gatherApplicantContext", () => {
     db.close();
   });
 
-  it("collects the profile, membership, activity, gate application and earlier tickets", async () => {
+  it("collects the profile, membership, activity, gate application and other tickets", async () => {
     const lastSeenS = T0 / 1000 - 3600;
     addActivity(GUILD_ID, APPLICANT_ID, lastSeenS - 5000, lastSeenS, lastSeenS - 90);
     addActivity(GUILD_ID, OTHER_MEMBER_ID, lastSeenS + 500);
@@ -433,7 +433,7 @@ describe("gatherApplicantContext", () => {
       expect(context).toMatchObject({ priorTickets: [], onVerifyBlacklist: false, blacklistNote: null, gaps: [] });
     });
 
-    it("adds earlier Ticket Tool tickets from the log", async () => {
+    it("adds Ticket Tool tickets from the log", async () => {
       const logChannel = staffChannel([
         transcript(1, APPLICANT_ID, "2d-artist-0031"),
         transcript(2, OTHER_MEMBER_ID, "2d-artist-0040"),
@@ -447,7 +447,7 @@ describe("gatherApplicantContext", () => {
         {
           name: "2d-artist-0031",
           when: new Date(staffMessage(1).createdTimestamp).toISOString(),
-          note: "closed, transcript on file in the ticket log",
+          note: "transcript on file in the ticket log",
           source: "ticket-tool-log",
         },
       ]);
@@ -472,10 +472,10 @@ describe("gatherApplicantContext", () => {
 
     it("lists the log as a gap when the channel is gone or unreadable", async () => {
       const missing = await gather(configured({ logChannel: null }));
-      expect(missing.gaps).toEqual(["Ticket log could not be read, so earlier Ticket Tool tickets are unknown (log channel is not readable)."]);
+      expect(missing.gaps).toEqual(["Ticket log could not be read, so their other Ticket Tool tickets are unknown (log channel is not readable)."]);
 
       const refused = await gather(configured({ logChannel: new Error("Missing Access") }));
-      expect(refused.gaps).toEqual(["Ticket log could not be read, so earlier Ticket Tool tickets are unknown (Missing Access)."]);
+      expect(refused.gaps).toEqual(["Ticket log could not be read, so their other Ticket Tool tickets are unknown (Missing Access)."]);
 
       const notText = await gather(configured({ logChannel: { isTextBased: () => false } }));
       expect(notText.gaps).toHaveLength(1);

@@ -37,6 +37,7 @@ import type {
   ImageFailure,
   Ownership,
   PreparedImage,
+  PriorTicket,
   ProvenanceMatch,
   ProvenanceResult,
   TicketEvidence,
@@ -181,6 +182,14 @@ export function describeAge(fromMs: number, toMs: number): string {
   return `${years} years${rest > 0 ? ` ${rest} month${rest === 1 ? "" : "s"}` : ""}`;
 }
 
+/**
+ * "(opened 2025-06-15)" or "(closed 2026-11-09)", or nothing without a date. The
+ * bot's own tickets record when they opened. Ticket Tool's log only shows when
+ * one closed.
+ */
+export const describeTicketDate = (ticket: PriorTicket) =>
+  ticket.when ? ` (${ticket.source === "first-party" ? "opened" : "closed"} ${ticket.when.slice(0, 10)})` : "";
+
 const bullets = (items: readonly string[]) => items.map((item) => `- ${item}`).join("\n");
 
 export function buildSystemPrompt(): string {
@@ -322,10 +331,10 @@ function applicantSection(applicant: ApplicantContext, referenceMs: number): str
     `Staff Verify Blacklist: ${blacklist}`,
   ];
   if (applicant.priorTickets.length === 0) {
-    lines.push("Earlier 2D artist tickets: none found");
+    lines.push("Other 2D artist tickets by this applicant: none found");
   } else {
-    lines.push("Earlier 2D artist tickets:");
-    lines.push(...applicant.priorTickets.map((t) => `- ${t.name}${t.when ? ` (${t.when.slice(0, 10)})` : ""}: ${t.note}`));
+    lines.push("Other 2D artist tickets by this applicant (one with a higher number than this ticket was opened after it):");
+    lines.push(...applicant.priorTickets.map((t) => `- ${t.name}${describeTicketDate(t)}, ${t.note}`));
   }
   if (applicant.gaps.length > 0) {
     lines.push("Checks that could not run:");

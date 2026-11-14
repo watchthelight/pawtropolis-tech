@@ -61,7 +61,7 @@ export const LIMITS = {
   imageConcurrency: 4,
   /** Matches kept per image and service after sorting by similarity. */
   matchesPerQuery: 6,
-  /** Pages of the Ticket Tool log read when looking for earlier tickets. */
+  /** Pages of the Ticket Tool log read when looking for the applicant's other tickets. */
   logPages: 5,
   /** Pages of the Verify Blacklist thread read. */
   blacklistPages: 5,

@@ -229,7 +229,7 @@ describe("renderReport: summary", () => {
         "Roles: Member",
         `Activity: 42 messages in the last 90 days, latest <t:${seconds(T0 - 86_400_000)}:D>`,
         "Gate application: approved, submitted 2025-06-01",
-        "Earlier 2D artist tickets: none found",
+        "Other 2D artist tickets: none found",
         "Verify Blacklist: not listed",
       ].join("\n")
     );
@@ -306,20 +306,34 @@ describe("renderReport: summary", () => {
     expect(summary).toContain("Gate application: draft\n");
   });
 
-  it("lists up to six earlier tickets", () => {
+  it("lists up to six other tickets", () => {
     const priorTickets = Array.from({ length: 8 }, (_, i) => ({
       name: `2d-artist-000${i + 1}`,
       when: i === 0 ? null : `2026-0${i + 1}-10T09:00:00.000Z`,
       note: i === 0 ? "still open" : "closed: no reply",
-      source: "ticket-tool-log" as const,
+      source: "first-party" as const,
     }));
     const summary = section(render({ applicant: applicantContext({ priorTickets }) }), "Artist investigation: #2d-artist-0042");
 
     expect(summary).toContain(
-      "Earlier 2D artist tickets: 2d-artist-0001: still open; 2d-artist-0002 (2026-02-10): closed: no reply; 2d-artist-0003"
+      "Other 2D artist tickets: 2d-artist-0001, still open; 2d-artist-0002 (opened 2026-02-10), closed: no reply; 2d-artist-0003"
     );
     expect(summary).toContain("2d-artist-0006");
     expect(summary).not.toContain("2d-artist-0007");
+  });
+
+  it("says that the date of a Ticket Tool ticket is the day it closed", () => {
+    const priorTickets = [
+      {
+        name: "2d-artist-0300",
+        when: "2026-11-09T18:00:00.000Z",
+        note: "transcript on file in the ticket log",
+        source: "ticket-tool-log" as const,
+      },
+    ];
+    const summary = section(render({ applicant: applicantContext({ priorTickets }) }), "Artist investigation: #2d-artist-0042");
+
+    expect(summary).toContain("Other 2D artist tickets: 2d-artist-0300 (closed 2026-11-09), transcript on file in the ticket log\n");
   });
 
   it("makes a Verify Blacklist entry stand out, with or without a note", () => {
@@ -990,7 +1004,7 @@ describe("renderReport: notes", () => {
     const notes = section(
       render({
         evidence: ticketEvidence({ images: [image(1), image(2)] }),
-        applicant: applicantContext({ gaps: ["Ticket log could not be read, so earlier Ticket Tool tickets are unknown (Missing Access)."] }),
+        applicant: applicantContext({ gaps: ["Ticket log could not be read, so their other Ticket Tool tickets are unknown (Missing Access)."] }),
         imageFailures: [{ key: "img2", name: "piece_2.png", reason: "HTTP 404" }],
       }),
       "Notes"
@@ -999,7 +1013,7 @@ describe("renderReport: notes", () => {
     expect(notes).toContain(
       [
         "**Checks that could not run**",
-        "- Ticket log could not be read, so earlier Ticket Tool tickets are unknown (Missing Access).",
+        "- Ticket log could not be read, so their other Ticket Tool tickets are unknown (Missing Access).",
         '- img2 "piece\\_2.png" could not be loaded: HTTP 404.',
       ].join("\n")
     );

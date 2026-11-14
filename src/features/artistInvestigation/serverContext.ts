@@ -1,7 +1,7 @@
 /**
  * Pawtropolis Tech -- src/features/artistInvestigation/serverContext.ts
  * WHAT: What the server already knows about an applicant: account age, join
- *       date, roles, recent activity, gate application, earlier verification
+ *       date, roles, recent activity, gate application, other verification
  *       tickets and the staff Verify Blacklist.
  * WHY: The handbook's red and green flags lean on history ("Account <6 months
  *      old with no traceable history"). Each lookup is independent: one that
@@ -57,7 +57,7 @@ async function readRecent(channel: ReadableChannel, pages: number): Promise<{ me
 const ticketKey = (name: string) => name.trim().toLowerCase().replace(/-closed(?=\d)/, "-");
 
 /**
- * Earlier tickets from Ticket Tool's transcript posts. Each closed ticket leaves
+ * Other tickets from Ticket Tool's transcript posts. Each closed ticket leaves
  * an embed with "Ticket Owner" and "Ticket Name" fields, and can leave more than
  * one: a post under its open name and another under its closed name. Those are
  * merged, so one ticket is never counted as two.
@@ -75,7 +75,7 @@ export function priorTicketsFromLog(messages: Iterable<StaffMessage>, applicantI
       found.set(key, {
         name: key,
         when: new Date(message.createdTimestamp).toISOString(),
-        note: "closed, transcript on file in the ticket log",
+        note: "transcript on file in the ticket log",
         source: "ticket-tool-log",
         atMs: message.createdTimestamp,
       });
@@ -214,10 +214,10 @@ export async function gatherApplicantContext(input: ContextInput): Promise<Appli
         context.gaps.push(`Ticket log was read back to ${new Date(oldest).toISOString().slice(0, 10)} only; older tickets are not counted.`);
       }
     } catch (err) {
-      context.gaps.push(`Ticket log could not be read, so earlier Ticket Tool tickets are unknown (${describe(err)}).`);
+      context.gaps.push(`Ticket log could not be read, so their other Ticket Tool tickets are unknown (${describe(err)}).`);
     }
   } else {
-    context.gaps.push("No ticket log channel is configured for this server, so earlier Ticket Tool tickets are unknown.");
+    context.gaps.push("No ticket log channel is configured for this server, so their other Ticket Tool tickets are unknown.");
   }
 
   const blacklistThreadId = getVerifyBlacklistThreadId(guild.id);

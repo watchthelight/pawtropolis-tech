@@ -13,7 +13,15 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import { escapeMarkdown, type APIEmbed } from "discord.js";
-import { describeAge, describeOwnership, matchLabel, type AnalysisOutcome, type Assessment, type Rating } from "./analysis.js";
+import {
+  describeAge,
+  describeOwnership,
+  describeTicketDate,
+  matchLabel,
+  type AnalysisOutcome,
+  type Assessment,
+  type Rating,
+} from "./analysis.js";
 import { formatFooter, type TokenUsage } from "./budget.js";
 import { CRITERIA, WORKFLOW_GAPS, displayRule, findRequirementDrift, type WorkflowSource } from "./criteria.js";
 import { scatteredImages } from "./handles.js";
@@ -219,10 +227,10 @@ function applicantBlock(report: InvestigationReport): string {
   );
   lines.push(
     applicant.priorTickets.length === 0
-      ? "Earlier 2D artist tickets: none found"
-      : `Earlier 2D artist tickets: ${applicant.priorTickets
+      ? "Other 2D artist tickets: none found"
+      : `Other 2D artist tickets: ${applicant.priorTickets
           .slice(0, 6)
-          .map((t) => `${safe(t.name, 30)}${t.when ? ` (${t.when.slice(0, 10)})` : ""}: ${safe(t.note, 80)}`)
+          .map((t) => `${safe(t.name, 30)}${describeTicketDate(t)}, ${safe(t.note, 80)}`)
           .join("; ")}`
   );
   lines.push(

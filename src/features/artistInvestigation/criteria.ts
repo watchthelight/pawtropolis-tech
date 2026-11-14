@@ -187,7 +187,7 @@ export const CRITERIA: readonly Criterion[] = [
       { text: "DM advertising", source: "handbook" },
     ],
     guidance:
-      "Use the server context as given: account age, join date, roles, activity, earlier verification tickets and the Verify Blacklist. Note how the applicant answered staff requests for more proof.",
+      "Use the server context as given: account age, join date, roles, activity, other verification tickets and the Verify Blacklist. Note how the applicant answered staff requests for more proof.",
   },
 ];
 
