@@ -98,6 +98,15 @@ export function blacklistEntry(messages: Iterable<StaffMessage>, applicantId: st
 
 const describe = (err: unknown) => (err instanceof Error ? err.message : "unknown error").slice(0, 120);
 
+const BRAILLE_BLANK = String.fromCharCode(0x2800);
+
+/**
+ * Discord trims spaces from a role name, so servers pad one with braille blanks
+ * to center a heading in the member list ("   Pings Roles   "). A role like
+ * that says nothing about the member.
+ */
+const isDividerRole = (name: string) => name.includes(BRAILLE_BLANK);
+
 /** Stands in for the username when the profile cannot be read. Never use it as a name to match on. */
 export const UNKNOWN_USERNAME = "unknown";
 
@@ -143,7 +152,7 @@ export async function gatherApplicantContext(input: ContextInput): Promise<Appli
     context.joinedAtMs = member.joinedTimestamp;
     context.nickname = member.nickname;
     context.roles = [...member.roles.cache.values()]
-      .filter((role) => role.id !== guild.id)
+      .filter((role) => role.id !== guild.id && !isDividerRole(role.name))
       .sort((a, b) => b.position - a.position)
       .map((role) => role.name);
   } catch (err) {

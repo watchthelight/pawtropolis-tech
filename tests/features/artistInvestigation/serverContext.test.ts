@@ -338,6 +338,21 @@ describe("gatherApplicantContext", () => {
     });
   });
 
+  it("leaves out the divider roles a server uses as headings in its member list", async () => {
+    // Discord trims spaces from a role name, so a heading is padded with braille blanks instead.
+    const pad = String.fromCharCode(0x2800).repeat(4);
+    const guild = fakeGuild({
+      member: member(GUILD_ID, [
+        { id: "r1", name: "Member", position: 2 },
+        { id: "r2", name: `${pad}Pings Roles${pad}`, position: 9 },
+        { id: "r3", name: "Art Pings", position: 8 },
+        { id: "r4", name: `${pad} Community ${pad}`, position: 5 },
+      ]),
+    });
+
+    expect((await gather(guild)).roles).toEqual(["Art Pings", "Member"]);
+  });
+
   it("reports an applicant the bot has no records for as zero activity, not as unknown", async () => {
     const context = await gather(fakeGuild());
 
