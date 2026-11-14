@@ -208,6 +208,16 @@ client.on("guildMemberRemove", wrapEvent("guildMemberRemove", async (member) => 
     logger.warn({ err, guildId, userId }, "[guildMemberRemove] failed to auto-dismiss flags");
   }
 
+  // Clean up per-user verify thread if the user had one open
+  try {
+    await cleanupVerifyThreadForUser(client, guildId, userId, "left_server");
+  } catch (err) {
+    logger.warn(
+      { err, guildId, userId },
+      "[guildMemberRemove] verify thread cleanup failed"
+    );
+  }
+
   // Find pending applications for this user
   const pendingApps = db.prepare(`
     SELECT id FROM application
@@ -234,16 +244,6 @@ client.on("guildMemberRemove", wrapEvent("guildMemberRemove", async (member) => 
         guildId,
       }, "[guildMemberRemove] failed to refresh review card");
     }
-  }
-
-  // Clean up per-user verify thread if the user had one open
-  try {
-    await cleanupVerifyThreadForUser(client, guildId, userId, "left_server");
-  } catch (err) {
-    logger.warn(
-      { err, guildId, userId },
-      "[guildMemberRemove] verify thread cleanup failed"
-    );
   }
 }));
 

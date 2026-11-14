@@ -105,6 +105,15 @@ describe("guildMemberRemove", () => {
     expect(h.ensureReview).toHaveBeenCalledWith(client, "app1");
   });
 
+  it("cleans up the verify thread for a leaver with no submitted application", async () => {
+    h.pendingApps = [];
+
+    await handlers.guildMemberRemove(member);
+
+    expect(h.ensureReview).not.toHaveBeenCalled();
+    expect(h.cleanupThread).toHaveBeenCalledWith(client, "g1", "u1", "left_server");
+  });
+
   it("refreshes review cards and cleans up for a leaver with a submitted application", async () => {
     h.pendingApps = [{ id: "app1" }];
 
