@@ -16,6 +16,9 @@ concurrency:
   group: update-badges
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   update-metrics:
     name: Update Badge Metrics
@@ -66,7 +69,7 @@ jobs:
         run: node scripts/generate-badge-metrics.js
 
       - name: Upload commands badge
-        uses: exuanbo/actions-deploy-gist@v1
+        uses: exuanbo/actions-deploy-gist@47697fceaeea2006a90594ee24eb9cd0a1121ef8 # v1.1.4
         with:
           token: ${{ secrets.GIST_TOKEN }}
           gist_id: ${{ vars.BADGE_GIST_ID }}
@@ -74,7 +77,7 @@ jobs:
           file_type: text
 
       - name: Upload LOC badge
-        uses: exuanbo/actions-deploy-gist@v1
+        uses: exuanbo/actions-deploy-gist@47697fceaeea2006a90594ee24eb9cd0a1121ef8 # v1.1.4
         with:
           token: ${{ secrets.GIST_TOKEN }}
           gist_id: ${{ vars.BADGE_GIST_ID }}
@@ -82,7 +85,7 @@ jobs:
           file_type: text
 
       - name: Upload tests badge
-        uses: exuanbo/actions-deploy-gist@v1
+        uses: exuanbo/actions-deploy-gist@47697fceaeea2006a90594ee24eb9cd0a1121ef8 # v1.1.4
         with:
           token: ${{ secrets.GIST_TOKEN }}
           gist_id: ${{ vars.BADGE_GIST_ID }}
@@ -90,7 +93,7 @@ jobs:
           file_type: text
 
       - name: Upload coverage badge
-        uses: exuanbo/actions-deploy-gist@v1
+        uses: exuanbo/actions-deploy-gist@47697fceaeea2006a90594ee24eb9cd0a1121ef8 # v1.1.4
         with:
           token: ${{ secrets.GIST_TOKEN }}
           gist_id: ${{ vars.BADGE_GIST_ID }}
@@ -98,7 +101,7 @@ jobs:
           file_type: text
 
       - name: Upload version badge
-        uses: exuanbo/actions-deploy-gist@v1
+        uses: exuanbo/actions-deploy-gist@47697fceaeea2006a90594ee24eb9cd0a1121ef8 # v1.1.4
         with:
           token: ${{ secrets.GIST_TOKEN }}
           gist_id: ${{ vars.BADGE_GIST_ID }}
