@@ -499,12 +499,12 @@ export function fetchActivityData(guildId: string, weeks: number = 1): ActivityD
     // Query message_activity for this week
     const rows = db
       .prepare(
-        `SELECT created_at_s
+        `SELECT created_at_s / 3600 AS hour_idx, COUNT(*) AS n
          FROM message_activity
          WHERE guild_id = ? AND created_at_s >= ? AND created_at_s <= ?
-         ORDER BY created_at_s ASC`
+         GROUP BY hour_idx`
       )
-      .all(guildId, startTimestamp, endTimestamp) as Array<{ created_at_s: number }>;
+      .all(guildId, startTimestamp, endTimestamp) as Array<{ hour_idx: number; n: number }>;
 
     // Initialize grid
     const grid: number[][] = Array.from({ length: 7 }, () => Array(24).fill(0));
@@ -527,11 +527,11 @@ export function fetchActivityData(guildId: string, weeks: number = 1): ActivityD
     // Using UTC throughout to avoid DST headaches - all times in heatmap are UTC.
     // dayIndex conversion: JS Sunday=0 becomes index 6 (end of week).
     for (const row of rows) {
-      const date = new Date(row.created_at_s * 1000);
+      const date = new Date(row.hour_idx * 3600 * 1000);
       const dayOfWeek = date.getUTCDay();
       const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
       const hour = date.getUTCHours();
-      grid[dayIndex]![hour] = (grid[dayIndex]![hour] ?? 0) + 1;
+      grid[dayIndex]![hour] = (grid[dayIndex]![hour] ?? 0) + row.n;
     }
 
     weeksData.push({
