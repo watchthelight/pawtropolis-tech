@@ -27,7 +27,7 @@ vi.mock("canvas", () => ({
       textAlign: "",
       textBaseline: "",
     }),
-    toBuffer: vi.fn(() => Buffer.from("mock-image")),
+    toBuffer: vi.fn((cb: (err: Error | null, buf: Buffer) => void) => cb(null, Buffer.from("mock-image"))),
   })),
 }));
 

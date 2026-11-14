@@ -34,7 +34,7 @@ vi.mock("canvas", () => ({
         addColorStop: vi.fn(),
       })),
     }),
-    toBuffer: vi.fn(() => Buffer.from("mock-png-image")),
+    toBuffer: vi.fn((cb: (err: Error | null, buf: Buffer) => void) => cb(null, Buffer.from("mock-png-image"))),
     width,
     height,
   })),

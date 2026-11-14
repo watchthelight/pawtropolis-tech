@@ -464,7 +464,9 @@ export async function generateHeatmap(
   ctx.textBaseline = 'bottom';
   ctx.fillText('All times shown are UTC', emptyIndicatorX, legendY + legendBarHeight + 50);
 
-  return canvas.toBuffer('image/png');
+  return new Promise<Buffer>((resolve, reject) => {
+    canvas.toBuffer((err, buf) => (err ? reject(err) : resolve(buf)), 'image/png');
+  });
 }
 
 /**

@@ -442,7 +442,9 @@ export async function generateLeaderboardImage(stats: ModStats[]): Promise<Buffe
   // Square corners intentional - Discord embed already has rounded corners,
   // so adding our own would create a double-rounded look.
   // This took an embarrassing amount of back-and-forth to realize.
-  return canvas.toBuffer("image/png");
+  return new Promise<Buffer>((resolve, reject) => {
+    canvas.toBuffer((err, buf) => (err ? reject(err) : resolve(buf)), "image/png");
+  });
 }
 
 // Legacy alias - some older code still calls this name.
