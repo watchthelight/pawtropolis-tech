@@ -17,6 +17,8 @@ export default [
       "scratch/**",
       ".playwright-mcp/**",
       "audit/**",
+      // Each worktree is a full copy of the repo at some other commit.
+      ".claude/worktrees/**",
     ],
   },
   js.configs.recommended,
