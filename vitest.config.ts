@@ -54,23 +54,25 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "json-summary", "html"],
+      // Without `include`, v8 only reports files a test happens to import,
+      // which hides never-loaded source and inflates the percentages.
+      include: ["src/**/*.ts"],
       exclude: [
         "tests/**",
         "**/*.test.ts",
+        "**/*.d.ts",
         "scripts/**",
         "dist/**",
       ],
-      // Thresholds reflect current floor with a 2pp safety margin. The
-      // previous targets (lines/statements 50%, functions 45%) had never
-      // actually been met — CI gated on missing test DB schema first, so
-      // the coverage error was masked. Raising back toward 50% is the
-      // long-term goal but happens incrementally per-area, not via a
-      // catch-all global gate.
+      // Thresholds sit just under the measured numbers with include: src/**
+      // (lines 39.82, statements 39.49, functions 44.72, branches 34.71), rounded
+      // down to the whole percent, so the gate is real but green. Raise them as
+      // coverage improves; never lower them to make a run pass.
       thresholds: {
-        lines: 20,
-        functions: 40,
-        branches: 35,
-        statements: 20,
+        lines: 39,
+        functions: 44,
+        branches: 34,
+        statements: 39,
       },
     },
   },
