@@ -49,12 +49,14 @@ interface Hit {
   match: RawMatch;
 }
 
-const BASE_WORDS = /\b(?:bases?|f2u|p2u|ych|your[ _]character[ _]here|template|line[ _]?art|adopt(?:able)?s?|free[ _]to[ _]use|pay[ _]to[ _]use)\b/i;
+const BASE_WORDS =
+  /\b(?:bases?|f2u|p2u|ych|your[ _]character[ _]here|template|line[ _]?art|adopt(?:able)?s?|free[ _]to[ _]use|pay[ _]to[ _]use)\b/i;
 
 /** Signs in a match's own title and tags that the artwork is, or is built on, a base. */
 export function baseHints(match: RawMatch): string[] {
   const hints: string[] = [];
-  if (match.title && BASE_WORDS.test(match.title)) hints.push(`source title mentions a base: "${match.title.slice(0, 80)}"`);
+  if (match.title && BASE_WORDS.test(match.title))
+    hints.push(`source title mentions a base: "${match.title.slice(0, 80)}"`);
   const tagged = match.tags.filter((tag) => BASE_WORDS.test(tag.replace(/_/g, " ")));
   if (tagged.length > 0) hints.push(`source is tagged ${tagged.slice(0, 4).join(", ")}`);
   return hints;
@@ -64,7 +66,8 @@ export function annotateMatch(hit: Hit, context: ProvenanceContext): ProvenanceM
   const { ownership, matchedHandle } = classifyOwnership(hit.match, context.handles);
   const postedMs = hit.match.postedAt ? Date.parse(hit.match.postedAt) : Number.NaN;
   const hints = baseHints(hit.match);
-  if (hit.variant === "mirrored") hints.push("found only when the image was mirrored, so the submission may be a flipped copy");
+  if (hit.variant === "mirrored")
+    hints.push("found only when the image was mirrored, so the submission may be a flipped copy");
 
   return {
     ...hit.match,
@@ -73,7 +76,9 @@ export function annotateMatch(hit: Hit, context: ProvenanceContext): ProvenanceM
     ownership,
     matchedHandle,
     predatesAccount:
-      Number.isNaN(postedMs) || context.accountCreatedAtMs === null ? null : postedMs < context.accountCreatedAtMs,
+      Number.isNaN(postedMs) || context.accountCreatedAtMs === null
+        ? null
+        : postedMs < context.accountCreatedAtMs,
     baseHints: hints,
   };
 }
@@ -119,7 +124,14 @@ async function runService(
   deps: Required<Pick<ProvenanceDeps, "db" | "sleep" | "now">>,
   deadlineMs: number
 ): Promise<{ report: ServiceReport; hits: Hit[] }> {
-  const report: ServiceReport = { service: service.name, status: "ok", detail: null, queries: 0, cacheHits: 0, matches: 0 };
+  const report: ServiceReport = {
+    service: service.name,
+    status: "ok",
+    detail: null,
+    queries: 0,
+    cacheHits: 0,
+    matches: 0,
+  };
   const hits: Hit[] = [];
 
   const unavailable = service.unavailableReason(context.settings);
@@ -143,7 +155,10 @@ async function runService(
     }
     try {
       const matches = await service.search(
-        { bytes: variant === "original" ? image.lookupBytes : image.lookupMirroredBytes, mediaType: image.lookupMediaType },
+        {
+          bytes: variant === "original" ? image.lookupBytes : image.lookupMirroredBytes,
+          mediaType: image.lookupMediaType,
+        },
         { settings: context.settings, pace: () => pacer.wait() }
       );
       report.queries++;
@@ -177,7 +192,8 @@ export async function runProvenance(
   deps: ProvenanceDeps
 ): Promise<ProvenanceResult> {
   const now = deps.now ?? Date.now;
-  const sleep = deps.sleep ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
+  const sleep =
+    deps.sleep ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
   const deadlineMs = now() + LIMITS.provenanceBudgetMs;
 
   const results = await Promise.all(
@@ -197,8 +213,11 @@ export async function runProvenance(
     imagesBySource.set(key, (imagesBySource.get(key) ?? new Set()).add(match.imageKey));
   }
   for (const match of matches) {
-    const others = [...(imagesBySource.get(canonicalUrl(match.sourceUrl)) ?? [])].filter((k) => k !== match.imageKey);
-    if (others.length > 0) match.baseHints.push(`the same source also matches ${others.join(", ")}`);
+    const others = [...(imagesBySource.get(canonicalUrl(match.sourceUrl)) ?? [])].filter(
+      (k) => k !== match.imageKey
+    );
+    if (others.length > 0)
+      match.baseHints.push(`the same source also matches ${others.join(", ")}`);
   }
 
   const services = results.map(({ report }) => ({

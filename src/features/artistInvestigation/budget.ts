@@ -33,7 +33,10 @@ const PRICES: Record<string, PriceEntry> = {
   "claude-sonnet-5-5": { base: { input: 2, output: 10, cacheWrite: 2.5, cacheRead: 0.1 } },
   "claude-haiku-5-5": {
     base: { input: 0.1, output: 0.5, cacheWrite: 0.125, cacheRead: 0.01 },
-    longPrompt: { overTokens: 100_000, price: { input: 0.5, output: 2.5, cacheWrite: 0.625, cacheRead: 0.05 } },
+    longPrompt: {
+      overTokens: 100_000,
+      price: { input: 0.5, output: 2.5, cacheWrite: 0.625, cacheRead: 0.05 },
+    },
   },
 };
 
@@ -47,12 +50,20 @@ export interface TokenUsage {
   cacheWriteTokens: number;
 }
 
-export const NO_USAGE: TokenUsage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0 };
+export const NO_USAGE: TokenUsage = {
+  inputTokens: 0,
+  outputTokens: 0,
+  cacheReadTokens: 0,
+  cacheWriteTokens: 0,
+};
 
 function priceFor(model: string, promptTokens: number): { price: ModelPrice; known: boolean } {
   const id = Object.keys(PRICES).find((known) => model === known || model.startsWith(`${known}-`));
   const entry = PRICES[id ?? FALLBACK_MODEL] as PriceEntry;
-  const price = entry.longPrompt && promptTokens > entry.longPrompt.overTokens ? entry.longPrompt.price : entry.base;
+  const price =
+    entry.longPrompt && promptTokens > entry.longPrompt.overTokens
+      ? entry.longPrompt.price
+      : entry.base;
   return { price, known: id !== undefined };
 }
 
@@ -101,14 +112,20 @@ export function monthStartS(nowMs: number): number {
 
 export function getMonthSpendUsd(db: Database, nowMs: number): number {
   const row = db
-    .prepare(`SELECT COALESCE(SUM(cost_usd), 0) AS total FROM artist_investigation_run WHERE created_at_s >= ?`)
+    .prepare(
+      `SELECT COALESCE(SUM(cost_usd), 0) AS total FROM artist_investigation_run WHERE created_at_s >= ?`
+    )
     .get(monthStartS(nowMs)) as { total: number };
   return row.total;
 }
 
 export type BudgetDecision = { allowed: true } | { allowed: false; reason: string };
 
-export function checkBudget(capUsd: number, monthSpendUsd: number, estimateUsd: number): BudgetDecision {
+export function checkBudget(
+  capUsd: number,
+  monthSpendUsd: number,
+  estimateUsd: number
+): BudgetDecision {
   if (monthSpendUsd + estimateUsd <= capUsd) return { allowed: true };
   return {
     allowed: false,
@@ -174,12 +191,14 @@ export interface FooterInput {
 
 /** Cost line for the response footer: this run, then the month against the cap. */
 export function formatFooter(input: FooterInput): string {
-  const inTokens = input.usage.inputTokens + input.usage.cacheReadTokens + input.usage.cacheWriteTokens;
+  const inTokens =
+    input.usage.inputTokens + input.usage.cacheReadTokens + input.usage.cacheWriteTokens;
   const parts = [
     `Run: ${formatUsd(input.runUsd)} (${formatTokens(inTokens)} in / ${formatTokens(input.usage.outputTokens)} out, ${input.model})`,
     `Month: ${formatUsd(input.monthUsd)} of ${formatUsd(input.capUsd)} cap`,
   ];
-  if (!isPriceKnown(input.model)) parts.push("no price on file for this model, cost shown at the highest known rate");
+  if (!isPriceKnown(input.model))
+    parts.push("no price on file for this model, cost shown at the highest known rate");
   parts.push("estimated from published prices");
   return parts.join(" · ");
 }

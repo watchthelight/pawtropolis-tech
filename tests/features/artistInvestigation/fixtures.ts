@@ -194,10 +194,18 @@ export function ticketEvidence(overrides: Partial<TicketEvidence> = {}): TicketE
     imagesOverCap: [],
     files: [],
     links: [],
-    handles: [{ platform: "furaffinity", handle: "FoxyArtz", origin: "link", url: "https://www.furaffinity.net/user/foxyartz" }],
+    handles: [
+      {
+        platform: "furaffinity",
+        handle: "FoxyArtz",
+        origin: "link",
+        url: "https://www.furaffinity.net/user/foxyartz",
+      },
+    ],
     messageIds: { m1: "700000000000000001", m2: "700000000000000002", m3: "700000000000000003" },
     greetingText: "",
-    transcript: "[m1] 2026-11-01 12:00 UTC | BOT (Ticket Tool): Hello\n[m2] 2026-11-01 12:01 UTC | APPLICANT (foxyartz): here is my art",
+    transcript:
+      "[m1] 2026-11-01 12:00 UTC | BOT (Ticket Tool): Hello\n[m2] 2026-11-01 12:01 UTC | APPLICANT (foxyartz): here is my art",
     transcriptTruncated: false,
     ...overrides,
   };
@@ -217,9 +225,22 @@ export function assessment(overrides: Partial<Assessment> = {}): Assessment {
       reasoning: `Reasoning for ${criterion.key}.`,
       evidence: ["img1", "m2"],
     })),
-    image_notes: [{ image: "img1", role: "sketch", ai_indicator_strength: "none", notes: "A pencil sketch with a signature." }],
+    image_notes: [
+      {
+        image: "img1",
+        role: "sketch",
+        ai_indicator_strength: "none",
+        notes: "A pencil sketch with a signature.",
+      },
+    ],
     red_flags: [],
-    green_flags: [{ flag: "Voluntary sharing of WIPs/process", reasoning: "A sketch was posted unprompted.", evidence: ["img1"] }],
+    green_flags: [
+      {
+        flag: "Voluntary sharing of WIPs/process",
+        reasoning: "A sketch was posted unprompted.",
+        evidence: ["img1"],
+      },
+    ],
     statements_check: [],
     questions: ["Can you share a timelapse?"],
     cannot_determine: ["Whether the applicant controls the linked gallery."],

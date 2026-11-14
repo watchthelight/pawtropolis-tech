@@ -47,14 +47,26 @@ const run = (overrides: Partial<RunRecord> = {}): RunRecord => ({
 
 describe("costUsd", () => {
   it("prices input and output tokens per million", () => {
-    expect(costUsd("claude-opus-5-5", { ...NO_USAGE, inputTokens: 1_000_000, outputTokens: 1_000_000 })).toBeCloseTo(24, 10);
-    expect(costUsd("claude-sonnet-5-5", { ...NO_USAGE, inputTokens: 500_000, outputTokens: 100_000 })).toBeCloseTo(2, 10);
-    expect(costUsd("claude-fable-5-2", { ...NO_USAGE, inputTokens: 1_000_000, outputTokens: 1_000_000 })).toBeCloseTo(48, 10);
+    expect(
+      costUsd("claude-opus-5-5", { ...NO_USAGE, inputTokens: 1_000_000, outputTokens: 1_000_000 })
+    ).toBeCloseTo(24, 10);
+    expect(
+      costUsd("claude-sonnet-5-5", { ...NO_USAGE, inputTokens: 500_000, outputTokens: 100_000 })
+    ).toBeCloseTo(2, 10);
+    expect(
+      costUsd("claude-fable-5-2", { ...NO_USAGE, inputTokens: 1_000_000, outputTokens: 1_000_000 })
+    ).toBeCloseTo(48, 10);
   });
 
   it("prices cache writes and cache reads at their own rates", () => {
-    expect(costUsd("claude-opus-5-5", { ...NO_USAGE, cacheWriteTokens: 1_000_000 })).toBeCloseTo(5, 10);
-    expect(costUsd("claude-opus-5-5", { ...NO_USAGE, cacheReadTokens: 1_000_000 })).toBeCloseTo(0.2, 10);
+    expect(costUsd("claude-opus-5-5", { ...NO_USAGE, cacheWriteTokens: 1_000_000 })).toBeCloseTo(
+      5,
+      10
+    );
+    expect(costUsd("claude-opus-5-5", { ...NO_USAGE, cacheReadTokens: 1_000_000 })).toBeCloseTo(
+      0.2,
+      10
+    );
   });
 
   it("costs nothing when no tokens were used", () => {
@@ -62,24 +74,38 @@ describe("costUsd", () => {
   });
 
   it("switches Haiku to its long-prompt price only past 100,000 prompt tokens", () => {
-    expect(costUsd("claude-haiku-5-5", { ...NO_USAGE, inputTokens: 100_000 })).toBeCloseTo(0.01, 10);
-    expect(costUsd("claude-haiku-5-5", { ...NO_USAGE, inputTokens: 100_001 })).toBeCloseTo(0.0500005, 10);
-    // Cached tokens are part of the prompt size.
-    expect(costUsd("claude-haiku-5-5", { ...NO_USAGE, inputTokens: 60_000, cacheReadTokens: 60_000, outputTokens: 1_000 })).toBeCloseTo(
-      (60_000 * 0.5 + 60_000 * 0.05 + 1_000 * 2.5) / 1_000_000,
+    expect(costUsd("claude-haiku-5-5", { ...NO_USAGE, inputTokens: 100_000 })).toBeCloseTo(
+      0.01,
       10
     );
+    expect(costUsd("claude-haiku-5-5", { ...NO_USAGE, inputTokens: 100_001 })).toBeCloseTo(
+      0.0500005,
+      10
+    );
+    // Cached tokens are part of the prompt size.
+    expect(
+      costUsd("claude-haiku-5-5", {
+        ...NO_USAGE,
+        inputTokens: 60_000,
+        cacheReadTokens: 60_000,
+        outputTokens: 1_000,
+      })
+    ).toBeCloseTo((60_000 * 0.5 + 60_000 * 0.05 + 1_000 * 2.5) / 1_000_000, 10);
   });
 
   it("recognizes a dated model id", () => {
     expect(isPriceKnown("claude-opus-5-5-20261101")).toBe(true);
-    expect(costUsd("claude-opus-5-5-20261101", { ...NO_USAGE, inputTokens: 1_000_000 })).toBeCloseTo(4, 10);
+    expect(
+      costUsd("claude-opus-5-5-20261101", { ...NO_USAGE, inputTokens: 1_000_000 })
+    ).toBeCloseTo(4, 10);
   });
 
   it("prices an unknown model at the highest known rate", () => {
     expect(isPriceKnown("claude-opus-5")).toBe(false);
     expect(isPriceKnown("some-future-model")).toBe(false);
-    expect(costUsd("some-future-model", { ...NO_USAGE, inputTokens: 1_000_000, outputTokens: 1_000_000 })).toBeCloseTo(48, 10);
+    expect(
+      costUsd("some-future-model", { ...NO_USAGE, inputTokens: 1_000_000, outputTokens: 1_000_000 })
+    ).toBeCloseTo(48, 10);
   });
 });
 
@@ -91,14 +117,26 @@ describe("imageTokens and estimateCostUsd", () => {
   });
 
   it("assumes the whole output allowance and three characters a token", () => {
-    const estimate = estimateCostUsd("claude-opus-5-5", { imageTokens: 10_000, textChars: 30_000, maxOutputTokens: 20_000 });
+    const estimate = estimateCostUsd("claude-opus-5-5", {
+      imageTokens: 10_000,
+      textChars: 30_000,
+      maxOutputTokens: 20_000,
+    });
     // (10,000 image + 10,000 text + 1,500 overhead) input tokens at $4, 20,000 output tokens at $20.
     expect(estimate).toBeCloseTo((21_500 * 4 + 20_000 * 20) / 1_000_000, 10);
   });
 
   it("never estimates below what the same tokens cost afterwards", () => {
-    const estimate = estimateCostUsd("claude-opus-5-5", { imageTokens: 2_352 * 12, textChars: 90_000, maxOutputTokens: 20_000 });
-    const actual = costUsd("claude-opus-5-5", { ...NO_USAGE, inputTokens: 2_352 * 12 + 30_000, outputTokens: 20_000 });
+    const estimate = estimateCostUsd("claude-opus-5-5", {
+      imageTokens: 2_352 * 12,
+      textChars: 90_000,
+      maxOutputTokens: 20_000,
+    });
+    const actual = costUsd("claude-opus-5-5", {
+      ...NO_USAGE,
+      inputTokens: 2_352 * 12 + 30_000,
+      outputTokens: 20_000,
+    });
     expect(estimate).toBeGreaterThanOrEqual(actual);
   });
 });
@@ -118,7 +156,9 @@ describe("checkBudget", () => {
     expect(decision).toMatchObject({ reason: expect.stringContaining("Monthly cap reached") });
     expect(decision).toMatchObject({ reason: expect.stringContaining("$199.75") });
     expect(decision).toMatchObject({ reason: expect.stringContaining("up to $0.50") });
-    expect(decision).toMatchObject({ reason: expect.stringContaining("$200.00 cap (INVESTIGATE_MONTHLY_CAP_USD)") });
+    expect(decision).toMatchObject({
+      reason: expect.stringContaining("$200.00 cap (INVESTIGATE_MONTHLY_CAP_USD)"),
+    });
   });
 
   it("refuses every paid run when the cap is zero", () => {
@@ -170,9 +210,22 @@ describe("monthly ledger", () => {
   });
 
   it("stores who ran it, where, the model, the tokens and the counts, and no ticket content", () => {
-    recordRun(db, run({ usage: { inputTokens: 30_000, outputTokens: 6_000, cacheReadTokens: 100, cacheWriteTokens: 200 } }));
+    recordRun(
+      db,
+      run({
+        usage: {
+          inputTokens: 30_000,
+          outputTokens: 6_000,
+          cacheReadTokens: 100,
+          cacheWriteTokens: 200,
+        },
+      })
+    );
 
-    const row = db.prepare(`SELECT * FROM artist_investigation_run`).get() as Record<string, unknown>;
+    const row = db.prepare(`SELECT * FROM artist_investigation_run`).get() as Record<
+      string,
+      unknown
+    >;
     expect(row).toMatchObject({
       guild_id: GUILD_ID,
       channel_id: CHANNEL_ID,
@@ -190,8 +243,20 @@ describe("monthly ledger", () => {
     });
     expect(Object.keys(row).sort()).toEqual(
       [
-        "cache_read_tokens", "cache_write_tokens", "channel_id", "cost_usd", "created_at_s", "guild_id", "id",
-        "image_count", "input_tokens", "invoked_by", "lookup_count", "model", "output_tokens", "status",
+        "cache_read_tokens",
+        "cache_write_tokens",
+        "channel_id",
+        "cost_usd",
+        "created_at_s",
+        "guild_id",
+        "id",
+        "image_count",
+        "input_tokens",
+        "invoked_by",
+        "lookup_count",
+        "model",
+        "output_tokens",
+        "status",
       ].sort()
     );
   });
@@ -221,7 +286,12 @@ describe("formatting", () => {
   it("puts this run and the month against the cap in the footer", () => {
     const footer = formatFooter({
       model: "claude-opus-5-5",
-      usage: { inputTokens: 20_000, outputTokens: 2_000, cacheReadTokens: 1_000, cacheWriteTokens: 500 },
+      usage: {
+        inputTokens: 20_000,
+        outputTokens: 2_000,
+        cacheReadTokens: 1_000,
+        cacheWriteTokens: 500,
+      },
       runUsd: 0.486,
       monthUsd: 12.34,
       capUsd: 200,
@@ -232,7 +302,15 @@ describe("formatting", () => {
   });
 
   it("says so in the footer when the model has no price on file", () => {
-    const footer = formatFooter({ model: "some-future-model", usage: NO_USAGE, runUsd: 0, monthUsd: 0, capUsd: 200 });
-    expect(footer).toContain("no price on file for this model, cost shown at the highest known rate");
+    const footer = formatFooter({
+      model: "some-future-model",
+      usage: NO_USAGE,
+      runUsd: 0,
+      monthUsd: 0,
+      capUsd: 200,
+    });
+    expect(footer).toContain(
+      "no price on file for this model, cost shown at the highest known rate"
+    );
   });
 });

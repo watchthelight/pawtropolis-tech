@@ -35,7 +35,9 @@ import { isOwner } from "../lib/owner.js";
 
 export const data = new SlashCommandBuilder()
   .setName("investigate-artist")
-  .setDescription("Private advisory review of the 2D artist application in this ticket (owner only)")
+  .setDescription(
+    "Private advisory review of the 2D artist application in this ticket (owner only)"
+  )
   .setDMPermission(false)
   // Keeps the command out of members' pickers. The real gate is the owner check in execute().
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
@@ -56,13 +58,24 @@ async function investigate(ctx: CommandContext<ChatInputCommandInteraction>): Pr
   const check =
     guild && channel && !channel.isDMBased()
       ? classifyTicketChannel(
-          { name: channel.name, parentId: channel.parentId, isGuildText: channel.type === ChannelType.GuildText },
+          {
+            name: channel.name,
+            parentId: channel.parentId,
+            isGuildText: channel.type === ChannelType.GuildText,
+          },
           ticketRow,
           getTicketsCategoryId(guild.id)
         )
-      : { ok: false as const, reason: "This only works inside a 2D artist verification ticket channel." };
+      : {
+          ok: false as const,
+          reason: "This only works inside a 2D artist verification ticket channel.",
+        };
   if (!check.ok || !guild || channel?.type !== ChannelType.GuildText) {
-    await interaction.editReply({ content: check.ok ? "This only works inside a 2D artist verification ticket channel." : check.reason });
+    await interaction.editReply({
+      content: check.ok
+        ? "This only works inside a 2D artist verification ticket channel."
+        : check.reason,
+    });
     return;
   }
 
@@ -92,9 +105,17 @@ async function investigate(ctx: CommandContext<ChatInputCommandInteraction>): Pr
 
   ctx.step("reply");
   const [first, ...rest] = renderReport(result.report);
-  await interaction.editReply({ content: "", embeds: first?.embeds ?? [], allowedMentions: NO_MENTIONS });
+  await interaction.editReply({
+    content: "",
+    embeds: first?.embeds ?? [],
+    allowedMentions: NO_MENTIONS,
+  });
   for (const page of rest) {
-    await interaction.followUp({ embeds: page.embeds, flags: MessageFlags.Ephemeral, allowedMentions: NO_MENTIONS });
+    await interaction.followUp({
+      embeds: page.embeds,
+      flags: MessageFlags.Ephemeral,
+      allowedMentions: NO_MENTIONS,
+    });
   }
 }
 
@@ -102,7 +123,10 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
   const { interaction } = ctx;
   try {
     if (!isOwner(interaction.user.id)) {
-      await interaction.reply({ content: "❌ This command is only available to the bot owner.", flags: MessageFlags.Ephemeral });
+      await interaction.reply({
+        content: "❌ This command is only available to the bot owner.",
+        flags: MessageFlags.Ephemeral,
+      });
       return;
     }
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
@@ -125,6 +149,10 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>):
       content: `The investigation stopped on an error. Nothing was posted in this channel. Trace: \`${ctx.traceId}\``,
       flags: MessageFlags.Ephemeral as const,
     };
-    await (interaction.deferred || interaction.replied ? interaction.followUp(notice) : interaction.reply(notice)).catch(() => undefined);
+    await (
+      interaction.deferred || interaction.replied
+        ? interaction.followUp(notice)
+        : interaction.reply(notice)
+    ).catch(() => undefined);
   }
 }

@@ -65,9 +65,14 @@ export type RunResult = { ok: true; report: InvestigationReport } | { ok: false;
 const MATCH_LINE_CHARS = 450;
 const SCHEMA_CHARS = 6_000;
 
-const shortReason = (err: unknown) => (err instanceof Error ? err.message : "unknown error").replace(/\s+/g, " ").slice(0, 120);
+const shortReason = (err: unknown) =>
+  (err instanceof Error ? err.message : "unknown error").replace(/\s+/g, " ").slice(0, 120);
 
-async function eachLimited<T>(items: readonly T[], limit: number, work: (item: T) => Promise<void>): Promise<void> {
+async function eachLimited<T>(
+  items: readonly T[],
+  limit: number,
+  work: (item: T) => Promise<void>
+): Promise<void> {
   let next = 0;
   const worker = async () => {
     while (next < items.length) await work(items[next++] as T);
@@ -80,7 +85,11 @@ async function eachLimited<T>(items: readonly T[], limit: number, work: (item: T
 let running = false;
 
 export async function runInvestigation(input: RunInput, deps: RunDeps): Promise<RunResult> {
-  if (running) return { ok: false, message: "An investigation is already running. Try again when it finishes." };
+  if (running)
+    return {
+      ok: false,
+      message: "An investigation is already running. Try again when it finishes.",
+    };
   running = true;
   try {
     return await investigate(input, deps);
@@ -107,7 +116,10 @@ async function investigate(input: RunInput, deps: RunDeps): Promise<RunResult> {
     };
   }
   if (willAskModel && settings.monthlyCapUsd <= 0) {
-    return { ok: false, message: "This command is switched off: INVESTIGATE_MONTHLY_CAP_USD is set to 0." };
+    return {
+      ok: false,
+      message: "This command is switched off: INVESTIGATE_MONTHLY_CAP_USD is set to 0.",
+    };
   }
   if (willAskModel && monthSpend >= settings.monthlyCapUsd) {
     return {
@@ -123,7 +135,10 @@ async function investigate(input: RunInput, deps: RunDeps): Promise<RunResult> {
   try {
     history = await fetchTicketHistory(input.channel);
   } catch (err) {
-    logger.warn({ evt: "investigate_artist_history_failed", problem: shortReason(err) }, "[investigate-artist] ticket history not readable");
+    logger.warn(
+      { evt: "investigate_artist_history_failed", problem: shortReason(err) },
+      "[investigate-artist] ticket history not readable"
+    );
     return {
       ok: false,
       message: `The messages in this ticket could not be read (${shortReason(err)}). Nothing was run and nothing was spent.`,
@@ -132,7 +147,8 @@ async function investigate(input: RunInput, deps: RunDeps): Promise<RunResult> {
   const who = resolveApplicant({
     overrideUserId: input.overrideApplicantId,
     ticketOpenerId: input.ticket.openerId,
-    greetingContent: history.messages.find((m) => m.authorId === TICKET_TOOL_BOT_ID)?.content ?? null,
+    greetingContent:
+      history.messages.find((m) => m.authorId === TICKET_TOOL_BOT_ID)?.content ?? null,
     memberOverwriteIds: input.memberOverwriteIds,
     excludeIds: [TICKET_TOOL_BOT_ID, input.botUserId],
   });
@@ -172,7 +188,9 @@ async function investigate(input: RunInput, deps: RunDeps): Promise<RunResult> {
   const prepared: PreparedImage[] = [];
   const imageFailures: ImageFailure[] = [];
   if (evidence.images.length > 0) {
-    await input.onProgress(`Fetching ${evidence.images.length} image${evidence.images.length === 1 ? "" : "s"}...`);
+    await input.onProgress(
+      `Fetching ${evidence.images.length} image${evidence.images.length === 1 ? "" : "s"}...`
+    );
     await eachLimited(evidence.images, LIMITS.imageConcurrency, async (image) => {
       try {
         prepared.push(await prepare(image.key, await fetchImage(image.url)));
@@ -188,7 +206,10 @@ async function investigate(input: RunInput, deps: RunDeps): Promise<RunResult> {
   const base = { settings, ticket, evidence, applicant, images: prepared, imageFailures };
   const estimateUsd = willAskModel
     ? estimateCostUsd(settings.model, {
-        imageTokens: prepared.reduce((sum, image) => sum + imageTokens(image.modelWidth, image.modelHeight), 0),
+        imageTokens: prepared.reduce(
+          (sum, image) => sum + imageTokens(image.modelWidth, image.modelHeight),
+          0
+        ),
         textChars:
           promptChars(buildPromptText({ ...base, provenance: noLookups })) +
           prepared.length * LIMITS.matchesPerQuery * MATCH_LINE_CHARS +
@@ -212,7 +233,10 @@ async function investigate(input: RunInput, deps: RunDeps): Promise<RunResult> {
       { db, now }
     );
   } catch (err) {
-    logger.error({ evt: "investigate_artist_lookups_failed", problem: shortReason(err) }, "[investigate-artist] lookup stage failed");
+    logger.error(
+      { evt: "investigate_artist_lookups_failed", problem: shortReason(err) },
+      "[investigate-artist] lookup stage failed"
+    );
     provenance = {
       matches: [],
       services: LOOKUP_SERVICES.map((service) => ({
@@ -229,14 +253,25 @@ async function investigate(input: RunInput, deps: RunDeps): Promise<RunResult> {
 
   let analysis: InvestigationReport["analysis"];
   if (!willAskModel) {
-    analysis = { kind: "skipped", message: "ANTHROPIC_API_KEY is not set, so the model was not asked." };
+    analysis = {
+      kind: "skipped",
+      message: "ANTHROPIC_API_KEY is not set, so the model was not asked.",
+    };
   } else {
     await input.onProgress("Asking the model. This can take a few minutes...");
     try {
       analysis = await (deps.analyze ?? analyzeTicket)({ ...base, provenance });
     } catch (err) {
-      logger.error({ evt: "investigate_artist_analysis_failed", problem: shortReason(err) }, "[investigate-artist] model stage failed");
-      analysis = { kind: "error", message: "The model call failed unexpectedly.", usage: null, mayBeBilled: true };
+      logger.error(
+        { evt: "investigate_artist_analysis_failed", problem: shortReason(err) },
+        "[investigate-artist] model stage failed"
+      );
+      analysis = {
+        kind: "error",
+        message: "The model call failed unexpectedly.",
+        usage: null,
+        mayBeBilled: true,
+      };
     }
   }
 
@@ -262,7 +297,10 @@ async function investigate(input: RunInput, deps: RunDeps): Promise<RunResult> {
     monthUsd = getMonthSpendUsd(db, now());
   } catch (err) {
     ledgerSaved = false;
-    logger.error({ evt: "investigate_artist_ledger_failed", problem: shortReason(err), runUsd }, "[investigate-artist] run was not recorded");
+    logger.error(
+      { evt: "investigate_artist_ledger_failed", problem: shortReason(err), runUsd },
+      "[investigate-artist] run was not recorded"
+    );
   }
 
   // Counts and cost only: nothing from the ticket goes into the logs.
@@ -298,7 +336,15 @@ async function investigate(input: RunInput, deps: RunDeps): Promise<RunResult> {
       imageFailures,
       provenance,
       analysis,
-      cost: { model: settings.model, usage, runUsd, monthUsd, capUsd: settings.monthlyCapUsd, worstCase, ledgerSaved },
+      cost: {
+        model: settings.model,
+        usage,
+        runUsd,
+        monthUsd,
+        capUsd: settings.monthlyCapUsd,
+        worstCase,
+        ledgerSaved,
+      },
     },
   };
 }

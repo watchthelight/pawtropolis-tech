@@ -39,36 +39,166 @@ const subdomain = (reserved: readonly string[]) => (_url: URL, hostMatch: RegExp
   return sub && !reserved.includes(sub) ? sub : null;
 };
 
-const SOCIAL_RESERVED = ["home", "i", "search", "explore", "hashtag", "intent", "share", "settings", "login", "signup"];
+const SOCIAL_RESERVED = [
+  "home",
+  "i",
+  "search",
+  "explore",
+  "hashtag",
+  "intent",
+  "share",
+  "settings",
+  "login",
+  "signup",
+];
 
 const SITE_RULES: readonly SiteRule[] = [
-  { platform: "furaffinity", host: /^(?:www\.)?furaffinity\.net$/, handle: afterSeg("user", "gallery", "scraps", "commissions", "journals") },
+  {
+    platform: "furaffinity",
+    host: /^(?:www\.)?furaffinity\.net$/,
+    handle: afterSeg("user", "gallery", "scraps", "commissions", "journals"),
+  },
   {
     platform: "deviantart",
     host: /^(?:www\.)?deviantart\.com$/,
-    handle: firstSegUnless(["tag", "about", "search", "topic", "watch", "daily-deviations", "users", "join", "notifications", "core-membership"]),
+    handle: firstSegUnless([
+      "tag",
+      "about",
+      "search",
+      "topic",
+      "watch",
+      "daily-deviations",
+      "users",
+      "join",
+      "notifications",
+      "core-membership",
+    ]),
   },
-  { platform: "deviantart", host: /^([a-z0-9-]+)\.deviantart\.com$/, handle: subdomain(["www", "sta", "fav", "about", "shop", "chat", "forum"]) },
-  { platform: "twitter", host: /^(?:www\.|mobile\.)?(?:twitter|x|fxtwitter|vxtwitter|fixupx)\.com$/, handle: firstSegUnless(SOCIAL_RESERVED) },
-  { platform: "bluesky", host: /^bsky\.app$/, handle: (url) => afterSeg("profile")(url)?.replace(/\.bsky\.social$/i, "") ?? null },
-  { platform: "instagram", host: /^(?:www\.)?instagram\.com$/, handle: firstSegUnless(["p", "reel", "reels", "explore", "stories", "accounts", "tv"]) },
-  { platform: "artstation", host: /^(?:www\.)?artstation\.com$/, handle: firstSegUnless(["artwork", "marketplace", "learning", "search", "jobs", "blogs", "channels"]) },
-  { platform: "toyhouse", host: /^(?:www\.)?toyhou\.se$/, handle: (url) => (/^\d+\./.test(seg(url, 0) ?? "") ? null : firstSegUnless(["~images", "~forums", "~account"])(url)) },
-  { platform: "weasyl", host: /^(?:www\.)?weasyl\.com$/, handle: (url) => { const s = seg(url, 0); return s?.startsWith("~") ? s.slice(1) : afterSeg("profile", "submissions", "user")(url); } },
-  { platform: "inkbunny", host: /^(?:www\.)?inkbunny\.net$/, handle: (url) => { const s = seg(url, 0); return s && !/\.php$/i.test(s) && s !== "s" && s !== "j" ? s : null; } },
+  {
+    platform: "deviantart",
+    host: /^([a-z0-9-]+)\.deviantart\.com$/,
+    handle: subdomain(["www", "sta", "fav", "about", "shop", "chat", "forum"]),
+  },
+  {
+    platform: "twitter",
+    host: /^(?:www\.|mobile\.)?(?:twitter|x|fxtwitter|vxtwitter|fixupx)\.com$/,
+    handle: firstSegUnless(SOCIAL_RESERVED),
+  },
+  {
+    platform: "bluesky",
+    host: /^bsky\.app$/,
+    handle: (url) => afterSeg("profile")(url)?.replace(/\.bsky\.social$/i, "") ?? null,
+  },
+  {
+    platform: "instagram",
+    host: /^(?:www\.)?instagram\.com$/,
+    handle: firstSegUnless(["p", "reel", "reels", "explore", "stories", "accounts", "tv"]),
+  },
+  {
+    platform: "artstation",
+    host: /^(?:www\.)?artstation\.com$/,
+    handle: firstSegUnless([
+      "artwork",
+      "marketplace",
+      "learning",
+      "search",
+      "jobs",
+      "blogs",
+      "channels",
+    ]),
+  },
+  {
+    platform: "toyhouse",
+    host: /^(?:www\.)?toyhou\.se$/,
+    handle: (url) =>
+      /^\d+\./.test(seg(url, 0) ?? "")
+        ? null
+        : firstSegUnless(["~images", "~forums", "~account"])(url),
+  },
+  {
+    platform: "weasyl",
+    host: /^(?:www\.)?weasyl\.com$/,
+    handle: (url) => {
+      const s = seg(url, 0);
+      return s?.startsWith("~") ? s.slice(1) : afterSeg("profile", "submissions", "user")(url);
+    },
+  },
+  {
+    platform: "inkbunny",
+    host: /^(?:www\.)?inkbunny\.net$/,
+    handle: (url) => {
+      const s = seg(url, 0);
+      return s && !/\.php$/i.test(s) && s !== "s" && s !== "j" ? s : null;
+    },
+  },
   { platform: "itaku", host: /^(?:www\.)?itaku\.ee$/, handle: afterSeg("profile") },
-  { platform: "kofi", host: /^(?:www\.)?ko-fi\.com$/, handle: firstSegUnless(["s", "post", "home", "explore", "about", "c", "i", "album"]) },
-  { platform: "vgen", host: /^(?:www\.)?vgen\.co$/, handle: firstSegUnless(["as", "explore", "search", "commissions", "characters"]) },
+  {
+    platform: "kofi",
+    host: /^(?:www\.)?ko-fi\.com$/,
+    handle: firstSegUnless(["s", "post", "home", "explore", "about", "c", "i", "album"]),
+  },
+  {
+    platform: "vgen",
+    host: /^(?:www\.)?vgen\.co$/,
+    handle: firstSegUnless(["as", "explore", "search", "commissions", "characters"]),
+  },
   { platform: "linktree", host: /^(?:www\.)?linktr\.ee$/, handle: firstSegUnless([]) },
-  { platform: "patreon", host: /^(?:www\.)?patreon\.com$/, handle: (url) => afterSeg("c", "cw")(url) ?? firstSegUnless(["posts", "home", "user", "join", "login", "explore", "search"])(url) },
-  { platform: "tumblr", host: /^([a-z0-9-]+)\.tumblr\.com$/, handle: subdomain(["www", "assets", "media", "static"]) },
+  {
+    platform: "patreon",
+    host: /^(?:www\.)?patreon\.com$/,
+    handle: (url) =>
+      afterSeg("c", "cw")(url) ??
+      firstSegUnless(["posts", "home", "user", "join", "login", "explore", "search"])(url),
+  },
+  {
+    platform: "tumblr",
+    host: /^([a-z0-9-]+)\.tumblr\.com$/,
+    handle: subdomain(["www", "assets", "media", "static"]),
+  },
   { platform: "carrd", host: /^([a-z0-9-]+)\.carrd\.co$/, handle: subdomain(["www"]) },
-  { platform: "newgrounds", host: /^([a-z0-9-]+)\.newgrounds\.com$/, handle: subdomain(["www", "art", "img", "uimg"]) },
-  { platform: "youtube", host: /^(?:www\.|m\.)?youtube\.com$/, handle: (url) => { const s = seg(url, 0); return s?.startsWith("@") ? s.slice(1) : afterSeg("c", "user")(url); } },
-  { platform: "tiktok", host: /^(?:www\.)?tiktok\.com$/, handle: (url) => { const s = seg(url, 0); return s?.startsWith("@") ? s.slice(1) : null; } },
-  { platform: "twitch", host: /^(?:www\.)?twitch\.tv$/, handle: firstSegUnless(["videos", "directory", "settings", "p"]) },
-  { platform: "artfight", host: /^(?:www\.)?artfight\.net$/, handle: (url) => { const s = seg(url, 0); return s?.startsWith("~") ? s.slice(1) : null; } },
-  { platform: "pixiv", host: /^(?:www\.)?pixiv\.net$/, handle: (url) => { const parts = url.pathname.split("/").filter(Boolean); const at = parts.indexOf("users"); return at >= 0 ? (parts[at + 1] ?? null) : null; } },
+  {
+    platform: "newgrounds",
+    host: /^([a-z0-9-]+)\.newgrounds\.com$/,
+    handle: subdomain(["www", "art", "img", "uimg"]),
+  },
+  {
+    platform: "youtube",
+    host: /^(?:www\.|m\.)?youtube\.com$/,
+    handle: (url) => {
+      const s = seg(url, 0);
+      return s?.startsWith("@") ? s.slice(1) : afterSeg("c", "user")(url);
+    },
+  },
+  {
+    platform: "tiktok",
+    host: /^(?:www\.)?tiktok\.com$/,
+    handle: (url) => {
+      const s = seg(url, 0);
+      return s?.startsWith("@") ? s.slice(1) : null;
+    },
+  },
+  {
+    platform: "twitch",
+    host: /^(?:www\.)?twitch\.tv$/,
+    handle: firstSegUnless(["videos", "directory", "settings", "p"]),
+  },
+  {
+    platform: "artfight",
+    host: /^(?:www\.)?artfight\.net$/,
+    handle: (url) => {
+      const s = seg(url, 0);
+      return s?.startsWith("~") ? s.slice(1) : null;
+    },
+  },
+  {
+    platform: "pixiv",
+    host: /^(?:www\.)?pixiv\.net$/,
+    handle: (url) => {
+      const parts = url.pathname.split("/").filter(Boolean);
+      const at = parts.indexOf("users");
+      return at >= 0 ? (parts[at + 1] ?? null) : null;
+    },
+  },
   { platform: "e621", host: /^(?:www\.)?e(?:621|926)\.net$/, handle: afterSeg("users") },
 ];
 
@@ -166,7 +296,8 @@ export function extractHandles(text: string): ClaimedHandle[] {
   }
   for (const m of withoutUrls.matchAll(AT_PATTERN)) {
     const handle = m[1]?.replace(/\.+$/, "");
-    if (handle && !/^(everyone|here)$/i.test(handle)) out.push({ platform: "unknown", handle, origin: "text", url: null });
+    if (handle && !/^(everyone|here)$/i.test(handle))
+      out.push({ platform: "unknown", handle, origin: "text", url: null });
   }
   return dedupeHandles(out);
 }
@@ -209,15 +340,19 @@ export function compareNames(candidates: string[], claimed: ClaimedHandle[]): Ow
   const names = [...new Set(candidates.map(normalizeHandle).filter((n) => n.length > 0))];
   if (names.length === 0) return { ownership: "unknown", matchedHandle: null };
 
-  const label = (h: ClaimedHandle) => (h.platform === "unknown" ? h.handle : `${h.platform}: ${h.handle}`);
+  const label = (h: ClaimedHandle) =>
+    h.platform === "unknown" ? h.handle : `${h.platform}: ${h.handle}`;
 
   for (const h of claimed) {
-    if (names.includes(normalizeHandle(h.handle))) return { ownership: "applicant", matchedHandle: label(h) };
+    if (names.includes(normalizeHandle(h.handle)))
+      return { ownership: "applicant", matchedHandle: label(h) };
   }
   for (const h of claimed) {
     const mine = normalizeHandle(h.handle);
     if (mine.length < MIN_PARTIAL_LENGTH) continue;
-    if (names.some((n) => n.length >= MIN_PARTIAL_LENGTH && (n.includes(mine) || mine.includes(n)))) {
+    if (
+      names.some((n) => n.length >= MIN_PARTIAL_LENGTH && (n.includes(mine) || mine.includes(n)))
+    ) {
       return { ownership: "possible", matchedHandle: label(h) };
     }
   }
@@ -256,7 +391,9 @@ const SCATTER_THRESHOLD = 4;
  * service that answers a text page or flat line art has little detail to
  * compare, and returns look-alikes by a different artist each time.
  */
-export function scatteredImages(matches: ReadonlyArray<RawMatch & { imageKey: string }>): Map<string, number> {
+export function scatteredImages(
+  matches: ReadonlyArray<RawMatch & { imageKey: string }>
+): Map<string, number> {
   const names = new Map<string, Set<string>>();
   for (const match of matches) {
     const name = normalizeHandle(matchNames(match)[0] ?? "");
@@ -264,6 +401,8 @@ export function scatteredImages(matches: ReadonlyArray<RawMatch & { imageKey: st
     names.set(match.imageKey, (names.get(match.imageKey) ?? new Set<string>()).add(name));
   }
   return new Map(
-    [...names].filter(([, seen]) => seen.size >= SCATTER_THRESHOLD).map(([imageKey, seen]) => [imageKey, seen.size])
+    [...names]
+      .filter(([, seen]) => seen.size >= SCATTER_THRESHOLD)
+      .map(([imageKey, seen]) => [imageKey, seen.size])
   );
 }

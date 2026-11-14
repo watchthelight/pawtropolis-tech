@@ -151,7 +151,10 @@ export const CRITERIA: readonly Criterion[] = [
     rules: [
       { text: "AI detection triggers", source: "handbook" },
       { text: "Visual artifact checks (symmetrical errors, melting details)", source: "handbook" },
-      { text: "| 100% AI-generated | Prohibited | Not allowed | Decline Verification |", source: "handbook" },
+      {
+        text: "| 100% AI-generated | Prohibited | Not allowed | Decline Verification |",
+        source: "handbook",
+      },
       {
         text: "| AI used only as reference | No | Declare upfront + provide full proof trio | Treated as undisclosed AI |",
         source: "handbook",
@@ -213,15 +216,30 @@ export const GREEN_FLAGS: readonly string[] = [
 ];
 
 /** The handbook's AI-Generated Content Policy table, one entry per row. */
-export const AI_POLICY: ReadonlyArray<{ level: string; allowed: string; disclosure: string; consequence: string }> = [
-  { level: "No AI involvement", allowed: "Yes (default)", disclosure: "Standard proof trio", consequence: "None" },
+export const AI_POLICY: ReadonlyArray<{
+  level: string;
+  allowed: string;
+  disclosure: string;
+  consequence: string;
+}> = [
+  {
+    level: "No AI involvement",
+    allowed: "Yes (default)",
+    disclosure: "Standard proof trio",
+    consequence: "None",
+  },
   {
     level: "AI used only as reference",
     allowed: "No",
     disclosure: "Declare upfront + provide full proof trio",
     consequence: "Treated as undisclosed AI",
   },
-  { level: "100% AI-generated", allowed: "Prohibited", disclosure: "Not allowed", consequence: "Decline Verification" },
+  {
+    level: "100% AI-generated",
+    allowed: "Prohibited",
+    disclosure: "Not allowed",
+    consequence: "Decline Verification",
+  },
 ];
 
 /** The handbook's Spotting AI Art table: what to look for, by category. */
@@ -237,19 +255,23 @@ export const AI_ARTIFACT_GUIDE: ReadonlyArray<{ category: string; artifacts: str
   },
   {
     category: "Textures & Fur",
-    artifacts: "Overly smooth/shiny plastic-like skin, inconsistent fur direction/flow, blurry or repeating patterns",
+    artifacts:
+      "Overly smooth/shiny plastic-like skin, inconsistent fur direction/flow, blurry or repeating patterns",
   },
   {
     category: "Backgrounds & Composition",
-    artifacts: "Nonsensical elements (floating objects, impossible shadows/lighting), mismatched perspectives",
+    artifacts:
+      "Nonsensical elements (floating objects, impossible shadows/lighting), mismatched perspectives",
   },
   {
     category: "Stylistic Inconsistencies",
-    artifacts: "Sudden glossy/over-saturated look, unnatural color blending, symmetrical errors in asymmetric poses",
+    artifacts:
+      "Sudden glossy/over-saturated look, unnatural color blending, symmetrical errors in asymmetric poses",
   },
   {
     category: "Other Tells",
-    artifacts: "Incoherent accessories (warped clothing/jewelry), weird reflections, or dream-like distortions",
+    artifacts:
+      "Incoherent accessories (warped clothing/jewelry), weird reflections, or dream-like distortions",
   },
 ];
 
@@ -265,22 +287,26 @@ export const WORKFLOW_GAPS: readonly string[] = [
 
 /** Every handbook quote this file relies on. The docs parity test checks each one. */
 export function handbookQuotes(): string[] {
-  const fromCriteria = CRITERIA.flatMap((c) => c.rules.filter((r) => r.source === "handbook").map((r) => r.text));
-  const policyRows = AI_POLICY.map((r) => `| ${r.level} | ${r.allowed} | ${r.disclosure} | ${r.consequence} |`);
+  const fromCriteria = CRITERIA.flatMap((c) =>
+    c.rules.filter((r) => r.source === "handbook").map((r) => r.text)
+  );
+  const policyRows = AI_POLICY.map(
+    (r) => `| ${r.level} | ${r.allowed} | ${r.disclosure} | ${r.consequence} |`
+  );
   const guideRows = AI_ARTIFACT_GUIDE.map((r) => `| ${r.category} | ${r.artifacts} |`);
   return [...new Set([...fromCriteria, ...RED_FLAGS, ...GREEN_FLAGS, ...policyRows, ...guideRows])];
 }
 
 /** A rule as shown in the report. Quotes taken from a handbook table lose their column bars. */
 export function displayRule(text: string): string {
-  return text
-    .replace(/^\|\s*|\s*\|$/g, "")
-    .replace(/\s*\|\s*/g, " / ");
+  return text.replace(/^\|\s*|\s*\|$/g, "").replace(/\s*\|\s*/g, " / ");
 }
 
 /** Applicant requirement lines as read from the live server on 2026-11-14. */
 export function requirementQuotes(): string[] {
-  return CRITERIA.flatMap((c) => c.rules.filter((r) => r.source === "requirements").map((r) => r.text));
+  return CRITERIA.flatMap((c) =>
+    c.rules.filter((r) => r.source === "requirements").map((r) => r.text)
+  );
 }
 
 /** Lowercase, straight quotes, markdown emphasis and custom emoji removed, whitespace collapsed. */

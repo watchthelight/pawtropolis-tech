@@ -50,7 +50,11 @@ beforeEach(() => {
 
 describe("tk:open", () => {
   it("reports partial success when the greeting failed", async () => {
-    h.create.mockResolvedValue({ ticket: { number: 3 }, channel: { id: "chan1" }, greetingFailed: true });
+    h.create.mockResolvedValue({
+      ticket: { number: 3 },
+      channel: { id: "chan1" },
+      greetingFailed: true,
+    });
     const interaction = makeInteraction();
 
     await handleTicketButton(interaction as never);

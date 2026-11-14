@@ -70,7 +70,11 @@ describe("getPulseMetrics dailyDistribution", () => {
     msg("a", start);
     msg("b", start + DAY - 1);
     msg("c", start + DAY);
-    const m = getPulseMetrics(G, { startS: start, endS: start + 2 * DAY, prevStartS: start - 2 * DAY });
+    const m = getPulseMetrics(G, {
+      startS: start,
+      endS: start + 2 * DAY,
+      prevStartS: start - 2 * DAY,
+    });
     expect(m.dailyDistribution).toEqual([2, 1]);
   });
 });

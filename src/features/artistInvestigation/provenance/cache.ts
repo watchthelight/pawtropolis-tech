@@ -24,8 +24,7 @@ export function readCache(
        WHERE image_sha256 = ? AND service = ? AND variant = ? AND fetched_at_s >= ?`
     )
     .get(sha256, service, variant, Math.floor(nowMs / 1000) - LIMITS.cacheTtlSeconds) as
-    | { result_json: string }
-    | undefined;
+    { result_json: string } | undefined;
   if (!row) return null;
   try {
     const parsed: unknown = JSON.parse(row.result_json);

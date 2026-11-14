@@ -13,7 +13,8 @@ import { createHash } from "node:crypto";
 import { LIMITS } from "./config.js";
 import type { PreparedImage } from "./types.js";
 
-const DISCORD_MEDIA_HOSTS = /^(?:cdn\.discordapp\.com|media\.discordapp\.net|images-ext-\d+\.discordapp\.net)$/i;
+const DISCORD_MEDIA_HOSTS =
+  /^(?:cdn\.discordapp\.com|media\.discordapp\.net|images-ext-\d+\.discordapp\.net)$/i;
 
 export function isDiscordMediaUrl(url: string): boolean {
   try {
@@ -28,7 +29,10 @@ export function isDiscordMediaUrl(url: string): boolean {
 export async function fetchImageBytes(url: string): Promise<Buffer> {
   if (!isDiscordMediaUrl(url)) throw new Error("not hosted on Discord, so it was not downloaded");
 
-  const res = await fetch(url, { signal: AbortSignal.timeout(LIMITS.imageFetchTimeoutMs), redirect: "error" });
+  const res = await fetch(url, {
+    signal: AbortSignal.timeout(LIMITS.imageFetchTimeoutMs),
+    redirect: "error",
+  });
   if (!res.ok) throw new Error(`download failed (HTTP ${res.status})`);
   if (Number(res.headers.get("content-length") ?? 0) > LIMITS.maxImageBytes) {
     throw new Error("larger than the download limit");
@@ -123,7 +127,9 @@ export function scanMetadata(bytes: Buffer): string[] {
   for (const { keyword, text } of pngTextChunks(bytes)) {
     const meaning = GENERATOR_PNG_KEYS[keyword.toLowerCase()];
     if (meaning) {
-      notes.push(`PNG text chunk "${keyword}" (${meaning})${text ? `: "${oneLine(text, 160)}"` : ""}`);
+      notes.push(
+        `PNG text chunk "${keyword}" (${meaning})${text ? `: "${oneLine(text, 160)}"` : ""}`
+      );
     } else if (/^(software|source|comment|description|title)$/i.test(keyword) && text) {
       notes.push(`PNG "${keyword}" tag: "${oneLine(text, 120)}"`);
     }
@@ -141,13 +147,22 @@ export function scanMetadata(bytes: Buffer): string[] {
 /** Decode, auto-orient and downscale. Throws when the bytes are not an image sharp can read. */
 export async function prepareImage(key: string, bytes: Buffer): Promise<PreparedImage> {
   const { default: sharp } = await import("sharp");
-  const open = () => sharp(bytes, { limitInputPixels: LIMITS.maxInputPixels, failOn: "error" }).rotate();
+  const open = () =>
+    sharp(bytes, { limitInputPixels: LIMITS.maxInputPixels, failOn: "error" }).rotate();
 
-  const meta = await sharp(bytes, { limitInputPixels: LIMITS.maxInputPixels, failOn: "error" }).metadata();
+  const meta = await sharp(bytes, {
+    limitInputPixels: LIMITS.maxInputPixels,
+    failOn: "error",
+  }).metadata();
   if (!meta.width || !meta.height) throw new Error("could not be decoded as an image");
   const sideways = (meta.orientation ?? 1) >= 5;
 
-  const fit = (edge: number) => ({ width: edge, height: edge, fit: "inside" as const, withoutEnlargement: true });
+  const fit = (edge: number) => ({
+    width: edge,
+    height: edge,
+    fit: "inside" as const,
+    withoutEnlargement: true,
+  });
   const forModel = await open()
     .resize(fit(LIMITS.modelLongEdge))
     .flatten({ background: "#ffffff" })

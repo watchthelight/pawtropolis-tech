@@ -80,7 +80,9 @@ export async function lookupFetch(url: string, init: RequestInit): Promise<Respo
     return await fetch(url, { ...init, signal: AbortSignal.timeout(LIMITS.lookupTimeoutMs) });
   } catch (err) {
     const name = err instanceof Error ? err.name : "";
-    throw new LookupError(name === "TimeoutError" || name === "AbortError" ? "request timed out" : "network error");
+    throw new LookupError(
+      name === "TimeoutError" || name === "AbortError" ? "request timed out" : "network error"
+    );
   }
 }
 
@@ -108,7 +110,11 @@ export async function readJson(res: Response): Promise<unknown> {
 
 export function multipartImage(field: string, image: LookupImage): FormData {
   const form = new FormData();
-  form.append(field, new Blob([new Uint8Array(image.bytes)], { type: image.mediaType }), "image.jpg");
+  form.append(
+    field,
+    new Blob([new Uint8Array(image.bytes)], { type: image.mediaType }),
+    "image.jpg"
+  );
   return form;
 }
 
@@ -123,18 +129,27 @@ const TWITTER_EPOCH_MS = 1288834974657n;
 
 /** Post time encoded in a Twitter/X status id. Null for other URLs and for pre-2010 ids. */
 export function tweetDate(url: string): string | null {
-  const id = url.match(/^https?:\/\/(?:www\.|mobile\.)?(?:twitter|x)\.com\/[^/]+\/status\/(\d{15,20})/i)?.[1];
+  const id = url.match(
+    /^https?:\/\/(?:www\.|mobile\.)?(?:twitter|x)\.com\/[^/]+\/status\/(\d{15,20})/i
+  )?.[1];
   if (!id) return null;
   const ms = Number((BigInt(id) >> 22n) + TWITTER_EPOCH_MS);
   return ms < Date.now() + 86_400_000 ? new Date(ms).toISOString() : null;
 }
 
 export const asRecord = (value: unknown): Record<string, unknown> =>
-  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+  value !== null && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
 
 export const asString = (value: unknown): string | null =>
-  typeof value === "string" && value.trim() ? value.trim() : typeof value === "number" ? String(value) : null;
+  typeof value === "string" && value.trim()
+    ? value.trim()
+    : typeof value === "number"
+      ? String(value)
+      : null;
 
 export const asArray = (value: unknown): unknown[] => (Array.isArray(value) ? value : []);
 
-export const isHttpUrl = (value: unknown): value is string => typeof value === "string" && /^https?:\/\//i.test(value);
+export const isHttpUrl = (value: unknown): value is string =>
+  typeof value === "string" && /^https?:\/\//i.test(value);

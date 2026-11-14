@@ -27,8 +27,17 @@ const row = (overrides: Partial<TicketRowFacts> = {}): TicketRowFacts => ({
 
 describe("classifyTicketChannel", () => {
   it("accepts a first-party 2D artist ticket and reports its opener", () => {
-    const check = classifyTicketChannel({ name: "2d-artist-0007", parentId: null, isGuildText: true }, row(), null);
-    expect(check).toEqual({ ok: true, system: "first-party", openerId: "400000000000000001", closed: false });
+    const check = classifyTicketChannel(
+      { name: "2d-artist-0007", parentId: null, isGuildText: true },
+      row(),
+      null
+    );
+    expect(check).toEqual({
+      ok: true,
+      system: "first-party",
+      openerId: "400000000000000001",
+      closed: false,
+    });
   });
 
   it("marks a first-party ticket closed from its row, not from its name", () => {
@@ -88,22 +97,48 @@ describe("classifyTicketChannel", () => {
   });
 
   it.each([
-    ["a channel with the right name outside the tickets category", { name: "2d-artist-0142", parentId: "900000000000000002", isGuildText: true }],
-    ["a channel with the right name and no category", { name: "2d-artist-0142", parentId: null, isGuildText: true }],
-    ["another ticket type inside the tickets category", { name: "support-0142", parentId: TICKETS_CATEGORY, isGuildText: true }],
-    ["a general chat channel", { name: "general", parentId: "900000000000000002", isGuildText: true }],
-    ["a thread or forum post", { name: "2d-artist-0142", parentId: TICKETS_CATEGORY, isGuildText: false }],
+    [
+      "a channel with the right name outside the tickets category",
+      { name: "2d-artist-0142", parentId: "900000000000000002", isGuildText: true },
+    ],
+    [
+      "a channel with the right name and no category",
+      { name: "2d-artist-0142", parentId: null, isGuildText: true },
+    ],
+    [
+      "another ticket type inside the tickets category",
+      { name: "support-0142", parentId: TICKETS_CATEGORY, isGuildText: true },
+    ],
+    [
+      "a general chat channel",
+      { name: "general", parentId: "900000000000000002", isGuildText: true },
+    ],
+    [
+      "a thread or forum post",
+      { name: "2d-artist-0142", parentId: TICKETS_CATEGORY, isGuildText: false },
+    ],
   ])("refuses %s", (_label, channel) => {
-    expect(classifyTicketChannel(channel, null, TICKETS_CATEGORY)).toEqual({ ok: false, reason: NOT_A_TICKET });
+    expect(classifyTicketChannel(channel, null, TICKETS_CATEGORY)).toEqual({
+      ok: false,
+      reason: NOT_A_TICKET,
+    });
   });
 
   it("refuses name-matched channels when no tickets category is configured", () => {
-    const check = classifyTicketChannel({ name: "2d-artist-0142", parentId: null, isGuildText: true }, null, null);
+    const check = classifyTicketChannel(
+      { name: "2d-artist-0142", parentId: null, isGuildText: true },
+      null,
+      null
+    );
     expect(check).toEqual({ ok: false, reason: NOT_A_TICKET });
   });
 
   it("refuses a first-party artist ticket that is not a text channel", () => {
-    const check = classifyTicketChannel({ name: "2d-artist-0007", parentId: null, isGuildText: false }, row(), null);
+    const check = classifyTicketChannel(
+      { name: "2d-artist-0007", parentId: null, isGuildText: false },
+      row(),
+      null
+    );
     expect(check).toEqual({ ok: false, reason: NOT_A_TICKET });
   });
 });
@@ -130,13 +165,20 @@ describe("resolveApplicant", () => {
   });
 
   it("uses the ticket row's opener next", () => {
-    const who = resolveApplicant(inputs({ ticketOpenerId: "222222222222222222", greetingContent: "Hello <@333333333333333333>!" }));
+    const who = resolveApplicant(
+      inputs({
+        ticketOpenerId: "222222222222222222",
+        greetingContent: "Hello <@333333333333333333>!",
+      })
+    );
     expect(who).toEqual({ ok: true, userId: "222222222222222222", via: "ticket" });
   });
 
   it("reads the opener from the Ticket Tool greeting", () => {
     const who = resolveApplicant(
-      inputs({ greetingContent: "Hello <@333333333333333333>! A <@&444444444444444444> has been notified" })
+      inputs({
+        greetingContent: "Hello <@333333333333333333>! A <@&444444444444444444> has been notified",
+      })
     );
     expect(who).toEqual({ ok: true, userId: "333333333333333333", via: "greeting" });
   });
@@ -153,19 +195,31 @@ describe("resolveApplicant", () => {
 
   it("falls back to the only member with a permission overwrite, ignoring the bots", () => {
     const who = resolveApplicant(
-      inputs({ memberOverwriteIds: ["557628352828014614", "400000000000000009", "555555555555555555"] })
+      inputs({
+        memberOverwriteIds: ["557628352828014614", "400000000000000009", "555555555555555555"],
+      })
     );
     expect(who).toEqual({ ok: true, userId: "555555555555555555", via: "overwrite" });
   });
 
   it("asks for the option when several members have access", () => {
-    const who = resolveApplicant(inputs({ memberOverwriteIds: ["555555555555555555", "666666666666666666"] }));
-    expect(who).toMatchObject({ ok: false, reason: expect.stringContaining("More than one member") });
+    const who = resolveApplicant(
+      inputs({ memberOverwriteIds: ["555555555555555555", "666666666666666666"] })
+    );
+    expect(who).toMatchObject({
+      ok: false,
+      reason: expect.stringContaining("More than one member"),
+    });
     expect(who).toMatchObject({ reason: expect.stringContaining("`applicant` option") });
   });
 
   it("asks for the option when nothing identifies the opener", () => {
-    const who = resolveApplicant(inputs({ greetingContent: "Welcome!", memberOverwriteIds: ["557628352828014614"] }));
-    expect(who).toMatchObject({ ok: false, reason: expect.stringContaining("Could not tell who opened this ticket") });
+    const who = resolveApplicant(
+      inputs({ greetingContent: "Welcome!", memberOverwriteIds: ["557628352828014614"] })
+    );
+    expect(who).toMatchObject({
+      ok: false,
+      reason: expect.stringContaining("Could not tell who opened this ticket"),
+    });
   });
 });

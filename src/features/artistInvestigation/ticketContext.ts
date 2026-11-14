@@ -44,7 +44,12 @@ export function classifyTicketChannel(
         reason: `This is a \`${ticket.typeKey}\` ticket. The command only works in 2D artist verification tickets.`,
       };
     }
-    return { ok: true, system: "first-party", openerId: ticket.openerUserId, closed: ticket.status === "closed" };
+    return {
+      ok: true,
+      system: "first-party",
+      openerId: ticket.openerUserId,
+      closed: ticket.status === "closed",
+    };
   }
 
   const name = channel.name.toLowerCase();

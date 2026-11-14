@@ -16,13 +16,18 @@ vi.mock("../../src/lib/logger.js", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 
-import { migrate084ArtistInvestigation, verify084ArtistInvestigation } from "../../migrations/084_artist_investigation.js";
+import {
+  migrate084ArtistInvestigation,
+  verify084ArtistInvestigation,
+} from "../../migrations/084_artist_investigation.js";
 
 type Db = InstanceType<typeof Database>;
 
 function freshDb(): Db {
   const d = new Database(":memory:");
-  d.exec(`CREATE TABLE schema_migrations (version TEXT PRIMARY KEY, name TEXT, applied_at INTEGER DEFAULT (strftime('%s','now')));`);
+  d.exec(
+    `CREATE TABLE schema_migrations (version TEXT PRIMARY KEY, name TEXT, applied_at INTEGER DEFAULT (strftime('%s','now')));`
+  );
   return d;
 }
 
@@ -58,11 +63,15 @@ describe("migration 084: artist investigation", () => {
     migrate084ArtistInvestigation(d);
 
     for (const table of TABLES) {
-      const row = d.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name = ?`).get(table);
+      const row = d
+        .prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name = ?`)
+        .get(table);
       expect(row, `missing table ${table}`).toBeTruthy();
     }
     const index = d
-      .prepare(`SELECT tbl_name FROM sqlite_master WHERE type='index' AND name = 'idx_artist_investigation_run_created'`)
+      .prepare(
+        `SELECT tbl_name FROM sqlite_master WHERE type='index' AND name = 'idx_artist_investigation_run_created'`
+      )
       .get() as { tbl_name: string } | undefined;
     expect(index?.tbl_name).toBe("artist_investigation_run");
     d.close();
@@ -96,7 +105,9 @@ describe("migration 084: artist investigation", () => {
     migrate084ArtistInvestigation(d);
 
     const names = columns(d, "artist_investigation_run").map((c) => c.name);
-    expect(names.filter((name) => /content|text|transcript|applicant|user_id|url|report/.test(name))).toEqual([]);
+    expect(
+      names.filter((name) => /content|text|transcript|applicant|user_id|url|report/.test(name))
+    ).toEqual([]);
     d.close();
   });
 
@@ -108,7 +119,10 @@ describe("migration 084: artist investigation", () => {
     d.prepare(
       `INSERT INTO artist_investigation_run (guild_id, channel_id, invoked_by, model, status) VALUES ('g', 'c', 'u', 'm', 'ok')`
     ).run();
-    const row = d.prepare(`SELECT * FROM artist_investigation_run`).get() as Record<string, number | string>;
+    const row = d.prepare(`SELECT * FROM artist_investigation_run`).get() as Record<
+      string,
+      number | string
+    >;
 
     expect(row).toMatchObject({
       id: 1,
@@ -132,7 +146,9 @@ describe("migration 084: artist investigation", () => {
     d.prepare(
       `INSERT INTO artist_investigation_run (guild_id, channel_id, invoked_by, model, status, cost_usd) VALUES ('g', 'c', 'u', 'm', 'ok', ?)`
     ).run(0.144321);
-    const row = d.prepare(`SELECT cost_usd FROM artist_investigation_run`).get() as { cost_usd: number };
+    const row = d.prepare(`SELECT cost_usd FROM artist_investigation_run`).get() as {
+      cost_usd: number;
+    };
 
     expect(row.cost_usd).toBeCloseTo(0.144321, 9);
     d.close();
@@ -157,7 +173,9 @@ describe("migration 084: artist investigation", () => {
     const d = freshDb();
     migrate084ArtistInvestigation(d);
 
-    d.prepare(`INSERT INTO artist_provenance_cache (image_sha256, service, result_json) VALUES ('abc', 'fluffle', '[]')`).run();
+    d.prepare(
+      `INSERT INTO artist_provenance_cache (image_sha256, service, result_json) VALUES ('abc', 'fluffle', '[]')`
+    ).run();
     const row = d.prepare(`SELECT variant, fetched_at_s FROM artist_provenance_cache`).get() as {
       variant: string;
       fetched_at_s: number;
@@ -177,9 +195,13 @@ describe("migration 084: artist investigation", () => {
 
     expect(() => migrate084ArtistInvestigation(d)).not.toThrow();
 
-    const total = d.prepare(`SELECT COUNT(*) AS n, SUM(cost_usd) AS usd FROM artist_investigation_run`).get();
+    const total = d
+      .prepare(`SELECT COUNT(*) AS n, SUM(cost_usd) AS usd FROM artist_investigation_run`)
+      .get();
     expect(total).toEqual({ n: 1, usd: 1.5 });
-    const stamps = d.prepare(`SELECT version, name FROM schema_migrations WHERE version = '084'`).all();
+    const stamps = d
+      .prepare(`SELECT version, name FROM schema_migrations WHERE version = '084'`)
+      .all();
     expect(stamps).toEqual([{ version: "084", name: "artist_investigation" }]);
     d.close();
   });
@@ -202,13 +224,17 @@ describe("migration 084: artist investigation", () => {
     const fixture = fixtureDb();
 
     for (const table of TABLES) {
-      expect(columns(fixture, table), `fixture differs for ${table}`).toEqual(columns(migrated, table));
+      expect(columns(fixture, table), `fixture differs for ${table}`).toEqual(
+        columns(migrated, table)
+      );
     }
     const indexSql = (d: Db) =>
       (
-        d.prepare(`SELECT sql FROM sqlite_master WHERE type='index' AND name = 'idx_artist_investigation_run_created'`).get() as
-          | { sql: string }
-          | undefined
+        d
+          .prepare(
+            `SELECT sql FROM sqlite_master WHERE type='index' AND name = 'idx_artist_investigation_run_created'`
+          )
+          .get() as { sql: string } | undefined
       )?.sql
         .replace(/\s+/g, " ")
         .trim();

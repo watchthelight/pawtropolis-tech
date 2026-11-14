@@ -101,10 +101,17 @@ describe("modmail thread open: pending guard", () => {
   });
 
   it("refuses while a recent pending row exists", async () => {
-    h.db.prepare("INSERT INTO open_modmail (guild_id, applicant_id, thread_id) VALUES ('g1','u1','pending')").run();
+    h.db
+      .prepare(
+        "INSERT INTO open_modmail (guild_id, applicant_id, thread_id) VALUES ('g1','u1','pending')"
+      )
+      .run();
     const { interaction } = makeInteraction();
 
-    const result = await openPublicModmailThreadFor({ interaction: interaction as any, userId: "u1" });
+    const result = await openPublicModmailThreadFor({
+      interaction: interaction as any,
+      userId: "u1",
+    });
 
     expect(result.success).toBe(false);
     expect(result.message).toContain("being created by another moderator");
@@ -119,7 +126,10 @@ describe("modmail thread open: pending guard", () => {
       .run();
     const { interaction } = makeInteraction();
 
-    const result = await openPublicModmailThreadFor({ interaction: interaction as any, userId: "u1" });
+    const result = await openPublicModmailThreadFor({
+      interaction: interaction as any,
+      userId: "u1",
+    });
 
     expect(result.success).toBe(true);
     expect(guardRows()).toEqual([{ thread_id: "thread-1" }]);
@@ -133,7 +143,10 @@ describe("modmail thread open: pending guard", () => {
       .run();
     const { interaction } = makeInteraction();
 
-    const result = await openPublicModmailThreadFor({ interaction: interaction as any, userId: "u1" });
+    const result = await openPublicModmailThreadFor({
+      interaction: interaction as any,
+      userId: "u1",
+    });
 
     expect(result.success).toBe(false);
     expect(result.message).toContain("<#existing>");
@@ -143,7 +156,10 @@ describe("modmail thread open: pending guard", () => {
     h.ensureMods.mockRejectedValue(new Error("missing access"));
     const { interaction, thread } = makeInteraction();
 
-    const result = await openPublicModmailThreadFor({ interaction: interaction as any, userId: "u1" });
+    const result = await openPublicModmailThreadFor({
+      interaction: interaction as any,
+      userId: "u1",
+    });
 
     expect(result.success).toBe(false);
     expect(guardRows()).toEqual([]);

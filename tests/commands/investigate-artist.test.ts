@@ -23,8 +23,12 @@ vi.mock("../../src/lib/logger.js", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 vi.mock("../../src/lib/owner.js", () => ({ isOwner: vi.fn(() => false) }));
-vi.mock("../../src/features/tickets/service.js", () => ({ TicketService: { findByChannelId: vi.fn(() => null) } }));
-vi.mock("../../src/features/tickets/config.js", () => ({ getTicketsCategoryId: vi.fn(() => "600000000000000001") }));
+vi.mock("../../src/features/tickets/service.js", () => ({
+  TicketService: { findByChannelId: vi.fn(() => null) },
+}));
+vi.mock("../../src/features/tickets/config.js", () => ({
+  getTicketsCategoryId: vi.fn(() => "600000000000000001"),
+}));
 vi.mock("../../src/features/artistInvestigation/run.js", () => ({ runInvestigation: vi.fn() }));
 vi.mock("../../src/features/artistInvestigation/render.js", () => ({ renderReport: vi.fn() }));
 vi.mock("../../src/features/artistInvestigation/config.js", async (importOriginal) => ({
@@ -50,7 +54,10 @@ const GUILD_ID = "300000000000000001";
 const CHANNEL_ID = "500000000000000001";
 const TICKETS_CATEGORY = "600000000000000001";
 const NOT_A_TICKET = "This only works inside a 2D artist verification ticket channel.";
-const REFUSAL = { content: "❌ This command is only available to the bot owner.", flags: MessageFlags.Ephemeral };
+const REFUSAL = {
+  content: "❌ This command is only available to the bot owner.",
+  flags: MessageFlags.Ephemeral,
+};
 const NO_MENTIONS = { parse: [] };
 const REPORT = { name: "test-report" } as unknown as InvestigationReport;
 
@@ -102,7 +109,8 @@ function runCall() {
   if (!call) throw new Error("runInvestigation was not called");
   return { input: call[0], deps: call[1] };
 }
-const order = (fn: unknown) => vi.mocked(fn as () => void).mock.invocationCallOrder[0] ?? Number.NaN;
+const order = (fn: unknown) =>
+  vi.mocked(fn as () => void).mock.invocationCallOrder[0] ?? Number.NaN;
 
 beforeEach(() => {
   vi.mocked(isOwner).mockReturnValue(true);
@@ -167,7 +175,9 @@ describe("/investigate-artist: owner check", () => {
 
   it("refuses outside a ticket too, without saying whether the channel is one", async () => {
     vi.mocked(isOwner).mockReturnValue(false);
-    const { interaction, ctx } = setup({ channel: ticketChannel({ name: "general", parentId: null }) });
+    const { interaction, ctx } = setup({
+      channel: ticketChannel({ name: "general", parentId: null }),
+    });
 
     await execute(ctx);
 
@@ -189,7 +199,9 @@ describe("/investigate-artist: privacy", () => {
     const { interaction, ctx } = setup();
     await execute(ctx);
 
-    expect(interaction.deferReply).toHaveBeenCalledExactlyOnceWith({ flags: MessageFlags.Ephemeral });
+    expect(interaction.deferReply).toHaveBeenCalledExactlyOnceWith({
+      flags: MessageFlags.Ephemeral,
+    });
     expect(order(interaction.deferReply)).toBeLessThan(order(TicketService.findByChannelId));
     expect(order(interaction.deferReply)).toBeLessThan(order(runInvestigation));
   });
@@ -213,8 +225,14 @@ describe("/investigate-artist: privacy", () => {
 
 describe("/investigate-artist: ticket check", () => {
   it.each([
-    ["a channel that is not a ticket", ticketChannel({ name: "general", parentId: "600000000000000002" })],
-    ["a ticket-named channel outside the tickets category", ticketChannel({ parentId: "600000000000000002" })],
+    [
+      "a channel that is not a ticket",
+      ticketChannel({ name: "general", parentId: "600000000000000002" }),
+    ],
+    [
+      "a ticket-named channel outside the tickets category",
+      ticketChannel({ parentId: "600000000000000002" }),
+    ],
     ["another kind of ticket in the tickets category", ticketChannel({ name: "support-0007" })],
     ["a thread named like a ticket", ticketChannel({ type: ChannelType.PublicThread })],
     ["a voice channel named like a ticket", ticketChannel({ type: ChannelType.GuildVoice })],
@@ -223,7 +241,9 @@ describe("/investigate-artist: ticket check", () => {
     const { interaction, ctx } = setup({ channel });
     await execute(ctx);
 
-    expect(interaction.deferReply).toHaveBeenCalledExactlyOnceWith({ flags: MessageFlags.Ephemeral });
+    expect(interaction.deferReply).toHaveBeenCalledExactlyOnceWith({
+      flags: MessageFlags.Ephemeral,
+    });
     expect(interaction.editReply).toHaveBeenCalledExactlyOnceWith({ content: NOT_A_TICKET });
     expect(runInvestigation).not.toHaveBeenCalled();
     expect(interaction.followUp).not.toHaveBeenCalled();
@@ -235,8 +255,12 @@ describe("/investigate-artist: ticket check", () => {
     const noGuild = setup({ guild: null });
     await execute(noGuild.ctx);
 
-    expect(noChannel.interaction.editReply).toHaveBeenCalledExactlyOnceWith({ content: NOT_A_TICKET });
-    expect(noGuild.interaction.editReply).toHaveBeenCalledExactlyOnceWith({ content: NOT_A_TICKET });
+    expect(noChannel.interaction.editReply).toHaveBeenCalledExactlyOnceWith({
+      content: NOT_A_TICKET,
+    });
+    expect(noGuild.interaction.editReply).toHaveBeenCalledExactlyOnceWith({
+      content: NOT_A_TICKET,
+    });
     expect(runInvestigation).not.toHaveBeenCalled();
   });
 
@@ -252,7 +276,8 @@ describe("/investigate-artist: ticket check", () => {
 
     expect(TicketService.findByChannelId).toHaveBeenCalledExactlyOnceWith(CHANNEL_ID);
     expect(interaction.editReply).toHaveBeenCalledExactlyOnceWith({
-      content: "This is a `partnership` ticket. The command only works in 2D artist verification tickets.",
+      content:
+        "This is a `partnership` ticket. The command only works in 2D artist verification tickets.",
     });
     expect(runInvestigation).not.toHaveBeenCalled();
   });
@@ -262,7 +287,12 @@ describe("/investigate-artist: ticket check", () => {
     await execute(ctx);
 
     expect(getTicketsCategoryId).toHaveBeenCalledExactlyOnceWith(GUILD_ID);
-    expect(runCall().input.ticket).toEqual({ ok: true, system: "ticket-tool", openerId: null, closed: false });
+    expect(runCall().input.ticket).toEqual({
+      ok: true,
+      system: "ticket-tool",
+      openerId: null,
+      closed: false,
+    });
   });
 
   it("recognizes a closed Ticket Tool ticket", async () => {
@@ -339,7 +369,9 @@ describe("/investigate-artist: running", () => {
   it("tracks the run and the reply as separate phases", async () => {
     const { interaction, ctx } = setup();
     const phases: string[] = [];
-    const tracked = createTestCommandContext(interaction, { onStep: (phase) => phases.push(phase) });
+    const tracked = createTestCommandContext(interaction, {
+      onStep: (phase) => phases.push(phase),
+    });
     await execute(tracked);
 
     expect(phases).toEqual(["investigate", "reply"]);
@@ -392,8 +424,16 @@ describe("/investigate-artist: answering", () => {
       allowedMentions: NO_MENTIONS,
     });
     expect(vi.mocked(interaction.followUp).mock.calls.map(([message]) => message)).toEqual([
-      { embeds: [{ title: "Page 2a" }, { title: "Page 2b" }], flags: MessageFlags.Ephemeral, allowedMentions: NO_MENTIONS },
-      { embeds: [{ title: "Page 3" }], flags: MessageFlags.Ephemeral, allowedMentions: NO_MENTIONS },
+      {
+        embeds: [{ title: "Page 2a" }, { title: "Page 2b" }],
+        flags: MessageFlags.Ephemeral,
+        allowedMentions: NO_MENTIONS,
+      },
+      {
+        embeds: [{ title: "Page 3" }],
+        flags: MessageFlags.Ephemeral,
+        allowedMentions: NO_MENTIONS,
+      },
     ]);
     expect(order(interaction.editReply)).toBeLessThan(order(interaction.followUp));
   });
@@ -401,7 +441,8 @@ describe("/investigate-artist: answering", () => {
 
 describe("/investigate-artist: errors", () => {
   const NOTICE = {
-    content: "The investigation stopped on an error. Nothing was posted in this channel. Trace: `test-trace-123`",
+    content:
+      "The investigation stopped on an error. Nothing was posted in this channel. Trace: `test-trace-123`",
     flags: MessageFlags.Ephemeral,
   };
 
@@ -417,7 +458,10 @@ describe("/investigate-artist: errors", () => {
   });
 
   it("logs the error's name, message and code, never the error object", async () => {
-    const failure = Object.assign(new Error(`Request failed: ${"x".repeat(500)}`), { code: 50013, requestBody: "ticket text" });
+    const failure = Object.assign(new Error(`Request failed: ${"x".repeat(500)}`), {
+      code: 50013,
+      requestBody: "ticket text",
+    });
     vi.mocked(runInvestigation).mockRejectedValue(failure);
     const { ctx } = setup();
     await execute(ctx);
@@ -439,7 +483,10 @@ describe("/investigate-artist: errors", () => {
     const { ctx } = setup();
     await execute(ctx);
 
-    expect(vi.mocked(logger.error).mock.calls[0]?.[0]).toMatchObject({ errName: "string", errMessage: "plain string" });
+    expect(vi.mocked(logger.error).mock.calls[0]?.[0]).toMatchObject({
+      errName: "string",
+      errMessage: "plain string",
+    });
   });
 
   it("answers privately when the report cannot be rendered or sent", async () => {
@@ -449,7 +496,10 @@ describe("/investigate-artist: errors", () => {
     const broken = setup();
     await execute(broken.ctx);
 
-    vi.mocked(renderReport).mockReturnValue([{ embeds: [{ title: "Page 1" }] }, { embeds: [{ title: "Page 2" }] }]);
+    vi.mocked(renderReport).mockReturnValue([
+      { embeds: [{ title: "Page 1" }] },
+      { embeds: [{ title: "Page 2" }] },
+    ]);
     const unsent = setup();
     vi.mocked(unsent.interaction.followUp).mockRejectedValueOnce(new Error("Invalid Form Body"));
     await execute(unsent.ctx);
@@ -507,7 +557,9 @@ describe("/investigate-artist: with the real owner list", () => {
     await command.execute(owner.ctx);
     await command.execute(stranger.ctx);
 
-    expect(owner.interaction.deferReply).toHaveBeenCalledExactlyOnceWith({ flags: MessageFlags.Ephemeral });
+    expect(owner.interaction.deferReply).toHaveBeenCalledExactlyOnceWith({
+      flags: MessageFlags.Ephemeral,
+    });
     expect(command.runInvestigation).toHaveBeenCalledTimes(1);
     expect(command.runInvestigation.mock.calls[0]?.[0].invokedBy).toBe("400000000000000009");
     expect(stranger.interaction.reply).toHaveBeenCalledExactlyOnceWith(REFUSAL);

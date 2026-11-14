@@ -19,19 +19,35 @@ vi.mock("../../src/lib/logger.js", () => ({
   logger: { info: vi.fn(), warn: h.warn, error: vi.fn(), debug: vi.fn() },
 }));
 vi.mock("../../src/scheduler/modMetricsScheduler.js", () => ({ stopModMetricsScheduler: h.first }));
-vi.mock("../../src/scheduler/guildSnapshotScheduler.js", () => ({ stopGuildSnapshotScheduler: vi.fn() }));
+vi.mock("../../src/scheduler/guildSnapshotScheduler.js", () => ({
+  stopGuildSnapshotScheduler: vi.fn(),
+}));
 vi.mock("../../src/scheduler/opsHealthScheduler.js", () => ({ stopOpsHealthScheduler: vi.fn() }));
-vi.mock("../../src/scheduler/staleApplicationCheck.js", () => ({ stopStaleApplicationScheduler: vi.fn() }));
-vi.mock("../../src/scheduler/securityAuditScheduler.js", () => ({ stopSecurityAuditScheduler: h.middle }));
-vi.mock("../../src/scheduler/byteMultiplierScheduler.js", () => ({ stopByteMultiplierCleanup: vi.fn() }));
+vi.mock("../../src/scheduler/staleApplicationCheck.js", () => ({
+  stopStaleApplicationScheduler: vi.fn(),
+}));
+vi.mock("../../src/scheduler/securityAuditScheduler.js", () => ({
+  stopSecurityAuditScheduler: h.middle,
+}));
+vi.mock("../../src/scheduler/byteMultiplierScheduler.js", () => ({
+  stopByteMultiplierCleanup: vi.fn(),
+}));
 vi.mock("../../src/scheduler/diskSpaceScheduler.js", () => ({ stopDiskSpaceScheduler: vi.fn() }));
-vi.mock("../../src/scheduler/eventTimeoutScheduler.js", () => ({ stopEventTimeoutScheduler: vi.fn() }));
-vi.mock("../../src/scheduler/badgeRefreshScheduler.js", () => ({ stopBadgeRefreshScheduler: vi.fn() }));
+vi.mock("../../src/scheduler/eventTimeoutScheduler.js", () => ({
+  stopEventTimeoutScheduler: vi.fn(),
+}));
+vi.mock("../../src/scheduler/badgeRefreshScheduler.js", () => ({
+  stopBadgeRefreshScheduler: vi.fn(),
+}));
 vi.mock("../../src/scheduler/messageActivityPruneScheduler.js", () => ({
   stopMessageActivityPruneScheduler: vi.fn(),
 }));
-vi.mock("../../src/scheduler/itemCaptureScheduler.js", () => ({ stopItemCaptureScheduler: vi.fn() }));
-vi.mock("../../src/scheduler/dbIntegrityScheduler.js", () => ({ stopDbIntegrityScheduler: vi.fn() }));
+vi.mock("../../src/scheduler/itemCaptureScheduler.js", () => ({
+  stopItemCaptureScheduler: vi.fn(),
+}));
+vi.mock("../../src/scheduler/dbIntegrityScheduler.js", () => ({
+  stopDbIntegrityScheduler: vi.fn(),
+}));
 vi.mock("../../src/scheduler/retentionScheduler.js", () => ({ stopRetentionScheduler: h.last }));
 
 import { stopSchedulers } from "../../src/startup/schedulers.js";

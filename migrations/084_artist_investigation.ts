@@ -64,7 +64,9 @@ export function migrate084ArtistInvestigation(db: Database): void {
 /** Post-condition: the runner rolls the migration back when this returns false. */
 export function verify084ArtistInvestigation(db: Database): boolean {
   for (const table of ["artist_investigation_run", "artist_provenance_cache"]) {
-    const row = db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name = ?`).get(table);
+    const row = db
+      .prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name = ?`)
+      .get(table);
     if (!row) return false;
   }
   return true;

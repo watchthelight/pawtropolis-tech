@@ -23,7 +23,13 @@ import {
   type Rating,
 } from "./analysis.js";
 import { formatFooter, type TokenUsage } from "./budget.js";
-import { CRITERIA, WORKFLOW_GAPS, displayRule, findRequirementDrift, type WorkflowSource } from "./criteria.js";
+import {
+  CRITERIA,
+  WORKFLOW_GAPS,
+  displayRule,
+  findRequirementDrift,
+  type WorkflowSource,
+} from "./criteria.js";
 import { scatteredImages } from "./handles.js";
 import type {
   ApplicantContext,
@@ -76,7 +82,11 @@ const DESCRIPTION_LIMIT = 3900;
 const MESSAGE_LIMIT = 5800;
 const EMBEDS_PER_MESSAGE = 10;
 
-const SERVICE_NAMES: Record<ProvenanceServiceName, string> = { fluffle: "Fluffle", e621: "e621", saucenao: "SauceNAO" };
+const SERVICE_NAMES: Record<ProvenanceServiceName, string> = {
+  fluffle: "Fluffle",
+  e621: "e621",
+  saucenao: "SauceNAO",
+};
 
 const RATING_WORDS: Record<Rating, string> = {
   met: "met",
@@ -106,17 +116,25 @@ interface Section {
 }
 
 const discordDate = (ms: number) => `<t:${Math.floor(ms / 1000)}:D>`;
-const plural = (count: number, word: string, many = `${word}s`) => `${count} ${count === 1 ? word : many}`;
+const plural = (count: number, word: string, many = `${word}s`) =>
+  `${count} ${count === 1 ? word : many}`;
 
 /** Text from the ticket or a lookup service, made safe to sit inside our own formatting. */
 const safe = (text: string, max = 100) => {
   const flat = text.replace(/\s+/g, " ").trim();
-  return escapeMarkdown(flat.length > max ? `${flat.slice(0, max)}...` : flat, { maskedLink: true });
+  return escapeMarkdown(flat.length > max ? `${flat.slice(0, max)}...` : flat, {
+    maskedLink: true,
+  });
 };
 const linkText = (text: string, max = 60) => safe(text.replace(/[[\]]/g, ""), max);
 /** A lookup service's URL as a link target. Nothing in it can close the link early or open another one. */
 const linkTarget = (url: string) =>
-  url.trim().replace(/[\s()[\]<>]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase().padStart(2, "0")}`);
+  url
+    .trim()
+    .replace(
+      /[\s()[\]<>]/g,
+      (c) => `%${c.charCodeAt(0).toString(16).toUpperCase().padStart(2, "0")}`
+    );
 const EM_DASH = String.fromCharCode(0x2014);
 const EN_DASH = String.fromCharCode(0x2013);
 /** An en dash between two numbers or labels: img1 to img3, 2019 to 2021. */
@@ -180,7 +198,10 @@ function pack(embeds: APIEmbed[]): ReportPage[] {
   let total = 0;
   for (const embed of embeds) {
     const size = embedSize(embed);
-    if (current.length > 0 && (total + size > MESSAGE_LIMIT || current.length >= EMBEDS_PER_MESSAGE)) {
+    if (
+      current.length > 0 &&
+      (total + size > MESSAGE_LIMIT || current.length >= EMBEDS_PER_MESSAGE)
+    ) {
       pages.push({ embeds: current });
       current = [];
       total = 0;
@@ -209,10 +230,18 @@ function applicantBlock(report: InvestigationReport): string {
   if (applicant.inServer === null) lines.push("Server membership could not be checked");
   else if (!applicant.inServer) lines.push("**No longer in the server**");
   else if (applicant.joinedAtMs !== null) {
-    lines.push(`Joined ${discordDate(applicant.joinedAtMs)}, ${describeAge(applicant.joinedAtMs, referenceMs)} before the ticket`);
+    lines.push(
+      `Joined ${discordDate(applicant.joinedAtMs)}, ${describeAge(applicant.joinedAtMs, referenceMs)} before the ticket`
+    );
   }
 
-  if (applicant.roles.length > 0) lines.push(`Roles: ${applicant.roles.slice(0, 15).map((r) => safe(r, 30)).join(", ")}`);
+  if (applicant.roles.length > 0)
+    lines.push(
+      `Roles: ${applicant.roles
+        .slice(0, 15)
+        .map((r) => safe(r, 30))
+        .join(", ")}`
+    );
   lines.push(
     applicant.recentMessageCount === null
       ? "Activity: not available"
@@ -222,7 +251,9 @@ function applicantBlock(report: InvestigationReport): string {
   lines.push(
     applicant.gateApplication
       ? `Gate application: ${safe(applicant.gateApplication.status, 30)}` +
-          (applicant.gateApplication.submittedAt ? `, submitted ${applicant.gateApplication.submittedAt.slice(0, 10)}` : "")
+          (applicant.gateApplication.submittedAt
+            ? `, submitted ${applicant.gateApplication.submittedAt.slice(0, 10)}`
+            : "")
       : "Gate application: none on record"
   );
   lines.push(
@@ -260,15 +291,28 @@ function submittedBlock(report: InvestigationReport): string {
     posted === 0
       ? "Images: none posted"
       : `Images: ${posted} posted, ${report.images.length} analyzed` +
-        (evidence.imagesOverCap.length > 0 ? `, ${evidence.imagesOverCap.length} over the per-run limit` : "") +
-        (report.imageFailures.length > 0 ? `, ${report.imageFailures.length} could not be loaded` : ""),
+        (evidence.imagesOverCap.length > 0
+          ? `, ${evidence.imagesOverCap.length} over the per-run limit`
+          : "") +
+        (report.imageFailures.length > 0
+          ? `, ${report.imageFailures.length} could not be loaded`
+          : ""),
     `Files (contents not inspected): ${files.length > 0 ? files.join(", ") : "none"}`,
     `Links (not opened): ${evidence.links.length}`,
-    `Claimed handles: ${handles.length > 0 ? handles.slice(0, 12).map((h) => `${safe(h.platform, 20)}: ${safe(h.handle, 40)}`).join(", ") : "none"}`,
+    `Claimed handles: ${
+      handles.length > 0
+        ? handles
+            .slice(0, 12)
+            .map((h) => `${safe(h.platform, 20)}: ${safe(h.handle, 40)}`)
+            .join(", ")
+        : "none"
+    }`,
   ];
   if (ticket.closed) lines.push("This ticket is closed.");
-  if (!ticket.historyComplete) lines.push("The channel has more history than was read. The oldest messages are missing.");
-  if (evidence.transcriptTruncated) lines.push("The transcript was too long to send whole. Messages in the middle were left out.");
+  if (!ticket.historyComplete)
+    lines.push("The channel has more history than was read. The oldest messages are missing.");
+  if (evidence.transcriptTruncated)
+    lines.push("The transcript was too long to send whole. Messages in the middle were left out.");
   return lines.join("\n");
 }
 
@@ -279,7 +323,9 @@ function summarySection(report: InvestigationReport): Section {
   ];
   if (analysis.kind === "ok") {
     const a = analysis.assessment;
-    blocks.push(`**Score: ${a.overall_score} / 100** · confidence: ${a.confidence}\n${prose(a.confidence_reason)}`);
+    blocks.push(
+      `**Score: ${a.overall_score} / 100** · confidence: ${a.confidence}\n${prose(a.confidence_reason)}`
+    );
     blocks.push(prose(a.overall_summary));
   } else {
     blocks.push(
@@ -294,9 +340,14 @@ function criteriaSection(assessment: Assessment, known: Set<string>): Section {
   const blocks = assessment.criteria.map((entry) => {
     const criterion = CRITERIA.find((c) => c.key === entry.key);
     const cited = citedLabels(entry.evidence, known);
-    const rules = (criterion?.rules ?? []).map((r) => `"${displayRule(r.text)}" (${SOURCE_NAMES[r.source]})`).join(" · ");
+    const rules = (criterion?.rules ?? [])
+      .map((r) => `"${displayRule(r.text)}" (${SOURCE_NAMES[r.source]})`)
+      .join(" · ");
     // "AI indicators: met" reads as if indicators were found. On a risk check it means the opposite.
-    const rating = criterion?.kind === "risk" && entry.rating === "met" ? "no concern found" : RATING_WORDS[entry.rating];
+    const rating =
+      criterion?.kind === "risk" && entry.rating === "met"
+        ? "no concern found"
+        : RATING_WORDS[entry.rating];
     return [
       `**${criterion?.title ?? entry.key}** · ${rating}${entry.score === null ? "" : ` · ${entry.score}/10`}`,
       prose(entry.reasoning),
@@ -307,7 +358,10 @@ function criteriaSection(assessment: Assessment, known: Set<string>): Section {
   return { title: "Criteria", blocks };
 }
 
-function imagesSection(report: InvestigationReport, jump: (messageId: string) => string): Section | null {
+function imagesSection(
+  report: InvestigationReport,
+  jump: (messageId: string) => string
+): Section | null {
   const { evidence } = report;
   if (evidence.images.length + evidence.imagesOverCap.length === 0) return null;
 
@@ -321,9 +375,13 @@ function imagesSection(report: InvestigationReport, jump: (messageId: string) =>
     const note = notes.find((n) => n.image.toLowerCase().trim() === image.key);
     const metadata = report.images.find((i) => i.key === image.key)?.metadataNotes ?? [];
     return [
-      note ? `${head} · ${note.role.replace(/_/g, " ")} · AI indicators: ${note.ai_indicator_strength}` : head,
+      note
+        ? `${head} · ${note.role.replace(/_/g, " ")} · AI indicators: ${note.ai_indicator_strength}`
+        : head,
       ...(note ? [prose(note.notes)] : []),
-      ...(metadata.length > 0 ? [`-# File metadata: ${metadata.map((m) => safe(m, 220)).join("; ")}`] : []),
+      ...(metadata.length > 0
+        ? [`-# File metadata: ${metadata.map((m) => safe(m, 220)).join("; ")}`]
+        : []),
     ].join("\n");
   });
 
@@ -340,16 +398,23 @@ function imagesSection(report: InvestigationReport, jump: (messageId: string) =>
 function matchBlock(match: ProvenanceMatch, index: number): string {
   const head = [
     `\`${matchLabel(index)}\` [${linkText(match.platform ?? SERVICE_NAMES[match.service], 30)}](${linkTarget(match.sourceUrl)})`,
-    [match.quality, match.similarity === null ? null : `${Math.round(match.similarity)}%`].filter(Boolean).join(", "),
+    [match.quality, match.similarity === null ? null : `${Math.round(match.similarity)}%`]
+      .filter(Boolean)
+      .join(", "),
     match.artists.length > 0 ? `artist: ${safe(match.artists.slice(0, 3).join(", "), 60)}` : null,
-    match.uploader && !match.artists.includes(match.uploader) ? `uploader: ${safe(match.uploader, 40)}` : null,
+    match.uploader && !match.artists.includes(match.uploader)
+      ? `uploader: ${safe(match.uploader, 40)}`
+      : null,
     match.postedAt ? `posted ${match.postedAt.slice(0, 10)}` : "no post date",
     `via ${SERVICE_NAMES[match.service]}`,
   ];
   const ownership =
-    match.ownership === "other" ? `**${describeOwnership(match)}**` : safe(describeOwnership(match), 160);
+    match.ownership === "other"
+      ? `**${describeOwnership(match)}**`
+      : safe(describeOwnership(match), 160);
   const lines = [head.filter(Boolean).join(" · "), `Name check: ${ownership}`];
-  if (match.predatesAccount) lines.push("**Posted before the applicant's Discord account existed**");
+  if (match.predatesAccount)
+    lines.push("**Posted before the applicant's Discord account existed**");
   lines.push(...match.baseHints.map((hint) => `Note: ${safe(hint, 160)}`));
   return lines.join("\n");
 }
@@ -367,7 +432,9 @@ function provenanceSection(report: InvestigationReport): Section {
   });
   const blocks = [`**Services**\n${services.length > 0 ? services.join("\n") : "No lookup ran."}`];
 
-  const analyzed = evidence.images.filter((image) => report.images.some((i) => i.key === image.key));
+  const analyzed = evidence.images.filter((image) =>
+    report.images.some((i) => i.key === image.key)
+  );
   const scattered = scatteredImages(provenance.matches);
   for (const image of analyzed) {
     const matches = provenance.matches
@@ -392,7 +459,10 @@ function provenanceSection(report: InvestigationReport): Section {
   const unmatched = analyzed.filter((image) => !matched.has(image.key)).map((image) => image.key);
   if (analyzed.length === 0) blocks.push("No images were available to search.");
   else if (unmatched.length > 0) blocks.push(`**No match found:** ${unmatched.join(", ")}`);
-  if (provenance.omitted > 0) blocks.push(`${plural(provenance.omitted, "lower-ranked match", "lower-ranked matches")} left out.`);
+  if (provenance.omitted > 0)
+    blocks.push(
+      `${plural(provenance.omitted, "lower-ranked match", "lower-ranked matches")} left out.`
+    );
 
   blocks.push(
     "-# No match is not proof of originality, and a match is not proof of theft. Mirrored copies are searched where a service allows it. Crops and recolors are found only when a service's own matching tolerates them. A match under the applicant's handle shows where the art is posted, not who drew it."
@@ -413,7 +483,9 @@ function findingsSection(assessment: Assessment, known: Set<string>): Section {
       `**Red flags**\n${list(assessment.red_flags.map((f) => `- ${prose(f.flag)}: ${prose(f.reasoning)}${cite(f.evidence)}`))}`,
       `**Green flags**\n${list(assessment.green_flags.map((f) => `- ${prose(f.flag)}: ${prose(f.reasoning)}${cite(f.evidence)}`))}`,
       `**Statements check**\n${list(
-        assessment.statements_check.map((s) => `- "${prose(s.claim)}": ${s.assessment}. ${prose(s.reasoning)}${cite(s.evidence)}`)
+        assessment.statements_check.map(
+          (s) => `- "${prose(s.claim)}": ${s.assessment}. ${prose(s.reasoning)}${cite(s.evidence)}`
+        )
       )}`,
       `**What to ask next**\n${list(assessment.questions.map((q, i) => `${i + 1}. ${prose(q)}`))}`,
       `**Cannot be determined**\n${list(assessment.cannot_determine.map((c) => `- ${prose(c)}`))}`,
@@ -421,7 +493,11 @@ function findingsSection(assessment: Assessment, known: Set<string>): Section {
   };
 }
 
-function notesSection(report: InvestigationReport, citedMessages: string[], jump: (messageId: string) => string): Section {
+function notesSection(
+  report: InvestigationReport,
+  citedMessages: string[],
+  jump: (messageId: string) => string
+): Section {
   const blocks: string[] = [];
 
   if (citedMessages.length > 0) {
@@ -432,7 +508,9 @@ function notesSection(report: InvestigationReport, citedMessages: string[], jump
     blocks.push(`**Cited messages**\n${links}`);
   }
 
-  blocks.push(`**Where the workflow is unclear**\n${WORKFLOW_GAPS.map((gap) => `- ${gap}`).join("\n")}`);
+  blocks.push(
+    `**Where the workflow is unclear**\n${WORKFLOW_GAPS.map((gap) => `- ${gap}`).join("\n")}`
+  );
 
   const drift = findRequirementDrift(report.evidence.greetingText);
   if (drift.length > 0) {
@@ -447,13 +525,17 @@ function notesSection(report: InvestigationReport, citedMessages: string[], jump
     ...report.applicant.gaps,
     ...report.imageFailures.map((f) => `${f.key} "${f.name}" could not be loaded: ${f.reason}.`),
   ];
-  if (gaps.length > 0) blocks.push(`**Checks that could not run**\n${gaps.map((gap) => `- ${safe(gap, 300)}`).join("\n")}`);
+  if (gaps.length > 0)
+    blocks.push(
+      `**Checks that could not run**\n${gaps.map((gap) => `- ${safe(gap, 300)}`).join("\n")}`
+    );
 
   return { title: "Notes", blocks };
 }
 
 export function renderReport(report: InvestigationReport): ReportPage[] {
-  const jump = (messageId: string) => `https://discord.com/channels/${report.guildId}/${report.channelId}/${messageId}`;
+  const jump = (messageId: string) =>
+    `https://discord.com/channels/${report.guildId}/${report.channelId}/${messageId}`;
   const known = new Set<string>([
     ...report.evidence.images.map((image) => image.key),
     ...Object.keys(report.evidence.messageIds),
@@ -476,7 +558,8 @@ export function renderReport(report: InvestigationReport): ReportPage[] {
       .sort((x, y) => Number(x.slice(1)) - Number(y.slice(1)));
   }
   sections.push(imagesSection(report, jump), provenanceSection(report));
-  if (report.analysis.kind === "ok") sections.push(findingsSection(report.analysis.assessment, known));
+  if (report.analysis.kind === "ok")
+    sections.push(findingsSection(report.analysis.assessment, known));
   sections.push(notesSection(report, citedMessages, jump));
 
   const embeds = sections
@@ -493,8 +576,12 @@ export function renderReport(report: InvestigationReport): ReportPage[] {
   if (last) {
     const notes = [
       formatFooter(report.cost),
-      report.cost.worstCase ? "token counts never came back, so this run is counted at its worst case" : null,
-      report.cost.ledgerSaved ? null : "this run could not be saved to the usage ledger, so later totals will miss it",
+      report.cost.worstCase
+        ? "token counts never came back, so this run is counted at its worst case"
+        : null,
+      report.cost.ledgerSaved
+        ? null
+        : "this run could not be saved to the usage ledger, so later totals will miss it",
     ];
     last.footer = { text: notes.filter(Boolean).join(" · ") };
   }

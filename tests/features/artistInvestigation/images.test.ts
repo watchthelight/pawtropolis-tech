@@ -49,7 +49,9 @@ describe("fetchImageBytes", () => {
     const fetchSpy = vi.fn();
     vi.stubGlobal("fetch", fetchSpy);
 
-    await expect(fetchImageBytes("https://example.com/art.png")).rejects.toThrow("not hosted on Discord");
+    await expect(fetchImageBytes("https://example.com/art.png")).rejects.toThrow(
+      "not hosted on Discord"
+    );
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
@@ -68,7 +70,10 @@ describe("fetchImageBytes", () => {
   });
 
   it("reports an expired or missing file by its HTTP status", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => new Response("gone", { status: 404 })));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response("gone", { status: 404 }))
+    );
     await expect(fetchImageBytes(CDN_URL)).rejects.toThrow("download failed (HTTP 404)");
   });
 
@@ -102,7 +107,10 @@ describe("fetchImageBytes", () => {
   });
 
   it("rejects an empty download", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => new Response(new Uint8Array(0), { status: 200 })));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(new Uint8Array(0), { status: 200 }))
+    );
     await expect(fetchImageBytes(CDN_URL)).rejects.toThrow("download was empty");
   });
 });
@@ -124,12 +132,20 @@ function pngWith(chunks: Array<{ type: string; data: Buffer }>): Buffer {
 
 const textChunk = (keyword: string, text: string) => ({
   type: "tEXt",
-  data: Buffer.concat([Buffer.from(keyword, "latin1"), Buffer.from([0]), Buffer.from(text, "latin1")]),
+  data: Buffer.concat([
+    Buffer.from(keyword, "latin1"),
+    Buffer.from([0]),
+    Buffer.from(text, "latin1"),
+  ]),
 });
 
 describe("scanMetadata", () => {
   it("reports a Stable Diffusion parameters chunk with the start of its text", () => {
-    const notes = scanMetadata(pngWith([textChunk("parameters", "masterpiece, fox, detailed fur\nSteps: 28, Sampler: Euler a")]));
+    const notes = scanMetadata(
+      pngWith([
+        textChunk("parameters", "masterpiece, fox, detailed fur\nSteps: 28, Sampler: Euler a"),
+      ])
+    );
     expect(notes).toEqual([
       'PNG text chunk "parameters" (written by Stable Diffusion web front ends): "masterpiece, fox, detailed fur Steps: 28, Sampler: Euler a"',
     ]);
@@ -142,7 +158,9 @@ describe("scanMetadata", () => {
       Buffer.from('{"3":{"class_type":"KSampler"}}', "utf8"),
     ]);
     const notes = scanMetadata(pngWith([{ type: "iTXt", data }]));
-    expect(notes).toEqual(['PNG text chunk "prompt" (written by ComfyUI): "{"3":{"class_type":"KSampler"}}"']);
+    expect(notes).toEqual([
+      'PNG text chunk "prompt" (written by ComfyUI): "{"3":{"class_type":"KSampler"}}"',
+    ]);
   });
 
   it("reports the software tag and names known art programs", () => {
@@ -154,10 +172,16 @@ describe("scanMetadata", () => {
   });
 
   it("finds generator names anywhere in a file that is not a PNG", () => {
-    const jpegLike = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe1]), Buffer.from("...Midjourney...trainedAlgorithmicMedia..."), Buffer.alloc(32)]);
+    const jpegLike = Buffer.concat([
+      Buffer.from([0xff, 0xd8, 0xff, 0xe1]),
+      Buffer.from("...Midjourney...trainedAlgorithmicMedia..."),
+      Buffer.alloc(32),
+    ]);
     const notes = scanMetadata(jpegLike);
     expect(notes).toContain("File metadata contains the name Midjourney");
-    expect(notes).toContain("File metadata contains a Content Credentials manifest that declares AI-generated media");
+    expect(notes).toContain(
+      "File metadata contains a Content Credentials manifest that declares AI-generated media"
+    );
   });
 
   it("returns nothing for a file with no metadata of interest", () => {
@@ -173,7 +197,9 @@ describe("scanMetadata", () => {
 
 async function twoTone(width: number, height: number): Promise<Buffer> {
   // Left half red, right half blue, so a mirrored copy can be told apart.
-  const blueHalf = await sharp({ create: { width: Math.floor(width / 2), height, channels: 3, background: "#0000ff" } })
+  const blueHalf = await sharp({
+    create: { width: Math.floor(width / 2), height, channels: 3, background: "#0000ff" },
+  })
     .png()
     .toBuffer();
   return sharp({ create: { width, height, channels: 3, background: "#ff0000" } })
@@ -205,9 +231,17 @@ describe("prepareImage", () => {
       metadataNotes: [],
     });
     const lookup = await sharp(prepared.lookupBytes).metadata();
-    expect([lookup.format, lookup.width, lookup.height]).toEqual(["jpeg", LIMITS.lookupLongEdge, LIMITS.lookupLongEdge / 2]);
+    expect([lookup.format, lookup.width, lookup.height]).toEqual([
+      "jpeg",
+      LIMITS.lookupLongEdge,
+      LIMITS.lookupLongEdge / 2,
+    ]);
     const model = await sharp(prepared.modelBytes).metadata();
-    expect([model.format, model.width, model.height]).toEqual(["jpeg", prepared.modelWidth, prepared.modelHeight]);
+    expect([model.format, model.width, model.height]).toEqual([
+      "jpeg",
+      prepared.modelWidth,
+      prepared.modelHeight,
+    ]);
   });
 
   it("does not enlarge a small image", async () => {
@@ -230,7 +264,9 @@ describe("prepareImage", () => {
   });
 
   it("puts transparent art on a white background", async () => {
-    const transparent = await sharp({ create: { width: 60, height: 60, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+    const transparent = await sharp({
+      create: { width: 60, height: 60, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+    })
       .png()
       .toBuffer();
     const prepared = await prepareImage("img1", transparent);
@@ -242,19 +278,28 @@ describe("prepareImage", () => {
     const first = await twoTone(200, 100);
     const second = await twoTone(100, 200);
     expect((await prepareImage("a", first)).sha256).toBe((await prepareImage("b", first)).sha256);
-    expect((await prepareImage("a", first)).sha256).not.toBe((await prepareImage("b", second)).sha256);
+    expect((await prepareImage("a", first)).sha256).not.toBe(
+      (await prepareImage("b", second)).sha256
+    );
   });
 
   it("carries metadata notes found in the file", async () => {
-    const withSoftware = await sharp({ create: { width: 40, height: 40, channels: 3, background: "#808080" } })
+    const withSoftware = await sharp({
+      create: { width: 40, height: 40, channels: 3, background: "#808080" },
+    })
       .png()
       .toBuffer();
     // Append a generator name after the image data: still a readable PNG, and the byte scan sees it.
-    const prepared = await prepareImage("img1", Buffer.concat([withSoftware, Buffer.from("NovelAI")]));
+    const prepared = await prepareImage(
+      "img1",
+      Buffer.concat([withSoftware, Buffer.from("NovelAI")])
+    );
     expect(prepared.metadataNotes).toContain("File metadata contains the name NovelAI");
   });
 
   it("rejects bytes that are not an image", async () => {
-    await expect(prepareImage("img1", Buffer.from("this is a text file, not a picture"))).rejects.toThrow();
+    await expect(
+      prepareImage("img1", Buffer.from("this is a text file, not a picture"))
+    ).rejects.toThrow();
   });
 });

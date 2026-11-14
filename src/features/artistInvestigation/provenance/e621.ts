@@ -33,12 +33,20 @@ const MAX_POSTS = 6;
 
 /** Artist-category tags that are bookkeeping, not people. */
 const NOT_ARTISTS = new Set([
-  "unknown_artist", "unknown_artist_signature", "anonymous_artist", "conditional_dnp", "avoid_posting",
-  "third-party_edit", "sound_warning", "epilepsy_warning", "jumpscare_warning",
+  "unknown_artist",
+  "unknown_artist_signature",
+  "anonymous_artist",
+  "conditional_dnp",
+  "avoid_posting",
+  "third-party_edit",
+  "sound_warning",
+  "epilepsy_warning",
+  "jumpscare_warning",
 ]);
 
 /** Tags that matter for the base, edit and AI questions. Everything else is left out. */
-const RELEVANT_TAG = /base|ych|template|adopt|lineart|line_art|edit|trace|recolor|ai_generated|ai_assisted|commission|collaboration|sketch|wip|unfinished/;
+const RELEVANT_TAG =
+  /base|ych|template|adopt|lineart|line_art|edit|trace|recolor|ai_generated|ai_assisted|commission|collaboration|sketch|wip|unfinished/;
 
 function headers({ settings }: LookupContext): Record<string, string> {
   const login = settings.e621Login ?? "";
@@ -74,7 +82,8 @@ function toHit(raw: unknown): Hit | null {
 function toMatch(hit: Hit, rawPost: unknown): RawMatch {
   const post = asRecord(rawPost);
   const tags = asRecord(post.tags);
-  const tagList = (category: string) => asArray(tags[category]).filter((t): t is string => typeof t === "string");
+  const tagList = (category: string) =>
+    asArray(tags[category]).filter((t): t is string => typeof t === "string");
   const sources = asArray(post.sources).filter(isHttpUrl);
 
   return {
@@ -87,7 +96,9 @@ function toMatch(hit: Hit, rawPost: unknown): RawMatch {
     similarity: Math.round(hit.score * 10) / 10,
     quality: qualityFromScore(hit.score),
     title: null,
-    tags: [...tagList("general"), ...tagList("meta"), ...tagList("lore")].filter((t) => RELEVANT_TAG.test(t)).slice(0, 12),
+    tags: [...tagList("general"), ...tagList("meta"), ...tagList("lore")]
+      .filter((t) => RELEVANT_TAG.test(t))
+      .slice(0, 12),
     relatedUrls: (sources.length > 0 ? sources : hit.sources).slice(0, 6),
   };
 }
@@ -129,6 +140,11 @@ export const e621: LookupService = {
       // Keep the hits. They still carry a link, a score, a date and source links.
     }
 
-    return hits.map((hit) => toMatch(hit, posts.find((p) => asString(asRecord(p).id) === hit.id)));
+    return hits.map((hit) =>
+      toMatch(
+        hit,
+        posts.find((p) => asString(asRecord(p).id) === hit.id)
+      )
+    );
   },
 };

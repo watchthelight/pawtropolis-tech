@@ -46,7 +46,10 @@ describe("downloadImage", () => {
   });
 
   it("throws on a non-ok response", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => new Response("no", { status: 404, statusText: "Not Found" })));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response("no", { status: 404, statusText: "Not Found" }))
+    );
     await expect(downloadImage("https://cdn.example.test/a.png")).rejects.toThrow(
       "Failed to download image: Not Found"
     );

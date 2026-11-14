@@ -34,7 +34,12 @@ import {
 const ENDPOINT = "https://saucenao.com/search.php";
 const MIN_SIMILARITY = 65;
 
-const stripHtml = (text: string) => text.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 160);
+const stripHtml = (text: string) =>
+  text
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 160);
 
 function platformOf(url: string): string | null {
   const known = handleFromUrl(url)?.platform;
@@ -67,7 +72,15 @@ function toMatch(raw: unknown): RawMatch | null {
   if (!sourceUrl) return null;
 
   const creators = Array.isArray(data.creator) ? data.creator : [data.creator];
-  const names = [data.member_name, data.author_name, data.twitter_user_handle, data.user_name, data.creator_name, data.artist, ...creators]
+  const names = [
+    data.member_name,
+    data.author_name,
+    data.twitter_user_handle,
+    data.user_name,
+    data.creator_name,
+    data.artist,
+    ...creators,
+  ]
     .map(asString)
     .filter((name): name is string => name !== null);
   const artists = [...new Set(names)];
@@ -114,7 +127,8 @@ export const saucenao: LookupService = {
     const status = Number(header.status ?? 0);
     // Below zero is a problem with the request or the account. Above zero means
     // some indexes were offline and the results that did come back are still good.
-    if (status < 0) throw new LookupError(stripHtml(asString(header.message) ?? "request was refused"), true);
+    if (status < 0)
+      throw new LookupError(stripHtml(asString(header.message) ?? "request was refused"), true);
 
     return asArray(body.results)
       .map(toMatch)

@@ -22,7 +22,9 @@ vi.mock("../../../src/lib/logger.js", () => ({
 vi.mock("../../../src/web/notifyDashboard.js", () => ({ notifyDashboard: vi.fn() }));
 vi.mock("../../../src/features/tickets/config.js", () => ({ getTicketsCategoryId: () => "cat" }));
 vi.mock("../../../src/features/tickets/counters.js", () => ({ allocateNextNumber: () => 7 }));
-vi.mock("../../../src/features/tickets/permissions.js", () => ({ buildTicketOverwrites: () => [] }));
+vi.mock("../../../src/features/tickets/permissions.js", () => ({
+  buildTicketOverwrites: () => [],
+}));
 vi.mock("../../../src/features/tickets/registry.js", () => ({
   getTicketType: () => ({
     key: "support",
@@ -71,7 +73,11 @@ describe("TicketService.create", () => {
   it("returns the ticket with greetingFailed when the greeting send throws", async () => {
     const guild = makeGuild(vi.fn().mockRejectedValue(new Error("missing access")));
 
-    const result = await TicketService.create({ typeKey: "support", guild: guild as never, openerUserId: "u1" });
+    const result = await TicketService.create({
+      typeKey: "support",
+      guild: guild as never,
+      openerUserId: "u1",
+    });
 
     expect(result.greetingFailed).toBe(true);
     expect(result.channel.id).toBe("chan1");
@@ -81,7 +87,11 @@ describe("TicketService.create", () => {
   it("does not flag a failure when the greeting posts", async () => {
     const guild = makeGuild(vi.fn().mockResolvedValue({ id: "msg1" }));
 
-    const result = await TicketService.create({ typeKey: "support", guild: guild as never, openerUserId: "u1" });
+    const result = await TicketService.create({
+      typeKey: "support",
+      guild: guild as never,
+      openerUserId: "u1",
+    });
 
     expect(result.greetingFailed).toBeUndefined();
     expect(result.ticket.greetingMessageId).toBe("msg1");

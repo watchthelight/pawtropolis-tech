@@ -92,7 +92,11 @@ export async function fetchTicketHistory(
   let before: string | undefined;
 
   for (let page = 0; page < maxPages; page++) {
-    const batch = [...(await channel.messages.fetch(before ? { limit: PAGE_SIZE, before } : { limit: PAGE_SIZE })).values()];
+    const batch = [
+      ...(
+        await channel.messages.fetch(before ? { limit: PAGE_SIZE, before } : { limit: PAGE_SIZE })
+      ).values(),
+    ];
     all.push(...batch.map(toTicketMessage));
     if (batch.length < PAGE_SIZE) return { messages: all.sort(olderFirst), complete: true };
     before = [...batch].sort(olderFirst)[0]?.id;
@@ -100,17 +104,45 @@ export async function fetchTicketHistory(
   return { messages: all.sort(olderFirst), complete: false };
 }
 
-const IMAGE_EXTENSIONS = new Set(["png", "jpg", "jpeg", "jfif", "webp", "gif", "avif", "tif", "tiff"]);
+const IMAGE_EXTENSIONS = new Set([
+  "png",
+  "jpg",
+  "jpeg",
+  "jfif",
+  "webp",
+  "gif",
+  "avif",
+  "tif",
+  "tiff",
+]);
 const VIDEO_EXTENSIONS = new Set(["mp4", "mov", "webm", "mkv", "avi", "m4v", "wmv", "flv"]);
 const SOURCE_EXTENSIONS = new Set([
-  "psd", "psb", "clip", "csp", "sai", "sai2", "kra", "ora", "procreate", "xcf", "mdp", "afphoto", "afdesign", "pdn", "tvpp", "rif", "ipv",
+  "psd",
+  "psb",
+  "clip",
+  "csp",
+  "sai",
+  "sai2",
+  "kra",
+  "ora",
+  "procreate",
+  "xcf",
+  "mdp",
+  "afphoto",
+  "afdesign",
+  "pdn",
+  "tvpp",
+  "rif",
+  "ipv",
 ]);
 
-const extensionOf = (name: string): string => name.split("?")[0]?.split(".").pop()?.toLowerCase() ?? "";
+const extensionOf = (name: string): string =>
+  name.split("?")[0]?.split(".").pop()?.toLowerCase() ?? "";
 
 function isImage(att: TicketAttachment): boolean {
   if (att.contentType?.startsWith("image/svg")) return false;
-  if (att.contentType?.startsWith("image/")) return IMAGE_EXTENSIONS.has(extensionOf(att.name)) || !att.name.includes(".");
+  if (att.contentType?.startsWith("image/"))
+    return IMAGE_EXTENSIONS.has(extensionOf(att.name)) || !att.name.includes(".");
   return !att.contentType && IMAGE_EXTENSIONS.has(extensionOf(att.name));
 }
 
@@ -121,13 +153,15 @@ export function classifyFile(att: Pick<TicketAttachment, "name" | "contentType">
   return "other";
 }
 
-const DISCORD_MEDIA_HOST = /^https?:\/\/(?:cdn\.discordapp\.com|media\.discordapp\.net|images-ext-\d+\.discordapp\.net)\//i;
+const DISCORD_MEDIA_HOST =
+  /^https?:\/\/(?:cdn\.discordapp\.com|media\.discordapp\.net|images-ext-\d+\.discordapp\.net)\//i;
 
 const utcStamp = (ms: number) => new Date(ms).toISOString().replace("T", " ").slice(0, 16) + " UTC";
 
 const megabytes = (bytes: number) => `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 
-const clip = (text: string, max: number) => (text.length > max ? `${text.slice(0, max)} [cut]` : text);
+const clip = (text: string, max: number) =>
+  text.length > max ? `${text.slice(0, max)} [cut]` : text;
 
 /** Keep the head and the tail when the transcript is over budget: the requirements and first submissions sit at the top, the latest answers at the bottom. */
 function fitTranscript(lines: string[], budget: number): { text: string; truncated: boolean } {
@@ -157,7 +191,11 @@ function fitTranscript(lines: string[], budget: number): { text: string; truncat
   }
   const omitted = hi - lo + 1;
   return {
-    text: [...head, `[... ${omitted} message${omitted === 1 ? "" : "s"} left out to fit the size limit ...]`, ...tail].join("\n"),
+    text: [
+      ...head,
+      `[... ${omitted} message${omitted === 1 ? "" : "s"} left out to fit the size limit ...]`,
+      ...tail,
+    ].join("\n"),
     truncated: true,
   };
 }
@@ -168,7 +206,11 @@ export interface EvidenceOptions {
   identityNames: string[];
 }
 
-export function buildEvidence(messages: TicketMessage[], applicantId: string, options: EvidenceOptions): TicketEvidence {
+export function buildEvidence(
+  messages: TicketMessage[],
+  applicantId: string,
+  options: EvidenceOptions
+): TicketEvidence {
   const images: CollectedImage[] = [];
   const files: CollectedFile[] = [];
   const links: string[] = [];
@@ -199,14 +241,35 @@ export function buildEvidence(messages: TicketMessage[], applicantId: string, op
           seenImageUrls.add(dedupeKey);
           const key = `img${images.length + 1}`;
           images.push({
-            key, messageId: msg.id, messageLabel: label, postedAtMs: msg.createdAtMs, name: att.name, url: att.url,
-            contentType: att.contentType, size: att.size, width: att.width, height: att.height, source: "attachment",
+            key,
+            messageId: msg.id,
+            messageLabel: label,
+            postedAtMs: msg.createdAtMs,
+            name: att.name,
+            url: att.url,
+            contentType: att.contentType,
+            size: att.size,
+            width: att.width,
+            height: att.height,
+            source: "attachment",
           });
-          notes.push(`${key} (image "${att.name}"${att.width && att.height ? `, ${att.width}x${att.height}` : ""})`);
+          notes.push(
+            `${key} (image "${att.name}"${att.width && att.height ? `, ${att.width}x${att.height}` : ""})`
+          );
         } else {
           const kind = classifyFile(att);
-          files.push({ messageId: msg.id, messageLabel: label, postedAtMs: msg.createdAtMs, name: att.name, contentType: att.contentType, size: att.size, kind });
-          notes.push(`${kind === "source_file" ? "source file" : kind === "video" ? "video" : "file"} "${att.name}" (${megabytes(att.size)}, contents not inspected)`);
+          files.push({
+            messageId: msg.id,
+            messageLabel: label,
+            postedAtMs: msg.createdAtMs,
+            name: att.name,
+            contentType: att.contentType,
+            size: att.size,
+            kind,
+          });
+          notes.push(
+            `${kind === "source_file" ? "source file" : kind === "video" ? "video" : "file"} "${att.name}" (${megabytes(att.size)}, contents not inspected)`
+          );
         }
       }
       for (const embed of msg.embeds) {
@@ -215,10 +278,21 @@ export function buildEvidence(messages: TicketMessage[], applicantId: string, op
         if (seenImageUrls.has(dedupeKey)) continue;
         seenImageUrls.add(dedupeKey);
         const key = `img${images.length + 1}`;
-        const name = decodeURIComponent((embed.url ?? embed.imageUrl).split("?")[0]?.split("/").pop() ?? "linked image");
+        const name = decodeURIComponent(
+          (embed.url ?? embed.imageUrl).split("?")[0]?.split("/").pop() ?? "linked image"
+        );
         images.push({
-          key, messageId: msg.id, messageLabel: label, postedAtMs: msg.createdAtMs, name, url: embed.imageUrl,
-          contentType: null, size: 0, width: null, height: null, source: "embed",
+          key,
+          messageId: msg.id,
+          messageLabel: label,
+          postedAtMs: msg.createdAtMs,
+          name,
+          url: embed.imageUrl,
+          contentType: null,
+          size: 0,
+          width: null,
+          height: null,
+          source: "embed",
         });
         notes.push(`${key} (linked image "${name}")`);
       }
@@ -227,13 +301,20 @@ export function buildEvidence(messages: TicketMessage[], applicantId: string, op
       }
       handles.push(...extractHandles(msg.content));
     } else if (msg.attachments.length > 0) {
-      notes.push(`${msg.attachments.length} attachment${msg.attachments.length === 1 ? "" : "s"} (not part of the application)`);
+      notes.push(
+        `${msg.attachments.length} attachment${msg.attachments.length === 1 ? "" : "s"} (not part of the application)`
+      );
     }
 
     const embedText = msg.authorIsBot
-      ? msg.embeds.map((e) => [e.title, e.description].filter(Boolean).join(": ")).filter(Boolean).join(" / ")
+      ? msg.embeds
+          .map((e) => [e.title, e.description].filter(Boolean).join(": "))
+          .filter(Boolean)
+          .join(" / ")
       : "";
-    const body = clip([msg.content.trim(), embedText].filter(Boolean).join(" "), LIMITS.messageChars) || "(no text)";
+    const body =
+      clip([msg.content.trim(), embedText].filter(Boolean).join(" "), LIMITS.messageChars) ||
+      "(no text)";
     lines.push(
       `[${label}] ${utcStamp(msg.createdAtMs)} | ${speaker} (${msg.authorName}): ${body}` +
         (notes.length > 0 ? `\n      attached: ${notes.join("; ")}` : "")
@@ -241,7 +322,8 @@ export function buildEvidence(messages: TicketMessage[], applicantId: string, op
   });
 
   for (const name of options.identityNames) {
-    if (name.trim()) handles.push({ platform: "discord", handle: name.trim(), origin: "discord", url: null });
+    if (name.trim())
+      handles.push({ platform: "discord", handle: name.trim(), origin: "discord", url: null });
   }
 
   const transcript = fitTranscript(lines, LIMITS.transcriptChars);

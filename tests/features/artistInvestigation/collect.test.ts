@@ -98,21 +98,53 @@ describe("fetchTicketHistory", () => {
 
 describe("toTicketMessage", () => {
   it("prefers the server display name, then the global name, then the username", () => {
-    expect(toTicketMessage(raw(1, { member: { displayName: "Foxy the Artist" } })).authorName).toBe("Foxy the Artist");
+    expect(toTicketMessage(raw(1, { member: { displayName: "Foxy the Artist" } })).authorName).toBe(
+      "Foxy the Artist"
+    );
     expect(toTicketMessage(raw(1)).authorName).toBe("Foxy");
-    expect(toTicketMessage(raw(1, { author: { id: APPLICANT_ID, username: "foxyartz", bot: false } })).authorName).toBe("foxyartz");
+    expect(
+      toTicketMessage(raw(1, { author: { id: APPLICANT_ID, username: "foxyartz", bot: false } }))
+        .authorName
+    ).toBe("foxyartz");
   });
 
   it("copies attachments and fills missing fields with null", () => {
     const attachments = new Map([
-      ["1", { id: "1", name: "a.png", url: "https://cdn.discordapp.com/a.png", contentType: "image/png", size: 10, width: 5, height: 6 }],
+      [
+        "1",
+        {
+          id: "1",
+          name: "a.png",
+          url: "https://cdn.discordapp.com/a.png",
+          contentType: "image/png",
+          size: 10,
+          width: 5,
+          height: 6,
+        },
+      ],
       ["2", { id: "2", name: "b.psd", url: "https://cdn.discordapp.com/b.psd", size: 20 } as never],
     ]);
     const result = toTicketMessage(raw(1, { attachments }));
 
     expect(result.attachments).toEqual([
-      { id: "1", name: "a.png", url: "https://cdn.discordapp.com/a.png", contentType: "image/png", size: 10, width: 5, height: 6 },
-      { id: "2", name: "b.psd", url: "https://cdn.discordapp.com/b.psd", contentType: null, size: 20, width: null, height: null },
+      {
+        id: "1",
+        name: "a.png",
+        url: "https://cdn.discordapp.com/a.png",
+        contentType: "image/png",
+        size: 10,
+        width: 5,
+        height: 6,
+      },
+      {
+        id: "2",
+        name: "b.psd",
+        url: "https://cdn.discordapp.com/b.psd",
+        contentType: null,
+        size: 20,
+        width: null,
+        height: null,
+      },
     ]);
   });
 
@@ -126,7 +158,10 @@ describe("toTicketMessage", () => {
             description: null,
             url: "https://example.com/art.png",
             image: null,
-            thumbnail: { url: "https://example.com/art.png", proxyURL: "https://images-ext-1.discordapp.net/external/x/art.png" },
+            thumbnail: {
+              url: "https://example.com/art.png",
+              proxyURL: "https://images-ext-1.discordapp.net/external/x/art.png",
+            },
           },
         ],
       })
@@ -180,7 +215,12 @@ describe("buildEvidence", () => {
 
   it("labels every message in order and counts the applicant's own", () => {
     const messages = [
-      message({ authorId: BOT_ID, authorIsBot: true, authorName: "Ticket Tool", content: "Hello!" }),
+      message({
+        authorId: BOT_ID,
+        authorIsBot: true,
+        authorName: "Ticket Tool",
+        content: "Hello!",
+      }),
       message({ content: "hi, here is my art" }),
       message({ authorId: STAFF_ID, authorName: "Mod", content: "thanks, taking a look" }),
       message({ content: "ok!" }),
@@ -189,12 +229,19 @@ describe("buildEvidence", () => {
 
     expect(evidence.messageCount).toBe(4);
     expect(evidence.applicantMessageCount).toBe(2);
-    expect(evidence.messageIds).toEqual({ m1: messages[0]?.id, m2: messages[1]?.id, m3: messages[2]?.id, m4: messages[3]?.id });
+    expect(evidence.messageIds).toEqual({
+      m1: messages[0]?.id,
+      m2: messages[1]?.id,
+      m3: messages[2]?.id,
+      m4: messages[3]?.id,
+    });
     expect(evidence.firstMessageAtMs).toBe(messages[0]?.createdAtMs);
     expect(evidence.lastMessageAtMs).toBe(messages[3]?.createdAtMs);
 
     const lines = evidence.transcript.split("\n");
-    expect(lines[0]).toMatch(/^\[m1\] \d{4}-\d{2}-\d{2} \d{2}:\d{2} UTC \| BOT \(Ticket Tool\): Hello!$/);
+    expect(lines[0]).toMatch(
+      /^\[m1\] \d{4}-\d{2}-\d{2} \d{2}:\d{2} UTC \| BOT \(Ticket Tool\): Hello!$/
+    );
     expect(lines[1]).toContain("| APPLICANT (foxyartz): hi, here is my art");
     expect(lines[2]).toContain("| MEMBER (Mod): thanks, taking a look");
     expect(evidence.transcriptTruncated).toBe(false);
@@ -205,12 +252,28 @@ describe("buildEvidence", () => {
       message({
         content: "sketch and lines",
         attachments: [
-          attachment({ id: "1", name: "sketch.png", url: "https://cdn.discordapp.com/attachments/1/1/sketch.png?ex=1" }),
-          attachment({ id: "2", name: "lines.jpg", contentType: "image/jpeg", url: "https://cdn.discordapp.com/attachments/1/2/lines.jpg?ex=1" }),
+          attachment({
+            id: "1",
+            name: "sketch.png",
+            url: "https://cdn.discordapp.com/attachments/1/1/sketch.png?ex=1",
+          }),
+          attachment({
+            id: "2",
+            name: "lines.jpg",
+            contentType: "image/jpeg",
+            url: "https://cdn.discordapp.com/attachments/1/2/lines.jpg?ex=1",
+          }),
         ],
       }),
       message({
-        attachments: [attachment({ id: "3", name: "final.webp", contentType: "image/webp", url: "https://cdn.discordapp.com/attachments/1/3/final.webp" })],
+        attachments: [
+          attachment({
+            id: "3",
+            name: "final.webp",
+            contentType: "image/webp",
+            url: "https://cdn.discordapp.com/attachments/1/3/final.webp",
+          }),
+        ],
       }),
     ];
     const evidence = buildEvidence(messages, APPLICANT_ID, options);
@@ -220,14 +283,31 @@ describe("buildEvidence", () => {
       ["img2", "lines.jpg", "m1", "attachment"],
       ["img3", "final.webp", "m2", "attachment"],
     ]);
-    expect(evidence.images[0]).toMatchObject({ messageId: messages[0]?.id, postedAtMs: messages[0]?.createdAtMs, width: 1200, height: 900 });
-    expect(evidence.transcript).toContain('attached: img1 (image "sketch.png", 1200x900); img2 (image "lines.jpg", 1200x900)');
+    expect(evidence.images[0]).toMatchObject({
+      messageId: messages[0]?.id,
+      postedAtMs: messages[0]?.createdAtMs,
+      width: 1200,
+      height: 900,
+    });
+    expect(evidence.transcript).toContain(
+      'attached: img1 (image "sketch.png", 1200x900); img2 (image "lines.jpg", 1200x900)'
+    );
   });
 
   it("never treats another member's or a bot's attachments as part of the application", () => {
     const messages = [
-      message({ authorId: STAFF_ID, authorName: "Mod", content: "example of what we need", attachments: [attachment({ name: "example.png" })] }),
-      message({ authorId: BOT_ID, authorIsBot: true, authorName: "Ticket Tool", attachments: [attachment({ name: "banner.png" })] }),
+      message({
+        authorId: STAFF_ID,
+        authorName: "Mod",
+        content: "example of what we need",
+        attachments: [attachment({ name: "example.png" })],
+      }),
+      message({
+        authorId: BOT_ID,
+        authorIsBot: true,
+        authorName: "Ticket Tool",
+        attachments: [attachment({ name: "banner.png" })],
+      }),
       message({ content: "understood" }),
     ];
     const evidence = buildEvidence(messages, APPLICANT_ID, options);
@@ -241,9 +321,19 @@ describe("buildEvidence", () => {
     const messages = [
       message({
         attachments: [
-          attachment({ id: "1", name: "timelapse.mp4", contentType: "video/mp4", size: 8 * 1024 * 1024 }),
+          attachment({
+            id: "1",
+            name: "timelapse.mp4",
+            contentType: "video/mp4",
+            size: 8 * 1024 * 1024,
+          }),
           attachment({ id: "2", name: "piece.psd", contentType: null, size: 3 * 1024 * 1024 }),
-          attachment({ id: "3", name: "tos.pdf", contentType: "application/pdf", size: 1024 * 1024 }),
+          attachment({
+            id: "3",
+            name: "tos.pdf",
+            contentType: "application/pdf",
+            size: 1024 * 1024,
+          }),
           attachment({ id: "4", name: "logo.svg", contentType: "image/svg+xml", size: 2048 }),
         ],
       }),
@@ -258,18 +348,30 @@ describe("buildEvidence", () => {
       ["logo.svg", "other", "m1"],
     ]);
     expect(evidence.transcript).toContain('video "timelapse.mp4" (8.0 MB, contents not inspected)');
-    expect(evidence.transcript).toContain('source file "piece.psd" (3.0 MB, contents not inspected)');
+    expect(evidence.transcript).toContain(
+      'source file "piece.psd" (3.0 MB, contents not inspected)'
+    );
   });
 
   it("recognizes an image by extension when Discord sent no content type", () => {
-    const messages = [message({ attachments: [attachment({ name: "scan.JPEG", contentType: null })] })];
+    const messages = [
+      message({ attachments: [attachment({ name: "scan.JPEG", contentType: null })] }),
+    ];
     expect(buildEvidence(messages, APPLICANT_ID, options).images).toHaveLength(1);
   });
 
   it("counts the same upload once when it appears again with a new signature", () => {
     const messages = [
-      message({ attachments: [attachment({ url: "https://cdn.discordapp.com/attachments/1/2/sketch.png?ex=aaa" })] }),
-      message({ attachments: [attachment({ url: "https://cdn.discordapp.com/attachments/1/2/sketch.png?ex=bbb" })] }),
+      message({
+        attachments: [
+          attachment({ url: "https://cdn.discordapp.com/attachments/1/2/sketch.png?ex=aaa" }),
+        ],
+      }),
+      message({
+        attachments: [
+          attachment({ url: "https://cdn.discordapp.com/attachments/1/2/sketch.png?ex=bbb" }),
+        ],
+      }),
     ];
     expect(buildEvidence(messages, APPLICANT_ID, options).images).toHaveLength(1);
   });
@@ -284,9 +386,16 @@ describe("buildEvidence", () => {
             title: null,
             description: null,
             url: "https://example.com/art/my%20piece.png",
-            imageUrl: "https://images-ext-1.discordapp.net/external/abc/https/example.com/art/my%20piece.png",
+            imageUrl:
+              "https://images-ext-1.discordapp.net/external/abc/https/example.com/art/my%20piece.png",
           },
-          { type: "rich", title: "Gallery", description: null, url: "https://example.com/gallery", imageUrl: "https://example.com/preview.png" },
+          {
+            type: "rich",
+            title: "Gallery",
+            description: null,
+            url: "https://example.com/gallery",
+            imageUrl: "https://example.com/preview.png",
+          },
         ],
       }),
     ];
@@ -306,7 +415,11 @@ describe("buildEvidence", () => {
     const messages = [
       message({
         attachments: Array.from({ length: 5 }, (_, i) =>
-          attachment({ id: String(i), name: `piece${i + 1}.png`, url: `https://cdn.discordapp.com/attachments/1/${i}/piece.png` })
+          attachment({
+            id: String(i),
+            name: `piece${i + 1}.png`,
+            url: `https://cdn.discordapp.com/attachments/1/${i}/piece.png`,
+          })
         ),
       }),
     ];
@@ -321,24 +434,44 @@ describe("buildEvidence", () => {
 
   it("collects the applicant's links and gallery handles, and leaves out other people's", () => {
     const messages = [
-      message({ authorId: STAFF_ID, authorName: "Mod", content: "see https://www.furaffinity.net/user/modaccount/ for an example" }),
+      message({
+        authorId: STAFF_ID,
+        authorName: "Mod",
+        content: "see https://www.furaffinity.net/user/modaccount/ for an example",
+      }),
       message({
         content:
           "My gallery is https://www.furaffinity.net/user/foxyartz/ and my ToS: https://foxyartz.carrd.co/#tos. Twitter: @Foxy_Artz " +
           "https://cdn.discordapp.com/attachments/1/2/old.png",
       }),
     ];
-    const evidence = buildEvidence(messages, APPLICANT_ID, { maxImages: 12, identityNames: ["foxyartz", "Foxy", " "] });
+    const evidence = buildEvidence(messages, APPLICANT_ID, {
+      maxImages: 12,
+      identityNames: ["foxyartz", "Foxy", " "],
+    });
 
-    expect(evidence.links).toEqual(["https://www.furaffinity.net/user/foxyartz/", "https://foxyartz.carrd.co/#tos"]);
+    expect(evidence.links).toEqual([
+      "https://www.furaffinity.net/user/foxyartz/",
+      "https://foxyartz.carrd.co/#tos",
+    ]);
     expect(evidence.handles).toContainEqual({
       platform: "furaffinity",
       handle: "foxyartz",
       origin: "link",
       url: "https://www.furaffinity.net/user/foxyartz/",
     });
-    expect(evidence.handles).toContainEqual({ platform: "twitter", handle: "Foxy_Artz", origin: "text", url: null });
-    expect(evidence.handles).toContainEqual({ platform: "discord", handle: "Foxy", origin: "discord", url: null });
+    expect(evidence.handles).toContainEqual({
+      platform: "twitter",
+      handle: "Foxy_Artz",
+      origin: "text",
+      url: null,
+    });
+    expect(evidence.handles).toContainEqual({
+      platform: "discord",
+      handle: "Foxy",
+      origin: "discord",
+      url: null,
+    });
     expect(evidence.handles.some((h) => h.handle === "modaccount")).toBe(false);
     expect(evidence.handles.some((h) => h.handle.trim() === "")).toBe(false);
   });
@@ -350,31 +483,54 @@ describe("buildEvidence", () => {
         authorIsBot: true,
         authorName: "Ticket Tool",
         content: `Hello <@${APPLICANT_ID}>!`,
-        embeds: [{ type: "rich", title: "2D Artist", description: "3 different WIP/Layers to previous work", url: null, imageUrl: null }],
+        embeds: [
+          {
+            type: "rich",
+            title: "2D Artist",
+            description: "3 different WIP/Layers to previous work",
+            url: null,
+            imageUrl: null,
+          },
+        ],
       }),
-      message({ authorId: BOT_ID, authorIsBot: true, authorName: "Ticket Tool", content: "A later bot message" }),
+      message({
+        authorId: BOT_ID,
+        authorIsBot: true,
+        authorName: "Ticket Tool",
+        content: "A later bot message",
+      }),
     ];
     const evidence = buildEvidence(messages, APPLICANT_ID, options);
 
-    expect(evidence.greetingText).toBe(`Hello <@${APPLICANT_ID}>!\n3 different WIP/Layers to previous work`);
+    expect(evidence.greetingText).toBe(
+      `Hello <@${APPLICANT_ID}>!\n3 different WIP/Layers to previous work`
+    );
     expect(evidence.transcript).toContain("2D Artist: 3 different WIP/Layers to previous work");
   });
 
   it("trims one very long message and marks the cut", () => {
-    const evidence = buildEvidence([message({ content: "a".repeat(LIMITS.messageChars + 500) })], APPLICANT_ID, options);
+    const evidence = buildEvidence(
+      [message({ content: "a".repeat(LIMITS.messageChars + 500) })],
+      APPLICANT_ID,
+      options
+    );
     expect(evidence.transcript).toContain(`${"a".repeat(LIMITS.messageChars)} [cut]`);
     expect(evidence.transcript).not.toContain("a".repeat(LIMITS.messageChars + 1));
   });
 
   it("keeps the start and the end of an over-long ticket and says what was left out", () => {
-    const messages = Array.from({ length: 60 }, (_, i) => message({ content: `${i + 1} `.padEnd(1500, "x") }));
+    const messages = Array.from({ length: 60 }, (_, i) =>
+      message({ content: `${i + 1} `.padEnd(1500, "x") })
+    );
     const evidence = buildEvidence(messages, APPLICANT_ID, options);
 
     expect(evidence.transcriptTruncated).toBe(true);
     expect(evidence.transcript.length).toBeLessThanOrEqual(LIMITS.transcriptChars + 100);
     expect(evidence.transcript).toContain("[m1] ");
     expect(evidence.transcript).toContain("[m60] ");
-    expect(evidence.transcript).toMatch(/\[\.\.\. \d+ messages left out to fit the size limit \.\.\.\]/);
+    expect(evidence.transcript).toMatch(
+      /\[\.\.\. \d+ messages left out to fit the size limit \.\.\.\]/
+    );
     // Labels still cover every message, so a citation of a left-out message can be linked.
     expect(Object.keys(evidence.messageIds)).toHaveLength(60);
   });
@@ -393,7 +549,11 @@ describe("buildEvidence", () => {
   });
 
   it("shows a message with no text as such", () => {
-    const evidence = buildEvidence([message({ attachments: [attachment()] })], APPLICANT_ID, options);
+    const evidence = buildEvidence(
+      [message({ attachments: [attachment()] })],
+      APPLICANT_ID,
+      options
+    );
     expect(evidence.transcript).toContain("APPLICANT (foxyartz): (no text)");
   });
 });

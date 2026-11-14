@@ -32,7 +32,13 @@ vi.mock("node:timers/promises", () => ({ setTimeout: vi.fn().mockResolvedValue(u
 
 import { enqueuePending } from "../../../src/features/tickets/attachments.js";
 
-const item = { id: "att1", ticketId: "t1", filename: "a.png", size: 10, url: "https://cdn.example/a.png" };
+const item = {
+  id: "att1",
+  ticketId: "t1",
+  filename: "a.png",
+  size: 10,
+  url: "https://cdn.example/a.png",
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -46,7 +52,9 @@ describe("ticket attachment mirror", () => {
   it("mirrors a successful download", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({ ok: true, arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer })
+      vi
+        .fn()
+        .mockResolvedValue({ ok: true, arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer })
     );
 
     enqueuePending(item);
@@ -59,7 +67,9 @@ describe("ticket attachment mirror", () => {
     const signals: unknown[] = [];
     const fetchMock = vi.fn((_url: string, init?: { signal?: AbortSignal }) => {
       signals.push(init?.signal);
-      return Promise.reject(new DOMException("The operation was aborted due to timeout", "TimeoutError"));
+      return Promise.reject(
+        new DOMException("The operation was aborted due to timeout", "TimeoutError")
+      );
     });
     vi.stubGlobal("fetch", fetchMock);
 

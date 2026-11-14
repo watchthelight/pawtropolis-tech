@@ -42,7 +42,9 @@ function leakyError(): Error {
 }
 
 function expectNoLeak(value: unknown) {
-  const text = JSON.stringify(value, (_k, v) => (v instanceof Error ? { m: v.message, s: v.stack } : v));
+  const text = JSON.stringify(value, (_k, v) =>
+    v instanceof Error ? { m: v.message, s: v.stack } : v
+  );
   expect(text).not.toContain(TOKEN);
   expect(text).not.toContain(B64);
 }

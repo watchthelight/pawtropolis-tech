@@ -65,10 +65,16 @@ const CRITERION_KEYS = CRITERIA.map((c) => c.key) as [CriterionKey, ...Criterion
 
 // Built fresh for each use so the JSON schema stays flat, with no shared definitions.
 const labels = () =>
-  z.array(z.string()).describe("Labels this rests on, such as img3, m12 or p4. Only labels that appear in the input.");
+  z
+    .array(z.string())
+    .describe(
+      "Labels this rests on, such as img3, m12 or p4. Only labels that appear in the input."
+    );
 const flag = () =>
   z.object({
-    flag: z.string().describe("The flag, in the handbook's wording where one of its flags applies."),
+    flag: z
+      .string()
+      .describe("The flag, in the handbook's wording where one of its flags applies."),
     reasoning: z.string(),
     evidence: labels(),
   });
@@ -77,11 +83,17 @@ const flag = () =>
 const AssessmentSchema = z.object({
   overall_score: z
     .number()
-    .describe("0 to 100. Advisory read of how well the application meets the workflow on the evidence available."),
+    .describe(
+      "0 to 100. Advisory read of how well the application meets the workflow on the evidence available."
+    ),
   overall_summary: z
     .string()
-    .describe("Three to six sentences for the owner: what was submitted, what it supports, what is missing or concerning."),
-  confidence: z.enum(["low", "medium", "high"]).describe("How far the available evidence lets you conclude anything."),
+    .describe(
+      "Three to six sentences for the owner: what was submitted, what it supports, what is missing or concerning."
+    ),
+  confidence: z
+    .enum(["low", "medium", "high"])
+    .describe("How far the available evidence lets you conclude anything."),
   confidence_reason: z.string(),
   criteria: z
     .array(
@@ -89,7 +101,9 @@ const AssessmentSchema = z.object({
         key: z.enum(CRITERION_KEYS),
         rating: z.enum(RATINGS),
         score: z.number().nullable().describe("0 to 10, or null when the rating is undetermined."),
-        reasoning: z.string().describe("Two to four sentences. Name the images, messages or matches involved."),
+        reasoning: z
+          .string()
+          .describe("Two to four sentences. Name the images, messages or matches involved."),
         evidence: labels(),
       })
     )
@@ -102,7 +116,9 @@ const AssessmentSchema = z.object({
         ai_indicator_strength: z.enum(AI_STRENGTHS),
         notes: z
           .string()
-          .describe("One to three sentences: what the image shows and the specific features behind the indicator strength."),
+          .describe(
+            "One to three sentences: what the image shows and the specific features behind the indicator strength."
+          ),
       })
     )
     .describe("One entry for every image received."),
@@ -188,7 +204,9 @@ export function describeAge(fromMs: number, toMs: number): string {
  * one closed.
  */
 export const describeTicketDate = (ticket: PriorTicket) =>
-  ticket.when ? ` (${ticket.source === "first-party" ? "opened" : "closed"} ${ticket.when.slice(0, 10)})` : "";
+  ticket.when
+    ? ` (${ticket.source === "first-party" ? "opened" : "closed"} ${ticket.when.slice(0, 10)})`
+    : "";
 
 const bullets = (items: readonly string[]) => items.map((item) => `- ${item}`).join("\n");
 
@@ -209,7 +227,9 @@ export function buildSystemPrompt(): string {
     CRITERIA.filter((c) => c.kind === kind)
       .map((c) => c.key)
       .join(", ");
-  const artifacts = AI_ARTIFACT_GUIDE.map((row) => `- ${row.category}: ${row.artifacts}`).join("\n");
+  const artifacts = AI_ARTIFACT_GUIDE.map((row) => `- ${row.category}: ${row.artifacts}`).join(
+    "\n"
+  );
 
   return `You are helping the owner of Pawtropolis, a Discord community, review an application to its Verified 2D Artist program. Verified artists may advertise and take paid commissions from members, so this review exists to protect members from scams, stolen art and AI-generated work sold as hand-made.
 
@@ -278,13 +298,17 @@ Write for a busy reader: specific, plain and short. Name the image, message or m
 
 const OWNERSHIP_WORDS: Record<Ownership, (handle: string | null) => string> = {
   applicant: (handle) => `under a handle the applicant claimed${handle ? ` ("${handle}")` : ""}`,
-  possible: (handle) => `close to a handle the applicant claimed${handle ? ` ("${handle}")` : ""}, not an exact match`,
+  possible: (handle) =>
+    `close to a handle the applicant claimed${handle ? ` ("${handle}")` : ""}, not an exact match`,
   other: () => "under a different name from every handle the applicant claimed",
-  unknown: () => "nothing to compare: no name on the match, or the applicant claimed no handles outside Discord",
+  unknown: () =>
+    "nothing to compare: no name on the match, or the applicant claimed no handles outside Discord",
 };
 
 /** The ownership label in plain words. Shared by the prompt and the report. */
-export function describeOwnership(match: Pick<ProvenanceMatch, "ownership" | "matchedHandle">): string {
+export function describeOwnership(
+  match: Pick<ProvenanceMatch, "ownership" | "matchedHandle">
+): string {
   return OWNERSHIP_WORDS[match.ownership](match.matchedHandle);
 }
 
@@ -333,8 +357,12 @@ function applicantSection(applicant: ApplicantContext, referenceMs: number): str
   if (applicant.priorTickets.length === 0) {
     lines.push("Other 2D artist tickets by this applicant: none found");
   } else {
-    lines.push("Other 2D artist tickets by this applicant (one with a higher number than this ticket was opened after it):");
-    lines.push(...applicant.priorTickets.map((t) => `- ${t.name}${describeTicketDate(t)}, ${t.note}`));
+    lines.push(
+      "Other 2D artist tickets by this applicant (one with a higher number than this ticket was opened after it):"
+    );
+    lines.push(
+      ...applicant.priorTickets.map((t) => `- ${t.name}${describeTicketDate(t)}, ${t.note}`)
+    );
   }
   if (applicant.gaps.length > 0) {
     lines.push("Checks that could not run:");
@@ -355,7 +383,8 @@ function ticketSection(input: AnalysisInput): string {
         ? `, from ${stamp(evidence.firstMessageAtMs)} to ${stamp(evidence.lastMessageAtMs)}.`
         : "."),
   ];
-  if (!ticket.historyComplete) lines.push("The channel has more history than was read. The oldest messages are missing.");
+  if (!ticket.historyComplete)
+    lines.push("The channel has more history than was read. The oldest messages are missing.");
 
   const posted = evidence.images.length + evidence.imagesOverCap.length;
   lines.push(
@@ -369,14 +398,17 @@ function ticketSection(input: AnalysisInput): string {
     );
   }
   if (imageFailures.length > 0) {
-    lines.push(`Could not be loaded: ${imageFailures.map((f) => `${f.key} "${f.name}" (${f.reason})`).join(", ")}.`);
+    lines.push(
+      `Could not be loaded: ${imageFailures.map((f) => `${f.key} "${f.name}" (${f.reason})`).join(", ")}.`
+    );
   }
 
   if (evidence.files.length > 0) {
     lines.push("Other files the applicant attached (contents not inspected):");
     lines.push(
       ...evidence.files.map(
-        (f) => `- ${f.messageLabel}: ${f.kind === "source_file" ? "source file" : f.kind} "${f.name}" (${megabytes(f.size)})`
+        (f) =>
+          `- ${f.messageLabel}: ${f.kind === "source_file" ? "source file" : f.kind} "${f.name}" (${megabytes(f.size)})`
       )
     );
   }
@@ -390,12 +422,16 @@ function ticketSection(input: AnalysisInput): string {
   if (claimed.length > 0) {
     lines.push("Handles the applicant claimed in the ticket:");
     lines.push(
-      ...claimed.map((h) => `- ${h.platform}: ${h.handle} (${h.origin === "link" ? "from a profile link" : "named in a message"})`)
+      ...claimed.map(
+        (h) =>
+          `- ${h.platform}: ${h.handle} (${h.origin === "link" ? "from a profile link" : "named in a message"})`
+      )
     );
   } else {
     lines.push("The applicant named no gallery or social handles in the ticket.");
   }
-  if (discordNames.length > 0) lines.push(`Discord names also used for the name comparison: ${discordNames.join(", ")}`);
+  if (discordNames.length > 0)
+    lines.push(`Discord names also used for the name comparison: ${discordNames.join(", ")}`);
   return lines.join("\n");
 }
 
@@ -403,7 +439,12 @@ function matchLine(match: ProvenanceMatch, index: number): string {
   const parts = [
     `${matchLabel(index)} for ${match.imageKey}: ${match.sourceUrl}`,
     `found by ${match.service}`,
-    [match.quality, match.similarity !== null ? `similarity ${Math.round(match.similarity)}%` : null].filter(Boolean).join(", "),
+    [
+      match.quality,
+      match.similarity !== null ? `similarity ${Math.round(match.similarity)}%` : null,
+    ]
+      .filter(Boolean)
+      .join(", "),
     match.platform ? `site ${match.platform}` : null,
     match.artists.length > 0 ? `credited artist: ${match.artists.join(", ")}` : null,
     match.uploader ? `uploader: ${match.uploader}` : null,
@@ -424,9 +465,11 @@ function provenanceSection(input: AnalysisInput): string {
   lines.push(
     ...provenance.services.map((s) => {
       const counts = `${s.queries} lookup${s.queries === 1 ? "" : "s"}${s.cacheHits > 0 ? `, ${s.cacheHits} more from cache` : ""}, ${s.matches} match${s.matches === 1 ? "" : "es"}`;
-      if (s.status === "skipped") return `- ${s.service}: skipped (${s.detail ?? "not configured"})`;
+      if (s.status === "skipped")
+        return `- ${s.service}: skipped (${s.detail ?? "not configured"})`;
       if (s.status === "failed") return `- ${s.service}: failed (${s.detail ?? "no detail"})`;
-      if (s.status === "partial") return `- ${s.service}: incomplete (${s.detail ?? "no detail"}); ${counts}`;
+      if (s.status === "partial")
+        return `- ${s.service}: incomplete (${s.detail ?? "no detail"}); ${counts}`;
       return `- ${s.service}: ran; ${counts}`;
     })
   );
@@ -442,12 +485,15 @@ function provenanceSection(input: AnalysisInput): string {
     lines.push("Matches:");
     lines.push(...provenance.matches.map(matchLine));
     for (const [imageKey, artists] of scatteredImages(provenance.matches)) {
-      lines.push(`The matches for ${imageKey} name ${artists} different artists. That pattern usually means look-alikes, not a source.`);
+      lines.push(
+        `The matches for ${imageKey} name ${artists} different artists. That pattern usually means look-alikes, not a source.`
+      );
     }
     const matched = new Set(provenance.matches.map((m) => m.imageKey));
     const unmatched = images.filter((image) => !matched.has(image.key)).map((image) => image.key);
     if (unmatched.length > 0) lines.push(`Images with no match: ${unmatched.join(", ")}`);
-    if (provenance.omitted > 0) lines.push(`${provenance.omitted} lower-ranked matches were left out.`);
+    if (provenance.omitted > 0)
+      lines.push(`${provenance.omitted} lower-ranked matches were left out.`);
   }
   return lines.join("\n");
 }
@@ -467,7 +513,8 @@ export function buildPromptText(input: AnalysisInput): PromptText {
   const imageLines = input.images.map((image) => {
     const posted = evidence.images.find((i) => i.key === image.key);
     const where = posted ? `, posted in ${posted.messageLabel} on ${stamp(posted.postedAtMs)}` : "";
-    const metadata = image.metadataNotes.length > 0 ? ` File metadata: ${image.metadataNotes.join("; ")}.` : "";
+    const metadata =
+      image.metadataNotes.length > 0 ? ` File metadata: ${image.metadataNotes.join("; ")}.` : "";
     return {
       key: image.key,
       text: `${image.key}: "${posted?.name ?? "image"}"${where}, original size ${image.originalWidth}x${image.originalHeight}.${metadata}`,
@@ -487,7 +534,9 @@ export function buildPromptText(input: AnalysisInput): PromptText {
       "<transcript>",
       transcript,
       "</transcript>",
-      ...(evidence.transcriptTruncated ? ["Some messages in the middle were left out to fit the size limit."] : []),
+      ...(evidence.transcriptTruncated
+        ? ["Some messages in the middle were left out to fit the size limit."]
+        : []),
     ].join("\n"),
     "## Task\nAssess this application against the workflow criteria and return the structured assessment.",
   ].join("\n\n");
@@ -520,7 +569,11 @@ function toContent(prompt: PromptText, images: PreparedImage[]): Anthropic.Conte
     blocks.push({ type: "text", text: line?.text ?? `${image.key}:` });
     blocks.push({
       type: "image",
-      source: { type: "base64", media_type: image.modelMediaType, data: image.modelBytes.toString("base64") },
+      source: {
+        type: "base64",
+        media_type: image.modelMediaType,
+        data: image.modelBytes.toString("base64"),
+      },
     });
   }
   blocks.push({ type: "text", text: prompt.brief });
@@ -565,14 +618,16 @@ function describeError(err: unknown, model: string, timedOut: boolean, timeoutMs
   if (timedOut || err instanceof Anthropic.APIConnectionTimeoutError) {
     return `The Claude API did not finish within ${Math.round(timeoutMs / 1000)} seconds.`;
   }
-  if (err instanceof Anthropic.AuthenticationError) return "The Claude API rejected the key in ANTHROPIC_API_KEY.";
+  if (err instanceof Anthropic.AuthenticationError)
+    return "The Claude API rejected the key in ANTHROPIC_API_KEY.";
   if (err instanceof Anthropic.PermissionDeniedError) {
     return "The Claude API key is not allowed to make this request. Check the key's workspace and its model access.";
   }
   if (err instanceof Anthropic.NotFoundError) {
     return `The Claude API does not know the model \`${model}\`. Check INVESTIGATE_MODEL.`;
   }
-  if (err instanceof Anthropic.RateLimitError) return "The Claude API rate limit was reached. Try again in a few minutes.";
+  if (err instanceof Anthropic.RateLimitError)
+    return "The Claude API rate limit was reached. Try again in a few minutes.";
   if (err instanceof Anthropic.BadRequestError) {
     const detail = apiMessage(err);
     // A key that is not tied to one workspace is refused until the request names one.
@@ -597,7 +652,11 @@ function readMessage(message: Anthropic.Message): AnalysisOutcome {
 
   if (message.stop_reason === "refusal") {
     const why = message.stop_details?.explanation;
-    return { kind: "refused", usage, message: `The model declined to assess this ticket${why ? `: ${why.slice(0, 240)}` : "."}` };
+    return {
+      kind: "refused",
+      usage,
+      message: `The model declined to assess this ticket${why ? `: ${why.slice(0, 240)}` : "."}`,
+    };
   }
   if (message.stop_reason !== "end_turn") {
     return {
@@ -610,7 +669,9 @@ function readMessage(message: Anthropic.Message): AnalysisOutcome {
     };
   }
 
-  const text = message.content.flatMap((block) => (block.type === "text" ? [block.text] : [])).join("");
+  const text = message.content
+    .flatMap((block) => (block.type === "text" ? [block.text] : []))
+    .join("");
   let json: unknown;
   try {
     json = JSON.parse(text);
@@ -620,12 +681,19 @@ function readMessage(message: Anthropic.Message): AnalysisOutcome {
   const checked = AssessmentSchema.safeParse(json);
   if (!checked.success) {
     const where = checked.error.issues[0]?.path.join(".") || "top level";
-    return { kind: "invalid", usage, message: `The model's answer did not match the expected format (at ${where}).` };
+    return {
+      kind: "invalid",
+      usage,
+      message: `The model's answer did not match the expected format (at ${where}).`,
+    };
   }
   return { kind: "ok", usage, assessment: normalizeAssessment(checked.data) };
 }
 
-export async function analyzeTicket(input: AnalysisInput, deps: AnalysisDeps = {}): Promise<AnalysisOutcome> {
+export async function analyzeTicket(
+  input: AnalysisInput,
+  deps: AnalysisDeps = {}
+): Promise<AnalysisOutcome> {
   const timeoutMs = deps.timeoutMs ?? LIMITS.analysisTimeoutMs;
   const prompt = buildPromptText(input);
   // The SDK's own parser throws on a cut-off answer, which would lose the token
@@ -657,7 +725,9 @@ export async function analyzeTicket(input: AnalysisInput, deps: AnalysisDeps = {
       usage: null,
       // Once the response has started, or the call was cut off mid-flight, input tokens were spent.
       mayBeBilled:
-        timedOut || err instanceof Anthropic.APIConnectionTimeoutError || stream?.currentMessage !== undefined,
+        timedOut ||
+        err instanceof Anthropic.APIConnectionTimeoutError ||
+        stream?.currentMessage !== undefined,
     };
   } finally {
     clearTimeout(timer);

@@ -40,13 +40,20 @@ function stubFetch(...responses: Array<Response | Error>) {
   return spy;
 }
 
-function context(overrides: Parameters<typeof settings>[0] = {}): LookupContext & { pace: ReturnType<typeof vi.fn> } {
+function context(
+  overrides: Parameters<typeof settings>[0] = {}
+): LookupContext & { pace: ReturnType<typeof vi.fn> } {
   return { settings: settings(overrides), pace: vi.fn(async () => undefined) };
 }
 
 const call = (spy: ReturnType<typeof stubFetch>, index: number) => {
   const [url, init] = spy.mock.calls[index] as [string, RequestInit];
-  return { url, init, headers: init.headers as Record<string, string>, form: init.body as FormData };
+  return {
+    url,
+    init,
+    headers: init.headers as Record<string, string>,
+    form: init.body as FormData,
+  };
 };
 
 const tweetId = (ms: number) => String((BigInt(ms) - 1288834974657n) << 22n);
@@ -55,10 +62,15 @@ describe("shared helpers", () => {
   it("spaces requests by the service's gap", async () => {
     let clock = 1_000;
     const sleeps: number[] = [];
-    const pacer = new Pacer(1_500, 60_000, async (ms) => {
-      sleeps.push(ms);
-      clock += ms;
-    }, () => clock);
+    const pacer = new Pacer(
+      1_500,
+      60_000,
+      async (ms) => {
+        sleeps.push(ms);
+        clock += ms;
+      },
+      () => clock
+    );
 
     await pacer.wait();
     await pacer.wait();
@@ -71,9 +83,14 @@ describe("shared helpers", () => {
 
   it("refuses to hand out a slot at or past the deadline", async () => {
     let clock = 0;
-    const pacer = new Pacer(1_000, 2_500, async (ms) => {
-      clock += ms;
-    }, () => clock);
+    const pacer = new Pacer(
+      1_000,
+      2_500,
+      async (ms) => {
+        clock += ms;
+      },
+      () => clock
+    );
 
     await pacer.wait();
     await pacer.wait();
@@ -82,21 +99,38 @@ describe("shared helpers", () => {
   });
 
   it("buckets similarity scores", () => {
-    expect([90, 89.9, 70, 69.9].map(qualityFromScore)).toEqual(["exact", "probable", "probable", "unlikely"]);
+    expect([90, 89.9, 70, 69.9].map(qualityFromScore)).toEqual([
+      "exact",
+      "probable",
+      "probable",
+      "unlikely",
+    ]);
   });
 
   it("reads the post time out of a tweet link and nothing out of other links", () => {
     const posted = Date.UTC(2024, 0, 1);
-    expect(tweetDate(`https://x.com/FoxyArtz/status/${tweetId(posted)}`)).toBe("2024-01-01T00:00:00.000Z");
-    expect(tweetDate(`https://twitter.com/FoxyArtz/status/${tweetId(posted)}?s=20`)).toBe("2024-01-01T00:00:00.000Z");
+    expect(tweetDate(`https://x.com/FoxyArtz/status/${tweetId(posted)}`)).toBe(
+      "2024-01-01T00:00:00.000Z"
+    );
+    expect(tweetDate(`https://twitter.com/FoxyArtz/status/${tweetId(posted)}?s=20`)).toBe(
+      "2024-01-01T00:00:00.000Z"
+    );
     expect(tweetDate("https://www.furaffinity.net/view/12345/")).toBeNull();
     expect(tweetDate("https://x.com/FoxyArtz")).toBeNull();
-    expect(tweetDate(`https://x.com/FoxyArtz/status/${tweetId(Date.now() + 10 * 86_400_000)}`)).toBeNull();
+    expect(
+      tweetDate(`https://x.com/FoxyArtz/status/${tweetId(Date.now() + 10 * 86_400_000)}`)
+    ).toBeNull();
   });
 
   it("treats auth and quota failures as fatal and other statuses as retryable", () => {
     const of = (status: number) => httpError(new Response(null, { status }));
-    expect([of(401).fatal, of(403).fatal, of(429).fatal, of(404).fatal, of(500).fatal]).toEqual([true, true, true, false, false]);
+    expect([of(401).fatal, of(403).fatal, of(429).fatal, of(404).fatal, of(500).fatal]).toEqual([
+      true,
+      true,
+      true,
+      false,
+      false,
+    ]);
     expect(of(401).message).toBe("credentials were rejected (HTTP 401)");
     expect(of(429).message).toBe("rate limit reached (HTTP 429)");
     expect(of(503).message).toBe("service error (HTTP 503)");
@@ -115,11 +149,41 @@ describe("fluffle", () => {
     const spy = stubFetch(
       json({
         results: [
-          { match: "exact", url: "https://www.furaffinity.net/view/123/", platform: "furAffinity", distance: 0.9731, authors: [{ name: "FoxyArtz" }] },
-          { match: "unlikely", url: "https://www.furaffinity.net/view/999/", platform: "furAffinity", distance: 0.41, authors: [{ name: "Noise" }] },
-          { match: "probable", url: "https://e621.net/posts/55", platform: "e621", distance: 0.81, authors: [{ name: "foxyartz_(artist)" }] },
-          { match: "exact", url: `https://x.com/FoxyArtz/status/${tweetId(posted)}`, platform: "twitter", distance: 1, authors: [] },
-          { match: "exact", url: "javascript:alert(1)", platform: "twitter", distance: 1, authors: [] },
+          {
+            match: "exact",
+            url: "https://www.furaffinity.net/view/123/",
+            platform: "furAffinity",
+            distance: 0.9731,
+            authors: [{ name: "FoxyArtz" }],
+          },
+          {
+            match: "unlikely",
+            url: "https://www.furaffinity.net/view/999/",
+            platform: "furAffinity",
+            distance: 0.41,
+            authors: [{ name: "Noise" }],
+          },
+          {
+            match: "probable",
+            url: "https://e621.net/posts/55",
+            platform: "e621",
+            distance: 0.81,
+            authors: [{ name: "foxyartz_(artist)" }],
+          },
+          {
+            match: "exact",
+            url: `https://x.com/FoxyArtz/status/${tweetId(posted)}`,
+            platform: "twitter",
+            distance: 1,
+            authors: [],
+          },
+          {
+            match: "exact",
+            url: "javascript:alert(1)",
+            platform: "twitter",
+            distance: 1,
+            authors: [],
+          },
         ],
       })
     );
@@ -161,7 +225,13 @@ describe("fluffle", () => {
         similarity: 81,
         quality: "probable",
       }),
-      expect.objectContaining({ platform: "twitter", postedAt: "2024-06-15T12:00:00.000Z", uploader: null, artists: [], similarity: 100 }),
+      expect.objectContaining({
+        platform: "twitter",
+        postedAt: "2024-06-15T12:00:00.000Z",
+        uploader: null,
+        artists: [],
+        similarity: 100,
+      }),
     ]);
   });
 
@@ -174,23 +244,36 @@ describe("fluffle", () => {
 
   it("stops the service on a rate limit and keeps going after a server error", async () => {
     stubFetch(new Response("slow down", { status: 429 }));
-    await expect(fluffle.search(image, context())).rejects.toMatchObject({ name: "LookupError", fatal: true });
+    await expect(fluffle.search(image, context())).rejects.toMatchObject({
+      name: "LookupError",
+      fatal: true,
+    });
 
     stubFetch(new Response("oops", { status: 502 }));
-    await expect(fluffle.search(image, context())).rejects.toMatchObject({ message: "service error (HTTP 502)", fatal: false });
+    await expect(fluffle.search(image, context())).rejects.toMatchObject({
+      message: "service error (HTTP 502)",
+      fatal: false,
+    });
   });
 
   it("reports a dropped connection, a timeout and a broken answer in plain words", async () => {
     stubFetch(new TypeError("fetch failed"));
-    await expect(fluffle.search(image, context())).rejects.toMatchObject({ message: "network error", fatal: false });
+    await expect(fluffle.search(image, context())).rejects.toMatchObject({
+      message: "network error",
+      fatal: false,
+    });
 
     const timeout = new Error("The operation was aborted due to timeout");
     timeout.name = "TimeoutError";
     stubFetch(timeout);
-    await expect(fluffle.search(image, context())).rejects.toMatchObject({ message: "request timed out" });
+    await expect(fluffle.search(image, context())).rejects.toMatchObject({
+      message: "request timed out",
+    });
 
     stubFetch(new Response("<html>maintenance</html>", { status: 200 }));
-    await expect(fluffle.search(image, context())).rejects.toMatchObject({ message: "answer was not valid JSON" });
+    await expect(fluffle.search(image, context())).rejects.toMatchObject({
+      message: "answer was not valid JSON",
+    });
   });
 });
 
@@ -199,16 +282,36 @@ describe("e621", () => {
 
   it("is skipped unless both the login and the key are set", () => {
     expect(e621.unavailableReason(settings())).toBe("E621_LOGIN and E621_API_KEY are not set");
-    expect(e621.unavailableReason(settings({ e621Login: "pawbot" }))).toBe("E621_LOGIN and E621_API_KEY are not set");
+    expect(e621.unavailableReason(settings({ e621Login: "pawbot" }))).toBe(
+      "E621_LOGIN and E621_API_KEY are not set"
+    );
     expect(e621.unavailableReason(settings(keys))).toBeNull();
   });
 
   it("searches by similarity, then reads the posts for artists, sources and dates", async () => {
     const spy = stubFetch(
       json([
-        { post_id: 111, score: 92.44, post: { posts: { created_at: "2024-03-02T10:00:00.000-05:00", source: "https://www.furaffinity.net/view/9/" } } },
+        {
+          post_id: 111,
+          score: 92.44,
+          post: {
+            posts: {
+              created_at: "2024-03-02T10:00:00.000-05:00",
+              source: "https://www.furaffinity.net/view/9/",
+            },
+          },
+        },
         { post_id: 222, score: 50 },
-        { post_id: 333, score: 75.26, post: { posts: { created_at: "2022-01-05T00:00:00.000Z", source: "https://twitter.com/a/status/1 notalink" } } },
+        {
+          post_id: 333,
+          score: 75.26,
+          post: {
+            posts: {
+              created_at: "2022-01-05T00:00:00.000Z",
+              source: "https://twitter.com/a/status/1 notalink",
+            },
+          },
+        },
       ]),
       json({
         posts: [
@@ -236,7 +339,9 @@ describe("e621", () => {
     expect(first.url).toBe("https://e621.net/iqdb_queries.json");
     expect(first.init.method).toBe("POST");
     expect(first.headers["User-Agent"]).toBe("pawtropolis-test/1.0 (by pawbot on e621)");
-    expect(first.headers.Authorization).toBe(`Basic ${Buffer.from("pawbot:e6-secret").toString("base64")}`);
+    expect(first.headers.Authorization).toBe(
+      `Basic ${Buffer.from("pawbot:e6-secret").toString("base64")}`
+    );
     expect(first.form.get("search[file]")).toBeInstanceOf(Blob);
 
     const second = call(spy, 1);
@@ -285,7 +390,18 @@ describe("e621", () => {
 
   it("keeps the hits when the post lookup fails", async () => {
     stubFetch(
-      json([{ post_id: 111, score: 95, post: { posts: { created_at: "2024-03-02T15:00:00.000Z", source: "https://www.furaffinity.net/view/9/" } } }]),
+      json([
+        {
+          post_id: 111,
+          score: 95,
+          post: {
+            posts: {
+              created_at: "2024-03-02T15:00:00.000Z",
+              source: "https://www.furaffinity.net/view/9/",
+            },
+          },
+        },
+      ]),
       new Response("down", { status: 503 })
     );
     const matches = await e621.search(image, context(keys));
@@ -299,7 +415,9 @@ describe("e621", () => {
     ]);
 
     stubFetch(json([{ post_id: 111, score: 95 }]), new TypeError("fetch failed"));
-    expect(await e621.search(image, context(keys))).toEqual([expect.objectContaining({ sourceUrl: "https://e621.net/posts/111" })]);
+    expect(await e621.search(image, context(keys))).toEqual([
+      expect.objectContaining({ sourceUrl: "https://e621.net/posts/111" }),
+    ]);
   });
 
   it("stops the service when the credentials are rejected, without echoing them", async () => {
@@ -328,12 +446,22 @@ describe("saucenao", () => {
         results: [
           {
             header: { similarity: "93.21", index_name: "Index #40: FurAffinity" },
-            data: { ext_urls: ["https://www.furaffinity.net/view/777/"], title: "Sunset fox", author_name: "FoxyArtz", created_at: "2023-05-06T00:00:00Z" },
+            data: {
+              ext_urls: ["https://www.furaffinity.net/view/777/"],
+              title: "Sunset fox",
+              author_name: "FoxyArtz",
+              created_at: "2023-05-06T00:00:00Z",
+            },
           },
           { header: { similarity: "40.1" }, data: { ext_urls: ["https://example.com/noise"] } },
           {
             header: { similarity: "70" },
-            data: { ext_urls: [], source: "https://www.pixiv.net/artworks/5", member_name: "pixfox", creator: ["pixfox", "other"] },
+            data: {
+              ext_urls: [],
+              source: "https://www.pixiv.net/artworks/5",
+              member_name: "pixfox",
+              creator: ["pixfox", "other"],
+            },
           },
           { header: { similarity: "88" }, data: { title: "no link" } },
         ],
@@ -347,7 +475,12 @@ describe("saucenao", () => {
     const sent = call(spy, 0);
     const url = new URL(sent.url);
     expect(`${url.origin}${url.pathname}`).toBe("https://saucenao.com/search.php");
-    expect(Object.fromEntries(url.searchParams)).toEqual({ output_type: "2", db: "999", numres: "8", api_key: "sauce-secret" });
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      output_type: "2",
+      db: "999",
+      numres: "8",
+      api_key: "sauce-secret",
+    });
     expect(sent.init.method).toBe("POST");
     expect(sent.form.get("file")).toBeInstanceOf(Blob);
 
@@ -382,7 +515,14 @@ describe("saucenao", () => {
   });
 
   it("stops the service when SauceNAO refuses the account, with its message stripped of HTML", async () => {
-    stubFetch(json({ header: { status: -2, message: "<strong>Daily Search Limit Exceeded.</strong><br />Try again tomorrow." } }));
+    stubFetch(
+      json({
+        header: {
+          status: -2,
+          message: "<strong>Daily Search Limit Exceeded.</strong><br />Try again tomorrow.",
+        },
+      })
+    );
     await expect(saucenao.search(image, context(keys))).rejects.toMatchObject({
       name: "LookupError",
       fatal: true,
@@ -394,11 +534,21 @@ describe("saucenao", () => {
     stubFetch(
       json({
         header: { status: 2 },
-        results: [{ header: { similarity: "91" }, data: { ext_urls: ["https://www.deviantart.com/foxyartz/art/A-1"], author_name: "foxyartz" } }],
+        results: [
+          {
+            header: { similarity: "91" },
+            data: {
+              ext_urls: ["https://www.deviantart.com/foxyartz/art/A-1"],
+              author_name: "foxyartz",
+            },
+          },
+        ],
       })
     );
     const matches = await saucenao.search(image, context(keys));
-    expect(matches).toEqual([expect.objectContaining({ platform: "deviantart", artists: ["foxyartz"], quality: "exact" })]);
+    expect(matches).toEqual([
+      expect.objectContaining({ platform: "deviantart", artists: ["foxyartz"], quality: "exact" }),
+    ]);
   });
 
   it("keeps the API key out of every error it raises", async () => {

@@ -37,15 +37,23 @@ export interface StaffMessage {
 
 interface ReadableChannel {
   messages: {
-    fetch(options: { limit: number; before?: string }): Promise<{ values(): Iterable<StaffMessage> }>;
+    fetch(options: {
+      limit: number;
+      before?: string;
+    }): Promise<{ values(): Iterable<StaffMessage> }>;
   };
 }
 
-async function readRecent(channel: ReadableChannel, pages: number): Promise<{ messages: StaffMessage[]; reachedStart: boolean }> {
+async function readRecent(
+  channel: ReadableChannel,
+  pages: number
+): Promise<{ messages: StaffMessage[]; reachedStart: boolean }> {
   const messages: StaffMessage[] = [];
   let before: string | undefined;
   for (let page = 0; page < pages; page++) {
-    const batch = [...(await channel.messages.fetch(before ? { limit: 100, before } : { limit: 100 })).values()];
+    const batch = [
+      ...(await channel.messages.fetch(before ? { limit: 100, before } : { limit: 100 })).values(),
+    ];
     messages.push(...batch);
     if (batch.length < 100) return { messages, reachedStart: true };
     before = batch.reduce((oldest, m) => (BigInt(m.id) < BigInt(oldest.id) ? m : oldest)).id;
@@ -54,7 +62,11 @@ async function readRecent(channel: ReadableChannel, pages: number): Promise<{ me
 }
 
 /** Ticket Tool renames a channel from `2d-artist-0300` to `2d-artist-closed0300` when it closes. Both name one ticket. */
-const ticketKey = (name: string) => name.trim().toLowerCase().replace(/-closed(?=\d)/, "-");
+const ticketKey = (name: string) =>
+  name
+    .trim()
+    .toLowerCase()
+    .replace(/-closed(?=\d)/, "-");
 
 /**
  * Other tickets from Ticket Tool's transcript posts. Each closed ticket leaves
@@ -62,7 +74,11 @@ const ticketKey = (name: string) => name.trim().toLowerCase().replace(/-closed(?
  * one: a post under its open name and another under its closed name. Those are
  * merged, so one ticket is never counted as two.
  */
-export function priorTicketsFromLog(messages: Iterable<StaffMessage>, applicantId: string, currentChannelName: string): PriorTicket[] {
+export function priorTicketsFromLog(
+  messages: Iterable<StaffMessage>,
+  applicantId: string,
+  currentChannelName: string
+): PriorTicket[] {
   const current = ticketKey(currentChannelName);
   const found = new Map<string, PriorTicket & { atMs: number }>();
   for (const message of messages) {
@@ -81,22 +97,32 @@ export function priorTicketsFromLog(messages: Iterable<StaffMessage>, applicantI
       });
     }
   }
-  return [...found.values()].sort((a, b) => b.atMs - a.atMs).map(({ atMs: _atMs, ...ticket }) => ticket);
+  return [...found.values()]
+    .sort((a, b) => b.atMs - a.atMs)
+    .map(({ atMs: _atMs, ...ticket }) => ticket);
 }
 
 /** The staff note naming this user in the Verify Blacklist thread, if there is one. */
-export function blacklistEntry(messages: Iterable<StaffMessage>, applicantId: string): string | null {
+export function blacklistEntry(
+  messages: Iterable<StaffMessage>,
+  applicantId: string
+): string | null {
   const mention = new RegExp(`<@!?${applicantId}>`);
   for (const message of messages) {
     if (!mention.test(message.content)) continue;
-    const note = message.content.replace(/<@!?\d+>/g, "").replace(/\s+/g, " ").replace(/^[\s-]+/, "").trim();
+    const note = message.content
+      .replace(/<@!?\d+>/g, "")
+      .replace(/\s+/g, " ")
+      .replace(/^[\s-]+/, "")
+      .trim();
     const date = new Date(message.createdTimestamp).toISOString().slice(0, 10);
     return `${date}: ${note.slice(0, 300) || "listed without a note"}`;
   }
   return null;
 }
 
-const describe = (err: unknown) => (err instanceof Error ? err.message : "unknown error").slice(0, 120);
+const describe = (err: unknown) =>
+  (err instanceof Error ? err.message : "unknown error").slice(0, 120);
 
 const BRAILLE_BLANK = String.fromCharCode(0x2800);
 
@@ -166,7 +192,9 @@ export async function gatherApplicantContext(input: ContextInput): Promise<Appli
     // 0.7 s on production data. An index was measured and rejected because it
     // triples the cost of every message insert, and this runs once per owner command.
     const activity = db
-      .prepare(`SELECT COUNT(*) AS n, MAX(created_at_s) AS last FROM message_activity WHERE guild_id = ? AND user_id = ?`)
+      .prepare(
+        `SELECT COUNT(*) AS n, MAX(created_at_s) AS last FROM message_activity WHERE guild_id = ? AND user_id = ?`
+      )
       .get(guild.id, applicantId) as { n: number; last: number | null };
     context.recentMessageCount = activity.n;
     context.lastSeenAtMs = activity.last === null ? null : activity.last * 1000;
@@ -176,7 +204,9 @@ export async function gatherApplicantContext(input: ContextInput): Promise<Appli
         `SELECT status, submitted_at FROM application WHERE guild_id = ? AND user_id = ? ORDER BY created_at DESC LIMIT 1`
       )
       .get(guild.id, applicantId) as { status: string; submitted_at: string | null } | undefined;
-    context.gateApplication = application ? { status: application.status, submittedAt: application.submitted_at } : null;
+    context.gateApplication = application
+      ? { status: application.status, submittedAt: application.submitted_at }
+      : null;
 
     const tickets = db
       .prepare(
@@ -194,7 +224,10 @@ export async function gatherApplicantContext(input: ContextInput): Promise<Appli
       ...tickets.map<PriorTicket>((t) => ({
         name: `${ARTIST_TICKET_TYPE_KEY}-${String(t.number).padStart(4, "0")}`,
         when: new Date(t.opened_at * 1000).toISOString(),
-        note: t.status === "closed" ? `closed${t.close_reason ? `: ${t.close_reason.slice(0, 120)}` : ""}` : "still open",
+        note:
+          t.status === "closed"
+            ? `closed${t.close_reason ? `: ${t.close_reason.slice(0, 120)}` : ""}`
+            : "still open",
         source: "first-party",
       }))
     );
@@ -208,16 +241,24 @@ export async function gatherApplicantContext(input: ContextInput): Promise<Appli
       const channel = await guild.channels.fetch(logChannelId);
       if (!channel?.isTextBased()) throw new Error("log channel is not readable");
       const log = await readRecent(channel as unknown as ReadableChannel, LIMITS.logPages);
-      context.priorTickets.push(...priorTicketsFromLog(log.messages, applicantId, input.channelName));
+      context.priorTickets.push(
+        ...priorTicketsFromLog(log.messages, applicantId, input.channelName)
+      );
       if (!log.reachedStart) {
         const oldest = Math.min(...log.messages.map((m) => m.createdTimestamp));
-        context.gaps.push(`Ticket log was read back to ${new Date(oldest).toISOString().slice(0, 10)} only; older tickets are not counted.`);
+        context.gaps.push(
+          `Ticket log was read back to ${new Date(oldest).toISOString().slice(0, 10)} only; older tickets are not counted.`
+        );
       }
     } catch (err) {
-      context.gaps.push(`Ticket log could not be read, so their other Ticket Tool tickets are unknown (${describe(err)}).`);
+      context.gaps.push(
+        `Ticket log could not be read, so their other Ticket Tool tickets are unknown (${describe(err)}).`
+      );
     }
   } else {
-    context.gaps.push("No ticket log channel is configured for this server, so their other Ticket Tool tickets are unknown.");
+    context.gaps.push(
+      "No ticket log channel is configured for this server, so their other Ticket Tool tickets are unknown."
+    );
   }
 
   const blacklistThreadId = getVerifyBlacklistThreadId(guild.id);
@@ -225,10 +266,17 @@ export async function gatherApplicantContext(input: ContextInput): Promise<Appli
     try {
       const thread = await guild.client.channels.fetch(blacklistThreadId);
       if (!thread?.isTextBased()) throw new Error("thread is not readable");
-      const { messages, reachedStart } = await readRecent(thread as unknown as ReadableChannel, LIMITS.blacklistPages);
+      const { messages, reachedStart } = await readRecent(
+        thread as unknown as ReadableChannel,
+        LIMITS.blacklistPages
+      );
       context.blacklistNote = blacklistEntry(messages, applicantId);
-      context.onVerifyBlacklist = context.blacklistNote !== null ? true : reachedStart ? false : null;
-      if (context.onVerifyBlacklist === null) context.gaps.push("Verify Blacklist is longer than the part that was read; no entry was found in the newest messages.");
+      context.onVerifyBlacklist =
+        context.blacklistNote !== null ? true : reachedStart ? false : null;
+      if (context.onVerifyBlacklist === null)
+        context.gaps.push(
+          "Verify Blacklist is longer than the part that was read; no entry was found in the newest messages."
+        );
     } catch (err) {
       context.gaps.push(`Verify Blacklist could not be read (${describe(err)}).`);
     }

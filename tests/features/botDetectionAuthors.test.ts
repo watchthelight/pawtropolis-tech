@@ -21,9 +21,8 @@ vi.mock("../../src/lib/logger.js", () => ({
   logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-const { checkActivityLevel, loadMessageAuthors } = await import(
-  "../../src/features/botDetection.js"
-);
+const { checkActivityLevel, loadMessageAuthors } =
+  await import("../../src/features/botDetection.js");
 
 const G = "g1";
 

@@ -18,9 +18,21 @@ vi.mock("../../../src/lib/logger.js", () => ({
 import type { AnalysisOutcome } from "../../../src/features/artistInvestigation/analysis.js";
 import { NO_USAGE, recordRun } from "../../../src/features/artistInvestigation/budget.js";
 import type { RawMessage } from "../../../src/features/artistInvestigation/collect.js";
-import { LIMITS, TICKET_TOOL_BOT_ID, type InvestigationSettings } from "../../../src/features/artistInvestigation/config.js";
-import { readCache, writeCache } from "../../../src/features/artistInvestigation/provenance/cache.js";
-import { runInvestigation, type RunDeps, type RunInput, type RunResult } from "../../../src/features/artistInvestigation/run.js";
+import {
+  LIMITS,
+  TICKET_TOOL_BOT_ID,
+  type InvestigationSettings,
+} from "../../../src/features/artistInvestigation/config.js";
+import {
+  readCache,
+  writeCache,
+} from "../../../src/features/artistInvestigation/provenance/cache.js";
+import {
+  runInvestigation,
+  type RunDeps,
+  type RunInput,
+  type RunResult,
+} from "../../../src/features/artistInvestigation/run.js";
 import { UNKNOWN_USERNAME } from "../../../src/features/artistInvestigation/serverContext.js";
 import type { ProvenanceResult } from "../../../src/features/artistInvestigation/types.js";
 import { logger } from "../../../src/lib/logger.js";
@@ -69,7 +81,11 @@ function raw(overrides: Partial<RawMessage> = {}): RawMessage {
   };
 }
 
-const greeting = () => raw({ author: { id: TICKET_TOOL_BOT_ID, username: "Ticket Tool", bot: true }, content: GREETING });
+const greeting = () =>
+  raw({
+    author: { id: TICKET_TOOL_BOT_ID, username: "Ticket Tool", bot: true },
+    content: GREETING,
+  });
 const picture = (name: string, url: string, content = "") =>
   raw({ content, attachments: new Map([[name, attachment({ id: name, name, url })]]) });
 
@@ -77,8 +93,15 @@ const picture = (name: string, url: string, content = "") =>
 function standardTicket(): RawMessage[] {
   return [
     greeting(),
-    picture("sketch.png", SKETCH_URL, "Hi! My gallery is https://www.furaffinity.net/user/foxyartz and this is a private note"),
-    raw({ author: { id: STAFF_ID, username: "staffer", bot: false }, content: "Thanks, looking now." }),
+    picture(
+      "sketch.png",
+      SKETCH_URL,
+      "Hi! My gallery is https://www.furaffinity.net/user/foxyartz and this is a private note"
+    ),
+    raw({
+      author: { id: STAFF_ID, username: "staffer", bot: false },
+      content: "Thanks, looking now.",
+    }),
     picture("final.png", FINAL_URL, "And the finished piece."),
   ];
 }
@@ -101,7 +124,14 @@ const LOOKUPS: ProvenanceResult = {
   matches: [provenanceMatch()],
   services: [
     { service: "fluffle", status: "ok", detail: null, queries: 4, cacheHits: 0, matches: 1 },
-    { service: "e621", status: "skipped", detail: "E621_LOGIN and E621_API_KEY are not set", queries: 0, cacheHits: 0, matches: 0 },
+    {
+      service: "e621",
+      status: "skipped",
+      detail: "E621_LOGIN and E621_API_KEY are not set",
+      queries: 0,
+      cacheHits: 0,
+      matches: 0,
+    },
     { service: "saucenao", status: "ok", detail: null, queries: 2, cacheHits: 1, matches: 0 },
   ],
   omitted: 0,
@@ -126,7 +156,11 @@ function harness(options: HarnessOptions = {}) {
     fetchImage: vi.fn<Stage<"fetchImage">>(async (url) => Buffer.from(url)),
     prepare: vi.fn<Stage<"prepare">>(async (key) => preparedImage(key)),
     lookups: vi.fn<Stage<"lookups">>(async () => LOOKUPS),
-    analyze: vi.fn<Stage<"analyze">>(async () => ({ kind: "ok", assessment: assessment(), usage: USAGE })),
+    analyze: vi.fn<Stage<"analyze">>(async () => ({
+      kind: "ok",
+      assessment: assessment(),
+      usage: USAGE,
+    })),
   };
   const input: RunInput = {
     guild: { id: GUILD_ID } as unknown as Guild,
@@ -214,11 +248,22 @@ describe("runInvestigation: a full run", () => {
 
     expect(report.guildId).toBe(GUILD_ID);
     expect(report.channelId).toBe(CHANNEL_ID);
-    expect(report.ticket).toEqual({ channelName: "2d-artist-0042", system: "ticket-tool", closed: false, historyComplete: true });
+    expect(report.ticket).toEqual({
+      channelName: "2d-artist-0042",
+      system: "ticket-tool",
+      closed: false,
+      historyComplete: true,
+    });
     expect(report.applicantVia).toBe("greeting");
     expect(report.applicant).toEqual(applicantContext());
-    expect(report.evidence).toMatchObject({ applicantId: APPLICANT_ID, messageCount: 4, applicantMessageCount: 2 });
-    expect(report.evidence.images.map((image) => [image.key, image.name, image.messageLabel])).toEqual([
+    expect(report.evidence).toMatchObject({
+      applicantId: APPLICANT_ID,
+      messageCount: 4,
+      applicantMessageCount: 2,
+    });
+    expect(
+      report.evidence.images.map((image) => [image.key, image.name, image.messageLabel])
+    ).toEqual([
       ["img1", "sketch.png", "m2"],
       ["img2", "final.png", "m4"],
     ]);
@@ -242,11 +287,15 @@ describe("runInvestigation: a full run", () => {
       channelName: "2d-artist-0042",
       db: h.db,
     });
-    expect(h.deps.fetchImage.mock.calls.map(([url]) => url).sort()).toEqual([SKETCH_URL, FINAL_URL].sort());
-    expect(h.deps.prepare.mock.calls.map(([key, bytes]) => [key, bytes.toString()]).sort()).toEqual([
-      ["img1", SKETCH_URL],
-      ["img2", FINAL_URL],
-    ]);
+    expect(h.deps.fetchImage.mock.calls.map(([url]) => url).sort()).toEqual(
+      [SKETCH_URL, FINAL_URL].sort()
+    );
+    expect(h.deps.prepare.mock.calls.map(([key, bytes]) => [key, bytes.toString()]).sort()).toEqual(
+      [
+        ["img1", SKETCH_URL],
+        ["img2", FINAL_URL],
+      ]
+    );
 
     const [images, context, lookupDeps] = h.deps.lookups.mock.calls[0] ?? [];
     expect(images?.map((image) => image.key)).toEqual(["img1", "img2"]);
@@ -350,7 +399,14 @@ describe("runInvestigation: a full run", () => {
       vi.mocked(logger.error).mock.calls,
       vi.mocked(logger.debug).mock.calls,
     ]);
-    for (const secret of ["private note", "foxyartz", "furaffinity", "cdn.discordapp.com", "sketch.png", APPLICANT_ID]) {
+    for (const secret of [
+      "private note",
+      "foxyartz",
+      "furaffinity",
+      "cdn.discordapp.com",
+      "sketch.png",
+      APPLICANT_ID,
+    ]) {
       expect(logged).not.toContain(secret);
     }
     // The in-memory database logs its own migration, so pick the run's line out by its event name.
@@ -374,15 +430,24 @@ describe("runInvestigation: a full run", () => {
   });
 
   it("passes the ticket's state through to the report", async () => {
-    const h = harness({ input: { ticket: { system: "first-party", openerId: APPLICANT_ID, closed: true } } });
+    const h = harness({
+      input: { ticket: { system: "first-party", openerId: APPLICANT_ID, closed: true } },
+    });
     const report = reportOf(await h.run());
 
-    expect(report.ticket).toEqual({ channelName: "2d-artist-0042", system: "first-party", closed: true, historyComplete: true });
+    expect(report.ticket).toEqual({
+      channelName: "2d-artist-0042",
+      system: "first-party",
+      closed: true,
+      historyComplete: true,
+    });
     expect(report.applicantVia).toBe("ticket");
   });
 
   it("says so when the channel has more history than it reads", async () => {
-    const filler = Array.from({ length: LIMITS.maxHistoryPages * 100 + 5 }, () => raw({ content: "hello" }));
+    const filler = Array.from({ length: LIMITS.maxHistoryPages * 100 + 5 }, () =>
+      raw({ content: "hello" })
+    );
     const h = harness({ messages: filler, input: { overrideApplicantId: APPLICANT_ID } });
     const report = reportOf(await h.run());
 
@@ -394,7 +459,9 @@ describe("runInvestigation: a full run", () => {
   it("treats the applicant's Discord names as claimed handles, except a name it never learned", async () => {
     const known = harness();
     const unknown = harness();
-    unknown.deps.context.mockResolvedValue(applicantContext({ username: UNKNOWN_USERNAME, globalName: null, nickname: "Foxy Fox" }));
+    unknown.deps.context.mockResolvedValue(
+      applicantContext({ username: UNKNOWN_USERNAME, globalName: null, nickname: "Foxy Fox" })
+    );
 
     const discordNames = async (h: ReturnType<typeof harness>) =>
       reportOf(await h.run())
@@ -407,11 +474,20 @@ describe("runInvestigation: a full run", () => {
 
   it("clears out lookup results that are past their keep time", async () => {
     const h = harness();
-    writeCache(h.db, "sha-old", "fluffle", "original", [rawMatch()], NOW - (LIMITS.cacheTtlSeconds + 60) * 1000);
+    writeCache(
+      h.db,
+      "sha-old",
+      "fluffle",
+      "original",
+      [rawMatch()],
+      NOW - (LIMITS.cacheTtlSeconds + 60) * 1000
+    );
     writeCache(h.db, "sha-fresh", "fluffle", "original", [rawMatch()], NOW - 60_000);
     await h.run();
 
-    const count = h.db.prepare("SELECT COUNT(*) AS n FROM artist_provenance_cache").get() as { n: number };
+    const count = h.db.prepare("SELECT COUNT(*) AS n FROM artist_provenance_cache").get() as {
+      n: number;
+    };
     expect(count.n).toBe(1);
     expect(readCache(h.db, "sha-fresh", "fluffle", "original", NOW)).toHaveLength(1);
   });
@@ -425,7 +501,10 @@ describe("runInvestigation: who the applicant is", () => {
   });
 
   it("lets the applicant option override everything else", async () => {
-    const messages = [...standardTicket(), raw({ author: { id: OTHER_MEMBER_ID, username: "otter", bot: false }, content: "mine too" })];
+    const messages = [
+      ...standardTicket(),
+      raw({ author: { id: OTHER_MEMBER_ID, username: "otter", bot: false }, content: "mine too" }),
+    ];
     const h = harness({ messages, input: { overrideApplicantId: OTHER_MEMBER_ID } });
     const report = reportOf(await h.run());
 
@@ -448,7 +527,9 @@ describe("runInvestigation: who the applicant is", () => {
     const h = harness({ messages: standardTicket().slice(1) });
     const result = await h.run();
 
-    expect(messageOf(result)).toBe("Could not tell who opened this ticket. Run it again with the `applicant` option.");
+    expect(messageOf(result)).toBe(
+      "Could not tell who opened this ticket. Run it again with the `applicant` option."
+    );
     expect(h.deps.context).not.toHaveBeenCalled();
     expect(h.deps.fetchImage).not.toHaveBeenCalled();
     expect(h.deps.lookups).not.toHaveBeenCalled();
@@ -471,7 +552,10 @@ describe("runInvestigation: who the applicant is", () => {
 describe("runInvestigation: nothing to review", () => {
   it("stops when the applicant has posted nothing, before anything is fetched or spent", async () => {
     const h = harness({
-      messages: [greeting(), raw({ author: { id: STAFF_ID, username: "staffer", bot: false }, content: "Hello?" })],
+      messages: [
+        greeting(),
+        raw({ author: { id: STAFF_ID, username: "staffer", bot: false }, content: "Hello?" }),
+      ],
     });
     const result = await h.run();
 
@@ -503,7 +587,9 @@ describe("runInvestigation: nothing to review", () => {
   });
 
   it("still reviews a ticket with text and no images", async () => {
-    const h = harness({ messages: [greeting(), raw({ content: "I have no samples yet, sorry." })] });
+    const h = harness({
+      messages: [greeting(), raw({ content: "I have no samples yet, sorry." })],
+    });
     const report = reportOf(await h.run());
 
     expect(h.deps.fetchImage).not.toHaveBeenCalled();
@@ -577,7 +663,9 @@ describe("runInvestigation: budget guard", () => {
     const h = harness({ settings: { monthlyCapUsd: 0 } });
     const result = await h.run();
 
-    expect(messageOf(result)).toBe("This command is switched off: INVESTIGATE_MONTHLY_CAP_USD is set to 0.");
+    expect(messageOf(result)).toBe(
+      "This command is switched off: INVESTIGATE_MONTHLY_CAP_USD is set to 0."
+    );
     expect(h.channel.fetch).not.toHaveBeenCalled();
     expect(ledger(h.db)).toEqual([]);
   });
@@ -605,7 +693,9 @@ describe("runInvestigation: budget guard", () => {
     expect(report.cost.ledgerSaved).toBe(false);
     expect(report.cost.runUsd).toBeCloseTo(0.144, 9);
     expect(report.cost.monthUsd).toBeCloseTo(5.144, 9);
-    expect(vi.mocked(logger.error).mock.calls[0]?.[0]).toMatchObject({ evt: "investigate_artist_ledger_failed" });
+    expect(vi.mocked(logger.error).mock.calls[0]?.[0]).toMatchObject({
+      evt: "investigate_artist_ledger_failed",
+    });
   });
 });
 
@@ -616,9 +706,24 @@ describe("runInvestigation: without an API key", () => {
 
     expect(h.deps.analyze).not.toHaveBeenCalled();
     expect(h.deps.lookups).toHaveBeenCalledTimes(1);
-    expect(report.analysis).toEqual({ kind: "skipped", message: "ANTHROPIC_API_KEY is not set, so the model was not asked." });
-    expect(report.cost).toMatchObject({ runUsd: 0, monthUsd: 0, usage: NO_USAGE, worstCase: false, ledgerSaved: true });
-    expect(ledger(h.db)[0]).toMatchObject({ status: "skipped", cost_usd: 0, input_tokens: 0, image_count: 2, lookup_count: 6 });
+    expect(report.analysis).toEqual({
+      kind: "skipped",
+      message: "ANTHROPIC_API_KEY is not set, so the model was not asked.",
+    });
+    expect(report.cost).toMatchObject({
+      runUsd: 0,
+      monthUsd: 0,
+      usage: NO_USAGE,
+      worstCase: false,
+      ledgerSaved: true,
+    });
+    expect(ledger(h.db)[0]).toMatchObject({
+      status: "skipped",
+      cost_usd: 0,
+      input_tokens: 0,
+      image_count: 2,
+      lookup_count: 6,
+    });
     expect(h.progress).not.toContain("Asking the model. This can take a few minutes...");
   });
 
@@ -647,7 +752,9 @@ describe("runInvestigation: one run at a time", () => {
     gate.resolve();
     const firstResult = await firstRun;
 
-    expect(messageOf(secondResult)).toBe("An investigation is already running. Try again when it finishes.");
+    expect(messageOf(secondResult)).toBe(
+      "An investigation is already running. Try again when it finishes."
+    );
     expect(second.channel.fetch).not.toHaveBeenCalled();
     expect(firstResult.ok).toBe(true);
     expect((await second.run()).ok).toBe(true);
@@ -684,14 +791,17 @@ describe("runInvestigation: images", () => {
   it("keeps going when one image cannot be decoded, with a short reason", async () => {
     const h = harness();
     h.deps.prepare.mockImplementation(async (key) => {
-      if (key === "img1") throw new Error(`Input buffer\n   contains unsupported image format ${"x".repeat(300)}`);
+      if (key === "img1")
+        throw new Error(`Input buffer\n   contains unsupported image format ${"x".repeat(300)}`);
       return preparedImage(key);
     });
     const report = reportOf(await h.run());
 
     expect(report.images.map((image) => image.key)).toEqual(["img2"]);
     expect(report.imageFailures[0]?.reason).toHaveLength(120);
-    expect(report.imageFailures[0]?.reason.startsWith("Input buffer contains unsupported image format x")).toBe(true);
+    expect(
+      report.imageFailures[0]?.reason.startsWith("Input buffer contains unsupported image format x")
+    ).toBe(true);
   });
 
   it("gives a reason even when what was thrown is not an error", async () => {
@@ -699,7 +809,10 @@ describe("runInvestigation: images", () => {
     h.deps.fetchImage.mockRejectedValue("nope");
     const report = reportOf(await h.run());
 
-    expect(report.imageFailures.map((failure) => failure.reason)).toEqual(["unknown error", "unknown error"]);
+    expect(report.imageFailures.map((failure) => failure.reason)).toEqual([
+      "unknown error",
+      "unknown error",
+    ]);
   });
 
   it("still asks the model when every image failed, and says there is nothing to look up", async () => {
@@ -717,7 +830,9 @@ describe("runInvestigation: images", () => {
   it("hands the images on in the order they were posted, whatever order they finish in", async () => {
     const h = harness();
     const slow = deferred<Buffer>();
-    h.deps.fetchImage.mockImplementation((url) => (url === SKETCH_URL ? slow.promise : Promise.resolve(Buffer.from(url))));
+    h.deps.fetchImage.mockImplementation((url) =>
+      url === SKETCH_URL ? slow.promise : Promise.resolve(Buffer.from(url))
+    );
 
     const running = h.run();
     await vi.waitFor(() => expect(h.deps.prepare).toHaveBeenCalledTimes(1));
@@ -773,7 +888,11 @@ describe("runInvestigation: a stage that fails", () => {
       cacheHits: 0,
       matches: 0,
     });
-    expect(report.provenance).toEqual({ matches: [], services: [failed("fluffle"), failed("e621"), failed("saucenao")], omitted: 0 });
+    expect(report.provenance).toEqual({
+      matches: [],
+      services: [failed("fluffle"), failed("e621"), failed("saucenao")],
+      omitted: 0,
+    });
     expect(h.deps.analyze.mock.calls[0]?.[0].provenance).toEqual(report.provenance);
     expect(report.analysis.kind).toBe("ok");
     expect(vi.mocked(logger.error).mock.calls[0]?.[0]).toEqual({
@@ -799,7 +918,12 @@ describe("runInvestigation: a stage that fails", () => {
     // The worst case always includes the full output allowance: 20,000 tokens at $20 per million.
     expect(report.cost.runUsd).toBeGreaterThan(0.4);
     expect(report.cost.monthUsd).toBeCloseTo(report.cost.runUsd, 9);
-    expect(ledger(h.db)[0]).toMatchObject({ status: "error", cost_usd: report.cost.runUsd, input_tokens: 0, output_tokens: 0 });
+    expect(ledger(h.db)[0]).toMatchObject({
+      status: "error",
+      cost_usd: report.cost.runUsd,
+      input_tokens: 0,
+      output_tokens: 0,
+    });
     expect(report.provenance).toBe(LOOKUPS);
     expect(vi.mocked(logger.error).mock.calls[0]?.[0]).toEqual({
       evt: "investigate_artist_analysis_failed",
@@ -808,7 +932,12 @@ describe("runInvestigation: a stage that fails", () => {
   });
 
   it("counts a timed-out model call at its worst case, and more images make that worst case larger", async () => {
-    const timedOut: AnalysisOutcome = { kind: "error", message: "The Claude API timed out.", usage: null, mayBeBilled: true };
+    const timedOut: AnalysisOutcome = {
+      kind: "error",
+      message: "The Claude API timed out.",
+      usage: null,
+      mayBeBilled: true,
+    };
     const two = harness();
     two.deps.analyze.mockResolvedValue(timedOut);
     const none = harness({ messages: [greeting(), raw({ content: "text only" })] });
@@ -825,21 +954,33 @@ describe("runInvestigation: a stage that fails", () => {
 
   it("charges nothing for a model call that never reached the API", async () => {
     const h = harness();
-    h.deps.analyze.mockResolvedValue({ kind: "error", message: "The Claude API could not be reached.", usage: null, mayBeBilled: false });
+    h.deps.analyze.mockResolvedValue({
+      kind: "error",
+      message: "The Claude API could not be reached.",
+      usage: null,
+      mayBeBilled: false,
+    });
     const report = reportOf(await h.run());
 
     expect(report.cost).toMatchObject({ runUsd: 0, monthUsd: 0, worstCase: false });
     expect(ledger(h.db)[0]).toMatchObject({ status: "error", cost_usd: 0 });
   });
 
-  it.each(["refused", "truncated", "invalid"] as const)("pays for a %s answer by its token counts", async (kind) => {
-    const h = harness();
-    h.deps.analyze.mockResolvedValue({ kind, message: "No usable answer.", usage: USAGE });
-    const report = reportOf(await h.run());
+  it.each(["refused", "truncated", "invalid"] as const)(
+    "pays for a %s answer by its token counts",
+    async (kind) => {
+      const h = harness();
+      h.deps.analyze.mockResolvedValue({ kind, message: "No usable answer.", usage: USAGE });
+      const report = reportOf(await h.run());
 
-    expect(report.analysis).toEqual({ kind, message: "No usable answer.", usage: USAGE });
-    expect(report.cost.runUsd).toBeCloseTo(0.144, 9);
-    expect(report.cost.worstCase).toBe(false);
-    expect(ledger(h.db)[0]).toMatchObject({ status: kind, input_tokens: 21_000, output_tokens: 3_000 });
-  });
+      expect(report.analysis).toEqual({ kind, message: "No usable answer.", usage: USAGE });
+      expect(report.cost.runUsd).toBeCloseTo(0.144, 9);
+      expect(report.cost.worstCase).toBe(false);
+      expect(ledger(h.db)[0]).toMatchObject({
+        status: kind,
+        input_tokens: 21_000,
+        output_tokens: 3_000,
+      });
+    }
+  );
 });

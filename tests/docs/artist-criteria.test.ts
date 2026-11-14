@@ -55,7 +55,9 @@ describe("artist criteria: handbook parity", () => {
 
   it("takes its verification rules from the Commissions Verification section", () => {
     const section = normalizeWorkflowText(handbookSection("## Commissions Verification"));
-    const outside = [...RED_FLAGS, ...GREEN_FLAGS].filter((quote) => !section.includes(normalizeWorkflowText(quote)));
+    const outside = [...RED_FLAGS, ...GREEN_FLAGS].filter(
+      (quote) => !section.includes(normalizeWorkflowText(quote))
+    );
 
     expect(outside).toEqual([]);
   });
@@ -89,7 +91,11 @@ describe("artist criteria: handbook parity", () => {
     expect(start).toBeGreaterThan(-1);
     expect(policyRows).toHaveLength(AI_POLICY.length);
     for (const row of AI_POLICY) {
-      expect(handbookText).toContain(normalizeWorkflowText(`| ${row.level} | ${row.allowed} | ${row.disclosure} | ${row.consequence} |`));
+      expect(handbookText).toContain(
+        normalizeWorkflowText(
+          `| ${row.level} | ${row.allowed} | ${row.disclosure} | ${row.consequence} |`
+        )
+      );
     }
   });
 
@@ -104,7 +110,9 @@ describe("artist criteria: handbook parity", () => {
 
     expect(entries).toHaveLength(AI_ARTIFACT_GUIDE.length);
     for (const row of AI_ARTIFACT_GUIDE) {
-      expect(normalizeWorkflowText(section)).toContain(normalizeWorkflowText(`| ${row.category} | ${row.artifacts} |`));
+      expect(normalizeWorkflowText(section)).toContain(
+        normalizeWorkflowText(`| ${row.category} | ${row.artifacts} |`)
+      );
     }
   });
 });
@@ -124,7 +132,9 @@ describe("artist criteria: shape", () => {
 
   it("marks which criteria ask for something and which look for a problem", () => {
     // The report and the prompt word a rating by this: "met" on a risk check means nothing was found.
-    expect(Object.fromEntries(CRITERIA.map((criterion) => [criterion.key, criterion.kind]))).toEqual({
+    expect(
+      Object.fromEntries(CRITERIA.map((criterion) => [criterion.key, criterion.kind]))
+    ).toEqual({
       process_evidence: "requirement",
       client_work: "requirement",
       terms_of_service: "requirement",
@@ -139,7 +149,9 @@ describe("artist criteria: shape", () => {
   });
 
   it("ties every rule to a source the report can name", () => {
-    const sources = new Set(CRITERIA.flatMap((criterion) => criterion.rules.map((rule) => rule.source)));
+    const sources = new Set(
+      CRITERIA.flatMap((criterion) => criterion.rules.map((rule) => rule.source))
+    );
 
     expect([...sources].sort()).toEqual(["art_rules", "handbook", "requirements"]);
     for (const source of sources) expect(WORKFLOW_SOURCE_LABELS[source].length).toBeGreaterThan(5);
@@ -147,7 +159,14 @@ describe("artist criteria: shape", () => {
 
   it("covers what the brief asks the command to assess", () => {
     expect(CRITERIA.map((criterion) => criterion.key)).toEqual(
-      expect.arrayContaining(["process_evidence", "consistency", "provenance", "ai_indicators", "base_use", "account_history"])
+      expect.arrayContaining([
+        "process_evidence",
+        "consistency",
+        "provenance",
+        "ai_indicators",
+        "base_use",
+        "account_history",
+      ])
     );
   });
 
@@ -155,7 +174,9 @@ describe("artist criteria: shape", () => {
     const guidance = CRITERIA.map((criterion) => criterion.guidance).join(" ");
 
     expect(guidance).toContain("AI generation cannot be detected reliably");
-    expect(guidance).not.toMatch(/\b(?:conclude|decide|rule) (?:that|whether) (?:the art|it) (?:is|was) (?:stolen|traced|AI)/i);
+    expect(guidance).not.toMatch(
+      /\b(?:conclude|decide|rule) (?:that|whether) (?:the art|it) (?:is|was) (?:stolen|traced|AI)/i
+    );
   });
 
   it("states the places where the workflow's sources disagree", () => {
@@ -170,7 +191,9 @@ describe("artist criteria: shape", () => {
       ...WORKFLOW_GAPS,
       ...Object.values(WORKFLOW_SOURCE_LABELS),
     ].join("\n");
-    const dashes = [0x2013, 0x2014, 0x2018, 0x2019, 0x201c, 0x201d].map((code) => String.fromCharCode(code));
+    const dashes = [0x2013, 0x2014, 0x2018, 0x2019, 0x201c, 0x201d].map((code) =>
+      String.fromCharCode(code)
+    );
 
     for (const mark of dashes) expect(shown).not.toContain(mark);
   });
@@ -182,18 +205,24 @@ describe("artist criteria: text helpers", () => {
   const curlyClose = String.fromCharCode(0x201d);
 
   it("normalizes case, spacing, emphasis, custom emoji and curly quotes", () => {
-    expect(normalizeWorkflowText("  **Speed-paints**   also\n\n_help_ your `verification` ~~now~~ ")).toBe(
-      "speed-paints also help your verification now"
+    expect(
+      normalizeWorkflowText("  **Speed-paints**   also\n\n_help_ your `verification` ~~now~~ ")
+    ).toBe("speed-paints also help your verification now");
+    expect(
+      normalizeWorkflowText("<:paw:123456789012345678> Rule <a:spin:987654321098765432>")
+    ).toBe("rule");
+    expect(normalizeWorkflowText(`Don${curlyApostrophe}t ${curlyOpen}trace${curlyClose}`)).toBe(
+      `don't "trace"`
     );
-    expect(normalizeWorkflowText("<:paw:123456789012345678> Rule <a:spin:987654321098765432>")).toBe("rule");
-    expect(normalizeWorkflowText(`Don${curlyApostrophe}t ${curlyOpen}trace${curlyClose}`)).toBe(`don't "trace"`);
   });
 
   it("shows a table row without its column bars and leaves other rules alone", () => {
-    expect(displayRule("| 100% AI-generated | Prohibited | Not allowed | Decline Verification |")).toBe(
-      "100% AI-generated / Prohibited / Not allowed / Decline Verification"
+    expect(
+      displayRule("| 100% AI-generated | Prohibited | Not allowed | Decline Verification |")
+    ).toBe("100% AI-generated / Prohibited / Not allowed / Decline Verification");
+    expect(displayRule("3 different WIP/Layers to previous work")).toBe(
+      "3 different WIP/Layers to previous work"
     );
-    expect(displayRule("3 different WIP/Layers to previous work")).toBe("3 different WIP/Layers to previous work");
   });
 
   it("lists the applicant requirement lines the criteria were built from", () => {
@@ -219,6 +248,8 @@ describe("artist criteria: text helpers", () => {
     const greeting = quotes.filter((_, index) => index !== 0 && index !== 2).join("\n");
 
     expect(findRequirementDrift(greeting)).toEqual([quotes[0], quotes[2]]);
-    expect(findRequirementDrift("Welcome! A staff member will be with you shortly.")).toEqual(quotes);
+    expect(findRequirementDrift("Welcome! A staff member will be with you shortly.")).toEqual(
+      quotes
+    );
   });
 });
