@@ -102,10 +102,14 @@ client.on("guildDelete", wrapEvent("guildDelete", async (guild) => {
 client.on("guildMemberAdd", wrapEvent("guildMemberAdd", async (member) => {
   if (!member.guild) return;
 
-  await logActionPretty(member.guild, {
-    actorId: member.id,
-    action: "member_join",
-  });
+  try {
+    await logActionPretty(member.guild, {
+      actorId: member.id,
+      action: "member_join",
+    });
+  } catch (err) {
+    logger.warn({ err, userId: member.id, guildId: member.guild.id }, "[guildMemberAdd] member_join log failed");
+  }
 
   logger.debug({ userId: member.id, guildId: member.guild.id }, "[metrics] member join logged");
 
@@ -179,10 +183,14 @@ client.on("guildMemberRemove", wrapEvent("guildMemberRemove", async (member) => 
 
   // Append-only leave event (mirrors member_join): one immutable row per leave
   // in action_log, so churn metrics never change retroactively on rejoin.
-  await logActionPretty(member.guild, {
-    actorId: userId,
-    action: "member_leave",
-  });
+  try {
+    await logActionPretty(member.guild, {
+      actorId: userId,
+      action: "member_leave",
+    });
+  } catch (err) {
+    logger.warn({ err, guildId, userId }, "[guildMemberRemove] member_leave log failed");
+  }
 
   // Track member departure in user_activity
   trackLeave(guildId, userId);
