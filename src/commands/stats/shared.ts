@@ -62,6 +62,7 @@ export function getAvgClaimToDecision(
   actorId: string,
   windowStartS: number
 ): number | null {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- kept as require(): swapping to an import changes runtime behaviour (tests/commands/stats/shared.test.ts pins it); fixing it is a separate change
   const { db } = require("../../db/db.js");
   const result = db
     .prepare(
@@ -100,6 +101,7 @@ export function getAvgClaimToDecision(
  * WHY: Context metric for understanding review queue responsiveness.
  */
 export function getAvgSubmitToFirstClaim(guildId: string, windowStartS: number): number | null {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- kept as require(): swapping to an import changes runtime behaviour (tests/commands/stats/shared.test.ts pins it); fixing it is a separate change
   const { db } = require("../../db/db.js");
   const result = db
     .prepare(
