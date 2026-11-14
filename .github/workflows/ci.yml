@@ -30,14 +30,15 @@ jobs:
         # See docs/operations/ci-policy.md for the gate hierarchy.
         run: npm run typecheck
       - name: Lint
+        # HARD GATE: 0 errors (warnings allowed). See docs/operations/ci-policy.md.
         run: npm run lint
-        continue-on-error: true  # SOFT — large web/ + workers/ globals backlog tracked in TODO.md
       - name: Format Check
         run: npm run format:check
-        continue-on-error: true  # SOFT — large web/ Prettier drift tracked in TODO.md
+        # SOFT: flips to a hard gate right after the one-shot mechanical format commit.
+        continue-on-error: true
       - name: Dead code (knip)
+        # HARD GATE: knip exits 0 (#00271).
         run: npm run knip
-        continue-on-error: true  # SOFT: report only until the export backlog is gone (#00271)
 
   test:
     name: Tests (Node ${{ matrix.node }})
