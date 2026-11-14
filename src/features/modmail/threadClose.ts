@@ -86,7 +86,7 @@ async function archiveOrDeleteThread(
   thread: ThreadChannel,
   deleteOnClose: boolean,
   client: Client
-): Promise<{ action: "delete" | "archive"; ok: boolean; err?: any; code?: number }> {
+): Promise<{ action: "delete" | "archive"; ok: boolean; err?: unknown; code?: number }> {
   // Pre-check permissions
   const me = thread.guild?.members.me;
   const myPerms = me ? thread.permissionsFor(me.id) : null;
@@ -263,7 +263,7 @@ export async function closeModmailThread(params: {
     }
 
     // Store thread reference for later cleanup
-    let threadForCleanup: any = null;
+    let threadForCleanup: ThreadChannel | null = null;
 
     // Lock and archive thread
     if (ticket.thread_id) {

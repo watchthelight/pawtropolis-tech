@@ -114,7 +114,7 @@ export async function handleDbRecoveryButton(interaction: ButtonInteraction): Pr
         if (guild) {
           await logActionPretty(guild, {
             actorId: user.id,
-            action: "db_recover_validate" as any, // Will be added to ActionType
+            action: "db_recover_validate",
             meta: {
               candidateId,
               filename: candidate.filename,
@@ -157,7 +157,7 @@ export async function handleDbRecoveryButton(interaction: ButtonInteraction): Pr
         if (guild) {
           await logActionPretty(guild, {
             actorId: user.id,
-            action: "db_recover_restore" as any,
+            action: "db_recover_restore",
             meta: {
               candidateId,
               filename: candidate.filename,
@@ -213,7 +213,7 @@ export async function handleDbRecoveryButton(interaction: ButtonInteraction): Pr
         if (guild) {
           await logActionPretty(guild, {
             actorId: user.id,
-            action: "db_recover_restore" as any,
+            action: "db_recover_restore",
             meta: {
               candidateId,
               filename: candidate.filename,

@@ -110,7 +110,7 @@ const ALLOWED_TIME_COLUMNS = new Set([
 export function getEpochPredicate(
   guildId: string,
   timeColumnName: string = "created_at_s"
-): { sql: string; params: any[] } {
+): { sql: string; params: unknown[] } {
   // Validate column name against allowlist to prevent SQL injection
   if (!ALLOWED_TIME_COLUMNS.has(timeColumnName)) {
     logger.error(

@@ -160,7 +160,7 @@ export async function dashboardOpenThread(params: {
         channel,
         user: { id: staffUserId, tag: member.user.tag, username: member.user.username },
         member,
-      } as any,
+      } as unknown as Parameters<typeof openPublicModmailThreadFor>[0]["interaction"],
       userId: targetUserId,
       appCode,
     });

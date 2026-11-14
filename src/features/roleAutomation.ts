@@ -161,7 +161,7 @@ function logRoleAssignment(
   action: "add" | "remove" | "skipped",
   reason: string,
   triggeredBy: string,
-  details?: Record<string, any>
+  details?: Record<string, unknown>
 ): void {
   const stmt = db.prepare(`
     INSERT INTO role_assignments (

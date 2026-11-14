@@ -141,7 +141,7 @@ export function logActionJSON(params: {
   moderatorId: string;
   applicantId?: string;
   reason?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   timestamp: number;
 }): void {
   console.log(

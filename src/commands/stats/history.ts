@@ -22,7 +22,7 @@ import {
 } from "./shared.js";
 import { computePercentiles } from "../../lib/percentiles.js";
 import { detectModeratorAnomalies } from "../../lib/anomaly.js";
-import { generateModHistoryCsv } from "../../lib/csv.js";
+import { generateModHistoryCsv, type ActionLogCsvRow } from "../../lib/csv.js";
 import { logActionPretty } from "../../logging/pretty.js";
 import { randomBytes } from "node:crypto";
 
@@ -227,7 +227,7 @@ export async function handleHistory(
              WHERE actor_id = ? AND guild_id = ? AND created_at_s >= ?
              ORDER BY created_at_s DESC
              LIMIT ?`
-          ).all(moderator.id, guildId, fromTimestamp, MAX_EXPORT_ROWS) as any[]
+          ).all(moderator.id, guildId, fromTimestamp, MAX_EXPORT_ROWS) as ActionLogCsvRow[]
         );
 
         const csv = generateModHistoryCsv(rows);

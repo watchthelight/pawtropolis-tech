@@ -89,6 +89,27 @@ function validateRemotePath(remotePath: string): string {
   return remotePath;
 }
 
+interface ManifestSide {
+  exists: boolean;
+  size: number;
+  sha256?: string;
+}
+
+interface DbManifest {
+  synced_at: string | number;
+  mode: string;
+  local: ManifestSide;
+  remote: ManifestSide;
+}
+
+interface RemoteHealth {
+  healthy: boolean;
+  integrity: string;
+  size: number;
+  tables: Record<string, unknown>;
+  errors?: string[];
+}
+
 interface BackupInfo {
   count: number;
   totalSize: number;
@@ -252,7 +273,7 @@ async function executeCheck(ctx: CommandContext<ChatInputCommandInteraction>) {
   }
 
   // Get manifest info if available
-  let manifest: any = null;
+  let manifest: DbManifest | null = null;
   try {
     const manifestPath = path.resolve("./data/.db-manifest.json");
     if (fs.existsSync(manifestPath)) {
@@ -273,7 +294,7 @@ async function executeCheck(ctx: CommandContext<ChatInputCommandInteraction>) {
 
   // Try to check remote database (if SSH configured)
   ctx.step("check_remote_db");
-  let remoteHealth: any = null;
+  let remoteHealth: RemoteHealth | null = null;
   let remoteError: string | null = null;
 
   try {
@@ -422,13 +443,14 @@ async function executeCheck(ctx: CommandContext<ChatInputCommandInteraction>) {
       remoteValue += `• ${table}: \`${typeof count === "number" ? count.toLocaleString() : count}\`\n`;
     });
 
-    if (remoteHealth.errors?.length > 0) {
-      remoteValue += `\n**Errors (${remoteHealth.errors.length}):**\n`;
-      remoteHealth.errors.slice(0, 2).forEach((err: string) => {
+    const remoteErrors = remoteHealth.errors ?? [];
+    if (remoteErrors.length > 0) {
+      remoteValue += `\n**Errors (${remoteErrors.length}):**\n`;
+      remoteErrors.slice(0, 2).forEach((err: string) => {
         remoteValue += `• ${err.slice(0, 100)}\n`;
       });
-      if (remoteHealth.errors.length > 2) {
-        remoteValue += `• ...and ${remoteHealth.errors.length - 2} more\n`;
+      if (remoteErrors.length > 2) {
+        remoteValue += `• ...and ${remoteErrors.length - 2} more\n`;
       }
     }
 

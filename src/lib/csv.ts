@@ -21,7 +21,7 @@
  * @param value - Field value (may be null/undefined)
  * @returns Escaped CSV field
  */
-function escapeCsvField(value: string | null | undefined): string {
+function escapeCsvField(value: unknown): string {
   if (value === null || value === undefined) {
     return "";
   }
@@ -57,7 +57,7 @@ function escapeCsvField(value: string | null | undefined): string {
  * WHAT: Transform action_log row to CSV-friendly format
  * WHY: Moderator history export with metadata
  */
-export function formatActionLogRow(row: {
+export interface ActionLogCsvRow {
   id: number;
   action: string;
   actor_id: string;
@@ -67,11 +67,13 @@ export function formatActionLogRow(row: {
   reason?: string | null;
   meta_json?: string | null;
   guild_id: string;
-}): Record<string, any> {
+}
+
+export function formatActionLogRow(row: ActionLogCsvRow): Record<string, unknown> {
   // meta_json contains variable schema data depending on action type.
   // Parse defensively - malformed JSON shouldn't crash the export.
   // If parse fails, preserve the raw string so data isn't silently lost.
-  let meta: Record<string, any> = {};
+  let meta: Record<string, unknown> = {};
   if (row.meta_json) {
     try {
       meta = JSON.parse(row.meta_json);
@@ -101,7 +103,7 @@ export function formatActionLogRow(row: {
  * WHAT: Generate CSV from action_log rows for moderator history
  * WHY: Export moderator action history for analysis
  */
-export function generateModHistoryCsv(rows: any[]): string {
+export function generateModHistoryCsv(rows: ActionLogCsvRow[]): string {
   const columns = [
     "id",
     "timestamp",

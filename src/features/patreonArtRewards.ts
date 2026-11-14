@@ -171,7 +171,7 @@ export function getArtLogForUser(guildId: string, userId: string, limit = 10): A
     `SELECT art_type, quantity, patreon_tier, reason, created_at_s
      FROM patreon_art_log WHERE guild_id = ? AND user_id = ?
      ORDER BY created_at_s DESC LIMIT ?`
-  ).all(guildId, userId, limit) as any[];
+  ).all(guildId, userId, limit) as ReturnType<typeof getArtLogForUser>;
 }
 
 // ---------------------------------------------------------------------------

@@ -28,10 +28,7 @@ let cachedGuildBannerHash: string | null = null;
 let lastSyncTime: number | null = null;
 
 // Store reference to guildUpdate listener for cleanup
-// WHY typed as `any`: discord.js Guild types are large, and we only need .banner and .id.
-// This avoids importing the full Guild type just to satisfy TypeScript for an event handler
-// that's stored in a module-level variable.
-let guildUpdateListener: ((oldGuild: any, newGuild: any) => Promise<void>) | null = null;
+let guildUpdateListener: ((oldGuild: Guild, newGuild: Guild) => Promise<void>) | null = null;
 let periodicCheckInterval: NodeJS.Timeout | null = null;
 
 // Rate limiting: don't update bot banner more than once per 10 minutes

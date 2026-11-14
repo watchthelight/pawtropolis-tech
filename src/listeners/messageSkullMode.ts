@@ -69,7 +69,7 @@ export async function execute(message: Message) {
         guildId: message.guild.id,
         channelId: message.channel.id,
         messageId: message.id,
-        errorCode: (err as any)?.code,
+        errorCode: (err as { code?: unknown } | undefined)?.code,
       },
       "[skullmode] failed to react with skull"
     );

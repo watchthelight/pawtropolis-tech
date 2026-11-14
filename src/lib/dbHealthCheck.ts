@@ -154,7 +154,7 @@ export function checkDatabaseHealth(): HealthCheckResult {
     // This check has caught "oops deployed with empty database" twice now.
     try {
       // better-sqlite3 exposes the file path as .name (undocumented but stable)
-      const dbPath = (db as any).name;
+      const dbPath = db.name;
       const stats = statSync(dbPath);
       const sizeMB = (stats.size / 1024 / 1024).toFixed(2);
 

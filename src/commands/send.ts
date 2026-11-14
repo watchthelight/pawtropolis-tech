@@ -102,7 +102,7 @@ function checkRoleAccess(interaction: ChatInputCommandInteraction): boolean {
    * webhook-based interactions. If this breaks, check if you're using REST mode.
    */
   if (interaction.member && "roles" in interaction.member) {
-    const memberRoles = interaction.member.roles as { cache: Map<string, any> };
+    const memberRoles = interaction.member.roles as { cache: Map<string, unknown> };
     const hasRole = roleIds.some((roleId) => memberRoles.cache.has(roleId));
     return hasRole;
   }

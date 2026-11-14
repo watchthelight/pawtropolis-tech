@@ -140,7 +140,7 @@ function messageHasStartButton(message: Message) {
   return message.components.some((row) => {
     if (!("components" in row)) return false;
     return row.components?.some(
-      (component: any) =>
+      (component) =>
         component.type === ComponentType.Button && component.customId === "v1:start"
     );
   });

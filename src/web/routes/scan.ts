@@ -40,13 +40,14 @@ export function registerScanRoutes(server: FastifyInstance, ctx: DashboardRouteC
       const avatarResult = await scanAvatar(avatarUrl);
 
       // Scan banner NSFW (if exists)
-      let bannerResult: { finalPct: number; nsfwScore: number | null; reason: string; evidence: { hard: any[]; soft: any[]; safe: any[] } } | null = null;
+      type BannerEvidence = Array<{ tag: string; p: number }>;
+      let bannerResult: { finalPct: number; nsfwScore: number | null; reason: "hard_evidence" | "soft_evidence" | "suggestive" | "none"; evidence: { hard: BannerEvidence; soft: BannerEvidence; safe: BannerEvidence } } | null = null;
       if (bannerUrl) {
         const { detectNsfwVision, calculateVisionScore } = await import("../../features/googleVision.js");
         const visionResult = await detectNsfwVision(bannerUrl);
         if (visionResult) {
           const score = calculateVisionScore(visionResult);
-          let reason = "none";
+          let reason: "hard_evidence" | "soft_evidence" | "suggestive" | "none" = "none";
           if (visionResult.adultScore >= 0.8) reason = "hard_evidence";
           else if (visionResult.adultScore >= 0.5 || visionResult.racyScore >= 0.8) reason = "soft_evidence";
           else if (visionResult.racyScore >= 0.5) reason = "suggestive";
@@ -73,7 +74,7 @@ export function registerScanRoutes(server: FastifyInstance, ctx: DashboardRouteC
         bannerUrl,
         bannerNsfwScore: bannerResult?.nsfwScore ?? null,
         bannerFinalPct: bannerResult?.finalPct ?? 0,
-        bannerReason: (bannerResult?.reason as any) ?? null,
+        bannerReason: bannerResult?.reason ?? null,
         bannerEvidence: bannerResult?.evidence ?? null,
         avatarAiScore: null, // Don't overwrite AI scores
         bannerAiScore: null,

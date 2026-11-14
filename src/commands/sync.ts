@@ -33,7 +33,10 @@ export async function syncCommandsToGuild(guildId: string): Promise<void> {
     const commands = getAllSlashCommands();
     // Some commands might be raw objects (from JSON), others are builders.
     // toJSON() serializes builders; raw objects pass through unchanged.
-    const serialized = commands.map((cmd: any) => (cmd.toJSON ? cmd.toJSON() : cmd));
+    const serialized = commands.map((cmd) => {
+      const builder = cmd as { toJSON?: () => unknown };
+      return builder.toJSON ? builder.toJSON() : cmd;
+    });
 
     const rest = new REST({ version: "10" }).setToken(env.DISCORD_TOKEN);
     await rest.put(Routes.applicationGuildCommands(env.CLIENT_ID, guildId), {

@@ -211,7 +211,15 @@ export async function listCandidates(): Promise<BackupCandidate[]> {
         // Check if metadata exists in db_backups table
         const existingMeta = db
           .prepare(`SELECT * FROM db_backups WHERE path = ?`)
-          .get(filePath) as any;
+          .get(filePath) as
+          | {
+              integrity_result?: string;
+              row_count?: number;
+              checksum?: string;
+              verified_at?: number;
+              notes?: string;
+            }
+          | undefined;
 
         candidates.push({
           id,
@@ -309,7 +317,7 @@ export async function validateCandidate(candidateId: string): Promise<Validation
     // the pragma is needed for foreign_key_check to work properly.
     logger.info(`[dbRecovery] Running PRAGMA foreign_key_check`);
     candidateDb.pragma("foreign_keys = ON");
-    const fkRows = candidateDb.pragma("foreign_key_check") as Array<any>;
+    const fkRows = candidateDb.pragma("foreign_key_check") as Array<{ table: string; fkid: number; parent: string }>;
     foreign_key_violations = fkRows.length;
 
     if (foreign_key_violations === 0) {
@@ -600,7 +608,7 @@ export async function restoreCandidate(
     const integrity_result = integrityRows.map((r) => r.integrity_check).join("; ");
 
     restoredDb.pragma("foreign_keys = ON");
-    const fkRows = restoredDb.pragma("foreign_key_check") as Array<any>;
+    const fkRows = restoredDb.pragma("foreign_key_check") as unknown[];
     const foreign_key_violations = fkRows.length;
 
     restoredDb.close();

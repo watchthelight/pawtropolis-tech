@@ -85,7 +85,7 @@ async function resolveGuildEmoji(
 
   // The type assertion here is ugly, but discord.js's Collection typing is a pain.
   // We know .find exists, but TypeScript doesn't always agree depending on version.
-  const cache = guild.emojis.cache as { find?: (fn: (emoji: any) => boolean) => any };
+  const cache = guild.emojis.cache as { find?: (fn: (emoji: { name?: string | null }) => boolean) => { id?: string; name?: string | null; animated?: boolean | null } | undefined };
   if (cache?.find) {
     const match = cache.find((emoji) => {
       const name = (emoji?.name ?? "").toLowerCase();

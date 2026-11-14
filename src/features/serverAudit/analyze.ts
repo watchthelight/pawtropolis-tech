@@ -124,9 +124,9 @@ export async function fetchChannels(guild: Guild, roles: RoleData[]): Promise<Ch
       position: "position" in channel ? channel.position : 0,
       parentId: channel.parentId,
       parentName,
-      topic: "topic" in channel ? (channel as any).topic : null,
-      nsfw: "nsfw" in channel ? (channel as any).nsfw : false,
-      rateLimitPerUser: "rateLimitPerUser" in channel ? (channel as any).rateLimitPerUser : null,
+      topic: "topic" in channel ? channel.topic : null,
+      nsfw: "nsfw" in channel ? channel.nsfw : false,
+      rateLimitPerUser: "rateLimitPerUser" in channel ? channel.rateLimitPerUser : null,
       overwrites,
     });
   }

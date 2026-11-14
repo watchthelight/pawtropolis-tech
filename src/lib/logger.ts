@@ -110,7 +110,7 @@ export const logger = pino({
   // Custom error serializer extracts only the useful fields, avoiding
   // circular refs or huge stack traces from discord.js errors
   serializers: {
-    err: (e: any) => ({
+    err: (e: { name?: string; code?: unknown; message?: string; stack?: string } | null | undefined) => ({
       name: e?.name,
       code: e?.code,
       message: e?.message,

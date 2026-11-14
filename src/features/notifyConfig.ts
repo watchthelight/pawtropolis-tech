@@ -130,7 +130,7 @@ export function setNotifyConfig(guildId: string, config: Partial<NotifyConfig>):
     // Dynamic UPDATE: only set fields that were explicitly passed. This lets
     // callers update one field without touching others. Verbose but safe.
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
 
     if (config.forum_channel_id !== undefined) {
       updates.push("forum_channel_id = ?");
