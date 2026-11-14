@@ -73,11 +73,6 @@ function likelihoodToScore(likelihood: SafeSearchLikelihood): number {
 const REJECTION_PAUSE_MS = 6 * 60 * 60 * 1000;
 let pausedUntil = 0;
 
-/** Test hook. */
-export function _resetVisionPauseForTests(): void {
-  pausedUntil = 0;
-}
-
 export async function detectNsfwVision(imageUrl: string): Promise<VisionResult | null> {
   if (!GOOGLE_VISION_ENABLED) {
     return null;

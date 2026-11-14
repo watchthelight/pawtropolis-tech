@@ -7,7 +7,7 @@
  */
 
 export const DISCORD_BLURPLE = "#5865F2";
-export const DISCORD_DARK_BG = "#2B2D31";
+const DISCORD_DARK_BG = "#2B2D31";
 const DISCORD_TEXT_LIGHT = "#FFFFFF";
 const DISCORD_TEXT_DARK = "#0D0D0D";
 export const DISCORD_NEUTRAL_PILL = "#404249";

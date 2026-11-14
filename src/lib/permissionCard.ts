@@ -30,7 +30,7 @@ import { newTraceId, ctx } from "./reqctx.js";
  * Defines what permission(s) would grant access to a command.
  * Uses discriminated union for type-safe handling.
  */
-export type PermissionRequirement =
+type PermissionRequirement =
   | { type: "roles"; roleIds: string[] }
   | { type: "hierarchy"; minRoleId: string }
   | { type: "config"; field: "mod_role_ids" | "reviewer_role_id" | "artist_role_id" | "leadership_role_id" }
