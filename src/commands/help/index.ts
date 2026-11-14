@@ -330,10 +330,11 @@ export async function handleHelpButton(interaction: ButtonInteraction): Promise<
         await showCommandDetail(interaction, nav.name, member, guildId, userId, nav.full);
         break;
 
-      case "search_modal":
+      case "search_modal": {
         const modal = buildSearchModal();
         await interaction.showModal(modal);
         break;
+      }
 
       default:
         await interaction.reply({

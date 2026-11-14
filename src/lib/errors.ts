@@ -250,10 +250,11 @@ export function isRecoverable(err: ClassifiedError): boolean {
       // logic errors and will fail again.
       return err.code === "SQLITE_BUSY" || err.code === "SQLITE_LOCKED";
 
-    case "discord_api":
+    case "discord_api": {
       // Retry server errors (5xx) - Discord is having a bad day
       const status = err.httpStatus ?? 0;
       return status >= 500 && status < 600;
+    }
 
     default:
       return false;
