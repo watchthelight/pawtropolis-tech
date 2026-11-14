@@ -239,9 +239,9 @@ export function startDiskSpaceScheduler(client: Client): void {
     try {
       await checkDiskSpace(client);
       recordSchedulerRun("diskSpace", true);
-    } catch (err: any) {
+    } catch (err) {
       recordSchedulerRun("diskSpace", false);
-      logger.error({ err: err.message }, "[diskspace:scheduler] initial check failed");
+      logger.error({ err: (err as Error).message }, "[diskspace:scheduler] initial check failed");
     }
   }, 15000); // 15s delay
   _startupTimeout.unref?.();
@@ -251,9 +251,9 @@ export function startDiskSpaceScheduler(client: Client): void {
     try {
       await checkDiskSpace(client);
       recordSchedulerRun("diskSpace", true);
-    } catch (err: any) {
+    } catch (err) {
       recordSchedulerRun("diskSpace", false);
-      logger.error({ err: err.message }, "[diskspace:scheduler] scheduled check failed");
+      logger.error({ err: (err as Error).message }, "[diskspace:scheduler] scheduled check failed");
     }
   }, intervalMs);
 

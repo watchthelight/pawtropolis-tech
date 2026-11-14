@@ -49,10 +49,10 @@ export async function forumPostNotify(thread: ThreadChannel): Promise<void> {
     let starterMessage;
     try {
       starterMessage = await thread.fetchStarterMessage();
-    } catch (err: any) {
+    } catch (err) {
       // Discord race condition: threadCreate fires before starter message exists
       // Retry once after a short delay (error 10008 = Unknown Message)
-      if (err.code === 10008) {
+      if ((err as { code?: unknown; message?: string }).code === 10008) {
         logger.info({ threadId: thread.id, guildId }, "[forumPostNotify] starter message not ready, retrying");
         await new Promise((resolve) => setTimeout(resolve, DISCORD_RETRY_DELAY_MS));
         try {
@@ -124,17 +124,17 @@ export async function forumPostNotify(thread: ThreadChannel): Promise<void> {
           meta: { thread_name: thread.name, starter_message_id: starterMessage.id, role_id: roleId, notify_mode: notifyMode },
         });
       }
-    } catch (err: any) {
+    } catch (err) {
       logger.error({ err, guildId, threadId: thread.id, roleId }, "[forumPostNotify] failed to send ping");
       let failureReason = "unknown_error";
-      if (err.code === 50013) failureReason = "missing_permissions";
-      else if (err.message?.includes("mentionable")) failureReason = "role_not_mentionable";
+      if ((err as { code?: unknown; message?: string }).code === 50013) failureReason = "missing_permissions";
+      else if ((err as { code?: unknown; message?: string }).message?.includes("mentionable")) failureReason = "role_not_mentionable";
       if (thread.guild) {
         await logActionPretty(thread.guild, {
           actorId: starterMessage.author.id,
           action: "forum_post_ping_fail",
           reason: `Failed: ${failureReason}`,
-          meta: { thread_name: thread.name, starter_message_id: starterMessage.id, role_id: roleId, error_code: err.code, failure_reason: failureReason },
+          meta: { thread_name: thread.name, starter_message_id: starterMessage.id, role_id: roleId, error_code: (err as { code?: unknown; message?: string }).code, failure_reason: failureReason },
         });
       }
       // If the role isn't mentionable, we still want staff to know about the post.

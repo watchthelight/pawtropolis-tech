@@ -335,8 +335,8 @@ export async function validateCandidate(candidateId: string): Promise<Validation
         };
         row_counts[table] = result.count;
         messages.push(`📊 ${table}: ${result.count.toLocaleString()} rows`);
-      } catch (err: any) {
-        if (err.message?.includes("no such table")) {
+      } catch (err) {
+        if ((err as Error).message?.includes("no such table")) {
           row_counts[table] = 0;
           messages.push(`⚠️ ${table}: table does not exist`);
         } else {
@@ -638,8 +638,8 @@ export async function restoreCandidate(
     try {
       scheduleDetachedPm2Restart(restartProcessName);
       messages.push(`🚀 Restart scheduled: the bot will reload on the new database in a moment`);
-    } catch (err: any) {
-      messages.push(`⚠️ Could not schedule PM2 restart: ${err.message}`);
+    } catch (err) {
+      messages.push(`⚠️ Could not schedule PM2 restart: ${(err as Error).message}`);
       messages.push(`   Restart manually: pm2 restart ${restartProcessName}`);
     }
   }

@@ -61,9 +61,9 @@ export function trackJoin(guildId: string, userId: string, joinedAt: number): vo
     ).run(guildId, userId, joinedAt);
 
     logger.debug({ guildId, userId, joinedAt }, "[activity] join tracked");
-  } catch (err: any) {
+  } catch (err) {
     // Gracefully handle missing table (pre-migration databases)
-    if (err?.message?.includes("no such table: user_activity")) {
+    if ((err as Error | undefined)?.message?.includes("no such table: user_activity")) {
       logger.debug(
         { err, guildId, userId },
         "[activity] user_activity table missing - migration 005 may not have run yet"
@@ -85,8 +85,8 @@ export function trackLeave(guildId: string, userId: string): void {
       `UPDATE user_activity SET left_at = ? WHERE guild_id = ? AND user_id = ?`
     ).run(Math.floor(Date.now() / 1000), guildId, userId);
     logger.debug({ guildId, userId }, "[activity] leave tracked");
-  } catch (err: any) {
-    if (err?.message?.includes("no such table") || err?.message?.includes("no such column")) return;
+  } catch (err) {
+    if ((err as Error | undefined)?.message?.includes("no such table") || (err as Error | undefined)?.message?.includes("no such column")) return;
     logger.warn({ err, guildId, userId }, "[activity] failed to track leave");
   }
 }
@@ -167,9 +167,9 @@ export async function trackFirstMessage(client: Client, message: Message): Promi
 
     // Evaluate threshold and post flag alert if needed
     await evaluateAndFlag(client, guildId, userId, row.joined_at, messageTimestamp, message);
-  } catch (err: any) {
+  } catch (err) {
     // Gracefully handle missing table (pre-migration databases)
-    if (err?.message?.includes("no such table: user_activity")) {
+    if ((err as Error | undefined)?.message?.includes("no such table: user_activity")) {
       logger.debug(
         { err, guildId, userId },
         "[activity] user_activity table missing - migration 005 may not have run yet"

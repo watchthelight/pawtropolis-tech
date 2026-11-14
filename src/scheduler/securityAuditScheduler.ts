@@ -220,9 +220,9 @@ async function runSecurityAudit(client: Client): Promise<void> {
       },
       "[security-audit:scheduler] Audit completed and posted"
     );
-  } catch (err: any) {
+  } catch (err) {
     logger.error(
-      { err: err.message, guildId },
+      { err: (err as Error).message, guildId },
       "[security-audit:scheduler] Failed to run security audit"
     );
     throw err;
@@ -351,9 +351,9 @@ export function startSecurityAuditScheduler(client: Client): void {
     try {
       await runSecurityAudit(client);
       recordSchedulerRun("securityAudit", true, Date.now() - startedAt);
-    } catch (err: any) {
+    } catch (err) {
       recordSchedulerRun("securityAudit", false, Date.now() - startedAt);
-      logger.error({ err: err.message }, "[security-audit:scheduler] Initial audit failed");
+      logger.error({ err: (err as Error).message }, "[security-audit:scheduler] Initial audit failed");
     }
   }, 30000);
 
@@ -372,9 +372,9 @@ export function startSecurityAuditScheduler(client: Client): void {
     try {
       await runSecurityAudit(client);
       recordSchedulerRun("securityAudit", true, Date.now() - startedAt);
-    } catch (err: any) {
+    } catch (err) {
       recordSchedulerRun("securityAudit", false, Date.now() - startedAt);
-      logger.error({ err: err.message }, "[security-audit:scheduler] Scheduled audit failed");
+      logger.error({ err: (err as Error).message }, "[security-audit:scheduler] Scheduled audit failed");
     } finally {
       _running = false;
     }

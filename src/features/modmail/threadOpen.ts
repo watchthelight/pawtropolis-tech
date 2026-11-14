@@ -456,15 +456,15 @@ export async function openPublicModmailThreadFor(params: {
       success: true,
       message: `Modmail thread created: <#${thread.id}>`,
     };
-  } catch (err: any) {
+  } catch (err) {
     // Transaction rollback is automatic via db.transaction() - no explicit rollback needed
 
     // Detect race condition: if we hit a PRIMARY KEY constraint, another mod won.
     const isRaceCondition =
-      String(err?.message || "").includes("UNIQUE") ||
-      String(err?.message || "").includes("PRIMARY KEY") ||
-      err?.code === "SQLITE_CONSTRAINT_PRIMARYKEY" ||
-      err?.code === "SQLITE_CONSTRAINT";
+      String((err as Error | undefined)?.message || "").includes("UNIQUE") ||
+      String((err as Error | undefined)?.message || "").includes("PRIMARY KEY") ||
+      (err as { code?: unknown } | undefined)?.code === "SQLITE_CONSTRAINT_PRIMARYKEY" ||
+      (err as { code?: unknown } | undefined)?.code === "SQLITE_CONSTRAINT";
 
     if (isRaceCondition) {
       // Race detected: another moderator beat us. Look up their thread and link to it.

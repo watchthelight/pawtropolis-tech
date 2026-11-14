@@ -146,11 +146,11 @@ function flushMessageBuffer(): void {
     })();
 
     logger.debug({ count: batch.length }, '[message_activity] flushed batch');
-  } catch (err: any) {
+  } catch (err) {
     // Gracefully handle missing table - this happens when running against a
     // database that predates migration 020. We don't want to crash the bot
     // just because activity tracking isn't available yet.
-    if (err?.message?.includes('no such table: message_activity')) {
+    if ((err as Error | undefined)?.message?.includes('no such table: message_activity')) {
       logger.debug(
         { err, batchSize: batch.length },
         '[message_activity] message_activity table missing - migration 020 may not have run yet'

@@ -65,10 +65,10 @@ async function runHealthCheckForAllGuilds(client: Client): Promise<number> {
       "[opshealth:scheduler] health check completed"
     );
     processedCount++;
-  } catch (err: any) {
+  } catch (err) {
     // WHY err.message instead of err? Pino serializes Error objects weirdly,
     // and we've had production logs where the actual error was "[object Object]"
-    logger.error({ err: err.message, guildId }, "[opshealth:scheduler] health check failed");
+    logger.error({ err: (err as Error).message, guildId }, "[opshealth:scheduler] health check failed");
     errorCount++;
   }
 
@@ -126,9 +126,9 @@ export function startOpsHealthScheduler(client: Client): void {
     try {
       await runHealthCheckForAllGuilds(client);
       recordSchedulerRun("opsHealth", true, Date.now() - startedAt);
-    } catch (err: any) {
+    } catch (err) {
       recordSchedulerRun("opsHealth", false, Date.now() - startedAt);
-      logger.error({ err: err.message }, "[opshealth:scheduler] initial check failed");
+      logger.error({ err: (err as Error).message }, "[opshealth:scheduler] initial check failed");
     }
   }, 10000); // 10s delay
 
@@ -138,9 +138,9 @@ export function startOpsHealthScheduler(client: Client): void {
     try {
       await runHealthCheckForAllGuilds(client);
       recordSchedulerRun("opsHealth", true, Date.now() - startedAt);
-    } catch (err: any) {
+    } catch (err) {
       recordSchedulerRun("opsHealth", false, Date.now() - startedAt);
-      logger.error({ err: err.message }, "[opshealth:scheduler] scheduled check failed");
+      logger.error({ err: (err as Error).message }, "[opshealth:scheduler] scheduled check failed");
     }
   }, intervalMs);
 

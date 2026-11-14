@@ -51,13 +51,13 @@ export async function executeSetFlagsThreshold(ctx: CommandContext<ChatInputComm
         "[config] flags threshold updated"
       );
       return true;
-    } catch (err: any) {
+    } catch (err) {
       logger.error(
         { err, guildId: interaction.guildId, days },
         "[config] failed to set flags threshold"
       );
       await replyOrEdit(interaction, {
-        content: `Failed to set threshold: ${err.message}`,
+        content: `Failed to set threshold: ${(err as Error).message}`,
         flags: MessageFlags.Ephemeral,
       });
       return false;

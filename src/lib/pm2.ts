@@ -138,10 +138,10 @@ async function fetchPM2Status(processNames: string[]): Promise<PM2ProcessStatus[
 
     logger.debug({ statuses }, "[pm2] fetched process statuses");
     return statuses;
-  } catch (err: any) {
+  } catch (err) {
     // Graceful degradation: return unknown status rather than throwing.
     // Health checks should be resilient to PM2 being unavailable.
-    if (err.code === "ENOENT" || err.message?.includes("command not found")) {
+    if ((err as { code?: unknown; message?: string }).code === "ENOENT" || (err as { code?: unknown; message?: string }).message?.includes("command not found")) {
       logger.warn("[pm2] pm2 command not found - PM2 may not be installed");
       return processNames.map((name) => ({
         name,
@@ -150,7 +150,7 @@ async function fetchPM2Status(processNames: string[]): Promise<PM2ProcessStatus[
     }
 
     // Timeout or other error
-    logger.error({ err: err.message, code: err.code }, "[pm2] failed to fetch process status");
+    logger.error({ err: (err as { code?: unknown; message?: string }).message, code: (err as { code?: unknown; message?: string }).code }, "[pm2] failed to fetch process status");
     return processNames.map((name) => ({
       name,
       status: "unknown",

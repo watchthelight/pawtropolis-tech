@@ -106,8 +106,8 @@ async function archiveOrDeleteThread(
         await thread.delete("Modmail closed - transcript flushed");
         logger.debug({ threadId: thread.id }, "[modmail] close:archive action=delete ok");
         return { action: "delete", ok: true };
-      } catch (e: any) {
-        const code = e?.code;
+      } catch (e) {
+        const code = (e as { code?: number } | undefined)?.code;
         logger.warn(
           { err: e, threadId: thread.id, code },
           "[modmail] close:archive action=delete failed -> falling back to archive"
@@ -133,8 +133,8 @@ async function archiveOrDeleteThread(
     await thread.edit({ archived: true, locked: true });
     logger.debug({ threadId: thread.id }, "[modmail] close:archive action=archive ok");
     return { action: "archive", ok: true };
-  } catch (e: any) {
-    const code = e?.code;
+  } catch (e) {
+    const code = (e as { code?: number } | undefined)?.code;
     logger.warn(
       { err: e, threadId: thread.id, code },
       "[modmail] close:archive action=archive failed"
