@@ -14,6 +14,9 @@ export default [
       "web/build/**",
       "coverage/**",
       "graphify-out/**",
+      "scratch/**",
+      ".playwright-mcp/**",
+      "audit/**",
     ],
   },
   js.configs.recommended,
@@ -66,8 +69,33 @@ export default [
           varsIgnorePattern: "^_",
         },
       ],
-      "no-undef": "warn",
+      // The TypeScript compiler already reports undefined names, with real type
+      // knowledge; ESLint no-undef only adds false positives on type globals.
+      "no-undef": "off",
       "no-console": "off",
+    },
+  },
+  // Test doubles and one-shot scripts. Mocks of discord.js, better-sqlite3 and
+  // interaction objects are cast through `any` all over tests/ (about 1150
+  // sites), where a precise type adds noise without catching bugs: off. scripts/
+  // is operator tooling run by hand: warn so new uses stay visible. migrations/
+  // are frozen history: off. src/ keeps the "error" level above.
+  {
+    files: ["tests/**/*.ts"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+    },
+  },
+  {
+    files: ["scripts/**/*.ts"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "warn",
+    },
+  },
+  {
+    files: ["migrations/**/*.ts"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
     },
   },
   // Configuration for JavaScript files (scripts)
