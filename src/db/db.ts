@@ -62,6 +62,7 @@ const originalPrepare = db.prepare.bind(db);
 const STMT_CACHE_MAX = 1024;
 const stmtCache = new Map<string, Database.Statement>();
 
+/* eslint-disable @typescript-eslint/no-explicit-any -- better-sqlite3 methods are replaced in place with wrappers that forward arbitrary arguments, which its overloaded typings cannot express */
 function wrapStatement(statement: Database.Statement, sql: string): Database.Statement {
   for (const method of ["run", "get", "all"] as const) {
     const base = (statement as any)[method];
@@ -151,6 +152,7 @@ function transactionSite(): string {
   });
   return wrapped;
 };
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 // Bootstrap schema (M6-M9)
 // review_card: tracks where the staff-facing review message lives

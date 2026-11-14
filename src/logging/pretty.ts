@@ -101,6 +101,7 @@ export interface LogActionParams {
   subjectId?: string;
   action: ActionType;
   reason?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- free-form per-action metadata bag, each action reads its own keys
   meta?: Record<string, any>;
 }
 

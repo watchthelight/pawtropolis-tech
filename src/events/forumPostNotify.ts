@@ -94,6 +94,7 @@ export async function forumPostNotify(thread: ThreadChannel): Promise<void> {
 
     // Yeah, that's an `any`. Sue me. TypeScript's channel types are a nightmare
     // and this gets reassigned conditionally. Both paths are text-based so .send() works.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- see the note above: reassigned across channel types that all have .send()
     let targetChannel: any = thread;
     let notifyMode = config.notify_mode || "post";
 
