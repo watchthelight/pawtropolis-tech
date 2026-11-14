@@ -12,12 +12,12 @@
  *   - Each start runs under runStartupTask("<name>", ..., { level: "warn" })
  *     because every scheduler is optional.
  *   - The order of starts mirrors the previous order in index.ts.
- *   - Each stop runs unwrapped (no try/catch around stopX) — these were
- *     also unwrapped in the previous shutdown handler. If a stop throws,
- *     the gracefulShutdown outer try/catch logs it and continues.
+ *   - Each stop is isolated in its own try/catch so one throwing stop
+ *     cannot skip the remaining stops or the rest of gracefulShutdown.
  */
 
 import type { Client } from "discord.js";
+import { logger } from "../lib/logger.js";
 import { runStartupTask } from "./runStartupTask.js";
 
 /**
@@ -194,71 +194,109 @@ export async function startSchedulers(client: Client): Promise<void> {
 /**
  * stopSchedulers: tears down every scheduler started above. Called
  * from gracefulShutdown. Order is start-order so the symmetry is easy
- * to audit. Errors propagate up to the gracefulShutdown try/catch.
+ * to audit. Each stop is isolated: a throwing stop is logged and the
+ * remaining ones still run.
  */
 export async function stopSchedulers(): Promise<void> {
-  const { stopModMetricsScheduler } = await import(
-    "../scheduler/modMetricsScheduler.js"
-  );
-  stopModMetricsScheduler();
+  const steps: Array<[string, () => Promise<void>]> = [
+    [
+      "stopModMetricsScheduler",
+      async () => {
+        const { stopModMetricsScheduler } = await import("../scheduler/modMetricsScheduler.js");
+        stopModMetricsScheduler();
+      },
+    ],
+    [
+      "stopGuildSnapshotScheduler",
+      async () => {
+        const { stopGuildSnapshotScheduler } = await import("../scheduler/guildSnapshotScheduler.js");
+        stopGuildSnapshotScheduler();
+      },
+    ],
+    [
+      "stopOpsHealthScheduler",
+      async () => {
+        const { stopOpsHealthScheduler } = await import("../scheduler/opsHealthScheduler.js");
+        stopOpsHealthScheduler();
+      },
+    ],
+    [
+      "stopStaleApplicationScheduler",
+      async () => {
+        const { stopStaleApplicationScheduler } = await import("../scheduler/staleApplicationCheck.js");
+        stopStaleApplicationScheduler();
+      },
+    ],
+    [
+      "stopSecurityAuditScheduler",
+      async () => {
+        const { stopSecurityAuditScheduler } = await import("../scheduler/securityAuditScheduler.js");
+        stopSecurityAuditScheduler();
+      },
+    ],
+    [
+      "stopByteMultiplierCleanup",
+      async () => {
+        const { stopByteMultiplierCleanup } = await import("../scheduler/byteMultiplierScheduler.js");
+        stopByteMultiplierCleanup();
+      },
+    ],
+    [
+      "stopDiskSpaceScheduler",
+      async () => {
+        const { stopDiskSpaceScheduler } = await import("../scheduler/diskSpaceScheduler.js");
+        stopDiskSpaceScheduler();
+      },
+    ],
+    [
+      "stopEventTimeoutScheduler",
+      async () => {
+        const { stopEventTimeoutScheduler } = await import("../scheduler/eventTimeoutScheduler.js");
+        stopEventTimeoutScheduler();
+      },
+    ],
+    [
+      "stopBadgeRefreshScheduler",
+      async () => {
+        const { stopBadgeRefreshScheduler } = await import("../scheduler/badgeRefreshScheduler.js");
+        stopBadgeRefreshScheduler();
+      },
+    ],
+    [
+      "stopMessageActivityPruneScheduler",
+      async () => {
+        const { stopMessageActivityPruneScheduler } = await import("../scheduler/messageActivityPruneScheduler.js");
+        stopMessageActivityPruneScheduler();
+      },
+    ],
+    [
+      "stopItemCaptureScheduler",
+      async () => {
+        const { stopItemCaptureScheduler } = await import("../scheduler/itemCaptureScheduler.js");
+        stopItemCaptureScheduler();
+      },
+    ],
+    [
+      "stopDbIntegrityScheduler",
+      async () => {
+        const { stopDbIntegrityScheduler } = await import("../scheduler/dbIntegrityScheduler.js");
+        stopDbIntegrityScheduler();
+      },
+    ],
+    [
+      "stopRetentionScheduler",
+      async () => {
+        const { stopRetentionScheduler } = await import("../scheduler/retentionScheduler.js");
+        stopRetentionScheduler();
+      },
+    ],
+  ];
 
-  const { stopGuildSnapshotScheduler } = await import(
-    "../scheduler/guildSnapshotScheduler.js"
-  );
-  stopGuildSnapshotScheduler();
-
-  const { stopOpsHealthScheduler } = await import(
-    "../scheduler/opsHealthScheduler.js"
-  );
-  stopOpsHealthScheduler();
-
-  const { stopStaleApplicationScheduler } = await import(
-    "../scheduler/staleApplicationCheck.js"
-  );
-  stopStaleApplicationScheduler();
-
-  const { stopSecurityAuditScheduler } = await import(
-    "../scheduler/securityAuditScheduler.js"
-  );
-  stopSecurityAuditScheduler();
-
-  const { stopByteMultiplierCleanup } = await import(
-    "../scheduler/byteMultiplierScheduler.js"
-  );
-  stopByteMultiplierCleanup();
-
-  const { stopDiskSpaceScheduler } = await import(
-    "../scheduler/diskSpaceScheduler.js"
-  );
-  stopDiskSpaceScheduler();
-
-  const { stopEventTimeoutScheduler } = await import(
-    "../scheduler/eventTimeoutScheduler.js"
-  );
-  stopEventTimeoutScheduler();
-
-  const { stopBadgeRefreshScheduler } = await import(
-    "../scheduler/badgeRefreshScheduler.js"
-  );
-  stopBadgeRefreshScheduler();
-
-  const { stopMessageActivityPruneScheduler } = await import(
-    "../scheduler/messageActivityPruneScheduler.js"
-  );
-  stopMessageActivityPruneScheduler();
-
-  const { stopItemCaptureScheduler } = await import(
-    "../scheduler/itemCaptureScheduler.js"
-  );
-  stopItemCaptureScheduler();
-
-  const { stopDbIntegrityScheduler } = await import(
-    "../scheduler/dbIntegrityScheduler.js"
-  );
-  stopDbIntegrityScheduler();
-
-  const { stopRetentionScheduler } = await import(
-    "../scheduler/retentionScheduler.js"
-  );
-  stopRetentionScheduler();
+  for (const [name, stop] of steps) {
+    try {
+      await stop();
+    } catch (err) {
+      logger.warn({ err, step: name }, "[shutdown] scheduler stop failed (non-fatal)");
+    }
+  }
 }

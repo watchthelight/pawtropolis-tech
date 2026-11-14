@@ -350,9 +350,11 @@ client.once(Events.ClientReady, async () => {
       }
 
       // 1. Stop schedulers (extracted to src/startup/schedulers.ts)
-      {
+      try {
         const { stopSchedulers } = await import("../startup/schedulers.js");
         await stopSchedulers();
+      } catch (err) {
+        logger.warn({ err }, "[shutdown] Scheduler stop failed (non-fatal)");
       }
 
       // 2. Flush message activity buffer before shutdown
@@ -421,12 +423,20 @@ client.once(Events.ClientReady, async () => {
 
       // 7. Remove all event listeners before destroying client
       // WHY: Explicit cleanup prevents race conditions and makes shutdown behavior predictable
-      client.removeAllListeners();
-      logger.debug("[shutdown] Event listeners removed");
+      try {
+        client.removeAllListeners();
+        logger.debug("[shutdown] Event listeners removed");
+      } catch (err) {
+        logger.warn({ err }, "[shutdown] Listener removal failed (non-fatal)");
+      }
 
       // 8. Destroy Discord client (closes WebSocket connection)
-      client.destroy();
-      logger.debug("[shutdown] Discord client destroyed");
+      try {
+        client.destroy();
+        logger.debug("[shutdown] Discord client destroyed");
+      } catch (err) {
+        logger.warn({ err }, "[shutdown] Client destroy failed (non-fatal)");
+      }
 
       // 9. Close database. `optimize` refreshes planner statistics for tables whose
       // shape changed since the last run; analysis_limit bounds how much of each
