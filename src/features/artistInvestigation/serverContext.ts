@@ -53,26 +53,35 @@ async function readRecent(channel: ReadableChannel, pages: number): Promise<{ me
   return { messages, reachedStart: false };
 }
 
+/** Ticket Tool renames a channel from `2d-artist-0300` to `2d-artist-closed0300` when it closes. Both name one ticket. */
+const ticketKey = (name: string) => name.trim().toLowerCase().replace(/-closed(?=\d)/, "-");
+
 /**
  * Earlier tickets from Ticket Tool's transcript posts. Each closed ticket leaves
- * an embed with "Ticket Owner" and "Ticket Name" fields.
+ * an embed with "Ticket Owner" and "Ticket Name" fields, and can leave more than
+ * one: a post under its open name and another under its closed name. Those are
+ * merged, so one ticket is never counted as two.
  */
 export function priorTicketsFromLog(messages: Iterable<StaffMessage>, applicantId: string, currentChannelName: string): PriorTicket[] {
-  const found = new Map<string, PriorTicket>();
+  const current = ticketKey(currentChannelName);
+  const found = new Map<string, PriorTicket & { atMs: number }>();
   for (const message of messages) {
     for (const embed of message.embeds) {
       const field = (name: string) => embed.fields.find((f) => f.name === name)?.value ?? "";
-      const name = field("Ticket Name").trim();
-      if (!name || name === currentChannelName || !field("Ticket Owner").includes(applicantId)) continue;
-      found.set(name, {
-        name,
+      const key = ticketKey(field("Ticket Name"));
+      if (!key || key === current || !field("Ticket Owner").includes(applicantId)) continue;
+      const known = found.get(key);
+      if (known && known.atMs >= message.createdTimestamp) continue;
+      found.set(key, {
+        name: key,
         when: new Date(message.createdTimestamp).toISOString(),
         note: "closed, transcript on file in the ticket log",
         source: "ticket-tool-log",
+        atMs: message.createdTimestamp,
       });
     }
   }
-  return [...found.values()];
+  return [...found.values()].sort((a, b) => b.atMs - a.atMs).map(({ atMs: _atMs, ...ticket }) => ticket);
 }
 
 /** The staff note naming this user in the Verify Blacklist thread, if there is one. */

@@ -154,6 +154,35 @@ describe("priorTicketsFromLog", () => {
     expect(priorTicketsFromLog(log, APPLICANT_ID, CHANNEL_NAME)).toHaveLength(1);
   });
 
+  it("counts a ticket once when the log has it under its open name and its closed name", () => {
+    // Ticket Tool renames 2d-artist-0031 to 2d-artist-closed0031 on close, and can post a transcript under each.
+    const log = [transcript(2, APPLICANT_ID, "2d-artist-0031"), transcript(3, APPLICANT_ID, "2d-artist-closed0031")];
+    const expected = [
+      {
+        name: "2d-artist-0031",
+        when: new Date(staffMessage(3).createdTimestamp).toISOString(),
+        note: "closed, transcript on file in the ticket log",
+        source: "ticket-tool-log",
+      },
+    ];
+
+    expect(priorTicketsFromLog(log, APPLICANT_ID, CHANNEL_NAME)).toEqual(expected);
+    expect(priorTicketsFromLog([...log].reverse(), APPLICANT_ID, CHANNEL_NAME)).toEqual(expected);
+  });
+
+  it("still tells two tickets apart by their numbers", () => {
+    const log = [transcript(2, APPLICANT_ID, "2d-artist-closed0031"), transcript(1, APPLICANT_ID, "2d-artist-closed0030")];
+    expect(priorTicketsFromLog(log, APPLICANT_ID, CHANNEL_NAME).map((ticket) => ticket.name)).toEqual([
+      "2d-artist-0031",
+      "2d-artist-0030",
+    ]);
+  });
+
+  it("leaves out the ticket being reviewed whichever name the log or the channel carries", () => {
+    expect(priorTicketsFromLog([transcript(1, APPLICANT_ID, "2d-artist-closed0042")], APPLICANT_ID, CHANNEL_NAME)).toEqual([]);
+    expect(priorTicketsFromLog([transcript(1, APPLICANT_ID, CHANNEL_NAME)], APPLICANT_ID, "2d-artist-closed0042")).toEqual([]);
+  });
+
   it("ignores log lines that are not transcripts", () => {
     const log = [
       staffMessage(1, { content: `Ticket created by <@${APPLICANT_ID}>` }),
