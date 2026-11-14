@@ -112,3 +112,25 @@ jobs:
           name: dist
           path: dist/
           retention-days: 7
+
+  web:
+    name: Dashboard (check & build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npx svelte-kit sync
+      - name: Type check (svelte-check)
+        # 0 errors, 86 warnings when added. Warnings do not fail svelte-check.
+        run: npm run check
+      - name: Build
+        run: npm run build
