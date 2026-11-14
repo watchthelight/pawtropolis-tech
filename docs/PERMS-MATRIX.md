@@ -220,6 +220,16 @@ Commands restricted to Server Dev role or Bot Owner user ID only:
 
 ---
 
+### Bot Owner Only
+
+Restricted to the user IDs in the `OWNER_IDS` environment variable. The check runs inside the command handler, and the Server Dev bypass does not apply:
+
+| Command | Description |
+|---------|-------------|
+| `/investigate-artist` | Private advisory review of a 2D artist verification ticket. Never approves, denies or changes roles |
+
+---
+
 ### Discord Permission Based
 
 These check Discord's built-in permissions instead of role hierarchy:
@@ -400,6 +410,7 @@ Bypass conditions are checked before anything else:
 | Senior Admin+ | SA+ | `/panic`, `/stats export/reset` |
 | Community Manager+ | CM+ | `/backfill`, `/gate setup`, `/admin-migrate-unverified` |
 | Bot Owner / Server Dev | [BO/SD] | `/database`, `/poke`, `/testidea`, `/test`, `/developer` |
+| Bot Owner | [BO] | `/investigate-artist` |
 | Discord Perm | ManageMessages | `/send`, `/purge`, `/closeticket` |
 | Discord Perm | ManageGuild | `/postticketpanel`, `/review-set-listopen-output` |
 | Discord Perm | ManageRoles | `/roles`, `/artistqueue`, `/assignticket` |

@@ -848,6 +848,33 @@ export const COMMAND_REGISTRY: CommandMetadata[] = [
     relatedCommands: ["artistqueue", "art", "stash"],
     aliases: ["ticket"],
   },
+  {
+    name: "investigate-artist",
+    description: "Private advisory review of a 2D artist verification ticket",
+    category: "artist",
+    permissionLevel: "owner",
+    usage: "/investigate-artist [applicant:<@user>]",
+    options: [
+      {
+        name: "applicant",
+        description: "The applicant, if the bot cannot tell who opened the ticket",
+        type: "user",
+        required: false,
+      },
+    ],
+    examples: ["/investigate-artist", "/investigate-artist applicant:@User"],
+    notes:
+      "Owner-only, and only inside a 2D artist verification ticket. The reply is visible only to you. " +
+      "It reads the ticket, runs the submitted images through reverse image search, and asks Claude for an assessment " +
+      "against the Mod Handbook. The score is advisory: the command never approves, denies, assigns roles or messages the applicant.",
+    workflowTips: [
+      "Run it after the applicant has posted their art and proof",
+      "Reverse image matches and AI indicators are leads to check, not verdicts",
+      "The footer shows the cost of the run and the month's total against the cap",
+    ],
+    relatedCommands: ["isitreal"],
+    aliases: ["artcheck", "verifyartist"],
+  },
 
   // ============================================================================
   // EVENTS

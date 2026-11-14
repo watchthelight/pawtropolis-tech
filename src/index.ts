@@ -171,6 +171,10 @@ commands.set(audit.data.name, wrapCommand("audit", audit.execute));
 import * as isitreal from "./commands/isitreal.js";
 commands.set(isitreal.data.name, wrapCommand("isitreal", isitreal.execute));
 
+// Artist verification review aid (owner-only, private)
+import * as investigateArtist from "./commands/investigate-artist.js";
+commands.set(investigateArtist.data.name, wrapCommand("investigate-artist", investigateArtist.execute));
+
 // Unblock command (remove permanent rejection)
 import * as unblock from "./commands/unblock.js";
 commands.set(unblock.data.name, wrapCommand("unblock", unblock.execute));

@@ -70,6 +70,7 @@ export const SLASH_COMMAND_NAMES = [
   // Admin tooling
   "audit",
   "isitreal",
+  "investigate-artist",
 
   // Help
   "help",

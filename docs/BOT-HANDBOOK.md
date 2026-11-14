@@ -2037,7 +2037,7 @@ The help system organizes commands into 9 categories:
 | Analytics | stats (activity, approval-rate, leaderboard, user, export, reset, history) |
 | Messaging | send, poke, modmail, qotd |
 | Role Automation | roles, restoreroles, panic |
-| Artist System | artistqueue, art, redeemreward, usebyte |
+| Artist System | artistqueue, art, redeemreward, usebyte, investigate-artist (owner only) |
 | Rewards & Inventory | stash, redeem |
 | Events | movie, event, attendance, verify |
 | Tickets | postticketpanel, closeticket, assignticket |
@@ -2388,6 +2388,40 @@ This command sends a message mentioning the user in every text channel within th
 
 ---
 
+### `/investigate-artist`
+**Who can use it:** Bot Owner only (user IDs listed in `OWNER_IDS`). The Server Dev bypass does not apply.
+
+A private second opinion on a 2D artist verification ticket. Run it inside the applicant's ticket. The bot reads the ticket, runs the submitted art through reverse image search, and asks Claude to rate the application against the [Commissions Verification](MOD-HANDBOOK.md#commissions-verification) rules. Only you see the reply, and nothing is posted in the ticket.
+
+| Option | Required? | What it does |
+|--------|-----------|--------------|
+| `applicant` | No | The applicant. Only needed when the bot cannot tell who opened the ticket |
+
+**What it looks at:**
+1. Every message in the ticket: text, images, other attachments, links and gallery handles
+2. What the server knows about the applicant: account age, join date, roles, recent activity, their gate application, earlier 2D artist tickets and the Verify Blacklist thread
+3. Reverse image search for each image on Fluffle, e621 and SauceNAO. A service with no API key configured is skipped, and the report names it as skipped
+4. Claude's read of the images and the ticket text, rated against each handbook rule
+
+**What you get back:**
+- An overall score out of 100 with a confidence level
+- One rating per handbook rule, with the images, messages and links behind it
+- Every reverse image match: source link, uploader, post date, similarity, and whether the uploader's name matches a handle the applicant gave
+- Red flags, green flags, and what to ask the applicant next when the evidence is thin
+- A footer with the cost of the run and the month's total against the cap
+
+**Important notes:**
+- The score is advisory. The command never approves, denies, assigns roles or messages the applicant
+- Stolen, traced and AI-generated art cannot be detected reliably. A match is not proof of theft, and no match is not proof of originality. Treat every finding as a lead to check yourself
+- It only works in a 2D artist ticket (`2d-artist-NNNN` in the Tickets category, or a first-party ticket of that type). Anywhere else it says so
+- A run can take a few minutes and costs real money. The command refuses to start when the month's tracked spend would pass `INVESTIGATE_MONTHLY_CAP_USD`
+- Images are capped per run (`INVESTIGATE_MAX_IMAGES`, 12 by default) and large ones are downscaled before they are sent anywhere
+- One run at a time
+
+Setup (API keys and the cap) is covered in [deployment-config.md](operations/deployment-config.md#investigate-artist).
+
+---
+
 ### `/database`
 
 > 📚 **Reference Section**: Bot owner only. Skip unless you're troubleshooting infrastructure.
@@ -2575,6 +2609,7 @@ Sets the odds for the bot to react to messages with the skull emoji. `chance:1` 
 | **Senior Admin+** | SA and above | `/panic`, `/stats export/reset` |
 | **Community Manager+** | CM and above | `/update banner/avatar`, `/backfill` |
 | **Bot Owner / Server Dev** | Server Dev or Bot Owner | `/database`, `/poke` |
+| **Bot Owner** | User IDs in `OWNER_IDS` only (no Server Dev bypass) | `/investigate-artist` |
 
 ### Understanding "X and above"
 

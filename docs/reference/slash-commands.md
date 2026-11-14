@@ -19,7 +19,7 @@ Categories follow `/help`'s grouping. **Hidden** = registered but intentionally 
 | Configuration | `/config` |
 | Messaging | `/send`, `/poke`, `/modmail`, `/qotd` |
 | Roles | `/roles`, `/restoreroles`, `/panic` |
-| Artist System | `/artistqueue`, `/redeemreward`, `/art`, `/usebyte` |
+| Artist System | `/artistqueue`, `/redeemreward`, `/art`, `/usebyte`, `/investigate-artist` |
 | Rewards & Inventory | `/stash`, `/redeem`, `/resetprofile` |
 | Events | `/movie`, `/event`, `/attendance` |
 | Analytics | `/stats` (subcommands: activity, approval-rate, leaderboard, user, export, reset, history) |

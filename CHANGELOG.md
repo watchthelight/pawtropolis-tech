@@ -6,7 +6,11 @@ All changes to Pawtropolis Tech are tracked here.
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- `/investigate-artist`: an owner-only, private review aid for 2D artist verification tickets. Run inside the ticket, it reads the whole history, fetches every image the applicant posted, runs reverse image lookups (Fluffle, e621 and SauceNAO where a key is set), gathers the applicant's server history and asks the Claude API to rate the application against the handbook's own criteria. The answer is ephemeral: an advisory score, a per-criterion breakdown with the evidence behind each rating, every lookup match with its link, flags, follow-up questions and what could not be determined. It never approves, denies, changes roles or messages the applicant, and nothing is posted in the ticket. Only user IDs in `OWNER_IDS` can run it, checked in the handler (#00279).
+- Per-run token usage and estimated cost are recorded in `artist_investigation_run` (migration 084). The report footer shows the run's cost and the month's total, and a run that could pass `INVESTIGATE_MONTHLY_CAP_USD` is refused before anything is sent (#00279).
+- Optional environment keys: `ANTHROPIC_WORKSPACE_ID`, `INVESTIGATE_MODEL`, `INVESTIGATE_MONTHLY_CAP_USD`, `INVESTIGATE_MAX_IMAGES`, `SAUCENAO_API_KEY`, `E621_LOGIN`, `E621_API_KEY`, `PROVENANCE_USER_AGENT` (#00279).
 
 ## [7.0.0] - 2026-09-02
 
