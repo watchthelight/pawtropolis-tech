@@ -259,7 +259,7 @@ ${bullets(WORKFLOW_GAPS)}
 - questions: what the owner should ask the applicant next, most useful first. Prefer the proofs the handbook already names: a timelapse, a layered source file, a dated work-in-progress photo.
 - cannot_determine: plain statements of what this evidence cannot settle, and why.
 
-Write for a busy reader: specific, plain and short. Name the image, message or match behind every point.`;
+Write for a busy reader: specific, plain and short. Name the image, message or match behind every point. Use plain punctuation: straight quotes, and no em dashes or en dashes. Write a range as "img1 to img3".`;
 }
 
 const OWNERSHIP_WORDS: Record<Ownership, (handle: string | null) => string> = {

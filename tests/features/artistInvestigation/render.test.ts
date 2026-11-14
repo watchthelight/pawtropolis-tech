@@ -1007,6 +1007,30 @@ describe("renderReport: text that did not come from us", () => {
     expect(linkTargets(text).filter((target) => target?.includes("evil.example"))).toEqual([]);
   });
 
+  it("puts the model's prose in plain punctuation", () => {
+    const [enDash, emDash, openSingle, closeSingle, openDouble, closeDouble] = [0x2013, 0x2014, 0x2018, 0x2019, 0x201c, 0x201d].map(
+      (code) => String.fromCharCode(code)
+    );
+    const base = assessment();
+    const text = everything(
+      withAnswerPages({
+        overall_summary: `Sketches img1${enDash}img3 show process ${emDash} the rest do not.`,
+        confidence_reason: `Posted 2019 ${enDash} 2021${emDash}before the account existed.`,
+        criteria: base.criteria.map((c) => ({
+          ...c,
+          reasoning: `The applicant${closeSingle}s ${openDouble}ToS${closeDouble} is a client${enDash}artist agreement ${enDash} nothing more.`,
+        })),
+        questions: [`In 2021 ${enDash} the year of img2 ${enDash} did you post a ${openSingle}timelapse${closeSingle}?`],
+      })
+    );
+
+    expect(text).toContain("Sketches img1 to img3 show process, the rest do not.");
+    expect(text).toContain("Posted 2019 to 2021, before the account existed.");
+    expect(text).toContain(`The applicant's "ToS" is a client-artist agreement, nothing more.`);
+    expect(text).toContain("In 2021, the year of img2, did you post a 'timelapse'?");
+    for (const mark of [enDash, emDash, openSingle, closeSingle, openDouble, closeDouble]) expect(text).not.toContain(mark);
+  });
+
   it("breaks a masked link in the reason given for a missing assessment", () => {
     const text = everything(
       render({ analysis: { kind: "refused", message: "Declined: [details](https://evil.example/x)", usage: USAGE } })

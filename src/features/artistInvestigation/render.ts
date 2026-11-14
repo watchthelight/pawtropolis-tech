@@ -109,8 +109,28 @@ const linkText = (text: string, max = 60) => safe(text.replace(/[[\]]/g, ""), ma
 /** A lookup service's URL as a link target. Nothing in it can close the link early or open another one. */
 const linkTarget = (url: string) =>
   url.trim().replace(/[\s()[\]<>]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase().padStart(2, "0")}`);
-/** Model prose keeps its light formatting but cannot carry a masked link. */
-const prose = (text: string) => text.replace(/\]\(/g, "] (").trim();
+const EM_DASH = String.fromCharCode(0x2014);
+const EN_DASH = String.fromCharCode(0x2013);
+/** An en dash between two numbers or labels: img1 to img3, 2019 to 2021. */
+const RANGE_DASH = new RegExp(`(?<=\\d)\\s*${EN_DASH}\\s*(?=[a-z]*\\d)`, "gi");
+/** A dash standing in for a pause: an em dash, or an en dash with space around it. */
+const PAUSE_DASH = new RegExp(`\\s*${EM_DASH}\\s*|\\s+${EN_DASH}\\s+`, "g");
+const CURLY_SINGLE = new RegExp(`[${String.fromCharCode(0x2018, 0x2019)}]`, "g");
+const CURLY_DOUBLE = new RegExp(`[${String.fromCharCode(0x201c, 0x201d)}]`, "g");
+
+/**
+ * Model prose keeps its light formatting but cannot carry a masked link, and
+ * reads in plain punctuation whatever the model typed.
+ */
+const prose = (text: string) =>
+  text
+    .replace(/\]\(/g, "] (")
+    .replace(RANGE_DASH, " to ")
+    .replace(PAUSE_DASH, ", ")
+    .replaceAll(EN_DASH, "-")
+    .replace(CURLY_SINGLE, "'")
+    .replace(CURLY_DOUBLE, '"')
+    .trim();
 
 /** Cut one over-long block at line breaks, then spaces, so every piece fits. */
 function splitLong(text: string, limit: number): string[] {

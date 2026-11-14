@@ -197,6 +197,10 @@ describe("buildSystemPrompt", () => {
     expect(system).toContain("do not list them as a red flag unless something else supports them");
   });
 
+  it("asks for plain punctuation", () => {
+    expect(system).toContain('Use plain punctuation: straight quotes, and no em dashes or en dashes. Write a range as "img1 to img3".');
+  });
+
   it("is the same text on every run, so it can be cached", () => {
     expect(buildSystemPrompt()).toBe(system);
   });
