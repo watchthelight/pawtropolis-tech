@@ -256,6 +256,7 @@ The first two runs led to six fixes, all on the branch. The report of run 3 has 
 - Every optimization has a measured before and after number. The query numbers were taken on a read-only copy of the production database; the PNG number is an event-loop stall probe on a 1600x1900 canvas. PERF-5 has no number and was not shipped.
 - Final check from clean clones. The steps of `.github/workflows/ci.yml` were replayed in order in two fresh clones, one under Node 24.22.3 and one under Node 20.20.2 (portable builds, Windows): install, typecheck, lint, format check, build, `node --check dist/index.js`, dashboard install and sync, knip, test database, full tests with coverage, then the dashboard check and build with the root `node_modules` moved aside, as in the `web` job. Every hard gate passed on both: 320 test files, 6351 tests, 0 lint errors. The format check failed on 822 files, as expected. Neither install printed an engine warning.
 - The first Node 24 replay stopped at knip (exit 2). In a fresh checkout knip cannot load `web/vite.config.ts` until the dashboard is installed and synced, and the `check` job ran it in exactly that state. The job now prepares `web/` first (`05a76026`), and knip passes in both clones.
+- Both lockfiles were rewritten on Windows, and a lockfile written on one platform can lose the optional packages of the others. They were read for that: every optional dependency has an entry, and the Linux x64 set (esbuild, sharp, rollup, lightningcss and the rest) is the same as on `main`.
 
 ### Not verified
 
