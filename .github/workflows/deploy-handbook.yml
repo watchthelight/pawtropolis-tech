@@ -73,6 +73,8 @@ jobs:
       # installed from the lockfile just extracted; deploy.sh keeps the same
       # marker. The braces make bash read the whole script before it runs any
       # of it, so a command that reads stdin cannot swallow the rest.
+      # pm2 prints its whole process table after a restart, and this log is
+      # public: the restart is silenced and only the dashboard's row is shown.
       - name: Extract, install and restart on EC2
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
@@ -89,7 +91,7 @@ jobs:
               npm ci --omit=dev
               echo "$lock_hash" > node_modules/.lock-sha256
             fi
-            pm2 restart pawtropolis-web
+            pm2 restart pawtropolis-web > /dev/null
             rm -f ../web-deploy.tar.gz
             pm2 list | grep pawtropolis-web
           }
