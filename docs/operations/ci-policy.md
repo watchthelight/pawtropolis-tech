@@ -58,7 +58,7 @@ Has always been hard. Build = `tsup` plus `scripts/scan-legacy.ts`. Unaffected b
 
 ### Format
 
-`npm run format:check` reports 829 files that drift (839 before the v26 work, which formatted the files it added). One mechanical `npm run format` commit over the whole repo fixes them; it is done separately so it does not collide with open work.
+`npm run format:check` reports 822 files that drift in a clean checkout (832 before the v26 work, which formatted the files it added). One mechanical `npm run format` commit over the whole repo fixes them; it is done separately so it does not collide with open work.
 
 **Promotion conditions:**
 

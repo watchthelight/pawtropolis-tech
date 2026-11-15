@@ -64,7 +64,7 @@ Query numbers were measured on a read-only copy of the production database, medi
 - Lint passes with 0 errors (it had 1274) and is a hard gate. `no-explicit-any` stays an error in `src/`, is a warning in `scripts/` and is off in tests and migrations (#00283).
 - knip passes and is a hard gate; a dead barrel file, an unused test helper and a handful of unused exports are gone (#00283).
 - The dashboard has a CI job: `svelte-check` and a production build (#00283).
-- The files this release adds follow the prettier config; 41 of them had to be reformatted. 829 older files still fail `npm run format:check`, so that gate stays soft until they are formatted in one commit of their own (#00283).
+- The files this release adds follow the prettier config; 41 of them had to be reformatted. 822 older files still fail `npm run format:check`, so that gate stays soft until they are formatted in one commit of their own (#00283).
 - vitest, eslint and prettier skip `.claude/worktrees/`, where each worktree is a full copy of the repo (#00283).
 
 ### Dependencies
@@ -81,7 +81,7 @@ Query numbers were measured on a read-only copy of the production database, medi
 
 ### Tests
 
-- 320 test files and 6357 tests, up from 289 and 5744. The new ones cover `/investigate-artist` with every external API mocked, and each security, reliability and performance change (#00279 to #00284).
+- 320 test files and 6351 tests in a clean checkout, up from 289 and 5736. The new ones cover `/investigate-artist` with every external API mocked, and each security, reliability and performance change (#00279 to #00284).
 
 ### Upgrade notes
 
