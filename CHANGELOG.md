@@ -75,7 +75,7 @@ Query numbers were measured on a read-only copy of the production database, medi
 - `@anthropic-ai/sdk` moves from a 0.91 dev dependency to a 1.8 runtime dependency, since production installs without dev dependencies (#00282).
 - In-range updates: Sentry 10.78.0, canvas 3.2.3, dotenv 17.4.2, pino 10.4.0, vitest 4.1.12, eslint 9.39.5, typescript-eslint 8.72.2, knip 6.45.1, prettier 3.10.1, tsup 8.5.1; in the dashboard SvelteKit 2.70.4, svelte 5.57.3, vite 7.3.8 and mermaid 11.17.2, which clears the critical dompurify advisory (#00282).
 - Overrides for packages that are no longer in the tree are removed, and the fast-uri and brace-expansion floors are raised (#00282).
-- Both `package.json` files carry an `allowScripts` allowlist, so `npm ci` on npm 11.21 runs the native builds it needs and prints no warning (#00282).
+- Both `package.json` files carry an `allowScripts` allowlist, so `npm ci` on npm 11.21 runs the native builds it needs without the install-script warning (#00282).
 - `npm audit` for the bot went from 26 findings (11 high) to 1: zod, which needs the zod 4 major and whose advisory is in a v4 code path this repo does not use. The dashboard went from 28 (1 critical, 8 high) to 14, none critical or high (#00282).
 - Held back: better-sqlite3 stays at 12.4.1 until the production Node version is confirmed. The major upgrades (Sentry 11, zod 4, vitest 5, eslint 10, TypeScript 7, SvelteKit 3 with Vite 8) are deferred with reasons in `MODERNIZATION_PLAN.md` (#00286).
 
