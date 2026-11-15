@@ -108,6 +108,7 @@ scripts\start.cmd --local --fresh
 ```bash
 npm run build        # tsup bundles src/index.ts → dist/index.js
                      # Also bundles scripts/commands.ts → dist/scripts/commands.js
+                     # and scripts/research.ts → dist/scripts/research.js (the chat research job)
 ```
 
 **Build Configuration** (tsup):
@@ -169,9 +170,9 @@ npm run format       # Auto-fix formatting
 1. Run tests (`npm test`) - skipped with `--fast`
 2. Build (`npm run build` via tsup)
 3. Inject build metadata (`scripts/inject-build-info.ts` → `.env.build`)
-4. Create tarball (`dist/`, `migrations/`, `scripts/`, `package.json`, `package-lock.json`, `.env.build`)
+4. Create tarball (`dist/`, `src/`, `migrations/`, `scripts/`, `assets/`, `models/`, `package.json`, `package-lock.json`, `.env.build`, `ecosystem.config.cjs`, the dashboard build with its package files, and the package files of `research/`)
 5. Upload tarball via SCP to `pawtropolis:/home/ubuntu/pawtropolis-tech/`
-6. Extract on remote, then `npm ci --omit=dev` in the root and in `web/` wherever `node_modules` was not installed from the lockfile just shipped, or was installed under another Node major (the key is `node_modules/.install-key`: the lockfile's sha256 and the module ABI number of the host's Node)
+6. Extract on remote, then `npm ci --omit=dev` in the root and in `web/` wherever `node_modules` was not installed from the lockfile just shipped, or was installed under another Node major (the key is `node_modules/.install-key`: the lockfile's sha256 and the module ABI number of the host's Node). The library of the chat research job in `research/` is installed the same way, with `--ignore-scripts`, and `node dist/scripts/research.js fetch-model` downloads the job's model files when they are missing. Neither of the two can fail a deploy: they print a warning, because the bot and the dashboard run without them
 7. Run migrations (`node scripts/migrate-remote.js`)
 8. Register slash commands with Discord
 9. Restart PM2 (`pm2 startOrRestart ecosystem.config.cjs`, then `pm2 save` so that a restart of the PM2 daemon brings the apps back as they were just deployed) + health check + cleanup

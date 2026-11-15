@@ -8,8 +8,8 @@ Every prior invocation works the same way:
 
 | Command | What it does |
 |---------|--------------|
-| `./deploy.sh` | full deploy: tests, build bot, build web, upload, install deps, run migrations, register slash commands, restart, `pm2 save`, health check |
-| `./deploy.sh --bot` | build + upload + restart bot only |
+| `./deploy.sh` | full deploy: tests, build bot, build web, upload, install deps, prepare the research job, run migrations, register slash commands, restart, `pm2 save`, health check |
+| `./deploy.sh --bot` | build + upload + restart bot only; it also prepares the research job, whose code is part of the bot's build |
 | `./deploy.sh --web` | build + upload + restart dashboard only |
 | `./deploy.sh --fast` | full deploy without running tests first |
 | `./deploy.sh --logs` | full deploy, then tail recent logs |
@@ -128,6 +128,19 @@ When that work lands, document the new switch here.
 - Tarball contents. Same files, same compression.
 - Health check logic. Same five attempts, three-second delay, same matchers ("Bot ready" / "client_ready" / "Connected to Discord").
 
+## The research job (26.2.0)
+
+The chat research job is not a PM2 process. Cron starts `dist/scripts/research.js` every 15 minutes (the line is in `scripts/quality-cron.txt`), and it needs two things the bot does not: its embedding library in `research/node_modules` and four model files in `data/research-model`.
+
+A full deploy and `--bot` prepare both, after the bot's own install and before the migrations:
+
+- The package files of `research/` travel in the tarball, and `npm ci --omit=dev --ignore-scripts` runs there when the lockfile or the host's Node has changed (the same install key as for the bot and the dashboard). The install scripts stay off because the one of the ONNX runtime downloads GPU binaries from a second source; the job runs on the CPU with the binaries that are in the package.
+- `node dist/scripts/research.js fetch-model` compares each model file with its pinned sha256 and downloads the ones that are missing or different. When all four are there it reads them and is done.
+
+The full deploy also ships `models/` (the effort model) next to `scripts/` (the two word lists). `--bot` ships neither of them.
+
+Neither step can stop a deploy. The bot and the dashboard run without the library and the model, and the job writes what is missing to `data/research.log` each time cron starts it.
+
 ## Failure semantics
 
 | Failure | Behavior |
@@ -135,7 +148,9 @@ When that work lands, document the new switch here.
 | Lock held by other deploy | exit 1 with explicit clear-lock instructions |
 | SSH connection refused | exit 1 within 15 seconds |
 | Mid-deploy SSH timeout | exit 1; lock released by trap |
-| `npm ci` fails on remote | exit 1; lock released by trap |
+| `npm ci` fails on remote for the bot or the dashboard | exit 1; lock released by trap |
+| `npm ci` fails on remote for the research library | warning with the command to run by hand; the deploy goes on, and the next deploy installs again |
+| The research job's model files cannot be fetched | warning with the command to run by hand; the deploy goes on |
 | Migration step fails | logs warning and continues (preserves prior behavior) |
 | PM2 restart fails | next health check loop reports "unknown" status; script exits with the inconclusive warning but exit code 0 (preserves prior behavior) |
 

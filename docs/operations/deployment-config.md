@@ -38,18 +38,28 @@ tsup is a fast bundler for TypeScript projects.
 ```typescript
 import { defineConfig } from "tsup";
 
-export default defineConfig({
-  entry: ["src/index.ts"],
-  format: ["esm"],
-  target: "node20",
-  outDir: "dist",
-  clean: true,
-  sourcemap: true,
-  minify: false, // Keep readable for debugging
-  splitting: false,
-  treeshake: true,
-  dts: false, // No declaration files needed
-});
+export default defineConfig([
+  {
+    entry: ["src/index.ts"],
+    splitting: false,
+    sourcemap: true,
+    clean: true,
+    format: ["esm"],
+    target: "node20",
+    outDir: "dist",
+    minify: false,
+  },
+  {
+    entry: ["scripts/commands.ts", "scripts/research.ts"],
+    splitting: false,
+    sourcemap: true,
+    clean: false,
+    format: ["esm"],
+    target: "node20",
+    outDir: "dist/scripts",
+    minify: false,
+  },
+]);
 ```
 
 **Build Commands**:
@@ -60,7 +70,7 @@ npm run dev         # Build with hot reload
 npm run typecheck   # Check types without building
 ```
 
-Output: `dist/index.js`
+Output: `dist/index.js` (the bot), `dist/scripts/commands.js` (the slash command sync) and `dist/scripts/research.js` (the chat research job, which cron starts on the host).
 
 ## Environment Variables
 
@@ -85,6 +95,7 @@ Every optional variable is listed with its default in [`.env.example`](../../.en
 | `DB_INTEGRITY_INTERVAL_HOURS` | Off-process `PRAGMA quick_check` cadence | `6` |
 | `RETENTION_ENABLED` | Lets the retention scheduler delete expired rows, old deploy backups and 30-day-old verification posts; otherwise it logs a dry run | `false` |
 | `DB_BACKUPS_DIR` | Where `deploy.sh` and the pruner keep database backups | `data/backups` |
+| `RESEARCH_DB_PATH` | The score file of the chat research job. The dashboard's Quality tab reads the same file, so a path set here has to be set in `web/.env` too | `research.db` next to `DB_PATH` |
 | `*_SCHEDULER_DISABLED=1` | Turns one scheduler off. Tests use these; production should run with none set | unset |
 | `DASHBOARD_API_PORT`, `DASHBOARD_API_HOST` | Port and bind address of the bot-side dashboard API. The host defaults to loopback; set `DASHBOARD_API_HOST=0.0.0.0` to listen on all interfaces (the previous behavior) | `3003`, `127.0.0.1` |
 | `LOGGING_CHANNEL` / `LOGGING_CHANNEL_ID` | Fallback logging channel for `/send` | unset |

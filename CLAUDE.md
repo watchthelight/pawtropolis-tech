@@ -29,7 +29,7 @@ File-first; GitHub Issues are a mirror.
 - Node 20.9.0 or newer (`engines` in `package.json`; sharp 0.35 needs it). CI runs Node 24, with a second test leg on Node 20. The production host runs Node 24.
 - Install: `npm ci` in the root, and `npm ci` in `web/` (its own package and lockfile).
 - Bot: `npm run dev` (tsx watch), `npm run build` (tsup, then `scripts/scan-legacy.ts`), `npm start`.
-- The build writes two ESM bundles: `src/index.ts` to `dist/index.js` and `scripts/commands.ts` to `dist/scripts/commands.js`.
+- The build writes three ESM bundles: `src/index.ts` to `dist/index.js`, `scripts/commands.ts` to `dist/scripts/commands.js` and `scripts/research.ts` to `dist/scripts/research.js`.
 - Dashboard, inside `web/`: `npm run dev`, `npm run check` (svelte-check), `npm run build`.
 
 ## Quality gates
@@ -70,12 +70,13 @@ What CI enforces is in [docs/operations/ci-policy.md](./docs/operations/ci-polic
 - `src/commands/`: one file or folder per slash command, each exporting `data` and `execute`. `buildCommands.ts` collects the payloads sent to Discord. `runtimeManifest.ts` is the string list of command names that tests and startup check against.
 - `src/features/`: the logic behind the commands and events (gate and review, modmail, tickets, artist rotation, stats, bot detection and so on).
 - `src/features/artistInvestigation/`: everything behind `/investigate-artist`. `criteria.ts` holds the handbook's verification criteria, `collect.ts` and `ticketContext.ts` read the ticket, `images.ts` fetches and downsizes images, `provenance/` holds the lookup services and their cache, `analysis.ts` calls the Claude API, `budget.ts` keeps the cost ledger and the monthly cap, `render.ts` builds the ephemeral report, `run.ts` ties them together.
+- `src/features/research/`: the chat research job behind the dashboard's Quality tab. Cron starts it on the host as `dist/scripts/research.js`; the bot never imports it. `archive.ts` reads the main chat from `messages_archive`, `text.ts` and `effortModel.ts` score a message, `embedder.ts` runs the pinned embedding model, `store.ts` is the score file, `weekly.ts` builds the weekly rows, `run.ts` ties them together and `cli.ts` is the command line. The embedding library is a package of its own in `research/`, so the bot's dependencies do not include it. A batch of texts is limited by what it costs in memory: read the header of `embedder.ts` before changing that.
 - `src/events/`, `src/listeners/`: gateway event handlers. `events/interactionCreate.ts` routes slash commands, buttons and modals. `src/scheduler/`: the background jobs.
 - `src/db/`: better-sqlite3 in WAL mode. `src/db/db.ts` opens `DB_PATH` when it is imported. `src/store/`: small persistence helpers.
 - `src/web/`: the bot's HTTP side. `dashboardApi.ts` is the Fastify API the dashboard calls; it binds to `127.0.0.1` by default (`DASHBOARD_API_HOST`) and checks a shared secret. The linked-roles, badge and status endpoints live here too.
 - `src/lib/`: shared helpers. Environment parsing is in `src/lib/env.ts`. `src/lib/envFile.ts` sets and removes single lines in the host's `.env` and in `process.env`.
 - `src/features/serviceKeys.ts`: the API keys the owner sets from Discord with `/service-keys` (Google Vision, SauceNAO, e621), each with a test call. They are stored through `envFile.ts`, so code that uses one reads `process.env` at the time of use, not the `env` object that is parsed once at start.
-- `web/`: the SvelteKit dashboard. It reads SQLite directly and calls the bot API through `web/src/lib/server/botApi.ts` when it needs the Discord client.
+- `web/`: the SvelteKit dashboard. It reads SQLite directly and calls the bot API through `web/src/lib/server/botApi.ts` when it needs the Discord client. The Quality tab reads the research job's score file through `web/src/lib/server/researchDb.ts`.
 - `migrations/`: numbered TypeScript migrations. `scripts/`: operational scripts. `docs/`: handbooks, references, operations docs and release notes.
 
 ## Tests
@@ -85,7 +86,7 @@ What CI enforces is in [docs/operations/ci-policy.md](./docs/operations/ci-polic
 - `tests/setup.ts` gives every worker its own SQLite file under `tests/.tmp/`, seeded from `tests/fixtures/schema.sql`. Tests never touch `data/data.db`, also when they mock `src/lib/env.js`: `src/db/db.ts` then takes the path from `process.env.DB_PATH`.
 - Dashboard tests live under `tests/web/` and import from `web/src`, so `web/` must be installed and `npx svelte-kit sync` run there before the full suite.
 - `tests/docs/` holds parity tests: the handbook, command reference, permission matrix, env examples, dashboard config editor and the artist verification criteria are checked against the code. A new env variable has to be in `.env.example` (or `web/.env.example`). Markdown files must not contain raw Discord mentions such as `<@&id>`.
-- Mock every external service. Nothing in the suite talks to Discord, the Claude API or a lookup service.
+- Mock every external service. Nothing in the suite talks to Discord, the Claude API or a lookup service, and nothing loads the embedding model: the research tests pass a stand-in for the library.
 - `.claude/worktrees/` is skipped by vitest, eslint and prettier: each worktree is a full copy of the repo.
 
 ## Adding a slash command
@@ -105,11 +106,13 @@ A permission that matters is checked in the handler, never only through Discord'
 - Migrations are `migrations/NNN_descriptive_name.ts`; conventions are in `migrations/README.md`. `npm run migrate` applies the pending ones, `npm run migrate:dry` lists them.
 - After a schema change, regenerate `tests/fixtures/schema.sql` (`npm run gen:test-schema` against a migrated database) and the schema reference (`npm run docs:schema`).
 - Destructive or hard-to-reverse migrations need the owner's say first.
+- The research job's scores are not in the bot's database. They are in a file of their own, `data/research.db` (`RESEARCH_DB_PATH`, the same value for the bot and for `web/`), which `src/features/research/store.ts` creates. No migration touches it.
 
 ## Deploy
 
 - Production: PM2 on EC2 (pawtropolis instance, i-036253b06d0ab8546).
-- Deploy script: `./deploy.sh` with lock, a database backup first (on by default; `BACKUP_BEFORE_DEPLOY=0` skips it) and a health check. It runs the tests, builds, uploads, runs pending migrations on the host and registers the slash commands there.
+- Deploy script: `./deploy.sh` with lock, a database backup first (on by default; `BACKUP_BEFORE_DEPLOY=0` skips it) and a health check. It runs the tests, builds, uploads, runs pending migrations on the host and registers the slash commands there. It also installs the research job's library in `research/` on the host and fetches the job's model files; a failure there warns and the deploy goes on.
+- The research job is started by cron on the host, not by PM2. Its crontab line and the command that installs it are in `scripts/quality-cron.txt`. It logs one JSON line per run to `data/research.log`.
 - Slash-command sync by hand: `npm run deploy:cmds` (run on EC2; local hangs).
 - A push to `main` that touches `docs/**` or `web/**` starts the dashboard deploy workflow. It deploys once CI has passed on that commit; started by hand it does not wait for CI.
 - Node on the host is the NodeSource apt package, and other Node apps on the host run on it too. `needrestart` restarts services by itself after an apt run, so an install that replaces Node goes with `NEEDRESTART_SUSPEND=1`. The deploy reinstalls dependencies when the host's Node major changes. The procedure of the move to Node 24 is in `docs/releases/26.1.0.md`.
