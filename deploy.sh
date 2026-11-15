@@ -234,7 +234,8 @@ fi
 # install_remote_deps - run npm ci on the remote unless node_modules there was
 # installed from the lockfile that is on the remote now, under the Node that is
 # on the remote now.
-# Args: $1 = remote directory holding package-lock.json, $2 = label for output
+# Args: $1 = remote directory holding package-lock.json, $2 = label for output,
+#       $3 = more flags for npm ci (optional)
 # One SSH round-trip (~1s) saves ~20-30s of npm ci when nothing changed.
 #
 # npm leaves no record of what it installed from, so a key is written to
@@ -258,6 +259,7 @@ INSTALL_KEY_CMD="echo \"\$(sha256sum package-lock.json | cut -d' ' -f1) node-abi
 install_remote_deps() {
   local remote_dir="$1"
   local label="$2"
+  local npm_flags="${3:+ $3}"
 
   if ssh_remote "cd ${remote_dir} && [ -s node_modules/.install-key ] && [ \"\$(${INSTALL_KEY_CMD})\" = \"\$(cat node_modules/.install-key)\" ]"; then
     echo "  -> ${label} dependencies match the lockfile and the host's Node, skipping npm ci"
@@ -265,7 +267,28 @@ install_remote_deps() {
   fi
 
   echo "  -> ${label} dependencies do not match the lockfile or the host's Node, running npm ci..."
-  ssh_remote "cd ${remote_dir} && npm ci --omit=dev && ${INSTALL_KEY_CMD} > node_modules/.install-key"
+  ssh_remote "cd ${remote_dir} && npm ci --omit=dev${npm_flags} && ${INSTALL_KEY_CMD} > node_modules/.install-key"
+}
+
+# The chat research job (dist/scripts/research.js, started by cron, see
+# scripts/quality-cron.txt) needs two things the bot does not: its embedding
+# library in research/node_modules and the model files next to the database.
+# The library is installed without its install scripts: the one of the ONNX
+# runtime downloads GPU binaries from a second source, and the job runs on the
+# CPU with the binaries that are in the package. fetch-model downloads a model
+# file only when it is missing or is not the pinned one, so on most deploys it
+# reads four files and is done.
+#
+# The bot and the dashboard run without either, and the job says what is missing
+# every time cron starts it. So a failure here warns and the deploy goes on.
+prepare_research_job() {
+  if ! install_remote_deps "${REMOTE_PATH}/research" "Research" "--ignore-scripts"; then
+    echo "WARNING: the research library did not install, so the chat research job cannot score. The next deploy tries again. By hand on the remote: cd ${REMOTE_PATH}/research && npm ci --omit=dev --ignore-scripts"
+  fi
+  echo "  -> Checking the model files of the chat research job..."
+  if ! ssh_remote "cd ${REMOTE_PATH} && node dist/scripts/research.js fetch-model"; then
+    echo "WARNING: the model files of the chat research job could not be checked or fetched. Run on the remote: cd ${REMOTE_PATH} && node dist/scripts/research.js fetch-model"
+  fi
 }
 
 # pm2 startOrRestart applies ecosystem.config.cjs to the running daemon and to
@@ -355,9 +378,10 @@ if [ "$DEPLOY_BOT" = true ]; then
   echo "Step 2/5: Injecting build metadata..."
   npx tsx scripts/inject-build-info.ts
 
-  # Step 3: Create tarball (dist + .env.build only)
+  # Step 3: Create tarball (dist + .env.build, and the package files of the
+  # research job's library, because dist holds the code that calls it)
   echo "Step 3/5: Creating bot tarball..."
-  tar -czf ${TARBALL} dist .env.build package.json package-lock.json
+  tar -czf ${TARBALL} dist .env.build package.json package-lock.json research/package.json research/package-lock.json
 
   # Step 4: Upload + extract
   echo "Step 4/5: Uploading and extracting..."
@@ -365,6 +389,9 @@ if [ "$DEPLOY_BOT" = true ]; then
   ssh_remote "cd ${REMOTE_PATH} && tar -xzf ${TARBALL}"
 
   install_remote_deps "${REMOTE_PATH}" "Bot"
+  # The word lists (scripts/) and the effort model (models/) of the research job
+  # travel with a full deploy only.
+  prepare_research_job
 
   # Step 4.5: refuse to restart new code against a schema that has not caught up.
   # --bot uploads neither migrations/ nor scripts/ and never runs the migrator, so a
@@ -445,7 +472,7 @@ npx tsx scripts/inject-build-info.ts
 # Step 4: Create tarball
 # Include .env.build so the build metadata is available on the server
 echo "Step 4/9: Creating deployment tarball..."
-tar -czf ${TARBALL} dist src migrations scripts assets package.json package-lock.json .env.build ecosystem.config.cjs web/build web/package.json web/package-lock.json
+tar -czf ${TARBALL} dist src migrations scripts assets models package.json package-lock.json .env.build ecosystem.config.cjs web/build web/package.json web/package-lock.json research/package.json research/package-lock.json
 
 # Step 5: Upload to remote
 echo "Step 5/9: Uploading to remote server..."
@@ -457,6 +484,9 @@ ssh_remote "cd ${REMOTE_PATH} && tar -xzf ${TARBALL}"
 
 install_remote_deps "${REMOTE_PATH}" "Bot"
 install_remote_deps "${REMOTE_PATH}/web" "Web"
+# Before the migrations, so that a first download of the model does not add to
+# the time the old code runs on the new schema.
+prepare_research_job
 
 # Step 6.5: Run migrations on remote
 # A migration failure MUST abort the deploy: restarting new code against an

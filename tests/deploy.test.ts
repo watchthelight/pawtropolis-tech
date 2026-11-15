@@ -2,9 +2,9 @@
 /**
  * Pawtropolis Tech -- tests/deploy.test.ts
  * WHAT: Runs deploy.sh against a fake remote and checks when it installs
- *       dependencies there and what it tells PM2. ssh, scp, node, npm, npx,
- *       pm2, systemctl, sqlite3 and sleep are stand-in scripts on PATH; the
- *       "remote" is a temp directory.
+ *       dependencies there, what it tells PM2 and how it prepares the chat
+ *       research job. ssh, scp, node, npm, npx, pm2, systemctl, sqlite3 and
+ *       sleep are stand-in scripts on PATH; the "remote" is a temp directory.
  * WHY: The script used to compare the local lockfile with the remote one after
  *      its own tarball had replaced the remote one. The two always matched, so
  *      npm ci never ran on the host and production kept the packages of an
@@ -12,8 +12,13 @@
  *      packages is a new Node major on the host: the lockfile is the same and
  *      the compiled modules no longer load. And the script never saved the PM2
  *      process list, so a restart of the PM2 daemon brought the apps back as
- *      they were defined at the last manual save. Nothing here opens a network
- *      connection.
+ *      they were defined at the last manual save.
+ *
+ *      The research job has a library and model files of its own. The bot runs
+ *      without them, so a registry or a download that fails there must not
+ *      stop a deploy of the bot.
+ *
+ *      Nothing here opens a network connection.
  */
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -40,10 +45,14 @@ exec bash -c "$*"
 while [ "$1" = "-o" ]; do shift 2; done
 cp "$1" "\${2#*@*:}"
 `,
-  // The remote's Node. It answers the one question the script asks it, and
-  // does nothing when the script starts the migration runner or the command sync.
+  // The remote's Node. It answers the one question the script asks it and
+  // notes what else it is started with: the research job's check of its model
+  // files, the migration runner and the command sync.
   node: `#!/bin/bash
-if [ "$1" = "-p" ]; then echo "$FAKE_NODE_ABI"; fi
+if [ "$1" = "-p" ]; then echo "$FAKE_NODE_ABI"; exit 0; fi
+echo "node $*" >> "$FAKE_LOG"
+if [ "$2" = "fetch-model" ] && [ -n "$FAKE_FETCH_FAILS" ]; then exit 1; fi
+exit 0
 `,
   // npm ci starts from an empty node_modules, so the key of the last install goes.
   npm: `#!/bin/bash
@@ -51,7 +60,11 @@ echo "npm $* | $PWD" >> "$FAKE_LOG"
 if [ "$1" = "ci" ]; then
   mkdir -p node_modules
   rm -f node_modules/.install-key
+  case "$PWD" in
+    */research) [ -z "$FAKE_RESEARCH_INSTALL_FAILS" ] || exit 1 ;;
+  esac
 fi
+exit 0
 `,
   npx: `#!/bin/bash
 echo "BUILD_GIT_SHA=test" > .env.build
@@ -82,6 +95,8 @@ let logFile = "";
 // The module ABI number the remote's Node reports: 115 is Node 20, 137 is Node 24.
 let remoteAbi = "115";
 let pm2SaveFails = false;
+let researchInstallFails = false;
+let modelFetchFails = false;
 
 function write(file: string, text: string): void {
   mkdirSync(path.dirname(file), { recursive: true });
@@ -104,6 +119,10 @@ interface DeployRun {
   output: string;
   /** Where npm ci ran, in order. */
   installs: string[];
+  /** Where it ran with the packages' install scripts switched off. */
+  withoutScripts: string[];
+  /** What the remote's Node was started with, in order. */
+  node: string[];
   /** The arguments of every pm2 call, in order. */
   pm2: string[];
 }
@@ -129,6 +148,8 @@ function deploy(...args: string[]): DeployRun {
         FAKE_LOG: slash(logFile),
         FAKE_NODE_ABI: remoteAbi,
         FAKE_PM2_SAVE_FAILS: pm2SaveFails ? "1" : "",
+        FAKE_RESEARCH_INSTALL_FAILS: researchInstallFails ? "1" : "",
+        FAKE_FETCH_FAILS: modelFetchFails ? "1" : "",
         DEPLOY_SH,
         REMOTE_HOST: "fake-host",
         REMOTE_PATH: slash(remote),
@@ -138,11 +159,17 @@ function deploy(...args: string[]): DeployRun {
     }
   );
   const log = readFileSync(logFile, "utf8").split("\n");
-  const installs = log
-    .filter((line) => line.startsWith("npm ci --omit=dev | "))
-    .map((line) => (line.endsWith("/web") ? "web" : "bot"));
-  const pm2 = log.filter((line) => line.startsWith("pm2 ")).map((line) => line.slice(4));
-  return { status: result.status, output: `${result.stdout}\n${result.stderr}`, installs, pm2 };
+  const where = (line: string): string =>
+    line.endsWith("/web") ? "web" : line.endsWith("/research") ? "research" : "bot";
+  const installLines = log.filter((line) => line.startsWith("npm ci --omit=dev"));
+  return {
+    status: result.status,
+    output: `${result.stdout}\n${result.stderr}`,
+    installs: installLines.map(where),
+    withoutScripts: installLines.filter((line) => line.includes(" --ignore-scripts ")).map(where),
+    node: log.filter((line) => line.startsWith("node ")).map((line) => line.slice(5)),
+    pm2: log.filter((line) => line.startsWith("pm2 ")).map((line) => line.slice(4)),
+  };
 }
 
 describe.skipIf(!bash)("deploy.sh on a fake remote", () => {
@@ -160,19 +187,24 @@ describe.skipIf(!bash)("deploy.sh on a fake remote", () => {
 
     write(path.join(local, "dist", "index.js"), "");
     write(path.join(local, "dist", "scripts", "commands.js"), "");
+    write(path.join(local, "dist", "scripts", "research.js"), "");
     write(path.join(local, "src", "index.ts"), "");
     write(path.join(local, "migrations", "001_init.ts"), "");
     write(path.join(local, "scripts", "migrate-remote.js"), "");
     write(path.join(local, "assets", "banner.txt"), "");
+    write(path.join(local, "models", "effort_v1.json"), "{}\n");
     write(path.join(local, "ecosystem.config.cjs"), "module.exports = { apps: [] };\n");
     write(path.join(local, "package.json"), "{}\n");
     write(path.join(local, "package-lock.json"), '{ "lock": "bot 1" }\n');
     write(path.join(local, "web", "build", "index.js"), "");
     write(path.join(local, "web", "package.json"), "{}\n");
     write(path.join(local, "web", "package-lock.json"), '{ "lock": "web 1" }\n');
+    write(path.join(local, "research", "package.json"), "{}\n");
+    write(path.join(local, "research", "package-lock.json"), '{ "lock": "research 1" }\n');
 
     // The host as the old script left it: packages from an earlier install and
-    // lockfiles that already equal the ones about to be shipped.
+    // lockfiles that already equal the ones about to be shipped. It has never
+    // held the research job.
     write(path.join(remote, "node_modules", "old-package", "index.js"), "");
     write(path.join(remote, "web", "node_modules", "old-package", "index.js"), "");
     write(path.join(remote, "package-lock.json"), '{ "lock": "bot 1" }\n');
@@ -191,24 +223,39 @@ describe.skipIf(!bash)("deploy.sh on a fake remote", () => {
 
       expect(run.output).toContain("::DEPLOY_DONE::");
       expect(run.status).toBe(0);
-      expect(run.installs).toEqual(["bot", "web"]);
+      expect(run.installs).toEqual(["bot", "web", "research"]);
       expect(marker(remote)).toBe(installKey(path.join(local, "package-lock.json")));
       expect(marker(path.join(remote, "web"))).toBe(
         installKey(path.join(local, "web", "package-lock.json"))
       );
+      expect(marker(path.join(remote, "research"))).toBe(
+        installKey(path.join(local, "research", "package-lock.json"))
+      );
     }
   );
 
+  it("skips npm ci when every lockfile is the one that was installed", { timeout: 120_000 }, () => {
+    const run = deploy();
+
+    expect(run.status).toBe(0);
+    expect(run.installs).toEqual([]);
+    expect(run.output).toContain("Bot dependencies match the lockfile");
+    expect(run.output).toContain("Web dependencies match the lockfile");
+    expect(run.output).toContain("Research dependencies match the lockfile");
+  });
+
   it(
-    "skips npm ci when both lockfiles are the ones that were installed",
+    "checks the research job's model files before it changes the schema",
     { timeout: 120_000 },
     () => {
       const run = deploy();
 
       expect(run.status).toBe(0);
-      expect(run.installs).toEqual([]);
-      expect(run.output).toContain("Bot dependencies match the lockfile");
-      expect(run.output).toContain("Web dependencies match the lockfile");
+      expect(run.node).toEqual([
+        "dist/scripts/research.js fetch-model",
+        "scripts/migrate-remote.js",
+        "dist/scripts/commands.js --all",
+      ]);
     }
   );
 
@@ -248,7 +295,7 @@ describe.skipIf(!bash)("deploy.sh on a fake remote", () => {
   });
 
   it(
-    "installs both again when the host has moved to another Node major",
+    "installs everything again when the host has moved to another Node major",
     { timeout: 240_000 },
     () => {
       remoteAbi = "137";
@@ -256,7 +303,7 @@ describe.skipIf(!bash)("deploy.sh on a fake remote", () => {
       const run = deploy();
 
       expect(run.status).toBe(0);
-      expect(run.installs).toEqual(["bot", "web"]);
+      expect(run.installs).toEqual(["bot", "web", "research"]);
       expect(marker(remote)).toBe(installKey(path.join(local, "package-lock.json")));
       expect(marker(path.join(remote, "web"))).toBe(
         installKey(path.join(local, "web", "package-lock.json"))
@@ -293,6 +340,76 @@ describe.skipIf(!bash)("deploy.sh on a fake remote", () => {
     expect(run.status).toBe(0);
     expect(run.installs).toEqual(["bot"]);
     expect(marker(remote)).toBe(installKey(path.join(local, "package-lock.json")));
+  });
+
+  // dist holds the job's code, so a deploy of dist alone has to bring the
+  // library that code calls.
+  it(
+    "--bot installs the research library, without install scripts, when its lockfile changed",
+    { timeout: 120_000 },
+    () => {
+      writeFileSync(
+        path.join(local, "research", "package-lock.json"),
+        '{ "lock": "research 2" }\n'
+      );
+
+      const run = deploy("--bot");
+
+      expect(run.output).toContain("::DEPLOY_DONE::");
+      expect(run.status).toBe(0);
+      expect(run.installs).toEqual(["research"]);
+      expect(run.withoutScripts).toEqual(["research"]);
+      expect(run.node).toEqual(["dist/scripts/research.js fetch-model"]);
+      expect(marker(path.join(remote, "research"))).toBe(
+        installKey(path.join(local, "research", "package-lock.json"))
+      );
+    }
+  );
+
+  it(
+    "goes on with a warning when the research library does not install",
+    { timeout: 240_000 },
+    () => {
+      writeFileSync(
+        path.join(local, "research", "package-lock.json"),
+        '{ "lock": "research 3" }\n'
+      );
+      researchInstallFails = true;
+      try {
+        const run = deploy();
+
+        expect(run.output).toContain("WARNING: the research library did not install");
+        expect(run.output).toContain("::DEPLOY_DONE::");
+        expect(run.status).toBe(0);
+        expect(run.installs).toEqual(["research"]);
+        expect(marker(path.join(remote, "research"))).toBeNull();
+        // The bot was still migrated and restarted.
+        expect(run.node).toContain("scripts/migrate-remote.js");
+        expect(run.pm2).toContain("startOrRestart ecosystem.config.cjs");
+      } finally {
+        researchInstallFails = false;
+      }
+
+      // No key was left, so the next deploy installs.
+      expect(deploy().installs).toEqual(["research"]);
+      expect(marker(path.join(remote, "research"))).toBe(
+        installKey(path.join(local, "research", "package-lock.json"))
+      );
+    }
+  );
+
+  it("goes on with a warning when the model files cannot be fetched", { timeout: 120_000 }, () => {
+    modelFetchFails = true;
+    try {
+      const run = deploy();
+
+      expect(run.output).toContain("WARNING: the model files of the chat research job");
+      expect(run.output).toContain("::DEPLOY_DONE::");
+      expect(run.status).toBe(0);
+      expect(run.pm2).toContain("startOrRestart ecosystem.config.cjs");
+    } finally {
+      modelFetchFails = false;
+    }
   });
 
   it("--restart applies the ecosystem file and saves the list", { timeout: 120_000 }, () => {
