@@ -167,11 +167,11 @@ Configure how the review system notifies staff about new applications.
 
 Purge up to 1000 recent messages from the channel you're in. Useful for spam waves, accidental floods, or just clearing scratchpad chatter from a staff channel.
 
-- Messages older than 14 days are skipped (Discord bulk-delete limit) and reported in the result.
+- Messages older than 14 days are deleted too, one by one because Discord's bulk delete refuses them. That is slower, and the result says how many there were.
 - Provide `reason:` whenever you can — it shows up in the audit channel so leadership knows the why.
 - Moderator+ can run it; the command also requires the Discord-level **Manage Messages** permission.
 
-`/purge` is the bigger sibling for targeted/filtered deletes; `/cleanup` is the fast "wipe the last N" sweep.
+`/purge` is the bigger sibling: it asks for the admin password and deletes up to 10,000 messages in one run, the whole channel if no `count` is given. `/cleanup` is the fast "wipe the last N" sweep.
 
 ### `/restoreroles user:@x [dry_run]`
 

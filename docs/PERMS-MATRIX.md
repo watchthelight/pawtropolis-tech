@@ -241,7 +241,7 @@ These check Discord's built-in permissions instead of role hierarchy:
 | Command | Discord Permission | Description |
 |---------|-------------------|-------------|
 | `/send` | ManageMessages | Post an anonymous message as the bot |
-| `/purge` | ManageMessages + (Mod roles OR ManageGuild OR Reviewer) + Password | Bulk delete messages (up to 100, max 14 days old). The staff check runs in the handler, before the password is looked at |
+| `/purge` | ManageMessages + (Mod roles OR ManageGuild OR Reviewer) + Password | Bulk delete messages (up to 10,000 in one run; messages older than 14 days are deleted one by one). The staff check runs in the handler, before the password is looked at |
 | `/roles` | ManageRoles | Configure role automation mappings |
 | `/artistqueue` | ManageRoles | Manage the artist rotation queue |
 | `/redeemreward` | Junior Mod+ OR Ambassador Role OR ManageRoles | Assign an art reward to a user |

@@ -2275,7 +2275,7 @@ The bot checks for staff itself before it looks at the password: a configured mo
 | Option | Required? | What it does |
 |--------|-----------|--------------|
 | `password` | **Yes** | Admin password (from RESET_PASSWORD env variable) |
-| `count` | No | How many messages to delete (default: all messages in channel) |
+| `count` | No | How many messages to delete, 1 to 10,000 (default: all messages in the channel, up to 10,000 in one run) |
 
 #### How Purge Works
 
@@ -2527,7 +2527,7 @@ Purge up to 1000 recent messages from the current channel. Use it for spam waves
 | `count` | **Yes** | How many messages to delete (1 to 1000) |
 | `reason` | No | Reason logged to the audit channel |
 
-Messages older than 14 days are skipped because Discord's bulk-delete endpoint refuses them; the result tells you how many were skipped so you can decide whether to do a manual sweep.
+Messages older than 14 days are deleted too. Discord's bulk-delete endpoint refuses them, so the bot removes them one by one, at most four a second, and the result says how many went that way. In a quiet channel `count:200` reaches back as far as the last 200 messages go, however old they are.
 
 ### `/restoreroles`
 **Who can use it:** Administrator+
