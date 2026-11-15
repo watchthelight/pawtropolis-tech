@@ -2,15 +2,97 @@
 
 All changes to Pawtropolis Tech are tracked here.
 
-**Versions:** [Unreleased](#unreleased) | [7.0.0](#700---2026-09-02) | [6.2.1](#621---2026-09-02) | [6.2.0](#620---2026-09-01) | [6.1.0](#610---2026-08-29) | [6.0.0](#600---2026-05-15) | [5.2.0](#520---2026-05-02) | [5.1.1](#511---2026-01-27) | [5.1.0](#510---2026-01-17) | [5.0.0](#500---2026-01-12) | [4.9.2](#492---2026-01-07) | [4.9.1](#491---2026-01-07) | [4.9.0](#490---2026-01-04) | [4.8.0](#480---2025-12-08) | [4.7.1](#471---2025-12-03) | [4.7.0](#470---2025-12-03) | [4.6.0](#460---2025-12-03) | [4.5.0](#450---2025-12-02) | [4.4.4](#444---2025-12-03) | [4.4.3](#443---2025-12-03) | [4.4.2](#442---2025-12-03) | [4.4.1](#441---2025-12-03) | [4.4.0](#440---2025-12-03) | [4.3.0](#430---2025-12-02) | [4.2.0](#420---2025-12-01) | [4.1.0](#410---2025-12-01) | [4.0.3](#403---2025-12-01) | [4.0.2](#402---2025-12-01) | [4.0.1](#401---2025-12-01) | [4.0.0](#400---2025-12-01) | [Earlier versions](#earlier-versions)
+**Versions:** [Unreleased](#unreleased) | [26.0.0](#2600---2026-11-14) | [7.0.0](#700---2026-09-02) | [6.2.1](#621---2026-09-02) | [6.2.0](#620---2026-09-01) | [6.1.0](#610---2026-08-29) | [6.0.0](#600---2026-05-15) | [5.2.0](#520---2026-05-02) | [5.1.1](#511---2026-01-27) | [5.1.0](#510---2026-01-17) | [5.0.0](#500---2026-01-12) | [4.9.2](#492---2026-01-07) | [4.9.1](#491---2026-01-07) | [4.9.0](#490---2026-01-04) | [4.8.0](#480---2025-12-08) | [4.7.1](#471---2025-12-03) | [4.7.0](#470---2025-12-03) | [4.6.0](#460---2025-12-03) | [4.5.0](#450---2025-12-02) | [4.4.4](#444---2025-12-03) | [4.4.3](#443---2025-12-03) | [4.4.2](#442---2025-12-03) | [4.4.1](#441---2025-12-03) | [4.4.0](#440---2025-12-03) | [4.3.0](#430---2025-12-02) | [4.2.0](#420---2025-12-01) | [4.1.0](#410---2025-12-01) | [4.0.3](#403---2025-12-01) | [4.0.2](#402---2025-12-01) | [4.0.1](#401---2025-12-01) | [4.0.0](#400---2025-12-01) | [Earlier versions](#earlier-versions)
 
 ## [Unreleased]
+
+## [26.0.0] - 2026-11-14
+
+Version 26 is the end-of-2026 release; the number jumps from 7. It has one new command, `/investigate-artist`, and a modernization pass over the whole repository: security and reliability fixes from an audit, dependency updates, quality gates that pass for real and are now enforced, and four measured optimizations. The audit, everything that was deferred and why, and the decisions left for the owner are in [`MODERNIZATION_PLAN.md`](MODERNIZATION_PLAN.md). The release steps are in [`docs/releases/26.0.0.md`](docs/releases/26.0.0.md).
+
+### Breaking
+
+- Node: `engines` is now `>=20.9.0`. sharp 0.35 requires it and canvas 3.2 does not support 20.0 to 20.8. Check `node -v` on the host before deploying (#00282).
+- Dashboard sessions: a session cookie that does not decrypt is rejected. Anyone still holding a cookie from before cookies were encrypted signs in again (#00280).
+- Dashboard API: the bot's internal API listens on `127.0.0.1` by default instead of all interfaces. Set `DASHBOARD_API_HOST=0.0.0.0` only if the dashboard calls the bot from another machine (#00280).
+- Stats: weekly active users in the Stats Observatory and the Pulse daily chart show different numbers from this release on. The old ones were wrong (#00284).
+- CI: lint, knip, the coverage floors and the new dashboard job fail the build now. They used to be soft or absent (#00283).
 
 ### Added
 
 - `/investigate-artist`: an owner-only, private review aid for 2D artist verification tickets. Run inside the ticket, it reads the whole history, fetches every image the applicant posted, runs reverse image lookups (Fluffle, e621 and SauceNAO where a key is set), gathers the applicant's server history and asks the Claude API to rate the application against the handbook's own criteria. The answer is ephemeral: an advisory score, a per-criterion breakdown with the evidence behind each rating, every lookup match with its link, flags, follow-up questions and what could not be determined. It never approves, denies, changes roles or messages the applicant, and nothing is posted in the ticket. Only user IDs in `OWNER_IDS` can run it, checked in the handler (#00279).
 - Per-run token usage and estimated cost are recorded in `artist_investigation_run` (migration 084). The report footer shows the run's cost and the month's total, and a run that could pass `INVESTIGATE_MONTHLY_CAP_USD` is refused before anything is sent (#00279).
 - Optional environment keys: `ANTHROPIC_WORKSPACE_ID`, `INVESTIGATE_MODEL`, `INVESTIGATE_MONTHLY_CAP_USD`, `INVESTIGATE_MAX_IMAGES`, `SAUCENAO_API_KEY`, `E621_LOGIN`, `E621_API_KEY`, `PROVENANCE_USER_AGENT` (#00279).
+- `DASHBOARD_API_HOST`: bind address of the bot's internal dashboard API, `127.0.0.1` by default (#00280).
+- A test that holds the hand-written `/help` registry against the registered slash commands. A new command has to be added to the registry or to a short hidden list (#00283).
+
+### Security
+
+- Dashboard sessions could be forged. When a session cookie failed to decrypt, the server parsed it as plain JSON, so anyone could write a cookie naming any user at any tier, owner included. A cookie that does not decrypt and authenticate now gives no session (#00280).
+- The GitHub bot token could leak. `/update banner`, `/update avatar` and the server audit docs job put the token in the push URL, so a failed push printed it in a public Discord reply and in the logs. The token now reaches git through an environment-supplied header, never the command line or the remote URL; Discord gets a fixed message and the log line is scrubbed (#00280).
+- The bot's internal dashboard API listened on all interfaces and compared its shared secret with `!==`. It now binds to loopback by default and compares in constant time (#00280).
+- GitHub workflows run with `contents: read` unless they push, and the third-party gist action is pinned to a commit instead of a tag (#00280).
+
+### Fixed
+
+- Panic mode was off after every restart until the full member fetch finished. Its state is now loaded before the member cache warm-up (#00281).
+- A modmail open that died half way left a `pending` row that blocked that applicant's modmail for good. Pending rows older than 120 seconds are treated as abandoned, and a thread that was created but never registered is deleted. An open that is still running after 120 seconds can now be overtaken by a second one (#00281).
+- A failed log-channel send aborted the rest of the member join and leave handlers: join tracking, the verify thread, leave tracking, flag dismissal and the review card refresh. Both sends are guarded now (#00281).
+- Verify thread cleanup was skipped for members who left without a submitted application. It runs for every leaver (#00281).
+- Ticket attachment downloads and the image downloads in `/update banner` and `/update avatar` had no timeout, so one stalled download held up everything behind it. Both give up after 30 seconds (#00281).
+- Shutdown: one throwing scheduler stop skipped the remaining buffer flushes and the database close. Each step is isolated now, and the buffered welcome batch is posted on shutdown (capped at 5 seconds) instead of being dropped (#00281).
+- `/redeemreward` removed the member's ticket role before checking the artist queue, so an empty queue cost them the ticket. It checks the queue first and spends nothing when it is empty (#00281).
+- Slash commands that had already deferred were recorded as 10 second event timeouts. Interactions get a 15 minute budget, the lifetime of an interaction token; every other event keeps 10 seconds (#00281).
+- Opening a ticket reported "Failed to open ticket" when only the welcome message failed to post, although the channel and the ticket existed. The reply now says the ticket opened and the welcome message could not be posted (#00281).
+- A discord.js client `error` event had no listener and could take the process down. It is logged now (#00281).
+- Weekly active users in the Stats Observatory and the Pulse daily chart were computed from fractional day buckets: one bucket per second instead of one per day. Weekly active users undercounted and the chart showed 1 for most days. Both use whole days now (#00284).
+
+### Performance
+
+Query numbers were measured on a read-only copy of the production database, median of several runs.
+
+- Stats refresh query, 101-day lookback: 478,091 rows in 1084 ms to 9,899 rows in 747 ms. Pulse daily query for 30 days: 109,340 rows in 119 ms to 30 rows in 32.5 ms. Both come from the day-bucket fix above (#00284).
+- `/activity` heatmap groups messages by hour in SQL instead of reading every row. 8 weeks: 222,882 rows in 69.7 ms to 1,352 rows in 32.1 ms. 1 week: 19.5 ms to 6.8 ms. The image is unchanged (#00284).
+- `/audit members` loads the guild's message authors once instead of scanning the activity table for every member. The activity lookups for 100 members went from 13,694 ms to 310 ms. An index was measured as the alternative and rejected: 4.8 s to build, 95 MB on disk, and it slowed a 50,000-row insert from 470 ms to 1,558 ms (#00284).
+- Leaderboard and heatmap images are encoded off the event loop. The encode of a 1600x1900 image blocked the loop for 100.0 ms and now blocks for 0.4 ms; the bytes are identical (#00284).
+
+### Changed
+
+- A failed push from `/update` or the server audit docs job shows a fixed message in Discord. The detail is in the bot log (#00280).
+- CI runs on Node 24 with a second test leg on Node 20, uses the current action majors, cancels superseded runs, has job timeouts and also builds pushes to `release/**` (#00283).
+- Coverage counts every file in `src/`, not only the files a test imports, which moved the reported line coverage from 47.7% to 39.8% without any code changing. The floors are set one point under the measured values: lines 43, statements 43, functions 48, branches 37 (#00283).
+- Lint passes with 0 errors (it had 1274) and is a hard gate. `no-explicit-any` stays an error in `src/`, is a warning in `scripts/` and is off in tests and migrations (#00283).
+- knip passes and is a hard gate; a dead barrel file, an unused test helper and a handful of unused exports are gone (#00283).
+- The dashboard has a CI job: `svelte-check` and a production build (#00283).
+- The files this release adds follow the prettier config; 41 of them had to be reformatted. 829 older files still fail `npm run format:check`, so that gate stays soft until they are formatted in one commit of their own (#00283).
+- vitest, eslint and prettier skip `.claude/worktrees/`, where each worktree is a full copy of the repo (#00283).
+
+### Dependencies
+
+- fastify 5.8.5 to 5.12.8 (four high advisories) (#00282).
+- discord.js 14.27.0 to 14.28.1, with undici at the patched 6.29.1 (#00282).
+- sharp 0.34.5 to 0.35.5 in the bot and the dashboard (bundled libvips and libheif advisories); `@types/sharp` is gone because sharp ships its own types (#00282).
+- `@anthropic-ai/sdk` moves from a 0.91 dev dependency to a 1.8 runtime dependency, since production installs without dev dependencies (#00282).
+- In-range updates: Sentry 10.78.0, canvas 3.2.3, dotenv 17.4.2, pino 10.4.0, vitest 4.1.12, eslint 9.39.5, typescript-eslint 8.72.2, knip 6.45.1, prettier 3.10.1, tsup 8.5.1; in the dashboard SvelteKit 2.70.4, svelte 5.57.3, vite 7.3.8 and mermaid 11.17.2, which clears the critical dompurify advisory (#00282).
+- Overrides for packages that are no longer in the tree are removed, and the fast-uri and brace-expansion floors are raised (#00282).
+- Both `package.json` files carry an `allowScripts` allowlist, so `npm ci` on npm 11.21 runs the native builds it needs and prints no warning (#00282).
+- `npm audit` for the bot went from 26 findings (11 high) to 1: zod, which needs the zod 4 major and whose advisory is in a v4 code path this repo does not use. The dashboard went from 28 (1 critical, 8 high) to 14, none critical or high (#00282).
+- Held back: better-sqlite3 stays at 12.4.1 until the production Node version is confirmed. The major upgrades (Sentry 11, zod 4, vitest 5, eslint 10, TypeScript 7, SvelteKit 3 with Vite 8) are deferred with reasons in `MODERNIZATION_PLAN.md` (#00286).
+
+### Tests
+
+- 320 test files and 6357 tests, up from 289 and 5744. The new ones cover `/investigate-artist` with every external API mocked, and each security, reliability and performance change (#00279 to #00284).
+
+### Upgrade notes
+
+The same steps with exact commands are in [`docs/releases/26.0.0.md`](docs/releases/26.0.0.md).
+
+- Before deploying, run `node -v` on the host. It must print 20.9.0 or newer.
+- Add to the host `.env`: `ANTHROPIC_API_KEY`, `ANTHROPIC_WORKSPACE_ID` and your Discord user ID in `OWNER_IDS`. Optional: `SAUCENAO_API_KEY`, `E621_LOGIN` and `E621_API_KEY` (free accounts), `INVESTIGATE_MONTHLY_CAP_USD` (default 200). Without `OWNER_IDS` the command refuses everyone; without the Anthropic key it runs the lookups and gives no assessment.
+- The deploy runs migration 084, which only adds two tables (`artist_investigation_run`, `artist_provenance_cache`).
+- `./deploy.sh` registers the slash commands on the host as step 6.6, which is what makes `/investigate-artist` appear. If it prints a registration warning, run `npm run deploy:cmds` on the host.
+- Merging to `main` also starts the dashboard deploy workflow, because `docs/**` and `web/**` changed.
+- Anyone still holding a dashboard cookie from before cookies were encrypted is asked to sign in again.
 
 ## [7.0.0] - 2026-09-02
 
