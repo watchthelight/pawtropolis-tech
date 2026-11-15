@@ -11,10 +11,9 @@
  *
  *      A normal run looks at the last three days only, which costs a few
  *      milliseconds of reading. Once a day a full pass goes over the whole
- *      channel in slices of thirty days and catches what the short window
- *      cannot see: a message deleted or edited long after it was posted, a
- *      reply to an old message, and the 95th percentile that resonance is
- *      measured against.
+ *      channel a day at a time and catches what the short window cannot see:
+ *      a message deleted or edited long after it was posted, a reply to an old
+ *      message, and the 95th percentile that resonance is measured against.
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
@@ -36,7 +35,12 @@ import { summarizeWeek, type WeekMessage } from "./weekly.js";
 const DAY_S = 86400;
 /** How far back a normal run looks. */
 export const WINDOW_S = 3 * DAY_S;
-const SLICE_S = 30 * DAY_S;
+/**
+ * How much of the channel is held in memory at once. The busiest day of the
+ * main chat has 11,000 messages. Slices of thirty days held up to 180,000, and
+ * a pass over the whole channel then took 875 MB where a day at a time takes 314.
+ */
+const SLICE_S = DAY_S;
 const CHUNK_SIZE = 256;
 const CONTEXT_SIZE = 3;
 /** A message may carry a time slightly ahead of this machine's clock. */
