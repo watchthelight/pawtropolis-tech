@@ -46,7 +46,8 @@ What CI enforces is in [docs/operations/ci-policy.md](./docs/operations/ci-polic
 | Dashboard               | in `web/`: `npm run check`, `npm run build`        | HARD |
 | Format                  | `npm run format:check`                             | SOFT |
 
-- Format is soft because the files that predate v26 have never been formatted. New and touched files should still pass `npx prettier --check <file>`. Do not run `npm run format` over the whole repo as part of other work: that commit is planned on its own (todo #00286).
+- Format is soft because about 800 files that predate v26 fail the check. A new file has to pass `npx prettier --check <file>`, and so does a file that passed before the edit. An older file that already fails is edited as it is: do not format it in the same commit, and do not run `npm run format` over the whole repo as part of other work. That commit is planned on its own (todo #00286).
+- prettier wants LF line endings. A file checked out with CRLF on Windows fails the check on that alone, so a local count can be higher than the one in `docs/operations/ci-policy.md`.
 - `npm run check` chains typecheck, lint, format check and tests, so it stops at the format check until that commit lands. Run the gates one by one.
 - knip and the full test suite both need the dashboard prepared: `npm ci` and `npx svelte-kit sync` in `web/`. In a fresh clone without them knip stops with `Error loading web/vite.config.ts`.
 - `tsconfig.json` covers `src/` and `scripts/` only. Tests are type-checked by nobody; vitest strips types.
