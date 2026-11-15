@@ -77,6 +77,23 @@ export default [
       "no-console": "off",
     },
   },
+  // pino writes its own "level" and then the fields of the object it is given.
+  // A field named "level" is then in the JSON line twice and a reader takes the
+  // second one, so an error about level 5 reads as a line of level 5.
+  {
+    files: ["src/**/*.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "CallExpression[callee.property.name=/^(trace|debug|info|warn|error|fatal)$/] > ObjectExpression:first-child > Property:matches([key.name='level'], [key.value='level'])",
+          message:
+            'A log field named "level" replaces the level of the line in the JSON output. Give the field another name.',
+        },
+      ],
+    },
+  },
   // Test doubles and one-shot scripts. Mocks of discord.js, better-sqlite3 and
   // interaction objects are cast through `any` all over tests/ (about 1150
   // sites), where a precise type adds noise without catching bugs: off. scripts/

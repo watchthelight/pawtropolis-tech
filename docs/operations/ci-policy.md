@@ -40,6 +40,8 @@ Was soft until both pre-existing failures were resolved:
 
 Was soft while the backlog stood at 1274 errors. The ESLint config now turns `no-undef` off for TypeScript (tsc covers it), turns `no-explicit-any` off for `tests/**` and `migrations/**` and to a warning for `scripts/**`, and ignores generated and scratch directories. The remaining errors in `src/`, `web/` and `scripts/` were fixed. `src/**` keeps `no-explicit-any` as an error. Warnings (unused vars, unused disable directives, `any` in scripts) are allowed and do not fail CI.
 
+Since 26.1.0 `src/**` has one more error: a log call must not carry a field named `level`. pino writes its own `level` and then the fields of the object it is given, so the JSON line holds `level` twice and a reader takes the second. Thirteen calls did that. One of them is the error line for a level reward that could not be granted: for a member who had reached level 5 it would have read as a line of level 5, and a scan for errors would have passed over it.
+
 ### Dead code (knip, promoted with #00283)
 
 Was soft from #00271. `npm run knip` now exits 0: the unused barrel, the unused test helper, the unused exports and the stale config hints are gone. A new unused file, export or type fails the check job.
