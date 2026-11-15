@@ -46,6 +46,9 @@ Version 26 is the end-of-2026 release; the number jumps from 7. It has one new c
 - Opening a ticket reported "Failed to open ticket" when only the welcome message failed to post, although the channel and the ticket existed. The reply now says the ticket opened and the welcome message could not be posted (#00281).
 - A discord.js client `error` event had no listener and could take the process down. It is logged now (#00281).
 - Weekly active users in the Stats Observatory and the Pulse daily chart were computed from fractional day buckets: one bucket per second instead of one per day. Weekly active users undercounted and the chart showed 1 for most days. Both use whole days now (#00284).
+- `./deploy.sh` never installed dependencies on a host that already had a lockfile. It compared the local lockfile with the remote one after its own tarball had replaced the remote one, so the two always matched and `npm ci` was skipped. The host was still running on packages installed in May 2026 while later deploys shipped newer lockfiles, and this release would not have started on them. The script now records which lockfile `node_modules` was installed from, in `node_modules/.lock-sha256`, and installs whenever that differs from the lockfile on the host. A new test runs the script against a fake remote (#00285).
+- The dashboard deploy workflow shipped `web/package-lock.json` and never installed from it. It now runs `npm ci --omit=dev` on the host when the lockfile changed, using the same marker as `deploy.sh` (#00285).
+- `scripts/cleanup-backups.sh` deleted nothing: it built its keep list from one file name pattern and deleted by another. The repo now has the version the host has run from cron since October 2026, which prunes the deploy snapshots and the migration runner's copies (#00269).
 
 ### Performance
 
@@ -81,7 +84,7 @@ Query numbers were measured on a read-only copy of the production database, medi
 
 ### Tests
 
-- 320 test files and 6351 tests in a clean checkout, up from 289 and 5736. The new ones cover `/investigate-artist` with every external API mocked, and each security, reliability and performance change (#00279 to #00284).
+- 321 test files and 6357 tests in a clean checkout, up from 289 and 5736. The new ones cover `/investigate-artist` with every external API mocked, each security, reliability and performance change, and the dependency install step of `deploy.sh` (#00279 to #00285).
 
 ### Upgrade notes
 
@@ -89,6 +92,7 @@ The same steps with exact commands are in [`docs/releases/26.0.0.md`](docs/relea
 
 - Before deploying, run `node -v` on the host. It must print 20.9.0 or newer.
 - Add to the host `.env`: `ANTHROPIC_API_KEY`, `ANTHROPIC_WORKSPACE_ID` and your Discord user ID in `OWNER_IDS`. Optional: `SAUCENAO_API_KEY`, `E621_LOGIN` and `E621_API_KEY` (free accounts), `INVESTIGATE_MONTHLY_CAP_USD` (default 200). Without `OWNER_IDS` the command refuses everyone; without the Anthropic key it runs the lookups and gives no assessment.
+- The first deploy of this version installs dependencies on the host from scratch: `npm ci --omit=dev` in the root and in `web/`. That takes a few minutes and removes any package that was added there by hand.
 - The deploy runs migration 084, which only adds two tables (`artist_investigation_run`, `artist_provenance_cache`).
 - `./deploy.sh` registers the slash commands on the host as step 6.6, which is what makes `/investigate-artist` appear. If it prints a registration warning, run `npm run deploy:cmds` on the host.
 - Merging to `main` also starts the dashboard deploy workflow, because `docs/**` and `web/**` changed.
