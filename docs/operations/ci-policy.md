@@ -58,12 +58,13 @@ Has always been hard. Build = `tsup` plus `scripts/scan-legacy.ts`. Unaffected b
 
 ### Format
 
-`npm run format:check` reports 822 files that drift in a clean checkout (832 before the v26 work, which formatted the files it added). One mechanical `npm run format` commit over the whole repo fixes them; it is done separately so it does not collide with open work.
+`npm run format:check` reports 819 files that drift when the checkout has LF line endings, as it does on the CI runners. Before the v26 work it was 830; most of that difference is the prettier update from 3.6.2 to 3.10.1, which judges 40 older files differently. A default Windows clone reports two more, `.prettierrc` and `web/src/app.css`, because it checks them out with CRLF. One mechanical `npm run format` commit over the whole repo fixes them; it is done separately so it does not collide with open work.
 
 **Promotion conditions:**
 
-1. Run `npm run format` against the whole repo and commit the result.
-2. Drop `continue-on-error: true` from the Format Check step.
+1. Give `*.cjs`, `*.css`, `*.html` and `.prettierrc` an `eol=lf` rule in `.gitattributes`, so a Windows clone checks them out the way the runners do.
+2. Run `npm run format` against the whole repo and commit the result.
+3. Drop `continue-on-error: true` from the Format Check step.
 
 ## What CI does not check
 
