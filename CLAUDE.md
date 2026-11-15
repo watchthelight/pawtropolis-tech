@@ -117,7 +117,7 @@ A permission that matters is checked in the handler, never only through Discord'
 
 - The version lives in `package.json`, `web/package.json` and both lockfiles: `npm version <x> --no-git-tag-version` in the root and in `web/`.
 - `CHANGELOG.md` gets a section per release and the version list at its top gets a link. Release notes with the host steps go in `docs/releases/<version>.md`.
-- The current release is 26.0.0. Its audit, deferred work and open owner decisions are in `MODERNIZATION_PLAN.md`.
+- The current release is 26.0.0. Its audit, the deferred work and the owner's decisions of 2026-11-15 are in `MODERNIZATION_PLAN.md`.
 
 ## Web dashboard design
 

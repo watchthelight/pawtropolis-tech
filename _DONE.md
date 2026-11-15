@@ -4,6 +4,10 @@ One-line dated ledger. Detail in [`done/`](./done/). Pair of [`_BACKLOG.md`](./_
 
 Reverse chronological by completion date.
 
+## 2026-11-15
+
+- [x] [Owner decisions from the v26 audit](done/00287.md) `High` All sixteen decided by the owner. The two held changes are merged, the dashboard deploy waits for CI and three dead files are gone. The rest is in #00289 to #00296 and ships with 26.1.0.
+
 ## 2026-11-14
 
 - [x] [Owner-only /investigate-artist for 2D artist verification tickets](done/00279.md) `High` Private, advisory review of a 2D artist ticket against the handbook's criteria: reverse image lookups, Claude analysis, per-run cost and a monthly cap. Not yet run as a real interaction (no test guild). Shipped in 26.0.0.
