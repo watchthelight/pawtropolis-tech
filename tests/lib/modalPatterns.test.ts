@@ -23,6 +23,7 @@ import {
   MODAL_KICK_RE,
   MODAL_UNCLAIM_RE,
   identifyModalRoute,
+  isKeyForm,
 } from "../../src/lib/modalPatterns.js";
 
 describe("modalPatterns", () => {
@@ -327,6 +328,21 @@ describe("modalPatterns", () => {
         expect(identifyModalRoute("")).toBeNull();
         expect(identifyModalRoute("v1:modal")).toBeNull();
       });
+    });
+  });
+
+  describe("isKeyForm", () => {
+    it("knows the forms that take an API key", () => {
+      expect(isKeyForm("isitreal_modal_hive")).toBe(true);
+      expect(isKeyForm("isitreal_modal_sightengine")).toBe(true);
+    });
+
+    it("leaves every other form alone", () => {
+      expect(isKeyForm("v1:modal:reject:code98FF66")).toBe(false);
+      expect(isKeyForm("v1:modal:session123:p0")).toBe(false);
+      expect(isKeyForm("help:modal:search")).toBe(false);
+      expect(isKeyForm("isitreal_setup_hive")).toBe(false);
+      expect(isKeyForm("")).toBe(false);
     });
   });
 });

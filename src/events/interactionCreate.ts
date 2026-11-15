@@ -32,6 +32,7 @@ import {
   BTN_AUDIT_RE,
   BTN_REPORT_RESOLVE_RE,
   identifyModalRoute,
+  isKeyForm,
 } from "../lib/modalPatterns.js";
 import { handleStartButton, handleGateModalSubmit, handleDoneButton } from "../features/gate.js";
 import {
@@ -213,7 +214,7 @@ export function registerInteractionCreate(
             },
             "modal fields received"
           );
-          if (process.env.VERBOSE_PAYLOADS === "1") {
+          if (process.env.VERBOSE_PAYLOADS === "1" && !isKeyForm(interaction.customId)) {
             const verbose = Array.from(interaction.fields.fields.values()).map((field) => {
               const raw =
                 typeof (field as { value?: string }).value === "string"

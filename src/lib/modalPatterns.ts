@@ -79,6 +79,14 @@ export const BTN_QOTD_RE = /^qotd:(approve|reject):code([0-9A-F]{6})$/;
 const MODAL_QOTD_SUGGEST_RE = /^v1:modal:qotd:suggest$/;
 const MODAL_QOTD_REJECT_RE = /^v1:modal:qotd:reject:([0-9A-F]{6})$/;
 
+// Forms whose text fields are API keys. The router can log what was typed into
+// a form (VERBOSE_PAYLOADS=1), and a key must never reach the log file.
+const KEY_FORM_PREFIXES = ["isitreal_modal_"];
+
+export function isKeyForm(customId: string): boolean {
+  return KEY_FORM_PREFIXES.some((prefix) => customId.startsWith(prefix));
+}
+
 /**
  * Discriminated union for routed modal types. Allows type-safe handling
  * in the modal submission handler via switch on `type`.
