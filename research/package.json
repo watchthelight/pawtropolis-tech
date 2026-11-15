@@ -1,0 +1,9 @@
+{
+  "name": "pawtropolis-research",
+  "private": true,
+  "description": "The embedding library of the chat research job. The bot does not depend on it: dist/scripts/research.js loads it from this folder when it has messages to score.",
+  "license": "LicenseRef-ANW-1.0",
+  "dependencies": {
+    "@huggingface/transformers": "4.3.2"
+  }
+}
