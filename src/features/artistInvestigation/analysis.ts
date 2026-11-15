@@ -24,8 +24,9 @@ import {
   AI_POLICY,
   CRITERIA,
   GREEN_FLAGS,
+  HANDBOOK_PRECEDENCE,
   RED_FLAGS,
-  WORKFLOW_GAPS,
+  WORKFLOW_DECISIONS,
   WORKFLOW_SOURCE_LABELS,
   displayRule,
   type Criterion,
@@ -210,11 +211,18 @@ export const describeTicketDate = (ticket: PriorTicket) =>
 
 const bullets = (items: readonly string[]) => items.map((item) => `- ${item}`).join("\n");
 
+/** Follows an applicant-facing line the handbook overrules, so the model does not rate by it. */
+const OVERRULED_NOTE =
+  " [overruled by the handbook: listed because applicants have been shown this line, not a rule to rate by]";
+
 export function buildSystemPrompt(): string {
   const criteria = CRITERIA.map((c) =>
     [
       `## ${c.key}: ${c.title}`,
-      ...c.rules.map((r) => `- "${displayRule(r.text)}" (${WORKFLOW_SOURCE_LABELS[r.source]})`),
+      ...c.rules.map(
+        (r) =>
+          `- "${displayRule(r.text)}" (${WORKFLOW_SOURCE_LABELS[r.source]})${r.overruled ? OVERRULED_NOTE : ""}`
+      ),
       `How to apply: ${c.guidance}`,
     ].join("\n")
   ).join("\n\n");
@@ -275,10 +283,10 @@ ${policy}
 Artifacts the handbook tells reviewers to look for:
 ${artifacts}
 
-# Where the workflow is unclear
+# Points the owner has settled
 
-The server's documents disagree or are silent on these points. Report what the evidence shows for each side and leave the choice to the owner.
-${bullets(WORKFLOW_GAPS)}
+The text shown to applicants and the mod handbook used to disagree on these points, or neither said anything. The owner decided each one, and the handbook was updated to match. It also says which text wins: "${HANDBOOK_PRECEDENCE}" Apply the points below as rules. Do not report them as open questions.
+${bullets(WORKFLOW_DECISIONS)}
 
 # What to return
 

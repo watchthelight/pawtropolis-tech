@@ -2415,6 +2415,7 @@ A private second opinion on a 2D artist verification ticket. Run it inside the a
 **Important notes:**
 - The score is advisory. The command never approves, denies, assigns roles or messages the applicant
 - Stolen, traced and AI-generated art cannot be detected reliably. A match is not proof of theft, and no match is not proof of originality. Treat every finding as a lead to check yourself
+- Where the requirements shown to applicants ask for something other than the mod handbook does, it rates by the handbook. A requirement line the handbook overrules is marked as such in the report, and the Notes say when the ticket's greeting carries one
 - It only works in a 2D artist ticket (`2d-artist-NNNN` in the Tickets category, or a first-party ticket of that type). Anywhere else it says so
 - A run takes a minute or two for a small ticket and longer with many images. It costs real money: a ticket with four images came to about $0.18 with the default model. The command refuses to start when the month's tracked spend would pass `INVESTIGATE_MONTHLY_CAP_USD`
 - A timelapse or a layered source file is the strongest proof the workflow asks for, and the command cannot open either. Watch the video and open the file yourself

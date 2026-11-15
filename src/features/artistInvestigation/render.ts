@@ -25,8 +25,8 @@ import {
 import { formatFooter, type TokenUsage } from "./budget.js";
 import {
   CRITERIA,
-  WORKFLOW_GAPS,
   displayRule,
+  findOverruledInGreeting,
   findRequirementDrift,
   type WorkflowSource,
 } from "./criteria.js";
@@ -341,7 +341,10 @@ function criteriaSection(assessment: Assessment, known: Set<string>): Section {
     const criterion = CRITERIA.find((c) => c.key === entry.key);
     const cited = citedLabels(entry.evidence, known);
     const rules = (criterion?.rules ?? [])
-      .map((r) => `"${displayRule(r.text)}" (${SOURCE_NAMES[r.source]})`)
+      .map(
+        (r) =>
+          `"${displayRule(r.text)}" (${SOURCE_NAMES[r.source]}${r.overruled ? ", overruled by the handbook" : ""})`
+      )
       .join(" · ");
     // "AI indicators: met" reads as if indicators were found. On a risk check it means the opposite.
     const rating =
@@ -497,7 +500,7 @@ function notesSection(
   report: InvestigationReport,
   citedMessages: string[],
   jump: (messageId: string) => string
-): Section {
+): Section | null {
   const blocks: string[] = [];
 
   if (citedMessages.length > 0) {
@@ -508,9 +511,16 @@ function notesSection(
     blocks.push(`**Cited messages**\n${links}`);
   }
 
-  blocks.push(
-    `**Where the workflow is unclear**\n${WORKFLOW_GAPS.map((gap) => `- ${gap}`).join("\n")}`
-  );
+  const overruled = findOverruledInGreeting(report.evidence.greetingText);
+  if (overruled.length > 0) {
+    blocks.push(
+      `**Requirement text the handbook overrules**\nThe greeting posted in this ticket carries:\n${overruled
+        .map((line) => `- "${line}"`)
+        .join(
+          "\n"
+        )}\nThe applicant was told this. The handbook decides, so this report rates by the handbook. If the public requirements message and the ticket greeting template still carry the line, it should come out there.`
+    );
+  }
 
   const drift = findRequirementDrift(report.evidence.greetingText);
   if (drift.length > 0) {
@@ -530,7 +540,7 @@ function notesSection(
       `**Checks that could not run**\n${gaps.map((gap) => `- ${safe(gap, 300)}`).join("\n")}`
     );
 
-  return { title: "Notes", blocks };
+  return blocks.length > 0 ? { title: "Notes", blocks } : null;
 }
 
 export function renderReport(report: InvestigationReport): ReportPage[] {

@@ -198,18 +198,18 @@ One attempt was backed out before it reached the branch: replacing `require()` w
 | Art rules              | art-rules channel, "Last Revision - 4/8/26"; handbook "Art Bases"                                                    | Base credit rule, no tracing, AI or theft                   |
 | Verify Blacklist       | Staff forum thread, 2026-05-13                                                                                       | Users previously refused for verification                   |
 
-Criteria the command scores, each cited to its source in the output:
+Criteria the command scores, each cited to its source in the output. Items 1, 4, 9 and 10 read as they do since the owner's decision of 2026-11-15 (section 7, item 2; #00292): the handbook decides where the applicant-facing text asks for something else.
 
-1. **Process evidence**: "3 different WIP/Layers to previous work" (requirements); handbook minimum evidence, at least two of: recorded timelapse of 30 seconds or more, layered source file with dated layers, WIP photo with handwritten date and client identifier.
+1. **Process evidence**: handbook minimum evidence, at least two of: recorded timelapse of 30 seconds or more, layered source file with dated layers, WIP photo with handwritten date and client identifier. The applicant-facing line "3 different WIP/Layers to previous work" is still listed and marked as overruled: the report says how many pieces come with process material and does not rate by that count.
 2. **Finished client work**: "Previous finished work with a client" (requirements).
 3. **Terms of service**: "Need a form of ToS" (requirements).
-4. **Active commissions**: active commission artist, a commission in the last 6 months (requirements).
+4. **Active commissions and experience**: active commission artist with a commission in the six months before applying (requirements and handbook), and more than six months of experience (handbook). Two separate rules.
 5. **Foundational skill**: understands shading; rendering skill is not required (requirements).
 6. **Style and skill consistency**: sudden jumps and inconsistent portfolio are red flags (handbook).
 7. **Provenance**: reverse image search results versus the handles the applicant claimed (handbook supporting methods; art rules on theft).
 8. **AI indicators**: handbook AI policy and "Spotting AI Art" table.
-9. **Base use**: bases are allowed with credit (art rules). The workflow does not say whether base-made work counts as verification evidence, and the command says so plainly.
-10. **Account and history**: account age under 6 months with no traceable history is a red flag (handbook); Verify Blacklist entry; other verification tickets.
+9. **Base use**: bases are allowed with credit (art rules). A piece made on a base counts as verification evidence when the base creator is credited (handbook). Without credit it does not count, and that is the concern the report names.
+10. **Account and history**: account age under 6 months with no traceable history is a red flag (handbook), a third six-month rule apart from the two under item 4; Verify Blacklist entry; other verification tickets.
 
 ### Decisions
 

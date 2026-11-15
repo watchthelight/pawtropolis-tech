@@ -16,10 +16,12 @@ import {
   AI_POLICY,
   CRITERIA,
   GREEN_FLAGS,
+  HANDBOOK_PRECEDENCE,
   RED_FLAGS,
-  WORKFLOW_GAPS,
+  WORKFLOW_DECISIONS,
   WORKFLOW_SOURCE_LABELS,
   displayRule,
+  findOverruledInGreeting,
   findRequirementDrift,
   handbookQuotes,
   normalizeWorkflowText,
@@ -29,6 +31,11 @@ import {
 const REPO_ROOT = path.resolve(__dirname, "..", "..");
 const handbook = fs.readFileSync(path.join(REPO_ROOT, "docs", "MOD-HANDBOOK.md"), "utf8");
 const handbookText = normalizeWorkflowText(handbook);
+
+/** The one applicant-facing line the handbook overrules (owner decision, 2026-11-15). */
+const OVERRULED_LINE = "3 different WIP/Layers to previous work";
+
+const rulesOf = (key: string) => CRITERIA.find((criterion) => criterion.key === key)?.rules ?? [];
 
 /** The handbook text under one heading, up to the next heading of the same or a higher level. */
 function handbookSection(heading: string): string {
@@ -62,13 +69,40 @@ describe("artist criteria: handbook parity", () => {
     expect(outside).toEqual([]);
   });
 
-  it("takes its base rule from the Art Bases section", () => {
-    const section = normalizeWorkflowText(handbookSection("#### Art Bases"));
-    const baseRules = CRITERIA.find((criterion) => criterion.key === "base_use")?.rules ?? [];
-    const fromHandbook = baseRules.filter((rule) => rule.source === "handbook");
+  it("takes its base rules from the Art Bases and 2D Artwork Verification sections", () => {
+    const artBases = normalizeWorkflowText(handbookSection("#### Art Bases"));
+    const verification = normalizeWorkflowText(handbookSection("### 2D Artwork Verification"));
+    const fromHandbook = rulesOf("base_use")
+      .filter((rule) => rule.source === "handbook")
+      .map((rule) => normalizeWorkflowText(rule.text));
 
-    expect(fromHandbook.length).toBeGreaterThan(0);
+    // Posting with credit is an art rule. Whether a base piece counts as evidence
+    // is a verification rule, so it sits with the other verification rules.
+    expect(fromHandbook).toHaveLength(2);
+    expect(fromHandbook.filter((rule) => artBases.includes(rule))).toHaveLength(1);
+    expect(fromHandbook.filter((rule) => verification.includes(rule))).toHaveLength(1);
+  });
+
+  it("takes the experience and recent commission rules from the 2D section", () => {
+    const section = normalizeWorkflowText(handbookSection("### 2D Artwork Verification"));
+    const fromHandbook = rulesOf("active_commissions").filter((rule) => rule.source === "handbook");
+
+    expect(fromHandbook.map((rule) => rule.text)).toEqual([
+      "A commission within the 6 months before applying. Without one the applicant is ineligible",
+      "More than 6 months of experience",
+    ]);
     for (const rule of fromHandbook) expect(section).toContain(normalizeWorkflowText(rule.text));
+  });
+
+  it("finds the sentence that puts the handbook first next to the evidence list", () => {
+    const section = normalizeWorkflowText(handbookSection("### 2D Artwork Verification"));
+    const evidence = section.indexOf(
+      normalizeWorkflowText("Minimum Acceptable Evidence (at least TWO required):")
+    );
+    const precedence = section.indexOf(normalizeWorkflowText(HANDBOOK_PRECEDENCE));
+
+    expect(evidence).toBeGreaterThan(-1);
+    expect(precedence).toBeGreaterThan(evidence);
   });
 
   it("carries every row of the handbook's AI policy table", () => {
@@ -179,16 +213,43 @@ describe("artist criteria: shape", () => {
     );
   });
 
-  it("states the places where the workflow's sources disagree", () => {
-    expect(WORKFLOW_GAPS.length).toBeGreaterThanOrEqual(3);
-    expect(WORKFLOW_GAPS.join(" ")).toContain("3 different WIP/Layers to previous work");
-    expect(WORKFLOW_GAPS.join(" ")).toMatch(/base-made work counts toward verification/);
+  it("marks the one applicant line the handbook overrules, and no handbook line", () => {
+    const overruled = CRITERIA.flatMap((criterion) =>
+      criterion.rules
+        .filter((rule) => rule.overruled)
+        .map((rule) => `${criterion.key} / ${rule.source} / ${rule.text}`)
+    );
+
+    expect(overruled).toEqual([`process_evidence / requirements / ${OVERRULED_LINE}`]);
+  });
+
+  it("rates process evidence by the handbook's list, which comes first", () => {
+    const [first] = rulesOf("process_evidence");
+    const guidance =
+      CRITERIA.find((criterion) => criterion.key === "process_evidence")?.guidance ?? "";
+
+    expect(first).toEqual({
+      text: "Minimum Acceptable Evidence (at least TWO required):",
+      source: "handbook",
+    });
+    expect(guidance).toContain("at least two of its three evidence types");
+    expect(guidance).toContain("do not rate by that count");
+  });
+
+  it("states the three points the owner settled as rules", () => {
+    const decisions = WORKFLOW_DECISIONS.join(" ");
+
+    expect(WORKFLOW_DECISIONS).toHaveLength(3);
+    expect(decisions).toContain(`"${OVERRULED_LINE}" is context and does not decide`);
+    expect(decisions).toContain("three separate rules, and all three count");
+    expect(decisions).toContain("counts as evidence when the base creator is credited");
   });
 
   it("uses plain punctuation in everything it shows", () => {
     const shown = [
       ...CRITERIA.flatMap((criterion) => [criterion.title, criterion.guidance]),
-      ...WORKFLOW_GAPS,
+      ...WORKFLOW_DECISIONS,
+      HANDBOOK_PRECEDENCE,
       ...Object.values(WORKFLOW_SOURCE_LABELS),
     ].join("\n");
     const dashes = [0x2013, 0x2014, 0x2018, 0x2019, 0x201c, 0x201d].map((code) =>
@@ -228,7 +289,8 @@ describe("artist criteria: text helpers", () => {
   it("lists the applicant requirement lines the criteria were built from", () => {
     const quotes = requirementQuotes();
 
-    expect(quotes).toContain("3 different WIP/Layers to previous work");
+    // An overruled line stays on the list: it is still what applicants were shown.
+    expect(quotes).toContain(OVERRULED_LINE);
     expect(quotes.length).toBeGreaterThanOrEqual(5);
     expect(new Set(quotes).size).toBe(quotes.length);
   });
@@ -244,12 +306,33 @@ describe("artist criteria: text helpers", () => {
   });
 
   it("names exactly the lines a greeting no longer carries", () => {
-    const quotes = requirementQuotes();
+    const quotes = requirementQuotes().filter((quote) => quote !== OVERRULED_LINE);
     const greeting = quotes.filter((_, index) => index !== 0 && index !== 2).join("\n");
 
     expect(findRequirementDrift(greeting)).toEqual([quotes[0], quotes[2]]);
     expect(findRequirementDrift("Welcome! A staff member will be with you shortly.")).toEqual(
       quotes
     );
+  });
+
+  it("does not count an overruled line the greeting dropped as drift", () => {
+    const edited = requirementQuotes()
+      .filter((quote) => quote !== OVERRULED_LINE)
+      .join("\n");
+
+    expect(findRequirementDrift(edited)).toEqual([]);
+    expect(findOverruledInGreeting(edited)).toEqual([]);
+  });
+
+  it("finds an overruled line only in a greeting that carries it", () => {
+    const noisy = `> <:paw:123456789012345678> **${OVERRULED_LINE.toUpperCase()}**`;
+
+    expect(findOverruledInGreeting("")).toEqual([]);
+    expect(findOverruledInGreeting("   \n ")).toEqual([]);
+    expect(findOverruledInGreeting("Welcome! A staff member will be with you shortly.")).toEqual(
+      []
+    );
+    expect(findOverruledInGreeting(noisy)).toEqual([OVERRULED_LINE]);
+    expect(findOverruledInGreeting(requirementQuotes().join("\n"))).toEqual([OVERRULED_LINE]);
   });
 });

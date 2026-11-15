@@ -856,7 +856,7 @@ Be mindful that many scammers try to verify. Consult another staff member if you
 
 How to verify artist applications.
 
-> *Last updated: December 2025*
+> *Last updated: November 2026*
 
 Fraud is common in art commissioning -- AI art, stolen work, and scammers who disappear after getting paid. This section covers verification standards that protect both artists and clients.
 
@@ -892,6 +892,15 @@ Fraud is common in art commissioning -- AI art, stolen work, and scammers who di
 1. **Recorded timelapse**: Minimum 30 seconds, no unexplained cuts
 2. **Layered source file**: .psd, .clip, .sai2, etc. showing dated layers and logical workflow
 3. **Work-in-progress photo**: Handwritten current date + client identifier beside the artwork
+
+This list decides how much evidence is enough. Where the requirements shown to applicants ask for something else, staff go by the handbook.
+
+**Eligibility:**
+- More than 6 months of experience
+- A commission within the 6 months before applying. Without one the applicant is ineligible
+
+**Bases:**
+- Work made on a base counts as evidence when the base creator is credited
 
 **AI-Generated Content Policy:**
 

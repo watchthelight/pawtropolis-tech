@@ -29,8 +29,9 @@ import {
 import {
   CRITERIA,
   GREEN_FLAGS,
+  HANDBOOK_PRECEDENCE,
   RED_FLAGS,
-  WORKFLOW_GAPS,
+  WORKFLOW_DECISIONS,
 } from "../../../src/features/artistInvestigation/criteria.js";
 import type { ServiceReport } from "../../../src/features/artistInvestigation/types.js";
 import {
@@ -191,14 +192,30 @@ describe("buildSystemPrompt", () => {
       expect(system).toContain(`How to apply: ${criterion.guidance}`);
     }
     expect(system).toContain(
-      '- "3 different WIP/Layers to previous work" (Applicant requirements (verify-artist embed, ticket panel, ticket greeting))'
+      '- "Speed-paints also help your verification" (Applicant requirements (verify-artist embed, ticket panel, ticket greeting))\n'
     );
   });
 
-  it("carries the handbook's flags and the open questions in the workflow", () => {
-    for (const line of [...RED_FLAGS, ...GREEN_FLAGS, ...WORKFLOW_GAPS]) {
+  it("marks the applicant-facing line the handbook overrules, and only that one", () => {
+    const note =
+      " [overruled by the handbook: listed because applicants have been shown this line, not a rule to rate by]";
+
+    expect(system).toContain(
+      `- "3 different WIP/Layers to previous work" (Applicant requirements (verify-artist embed, ticket panel, ticket greeting))${note}\n`
+    );
+    expect(system.split(note)).toHaveLength(2);
+  });
+
+  it("carries the handbook's flags and the points the owner settled", () => {
+    for (const line of [...RED_FLAGS, ...GREEN_FLAGS, ...WORKFLOW_DECISIONS]) {
       expect(system).toContain(`- ${line}`);
     }
+    expect(system).toContain("# Points the owner has settled");
+    expect(system).toContain(`It also says which text wins: "${HANDBOOK_PRECEDENCE}"`);
+    expect(system).toContain(
+      "Apply the points below as rules. Do not report them as open questions."
+    );
+    expect(system).not.toContain("Where the workflow is unclear");
   });
 
   it("asks for indicators and never a verdict", () => {

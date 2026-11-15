@@ -11,11 +11,7 @@ import { describe, expect, it } from "vitest";
 import type { APIEmbed } from "discord.js";
 import type { Assessment } from "../../../src/features/artistInvestigation/analysis.js";
 import { formatFooter } from "../../../src/features/artistInvestigation/budget.js";
-import {
-  CRITERIA,
-  WORKFLOW_GAPS,
-  requirementQuotes,
-} from "../../../src/features/artistInvestigation/criteria.js";
+import { CRITERIA, requirementQuotes } from "../../../src/features/artistInvestigation/criteria.js";
 import {
   paginate,
   renderReport,
@@ -565,14 +561,32 @@ describe("renderReport: without an AI assessment", () => {
     );
     expect(summary).not.toContain("Score:");
     expect(summary).toContain("**Applicant**");
+    // No citations, no greeting to compare and no failed check: nothing to note.
+    expect(titles(pages)).toEqual([
+      "Artist investigation: #2d-artist-0042",
+      "Images",
+      "Reverse image search",
+    ]);
+    expect(section(pages, "Images")).toBe(`**img1** · [sketch.png](${JUMP}/700000000000000002)`);
+  });
+
+  it("keeps the notes that do not depend on an assessment", () => {
+    const pages = render({
+      analysis: { kind: "skipped", message: "No key." },
+      evidence: ticketEvidence({ greetingText: requirementQuotes().join("\n") }),
+      applicant: applicantContext({ gaps: ["Ticket log could not be read."] }),
+    });
+    const notes = section(pages, "Notes");
+
     expect(titles(pages)).toEqual([
       "Artist investigation: #2d-artist-0042",
       "Images",
       "Reverse image search",
       "Notes",
     ]);
-    expect(section(pages, "Notes")).not.toContain("Cited messages");
-    expect(section(pages, "Images")).toBe(`**img1** · [sketch.png](${JUMP}/700000000000000002)`);
+    expect(notes).not.toContain("Cited messages");
+    expect(notes).toContain("**Requirement text the handbook overrules**");
+    expect(notes).toContain("**Checks that could not run**\n- Ticket log could not be read.");
   });
 });
 
@@ -586,10 +600,23 @@ describe("renderReport: criteria", () => {
       );
     }
     expect(criteria).toContain(
-      '-# Rules: "3 different WIP/Layers to previous work" (applicant requirements) · '
+      '-# Rules: "Minimum Acceptable Evidence (at least TWO required):" (mod handbook) · '
+    );
+    expect(criteria).toContain(
+      '"Speed-paints also help your verification" (applicant requirements) · '
     );
     expect(criteria).toContain('"No tracing, AI passing as original, or art theft" (art rules)');
     expect(criteria).toContain('"AI detection triggers" (mod handbook)');
+  });
+
+  it("says which applicant-facing rule the handbook overrules", () => {
+    const criteria = section(render(), "Criteria") ?? "";
+    const marked = criteria.split(", overruled by the handbook)").length - 1;
+
+    expect(criteria).toContain(
+      '"3 different WIP/Layers to previous work" (applicant requirements, overruled by the handbook)'
+    );
+    expect(marked).toBe(1);
   });
 
   it("shows a rule quoted from a handbook table without its column bars", () => {
@@ -1226,27 +1253,68 @@ describe("renderReport: notes", () => {
 
   it("leaves the cited messages out when the model cited none", () => {
     const base = assessment();
-    const notes = section(
-      withAnswerPages({
-        criteria: base.criteria.map((c) => ({ ...c, evidence: ["img1"] })),
-        green_flags: [],
-      }),
-      "Notes"
-    );
+    const uncited: Partial<Assessment> = {
+      criteria: base.criteria.map((c) => ({ ...c, evidence: ["img1"] })),
+      green_flags: [],
+    };
+    const withGap = withAnswerPages(uncited, {
+      applicant: applicantContext({ gaps: ["Ticket log could not be read."] }),
+    });
 
-    expect(notes).not.toContain("Cited messages");
+    expect(section(withGap, "Notes")).toBe(
+      "**Checks that could not run**\n- Ticket log could not be read."
+    );
+    // With nothing else to note, the section is not there at all.
+    expect(titles(withAnswerPages(uncited))).not.toContain("Notes");
   });
 
-  it("always lists the places where the workflow is unclear", () => {
+  it("no longer lists the workflow questions the owner has settled", () => {
     for (const pages of [render(), render({ analysis: { kind: "skipped", message: "No key." } })]) {
-      const notes = section(pages, "Notes") ?? "";
-      expect(notes).toContain("**Where the workflow is unclear**");
-      for (const gap of WORKFLOW_GAPS) expect(notes).toContain(`- ${gap}`);
+      expect(everything(pages)).not.toContain("Where the workflow is unclear");
     }
   });
 
+  it("has no Notes section when there is nothing to note", () => {
+    const pages = render({ analysis: { kind: "skipped", message: "No key." } });
+
+    expect(section(pages, "Notes")).toBeNull();
+    // The footer moves to whichever embed is last.
+    expect(embedsOf(pages).at(-1)?.title).toBe("Reverse image search");
+    expect(embedsOf(pages).at(-1)?.footer?.text).toBeTruthy();
+  });
+
+  it("says when the greeting still carries a line the handbook overrules", () => {
+    const greetingText = requirementQuotes().join("\n");
+    const notes = section(render({ evidence: ticketEvidence({ greetingText }) }), "Notes");
+
+    expect(notes).toContain(
+      [
+        "**Requirement text the handbook overrules**",
+        "The greeting posted in this ticket carries:",
+        '- "3 different WIP/Layers to previous work"',
+        "The applicant was told this. The handbook decides, so this report rates by the handbook. If the public requirements message and the ticket greeting template still carry the line, it should come out there.",
+      ].join("\n")
+    );
+    expect(notes).not.toContain("Requirement text differs");
+  });
+
+  it("says nothing about an overruled line once the greeting drops it", () => {
+    const overruled = "3 different WIP/Layers to previous work";
+    const greetingText = requirementQuotes()
+      .filter((quote) => quote !== overruled)
+      .join("\n");
+    const notes = section(render({ evidence: ticketEvidence({ greetingText }) }), "Notes") ?? "";
+
+    expect(notes).not.toContain("Requirement text the handbook overrules");
+    expect(notes).not.toContain("Requirement text differs");
+    expect(notes).not.toContain(overruled);
+  });
+
   it("says nothing about the requirements when the ticket has no greeting to compare", () => {
-    expect(section(render(), "Notes")).not.toContain("Requirement text differs");
+    const notes = section(render(), "Notes");
+
+    expect(notes).not.toContain("Requirement text differs");
+    expect(notes).not.toContain("Requirement text the handbook overrules");
   });
 
   it("says nothing about the requirements when the greeting still carries every line", () => {

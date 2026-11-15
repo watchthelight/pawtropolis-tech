@@ -7,6 +7,9 @@
  *      tests/docs/artist-criteria.test.ts. The applicant requirements live only
  *      in Discord (read 2026-11-14), so each run compares them with the greeting
  *      in the ticket and reports any drift.
+ *      Where the two disagreed, the owner decided on 2026-11-15 that the
+ *      handbook wins. The handbook says so itself, and an applicant-facing line
+ *      it overrules is marked here and no longer decides a criterion.
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
@@ -22,6 +25,13 @@ interface WorkflowRule {
   /** Exact wording from the source, markdown emphasis removed. */
   text: string;
   source: WorkflowSource;
+  /**
+   * An applicant-facing line the handbook overrules. It stays listed, so the
+   * reviewer sees what applicants have been told, but it does not decide the
+   * criterion. A greeting that drops it is the edit the owner asked staff to
+   * make, so that is not reported as drift.
+   */
+  overruled?: true;
 }
 
 export type CriterionKey =
@@ -55,8 +65,6 @@ export const CRITERIA: readonly Criterion[] = [
     title: "Process evidence",
     kind: "requirement",
     rules: [
-      { text: "3 different WIP/Layers to previous work", source: "requirements" },
-      { text: "Speed-paints also help your verification", source: "requirements" },
       { text: "Minimum Acceptable Evidence (at least TWO required):", source: "handbook" },
       { text: "Recorded timelapse: Minimum 30 seconds, no unexplained cuts", source: "handbook" },
       {
@@ -67,9 +75,11 @@ export const CRITERIA: readonly Criterion[] = [
         text: "Work-in-progress photo: Handwritten current date + client identifier beside the artwork",
         source: "handbook",
       },
+      { text: "Speed-paints also help your verification", source: "requirements" },
+      { text: "3 different WIP/Layers to previous work", source: "requirements", overruled: true },
     ],
     guidance:
-      "Count distinct pieces that come with sketches, layer views, WIP stages, timelapses or source files, and say which of the handbook's three evidence types are present. Videos and source files are listed by name only: their contents were not inspected, so say that instead of assuming what they show.",
+      "The handbook decides how much is enough: at least two of its three evidence types (recorded timelapse, layered source file, dated work-in-progress photo). Say which of the three are present and rate by that. The text shown to applicants has asked for three sets of WIPs or layers, so also say how many distinct pieces come with sketches, layer views, WIP stages, timelapses or source files, but do not rate by that count. A piece made on a credited base counts like any other (see base_use). Videos and source files are listed by name only: their contents were not inspected, so say that instead of assuming what they show.",
   },
   {
     key: "client_work",
@@ -95,7 +105,7 @@ export const CRITERIA: readonly Criterion[] = [
   },
   {
     key: "active_commissions",
-    title: "Active commissions",
+    title: "Active commissions and experience",
     kind: "requirement",
     rules: [
       { text: "Have to be an artist that actively does commissions", source: "requirements" },
@@ -103,9 +113,14 @@ export const CRITERIA: readonly Criterion[] = [
         text: "If you haven't had a commission in the last 6 months prior to verifying, you will be ineligible",
         source: "requirements",
       },
+      {
+        text: "A commission within the 6 months before applying. Without one the applicant is ineligible",
+        source: "handbook",
+      },
+      { text: "More than 6 months of experience", source: "handbook" },
     ],
     guidance:
-      "Look for dated evidence of a commission within the six months before the ticket was opened. Dates the applicant states without anything to support them count as claims.",
+      "Two separate rules, and both count. First, a commission within the six months before the ticket was opened: look for dated evidence of one. Second, more than six months of experience: look for dated older work, gallery or account history, or what the applicant says about how long they have been taking commissions. Say what the evidence shows for each rule. Dates the applicant states without anything to support them count as claims. Account age is a third rule and belongs to account_history.",
   },
   {
     key: "foundational_skill",
@@ -169,6 +184,10 @@ export const CRITERIA: readonly Criterion[] = [
     kind: "risk",
     rules: [
       {
+        text: "Work made on a base counts as evidence when the base creator is credited",
+        source: "handbook",
+      },
+      {
         text: "Users may post artwork with P2U (Pay to Use) and F2U (Free to Use) bases as long as proper credit is given.",
         source: "handbook",
       },
@@ -178,7 +197,7 @@ export const CRITERIA: readonly Criterion[] = [
       },
     ],
     guidance:
-      "Flag images that look base-made: lookup matches tagged as a base or YCH, the same pose and linework under different characters, or copies where only colors and markings differ. Say whether the applicant credited the base creator anywhere in the ticket and whether the base looks paid.",
+      "Flag images that look base-made: lookup matches tagged as a base or YCH, the same pose and linework under different characters, or copies where only colors and markings differ. A base-made piece counts as evidence when the applicant credited the base creator somewhere in the ticket. Without credit it does not count, and that is the concern to report. Say where the credit is, or that there is none, and whether the base looks paid.",
   },
   {
     key: "account_history",
@@ -190,7 +209,7 @@ export const CRITERIA: readonly Criterion[] = [
       { text: "DM advertising", source: "handbook" },
     ],
     guidance:
-      "Use the server context as given: account age, join date, roles, activity, other verification tickets and the Verify Blacklist. Note how the applicant answered staff requests for more proof.",
+      "Use the server context as given: account age, join date, roles, activity, other verification tickets and the Verify Blacklist. An account under six months old with no traceable history is a red flag of its own, apart from the two six-month rules under active_commissions. Note how the applicant answered staff requests for more proof.",
   },
 ];
 
@@ -276,14 +295,20 @@ export const AI_ARTIFACT_GUIDE: ReadonlyArray<{ category: string; artifacts: str
 ];
 
 /**
- * Places where the workflow's sources disagree or say nothing. The command
- * reports them as open questions and does not pick a side.
+ * Points where the applicant-facing text and the handbook disagreed, or neither
+ * said anything. The owner settled each one on 2026-11-15 and the handbook
+ * carries the rule now, so the command applies them instead of reporting them
+ * as open questions.
  */
-export const WORKFLOW_GAPS: readonly string[] = [
-  'Evidence count: the handbook asks for at least two of timelapse, layered source file or dated WIP photo; the applicant requirements ask for "3 different WIP/Layers to previous work". Both are reported.',
-  "Bases as evidence: bases are allowed with credit when posting art. Neither source says whether base-made work counts toward verification.",
-  "Six months: the requirements make an applicant ineligible without a commission in the last 6 months; the handbook treats an account under 6 months old with no traceable history as a red flag. These are separate rules.",
+export const WORKFLOW_DECISIONS: readonly string[] = [
+  'Evidence: the handbook decides. At least two of recorded timelapse, layered source file and dated work-in-progress photo are enough. The applicant-facing line "3 different WIP/Layers to previous work" is context and does not decide.',
+  "Six months: three separate rules, and all three count. More than 6 months of experience, a commission within the 6 months before applying, and an account under 6 months old with no traceable history as a red flag.",
+  "Bases: work made on a base counts as evidence when the base creator is credited. Without credit it does not count and is a concern.",
 ];
+
+/** The handbook sentence that puts it above the applicant-facing text. */
+export const HANDBOOK_PRECEDENCE =
+  "Where the requirements shown to applicants ask for something else, staff go by the handbook.";
 
 /** Every handbook quote this file relies on. The docs parity test checks each one. */
 export function handbookQuotes(): string[] {
@@ -294,7 +319,16 @@ export function handbookQuotes(): string[] {
     (r) => `| ${r.level} | ${r.allowed} | ${r.disclosure} | ${r.consequence} |`
   );
   const guideRows = AI_ARTIFACT_GUIDE.map((r) => `| ${r.category} | ${r.artifacts} |`);
-  return [...new Set([...fromCriteria, ...RED_FLAGS, ...GREEN_FLAGS, ...policyRows, ...guideRows])];
+  return [
+    ...new Set([
+      ...fromCriteria,
+      ...RED_FLAGS,
+      ...GREEN_FLAGS,
+      ...policyRows,
+      ...guideRows,
+      HANDBOOK_PRECEDENCE,
+    ]),
+  ];
 }
 
 /** A rule as shown in the report. Quotes taken from a handbook table lose their column bars. */
@@ -321,12 +355,31 @@ export function normalizeWorkflowText(text: string): string {
     .toLowerCase();
 }
 
+/** Applicant requirement lines the handbook overrules. */
+function overruledQuotes(): string[] {
+  return CRITERIA.flatMap((c) => c.rules.filter((r) => r.overruled).map((r) => r.text));
+}
+
 /**
  * Requirement lines that no longer appear in the greeting posted in this ticket.
- * An empty greeting returns nothing: there is no text to compare against.
+ * An empty greeting returns nothing: there is no text to compare against. An
+ * overruled line is left out, because a greeting without it is how it should be.
  */
 export function findRequirementDrift(greetingText: string): string[] {
   const haystack = normalizeWorkflowText(greetingText);
   if (!haystack) return [];
-  return requirementQuotes().filter((quote) => !haystack.includes(normalizeWorkflowText(quote)));
+  const overruled = new Set(overruledQuotes());
+  return requirementQuotes().filter(
+    (quote) => !overruled.has(quote) && !haystack.includes(normalizeWorkflowText(quote))
+  );
+}
+
+/**
+ * Overruled requirement lines that the greeting posted in this ticket carries:
+ * the applicant was told something the handbook does not go by.
+ */
+export function findOverruledInGreeting(greetingText: string): string[] {
+  const haystack = normalizeWorkflowText(greetingText);
+  if (!haystack) return [];
+  return overruledQuotes().filter((quote) => haystack.includes(normalizeWorkflowText(quote)));
 }
