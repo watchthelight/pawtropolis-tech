@@ -2263,9 +2263,11 @@ Post an anonymous message as the bot. Good for announcements where you don't wan
 ---
 
 ### `/purge`
-**Who can use it:** Manage Messages + Password
+**Who can use it:** Staff with Manage Messages + Password
 
 Mass delete messages in a channel. Requires the admin password (set in environment variables) because this action is destructive and can't be undone.
+
+The bot checks for staff itself before it looks at the password: a configured mod role, the Manage Server permission, or reviewer access. Being given the command in the server's Integrations settings is not enough.
 
 | Option | Required? | What it does |
 |--------|-----------|--------------|

@@ -22,6 +22,7 @@ import {
 import { type CommandContext, withStep } from "../lib/cmdWrap.js";
 import { logger } from "../lib/logger.js";
 import { env } from "../lib/env.js";
+import { requireStaff } from "../lib/config.js";
 import { secureCompare } from "../lib/secureCompare.js";
 import { checkCooldown, formatCooldown, COOLDOWNS } from "../lib/rateLimiter.js";
 import { logActionPretty } from "../logging/pretty.js";
@@ -67,7 +68,8 @@ export const data = new SlashCommandBuilder()
  * execute
  * WHAT: Bulk deletes messages in the current channel after password validation.
  * SECURITY:
- *  - Requires ManageMessages permission
+ *  - Requires ManageMessages permission (Discord's default for the command)
+ *  - Requires a staff role, checked here before the password is looked at
  *  - Validates password with constant-time comparison
  *  - Logs action
  */
@@ -84,6 +86,22 @@ export async function execute(ctx: CommandContext<ChatInputCommandInteraction>) 
       content: "This command can only be used in a guild.",
       flags: MessageFlags.Ephemeral,
     });
+    return;
+  }
+
+  // ManageMessages is only the command's default permission: a server admin can
+  // hand the command to anyone in the Integrations settings. The staff check
+  // runs first, so a caller without a staff role never gets to try a password.
+  if (
+    !requireStaff(interaction, {
+      command: "purge",
+      description: "Bulk-deletes messages in this channel.",
+      requirements: [
+        { type: "config", field: "mod_role_ids" },
+        { type: "permission", permission: "ManageGuild" },
+      ],
+    })
+  ) {
     return;
   }
 

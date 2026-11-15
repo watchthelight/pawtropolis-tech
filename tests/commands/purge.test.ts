@@ -29,6 +29,14 @@ const envHolder = vi.hoisted(() => ({
 }));
 vi.mock("../../src/lib/env.js", () => envHolder);
 
+// requireStaff is canRunAllCommands or hasStaffPermissions, and both have their
+// own tests in tests/lib/config.test.ts. Here it is a switch: on for every test,
+// off for the one that checks the handler stops.
+vi.mock("../../src/lib/config.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../src/lib/config.js")>()),
+  requireStaff: vi.fn(() => true),
+}));
+
 // Mock secure compare
 vi.mock("../../src/lib/secureCompare.js", () => ({
   secureCompare: vi.fn((a: string, b: string) => a === b),
@@ -112,6 +120,60 @@ describe("/purge command", () => {
         content: "This command can only be used in a guild.",
         flags: 64,
       });
+    });
+
+    it("stops before the password when the caller has no staff role", async () => {
+      const { requireStaff } = await import("../../src/lib/config.js");
+      (requireStaff as any).mockReturnValueOnce(false);
+      const { checkCooldown } = await import("../../src/lib/rateLimiter.js");
+      const { secureCompare } = await import("../../src/lib/secureCompare.js");
+
+      const guild = createMockGuild({ id: "guild-123" });
+      const channel = createMockChannel({ id: "channel-123" });
+      (channel as any).type = ChannelType.GuildText;
+      (channel as any).bulkDelete = vi.fn();
+
+      const interaction = createMockInteraction({
+        guild: guild as Guild,
+        guildId: "guild-123",
+        channel: channel as TextChannel,
+        options: {
+          getString: { password: "test-password" },
+          getInteger: { count: 10 },
+        },
+      });
+      const ctx = createTestCommandContext(interaction);
+
+      await execute(ctx);
+
+      expect(requireStaff).toHaveBeenCalledWith(interaction, expect.objectContaining({ command: "purge" }));
+      // The right password does not help, and a wrong one would not have cost a cooldown.
+      expect(checkCooldown).not.toHaveBeenCalled();
+      expect(secureCompare).not.toHaveBeenCalled();
+      expect(interaction.deferReply).not.toHaveBeenCalled();
+      expect(channel.messages.fetch).not.toHaveBeenCalled();
+      expect((channel as any).bulkDelete).not.toHaveBeenCalled();
+    });
+
+    it("asks for the staff check before anything else in a guild", async () => {
+      const { requireStaff } = await import("../../src/lib/config.js");
+      const { checkCooldown } = await import("../../src/lib/rateLimiter.js");
+      (checkCooldown as any).mockReturnValueOnce({ allowed: false, remainingMs: 25000 });
+
+      const interaction = createMockInteraction({
+        guild: createMockGuild({ id: "guild-123" }) as Guild,
+        guildId: "guild-123",
+        options: {
+          getString: { password: "wrong-password" },
+          getInteger: { count: null },
+        },
+      });
+
+      await execute(createTestCommandContext(interaction));
+
+      const staffOrder = (requireStaff as any).mock.invocationCallOrder[0];
+      const cooldownOrder = (checkCooldown as any).mock.invocationCallOrder[0];
+      expect(staffOrder).toBeLessThan(cooldownOrder);
     });
 
     it("rejects when password cooldown is active", async () => {

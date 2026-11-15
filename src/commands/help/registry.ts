@@ -570,7 +570,7 @@ export const COMMAND_REGISTRY: CommandMetadata[] = [
     examples: ["/purge password:secretpass count:50"],
     // The 14-day limit is a Discord API limitation, not a design choice.
     // If someone asks why we can't purge older messages, blame Discord, not us.
-    notes: "Requires password confirmation and ManageMessages permission. Cannot delete messages older than 14 days.",
+    notes: "Requires a staff role, the ManageMessages permission and the password. Cannot delete messages older than 14 days.",
     workflowTips: [
       "Use for cleaning up spam or accidental messages",
       "14-day limit is a Discord API restriction",

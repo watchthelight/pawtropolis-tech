@@ -237,7 +237,7 @@ These check Discord's built-in permissions instead of role hierarchy:
 | Command | Discord Permission | Description |
 |---------|-------------------|-------------|
 | `/send` | ManageMessages | Post an anonymous message as the bot |
-| `/purge` | ManageMessages + Password | Bulk delete messages (up to 100, max 14 days old) |
+| `/purge` | ManageMessages + (Mod roles OR ManageGuild OR Reviewer) + Password | Bulk delete messages (up to 100, max 14 days old). The staff check runs in the handler, before the password is looked at |
 | `/roles` | ManageRoles | Configure role automation mappings |
 | `/artistqueue` | ManageRoles | Manage the artist rotation queue |
 | `/redeemreward` | Junior Mod+ OR Ambassador Role OR ManageRoles | Assign an art reward to a user |
@@ -411,7 +411,8 @@ Bypass conditions are checked before anything else:
 | Community Manager+ | CM+ | `/backfill`, `/gate setup`, `/admin-migrate-unverified` |
 | Bot Owner / Server Dev | [BO/SD] | `/database`, `/poke`, `/testidea`, `/test`, `/developer` |
 | Bot Owner | [BO] | `/investigate-artist` |
-| Discord Perm | ManageMessages | `/send`, `/purge`, `/closeticket` |
+| Discord Perm | ManageMessages | `/send`, `/closeticket` |
+| Hybrid | ManageMessages AND staff (mod roles, ManageGuild or reviewer) AND password | `/purge` |
 | Discord Perm | ManageGuild | `/postticketpanel`, `/review-set-listopen-output` |
 | Discord Perm | ManageRoles | `/roles`, `/artistqueue`, `/assignticket` |
 | Discord Perm | Administrator | `/review-set-notify-config`, `/review-get-notify-config` |
