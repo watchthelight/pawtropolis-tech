@@ -151,7 +151,7 @@ Neither step can stop a deploy. The bot and the dashboard run without the librar
 | `npm ci` fails on remote for the bot or the dashboard | exit 1; lock released by trap |
 | `npm ci` fails on remote for the research library | warning with the command to run by hand; the deploy goes on, and the next deploy installs again |
 | The research job's model files cannot be fetched | warning with the command to run by hand; the deploy goes on |
-| Migration step fails | logs warning and continues (preserves prior behavior) |
+| Migration step fails | exit 1 before the restart, so the old code keeps running; lock released by trap |
 | PM2 restart fails | next health check loop reports "unknown" status; script exits with the inconclusive warning but exit code 0 (preserves prior behavior) |
 
-The migration-step warning vs hard-fail mismatch is intentional and predates this pass; revisit if you ever want to make migrations strict.
+Until #00063 a failed migration only printed a warning and the restart went ahead, onto a schema the new code did not expect. The script stops there now.
