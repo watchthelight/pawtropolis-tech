@@ -11,7 +11,7 @@ export default defineConfig([
     minify: false,
   },
   {
-    entry: ["scripts/commands.ts"],
+    entry: ["scripts/commands.ts", "scripts/research.ts"],
     splitting: false,
     sourcemap: true,
     clean: false,
