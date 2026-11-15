@@ -380,6 +380,18 @@ export class TicketService {
     return { ticket: rowToTicket(row), channel, ...(greetingFailed ? { greetingFailed } : {}) };
   }
 
+  /** The opener's open ticket of this type in this guild, or null. */
+  static findOpenByOpener(guildId: string, openerUserId: string, typeKey: string): Ticket | null {
+    const row = db
+      .prepare(
+        `SELECT * FROM ticket
+          WHERE guild_id = ? AND opener_user_id = ? AND type_key = ? AND status = 'open'
+          ORDER BY opened_at DESC LIMIT 1`
+      )
+      .get(guildId, openerUserId, typeKey) as TicketRow | undefined;
+    return row ? rowToTicket(row) : null;
+  }
+
   /**
    * Look up a ticket by its Discord channel ID. Returns null if the channel
    * isn't tracked (legacy Ticket Tool channels, or unrelated channels).

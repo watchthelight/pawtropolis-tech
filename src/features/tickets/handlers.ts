@@ -240,6 +240,19 @@ async function handleOpenButton(
     return;
   }
 
+  const existing = TicketService.findOpenByOpener(
+    interaction.guild.id,
+    interaction.user.id,
+    typeKey
+  );
+  if (existing) {
+    await interaction.reply({
+      content: `You already have an open ticket of this type: <#${existing.channelId}>`,
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
   const cooldown = checkCooldown(`ticket:open:${typeKey}`, interaction.user.id, TICKET_OPEN_COOLDOWN_MS);
   if (!cooldown.allowed) {
     await interaction.reply({

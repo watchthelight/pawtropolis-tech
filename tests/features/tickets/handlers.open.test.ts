@@ -2,13 +2,15 @@
 /**
  * Pawtropolis Tech -- tests/features/tickets/handlers.open.test.ts
  * WHAT: tk:open button handling.
- * WHY: A failed greeting send was reported as a failed open although the ticket existed.
+ * WHY: Nothing stopped a user opening many tickets of one type, and a failed greeting
+ *      send was reported as a failed open although the ticket existed.
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const h = vi.hoisted(() => ({
   create: vi.fn(),
+  findOpen: vi.fn(),
   cooldown: vi.fn(),
 }));
 
@@ -27,7 +29,7 @@ vi.mock("../../../src/features/tickets/registry.js", () => ({
   getTicketType: () => ({ key: "support", isActive: true }),
 }));
 vi.mock("../../../src/features/tickets/service.js", () => ({
-  TicketService: { create: h.create },
+  TicketService: { create: h.create, findOpenByOpener: h.findOpen },
 }));
 
 import { handleTicketButton } from "../../../src/features/tickets/handlers.js";
@@ -45,10 +47,24 @@ function makeInteraction() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  h.findOpen.mockReturnValue(null);
   h.cooldown.mockReturnValue({ allowed: true });
 });
 
 describe("tk:open", () => {
+  it("points the user at their existing open ticket instead of creating another", async () => {
+    h.findOpen.mockReturnValue({ channelId: "chan9" });
+    const interaction = makeInteraction();
+
+    await handleTicketButton(interaction as never);
+
+    expect(h.findOpen).toHaveBeenCalledWith("g1", "u1", "support");
+    expect(h.create).not.toHaveBeenCalled();
+    expect(interaction.reply).toHaveBeenCalledWith(
+      expect.objectContaining({ content: expect.stringContaining("<#chan9>") })
+    );
+  });
+
   it("reports partial success when the greeting failed", async () => {
     h.create.mockResolvedValue({
       ticket: { number: 3 },

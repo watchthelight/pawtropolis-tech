@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 /**
  * Pawtropolis Tech -- tests/features/tickets/service.create.test.ts
- * WHAT: TicketService.create when the greeting send fails.
+ * WHAT: TicketService.create when the greeting send fails, and the open-ticket lookup.
  * WHY: A failed greeting send used to make the whole open fail although the channel and
- *      ticket row already existed.
+ *      ticket row already existed. The lookup backs the one open ticket per type rule.
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -95,5 +95,24 @@ describe("TicketService.create", () => {
 
     expect(result.greetingFailed).toBeUndefined();
     expect(result.ticket.greetingMessageId).toBe("msg1");
+  });
+});
+
+describe("TicketService.findOpenByOpener", () => {
+  it("finds only an open ticket of the same type for the same opener", async () => {
+    const guild = makeGuild(vi.fn().mockResolvedValue({ id: "msg1" }));
+    const { ticket } = await TicketService.create({
+      typeKey: "support",
+      guild: guild as never,
+      openerUserId: "u1",
+    });
+
+    expect(TicketService.findOpenByOpener("g1", "u1", "support")?.id).toBe(ticket.id);
+    expect(TicketService.findOpenByOpener("g1", "u2", "support")).toBeNull();
+    expect(TicketService.findOpenByOpener("g1", "u1", "other")).toBeNull();
+    expect(TicketService.findOpenByOpener("g2", "u1", "support")).toBeNull();
+
+    h.db.prepare("UPDATE ticket SET status = 'closed'").run();
+    expect(TicketService.findOpenByOpener("g1", "u1", "support")).toBeNull();
   });
 });
