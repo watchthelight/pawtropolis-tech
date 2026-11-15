@@ -82,7 +82,7 @@ What CI enforces is in [docs/operations/ci-policy.md](./docs/operations/ci-polic
 
 - Unit + integration tests via Vitest. Coverage via @vitest/coverage-v8.
 - Tests are a HARD gate in CI, coverage floors included.
-- `tests/setup.ts` gives every worker its own SQLite file under `tests/.tmp/`, seeded from `tests/fixtures/schema.sql`. Tests never touch `data/data.db`.
+- `tests/setup.ts` gives every worker its own SQLite file under `tests/.tmp/`, seeded from `tests/fixtures/schema.sql`. Tests never touch `data/data.db`, also when they mock `src/lib/env.js`: `src/db/db.ts` then takes the path from `process.env.DB_PATH`.
 - Dashboard tests live under `tests/web/` and import from `web/src`, so `web/` must be installed and `npx svelte-kit sync` run there before the full suite.
 - `tests/docs/` holds parity tests: the handbook, command reference, permission matrix, env examples, dashboard config editor and the artist verification criteria are checked against the code. A new env variable has to be in `.env.example` (or `web/.env.example`). Markdown files must not contain raw Discord mentions such as `<@&id>`.
 - Mock every external service. Nothing in the suite talks to Discord, the Claude API or a lookup service.

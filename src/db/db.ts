@@ -23,7 +23,10 @@ import { logger } from "../lib/logger.js";
 const DB_BUSY_TIMEOUT_MS = 15000;
 const DB_DEFAULT_PATH = "data/data.db";
 
-const dbPath = env.DB_PATH || DB_DEFAULT_PATH;
+// A test that mocks lib/env.js leaves env.DB_PATH unset. Without the second term
+// such a test opened data/data.db, which on a dev machine is a copy of production.
+// tests/setup.ts sets process.env.DB_PATH to a throwaway file for every worker.
+const dbPath = env.DB_PATH || process.env.DB_PATH || DB_DEFAULT_PATH;
 fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 export const db = new Database(dbPath, { fileMustExist: false });
 // PRAGMAs: see https://sqlite.org/pragma.html — tuned for bot workload

@@ -52,7 +52,8 @@ function errMsg(err: unknown): string {
 }
 
 export function dbFilePath(): string {
-  return env.DB_PATH || DB_DEFAULT_PATH;
+  // Same order as src/db/db.ts, so both name the same file under a mocked env.
+  return env.DB_PATH || process.env.DB_PATH || DB_DEFAULT_PATH;
 }
 
 /** Result of the most recent check (a placeholder until the first one completes). */
