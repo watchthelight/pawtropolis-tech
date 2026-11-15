@@ -2,14 +2,17 @@
 /**
  * Pawtropolis Tech -- tests/deploy.test.ts
  * WHAT: Runs deploy.sh against a fake remote and checks when it installs
- *       dependencies there. ssh, scp, node, npm, npx, pm2, systemctl, sqlite3
- *       and sleep are stand-in scripts on PATH; the "remote" is a temp directory.
+ *       dependencies there and what it tells PM2. ssh, scp, node, npm, npx,
+ *       pm2, systemctl, sqlite3 and sleep are stand-in scripts on PATH; the
+ *       "remote" is a temp directory.
  * WHY: The script used to compare the local lockfile with the remote one after
  *      its own tarball had replaced the remote one. The two always matched, so
  *      npm ci never ran on the host and production kept the packages of an
  *      install from months earlier. A second way to end up with the wrong
  *      packages is a new Node major on the host: the lockfile is the same and
- *      the compiled modules no longer load. Nothing here opens a network
+ *      the compiled modules no longer load. And the script never saved the PM2
+ *      process list, so a restart of the PM2 daemon brought the apps back as
+ *      they were defined at the last manual save. Nothing here opens a network
  *      connection.
  */
 import { spawnSync } from "node:child_process";
@@ -58,6 +61,7 @@ echo "pm2 $*" >> "$FAKE_LOG"
 case "$1" in
   show) echo "status   : online"; echo "restarts : 0" ;;
   logs) echo "Bot ready" ;;
+  save) [ -z "$FAKE_PM2_SAVE_FAILS" ] || exit 1 ;;
 esac
 `,
   systemctl: `#!/bin/bash
@@ -77,6 +81,7 @@ let remote = "";
 let logFile = "";
 // The module ABI number the remote's Node reports: 115 is Node 20, 137 is Node 24.
 let remoteAbi = "115";
+let pm2SaveFails = false;
 
 function write(file: string, text: string): void {
   mkdirSync(path.dirname(file), { recursive: true });
@@ -94,7 +99,16 @@ function marker(dir: string): string | null {
   return existsSync(file) ? readFileSync(file, "utf8").trim() : null;
 }
 
-function deploy(...args: string[]): { status: number | null; output: string; installs: string[] } {
+interface DeployRun {
+  status: number | null;
+  output: string;
+  /** Where npm ci ran, in order. */
+  installs: string[];
+  /** The arguments of every pm2 call, in order. */
+  pm2: string[];
+}
+
+function deploy(...args: string[]): DeployRun {
   writeFileSync(logFile, "");
   const result = spawnSync(
     bash as string,
@@ -114,6 +128,7 @@ function deploy(...args: string[]): { status: number | null; output: string; ins
         FAKE_BIN: slash(path.join(root, "bin")),
         FAKE_LOG: slash(logFile),
         FAKE_NODE_ABI: remoteAbi,
+        FAKE_PM2_SAVE_FAILS: pm2SaveFails ? "1" : "",
         DEPLOY_SH,
         REMOTE_HOST: "fake-host",
         REMOTE_PATH: slash(remote),
@@ -122,14 +137,15 @@ function deploy(...args: string[]): { status: number | null; output: string; ins
       },
     }
   );
-  const installs = readFileSync(logFile, "utf8")
-    .split("\n")
+  const log = readFileSync(logFile, "utf8").split("\n");
+  const installs = log
     .filter((line) => line.startsWith("npm ci --omit=dev | "))
     .map((line) => (line.endsWith("/web") ? "web" : "bot"));
-  return { status: result.status, output: `${result.stdout}\n${result.stderr}`, installs };
+  const pm2 = log.filter((line) => line.startsWith("pm2 ")).map((line) => line.slice(4));
+  return { status: result.status, output: `${result.stdout}\n${result.stderr}`, installs, pm2 };
 }
 
-describe.skipIf(!bash)("deploy.sh dependency install", () => {
+describe.skipIf(!bash)("deploy.sh on a fake remote", () => {
   beforeAll(() => {
     root = mkdtempSync(path.join(tmpdir(), "pawtropolis-deploy-test-"));
     local = path.join(root, "local");
@@ -193,6 +209,19 @@ describe.skipIf(!bash)("deploy.sh dependency install", () => {
       expect(run.installs).toEqual([]);
       expect(run.output).toContain("Bot dependencies match the lockfile");
       expect(run.output).toContain("Web dependencies match the lockfile");
+    }
+  );
+
+  it(
+    "saves the PM2 process list once the ecosystem file has been applied",
+    { timeout: 120_000 },
+    () => {
+      const run = deploy();
+
+      expect(run.status).toBe(0);
+      const applied = run.pm2.indexOf("startOrRestart ecosystem.config.cjs");
+      expect(applied).toBeGreaterThanOrEqual(0);
+      expect(run.pm2.indexOf("save")).toBeGreaterThan(applied);
     }
   );
 
@@ -264,6 +293,26 @@ describe.skipIf(!bash)("deploy.sh dependency install", () => {
     expect(run.status).toBe(0);
     expect(run.installs).toEqual(["bot"]);
     expect(marker(remote)).toBe(installKey(path.join(local, "package-lock.json")));
+  });
+
+  it("--restart applies the ecosystem file and saves the list", { timeout: 120_000 }, () => {
+    const run = deploy("--restart");
+
+    expect(run.status).toBe(0);
+    expect(run.pm2).toEqual(["startOrRestart ecosystem.config.cjs", "save"]);
+  });
+
+  it("ends with a warning, not an error, when the save fails", { timeout: 120_000 }, () => {
+    pm2SaveFails = true;
+    try {
+      const run = deploy("--restart");
+
+      expect(run.status).toBe(0);
+      expect(run.output).toContain("WARNING: 'pm2 save' failed");
+      expect(run.output).toContain("Process restarted successfully!");
+    } finally {
+      pm2SaveFails = false;
+    }
   });
 });
 

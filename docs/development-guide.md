@@ -174,7 +174,7 @@ npm run format       # Auto-fix formatting
 6. Extract on remote, then `npm ci --omit=dev` in the root and in `web/` wherever `node_modules` was not installed from the lockfile just shipped, or was installed under another Node major (the key is `node_modules/.install-key`: the lockfile's sha256 and the module ABI number of the host's Node)
 7. Run migrations (`node scripts/migrate-remote.js`)
 8. Register slash commands with Discord
-9. Restart PM2 + health check + cleanup
+9. Restart PM2 (`pm2 startOrRestart ecosystem.config.cjs`, then `pm2 save` so that a restart of the PM2 daemon brings the apps back as they were just deployed) + health check + cleanup
 
 ### Remote Management via start.sh
 

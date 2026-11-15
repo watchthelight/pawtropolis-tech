@@ -268,6 +268,15 @@ install_remote_deps() {
   ssh_remote "cd ${remote_dir} && npm ci --omit=dev && ${INSTALL_KEY_CMD} > node_modules/.install-key"
 }
 
+# pm2 startOrRestart applies ecosystem.config.cjs to the running daemon and to
+# nothing else. When the daemon itself starts again (a reboot, a restart of its
+# systemd unit), PM2 brings the apps back from its dump file, so what was just
+# applied has to be saved there too. A failed save does not undo the restart,
+# so it only warns.
+save_pm2_process_list() {
+  ssh_remote "pm2 save" || echo "WARNING: 'pm2 save' failed. Run it on the remote: until then a restart of the PM2 daemon brings back the process definitions of the last save."
+}
+
 # Status only
 if [ "$STATUS_ONLY" = true ]; then
   echo "Checking PM2 status on remote server..."
@@ -279,6 +288,7 @@ fi
 if [ "$RESTART_ONLY" = true ]; then
   echo "Restarting PM2 processes..."
   ssh_remote "cd ${REMOTE_PATH} && pm2 startOrRestart ecosystem.config.cjs"
+  save_pm2_process_list
   echo "Process restarted successfully!"
   exit 0
 fi
@@ -481,6 +491,7 @@ else
   echo "Step 7/9: Restarting PM2 processes..."
   ssh_remote "cd ${REMOTE_PATH} && pm2 startOrRestart ecosystem.config.cjs"
 fi
+save_pm2_process_list
 
 # Step 8: Post-deploy health check
 echo "Step 8/9: Verifying deployment..."

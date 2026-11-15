@@ -8,12 +8,12 @@ Every prior invocation works the same way:
 
 | Command | What it does |
 |---------|--------------|
-| `./deploy.sh` | full deploy: tests, build bot, build web, upload, install deps, run migrations, register slash commands, restart, health check |
+| `./deploy.sh` | full deploy: tests, build bot, build web, upload, install deps, run migrations, register slash commands, restart, `pm2 save`, health check |
 | `./deploy.sh --bot` | build + upload + restart bot only |
 | `./deploy.sh --web` | build + upload + restart dashboard only |
 | `./deploy.sh --fast` | full deploy without running tests first |
 | `./deploy.sh --logs` | full deploy, then tail recent logs |
-| `./deploy.sh --restart` | no rebuild, just `pm2 startOrRestart` on remote |
+| `./deploy.sh --restart` | no rebuild, just `pm2 startOrRestart` and `pm2 save` on remote |
 | `./deploy.sh --status` | print remote `pm2 status` and exit |
 | `./deploy.sh --graceful` | full deploy with SIGINT drain before restart |
 
