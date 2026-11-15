@@ -131,7 +131,7 @@
 			<span class="card-sub">{metrics.openModmail === 0 ? 'No open threads' : modmailPreview ?? 'active threads'}</span>
 		</div>
 
-		<a href="/dashboard/flags" class="card clickable" class:card-accent={totalFlags > 0}>
+		<div class="card" class:card-accent={totalFlags > 0}>
 			<div class="card-icon-row">
 				<Flag size={16} color={totalFlags > 0 ? 'var(--sage)' : 'var(--ink-3)'} />
 				<span class="status-dot" class:status-green={totalFlags === 0} class:status-amber={totalFlags > 0}></span>
@@ -139,7 +139,7 @@
 			<span class="card-label">Active Flags</span>
 			<StatNumber value={totalFlags} label="" />
 			<span class="card-sub">{totalFlags === 0 ? 'No active flags' : flagBreakdown}</span>
-		</a>
+		</div>
 	</div>
 
 	<h3 class="section-title">Activity ({windowLabel})</h3>

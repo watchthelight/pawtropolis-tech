@@ -3,7 +3,7 @@
 	import ConnectionIndicator from './ConnectionIndicator.svelte';
 	import { mode, nightDay, isLegacyMode, isLightMode } from '$lib/stores/appearanceStore.svelte';
 	import {
-		House, ClipboardCheck, BarChart3, Activity, Flag,
+		House, ClipboardCheck, BarChart3, Activity,
 		Grid3x3, Palette, Settings, ScrollText, Server,
 		MessageCircleQuestion, Mail, Sparkles, BookOpen,
 		Moon, Sun, SlidersHorizontal
@@ -33,7 +33,7 @@
 
 	const ICON_MAP: Record<string, typeof House> = {
 		Home: House, Reviews: ClipboardCheck, Stats: BarChart3, Modmail: Mail, Pulse: Activity,
-		Flags: Flag, Heatmap: Grid3x3, Art: Palette, QOTD: MessageCircleQuestion,
+		Heatmap: Grid3x3, Art: Palette, QOTD: MessageCircleQuestion,
 		Quality: Sparkles, Config: Settings, Audit: ScrollText, System: Server, Handbook: BookOpen
 	};
 
