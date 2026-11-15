@@ -79,7 +79,7 @@ By default the script copies the remote DB to a timestamped group inside `data/b
 BACKUP_BEFORE_DEPLOY=0 ./deploy.sh
 ```
 
-The backup runs after lock acquisition and before any tarball upload. Filename pattern: `data/backups/data.db.<UTC_YYYYMMDD-HHMMSS>` plus `-wal` and `-shm` siblings, about 1.8 GB per group. Nothing pruned these until September 2026 (41 files, 25 GB, disk at 83%); the bot's retention scheduler now keeps the 3 newest groups plus anything under 7 days once `RETENTION_ENABLED=true`, and `scripts/cleanup-backups.sh` applies the same policy by hand.
+The backup runs after lock acquisition and before any tarball upload. Filename pattern: `data/backups/data.db.<UTC_YYYYMMDD-HHMMSS>` plus `-wal` and `-shm` siblings, about 1.8 GB per group. Nothing pruned these until September 2026 (41 files, 25 GB, disk at 83%); the bot's retention scheduler now keeps the 3 newest groups plus anything under 7 days once `RETENTION_ENABLED=true`, and `scripts/cleanup-backups.sh` applies the same policy from cron on the host (04:00 daily).
 
 ### Dry run
 

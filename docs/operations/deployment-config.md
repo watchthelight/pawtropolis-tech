@@ -592,7 +592,7 @@ aws ec2 start-instances --instance-ids i-0b5c5db57b50ff74b --region us-east-1
 
 ### Disk Space Management
 
-`data/backups/` is the usual culprit: every deploy writes a `data.db.<timestamp>` copy plus its `-wal` and `-shm` siblings (about 1.8 GB per group in September 2026). The retention scheduler prunes the directory to the 3 newest groups plus anything under 7 days once `RETENTION_ENABLED=true`; `scripts/cleanup-backups.sh` applies the same policy by hand. The dashboard system page shows database, WAL and free-page sizes so growth is visible before the disk fills.
+`data/backups/` is the usual culprit: every deploy writes a `data.db.<timestamp>` copy plus its `-wal` and `-shm` siblings (about 1.8 GB per group in September 2026). The retention scheduler prunes the directory to the 3 newest groups plus anything under 7 days once `RETENTION_ENABLED=true`. `scripts/cleanup-backups.sh` applies the same policy from cron on the host (04:00 daily), and also to the migration runner's `data/data.db.backup-<timestamp>` copies. The dashboard system page shows database, WAL and free-page sizes so growth is visible before the disk fills.
 
 ```bash
 # Check disk usage
@@ -601,7 +601,8 @@ ssh bash-ec2 "df -h /"
 # Backup groups and their total size
 ssh bash-ec2 "ls -lt /home/ubuntu/pawtropolis-tech/data/backups | head; du -sh /home/ubuntu/pawtropolis-tech/data/backups"
 
-# Prune backups by hand (keeps the 3 newest groups plus 7 days)
+# Prune backups by hand (keeps the 3 newest groups plus 7 days). DRY_RUN=1 lists without deleting.
+ssh bash-ec2 "cd /home/ubuntu/pawtropolis-tech && DRY_RUN=1 bash scripts/cleanup-backups.sh"
 ssh bash-ec2 "cd /home/ubuntu/pawtropolis-tech && bash scripts/cleanup-backups.sh"
 
 # Reclaim free pages after large deletes. Everything that writes the file is stopped first.

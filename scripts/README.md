@@ -13,7 +13,7 @@ What each script is for and where it runs. One-off scripts that finished their j
 | `commands.ts` (`npm run deploy:cmds` on the host, `sync:cmds` locally) | Registers slash commands with Discord from the built spec. |
 | `deploy-commands.ts`, `print-commands.ts` (`npm run print:cmds`), `print-command-count.ts` | Command registration helpers and listings. |
 | `smoke-test.sh` | Post-deploy smoke checks against the running processes. |
-| `cleanup-backups.sh` | Keeps the 3 newest `data/backups/data.db.*` groups plus anything under 7 days. The bot's retention scheduler does the same daily when `RETENTION_ENABLED=true`. |
+| `cleanup-backups.sh` | Daily cron job on the host (04:00). Prunes the deploy snapshots (`data/backups/data.db.<timestamp>`) and the migration runner's copies (`data/data.db.backup-<timestamp>`): in each place it keeps the 3 newest plus anything under 7 days, and a backup's `-wal` and `-shm` files go with it. `DRY_RUN=1` only logs. The bot's retention scheduler applies the same rule to `data/backups` when `RETENTION_ENABLED=true`. |
 | `litestream.example.yml`, `litestream.service.example`, `litestream-restore.sh` | Litestream replication config, its systemd unit, and the restore drill. |
 | `setup-server.sh` | One-time fresh-host setup (packages, pm2, directories). Kept for disaster recovery. |
 | `verify-db-integrity.js` | Off-line integrity check of a database file. |
