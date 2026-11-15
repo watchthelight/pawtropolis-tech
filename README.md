@@ -61,10 +61,11 @@ The current release is **26.0.0** (2026-11-14): [release notes](docs/releases/26
 Needs Node 20.9.0 or newer. CI runs Node 24.
 
 ```bash
-# Clone and install
+# Clone and install (the dashboard in web/ is its own package)
 git clone https://github.com/watchthelight/pawtropolis-tech.git
 cd pawtropolis-tech
 npm install
+(cd web && npm install && npx svelte-kit sync)
 
 # Configure environment
 cp .env.example .env
@@ -89,7 +90,7 @@ npm run dev
 | `npm run check` | Typecheck, lint, format check and tests in one go. It stops at the format check until the older files are formatted (see [ci-policy](docs/operations/ci-policy.md)) |
 | `npm run deploy:cmds` | Deploy slash commands to Discord |
 
-The dashboard in `web/` is its own package: `cd web && npm install`, then `npm run dev`, `npm run check` and `npm run build`. The full test suite includes dashboard tests, so install `web/` and run `npx svelte-kit sync` there before `npm test`.
+The dashboard has its own scripts, run inside `web/`: `npm run dev`, `npm run check` and `npm run build`. `npm run knip` and the full test suite both look into `web/`, which is why the dashboard is installed and synced first.
 
 ---
 

@@ -36,6 +36,14 @@ jobs:
         run: npm run format:check
         # SOFT: flips to a hard gate right after the one-shot mechanical format commit.
         continue-on-error: true
+      - name: Install web deps + sync SvelteKit
+        # knip loads web/vite.config.ts for the web workspace, and web/tsconfig.json
+        # extends web/.svelte-kit/tsconfig.json, which only svelte-kit sync creates.
+        # Without this step knip stops with "Error loading web/vite.config.ts".
+        run: |
+          cd web
+          npm ci
+          npx svelte-kit sync
       - name: Dead code (knip)
         # HARD GATE: knip exits 0 (#00271).
         run: npm run knip

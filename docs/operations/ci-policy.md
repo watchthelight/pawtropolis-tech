@@ -9,7 +9,7 @@ This doc explains what CI enforces, what it tolerates, and the conditions for pr
 | Typecheck | HARD | check | `npm run typecheck` |
 | Lint | HARD | check | `npm run lint` (0 errors; warnings allowed) |
 | Format | SOFT | check | `npm run format:check` |
-| Dead code | HARD | check | `npm run knip` |
+| Dead code | HARD | check | `npm run knip` (after `npm ci` and `svelte-kit sync` in `web/`) |
 | Tests | HARD | test | `npm run test -- --coverage` (Node 24 and Node 20 legs) |
 | Coverage thresholds | HARD | test | enforced by vitest, see below |
 | Dashboard | HARD | web | `npm run check` (svelte-check) and `npm run build` in `web/` |
@@ -43,6 +43,8 @@ Was soft while the backlog stood at 1274 errors. The ESLint config now turns `no
 ### Dead code (knip, promoted with #00283)
 
 Was soft from #00271. `npm run knip` now exits 0: the unused barrel, the unused test helper, the unused exports and the stale config hints are gone. A new unused file, export or type fails the check job.
+
+knip analyzes the `web` workspace too, and to do that it loads `web/vite.config.ts`. `web/tsconfig.json` extends `web/.svelte-kit/tsconfig.json`, a file only `svelte-kit sync` creates. In a fresh checkout knip therefore stops with `Error loading web/vite.config.ts`, so the check job installs `web/` and runs `svelte-kit sync` right before the knip step. Do the same locally before `npm run knip` in a new clone.
 
 ### Dashboard (added with #00283)
 
