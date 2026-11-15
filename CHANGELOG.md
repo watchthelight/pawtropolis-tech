@@ -8,7 +8,7 @@ All changes to Pawtropolis Tech are tracked here.
 
 ## [26.1.0] - 2026-11-15
 
-26.1.0 carries out the owner's decisions of 2026-11-15 on the questions 26.0.0 left open (`MODERNIZATION_PLAN.md`, section 7). The outside API keys are set from Discord, `/investigate-artist` also searches the open web and rates by the mod handbook, `/purge` checks for a staff role, and the host moves from Node 20 to Node 24.
+26.1.0 carries out the owner's decisions of 2026-11-15 on the questions 26.0.0 left open (`MODERNIZATION_PLAN.md`, section 7). The outside API keys are set from Discord, `/investigate-artist` also searches the open web and rates by the mod handbook, `/purge` checks for a staff role, and the host moved from Node 20 to Node 24. It went to production on 2026-11-15 (UTC), and the record of that deploy and of the Node move is in [`docs/releases/26.1.0.md`](docs/releases/26.1.0.md).
 
 ### Breaking
 
@@ -58,12 +58,12 @@ All changes to Pawtropolis Tech are tracked here.
 
 ### Upgrade notes
 
-What the upgrade needs on the host is in [`docs/releases/26.1.0.md`](docs/releases/26.1.0.md). In short:
+What the upgrade needed on the host, and how it went there, is in [`docs/releases/26.1.0.md`](docs/releases/26.1.0.md). In short:
 
 - The deploy registers `/service-keys` with Discord and runs migration 085 after its database backup. The migration drops two indexes and no data; the two `CREATE INDEX` statements that bring them back are in its header.
 - The first deploy installs dependencies again in the root and in `web/`, because the install key is new.
 - No new environment key is needed. The three outside keys are optional and are entered with `/service-keys set`.
-- The host moves to Node 24 in the same maintenance window. `engines` stays at `>=20.9.0` for this release.
+- The host moved to Node 24.22.3 in the same maintenance window, after the release was running on Node 20. A second deploy then installed the dependencies again for the new Node. `engines` stays at `>=20.9.0` for this release, and CI keeps its Node 20 test leg.
 
 ## [26.0.0] - 2026-11-14
 
