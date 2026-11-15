@@ -82,8 +82,8 @@ Has always been hard. Build = `tsup` plus `scripts/scan-legacy.ts`. Unaffected b
 ## Coverage thresholds are a hard gate
 
 `vitest.config.ts` sets `coverage.include: ["src/**/*.ts"]`, so files no test imports count
-as uncovered instead of being invisible. Thresholds are `lines: 43, functions: 48,
-branches: 37, statements: 43`. The v26 suite measures 44.22, 49.64, 38.99 and 44.05; each
+as uncovered instead of being invisible. Thresholds are `lines: 44, functions: 49,
+branches: 39, statements: 44`. The 26.1.0 suite measures 45.22, 50.72, 40.16 and 45.06; each
 threshold is one point under, rounded down, because v8 counts differ slightly between Node
 versions and CI runs two. The test job runs `npm run test -- --coverage` with no
 `continue-on-error`, and vitest exits non-zero when a threshold is unmet.
