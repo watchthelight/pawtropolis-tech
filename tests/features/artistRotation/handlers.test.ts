@@ -68,7 +68,8 @@ vi.mock("../../../src/features/artJobs/index.js", () => ({
 // TicketService.findByChannelId queries the live `ticket` table (migration 067).
 // These handler tests predate the first-party ticket system and only exercise
 // the legacy Ticket-Tool path, so we stub the service to always return null.
-// Broader fix: per-test-file DB isolation (tracked in TODO.md soft-gate cleanup).
+// Each worker has its own database since v26 (tests/setup.ts); the stub stays
+// because these tests are about the Ticket Tool path only.
 vi.mock("../../../src/features/tickets/service.js", () => ({
   TicketService: {
     findByChannelId: vi.fn().mockReturnValue(null),

@@ -114,7 +114,7 @@ Today, a botched deploy is recovered manually:
 4. Check out the previous git tag in `~/pawtropolis-tech` (or restore from a previous tarball if `dist.bak` was kept).
 5. `pm2 start ecosystem.config.cjs`.
 
-A dedicated `--rollback` switch is tracked in TODO.md but not implemented in this pass; the user-facing pieces would be:
+A dedicated `--rollback` switch is tracked in todo #00288 but not implemented; the user-facing pieces would be:
 
 - Keep `dist.bak` (one slot) on remote during step 6.
 - `--rollback` would copy `dist.bak` back, restore the most recent `data.db.<ts>`, and restart PM2.
