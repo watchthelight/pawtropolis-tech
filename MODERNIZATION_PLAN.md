@@ -1,6 +1,8 @@
 # Pawtropolis Tech v26: modernization plan
 
-Written 2026-11-14 on branch `release/v26` (cut from `main` at `821f8491`). This file is the audit result and the work order for the v26 release. It is updated as work lands: every item ends up as done, deferred (with the reason), or waiting on an owner decision.
+Written 2026-11-14 on branch `release/v26` (cut from `main` at `821f8491`). This file is the audit result, the work order for the v26 release, and the record of what happened to each item: done (with the commit), deferred (with the reason), or waiting on an owner decision.
+
+**State at the end of the day:** everything planned for v26 is on the branch. Typecheck, build, lint, knip, the full test suite, the coverage floors and the dashboard check and build all pass. The format check is the one gate that still fails, on 829 older files, and it stays a soft gate on purpose (section 3, HEALTH-3). Two prepared changes are held on their own branches for an owner decision (section 7, items 12 and 13). Nothing was pushed, merged or deployed.
 
 Tracking todos: #00279 (`/investigate-artist`), #00280 (security), #00281 (reliability), #00282 (dependencies and runtime), #00283 (CI, lint, format, coverage), #00284 (measured optimizations), #00285 (release 26.0.0), #00286 (deferred to the next release), #00287 (owner decisions).
 
@@ -17,128 +19,166 @@ A single-developer Discord bot for one server (Pawtropolis, about 9,100 members)
 ### Things I had to infer
 
 - **Production still uses the third-party Ticket Tool bot for tickets.** The repo has a first-party ticket system (migrations 067 and 068, `src/features/tickets/`) and a cutover doc, but the live "Tickets" category only holds Ticket Tool channels (`2d-artist-0297` to `2d-artist-0309` on 2026-11-14), and the local copy of the `ticket` table is empty. `/investigate-artist` therefore supports both systems.
-- **The production Node version is not recorded anywhere I can read** (repo docs say "Node 20+"). I did not SSH to the host to check: only read-only inspection through the bot was sanctioned. Node 20 went end of life on 2026-04-30.
+- **The production Node version is not recorded anywhere I can read** (repo docs say "Node 20+"). I did not SSH to the host to check: only read-only inspection through the bot was sanctioned. Node 20 went end of life on 2026-04-30. v26 needs Node 20.9.0 or newer (section 7, item 5).
 - **No test guild is available.** `TEST_GUILD_ID` is empty and the bot is in exactly one guild (production). New commands could not be registered or tried in a test server.
 - **The staff-side artist verification workflow is the "Commissions Verification" section of `docs/MOD-HANDBOOK.md`**, and the applicant-side requirements are the embed posted in the verify-artist channel, the ticket panel and the Ticket Tool greeting. A staff forum thread points staff at the handbook, which supports this reading.
 - **The 15-minute public stats refresh may or may not be scheduled in production.** It is a script (`npm run stats:refresh`), and the crontab is on the host.
+- **The dashboard and the bot run on the same host.** `ecosystem.config.cjs` and the nginx config say so. The loopback bind in SEC-3 depends on it.
 
 ## 2. Baseline (before any change)
 
 Measured in place on Windows, Node v25.5.0, npm 11.21.0, at `821f8491`.
 
-| Gate | Result | Notes |
-|---|---|---|
-| Install (`npm ls`) | pass | |
-| Typecheck (`tsc --noEmit`) | pass | Covers `src` and `scripts` only. Tests and migrations are not typechecked. |
-| Build (`tsup`) | pass | `dist/index.js` 2.04 MB |
-| Smoke (`node --check dist/index.js`) | pass | |
-| Tests (`vitest run --coverage`) | pass | 289 files, 5744 tests, 33.8 s |
-| Coverage | lines 47.71%, statements 47.32%, functions 50.52%, branches 41.94% | Overstated: 62 source files (about 13k lines) are never loaded, so they are not counted. |
-| Lint (`eslint .`) | **fail** | 1441 problems: 1274 errors, 167 warnings. 1227 are `no-explicit-any`, about 1150 of them in tests. |
-| Format (`prettier --check .`) | **fail** | 839 files |
-| Dead code (`knip`) | **fail** | 2 unused files, 2 unused exports, 1 unused type, 12 config hints |
-| `npm run check` | **fail** | Cannot pass while lint and format fail. |
-| CI | green | Lint, format and knip are `continue-on-error`, so CI hides the three failures above. CI runs on Node 20 (end of life). The dashboard has no CI checks. |
-| `npm audit` (root) | 4 high in fastify, 3 high in sharp, undici advisories through discord.js | |
-| `npm audit` (web) | 1 critical (dompurify through mermaid), 1 high (devalue), 1 moderate (kit) | |
+| Gate                                 | Result                                                             | Notes                                                                                                                                                  |
+| ------------------------------------ | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Install (`npm ls`)                   | pass                                                               |                                                                                                                                                        |
+| Typecheck (`tsc --noEmit`)           | pass                                                               | Covers `src` and `scripts` only. Tests and migrations are not typechecked.                                                                             |
+| Build (`tsup`)                       | pass                                                               | `dist/index.js` 2.04 MB                                                                                                                                |
+| Smoke (`node --check dist/index.js`) | pass                                                               |                                                                                                                                                        |
+| Tests (`vitest run --coverage`)      | pass                                                               | 289 files, 5744 tests, 33.8 s                                                                                                                          |
+| Coverage                             | lines 47.71%, statements 47.32%, functions 50.52%, branches 41.94% | Overstated: 62 source files (about 13k lines) are never loaded, so they are not counted.                                                               |
+| Lint (`eslint .`)                    | **fail**                                                           | 1441 problems: 1274 errors, 167 warnings. 1227 are `no-explicit-any`, about 1150 of them in tests.                                                     |
+| Format (`prettier --check .`)        | **fail**                                                           | 839 files                                                                                                                                              |
+| Dead code (`knip`)                   | **fail**                                                           | 2 unused files, 2 unused exports, 1 unused type, 12 config hints                                                                                       |
+| `npm run check`                      | **fail**                                                           | Cannot pass while lint and format fail.                                                                                                                |
+| CI                                   | green                                                              | Lint, format and knip are `continue-on-error`, so CI hides the three failures above. CI runs on Node 20 (end of life). The dashboard has no CI checks. |
+| `npm audit` (root)                   | 26 findings: 11 high, 15 moderate                                  | High includes fastify, sharp and undici through discord.js.                                                                                            |
+| `npm audit` (web)                    | 28 findings: 1 critical, 8 high, 11 moderate, 8 low                | The critical is dompurify through mermaid.                                                                                                             |
 
-Pre-existing failures are findings HEALTH-1, HEALTH-3, HEALTH-20 and TCD-12 below. None are hidden by this branch: the goal is to make all gates pass for real and then make them hard gates.
+Pre-existing failures are findings HEALTH-1, HEALTH-3, HEALTH-20 and TCD-12 below. None are hidden by this branch.
 
 **Secrets:** no secrets were found in the tracked tree or in git history. `.env`, `.env.build`, `.env.cloudflare`, `CREDENTIALS.md` and `finances.md` are gitignored, and the example files hold placeholders only.
 
+### Where the branch ended up
+
+Same machine, same Node, measured at the branch tip. Audit counts for both columns were taken on 2026-11-14 against the same advisory data.
+
+| Gate                               | Baseline                                                                           | v26                                                                                                        |
+| ---------------------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Typecheck                          | pass                                                                               | pass                                                                                                       |
+| Build                              | pass, `dist/index.js` 2.04 MB                                                      | pass, 2.28 MB                                                                                              |
+| Tests                              | 289 files, 5744 tests                                                              | 320 files, 6356 tests, all passing                                                                         |
+| Coverage over all of `src/`        | lines 39.82, statements 39.49, functions 44.72, branches 34.71                     | lines 44.11, statements 44.05, functions 49.64, branches 38.99                                             |
+| Coverage floors                    | lines 20, statements 20, functions 40, branches 35, against the overstated numbers | lines 43, statements 43, functions 48, branches 37, against the real ones                                  |
+| Lint                               | 1274 errors, 167 warnings                                                          | 0 errors, 196 warnings                                                                                     |
+| Format                             | 839 files fail                                                                     | 829 files fail (soft gate, see HEALTH-3)                                                                   |
+| knip                               | fail                                                                               | pass                                                                                                       |
+| `npm run check`                    | fail                                                                               | fails at the format step only                                                                              |
+| Dashboard `svelte-check` and build | not run anywhere                                                                   | pass (0 errors, 86 warnings)                                                                               |
+| CI hard gates                      | typecheck, tests, build                                                            | typecheck, lint, knip, tests with coverage floors on Node 24 and Node 20, build, dashboard check and build |
+| `npm audit` (root)                 | 26: 11 high, 15 moderate                                                           | 1 high (zod, needs the zod 4 major; the advisory is in the v4 code path this repo does not use)            |
+| `npm audit` (web)                  | 28: 1 critical, 8 high, 11 moderate, 8 low                                         | 14: 5 moderate, 9 low                                                                                      |
+
+The 196 lint warnings are mostly `any` in `scripts/`, kept visible as warnings on purpose. Of the 14 dashboard findings, the 9 low ones need the SvelteKit 3, adapter-node 6 and mermaid 12 majors (deferred), and the 5 moderate ones sit in the Sentry build plugin's own glob and minimatch; `npm audit fix` offers a fix for those and then changes nothing.
+
+Performance numbers are with each PERF row in section 3.
+
 ## 3. Findings, ranked
 
-Impact is what goes wrong today. Fix risk is the chance the fix itself breaks something. "v26" means it ships in this release.
+Impact is what goes wrong today. Fix risk is the chance the fix itself breaks something. The Outcome column is what happened on this branch.
 
-### Tier 1: high impact, low fix risk (v26)
+### Tier 1: high impact, low fix risk
 
-| ID | Finding | Impact | Fix risk | Plan |
-|---|---|---|---|---|
-| SEC-1 | Dashboard session cookie falls back to plain JSON when decryption fails (`web/src/lib/server/session.ts`). Anyone can forge a session, including an owner-tier one. | Critical | Low | Remove the fallback. Old plain cookies stop working; users sign in again. |
-| SEC-2 | When `/update banner` or `/update avatar` fails to push, the git error (which contains the GitHub bot token in the remote URL) is shown in a public reply and logged. Same pattern in `src/features/serverAuditDocs.ts`. | High | Low | Keep the token out of argv and out of error text. |
-| SEC-3 | Internal dashboard API listens on `0.0.0.0:3003` and compares its secret with `!==`. | High | Low to medium | Bind to `127.0.0.1` by default (`DASHBOARD_API_HOST` overrides), constant-time compare. Behavior change, see section 7. |
-| DEP-1 | fastify 5.8.5: 4 high advisories. | High | Low | `^5.12.8` |
-| DEP-2 | undici 6.28.0 through discord.js. | Medium | Low | discord.js 14.28.1, undici 6.29.1 |
-| DEP-4 | sharp 0.34.5: 3 high advisories (root and web). | High | Low | `^0.35.5`. None of the removed options are used. |
-| DEP-6 | Dashboard: dompurify critical through mermaid, devalue high, kit moderate. | High | Low | In-range updates in `web/`. |
-| REL-1 | Panic mode is off after every restart until the full member fetch finishes (`src/startup/ready.ts`). | High | Low | Load panic state before the first await. |
-| REL-2 | A modmail row stuck at `thread_id = 'pending'` blocks that applicant's modmail forever (`src/features/modmail/threadOpen.ts`). | High | Low | Expire stale pending rows. |
-| REL-6 | Ticket attachment mirror and `/update` fetches have no timeout: one stalled download hangs the worker. | Medium | Low | `AbortSignal.timeout`. |
-| PERF-1 | Two queries divide by a bound JS number, which SQLite treats as REAL, so the day bucket is fractional. Weekly active users and the Pulse daily chart are wrong, and the queries return 30x to 3,600x more rows than needed. | High (wrong numbers) | Low | `CAST(... AS INTEGER)` |
-| DEP-5 | CI runs on Node 20 (end of life). | Medium | Low | CI on Node 24, actions v5 to v7. |
+| ID     | Finding                                                                                                                                                                                                                  | Impact               | Fix risk      | Outcome                                                                                                                                                                                                                        |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| SEC-1  | Dashboard session cookie falls back to plain JSON when decryption fails (`web/src/lib/server/session.ts`). Anyone can forge a session, including an owner-tier one.                                                      | Critical             | Low           | Done, `f6762e39`. A cookie that does not decrypt gives no session. Anyone still holding a pre-encryption cookie signs in again.                                                                                                |
+| SEC-2  | When `/update banner` or `/update avatar` fails to push, the git error (which contains the GitHub bot token in the remote URL) is shown in a public reply and logged. Same pattern in `src/features/serverAuditDocs.ts`. | High                 | Low           | Done, `38f81e67`. The token reaches git through an environment-supplied header, never argv or the remote URL. Discord gets a fixed message and the log line is scrubbed.                                                       |
+| SEC-3  | Internal dashboard API listens on `0.0.0.0:3003` and compares its secret with `!==`.                                                                                                                                     | High                 | Low to medium | Done, `8a85ca8a`. Binds to `127.0.0.1` by default (`DASHBOARD_API_HOST` overrides) and compares in constant time. Behavior change, see section 7 item 4.                                                                       |
+| DEP-1  | fastify 5.8.5: 4 high advisories.                                                                                                                                                                                        | High                 | Low           | Done, `0f243b39` (`^5.12.8`).                                                                                                                                                                                                  |
+| DEP-2  | undici 6.28.0 through discord.js.                                                                                                                                                                                        | Medium               | Low           | Done, `1b13569d` (discord.js 14.28.1, undici 6.29.1).                                                                                                                                                                          |
+| DEP-4  | sharp 0.34.5: 3 high advisories (root and web).                                                                                                                                                                          | High                 | Low           | Done, `e7293ff0` (`^0.35.5`). None of the removed options are used. One test fixture was a truncated PNG that older sharp tolerated; it is now a valid one.                                                                    |
+| DEP-6  | Dashboard: dompurify critical through mermaid, devalue high, kit moderate.                                                                                                                                               | High                 | Low           | Done, `e32f12af`. In-range updates; dashboard audit went from 28 findings to 14, none critical or high.                                                                                                                        |
+| REL-1  | Panic mode is off after every restart until the full member fetch finishes (`src/startup/ready.ts`).                                                                                                                     | High                 | Low           | Done, `564ca937`.                                                                                                                                                                                                              |
+| REL-2  | A modmail row stuck at `thread_id = 'pending'` blocks that applicant's modmail forever (`src/features/modmail/threadOpen.ts`).                                                                                           | High                 | Low           | Done, `60020db1`. Pending rows older than 120 seconds are treated as abandoned, and an orphan thread is deleted.                                                                                                               |
+| REL-6  | Ticket attachment mirror and `/update` fetches have no timeout: one stalled download hangs the worker.                                                                                                                   | Medium               | Low           | Done, `462bb9c1` and `d797c593` (30 second timeout on both).                                                                                                                                                                   |
+| PERF-1 | Two queries divide by a bound JS number, which SQLite treats as REAL, so the day bucket is fractional. Weekly active users and the Pulse daily chart are wrong, and the queries return far more rows than needed.        | High (wrong numbers) | Low           | Done, `49a5153e`. Stats refresh query: 478,091 rows in 1084 ms to 9,899 rows in 747 ms. Pulse daily, 30 days: 109,340 rows in 119 ms to 30 rows in 32.5 ms. The numbers these two show change because the old ones were wrong. |
+| DEP-5  | CI runs on Node 20 (end of life).                                                                                                                                                                                        | Medium               | Low           | Done, `7e89005f`. CI on Node 24 with a second test leg on Node 20, actions at v7.                                                                                                                                              |
 
-### Tier 2: medium impact or medium fix risk (v26)
+### Tier 2: medium impact or medium fix risk
 
-| ID | Finding | Plan |
-|---|---|---|
-| DEP-3 | `@anthropic-ai/sdk` 0.91.1 is a devDependency; production installs with `--omit=dev`. | Move to dependencies at `^1.8.0`. |
-| REL-3, REL-12 | Ticket open has a 5 second in-memory cooldown and no check for an existing open ticket; a failed greeting reports failure although the channel exists. | One open ticket per user per type; report partial success. Behavior change. |
-| REL-4 | `guildMemberRemove` returns early for leavers without an application and skips verify-thread cleanup. | Reorder. |
-| REL-7 | One throw in `stopSchedulers()` skips the remaining flushes and `db.close()`. | Isolate each step. |
-| REL-9 | Buffered welcome line is lost on restart. | Flush on shutdown. |
-| REL-10 | `/redeemreward` removes the ticket role before checking the artist queue. | Check first. |
-| REL-13 | Unguarded log awaits in `guildEvents.ts` abort the rest of the member handlers. | Guard. |
-| REL-15 | The 10 second event timeout fires for slow slash commands that already deferred. | Exempt interaction events. |
-| REL-17 | No `client.on("error")` listener. | Add. |
-| SEC-8 | Workflows have no `permissions:` block; one third-party action is pinned by tag. | Least privilege, pin by SHA. |
-| TCD-1, TCD-2 | Coverage ignores files that are never imported. | `coverage.include`, then re-baseline thresholds to the real numbers. |
-| TCD-13, TCD-15 | No dashboard checks in CI; no concurrency, timeouts or branch triggers. | Add a `web` job (svelte-check, build), concurrency and timeouts. |
-| TCD-22 | Nothing checks that the help registry lists every command. | Parity test. |
-| HEALTH-1, HEALTH-2 | Lint cannot pass: test files use `any` freely, about 85 real errors in `src`. | Relax `no-explicit-any` for tests, fix the `src` errors, make lint a hard gate. |
-| HEALTH-3 | 839 files fail the format check. | One mechanical `prettier --write` commit, listed in `.git-blame-ignore-revs`, then make format a hard gate. |
-| HEALTH-4, HEALTH-5, HEALTH-20, HEALTH-21 | 60 tracked `.playwright-mcp/` files, stale root docs, knip leftovers. | Clean up, make knip a hard gate. |
-| DEP-8, DEP-9, DEP-10, DEP-13 | Dead overrides, in-range tooling updates, engines field disagrees with CI and the build target, stray `@types/sharp`. | Align. |
-| PERF-3 | `/audit members` runs a 115 ms table scan per absent member (no index on `message_activity(guild_id, user_id)`). | Additive index migration. Measured. |
-| PERF-4 | `/activity` heatmap reads 222,882 raw rows where a grouped query returns 1,344. | Group in SQL. Measured. |
-| PERF-5 | Member join and leave handlers wait on a Discord log send before doing their real work. | Do the work first. Measured. |
-| PERF-9 | Synchronous PNG encode on the event loop (27 ms per image). | Async encode. Measured. |
+| ID                   | Finding                                                                                               | Outcome                                                                                                                                                                                                                                                                                      |
+| -------------------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DEP-3                | `@anthropic-ai/sdk` 0.91.1 is a devDependency; production installs with `--omit=dev`.                 | Done, `585d1674` (dependencies, `^1.8.0`).                                                                                                                                                                                                                                                   |
+| REL-3                | Ticket open has a 5 second in-memory cooldown and no check for an existing open ticket.               | **Held for the owner** (section 7, item 12). It is a policy change, not a bug: the live server lets a user hold two open tickets of one type. The change is ready on branch `hold/v26-one-open-ticket-per-type`.                                                                             |
+| REL-12               | A failed greeting reports "Failed to open ticket" although the channel and the ticket row exist.      | Done, `a75bfff5`. The reply now says the ticket opened and the welcome message could not be posted.                                                                                                                                                                                          |
+| REL-4                | `guildMemberRemove` returns early for leavers without an application and skips verify-thread cleanup. | Done, `ba6e1f63`.                                                                                                                                                                                                                                                                            |
+| REL-7                | One throw in `stopSchedulers()` skips the remaining flushes and `db.close()`.                         | Done, `814887af` (test `8466ba39`).                                                                                                                                                                                                                                                          |
+| REL-9                | Buffered welcome line is lost on restart.                                                             | Done, `220690cb`. Flushed on shutdown, capped at 5 seconds.                                                                                                                                                                                                                                  |
+| REL-10               | `/redeemreward` removes the ticket role before checking the artist queue.                             | Done, `7bb01e70`.                                                                                                                                                                                                                                                                            |
+| REL-13               | Unguarded log awaits in `guildEvents.ts` abort the rest of the member handlers.                       | Done, `09639bcd`.                                                                                                                                                                                                                                                                            |
+| REL-15               | The 10 second event timeout fires for slow slash commands that already deferred.                      | Done, `508dd9c3`. Interactions get a 15 minute budget, the lifetime of an interaction token. Every other event keeps 10 seconds.                                                                                                                                                             |
+| REL-17               | No `client.on("error")` listener.                                                                     | Done, `e97ac67e`.                                                                                                                                                                                                                                                                            |
+| SEC-8                | Workflows have no `permissions:` block; one third-party action is pinned by tag.                      | Done, `46f86180`.                                                                                                                                                                                                                                                                            |
+| TCD-1, TCD-2         | Coverage ignores files that are never imported.                                                       | Done, `1519827f` and `14f47a74`. Coverage counts all of `src/` and the floors sit one point under the measured numbers.                                                                                                                                                                      |
+| TCD-13, TCD-15       | No dashboard checks in CI; no concurrency, timeouts or branch triggers.                               | Done, `08dfb2c4` and `7e89005f`.                                                                                                                                                                                                                                                             |
+| TCD-22               | Nothing checks that the help registry lists every command.                                            | Done, `c2b7bea5`. 54 slash commands, 52 help entries; `/test` and `/testidea` are left out of `/help` on purpose and the test pins that.                                                                                                                                                     |
+| HEALTH-1, HEALTH-2   | Lint cannot pass: test files use `any` freely, about 85 real errors in `src`.                         | Done, `eceda359` to `b2921ff5`, hard gate in `a2f99ff7`. `src` keeps `no-explicit-any` as an error.                                                                                                                                                                                          |
+| HEALTH-3             | 839 files fail the format check.                                                                      | Partly done. The 41 files this release adds are formatted (`d778cf40`), which leaves 829. The one mechanical commit for the older files is deferred (Tier 3) and format stays a soft gate until it lands.                                                                                    |
+| HEALTH-4             | 60 tracked `.playwright-mcp/` files.                                                                  | **Held for the owner** (section 7, item 13). Ready on branch `hold/v26-untrack-playwright-mcp`. Lint and prettier already skip the directory.                                                                                                                                                |
+| HEALTH-5             | Stale root docs (`TODO.md`, `CLAUDE_CODE_PROMPT.md`) and a stale README badge.                        | Badge fixed with the README refresh. The two files stay: the standing rule for this repo is to keep AI working files in the tree, and `TODO.md` still has open lines. Listed under section 7, item 10.                                                                                       |
+| HEALTH-20, HEALTH-21 | knip leftovers and config drift.                                                                      | Done, `193932f1`, `156b6219`, `5b2ee457`, `16cf468d`; knip is a hard gate (`a2f99ff7`).                                                                                                                                                                                                      |
+| DEP-8                | Dead overrides.                                                                                       | Done, `c80edaef`.                                                                                                                                                                                                                                                                            |
+| DEP-9                | In-range runtime and tooling updates.                                                                 | Done, `88f937f0`, `14ddf658`, `eed420e9`, `e7d60fb5`.                                                                                                                                                                                                                                        |
+| DEP-10               | Engines field disagrees with what the dependencies need.                                              | Done, `ef9b03b4` (`>=20.9.0`). The build target stays `node20` while a Node 20 host is possible.                                                                                                                                                                                             |
+| DEP-11               | npm 11.21 warns about install scripts that are not allowlisted.                                       | Done, `9f84ebf8`. `allowScripts` in both packages; a clean `npm ci` prints no warning.                                                                                                                                                                                                       |
+| DEP-13               | Stray `@types/sharp` in `web/`.                                                                       | Done with DEP-4.                                                                                                                                                                                                                                                                             |
+| PERF-3               | `/audit members` runs a table scan per member (no index on `message_activity(guild_id, user_id)`).    | Done another way, `6dcf6342`. The run loads the guild's authors once: a 100-member pass went from 13,694 ms to 310 ms. The index was measured and rejected: 4.8 s to build, 95 MB on disk, and it slowed a 50,000-row insert from 470 ms to 1,558 ms, a cost every logged message would pay. |
+| PERF-4               | `/activity` heatmap reads 222,882 raw rows where a grouped query returns about 1,350.                 | Done, `3adc4072`. 8 weeks: 69.7 ms to 32.1 ms. 1 week: 19.5 ms to 6.8 ms. Output is pinned by a digest recorded from the old code.                                                                                                                                                           |
+| PERF-5               | Member join and leave handlers wait on a Discord log send before doing their real work.               | Deferred. The cost is a Discord round trip, which cannot be measured on this machine, and the rule for this release is no number, no claim. REL-13 already stops a failed send from aborting the handler.                                                                                    |
+| PERF-9               | Synchronous PNG encode on the event loop.                                                             | Done, `e04e80a7`. The encode blocked the loop for 100.0 ms on a 1600x1900 image and now blocks for 0.4 ms. Output bytes are identical.                                                                                                                                                       |
 
 ### Tier 3: deferred to the next release
 
 Reasons are given per group. Tracked in #00286.
 
-| ID | Finding | Why not today |
-|---|---|---|
-| Sentry 11, zod 4, vitest 5, eslint 10, TypeScript 7 | Major upgrades | Each needs a migration pass of its own. TypeScript 7 is blocked by the typescript-eslint peer range. The zod advisory is in the v4 code path, which this repo does not use. |
-| better-sqlite3 12.11 and 13 | Newer builds drop the Node 20 prebuild; 13 needs Node 22+ | Production Node version is unknown. Held at the locked version until `node -v` on the host is confirmed. |
-| SvelteKit 3, Vite 8, vite-plugin-svelte 7, adapter-node 6, `@lucide/svelte`, mermaid 12 | Coordinated dashboard major upgrade | Cannot be verified against the live dashboard today. |
-| dotenv 18, dotenvx 2, ioredis 6, web-push 4 | Majors with config or API changes | Low value today, each touches startup. |
-| SEC-3b | Dashboard API trusts `tier` and `userId` from the request body | Needs a design change (derive tier in the bot). The loopback bind in v26 removes the remote path. |
-| SEC-4 | Session freezes roles for 7 days and stores OAuth tokens in the cookie | Needs server-side sessions. |
-| SEC-6 | Several commands have no in-handler permission check | Needs a per-command decision and a table-driven test. |
-| SEC-9, SEC-10, SEC-11, SEC-12, SEC-14 to SEC-18 | ssh-keyscan trust on deploy, ports 3002 and 3004 on all interfaces, shell strings in `/database`, OAuth state not bound to the browser, nginx headers, cookie size, role logging, public internal docs, Sentry scrubbing | Touch deploy scripts, hosting or auth flows that cannot be exercised today. |
-| REL-5 | Database restore copies a live WAL database with `fs.copyFile` | Medium risk, needs a restore drill on a copy. |
-| REL-8, REL-11, REL-14, REL-16, REL-18 | Late signal handlers, level reward retry can double-credit, `/redeem` never defers, schedulers without reentrancy guards, SQLite datetimes parsed as local time | Each needs characterization tests first. |
-| PERF-2 | Stats refresh does all its reads inside one write transaction | Needs production timing to prove and a careful rewrite. |
-| PERF-7, PERF-8 | Unused and redundant indexes | Dropping an index is destructive: owner decision, measure on the host first. |
-| PERF-6, PERF-10 to PERF-15 | `execSync` git calls, smaller items | Low value. |
-| HEALTH-6 | `setDMPermission(false)` is deprecated (52 uses) | Changes every command payload; do it with a command re-registration. |
-| HEALTH-7, HEALTH-9, HEALTH-10, HEALTH-11 | 115 direct `process.env` reads, 1069-line interaction router, 1267-line config module, two error-card implementations | Refactors with no user-visible gain today. |
-| TCD-3 to TCD-8, TCD-10, TCD-11 | Thin coverage in gate flow, review actions and tickets; no migration-versus-fixture drift test; tests not typechecked | Characterization tests are added only where v26 changes code. |
-| TCD-14, TCD-20 | `deploy-handbook.yml` deploys without waiting for CI; `deploy.sh` lacks typecheck and branch checks | Deploy path: owner decision, see section 7. |
+| ID                                                                                      | Finding                                                                                                                                                                                                                  | Why not today                                                                                                                                                                                                                                                                                                         |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sentry 11, zod 4, vitest 5, eslint 10, TypeScript 7                                     | Major upgrades                                                                                                                                                                                                           | Each needs a migration pass of its own. TypeScript 7 is blocked by the typescript-eslint peer range. The zod advisory is in the v4 code path, which this repo does not use. eslint 9 is marked unsupported upstream, so eslint 10 should go first.                                                                    |
+| better-sqlite3 12.11 and 13                                                             | Newer builds drop the Node 20 prebuild; 13 needs Node 22+                                                                                                                                                                | Production Node version is unknown. Held at the locked 12.4.1 until `node -v` on the host is confirmed.                                                                                                                                                                                                               |
+| SvelteKit 3, Vite 8, vite-plugin-svelte 7, adapter-node 6, `@lucide/svelte`, mermaid 12 | Coordinated dashboard major upgrade                                                                                                                                                                                      | Cannot be verified against the live dashboard today. Clears the 9 low dashboard audit findings.                                                                                                                                                                                                                       |
+| dotenv 18, dotenvx 2, ioredis 6, web-push 4                                             | Majors with config or API changes                                                                                                                                                                                        | Low value today, each touches startup.                                                                                                                                                                                                                                                                                |
+| HEALTH-3                                                                                | One mechanical `prettier --write` commit for the 829 older files                                                                                                                                                         | A whitespace diff of that size should not ride in a feature release. After the release: run `npm run format`, commit it alone, add the commit to `.git-blame-ignore-revs`, then remove `continue-on-error` from the format step in `ci.yml`.                                                                          |
+| PERF-5                                                                                  | Member handlers wait on a log send                                                                                                                                                                                       | No way to measure it here; see Tier 2.                                                                                                                                                                                                                                                                                |
+| SEC-3b                                                                                  | Dashboard API trusts `tier` and `userId` from the request body                                                                                                                                                           | Needs a design change (derive tier in the bot). The loopback bind in v26 removes the remote path.                                                                                                                                                                                                                     |
+| SEC-4                                                                                   | Session freezes roles for 7 days and stores OAuth tokens in the cookie                                                                                                                                                   | Needs server-side sessions.                                                                                                                                                                                                                                                                                           |
+| SEC-6                                                                                   | Several commands have no in-handler permission check                                                                                                                                                                     | Needs a per-command decision and a table-driven test.                                                                                                                                                                                                                                                                 |
+| SEC-7                                                                                   | The GitHub bot token can push to `main`, and a push to `main` that touches `docs/**` or `web/**` deploys the dashboard                                                                                                   | Deploy path: owner decision, section 7 items 6 and 7.                                                                                                                                                                                                                                                                 |
+| SEC-13                                                                                  | The ticket attachment mirror downloads without a host allow-list or a size cap                                                                                                                                           | The URLs come from Discord attachment records, so exposure is low. v26 adds the timeout (REL-6); the allow-list and cap need tests against real attachment URLs.                                                                                                                                                      |
+| SEC-9, SEC-10, SEC-11, SEC-12, SEC-14 to SEC-18                                         | ssh-keyscan trust on deploy, ports 3002 and 3004 on all interfaces, shell strings in `/database`, OAuth state not bound to the browser, nginx headers, cookie size, role logging, public internal docs, Sentry scrubbing | Touch deploy scripts, hosting or auth flows that cannot be exercised today.                                                                                                                                                                                                                                           |
+| REL-5                                                                                   | Database restore copies a live WAL database with `fs.copyFile`                                                                                                                                                           | Medium risk, needs a restore drill on a copy.                                                                                                                                                                                                                                                                         |
+| REL-8, REL-11, REL-14, REL-16, REL-18                                                   | Late signal handlers, level reward retry can double-credit, `/redeem` never defers, schedulers without reentrancy guards, SQLite datetimes parsed as local time                                                          | Each needs characterization tests first.                                                                                                                                                                                                                                                                              |
+| PERF-2                                                                                  | Stats refresh does all its reads inside one write transaction                                                                                                                                                            | Needs production timing to prove and a careful rewrite.                                                                                                                                                                                                                                                               |
+| PERF-7, PERF-8                                                                          | Unused and redundant indexes                                                                                                                                                                                             | Dropping an index is destructive: owner decision, measure on the host first.                                                                                                                                                                                                                                          |
+| PERF-6, PERF-10 to PERF-15                                                              | `execSync` git calls, smaller items                                                                                                                                                                                      | Low value.                                                                                                                                                                                                                                                                                                            |
+| HEALTH-6                                                                                | `setDMPermission(false)` is deprecated (52 uses)                                                                                                                                                                         | Changes every command payload; do it with a command re-registration.                                                                                                                                                                                                                                                  |
+| HEALTH-7, HEALTH-9, HEALTH-10, HEALTH-11                                                | 115 direct `process.env` reads, 1069-line interaction router, 1267-line config module, two error-card implementations                                                                                                    | Refactors with no user-visible gain today.                                                                                                                                                                                                                                                                            |
+| TCD-3 to TCD-8, TCD-10, TCD-11                                                          | Thin coverage in gate flow, review actions and tickets; no migration-versus-fixture drift test; tests not typechecked                                                                                                    | Characterization tests were added only where v26 changes code. `tsconfig.json` covers `src` and `scripts`. Typechecking just the new command's tests reports 21 errors, all in two older shared helpers (`tests/utils/discordMocks.ts` 15, `tests/utils/contextFactory.ts` 6); the rest of `tests/` was not measured. |
+| TCD-14, TCD-20                                                                          | `deploy-handbook.yml` deploys without waiting for CI; `deploy.sh` lacks typecheck and branch checks                                                                                                                      | Deploy path: owner decision, see section 7.                                                                                                                                                                                                                                                                           |
 
 ## 4. Ordered work list
 
-1. Baseline (done, section 2).
-2. This plan.
-3. `/investigate-artist` (#00279): SDK dependency, migration, feature modules, command, tests, docs, dry run against a real ticket.
-4. Safe upgrades and fixes: security (#00280), reliability (#00281), dependencies and runtime (#00282), CI and tooling (#00283). Characterization tests come first where the touched code has thin coverage.
-5. Optimizations (#00284), each with a before and after number.
-6. Mechanical format commit, then lint, format and knip become hard gates.
-7. Release prep (#00285): version 26.0.0, changelog, README, CLAUDE.md, clean-clone verification.
+What was planned, in order, and how it went.
 
-Anything that breaks and cannot be fixed cleanly is reverted and moved to Tier 3 with the reason.
+1. Baseline (section 2). Done.
+2. This plan. Done, then kept current.
+3. `/investigate-artist` (#00279). Done: SDK dependency, migration 084, feature modules, command, tests, docs, and two dry runs against a real ticket that led to six fixes (section 5).
+4. Safe upgrades and fixes. Done: security (#00280, 4 commits), reliability (#00281, 13 commits), dependencies and runtime (#00282, 12 commits), CI and tooling (#00283, 23 commits). Characterization tests came first where the touched code had thin coverage.
+5. Optimizations (#00284, 4 commits). Done, each with a before and after number. PERF-5 deferred for lack of one.
+6. Mechanical format commit. Deferred (HEALTH-3). Lint and knip became hard gates without it.
+7. Release prep (#00285): version 26.0.0, changelog, release notes, README, CLAUDE.md, clean-clone verification.
+
+One attempt was backed out before it reached the branch: replacing `require()` with a static import in `src/commands/stats/shared.ts` changes behavior that a test pins, so the `require()` stays, with a scoped lint disable and the reason (`b2921ff5`). Two prepared changes were kept off the branch because they need an owner decision (REL-3 and HEALTH-4).
 
 ## 5. `/investigate-artist` design
 
 ### Workflow sources
 
-| Source | Where | What it defines |
-|---|---|---|
-| Applicant requirements | Embed in the verify-artist channel, the ticket panel, and the Ticket Tool greeting (identical text, read 2026-11-14) | What an applicant must submit |
-| Staff handbook | `docs/MOD-HANDBOOK.md`, "Commissions Verification" | How staff verify authorship, red and green flags, AI policy |
-| Art rules | art-rules channel, "Last Revision - 4/8/26"; handbook "Art Bases" | Base credit rule, no tracing, AI or theft |
-| Verify Blacklist | Staff forum thread, 2026-05-13 | Users previously refused for verification |
+| Source                 | Where                                                                                                                | What it defines                                             |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Applicant requirements | Embed in the verify-artist channel, the ticket panel, and the Ticket Tool greeting (identical text, read 2026-11-14) | What an applicant must submit                               |
+| Staff handbook         | `docs/MOD-HANDBOOK.md`, "Commissions Verification"                                                                   | How staff verify authorship, red and green flags, AI policy |
+| Art rules              | art-rules channel, "Last Revision - 4/8/26"; handbook "Art Bases"                                                    | Base credit rule, no tracing, AI or theft                   |
+| Verify Blacklist       | Staff forum thread, 2026-05-13                                                                                       | Users previously refused for verification                   |
 
 Criteria the command scores, each cited to its source in the output:
 
@@ -151,43 +191,78 @@ Criteria the command scores, each cited to its source in the output:
 7. **Provenance**: reverse image search results versus the handles the applicant claimed (handbook supporting methods; art rules on theft).
 8. **AI indicators**: handbook AI policy and "Spotting AI Art" table.
 9. **Base use**: bases are allowed with credit (art rules). The workflow does not say whether base-made work counts as verification evidence, and the command says so plainly.
-10. **Account and history**: account age under 6 months with no traceable history is a red flag (handbook); Verify Blacklist entry; earlier verification tickets.
+10. **Account and history**: account age under 6 months with no traceable history is a red flag (handbook); Verify Blacklist entry; other verification tickets.
 
 ### Decisions
 
-- **Owner only.** `isOwner(interaction.user.id)` (from `OWNER_IDS`) is checked in the handler before anything else. Everyone else gets a short ephemeral refusal.
+- **Owner only.** `isOwner(interaction.user.id)` (from `OWNER_IDS`) is checked in the handler before anything else. Everyone else gets a short ephemeral refusal. With `OWNER_IDS` empty the command refuses everyone.
 - **Private.** Ephemeral defer first, every reply ephemeral, nothing posted to the ticket, no public log line. Private structured logs carry counts and cost only, no content.
 - **Ticket check.** A channel qualifies if it has a first-party ticket row of type `2d-artist`, or it sits in the tickets category and its name starts with `2d-artist-` (Ticket Tool, open or closed). The applicant comes from the ticket row, then the greeting mention, then the member permission overwrite. An optional `applicant` option overrides.
 - **Collection.** Full history with pagination. Images from attachments and embeds, fetched as bytes at run time. Videos and source files are listed but cannot be inspected, and the output says so. Links and gallery handles are parsed from message text.
 - **Provenance services.**
 
-  | Service | Use | Auth | Limits honored |
-  |---|---|---|---|
-  | Fluffle (fluffle.xyz) | Yes, always on | None; descriptive User-Agent required | One request at a time |
-  | e621 | Yes, when `E621_LOGIN` and `E621_API_KEY` are set | HTTP Basic | 1 request per second |
-  | SauceNAO | Yes, when `SAUCENAO_API_KEY` is set | API key | 4 per 30 seconds, daily quota from response headers |
-  | Google Vision Web Detection | Not built | | Billing is off in production; owner decision |
-  | TinEye | Not built | | Paid, about 200 USD minimum: owner decision |
-  | FuzzySearch | Not built | | No public way to get a key |
-  | IQDB.org, Kheina, Bing Visual Search | Not used | | Anime boorus only; site down; API retired |
-  | FurAffinity, Pixiv, Inkbunny pages, ArtStation, Toyhou.se | Never scraped | | Terms forbid it or no official API |
+  | Service                                                   | Use                                               | Auth                                  | Limits honored                                      |
+  | --------------------------------------------------------- | ------------------------------------------------- | ------------------------------------- | --------------------------------------------------- |
+  | Fluffle (fluffle.xyz)                                     | Yes, always on                                    | None; descriptive User-Agent required | One request at a time                               |
+  | e621                                                      | Yes, when `E621_LOGIN` and `E621_API_KEY` are set | HTTP Basic                            | 1 request per second                                |
+  | SauceNAO                                                  | Yes, when `SAUCENAO_API_KEY` is set               | API key                               | 4 per 30 seconds, daily quota from response headers |
+  | Google Vision Web Detection                               | Not built                                         |                                       | Billing is off in production; owner decision        |
+  | TinEye                                                    | Not built                                         |                                       | Paid, about 200 USD minimum: owner decision         |
+  | FuzzySearch                                               | Not built                                         |                                       | No public way to get a key                          |
+  | IQDB.org, Kheina, Bing Visual Search                      | Not used                                          |                                       | Anime boorus only; site down; API retired           |
+  | FurAffinity, Pixiv, Inkbunny pages, ArtStation, Toyhou.se | Never scraped                                     |                                       | Terms forbid it or no official API                  |
 
   A service without a key is skipped and named as skipped. One failing service does not stop the run. Results are cached by image hash.
-- **Model.** `claude-opus-5-5` by default (`INVESTIGATE_MODEL` overrides), chosen from the live model and pricing pages on 2026-11-14: 4 USD per million input tokens, 20 USD per million output tokens, vision, structured output. Images are downscaled to about 1568 px on the long edge before upload. Expected cost is about 0.25 to 0.40 USD per run.
-- **Budget.** Every run records tokens and estimated cost. The footer shows the run cost and the month total. A run is refused when the month total plus the estimate would pass `INVESTIGATE_MONTHLY_CAP_USD` (default 200).
+
+- **Model.** `claude-opus-5-5` by default (`INVESTIGATE_MODEL` overrides), chosen from the live model and pricing pages on 2026-11-14: 4 USD per million input tokens, 20 USD per million output tokens, vision, structured output. Thinking depth is set through `output_config.effort`; the request streams. Images are downscaled to about 1568 px on the long edge before upload.
+- **Organization key.** The key is not scoped to one workspace, so the API rejects it without the `anthropic-workspace-id` header. The command sends the header when `ANTHROPIC_WORKSPACE_ID` is set. Verified live.
+- **Budget.** Every run records tokens and estimated cost. The footer shows the run cost and the month total. A run is refused when the month total plus the worst-case estimate would pass `INVESTIGATE_MONTHLY_CAP_USD` (default 200).
 - **Advisory only.** The command never approves, denies, assigns roles or messages the applicant. Indicators come with reasoning and a confidence statement, never a verdict.
 
-### What cannot be verified before release
+### Dry runs against a real ticket
 
-- The command cannot be registered or run as a real interaction without a test guild. It is verified by unit tests with all external APIs mocked and by a local dry run that reads a real ticket over REST (no gateway login, nothing sent to Discord).
-- SauceNAO and e621 adapters are verified against live response shapes only as far as anonymous access allows. No keys exist yet.
+There is no test guild, so the pipeline was run twice from a local script against one real ticket with four images. The script signs in to nothing: it reads the ticket over Discord REST with GET requests only and prints the report to a local file.
+
+| Run | Time   | Cost      |
+| --- | ------ | --------- |
+| 1   | 78.5 s | 0.172 USD |
+| 2   | 74.0 s | 0.180 USD |
+
+What left the machine: the ticket text and the four downscaled images went to the Claude API, and the four images went to Fluffle for lookup. Nothing was written to Discord. Total spend was about 0.35 USD. A ticket with more images costs more; 12 images is the default cap.
+
+The runs led to six fixes, all on the branch:
+
+- A ticket was counted twice across its open and closed channel names (`a092140d`).
+- Divider roles showed up in the applicant's role list (`a7784d38`).
+- Fluffle returns confident look-alikes for images that are mostly text, and the report listed them as sources. They are now called out as look-alikes (`43c5d9f0`).
+- The model wrote ranges with typeset dashes; the report now uses plain punctuation (`cf670113`).
+- "AI indicators: met" read as if indicators had been found. A clean risk check now reads "no concern found" (`76602e70`).
+- A later ticket was listed under "Earlier tickets" with the wrong kind of date. The heading is now "Other 2D artist tickets" and each date says whether the ticket opened or closed that day (`820e2c1f`).
+
+### What could not be verified before release
+
+- The command has never run as a real Discord interaction. It is verified by unit tests with all external APIs mocked and by the two dry runs above. The first real run in production is the first time the ephemeral reply path runs against Discord.
+- The SauceNAO and e621 adapters are written against the documented response shapes. No keys exist yet, so neither has returned a real match here.
+- The dry runs were made before the dependency batch. The feature's tests pass on the upgraded set (sharp 0.35.5, discord.js 14.28.1), and the sharp calls it makes are not among those 0.35 removed, but no live run has been made on it.
+- The "Other 2D artist tickets" wording has unit tests and has not been seen in a live report.
 
 ## 6. Verification approach
 
-- Build and tests run after every commit.
-- Characterization tests are written before a fix where the touched code has no coverage.
-- Every optimization has a measured before and after number or it is not called an optimization.
-- Final check from a clean clone: install, build, lint, typecheck, format check, knip, full tests, dashboard check and build.
+- Build and tests ran after every commit. Batches prepared in separate worktrees were checked commit by commit before they were taken: typecheck, build, and the tests for the touched area, then the full suite at the batch tip.
+- Characterization tests were written before a fix where the touched code had no coverage.
+- Every optimization has a measured before and after number. The query numbers were taken on a read-only copy of the production database; the PNG number is an event-loop stall probe on a 1600x1900 canvas. PERF-5 has no number and was not shipped.
+- Final check from a clean clone: install, build, lint, typecheck, format check, knip, full tests with coverage, dashboard install, check and build.
+
+### Not verified
+
+Said plainly, so nobody assumes otherwise:
+
+- **CI itself.** Nothing was pushed, so the reworked workflows have not run on GitHub. They were checked by reading them and by running the same commands locally.
+- **Node 20 and Node 24.** CI runs both. This machine has Node 25.5.0 only, and every local result is from that version.
+- **The production Node version**, and with it whether the host meets the new `>=20.9.0` floor.
+- **The GitHub push path of the token fix (SEC-2).** Unit tests cover the argument and environment handling. No real push was made.
+- **`/investigate-artist` in Discord**, and the two keyed lookup services (section 5).
+- **Production behavior of every reliability fix.** Each has tests. None has run against the live gateway.
 
 ## 7. Decisions waiting on the owner
 
@@ -197,10 +272,13 @@ These do not block the release. Each has the prep done and a recommendation.
 2. **Workflow differences.** The handbook says "at least two of timelapse, layered file, dated WIP photo"; the public requirements say "3 different WIP/Layers" and list speedpaints as helpful. Three different "6 months" rules exist (account age, last commission, and an older greeting that asks for 6 months of experience). Base-made work as verification evidence is not covered. The command reports against both sources and flags the gap. Recommendation: pick one wording and update the handbook and the embed together.
 3. **Private staff thread.** Each Ticket Tool ticket has a private staff thread. The command does not read it. Say if it should.
 4. **Dashboard API bind (SEC-3).** v26 binds the internal API to `127.0.0.1`. Both PM2 apps run on one host, so this should be invisible. If the dashboard ever runs elsewhere, set `DASHBOARD_API_HOST=0.0.0.0`.
-5. **Production Node version.** Run `node -v` on the host. If it is Node 20, upgrade to Node 24 LTS (supported to 2028-04) before or soon after this release; nothing in v26 requires it. After that, better-sqlite3 can move forward.
+5. **Production Node version.** Run `node -v` on the host before deploying. v26 needs 20.9.0 or newer: sharp 0.35 requires it and canvas 3.2 does not support 20.0 to 20.8. If the host is on a late Node 20, the release works there, and the recommendation is to move to Node 24 LTS (supported to 2028-04) soon after. Once the host is off Node 20, better-sqlite3 can move forward and the Node 20 test leg can leave CI.
 6. **Merging to main deploys the dashboard.** `.github/workflows/deploy-handbook.yml` runs on every push to `main` that touches `docs/**` or `web/**` and does not wait for CI. Merging this branch will trigger it. Recommendation: merge when you are ready to watch it, and consider gating that workflow on CI.
 7. **GitHub bot token.** If `/update banner` or `/update avatar` ever failed in a public channel, the token was shown. Recommendation: rotate `GITHUB_BOT_TOKEN`.
 8. **`/purge` policy.** The handler checks the password and Discord's ManageMessages default permission, with no role check in code. The permission matrix documents exactly that, so it was left alone. Say if it should require a staff role.
 9. **Ticket system cutover.** `docs/TICKET-SYSTEM-CUTOVER.md` is stale (the first-party counter seed is 144, live numbering is past 0309). Not part of v26.
-10. **Features that look dead.** `/movie` (superseded by game night code paths), `/admin-migrate-unverified`, `/test`, `/sample`, `/testidea`, `/skullmode`, `/developer`, the research pipeline scripts, `scripts/deploy-commands.ts`, `deploy-no-tests.sh`. Nothing was removed. Say which can go.
+10. **Features and files that look dead.** `/movie` (superseded by game night code paths), `/admin-migrate-unverified`, `/test`, `/sample`, `/testidea`, `/skullmode`, `/developer`, the research pipeline scripts, `scripts/deploy-commands.ts`, `deploy-no-tests.sh`, and the root files `TODO.md` and `CLAUDE_CODE_PROMPT.md`. Nothing was removed. Say which can go.
 11. **Unused and redundant indexes** (PERF-7, PERF-8). Dropping them is destructive. Recommendation: measure on the host first; the SQL is prepared in #00286.
+12. **One open ticket per user per type (REL-3).** Today the open button has a 5 second cooldown and nothing else, so a user can hold several open tickets of one type. Options: merge `hold/v26-one-open-ticket-per-type` (one commit on top of this release, with tests; the button then answers with a link to the ticket the user already has), or leave it. Recommendation: decide it together with the ticket cutover, since the first-party system is not live and the live server allows two open tickets today.
+13. **Untracking `.playwright-mcp/`.** 60 screenshots and page snapshots from May browser sessions are tracked, about 22,000 lines. Options: merge `hold/v26-untrack-playwright-mcp` (removes them from the repo and ignores the directory; the merge also deletes them from any checkout that has them), or keep them under the rule that AI working files stay in the tree. Recommendation: untrack them, they are generated output. Copy the directory somewhere first if you want the files.
+14. **A test server.** There is no guild where a new command can be registered and tried. Recommendation: make a small private server, invite the bot and set `TEST_GUILD_ID`, so the next command does not have its first run in production.
