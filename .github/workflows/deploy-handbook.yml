@@ -17,7 +17,53 @@ permissions:
   contents: read
 
 jobs:
+  # A push starts this workflow and CI at the same moment. The deploy waits for
+  # the CI run of the same commit and goes ahead only if that run passed.
+  # A run started by hand skips the wait: that is the way to deploy when CI is
+  # red for a reason that has nothing to do with the dashboard.
+  ci-gate:
+    name: Wait for CI
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    permissions:
+      actions: read
+    steps:
+      - name: Wait for the CI run of this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 90); do
+            run=$(gh run list --repo "$REPO" --workflow ci.yml --commit "$SHA" --event push \
+              --json databaseId,status,conclusion \
+              --jq 'sort_by(.databaseId) | last | select(. != null) | "\(.databaseId) \(.status) \(.conclusion)"')
+            if [ -z "$run" ]; then
+              echo "attempt $attempt: no CI run for $SHA yet"
+            else
+              read -r id status conclusion <<<"$run"
+              echo "attempt $attempt: CI run $id is $status $conclusion"
+              if [ "$status" = "completed" ]; then
+                if [ "$conclusion" = "success" ]; then
+                  exit 0
+                fi
+                echo "CI did not pass on $SHA, so nothing is deployed."
+                echo "Fix CI and push again, or start this workflow by hand."
+                exit 1
+              fi
+            fi
+            sleep 20
+          done
+          echo "CI did not finish within 30 minutes, so nothing is deployed."
+          exit 1
+
   deploy:
+    needs: ci-gate
+    # ci-gate is skipped for a run started by hand, and a skipped job would
+    # skip this one too without the explicit condition.
+    if: ${{ !cancelled() && (needs.ci-gate.result == 'success' || needs.ci-gate.result == 'skipped') }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:

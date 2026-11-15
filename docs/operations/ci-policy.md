@@ -70,7 +70,10 @@ Has always been hard. Build = `tsup` plus `scripts/scan-legacy.ts`. Unaffected b
 
 - Bot production deploy (handled by `deploy.sh`, run manually). The **web dashboard is
   not manual**: `.github/workflows/deploy-handbook.yml` ships `web/` to EC2 and restarts
-  `pawtropolis-web` on every push to `main` touching `docs/**` or `web/**`.
+  `pawtropolis-web` on every push to `main` touching `docs/**` or `web/**`. It waits for
+  the CI run of the same commit and deploys only if that run passed. Started by hand
+  (`workflow_dispatch`) it does not wait, which is the way out when CI is red for an
+  unrelated reason. CI keeps one run per commit on `main` so that wait always has a result.
 - Vulnerability scanning (no Dependabot or `npm audit` step today).
 - Migration dry-run (`npm run migrate:dry`): could be added cheaply.
 

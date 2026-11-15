@@ -10,7 +10,10 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  # One group per ref, so a newer push cancels the run before it. On main every
+  # commit keeps its own run: the dashboard deploy waits for the CI result of
+  # the exact commit it deploys, and a cancelled run would block that deploy.
+  group: ci-${{ github.workflow }}-${{ github.ref == 'refs/heads/main' && github.sha || github.ref }}
   cancel-in-progress: true
 
 jobs:
