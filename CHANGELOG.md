@@ -2,13 +2,56 @@
 
 All changes to Pawtropolis Tech are tracked here.
 
-**Versions:** [Unreleased](#unreleased) | [26.1.0](#2610---2026-11-15) | [26.0.0](#2600---2026-11-14) | [7.0.0](#700---2026-09-02) | [6.2.1](#621---2026-09-02) | [6.2.0](#620---2026-09-01) | [6.1.0](#610---2026-08-29) | [6.0.0](#600---2026-05-15) | [5.2.0](#520---2026-05-02) | [5.1.1](#511---2026-01-27) | [5.1.0](#510---2026-01-17) | [5.0.0](#500---2026-01-12) | [4.9.2](#492---2026-01-07) | [4.9.1](#491---2026-01-07) | [4.9.0](#490---2026-01-04) | [4.8.0](#480---2025-12-08) | [4.7.1](#471---2025-12-03) | [4.7.0](#470---2025-12-03) | [4.6.0](#460---2025-12-03) | [4.5.0](#450---2025-12-02) | [4.4.4](#444---2025-12-03) | [4.4.3](#443---2025-12-03) | [4.4.2](#442---2025-12-03) | [4.4.1](#441---2025-12-03) | [4.4.0](#440---2025-12-03) | [4.3.0](#430---2025-12-02) | [4.2.0](#420---2025-12-01) | [4.1.0](#410---2025-12-01) | [4.0.3](#403---2025-12-01) | [4.0.2](#402---2025-12-01) | [4.0.1](#401---2025-12-01) | [4.0.0](#400---2025-12-01) | [Earlier versions](#earlier-versions)
+**Versions:** [Unreleased](#unreleased) | [26.2.0](#2620---2026-11-15) | [26.1.0](#2610---2026-11-15) | [26.0.0](#2600---2026-11-14) | [7.0.0](#700---2026-09-02) | [6.2.1](#621---2026-09-02) | [6.2.0](#620---2026-09-01) | [6.1.0](#610---2026-08-29) | [6.0.0](#600---2026-05-15) | [5.2.0](#520---2026-05-02) | [5.1.1](#511---2026-01-27) | [5.1.0](#510---2026-01-17) | [5.0.0](#500---2026-01-12) | [4.9.2](#492---2026-01-07) | [4.9.1](#491---2026-01-07) | [4.9.0](#490---2026-01-04) | [4.8.0](#480---2025-12-08) | [4.7.1](#471---2025-12-03) | [4.7.0](#470---2025-12-03) | [4.6.0](#460---2025-12-03) | [4.5.0](#450---2025-12-02) | [4.4.4](#444---2025-12-03) | [4.4.3](#443---2025-12-03) | [4.4.2](#442---2025-12-03) | [4.4.1](#441---2025-12-03) | [4.4.0](#440---2025-12-03) | [4.3.0](#430---2025-12-02) | [4.2.0](#420---2025-12-01) | [4.1.0](#410---2025-12-01) | [4.0.3](#403---2025-12-01) | [4.0.2](#402---2025-12-01) | [4.0.1](#401---2025-12-01) | [4.0.0](#400---2025-12-01) | [Earlier versions](#earlier-versions)
 
 ## [Unreleased]
 
+## [26.2.0] - 2026-11-15
+
+26.2.0 brings the chat research pipeline back, which the owner decided on 2026-11-15 (`MODERNIZATION_PLAN.md`, section 7, item 15). One job scores the messages of the main chat on the host's own CPU and keeps the scores in a file of its own, and the dashboard has its Quality tab again, for moderators and up. The bot's own code does not change. What the release needs on the host is in [`docs/releases/26.2.0.md`](docs/releases/26.2.0.md).
+
+### Added
+
+- The chat research job, `dist/scripts/research.js`. It reads the main chat from the message archive and gives every message that has text and is not from a bot an effort score, a rule-based score, its novelty against the three messages before it, substantiveness and resonance (the replies it drew). It also builds one row of weekly measures per week. Cron starts it every 15 minutes, outside the bot process. A run looks at the last three days; the first run after 09:00 UTC goes over the whole channel and catches what the short window cannot see, such as a late edit or deletion and a reply to an old message. After a run the score file says what the archive says: new and edited messages have a score, deleted ones have lost theirs. A run can stop anywhere or be started twice, and the next one puts it right (#00295).
+- The scores are in `data/research.db`, outside the bot's database: one row of about 100 bytes per message and one row per week. The first pipeline kept two vectors and a second copy of the text for every message in the bot's database, which had grown to 9.4 GB when the pipeline was taken out in May. The job computes the vectors, uses them and throws them away. The file refuses a run for another channel or another model, because that would mix two series. `RESEARCH_DB_PATH` moves the file and has to be the same for the bot and for the dashboard (#00295).
+- The vectors come from all-MiniLM-L6-v2 at full precision, run on the machine's own CPU. No message leaves the host and no outside service is called. The model is pinned to one revision and to the SHA-256 of each of its four files, the files are checked on every load, and the library may not download anything by itself. The library, `@huggingface/transformers` 4.3.2 with its ONNX runtime, takes 470 MB and is not a dependency of the bot: `research/` has its own `package.json` and lockfile, and `npm audit` reports 0 vulnerabilities there (#00295).
+- The Quality tab of the dashboard, for moderators and up. For a time window it shows five headline numbers, the last twelve weeks against the four before them, effort by week, the spread of the effort scores, ten weekly measures and three boards of authors with at least 200 scored messages in the window. Every measure has a small chart of its own; the spread and the weekly measures also come as tables, and the arrow keys move through the weeks of a chart. A banner says how many messages are scored and when the job last ran. On a host without a score file the page says that nothing has been scored there (#00295).
+- `./deploy.sh` prepares the job on the host. It ships `research/package.json` with its lockfile and the `models/` folder, installs the library when the lockfile or the host's Node has changed, and runs `fetch-model`, which downloads a model file only when it is missing or is not the pinned one. Neither step can fail a deploy: a failure prints a warning with the command to run by hand (#00295).
+- `scripts/quality-cron.txt` holds the one crontab line of the job and the command that installs it. `flock` skips a run while the one before it is still at work, and `nice` lets the bot go first on the host's two CPUs (#00295).
+
 ### Fixed
 
+- The Active Flags card on the dashboard's Pulse page linked to the flags page, which was removed with the first pipeline in May, and led to a 404. It is a plain card now, like the one for modmail next to it.
+- `scripts/quality-cron.txt` is checked out with LF line endings on every system. The deploy packs the working copy, and the crontab line of a Windows checkout would have ended in a carriage return, right after the redirect of the job's output (#00295).
+- The failure table in `docs/operations/deployment-hardening.md` said that a failed migration logs a warning and the deploy goes on. `deploy.sh` has stopped there, before the restart, since #00063.
 - The texts about `/cleanup` and `/purge` said that messages older than 14 days are skipped or cannot be deleted. Both commands delete them, one by one: `/cleanup` since the day it was written, 2026-05-01, and `/purge` since the repo's first commit. The `/help` entries of both commands say so now, and so do the bot handbook, the admin guide and the permission matrix, which also gave `/purge` a limit of 100 messages where the command takes up to 10,000 in one run. The commands themselves are unchanged.
+
+### Performance
+
+- A batch of texts for the embedding model is limited by what it costs in memory, which is texts x tokens x tokens, and no longer by its number of texts alone. One message of 512 tokens made its batch cost sixteen times that of 32 texts of 128 tokens, and the runtime keeps the most it ever needed. On 3,001 messages around the longest one of the main chat, with one thread: 2,026 MB and 46.9 s before, 392 MB and 36.2 s after. Every score is the same (#00295).
+- The daily pass over the whole channel reads the archive a day at a time, not thirty days at a time, and fills its reply counts row by row. A pass with nothing to score over 1,965,039 scores, on the dev machine: 875 MB and 10.2 s before, 314 MB and 9.4 s after. On the host, where the pass also scored the 311 and then 323 messages that had come in: 1,142 MB and 33.3 s before, 632 MB and 26.2 s after. Both builds leave the same file (#00295).
+
+### Changed
+
+- The build writes a third bundle, `dist/scripts/research.js`, next to the bot and the slash command sync (#00295).
+- The coverage floors follow the measured values: lines 45, statements 45, functions 51, branches 40.
+
+### Removed
+
+- Migration 086 drops five score tables of the first pipeline where they are empty: `general_messages_effort`, `general_messages_resonance`, `general_messages_score`, `general_messages_substantiveness` and `general_messages_overlay_weekly`. On the host each held 0 rows: the pipeline's scripts had kept running from cron after the tables were dropped in May, and five of them create their output table when it is missing. A table that holds a row stays, so a developer's copy of the study keeps its results. `user_names` stays too, because `scripts/charts` and `scripts/report` read it (#00295).
+
+### Tests
+
+- 341 test files and 6774 tests on the dev machine, up from 329 and 6584. The new ones cover the research job (144 tests: the text measures, the effort model, the embedder against a stand-in for the library, the archive reader, the score file, the weekly rows, the run and the command line), the Quality tab's queries and its loader, migration 086 and the research steps of `deploy.sh`. Nothing in the suite loads the embedding model (#00295).
+
+### Upgrade notes
+
+The steps on the host are in [`docs/releases/26.2.0.md`](docs/releases/26.2.0.md). In short:
+
+- The deploy installs the job's library in `research/` and fetches the four model files into `data/research-model`, 91 MB together. It runs migration 086 after its database backup. No command is added or changed.
+- The history of the main chat was scored once on the dev machine, 1,965,039 messages from 2021-10-08 on, and the finished file of 200 MB is copied to `data/research.db` before the first run. Without it the job would score the whole history on the host, 2,000 messages per run.
+- The crontab line is installed once, by hand, with the command in `scripts/quality-cron.txt`. Nothing starts the job before that.
+- No new environment key is needed. `RESEARCH_DB_PATH` is optional.
 
 ## [26.1.0] - 2026-11-15
 

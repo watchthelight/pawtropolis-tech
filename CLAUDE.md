@@ -122,7 +122,7 @@ A permission that matters is checked in the handler, never only through Discord'
 
 - The version lives in `package.json`, `web/package.json` and both lockfiles: `npm version <x> --no-git-tag-version` in the root and in `web/`.
 - `CHANGELOG.md` gets a section per release and the version list at its top gets a link. Release notes with the host steps go in `docs/releases/<version>.md`.
-- The current release is 26.1.0, which carried out the owner's decisions of 2026-11-15. Those decisions, the v26 audit and the deferred work are in `MODERNIZATION_PLAN.md`.
+- The current release is 26.2.0, which brought the chat research job and the dashboard's Quality tab back. 26.1.0 carried out the owner's other decisions of 2026-11-15. Those decisions, the v26 audit and the deferred work are in `MODERNIZATION_PLAN.md`.
 
 ## Web dashboard design
 
