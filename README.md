@@ -52,7 +52,7 @@ Pawtropolis Tech is a server-owned verification system that handles community on
 
 Every review action is logged, every decision is attributable, and the bot stays out of the way when it has no work to do.
 
-The current release is **26.0.0** (2026-11-14): [release notes](docs/releases/26.0.0.md), [changelog](CHANGELOG.md).
+The current release is **26.1.0** (2026-11-15): [release notes](docs/releases/26.1.0.md), [changelog](CHANGELOG.md).
 
 ---
 
@@ -205,6 +205,7 @@ For full command reference, see [docs/BOT-HANDBOOK.md](docs/BOT-HANDBOOK.md).
 | [MOD-QUICKREF.md](docs/MOD-QUICKREF.md) | Quick reference for moderators |
 | [PERMS-MATRIX.md](docs/PERMS-MATRIX.md) | Permission requirements |
 | [CHANGELOG.md](CHANGELOG.md) | Version history |
+| [Release notes 26.1.0](docs/releases/26.1.0.md) | What changed in 26.1.0, the move of the host to Node 24, how to roll back |
 | [Release notes 26.0.0](docs/releases/26.0.0.md) | What changed in v26, how the deploy went, how to roll back |
 | [MODERNIZATION_PLAN.md](MODERNIZATION_PLAN.md) | The v26 audit: findings, what shipped, what was deferred, open decisions |
 | [ci-policy.md](docs/operations/ci-policy.md) | What CI enforces and what it tolerates |

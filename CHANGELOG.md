@@ -2,9 +2,68 @@
 
 All changes to Pawtropolis Tech are tracked here.
 
-**Versions:** [Unreleased](#unreleased) | [26.0.0](#2600---2026-11-14) | [7.0.0](#700---2026-09-02) | [6.2.1](#621---2026-09-02) | [6.2.0](#620---2026-09-01) | [6.1.0](#610---2026-08-29) | [6.0.0](#600---2026-05-15) | [5.2.0](#520---2026-05-02) | [5.1.1](#511---2026-01-27) | [5.1.0](#510---2026-01-17) | [5.0.0](#500---2026-01-12) | [4.9.2](#492---2026-01-07) | [4.9.1](#491---2026-01-07) | [4.9.0](#490---2026-01-04) | [4.8.0](#480---2025-12-08) | [4.7.1](#471---2025-12-03) | [4.7.0](#470---2025-12-03) | [4.6.0](#460---2025-12-03) | [4.5.0](#450---2025-12-02) | [4.4.4](#444---2025-12-03) | [4.4.3](#443---2025-12-03) | [4.4.2](#442---2025-12-03) | [4.4.1](#441---2025-12-03) | [4.4.0](#440---2025-12-03) | [4.3.0](#430---2025-12-02) | [4.2.0](#420---2025-12-01) | [4.1.0](#410---2025-12-01) | [4.0.3](#403---2025-12-01) | [4.0.2](#402---2025-12-01) | [4.0.1](#401---2025-12-01) | [4.0.0](#400---2025-12-01) | [Earlier versions](#earlier-versions)
+**Versions:** [Unreleased](#unreleased) | [26.1.0](#2610---2026-11-15) | [26.0.0](#2600---2026-11-14) | [7.0.0](#700---2026-09-02) | [6.2.1](#621---2026-09-02) | [6.2.0](#620---2026-09-01) | [6.1.0](#610---2026-08-29) | [6.0.0](#600---2026-05-15) | [5.2.0](#520---2026-05-02) | [5.1.1](#511---2026-01-27) | [5.1.0](#510---2026-01-17) | [5.0.0](#500---2026-01-12) | [4.9.2](#492---2026-01-07) | [4.9.1](#491---2026-01-07) | [4.9.0](#490---2026-01-04) | [4.8.0](#480---2025-12-08) | [4.7.1](#471---2025-12-03) | [4.7.0](#470---2025-12-03) | [4.6.0](#460---2025-12-03) | [4.5.0](#450---2025-12-02) | [4.4.4](#444---2025-12-03) | [4.4.3](#443---2025-12-03) | [4.4.2](#442---2025-12-03) | [4.4.1](#441---2025-12-03) | [4.4.0](#440---2025-12-03) | [4.3.0](#430---2025-12-02) | [4.2.0](#420---2025-12-01) | [4.1.0](#410---2025-12-01) | [4.0.3](#403---2025-12-01) | [4.0.2](#402---2025-12-01) | [4.0.1](#401---2025-12-01) | [4.0.0](#400---2025-12-01) | [Earlier versions](#earlier-versions)
 
 ## [Unreleased]
+
+## [26.1.0] - 2026-11-15
+
+26.1.0 carries out the owner's decisions of 2026-11-15 on the questions 26.0.0 left open (`MODERNIZATION_PLAN.md`, section 7). The outside API keys are set from Discord, `/investigate-artist` also searches the open web and rates by the mod handbook, `/purge` checks for a staff role, and the host moves from Node 20 to Node 24.
+
+### Breaking
+
+- `/purge` refuses a caller without a staff role (bot owner, a configured mod role, Manage Server or reviewer access). Someone who was given the command in Discord's Integrations settings and has none of these can no longer run it (#00291).
+- Log fields: the level number in the level-up and level reward lines and in the `/roles` lines is `levelNumber` instead of `level`, and the disk space alert carries `alertLevel`. Anything that reads those fields from the bot log has to follow (#00286).
+
+### Added
+
+- `/service-keys`, owner only: `status`, `set`, `clear` and `test` for the Google Vision, SauceNAO and e621 keys. A key is entered in a private form, tried against its service in one real request and stored only when the service accepts it. It goes into the host's `.env` and into the running bot, so it counts from the next scan or lookup on, without a restart. No reply, log line or error message shows a key (#00289).
+- Google web detection as a fourth lookup in `/investigate-artist`. It finds pages on the open web that hold the image or a part of it, which is where a picture taken from a shop listing, a portfolio site or a social feed turns up. It runs on the Google Vision key, so there is no second key to set; without a key it is skipped and the report names it as skipped. Google bills every image sent, on the Google Cloud project, and that cost is not counted against `INVESTIGATE_MONTHLY_CAP_USD`. The report says how many images the run sent (#00290).
+- The mod handbook has the three rules the artist criteria lacked: which process evidence is enough, the three six-month rules and work made on a base. It also says that it goes above the applicant-facing text (#00292).
+- A lint rule that refuses a log call with a field named `level` (#00286).
+
+### Security
+
+- `/purge` was gated by Discord's Manage Messages default permission and the admin password. The default permission is only a default: a server admin can hand the command to anyone, and then the password was the one thing in the way. The handler checks for a staff role first and refuses before the password is compared, so a guess costs no cooldown and tells nothing (#00291).
+- With `VERBOSE_PAYLOADS=1` the interaction router logs the first 300 characters of every form field at debug level. The `/config isitreal` setup forms take API keys, so a key entered while that flag was on went into the log file. Forms whose fields are keys are left out of the value log (#00289).
+- The last step of the `/config isitreal` wizard rewrote the host's `.env` by itself. A key with a dollar sign could be stored as a different key, a second line for the same name brought the old key back after a restart, and a crash in the middle of the write could leave half of the file that holds every secret of the bot. It now uses the writer `/service-keys` uses, which replaces one line and renames a finished temporary file over the old one (#00289).
+
+### Fixed
+
+- Thirteen log calls passed a field named `level`, which replaces the line's own log level in pino's JSON output. "User leveled up to 15" read as a line of level 15, and the error line for a level reward that could not be granted carried the member's level instead of 50, so a scan of the log for errors passed over it. The ten log files on the host hold no such error line (#00286).
+- `./deploy.sh` and the dashboard deploy workflow skipped `npm ci` after a Node upgrade on the host: the marker was the lockfile's hash alone, so it still matched while better-sqlite3 was built for the old Node. The key is now the lockfile's hash plus the module ABI number of the host's Node, in `node_modules/.install-key` (#00293).
+- `./deploy.sh` applied `ecosystem.config.cjs` with `pm2 startOrRestart` and never ran `pm2 save`. When the PM2 daemon started again, it brought the apps back as they were defined at the last manual save. The full deploy and `--restart` save the process list now (#00293).
+- Tests that mock the environment opened `data/data.db`, on a dev machine a copy of production, and created tables in it. The database module and the integrity check look at `process.env.DB_PATH` before they take the default.
+
+### Performance
+
+- Migration 085 drops `idx_msgarc_author_time` and `idx_msgarc_channel_time`. They held 208 MB of the 1,227 MB database, every archived message was written into both, and no query in the bot, the dashboard or the scripts reads through them: the planner on the host picks `idx_msgarc_guild_time` or the primary key every time. Replaying the last 40,000 live messages into a table rebuilt from the production keys, median of five rounds on the dev machine: 6,846 ms and 5.78 page writes a row with three indexes, 3,181 ms and 3.09 with one. The two heaviest report queries keep their plan and their time. The file does not shrink; the freed pages are reused as the archive grows (#00294).
+
+### Changed
+
+- `/investigate-artist` rates by the handbook where the applicant-facing requirements differ. Two of timelapse, layered source file and dated WIP photo are enough; the public line that asks for three sets of WIPs or layers stays listed, marked as overruled. The "Where the workflow is unclear" block is gone from the report. When a ticket's greeting carries the overruled line, the Notes say so, because the applicant was told it (#00292).
+- The Google Vision key and the lookup keys are read from the process environment when they are used, not once at start. The skip texts in the `/investigate-artist` report and the hint on the gate config card point to `/service-keys` (#00289).
+- The dashboard deploy workflow waits for the CI run of the same commit and deploys only when that run passed. Started by hand it does not wait. Each commit on `main` keeps its own CI run (#00287).
+- First-party tickets: a member can hold one open ticket per type. The open button answers with a link to the ticket they already have and creates nothing; until now only a 5 second cooldown was in the way. That ticket system is not live, Ticket Tool is, so nothing changes in the server today (#00287).
+- The ticket cutover guide is marked as on hold (#00287).
+
+### Removed
+
+- `scripts/deploy-commands.ts`, which nothing called: the deploy registers commands through `dist/scripts/commands.js`. `TODO.md`, whose three open lines moved to a todo (#00288), and `CLAUDE_CODE_PROMPT.md`. `.playwright-mcp/` is no longer tracked (#00287).
+
+### Tests
+
+- 329 test files and 6584 tests on the dev machine, up from 321 and 6363. The new ones cover `/service-keys` and the `.env` writer, web detection against stubbed answers, the staff check in `/purge`, the criteria against the handbook, migration 085, the database path under a mocked environment, and the install key and `pm2 save` steps of `deploy.sh` (#00289 to #00294).
+- The coverage floors follow the measured values: lines 44, statements 44, functions 49, branches 39.
+
+### Upgrade notes
+
+What the upgrade needs on the host is in [`docs/releases/26.1.0.md`](docs/releases/26.1.0.md). In short:
+
+- The deploy registers `/service-keys` with Discord and runs migration 085 after its database backup. The migration drops two indexes and no data; the two `CREATE INDEX` statements that bring them back are in its header.
+- The first deploy installs dependencies again in the root and in `web/`, because the install key is new.
+- No new environment key is needed. The three outside keys are optional and are entered with `/service-keys set`.
+- The host moves to Node 24 in the same maintenance window. `engines` stays at `>=20.9.0` for this release.
 
 ## [26.0.0] - 2026-11-14
 
