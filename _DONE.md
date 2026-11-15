@@ -4,6 +4,15 @@ One-line dated ledger. Detail in [`done/`](./done/). Pair of [`_BACKLOG.md`](./_
 
 Reverse chronological by completion date.
 
+## 2026-11-14
+
+- [x] [Owner-only /investigate-artist for 2D artist verification tickets](done/00279.md) `High` Private, advisory review of a 2D artist ticket against the handbook's criteria: reverse image lookups, Claude analysis, per-run cost and a monthly cap. Not yet run as a real interaction (no test guild). Shipped in 26.0.0.
+- [x] [v26 security fixes: forged dashboard sessions, GitHub token leak, dashboard API exposure](done/00280.md) `Critical` Plain session cookies rejected, GitHub token kept out of argv, logs and Discord, dashboard API on loopback with a constant-time secret check, workflows on least privilege. Shipped in 26.0.0.
+- [x] [v26 reliability fixes from the audit](done/00281.md) `High` Eleven fixes in 13 commits, each with tests. One open ticket per type is held on a branch for an owner decision (#00287). Shipped in 26.0.0.
+- [x] [v26 dependency and runtime upgrades](done/00282.md) `High` fastify 5.12.8, discord.js 14.28.1, sharp 0.35.5, dashboard in-range updates, Anthropic SDK 1.8 in dependencies, engines floor 20.9. Root audit 26 findings to 1, dashboard 28 to 14. Shipped in 26.0.0.
+- [x] [v26 quality gates: lint, format, knip, coverage and dashboard checks pass and are enforced](done/00283.md) `Medium` Lint 1274 errors to 0, knip clean, coverage floors on real numbers, dashboard job, Node 24 CI: all hard gates. Format stays soft, with 829 older files left for one mechanical commit (#00286). Shipped in 26.0.0.
+- [x] [v26 measured optimizations](done/00284.md) `Medium` Four changes with numbers: integer day buckets in stats, /activity heatmap grouped in SQL, /audit members preload (13,694 ms to 310 ms per 100 members), async PNG encode. PERF-5 deferred (#00286). Shipped in 26.0.0.
+
 ## 2026-10-14
 
 - [x] [Handbook: 2026-10 gatekeeper review rules, ticket deadlines, conduct rewrite](done/00278.md) `Medium` Gatekeeper Guide review rules and Staff Handbook ticket deadlines and conduct sections updated from the 10/10 meeting; regression tests lock them.
