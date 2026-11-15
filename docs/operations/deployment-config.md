@@ -119,7 +119,7 @@ With `/service-keys` a bot owner sets, tests and removes three keys from Discord
 - **By hand.** Editing `.env` over SSH still works. The bot needs a restart after that, because a running process does not read the file again.
 - **In the log.** `service_key_set`, `service_key_cleared`, `service_key_refused` and `service_key_test` name the service and the user. No line holds a key, and none holds what a service answered.
 
-The keys for `/isitreal` have their own setup in `/config isitreal`. The Claude API key is not covered: it stays in `.env`.
+The keys for `/isitreal` have their own setup in `/config isitreal`, which changes the file the same way and with the same limits. The Claude API key is not covered: it stays in `.env`.
 
 ### Example `.env` File
 

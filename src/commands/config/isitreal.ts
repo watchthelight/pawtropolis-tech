@@ -36,8 +36,7 @@ import {
   type ServiceHealth,
 } from "../../features/aiDetection/health.js";
 import { getEnabledServices } from "../../store/aiDetectionToggles.js";
-import * as fs from "fs";
-import * as path from "path";
+import { applyEnvChanges, hostEnvPath } from "../../lib/envFile.js";
 
 // ============================================================================
 // Constants
@@ -444,33 +443,9 @@ async function handleIsitRealSave(interaction: ButtonInteraction) {
   await interaction.deferUpdate();
 
   try {
-    // Write to .env file
-    const envPath = path.resolve(process.cwd(), ".env");
-
-    // Read existing .env
-    let envContent = "";
-    if (fs.existsSync(envPath)) {
-      envContent = fs.readFileSync(envPath, "utf-8");
-    }
-
-    // Update or append each env var
-    for (const [key, value] of Object.entries(pending.envVars)) {
-      const regex = new RegExp(`^${key}=.*$`, "m");
-      if (regex.test(envContent)) {
-        // Update existing
-        envContent = envContent.replace(regex, `${key}=${value}`);
-      } else {
-        // Append new
-        if (!envContent.endsWith("\n")) envContent += "\n";
-        envContent += `${key}=${value}\n`;
-      }
-
-      // Also update runtime env
-      process.env[key] = value;
-    }
-
-    // Write back
-    fs.writeFileSync(envPath, envContent);
+    // The same writer /service-keys uses: the file is replaced in one step, and
+    // the running bot gets the values only once the file has them.
+    applyEnvChanges(hostEnvPath(), pending.envVars);
 
     logger.info(
       { service, keys: Object.keys(pending.envVars) },
