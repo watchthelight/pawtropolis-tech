@@ -58,7 +58,7 @@ The current release is **26.1.0** (2026-11-15): [release notes](docs/releases/26
 
 ## Quick Start
 
-Needs Node 20.9.0 or newer. CI runs Node 24.
+Needs Node 20.9.0 or newer. CI and production run Node 24.
 
 ```bash
 # Clone and install (the dashboard in web/ is its own package)

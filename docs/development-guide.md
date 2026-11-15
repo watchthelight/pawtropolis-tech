@@ -4,7 +4,7 @@
 
 ## Prerequisites
 
-- **Node.js**: v20.9.0 or higher (`engines` in `package.json`; sharp 0.35 needs it). CI runs Node 24.
+- **Node.js**: v20.9.0 or higher (`engines` in `package.json`; sharp 0.35 needs it). CI and production run Node 24.
 - **npm**: Included with Node.js
 - **Git**: Version control
 - **SSH**: For remote server access (deployment)

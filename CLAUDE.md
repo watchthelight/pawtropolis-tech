@@ -26,7 +26,7 @@ File-first; GitHub Issues are a mirror.
 
 ## Build + run
 
-- Node 20.9.0 or newer (`engines` in `package.json`; sharp 0.35 needs it). CI runs Node 24, with a second test leg on Node 20.
+- Node 20.9.0 or newer (`engines` in `package.json`; sharp 0.35 needs it). CI runs Node 24, with a second test leg on Node 20. The production host runs Node 24.
 - Install: `npm ci` in the root, and `npm ci` in `web/` (its own package and lockfile).
 - Bot: `npm run dev` (tsx watch), `npm run build` (tsup, then `scripts/scan-legacy.ts`), `npm start`.
 - The build writes two ESM bundles: `src/index.ts` to `dist/index.js` and `scripts/commands.ts` to `dist/scripts/commands.js`.
@@ -112,6 +112,7 @@ A permission that matters is checked in the handler, never only through Discord'
 - Deploy script: `./deploy.sh` with lock, a database backup first (on by default; `BACKUP_BEFORE_DEPLOY=0` skips it) and a health check. It runs the tests, builds, uploads, runs pending migrations on the host and registers the slash commands there.
 - Slash-command sync by hand: `npm run deploy:cmds` (run on EC2; local hangs).
 - A push to `main` that touches `docs/**` or `web/**` starts the dashboard deploy workflow. It deploys once CI has passed on that commit; started by hand it does not wait for CI.
+- Node on the host is the NodeSource apt package, and other Node apps on the host run on it too. `needrestart` restarts services by itself after an apt run, so an install that replaces Node goes with `NEEDRESTART_SUSPEND=1`. The deploy reinstalls dependencies when the host's Node major changes. The procedure of the move to Node 24 is in `docs/releases/26.1.0.md`.
 - See `docs/operations/deployment-hardening.md` for the full procedure.
 
 ## Releases

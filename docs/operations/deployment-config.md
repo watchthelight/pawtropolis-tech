@@ -4,7 +4,7 @@
 
 ### Node.js and TypeScript
 
-- Node: 20.x
+- Node: 24.x on the host (the NodeSource apt package, 24.22.3 since 2026-11-15). `engines` allows 20.9.0 or newer.
 - TypeScript: 5.x with strict mode
 - Package Manager: npm
 

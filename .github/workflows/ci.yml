@@ -58,8 +58,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Node 24 is the primary target. Node 20 is end of life but stays as a
-        # second leg because the production host's Node version is unconfirmed.
+        # Node 24 is what production runs, since 26.1.0. Node 20 is end of life
+        # but stays as a second leg while the way back to Node 20 on the host is
+        # kept (docs/releases/26.1.0.md).
         node: ["24", "20"]
     env:
       # Dummy values for test environment validation

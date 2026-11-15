@@ -92,9 +92,10 @@ Raise the numbers as coverage improves; do not lower them to make a run pass.
 
 ## Node versions
 
-CI runs on Node 24. The test job has a second leg on Node 20 (end of life) because the
-production host's Node version is unconfirmed. Drop that leg once the host is confirmed on
-Node 22 or newer.
+CI runs on Node 24, which the production host has run since 26.1.0 (2026-11-15). The test
+job keeps a second leg on Node 20 (end of life) for as long as the way back to Node 20 on
+the host is kept (`docs/releases/26.1.0.md`). Drop that leg, and raise the `engines` floor,
+once it is given up (#00286).
 
 ## Why we keep soft gates
 
