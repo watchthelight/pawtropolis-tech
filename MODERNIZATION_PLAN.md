@@ -163,7 +163,7 @@ What was planned, in order, and how it went.
 
 1. Baseline (section 2). Done.
 2. This plan. Done, then kept current.
-3. `/investigate-artist` (#00279). Done: SDK dependency, migration 084, feature modules, command, tests, docs, and two dry runs against a real ticket that led to six fixes (section 5).
+3. `/investigate-artist` (#00279). Done: SDK dependency, migration 084, feature modules, command, tests, docs, and three dry runs against a real ticket, the first two of which led to six fixes (section 5).
 4. Safe upgrades and fixes. Done: security (#00280, 4 commits), reliability (#00281, 13 commits), dependencies and runtime (#00282, 12 commits), CI and tooling (#00283, 23 commits). Characterization tests came first where the touched code had thin coverage.
 5. Optimizations (#00284, 4 commits). Done, each with a before and after number. PERF-5 deferred for lack of one.
 6. Mechanical format commit. Deferred (HEALTH-3). Lint and knip became hard gates without it.
@@ -223,16 +223,19 @@ Criteria the command scores, each cited to its source in the output:
 
 ### Dry runs against a real ticket
 
-There is no test guild, so the pipeline was run twice from a local script against one real ticket with four images. The script signs in to nothing: it reads the ticket over Discord REST with GET requests only and prints the report to a local file.
+There is no test guild, so the pipeline was run three times from a local script against one real ticket with four images. The script signs in to nothing: it reads the ticket over Discord REST with GET requests only and prints the report to a local file.
 
 | Run | Time   | Cost      |
 | --- | ------ | --------- |
 | 1   | 78.5 s | 0.172 USD |
 | 2   | 74.0 s | 0.180 USD |
+| 3   | 63.7 s | 0.171 USD |
 
-What left the machine: the ticket text and the four downscaled images went to the Claude API, and the four images went to Fluffle for lookup. Nothing was written to Discord. Total spend was about 0.35 USD. A ticket with more images costs more; 12 images is the default cap.
+Run 3 was made last, at `26f61616`, on the upgraded dependency set (sharp 0.35.5, discord.js 14.28.1). It took its lookups from the cache.
 
-The runs led to six fixes, all on the branch:
+What left the machine: on every run the ticket text and the four downscaled images went to the Claude API. On the first two the four images also went to Fluffle for lookup; the third sent Fluffle nothing. Nothing was written to Discord. Total spend was about 0.52 USD. A ticket with more images costs more; 12 images is the default cap.
+
+The first two runs led to six fixes, all on the branch. The report of run 3 has every one of them:
 
 - A ticket was counted twice across its open and closed channel names (`a092140d`).
 - Divider roles showed up in the applicant's role list (`a7784d38`).
@@ -243,10 +246,8 @@ The runs led to six fixes, all on the branch:
 
 ### What could not be verified before release
 
-- The command has never run as a real Discord interaction. It is verified by unit tests with all external APIs mocked and by the two dry runs above. The first real run in production is the first time the ephemeral reply path runs against Discord.
+- The command has never run as a real Discord interaction. It is verified by unit tests with all external APIs mocked and by the three dry runs above. The first real run in production is the first time the ephemeral reply path runs against Discord.
 - The SauceNAO and e621 adapters are written against the documented response shapes. No keys exist yet, so neither has returned a real match here.
-- The dry runs were made before the dependency batch. The feature's tests pass on the upgraded set (sharp 0.35.5, discord.js 14.28.1), and the sharp calls it makes are not among those 0.35 removed, but no live run has been made on it.
-- The "Other 2D artist tickets" wording has unit tests and has not been seen in a live report.
 
 ## 6. Verification approach
 
