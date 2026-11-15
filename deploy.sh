@@ -231,34 +231,31 @@ if [ "$DEPLOY_WEB" = true ] && [ "$DEPLOY_BOT" = true ]; then
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
-# deps_changed - Compare local vs remote package-lock.json sha256
-# Args: $1 = local lockfile path, $2 = remote lockfile path
-# Returns: 0 if deps changed (or can't determine), 1 if unchanged
-# One SSH round-trip (~1s) saves ~20-30s of npm ci
+# install_remote_deps - run npm ci on the remote unless node_modules there was
+# installed from the lockfile that is on the remote now.
+# Args: $1 = remote directory holding package-lock.json, $2 = label for output
+# One SSH round-trip (~1s) saves ~20-30s of npm ci when nothing changed.
+#
+# npm leaves no record of which lockfile it installed, so the sha256 of the
+# lockfile is written to node_modules/.lock-sha256 after a successful npm ci.
+# npm ci removes node_modules first, so a failed install leaves no marker and
+# the next deploy installs again.
+#
+# The check this replaces compared the local lockfile with the remote one. It
+# ran after the tarball was extracted, and the tarball carries the lockfile, so
+# the two always matched and npm ci never ran on the host.
 # ─────────────────────────────────────────────────────────────────────────────
-deps_changed() {
-  local local_lock="$1"
-  local remote_lock="$2"
+install_remote_deps() {
+  local remote_dir="$1"
+  local label="$2"
 
-  if [ ! -f "$local_lock" ]; then
-    return 0  # can't determine, assume changed
+  if ssh_remote "cd ${remote_dir} && [ -s node_modules/.lock-sha256 ] && [ \"\$(sha256sum package-lock.json | cut -d' ' -f1)\" = \"\$(cat node_modules/.lock-sha256)\" ]"; then
+    echo "  -> ${label} dependencies match the lockfile, skipping npm ci"
+    return 0
   fi
 
-  local local_hash
-  local_hash=$(sha256sum "$local_lock" | cut -d' ' -f1)
-
-  local remote_hash
-  remote_hash=$(ssh_remote "sha256sum ${remote_lock} 2>/dev/null | cut -d' ' -f1" 2>/dev/null || echo "")
-
-  if [ -z "$remote_hash" ]; then
-    return 0  # can't determine, assume changed
-  fi
-
-  if [ "$local_hash" = "$remote_hash" ]; then
-    return 1  # unchanged
-  fi
-
-  return 0  # changed
+  echo "  -> ${label} dependencies do not match the lockfile, running npm ci..."
+  ssh_remote "cd ${remote_dir} && npm ci --omit=dev && sha256sum package-lock.json | cut -d' ' -f1 > node_modules/.lock-sha256"
 }
 
 # Status only
@@ -297,13 +294,7 @@ if [ "$DEPLOY_WEB" = true ]; then
   scp_remote ${TARBALL} ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}/
   ssh_remote "cd ${REMOTE_PATH} && tar -xzf ${TARBALL}"
 
-  # Check if web deps changed
-  if deps_changed "web/package-lock.json" "${REMOTE_PATH}/web/package-lock.json"; then
-    echo "  -> Web dependencies changed, running npm ci..."
-    ssh_remote "cd ${REMOTE_PATH}/web && npm ci --omit=dev"
-  else
-    echo "  -> Web dependencies unchanged, skipping npm ci"
-  fi
+  install_remote_deps "${REMOTE_PATH}/web" "Web"
 
   # Step 4: Restart web process + cleanup
   echo "Step 4/4: Restarting web dashboard..."
@@ -353,13 +344,7 @@ if [ "$DEPLOY_BOT" = true ]; then
   scp_remote ${TARBALL} ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}/
   ssh_remote "cd ${REMOTE_PATH} && tar -xzf ${TARBALL}"
 
-  # Check if bot deps changed
-  if deps_changed "package-lock.json" "${REMOTE_PATH}/package-lock.json"; then
-    echo "  -> Bot dependencies changed, running npm ci..."
-    ssh_remote "cd ${REMOTE_PATH} && npm ci --omit=dev"
-  else
-    echo "  -> Bot dependencies unchanged, skipping npm ci"
-  fi
+  install_remote_deps "${REMOTE_PATH}" "Bot"
 
   # Step 4.5: refuse to restart new code against a schema that has not caught up.
   # --bot uploads neither migrations/ nor scripts/ and never runs the migrator, so a
@@ -446,24 +431,12 @@ tar -czf ${TARBALL} dist src migrations scripts assets package.json package-lock
 echo "Step 5/9: Uploading to remote server..."
 scp_remote ${TARBALL} ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}/
 
-# Step 6: Extract and install on remote (smart dep detection)
+# Step 6: Extract on remote, then install where node_modules is behind its lockfile
 echo "Step 6/9: Extracting on remote..."
 ssh_remote "cd ${REMOTE_PATH} && tar -xzf ${TARBALL}"
 
-# Smart dep detection: only run npm ci for lockfiles that actually changed
-if deps_changed "package-lock.json" "${REMOTE_PATH}/package-lock.json"; then
-  echo "  -> Bot dependencies changed, running npm ci..."
-  ssh_remote "cd ${REMOTE_PATH} && npm ci --omit=dev"
-else
-  echo "  -> Bot dependencies unchanged, skipping npm ci"
-fi
-
-if deps_changed "web/package-lock.json" "${REMOTE_PATH}/web/package-lock.json"; then
-  echo "  -> Web dependencies changed, running npm ci..."
-  ssh_remote "cd ${REMOTE_PATH}/web && npm ci --omit=dev"
-else
-  echo "  -> Web dependencies unchanged, skipping npm ci"
-fi
+install_remote_deps "${REMOTE_PATH}" "Bot"
+install_remote_deps "${REMOTE_PATH}/web" "Web"
 
 # Step 6.5: Run migrations on remote
 # A migration failure MUST abort the deploy: restarting new code against an
