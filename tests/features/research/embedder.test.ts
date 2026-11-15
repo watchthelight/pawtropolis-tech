@@ -4,7 +4,8 @@
  *       embedding library. The library itself is replaced by a stand-in.
  * WHY: A model file that is not the pinned one must never be used, the library
  *      must never be allowed to fetch a model by itself, and sorting the texts
- *      by length must not mix up whose vector is whose.
+ *      by length must not mix up whose vector is whose. A batch must get
+ *      smaller as its texts get longer, or one long message costs gigabytes.
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
@@ -219,6 +220,27 @@ describe("createEmbedder", () => {
     expect(batches.map((batch) => batch.length)).toEqual([32, 32, 6]);
     const lengths = batches.flat().map((text) => text.length);
     expect(lengths).toEqual([...lengths].sort((a, b) => a - b));
+  });
+
+  it("puts fewer texts into a batch the longer they are", async () => {
+    putFiles();
+    const { library, batches } = fakeLibrary();
+    const embedder = await createEmbedder({ library, modelDir: dir, threads: 1, model: SPEC });
+    // 5 texts that the model cuts at 512 tokens, 40 short ones and 10 of 300 characters
+    const texts = [
+      ...Array.from({ length: 5 }, () => "z".repeat(1000)),
+      ...Array.from({ length: 40 }, () => "x".repeat(10)),
+      ...Array.from({ length: 10 }, () => "y".repeat(300)),
+    ];
+    const vectors = await embedder.embed(texts);
+
+    vectors.forEach((vector, i) => expect(vector[0]).toBe(texts[i]?.length));
+    expect(batches.map((batch) => batch.length)).toEqual([32, 8, 5, 5, 2, 2, 1]);
+    // Texts x tokens x tokens of the longest text stays within 32 x 128 x 128.
+    for (const batch of batches) {
+      const tokens = Math.min(512, Math.max(...batch.map((text) => text.length)) + 2);
+      expect(batch.length * tokens * tokens).toBeLessThanOrEqual(32 * 128 * 128);
+    }
   });
 
   it("gives each caller its own copy of a vector", async () => {

@@ -21,6 +21,14 @@
  *      because it picks its number ranges per batch. The full model gives the
  *      same vector in any batch, so texts can be sorted by length, which
  *      doubles the speed, and a score depends on the message alone.
+ *
+ *      A batch is limited by what it costs, not only by its number of texts.
+ *      It is padded to its longest text, the model's attention needs memory
+ *      for texts x tokens x tokens, and the runtime keeps the most it ever
+ *      needed. Measured on 2026-11-15 on 3,001 messages around the longest
+ *      one of the main chat, one thread: with 32 texts in every batch the
+ *      process peaked at 2,026 MB and took 47 s. With the limit it peaks at
+ *      392 MB and takes 36 s, and every score is the same.
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
@@ -54,7 +62,36 @@ export const EMBEDDING_MODEL: ModelSpec = {
 /** Stored with the scores, so that one file never mixes two models. */
 export const EMBEDDING_ID = `${EMBEDDING_MODEL.name}@${EMBEDDING_MODEL.revision.slice(0, 12)}/${EMBEDDING_MODEL.dtype}`;
 
+/** The most texts in one batch. */
 const BATCH_SIZE = 32;
+/** The model reads the first 512 tokens of a text and drops the rest. */
+const MAX_TOKENS = 512;
+/**
+ * The most a batch may hold, counted as texts x tokens x tokens, with the
+ * tokens of its longest text. The model compares every token of a text with
+ * every other one, so that product is what a batch needs memory for. 32 texts
+ * of 128 tokens fit, or 2 texts of 512.
+ */
+const BATCH_COST = BATCH_SIZE * 128 * 128;
+
+/**
+ * The tokens of a text, estimated from above by its length: one token per
+ * character and one at each end. Of 491,045 messages of the main chat none
+ * had more (2026-11-15); a long one has about four characters per token.
+ */
+const tokenBound = (text: string): number => Math.min(MAX_TOKENS, text.length + 2);
+
+/** Where the batch that starts at `start` ends. `order` is sorted by length. */
+function batchEnd(order: readonly { text: string }[], start: number): number {
+  let end = start + 1;
+  while (end < order.length && end - start < BATCH_SIZE) {
+    // The texts are sorted, so the one that joins is the longest of the batch.
+    const tokens = tokenBound(order[end]!.text);
+    if ((end - start + 1) * tokens * tokens > BATCH_COST) break;
+    end++;
+  }
+  return end;
+}
 
 const sha256 = (data: Uint8Array): string => createHash("sha256").update(data).digest("hex");
 const modelFile = (modelDir: string, model: ModelSpec, name: string): string =>
@@ -167,8 +204,9 @@ export async function createEmbedder(options: {
         .map((text, index) => ({ text, index }))
         .sort((a, b) => a.text.length - b.text.length);
       const vectors = new Array<Float32Array>(texts.length);
-      for (let start = 0; start < order.length; start += BATCH_SIZE) {
-        const batch = order.slice(start, start + BATCH_SIZE);
+      for (let start = 0, end = 0; start < order.length; start = end) {
+        end = batchEnd(order, start);
+        const batch = order.slice(start, end);
         const { data, dims } = await extract(
           batch.map((entry) => entry.text),
           { pooling: "mean", normalize: true }
