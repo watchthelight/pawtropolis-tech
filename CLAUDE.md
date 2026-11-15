@@ -107,7 +107,7 @@ A permission that matters is checked in the handler, never only through Discord'
 ## Deploy
 
 - Production: PM2 on EC2 (pawtropolis instance, i-036253b06d0ab8546).
-- Deploy script: `./deploy.sh` with lock, optional backup (`BACKUP_BEFORE_DEPLOY=1`), health check. It runs the tests, builds, uploads, runs pending migrations on the host and registers the slash commands there.
+- Deploy script: `./deploy.sh` with lock, a database backup first (on by default; `BACKUP_BEFORE_DEPLOY=0` skips it) and a health check. It runs the tests, builds, uploads, runs pending migrations on the host and registers the slash commands there.
 - Slash-command sync by hand: `npm run deploy:cmds` (run on EC2; local hangs).
 - A push to `main` that touches `docs/**` or `web/**` starts the dashboard deploy workflow.
 - See `docs/operations/deployment-hardening.md` for the full procedure.
