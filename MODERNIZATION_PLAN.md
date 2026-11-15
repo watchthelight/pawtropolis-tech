@@ -253,14 +253,15 @@ The runs led to six fixes, all on the branch:
 - Build and tests ran after every commit. Batches prepared in separate worktrees were checked commit by commit before they were taken: typecheck, build, and the tests for the touched area, then the full suite at the batch tip.
 - Characterization tests were written before a fix where the touched code had no coverage.
 - Every optimization has a measured before and after number. The query numbers were taken on a read-only copy of the production database; the PNG number is an event-loop stall probe on a 1600x1900 canvas. PERF-5 has no number and was not shipped.
-- Final check from a clean clone: install, build, lint, typecheck, format check, knip, full tests with coverage, dashboard install, check and build.
+- Final check from clean clones. The steps of `.github/workflows/ci.yml` were replayed in order in two fresh clones, one under Node 24.22.3 and one under Node 20.20.2 (portable builds, Windows): install, typecheck, lint, format check, build, `node --check dist/index.js`, dashboard install and sync, knip, test database, full tests with coverage, then the dashboard check and build with the root `node_modules` moved aside, as in the `web` job. Every hard gate passed on both: 320 test files, 6351 tests, 0 lint errors. The format check failed on 822 files, as expected. Neither install printed an engine warning.
+- The first Node 24 replay stopped at knip (exit 2). In a fresh checkout knip cannot load `web/vite.config.ts` until the dashboard is installed and synced, and the `check` job ran it in exactly that state. The job now prepares `web/` first (`05a76026`), and knip passes in both clones.
 
 ### Not verified
 
 Said plainly, so nobody assumes otherwise:
 
-- **CI itself.** Nothing was pushed, so the reworked workflows have not run on GitHub. They were checked by reading them and by running the same commands locally.
-- **Node 20 and Node 24.** CI runs both. This machine has Node 25.5.0 only, and every local result is from that version.
+- **CI itself.** Nothing was pushed, so the reworked workflows have not run on GitHub. They were checked by reading them and by replaying their steps locally (above). A push to `release/**` starts CI without touching `main`, which is why the release steps begin with pushing the branch.
+- **Linux.** Every local result is from Windows: Node 25.5.0 in place, Node 24.22.3 and Node 20.20.2 in the clean clones. The CI runners and the host are Linux, where better-sqlite3, sharp and canvas install different prebuilt binaries.
 - **The production Node version**, and with it whether the host meets the new `>=20.9.0` floor.
 - **The GitHub push path of the token fix (SEC-2).** Unit tests cover the argument and environment handling. No real push was made.
 - **`/investigate-artist` in Discord**, and the two keyed lookup services (section 5).
