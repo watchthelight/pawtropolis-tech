@@ -2,12 +2,15 @@
 /**
  * Pawtropolis Tech -- tests/deploy.test.ts
  * WHAT: Runs deploy.sh against a fake remote and checks when it installs
- *       dependencies there. ssh, scp, npm, npx, pm2, systemctl, sqlite3 and
- *       sleep are stand-in scripts on PATH; the "remote" is a temp directory.
+ *       dependencies there. ssh, scp, node, npm, npx, pm2, systemctl, sqlite3
+ *       and sleep are stand-in scripts on PATH; the "remote" is a temp directory.
  * WHY: The script used to compare the local lockfile with the remote one after
  *      its own tarball had replaced the remote one. The two always matched, so
  *      npm ci never ran on the host and production kept the packages of an
- *      install from months earlier. Nothing here opens a network connection.
+ *      install from months earlier. A second way to end up with the wrong
+ *      packages is a new Node major on the host: the lockfile is the same and
+ *      the compiled modules no longer load. Nothing here opens a network
+ *      connection.
  */
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -34,12 +37,17 @@ exec bash -c "$*"
 while [ "$1" = "-o" ]; do shift 2; done
 cp "$1" "\${2#*@*:}"
 `,
-  // npm ci starts from an empty node_modules, so the marker of the last install goes.
+  // The remote's Node. It answers the one question the script asks it, and
+  // does nothing when the script starts the migration runner or the command sync.
+  node: `#!/bin/bash
+if [ "$1" = "-p" ]; then echo "$FAKE_NODE_ABI"; fi
+`,
+  // npm ci starts from an empty node_modules, so the key of the last install goes.
   npm: `#!/bin/bash
 echo "npm $* | $PWD" >> "$FAKE_LOG"
 if [ "$1" = "ci" ]; then
   mkdir -p node_modules
-  rm -f node_modules/.lock-sha256
+  rm -f node_modules/.install-key
 fi
 `,
   npx: `#!/bin/bash
@@ -67,18 +75,22 @@ let root = "";
 let local = "";
 let remote = "";
 let logFile = "";
+// The module ABI number the remote's Node reports: 115 is Node 20, 137 is Node 24.
+let remoteAbi = "115";
 
 function write(file: string, text: string): void {
   mkdirSync(path.dirname(file), { recursive: true });
   writeFileSync(file, text);
 }
 
-function sha256(file: string): string {
-  return createHash("sha256").update(readFileSync(file)).digest("hex");
+/** The key an install from this lockfile leaves, under the remote's current Node. */
+function installKey(lockfile: string): string {
+  const sha256 = createHash("sha256").update(readFileSync(lockfile)).digest("hex");
+  return `${sha256} node-abi-${remoteAbi}`;
 }
 
 function marker(dir: string): string | null {
-  const file = path.join(dir, "node_modules", ".lock-sha256");
+  const file = path.join(dir, "node_modules", ".install-key");
   return existsSync(file) ? readFileSync(file, "utf8").trim() : null;
 }
 
@@ -101,6 +113,7 @@ function deploy(...args: string[]): { status: number | null; output: string; ins
         HOME: slash(path.join(root, "home")),
         FAKE_BIN: slash(path.join(root, "bin")),
         FAKE_LOG: slash(logFile),
+        FAKE_NODE_ABI: remoteAbi,
         DEPLOY_SH,
         REMOTE_HOST: "fake-host",
         REMOTE_PATH: slash(remote),
@@ -163,9 +176,9 @@ describe.skipIf(!bash)("deploy.sh dependency install", () => {
       expect(run.output).toContain("::DEPLOY_DONE::");
       expect(run.status).toBe(0);
       expect(run.installs).toEqual(["bot", "web"]);
-      expect(marker(remote)).toBe(sha256(path.join(local, "package-lock.json")));
+      expect(marker(remote)).toBe(installKey(path.join(local, "package-lock.json")));
       expect(marker(path.join(remote, "web"))).toBe(
-        sha256(path.join(local, "web", "package-lock.json"))
+        installKey(path.join(local, "web", "package-lock.json"))
       );
     }
   );
@@ -190,20 +203,40 @@ describe.skipIf(!bash)("deploy.sh dependency install", () => {
 
     expect(run.status).toBe(0);
     expect(run.installs).toEqual(["bot"]);
-    expect(marker(remote)).toBe(sha256(path.join(local, "package-lock.json")));
+    expect(marker(remote)).toBe(installKey(path.join(local, "package-lock.json")));
   });
 
-  it("installs again when node_modules has lost its marker", { timeout: 120_000 }, () => {
-    rmSync(path.join(remote, "web", "node_modules", ".lock-sha256"));
+  it("installs again when node_modules has lost its key", { timeout: 120_000 }, () => {
+    rmSync(path.join(remote, "web", "node_modules", ".install-key"));
 
     const run = deploy();
 
     expect(run.status).toBe(0);
     expect(run.installs).toEqual(["web"]);
     expect(marker(path.join(remote, "web"))).toBe(
-      sha256(path.join(local, "web", "package-lock.json"))
+      installKey(path.join(local, "web", "package-lock.json"))
     );
   });
+
+  it(
+    "installs both again when the host has moved to another Node major",
+    { timeout: 240_000 },
+    () => {
+      remoteAbi = "137";
+
+      const run = deploy();
+
+      expect(run.status).toBe(0);
+      expect(run.installs).toEqual(["bot", "web"]);
+      expect(marker(remote)).toBe(installKey(path.join(local, "package-lock.json")));
+      expect(marker(path.join(remote, "web"))).toBe(
+        installKey(path.join(local, "web", "package-lock.json"))
+      );
+
+      // The new Node is the installed one now, so the next deploy has nothing to do.
+      expect(deploy().installs).toEqual([]);
+    }
+  );
 
   it(
     "--web installs the dashboard dependencies when its lockfile changed",
@@ -217,7 +250,7 @@ describe.skipIf(!bash)("deploy.sh dependency install", () => {
       expect(run.status).toBe(0);
       expect(run.installs).toEqual(["web"]);
       expect(marker(path.join(remote, "web"))).toBe(
-        sha256(path.join(local, "web", "package-lock.json"))
+        installKey(path.join(local, "web", "package-lock.json"))
       );
     }
   );
@@ -230,6 +263,24 @@ describe.skipIf(!bash)("deploy.sh dependency install", () => {
     expect(run.output).toContain("::DEPLOY_DONE::");
     expect(run.status).toBe(0);
     expect(run.installs).toEqual(["bot"]);
-    expect(marker(remote)).toBe(sha256(path.join(local, "package-lock.json")));
+    expect(marker(remote)).toBe(installKey(path.join(local, "package-lock.json")));
+  });
+});
+
+// The dashboard deploy workflow installs into the same web/node_modules. With a
+// different key each of the two would reinstall after the other one ran.
+describe("install key", () => {
+  it("is built the same way in deploy.sh and in the dashboard deploy workflow", () => {
+    const key =
+      "$(sha256sum package-lock.json | cut -d' ' -f1) node-abi-$(node -p process.versions.modules)";
+    // deploy.sh holds the expression inside a double-quoted string.
+    const script = readFileSync("deploy.sh", "utf8").replaceAll("\\$", "$");
+    const workflow = readFileSync(".github/workflows/deploy-handbook.yml", "utf8");
+
+    for (const text of [script, workflow]) {
+      expect(text).toContain(key);
+      expect(text).toContain("node_modules/.install-key");
+      expect(text).not.toContain(".lock-sha256");
+    }
   });
 });

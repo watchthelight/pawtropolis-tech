@@ -232,30 +232,40 @@ fi
 
 # ─────────────────────────────────────────────────────────────────────────────
 # install_remote_deps - run npm ci on the remote unless node_modules there was
-# installed from the lockfile that is on the remote now.
+# installed from the lockfile that is on the remote now, under the Node that is
+# on the remote now.
 # Args: $1 = remote directory holding package-lock.json, $2 = label for output
 # One SSH round-trip (~1s) saves ~20-30s of npm ci when nothing changed.
 #
-# npm leaves no record of which lockfile it installed, so the sha256 of the
-# lockfile is written to node_modules/.lock-sha256 after a successful npm ci.
-# npm ci removes node_modules first, so a failed install leaves no marker and
-# the next deploy installs again.
+# npm leaves no record of what it installed from, so a key is written to
+# node_modules/.install-key after a successful npm ci: the sha256 of the
+# lockfile and the module ABI number of the host's Node. npm ci removes
+# node_modules first, so a failed install leaves no key and the next deploy
+# installs again.
+#
+# The ABI number is in the key because a compiled module is built for one of
+# them. After the host moves to another Node major the lockfile is the same and
+# better-sqlite3 no longer loads. The dashboard deploy workflow
+# (.github/workflows/deploy-handbook.yml) writes the same key.
 #
 # The check this replaces compared the local lockfile with the remote one. It
 # ran after the tarball was extracted, and the tarball carries the lockfile, so
 # the two always matched and npm ci never ran on the host.
 # ─────────────────────────────────────────────────────────────────────────────
+# Runs on the remote, in the directory that holds the lockfile.
+INSTALL_KEY_CMD="echo \"\$(sha256sum package-lock.json | cut -d' ' -f1) node-abi-\$(node -p process.versions.modules)\""
+
 install_remote_deps() {
   local remote_dir="$1"
   local label="$2"
 
-  if ssh_remote "cd ${remote_dir} && [ -s node_modules/.lock-sha256 ] && [ \"\$(sha256sum package-lock.json | cut -d' ' -f1)\" = \"\$(cat node_modules/.lock-sha256)\" ]"; then
-    echo "  -> ${label} dependencies match the lockfile, skipping npm ci"
+  if ssh_remote "cd ${remote_dir} && [ -s node_modules/.install-key ] && [ \"\$(${INSTALL_KEY_CMD})\" = \"\$(cat node_modules/.install-key)\" ]"; then
+    echo "  -> ${label} dependencies match the lockfile and the host's Node, skipping npm ci"
     return 0
   fi
 
-  echo "  -> ${label} dependencies do not match the lockfile, running npm ci..."
-  ssh_remote "cd ${remote_dir} && npm ci --omit=dev && sha256sum package-lock.json | cut -d' ' -f1 > node_modules/.lock-sha256"
+  echo "  -> ${label} dependencies do not match the lockfile or the host's Node, running npm ci..."
+  ssh_remote "cd ${remote_dir} && npm ci --omit=dev && ${INSTALL_KEY_CMD} > node_modules/.install-key"
 }
 
 # Status only

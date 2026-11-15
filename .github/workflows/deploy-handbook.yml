@@ -116,9 +116,10 @@ jobs:
 
       # The artefact carries package-lock.json, so the build can need packages
       # the host has not installed yet. npm ci runs when node_modules was not
-      # installed from the lockfile just extracted; deploy.sh keeps the same
-      # marker. The braces make bash read the whole script before it runs any
-      # of it, so a command that reads stdin cannot swallow the rest.
+      # installed from the lockfile just extracted, or was installed under a
+      # Node with another module ABI; deploy.sh keeps the same key. The braces
+      # make bash read the whole script before it runs any of it, so a command
+      # that reads stdin cannot swallow the rest.
       # pm2 prints its whole process table after a restart, and this log is
       # public: the restart is silenced and only the dashboard's row is shown.
       - name: Extract, install and restart on EC2
@@ -132,10 +133,10 @@ jobs:
             set -euo pipefail
             cd /home/ubuntu/pawtropolis-tech/web
             tar -xzf ../web-deploy.tar.gz
-            lock_hash=$(sha256sum package-lock.json | cut -d' ' -f1)
-            if [ "$lock_hash" != "$(cat node_modules/.lock-sha256 2>/dev/null)" ]; then
+            install_key="$(sha256sum package-lock.json | cut -d' ' -f1) node-abi-$(node -p process.versions.modules)"
+            if [ "$install_key" != "$(cat node_modules/.install-key 2>/dev/null)" ]; then
               npm ci --omit=dev
-              echo "$lock_hash" > node_modules/.lock-sha256
+              echo "$install_key" > node_modules/.install-key
             fi
             pm2 restart pawtropolis-web > /dev/null
             rm -f ../web-deploy.tar.gz
