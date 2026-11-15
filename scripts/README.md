@@ -48,7 +48,7 @@ What each script is for and where it runs. One-off scripts that finished their j
 
 ## Local research: chat-quality pipeline (LOCAL ONLY)
 
-These read and write the `general_messages_*` tables (`raw`, `ctx`, `embed`, `score`, `overlay_weekly`, `gold`). Production only carries the empty tables that migration 069 creates; the data lives in a local copy of the database, so none of this runs on the host.
+These read and write the `general_messages_*` tables (`raw`, `ctx`, `embed`, `score`, `overlay_weekly`, `gold`). The data lives in a local copy of the database. On the host the tables were dropped on 2026-05-15, so nothing here does any work there, although the host's crontab still starts seven of these scripts (#00295).
 
 | Script | Purpose |
 |---|---|
