@@ -58,7 +58,7 @@ Same machine, same Node, measured at the branch tip. Audit counts for both colum
 | Gate                               | Baseline                                                                           | v26                                                                                                        |
 | ---------------------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | Typecheck                          | pass                                                                               | pass                                                                                                       |
-| Build                              | pass, `dist/index.js` 2.04 MB                                                      | pass, 2.28 MB                                                                                              |
+| Build                              | pass, `dist/index.js` 2.04 MB (2,150,739 bytes)                                    | pass, 2.17 MB (2,286,014 bytes)                                                                            |
 | Tests                              | 289 files, 5736 tests                                                              | 320 files, 6351 tests, all passing                                                                         |
 | Coverage over all of `src/`        | lines 39.82, statements 39.49, functions 44.72, branches 34.71                     | lines 44.22, statements 44.05, functions 49.64, branches 38.99                                             |
 | Coverage floors                    | lines 20, statements 20, functions 40, branches 35, against the overstated numbers | lines 43, statements 43, functions 48, branches 37, against the real ones                                  |
@@ -164,10 +164,10 @@ What was planned, in order, and how it went.
 1. Baseline (section 2). Done.
 2. This plan. Done, then kept current.
 3. `/investigate-artist` (#00279). Done: SDK dependency, migration 084, feature modules, command, tests, docs, and three dry runs against a real ticket, the first two of which led to six fixes (section 5).
-4. Safe upgrades and fixes. Done: security (#00280, 4 commits), reliability (#00281, 13 commits), dependencies and runtime (#00282, 12 commits), CI and tooling (#00283, 23 commits). Characterization tests came first where the touched code had thin coverage.
+4. Safe upgrades and fixes. Done: security (#00280, 4 commits), reliability (#00281, 13 commits), dependencies and runtime (#00282, 14 commits), CI and tooling (#00283, 24 commits). Characterization tests came first where the touched code had thin coverage.
 5. Optimizations (#00284, 4 commits). Done, each with a before and after number. PERF-5 deferred for lack of one.
 6. Mechanical format commit. Deferred (HEALTH-3). Lint and knip became hard gates without it.
-7. Release prep (#00285): version 26.0.0, changelog, release notes, README, CLAUDE.md, clean-clone verification.
+7. Release prep (#00285). Done: version 26.0.0, changelog, release notes, README, CLAUDE.md and the clean-clone verification (section 6). Pushing, merging and deploying are the owner's.
 
 One attempt was backed out before it reached the branch: replacing `require()` with a static import in `src/commands/stats/shared.ts` changes behavior that a test pins, so the `require()` stays, with a scoped lint disable and the reason (`b2921ff5`). Two prepared changes were kept off the branch because they need an owner decision (REL-3 and HEALTH-4).
 
