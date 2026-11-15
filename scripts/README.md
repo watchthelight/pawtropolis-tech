@@ -14,6 +14,7 @@ What each script is for and where it runs. One-off scripts that finished their j
 | `print-commands.ts` (`npm run print:cmds`), `print-command-count.ts` | Listings of the command spec. |
 | `smoke-test.sh` | Post-deploy smoke checks against the running processes. |
 | `cleanup-backups.sh` | Daily cron job on the host (04:00). Prunes the deploy snapshots (`data/backups/data.db.<timestamp>`) and the migration runner's copies (`data/data.db.backup-<timestamp>`): in each place it keeps the 3 newest plus anything under 7 days, and a backup's `-wal` and `-shm` files go with it. `DRY_RUN=1` only logs. The bot's retention scheduler applies the same rule to `data/backups` when `RETENTION_ENABLED=true`. |
+| `research.ts` (built to `dist/scripts/research.js`), `quality-cron.txt` | The chat research job, started by cron on the host every 15 minutes. It scores the messages of the main chat from `messages_archive` and writes `data/research.db`, the file the dashboard's Quality tab reads. The code is in `src/features/research/`. It reads `models/effort_v1.json`, `lowlist.json` and `filler-bank.json`, and loads its embedding library from `research/`, which the deploy installs. `research.js fetch-model` downloads the pinned model files; `--help` lists the flags. `quality-cron.txt` holds the crontab line and how to install it. |
 | `litestream.example.yml`, `litestream.service.example`, `litestream-restore.sh` | Litestream replication config, its systemd unit, and the restore drill. |
 | `setup-server.sh` | One-time fresh-host setup (packages, pm2, directories). Kept for disaster recovery. |
 | `verify-db-integrity.js` | Off-line integrity check of a database file. |
@@ -48,7 +49,7 @@ What each script is for and where it runs. One-off scripts that finished their j
 
 ## Local research: chat-quality pipeline (LOCAL ONLY)
 
-These read and write the `general_messages_*` tables (`raw`, `ctx`, `embed`, `score`, `overlay_weekly`, `gold`). The data lives in a local copy of the database. On the host the tables were dropped on 2026-05-15, so nothing here does any work there, although the host's crontab still starts seven of these scripts (#00295).
+These are the scripts of the study the research job grew out of. They read and write the `general_messages_*` tables (`raw`, `ctx`, `embed`, `score`, `overlay_weekly`, `gold`), and the data lives in a local copy of the database. On the host the tables were dropped on 2026-05-15, so nothing here does any work there. The seven crontab lines that still started some of these scripts on the host were removed on 2026-11-15 (#00295). What runs on the host is `research.ts`, listed under Operations.
 
 | Script | Purpose |
 |---|---|
@@ -58,8 +59,8 @@ These read and write the `general_messages_*` tables (`raw`, `ctx`, `embed`, `sc
 | `score-quality.mjs`, `score-effort-v1.mjs`, `score-resonance.mjs`, `score-substantiveness.mjs` | Per-message scores. |
 | `train-effort.mjs`, `train-effort-v1.mjs`, `sample-gold.mjs`, `llm-label.mjs`, `novelty-sanity.mjs`, `plot-effort.mjs` | Model spikes, gold-set sampling and labelling, sanity checks. |
 | `metrics-overlay.mjs`, `build-overlay-weekly.mjs`, `generate-charts.mjs`, `chart-quality.mjs`, `chart-quality-v2.mjs`, `charts/` | Weekly metric overlay and PNG charts. |
-| `export-embed.mjs`, `export-overlay.mjs`, `export-processed.mjs`, `export-score.mjs`, `export-substantiveness.mjs`, `quality-snapshot.mjs`, `quality-snapshot-stage1.mjs`, `merge-processed.sh`, `quality-sync.sql`, `quality-cron.txt` | Move processed tables between machines; the cron file documents the old EC2 worker schedule. |
-| `build-filler-bank.mjs`, `filler-bank.json`, `lowlist.json`, `resolve-authors.mjs`, `recon-category.mjs`, `recon-ticket-tool.mjs` | Supporting data and one-time reconnaissance for the pipeline. |
+| `export-embed.mjs`, `export-overlay.mjs`, `export-processed.mjs`, `export-score.mjs`, `export-substantiveness.mjs`, `quality-snapshot.mjs`, `quality-snapshot-stage1.mjs`, `merge-processed.sh`, `quality-sync.sql` | Move processed tables between machines. |
+| `build-filler-bank.mjs`, `filler-bank.json`, `lowlist.json`, `resolve-authors.mjs`, `recon-category.mjs`, `recon-ticket-tool.mjs` | Supporting data and one-time reconnaissance for the pipeline. The research job reads the two word lists, `filler-bank.json` and `lowlist.json`, as well. |
 | `report/` (`npm run report:excel`) | Excel workbook builder over the processed tables. |
 
 ## Maintenance tools (re-runnable)
