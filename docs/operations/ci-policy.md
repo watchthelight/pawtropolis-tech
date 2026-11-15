@@ -56,7 +56,7 @@ Has always been hard. Build = `tsup` plus `scripts/scan-legacy.ts`. Unaffected b
 
 ### Format
 
-`npm run format:check` reports about 840 file drifts, almost all in `web/`. One mechanical `npm run format` commit over the whole repo fixes them; it is done separately so it does not collide with open work.
+`npm run format:check` reports 829 files that drift (839 before the v26 work, which formatted the files it added). One mechanical `npm run format` commit over the whole repo fixes them; it is done separately so it does not collide with open work.
 
 **Promotion conditions:**
 
@@ -75,7 +75,7 @@ Has always been hard. Build = `tsup` plus `scripts/scan-legacy.ts`. Unaffected b
 
 `vitest.config.ts` sets `coverage.include: ["src/**/*.ts"]`, so files no test imports count
 as uncovered instead of being invisible. Thresholds are `lines: 43, functions: 48,
-branches: 37, statements: 43`. The v26 suite measures 44.11, 49.64, 38.99 and 44.05; each
+branches: 37, statements: 43`. The v26 suite measures 44.22, 49.64, 38.99 and 44.05; each
 threshold is one point under, rounded down, because v8 counts differ slightly between Node
 versions and CI runs two. The test job runs `npm run test -- --coverage` with no
 `continue-on-error`, and vitest exits non-zero when a threshold is unmet.
