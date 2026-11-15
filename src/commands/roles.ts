@@ -243,7 +243,7 @@ async function handleAddLevelTier(ctx: CommandContext<ChatInputCommandInteractio
       logger.info({
         evt: "add_level_tier",
         guildId: guild.id,
-        level,
+        levelNumber: level,
         roleId: role.id,
         roleName: role.name,
         invokedBy: interaction.user.id,
@@ -294,7 +294,7 @@ async function handleAddLevelReward(ctx: CommandContext<ChatInputCommandInteract
       logger.info({
         evt: "add_level_reward",
         guildId: guild.id,
-        level,
+        levelNumber: level,
         roleId: role.id,
         roleName: role.name,
         invokedBy: interaction.user.id,
@@ -502,7 +502,7 @@ async function handleRemoveLevelTier(ctx: CommandContext<ChatInputCommandInterac
         logger.info({
           evt: "remove_level_tier",
           guildId: guild.id,
-          level,
+          levelNumber: level,
           invokedBy: interaction.user.id,
         }, `Removed level tier for level ${level}`);
 
@@ -548,7 +548,7 @@ async function handleRemoveLevelReward(ctx: CommandContext<ChatInputCommandInter
         logger.info({
           evt: "remove_level_reward",
           guildId: guild.id,
-          level,
+          levelNumber: level,
           roleId: role.id,
           invokedBy: interaction.user.id,
         }, `Removed level reward ${role.name} for level ${level}`);

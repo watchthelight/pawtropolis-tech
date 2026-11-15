@@ -117,7 +117,7 @@ export async function handleLevelRoleAdded(
       guildId: guild.id,
       userId: member.id,
       username: member.user.username,
-      level,
+      levelNumber: level,
       roleName: tier.tier_name,
     }, `User leveled up to ${level}`);
 
@@ -140,7 +140,7 @@ export async function handleLevelRoleAdded(
       logger.debug({
         evt: "no_rewards_for_level",
         guildId: guild.id,
-        level,
+        levelNumber: level,
       }, "No rewards configured for this level");
       return results;
     }
@@ -155,7 +155,7 @@ export async function handleLevelRoleAdded(
         evt: "level_reward_dedup",
         guildId: guild.id,
         userId: member.id,
-        level,
+        levelNumber: level,
       }, `Skipping duplicate level ${level} reward (already granted)`);
       return results;
     }
@@ -166,7 +166,7 @@ export async function handleLevelRoleAdded(
       evt: "granting_level_rewards",
       guildId: guild.id,
       userId: member.id,
-      level,
+      levelNumber: level,
       rewardCount: rewards.length,
     }, `Granting ${rewards.length} rewards for level ${level}`);
 
@@ -214,7 +214,7 @@ export async function handleLevelRoleAdded(
           evt: "reward_granted",
           guildId: guild.id,
           userId: member.id,
-          level,
+          levelNumber: level,
           rewardRole: reward.role_name,
         }, `Granted reward: ${reward.role_name}`);
         grantedRewards.push({ name: reward.role_name, id: reward.role_id });
@@ -225,7 +225,7 @@ export async function handleLevelRoleAdded(
           evt: "reward_error",
           guildId: guild.id,
           userId: member.id,
-          level,
+          levelNumber: level,
           rewardRole: reward.role_name,
           error: result.error,
         }, `Failed to grant reward: ${reward.role_name}`);
@@ -237,7 +237,7 @@ export async function handleLevelRoleAdded(
           evt: "reward_skipped",
           guildId: guild.id,
           userId: member.id,
-          level,
+          levelNumber: level,
           rewardRole: reward.role_name,
           reason: result.reason,
         }, `Skipped reward: ${reward.role_name} (${result.reason})`);
@@ -265,7 +265,7 @@ export async function handleLevelRoleAdded(
         evt: "level_reward_dedup_rollback",
         guildId: guild.id,
         userId: member.id,
-        level,
+        levelNumber: level,
         failedCount: failedRewards.length,
       }, `Cleared dedup marker for level ${level} so failed rewards can retry`);
     }

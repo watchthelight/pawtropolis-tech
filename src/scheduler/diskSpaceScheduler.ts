@@ -202,7 +202,7 @@ async function sendDiskSpaceAlert(
 
   logger.info(
     {
-      level,
+      alertLevel: level,
       usedPercent: stats.usedPercent,
       freeBytes: stats.freeBytes,
       pingedRole: isCritical && botDevRoleId ? botDevRoleId : null,
