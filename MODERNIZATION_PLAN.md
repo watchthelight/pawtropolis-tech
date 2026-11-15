@@ -169,7 +169,7 @@ What was planned, in order, and how it went.
 1. Baseline (section 2). Done.
 2. This plan. Done, then kept current.
 3. `/investigate-artist` (#00279). Done: SDK dependency, migration 084, feature modules, command, tests, docs, and three dry runs against a real ticket, the first two of which led to six fixes (section 5).
-4. Safe upgrades and fixes. Done: security (#00280, 4 commits), reliability (#00281, 13 commits), dependencies and runtime (#00282, 14 commits), CI and tooling (#00283, 24 commits). Characterization tests came first where the touched code had thin coverage.
+4. Safe upgrades and fixes. Done: security (#00280, 4 commits), reliability (#00281, 13 commits), dependencies and runtime (#00282, 14 commits), CI and tooling (#00283, 27 commits). Characterization tests came first where the touched code had thin coverage.
 5. Optimizations (#00284, 4 commits). Done, each with a before and after number. PERF-5 deferred for lack of one.
 6. Mechanical format commit. Deferred (HEALTH-3). Lint and knip became hard gates without it.
 7. Release prep (#00285). Done: version 26.0.0, changelog, release notes, README, CLAUDE.md and the clean-clone verification (section 6). Pushing, merging and deploying are the owner's.
