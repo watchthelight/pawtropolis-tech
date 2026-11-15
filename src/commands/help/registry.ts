@@ -568,12 +568,12 @@ export const COMMAND_REGISTRY: CommandMetadata[] = [
       { name: "count", description: "Number of messages to delete", type: "integer", required: false },
     ],
     examples: ["/purge password:secretpass count:50"],
-    // The 14-day limit is a Discord API limitation, not a design choice.
-    // If someone asks why we can't purge older messages, blame Discord, not us.
-    notes: "Requires a staff role, the ManageMessages permission and the password. Cannot delete messages older than 14 days.",
+    // Discord's bulk delete refuses messages older than 14 days, so the command
+    // deletes those one by one. Their age does not protect them.
+    notes: "Requires a staff role, the ManageMessages permission and the password. Messages older than 14 days are deleted too, one by one, which is slower.",
     workflowTips: [
       "Use for cleaning up spam or accidental messages",
-      "14-day limit is a Discord API restriction",
+      "Without a count it deletes the whole channel, up to 10,000 messages in one run",
       "Password prevents accidental purges",
     ],
     relatedCommands: ["send"],
@@ -1281,7 +1281,7 @@ export const COMMAND_REGISTRY: CommandMetadata[] = [
       { name: "reason", description: "Reason logged to the audit channel", type: "string", required: false },
     ],
     examples: ["/cleanup count:50", "/cleanup count:200 reason:Spam wave"],
-    notes: "Moderator+. Messages older than 14 days are skipped (Discord bulk-delete limit) and reported in the result.",
+    notes: "Moderator+. Messages older than 14 days are deleted too, one by one because Discord's bulk delete refuses them, and the result says how many.",
     relatedCommands: ["purge", "flag"],
     aliases: ["clear", "sweep"],
   },

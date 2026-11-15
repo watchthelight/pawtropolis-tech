@@ -4,9 +4,8 @@
  * WHAT: /cleanup count:N — purge up to N (max 1000) recent messages from the channel
  * WHY: Quick mod hygiene tool when a thread floods or spam needs sweeping
  * FLOWS:
- *  - bulkDelete in batches of 100 (Discord limit)
- *  - 14-day filter applied automatically by bulkDelete{filterOld:true}
- *  - Older messages reported as skipped, not deleted (Discord won't bulk-delete >14d)
+ *  - bulkDelete in batches of 100 (Discord limit) for messages under 14 days old
+ *  - Older messages are deleted one by one, because Discord won't bulk-delete them
  */
 
 import {

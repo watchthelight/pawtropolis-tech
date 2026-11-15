@@ -6,6 +6,10 @@ All changes to Pawtropolis Tech are tracked here.
 
 ## [Unreleased]
 
+### Fixed
+
+- The texts about `/cleanup` and `/purge` said that messages older than 14 days are skipped or cannot be deleted. Both commands delete them, one by one: `/cleanup` since the day it was written, 2026-05-01, and `/purge` since the repo's first commit. The `/help` entries of both commands say so now, and so do the bot handbook, the admin guide and the permission matrix, which also gave `/purge` a limit of 100 messages where the command takes up to 10,000 in one run. The commands themselves are unchanged.
+
 ## [26.1.0] - 2026-11-15
 
 26.1.0 carries out the owner's decisions of 2026-11-15 on the questions 26.0.0 left open (`MODERNIZATION_PLAN.md`, section 7). The outside API keys are set from Discord, `/investigate-artist` also searches the open web and rates by the mod handbook, `/purge` checks for a staff role, and the host moved from Node 20 to Node 24. It went to production on 2026-11-15 (UTC), and the record of that deploy and of the Node move is in [`docs/releases/26.1.0.md`](docs/releases/26.1.0.md).
