@@ -104,3 +104,6 @@ graphify-out/
 _charts_out/
 charts/
 design_handoff/
+
+# Playwright MCP session output (untracked, #00283)
+.playwright-mcp/
