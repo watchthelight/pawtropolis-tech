@@ -92,9 +92,10 @@ export function getSettings(): InvestigationSettings {
     model: env.INVESTIGATE_MODEL,
     monthlyCapUsd: env.INVESTIGATE_MONTHLY_CAP_USD,
     maxImages: env.INVESTIGATE_MAX_IMAGES,
-    sauceNaoApiKey: env.SAUCENAO_API_KEY || null,
-    e621Login: env.E621_LOGIN || null,
-    e621ApiKey: env.E621_API_KEY || null,
+    // Not from `env`, which is read once at start: these can change while the bot runs.
+    sauceNaoApiKey: process.env.SAUCENAO_API_KEY?.trim() || null,
+    e621Login: process.env.E621_LOGIN?.trim() || null,
+    e621ApiKey: process.env.E621_API_KEY?.trim() || null,
     userAgent: env.PROVENANCE_USER_AGENT || defaultUserAgent(),
   };
 }

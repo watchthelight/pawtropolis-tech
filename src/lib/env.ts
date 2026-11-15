@@ -114,9 +114,6 @@ const raw = {
   INVESTIGATE_MODEL: process.env.INVESTIGATE_MODEL?.trim() || undefined,
   INVESTIGATE_MONTHLY_CAP_USD: process.env.INVESTIGATE_MONTHLY_CAP_USD?.trim() || undefined,
   INVESTIGATE_MAX_IMAGES: process.env.INVESTIGATE_MAX_IMAGES?.trim() || undefined,
-  SAUCENAO_API_KEY: process.env.SAUCENAO_API_KEY?.trim(),
-  E621_LOGIN: process.env.E621_LOGIN?.trim(),
-  E621_API_KEY: process.env.E621_API_KEY?.trim(),
   PROVENANCE_USER_AGENT: process.env.PROVENANCE_USER_AGENT?.trim(),
 };
 
@@ -230,7 +227,9 @@ const schema = z.object({
   WIDE_EVENT_SAMPLE_RATE: z.string().optional().default("0.1"),
 
   // /investigate-artist (optional). Without ANTHROPIC_API_KEY the command explains what is
-  // missing; lookup services without a key are skipped and named in the report.
+  // missing; lookup services without a key are skipped and named in the report. The lookup
+  // keys are not here: /service-keys can change them while the bot runs, and this object is
+  // read once at start. src/features/artistInvestigation/config.ts reads them on every run.
   ANTHROPIC_API_KEY: z.string().optional(),
   ANTHROPIC_WORKSPACE_ID: z.string().optional(),
   INVESTIGATE_MODEL: z.string().default("claude-opus-5-5"),
@@ -238,9 +237,6 @@ const schema = z.object({
   INVESTIGATE_MONTHLY_CAP_USD: z.coerce.number().min(0).default(200),
   // Images analyzed per run. The API accepts more, but cost grows with every image.
   INVESTIGATE_MAX_IMAGES: z.coerce.number().int().min(1).max(20).default(12),
-  SAUCENAO_API_KEY: z.string().optional(),
-  E621_LOGIN: z.string().optional(),
-  E621_API_KEY: z.string().optional(),
   PROVENANCE_USER_AGENT: z.string().optional(),
 });
 
