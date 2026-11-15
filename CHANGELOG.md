@@ -8,7 +8,7 @@ All changes to Pawtropolis Tech are tracked here.
 
 ## [26.2.0] - 2026-11-15
 
-26.2.0 brings the chat research pipeline back, which the owner decided on 2026-11-15 (`MODERNIZATION_PLAN.md`, section 7, item 15). One job scores the messages of the main chat on the host's own CPU and keeps the scores in a file of its own, and the dashboard has its Quality tab again, for moderators and up. The bot's own code does not change. It went to production on 2026-11-15 (UTC), and the record of that deploy and of the cutover on the host is in [`docs/releases/26.2.0.md`](docs/releases/26.2.0.md).
+26.2.0 brings the chat research pipeline back, which the owner decided on 2026-11-15 (`MODERNIZATION_PLAN.md`, section 7, item 15). One job scores the messages of the main chat on the host's own CPU and keeps the scores in a file of its own, and the dashboard has its Quality tab again, for moderators and up. In the bot itself only the `/help` texts of `/cleanup` and `/purge` change. It went to production on 2026-11-15 (UTC), and the record of that deploy and of the cutover on the host is in [`docs/releases/26.2.0.md`](docs/releases/26.2.0.md).
 
 ### Added
 
