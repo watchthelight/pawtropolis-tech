@@ -84,8 +84,10 @@ export const KEY_SERVICES: readonly KeyService[] = [
   {
     id: "vision",
     name: "Google Vision",
-    usedFor: "the avatar scan when a member joins or changes their avatar, and `/audit nsfw`",
-    without: "Avatars are not scanned, and `/audit nsfw` runs but flags nobody.",
+    usedFor:
+      "the avatar scan when a member joins or changes their avatar, `/audit nsfw`, and Google's web detection lookup in `/investigate-artist`",
+    without:
+      "Avatars are not scanned, `/audit nsfw` runs but flags nobody, and `/investigate-artist` skips Google's web detection and names it as skipped.",
     fields: [{ env: "GOOGLE_VISION_API_KEY", label: "API key" }],
     testCost: null,
     async test(values) {

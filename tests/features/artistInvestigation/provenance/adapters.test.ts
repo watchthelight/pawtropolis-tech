@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 /**
  * Pawtropolis Tech -- tests/features/artistInvestigation/provenance/adapters.test.ts
- * WHAT: The three reverse image lookup adapters and the helpers they share,
+ * WHAT: The four reverse image lookup adapters and the helpers they share,
  *       with every HTTP call stubbed.
  * WHY: Each service has its own request format, its own way of saying "no
  *      result" and its own way of failing. The adapters must send what the
@@ -11,6 +11,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { e621 } from "../../../../src/features/artistInvestigation/provenance/e621.js";
 import { fluffle } from "../../../../src/features/artistInvestigation/provenance/fluffle.js";
+import { googleWeb } from "../../../../src/features/artistInvestigation/provenance/googleWeb.js";
 import { saucenao } from "../../../../src/features/artistInvestigation/provenance/saucenao.js";
 import {
   LookupError,
@@ -57,6 +58,15 @@ const call = (spy: ReturnType<typeof stubFetch>, index: number) => {
 };
 
 const tweetId = (ms: number) => String((BigInt(ms) - 1288834974657n) << 22n);
+
+/** The error a search fails with. A search that succeeds fails the test. */
+const rejection = (search: Promise<unknown>) =>
+  search.then(
+    () => {
+      throw new Error("the search did not fail");
+    },
+    (err: unknown) => err as Error
+  );
 
 describe("shared helpers", () => {
   it("spaces requests by the service's gap", async () => {
@@ -555,13 +565,6 @@ describe("saucenao", () => {
 
   it("keeps the API key out of every error it raises", async () => {
     stubFetch(new TypeError("fetch failed: https://saucenao.com/search.php?api_key=sauce-secret"));
-    const rejection = (search: Promise<unknown>) =>
-      search.then(
-        () => {
-          throw new Error("the search did not fail");
-        },
-        (err: unknown) => err as Error
-      );
     const network = await rejection(saucenao.search(image, context(keys)));
     expect(network.message).toBe("network error");
 
@@ -569,5 +572,279 @@ describe("saucenao", () => {
     const refused = await rejection(saucenao.search(image, context(keys)));
     expect(refused).toMatchObject({ fatal: true, message: "credentials were rejected (HTTP 403)" });
     expect(refused.message).not.toContain("sauce-secret");
+  });
+});
+
+describe("google", () => {
+  const keys = { googleVisionApiKey: "vision-secret" };
+
+  /** An error answer in the form Google's APIs use. */
+  const refusal = (status: number, reason: string, message: string) =>
+    json(
+      {
+        error: {
+          code: status,
+          message,
+          details: [
+            {
+              "@type": "type.googleapis.com/google.rpc.ErrorInfo",
+              reason,
+              domain: "googleapis.com",
+              metadata: { service: "vision.googleapis.com" },
+            },
+            {
+              "@type": "type.googleapis.com/google.rpc.LocalizedMessage",
+              locale: "en-US",
+              message,
+            },
+          ],
+        },
+      },
+      status
+    );
+
+  const found = (webDetection: Record<string, unknown>) => json({ responses: [{ webDetection }] });
+
+  it("is skipped without a Vision key and never searches mirrored copies", () => {
+    expect(googleWeb.unavailableReason(settings())).toBe(
+      "no Google Vision key stored, set one with /service-keys"
+    );
+    expect(googleWeb.unavailableReason(settings(keys))).toBeNull();
+    // Google bills every image it is sent.
+    expect(googleWeb.mirrored).toBe(false);
+  });
+
+  it("asks for web detection with the key in a header and the image as base64", async () => {
+    const spy = stubFetch(json({ responses: [{}] }));
+    const ctx = context(keys);
+
+    expect(await googleWeb.search(image, ctx)).toEqual([]);
+
+    expect(ctx.pace).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(1);
+    const sent = call(spy, 0);
+    expect(sent.url).toBe("https://vision.googleapis.com/v1/images:annotate");
+    expect(sent.init.method).toBe("POST");
+    expect(sent.headers).toEqual({
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": "vision-secret",
+    });
+    expect(JSON.parse(sent.init.body as string)).toEqual({
+      requests: [
+        {
+          image: { content: Buffer.from("jpeg-bytes").toString("base64") },
+          features: [{ type: "WEB_DETECTION", maxResults: 10 }],
+        },
+      ],
+    });
+  });
+
+  it("reads a page with the whole image as exact and a page with a part of it as probable", async () => {
+    const posted = Date.UTC(2024, 5, 15, 12);
+    stubFetch(
+      found({
+        webEntities: [{ entityId: "/m/0jcx", score: 0.9, description: "Fox" }],
+        bestGuessLabels: [{ label: "fox drawing" }],
+        fullMatchingImages: [
+          { url: "https://images.example.net/copy/sunset.png" },
+          { url: "https://cdn.example.org/files/sunset-full.png" },
+          { url: "data:image/png;base64,AAAA" },
+        ],
+        partialMatchingImages: [{ url: "https://cdn.example.org/files/sunset-crop.png" }],
+        pagesWithMatchingImages: [
+          {
+            url: "https://www.deviantart.com/foxyartz/art/Sunset-fox-1",
+            pageTitle: "<b>Sunset</b> fox by FoxyArtz on DeviantArt",
+            fullMatchingImages: [{ url: "https://images.example.net/copy/sunset.png" }],
+          },
+          {
+            url: "https://shop.example.com/listing/55",
+            pageTitle: "Fox sticker",
+            partialMatchingImages: [{ url: "https://shop.example.com/img/55.jpg" }],
+          },
+          {
+            url: `https://x.com/SomeoneElse/status/${tweetId(posted)}`,
+            fullMatchingImages: [{ url: "https://pbs.example.com/media/a.jpg" }],
+            partialMatchingImages: [{ url: "https://pbs.example.com/media/b.jpg" }],
+          },
+          { url: "javascript:alert(1)", fullMatchingImages: [{ url: "https://a.example/x.png" }] },
+          { pageTitle: "a page without an address" },
+        ],
+        visuallySimilarImages: [{ url: "https://lookalike.example.com/fox.png" }],
+      })
+    );
+
+    const matches = await googleWeb.search(image, context(keys));
+
+    expect(matches).toEqual([
+      {
+        service: "google",
+        sourceUrl: "https://www.deviantart.com/foxyartz/art/Sunset-fox-1",
+        platform: "deviantart",
+        uploader: null,
+        artists: [],
+        postedAt: null,
+        similarity: null,
+        quality: "exact",
+        title: "Sunset fox by FoxyArtz on DeviantArt",
+        tags: [],
+        relatedUrls: [],
+      },
+      {
+        service: "google",
+        sourceUrl: "https://shop.example.com/listing/55",
+        platform: "shop.example.com",
+        uploader: null,
+        artists: [],
+        postedAt: null,
+        similarity: null,
+        quality: "probable",
+        title: "Fox sticker",
+        tags: [],
+        relatedUrls: [],
+      },
+      {
+        service: "google",
+        sourceUrl: `https://x.com/SomeoneElse/status/${tweetId(posted)}`,
+        platform: "twitter",
+        uploader: null,
+        artists: [],
+        // Google gives no date. A tweet's own address carries one.
+        postedAt: "2024-06-15T12:00:00.000Z",
+        similarity: null,
+        quality: "exact",
+        title: null,
+        tags: [],
+        relatedUrls: [],
+      },
+      // A copy of the file that is on none of the pages. Look-alikes and the
+      // loose crop are not matches.
+      {
+        service: "google",
+        sourceUrl: "https://cdn.example.org/files/sunset-full.png",
+        platform: "cdn.example.org",
+        uploader: null,
+        artists: [],
+        postedAt: null,
+        similarity: null,
+        quality: "exact",
+        title: null,
+        tags: [],
+        relatedUrls: [],
+      },
+    ]);
+  });
+
+  it("reads at most ten pages and four loose copies of the file", async () => {
+    const page = (n: number) => `https://pages.example.com/${n}`;
+    const file = (n: number) => `https://files.example.com/${n}.png`;
+    stubFetch(
+      found({
+        fullMatchingImages: Array.from({ length: 7 }, (_, i) => ({ url: file(i) })),
+        pagesWithMatchingImages: Array.from({ length: 12 }, (_, i) => ({ url: page(i) })),
+      })
+    );
+
+    const matches = await googleWeb.search(image, context(keys));
+
+    expect(matches.map((m) => m.sourceUrl)).toEqual([
+      ...Array.from({ length: 10 }, (_, i) => page(i)),
+      ...Array.from({ length: 4 }, (_, i) => file(i)),
+    ]);
+    // A page that names no matching image of its own is not taken for a whole copy.
+    expect(matches.slice(0, 10).map((m) => m.quality)).toEqual(Array(10).fill("probable"));
+  });
+
+  it("returns no matches when Google found nothing", async () => {
+    stubFetch(found({ webEntities: [{ description: "Fox" }] }));
+    expect(await googleWeb.search(image, context(keys))).toEqual([]);
+    stubFetch(json({ unexpected: true }));
+    expect(await googleWeb.search(image, context(keys))).toEqual([]);
+  });
+
+  it("stops the service when Google refuses the request, and passes on only the reason code", async () => {
+    stubFetch(
+      refusal(
+        403,
+        "ACCESS_DENIED",
+        "Permission denied on the service. Enable it for project #123456789012."
+      )
+    );
+    const failure = await rejection(googleWeb.search(image, context(keys)));
+
+    expect(failure).toBeInstanceOf(LookupError);
+    expect(failure).toMatchObject({
+      fatal: true,
+      message: "credentials were rejected (HTTP 403): Google's reason: ACCESS_DENIED",
+    });
+    // Google's own sentence names the project behind the key.
+    expect(failure.message).not.toContain("123456789012");
+    expect(failure.message).not.toContain("vision-secret");
+  });
+
+  it("says so when the key itself is not valid", async () => {
+    stubFetch(refusal(400, "API_KEY_INVALID", "API key not valid. Please pass a valid API key."));
+
+    await expect(googleWeb.search(image, context(keys))).rejects.toMatchObject({
+      name: "LookupError",
+      fatal: true,
+      message: "the API key is not valid (HTTP 400)",
+    });
+  });
+
+  it("stops the service on a spent quota and keeps going after a server error", async () => {
+    stubFetch(refusal(429, "RATE_LIMIT_EXCEEDED", "Quota exceeded."));
+    await expect(googleWeb.search(image, context(keys))).rejects.toMatchObject({
+      fatal: true,
+      message: "rate limit reached (HTTP 429): Google's reason: RATE_LIMIT_EXCEEDED",
+    });
+
+    stubFetch(new Response("oops", { status: 503 }));
+    await expect(googleWeb.search(image, context(keys))).rejects.toMatchObject({
+      fatal: false,
+      message: "service error (HTTP 503)",
+    });
+  });
+
+  it("goes by the status alone when the refusal carries no reason code", async () => {
+    stubFetch(new Response("<html>denied</html>", { status: 403 }));
+    await expect(googleWeb.search(image, context(keys))).rejects.toMatchObject({
+      fatal: true,
+      message: "credentials were rejected (HTTP 403)",
+    });
+
+    // Only Google's code words are passed on, never a sentence.
+    stubFetch(
+      json(
+        { error: { details: [{ reason: "see https://example.com/project/123456789012" }] } },
+        403
+      )
+    );
+    await expect(googleWeb.search(image, context(keys))).rejects.toMatchObject({
+      message: "credentials were rejected (HTTP 403)",
+    });
+  });
+
+  it("reports an image that Google took and could not read", async () => {
+    stubFetch(json({ responses: [{ error: { code: 3, message: "Bad image data." } }] }));
+
+    await expect(googleWeb.search(image, context(keys))).rejects.toMatchObject({
+      name: "LookupError",
+      fatal: false,
+      message: "Google could not read the image",
+    });
+  });
+
+  it("reports a dropped connection and a broken answer in plain words", async () => {
+    stubFetch(new TypeError("fetch failed"));
+    await expect(googleWeb.search(image, context(keys))).rejects.toMatchObject({
+      message: "network error",
+      fatal: false,
+    });
+
+    stubFetch(new Response("<html>maintenance</html>", { status: 200 }));
+    await expect(googleWeb.search(image, context(keys))).rejects.toMatchObject({
+      message: "answer was not valid JSON",
+    });
   });
 });

@@ -219,16 +219,16 @@ Criteria the command scores, each cited to its source in the output. Items 1, 4,
 - **Collection.** Full history with pagination. Images from attachments and embeds, fetched as bytes at run time. Videos and source files are listed but cannot be inspected, and the output says so. Links and gallery handles are parsed from message text.
 - **Provenance services.**
 
-  | Service                                                   | Use                                               | Auth                                  | Limits honored                                      |
-  | --------------------------------------------------------- | ------------------------------------------------- | ------------------------------------- | --------------------------------------------------- |
-  | Fluffle (fluffle.xyz)                                     | Yes, always on                                    | None; descriptive User-Agent required | One request at a time                               |
-  | e621                                                      | Yes, when `E621_LOGIN` and `E621_API_KEY` are set | HTTP Basic                            | 1 request per second                                |
-  | SauceNAO                                                  | Yes, when `SAUCENAO_API_KEY` is set               | API key                               | 4 per 30 seconds, daily quota from response headers |
-  | Google Vision Web Detection                               | Not built                                         |                                       | Billing is off in production; owner decision        |
-  | TinEye                                                    | Not built                                         |                                       | Paid, about 200 USD minimum: owner decision         |
-  | FuzzySearch                                               | Not built                                         |                                       | No public way to get a key                          |
-  | IQDB.org, Kheina, Bing Visual Search                      | Not used                                          |                                       | Anime boorus only; site down; API retired           |
-  | FurAffinity, Pixiv, Inkbunny pages, ArtStation, Toyhou.se | Never scraped                                     |                                       | Terms forbid it or no official API                  |
+  | Service                                                   | Use                                               | Auth                                  | Limits honored                                        |
+  | --------------------------------------------------------- | ------------------------------------------------- | ------------------------------------- | ----------------------------------------------------- |
+  | Fluffle (fluffle.xyz)                                     | Yes, always on                                    | None; descriptive User-Agent required | One request at a time                                 |
+  | e621                                                      | Yes, when `E621_LOGIN` and `E621_API_KEY` are set | HTTP Basic                            | 1 request per second                                  |
+  | SauceNAO                                                  | Yes, when `SAUCENAO_API_KEY` is set               | API key                               | 4 per 30 seconds, daily quota from response headers   |
+  | Google web detection (Cloud Vision)                       | Yes, when `GOOGLE_VISION_API_KEY` is set (26.1.0) | API key                               | 1 request per second; one per image, billed by Google |
+  | TinEye                                                    | Not built                                         |                                       | Paid, about 200 USD minimum: owner decision           |
+  | FuzzySearch                                               | Not built                                         |                                       | No public way to get a key                            |
+  | IQDB.org, Kheina, Bing Visual Search                      | Not used                                          |                                       | Anime boorus only; site down; API retired             |
+  | FurAffinity, Pixiv, Inkbunny pages, ArtStation, Toyhou.se | Never scraped                                     |                                       | Terms forbid it or no official API                    |
 
   A service without a key is skipped and named as skipped. One failing service does not stop the run. Results are cached by image hash.
 

@@ -9,7 +9,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { getSettings } from "../../../src/features/artistInvestigation/config.js";
 
-const NAMES = ["SAUCENAO_API_KEY", "E621_LOGIN", "E621_API_KEY"] as const;
+const NAMES = ["SAUCENAO_API_KEY", "E621_LOGIN", "E621_API_KEY", "GOOGLE_VISION_API_KEY"] as const;
 const saved = new Map<string, string | undefined>();
 
 beforeEach(() => {
@@ -33,6 +33,7 @@ describe("getSettings: lookup keys", () => {
       sauceNaoApiKey: null,
       e621Login: null,
       e621ApiKey: null,
+      googleVisionApiKey: null,
     });
   });
 
@@ -40,11 +41,13 @@ describe("getSettings: lookup keys", () => {
     process.env.SAUCENAO_API_KEY = "sauce-key";
     process.env.E621_LOGIN = "pawbot";
     process.env.E621_API_KEY = "e6-key";
+    process.env.GOOGLE_VISION_API_KEY = "vision-key";
 
     expect(getSettings()).toMatchObject({
       sauceNaoApiKey: "sauce-key",
       e621Login: "pawbot",
       e621ApiKey: "e6-key",
+      googleVisionApiKey: "vision-key",
     });
   });
 

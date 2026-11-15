@@ -120,7 +120,7 @@ The dashboard has its own scripts, run inside `web/`: `npm run dev`, `npm run ch
 
 ### Artist Verification Review
 - `/investigate-artist`, run inside a 2D artist verification ticket by a bot owner (`OWNER_IDS`), reads the whole ticket and every image in it
-- Reverse image lookups (Fluffle, and SauceNAO and e621 when a key is set) and the applicant's history in the server
+- Reverse image lookups (Fluffle, and SauceNAO, e621 and Google's web detection when a key is set) and the applicant's history in the server
 - A Claude API assessment against the handbook's own criteria: an advisory score, a breakdown per criterion with the evidence, flags and follow-up questions
 - The reply is ephemeral and nothing is posted in the ticket. It gives indicators, never a verdict, and it never approves, denies, changes roles or messages the applicant
 - Cost per run and a monthly total are tracked, and the command refuses to run past `INVESTIGATE_MONTHLY_CAP_USD`

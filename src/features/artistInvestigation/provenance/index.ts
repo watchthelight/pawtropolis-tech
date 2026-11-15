@@ -24,10 +24,11 @@ import type {
 import { readCache, writeCache } from "./cache.js";
 import { e621 } from "./e621.js";
 import { fluffle } from "./fluffle.js";
+import { googleWeb } from "./googleWeb.js";
 import { saucenao } from "./saucenao.js";
 import { LookupError, OutOfTimeError, Pacer, type LookupService, type Sleep } from "./shared.js";
 
-export const LOOKUP_SERVICES: readonly LookupService[] = [fluffle, e621, saucenao];
+export const LOOKUP_SERVICES: readonly LookupService[] = [fluffle, e621, saucenao, googleWeb];
 
 export interface ProvenanceContext {
   settings: InvestigationSettings;
@@ -92,22 +93,48 @@ const canonicalUrl = (url: string) =>
 
 const QUALITY_RANK = { exact: 0, probable: 1, unlikely: 2 } as const;
 
+const isGoogle = (hit: Hit) => hit.match.service === "google";
+
 /** One entry per source per image, best first, originals ahead of mirrored copies. */
 function dedupeAndRank(hits: Hit[]): { kept: Hit[]; omitted: number } {
   const best = new Map<string, Hit>();
   for (const hit of hits) {
     const key = `${hit.imageKey}|${canonicalUrl(hit.match.sourceUrl)}`;
     const current = best.get(key);
+    // When Google and an art archive find the same page, the archive's entry
+    // stays: it names the artist, and it knows whether only the mirrored copy matched.
     const better =
       !current ||
-      (current.variant === "mirrored" && hit.variant === "original") ||
-      (current.variant === hit.variant && !current.match.postedAt && hit.match.postedAt !== null);
+      (isGoogle(current) && !isGoogle(hit)) ||
+      (isGoogle(current) === isGoogle(hit) &&
+        ((current.variant === "mirrored" && hit.variant === "original") ||
+          (current.variant === hit.variant &&
+            !current.match.postedAt &&
+            hit.match.postedAt !== null)));
     if (better) best.set(key, hit);
   }
   const rank = (hit: Hit) => (hit.match.quality ? QUALITY_RANK[hit.match.quality] : 1);
-  const ranked = [...best.values()].sort(
+  const byStrength = [...best.values()].sort(
     (a, b) => rank(a) - rank(b) || (b.match.similarity ?? 0) - (a.match.similarity ?? 0)
   );
+
+  // Google names no artist, and a picture that is all over the web brings a page
+  // for every copy. Past its first few matches for an image the rest go behind
+  // everything else, so they cannot push the art archives' matches off the list.
+  const googleCount = new Map<string, number>();
+  const front: Hit[] = [];
+  const back: Hit[] = [];
+  for (const hit of byStrength) {
+    if (!isGoogle(hit)) {
+      front.push(hit);
+      continue;
+    }
+    const count = (googleCount.get(hit.imageKey) ?? 0) + 1;
+    googleCount.set(hit.imageKey, count);
+    (count > LIMITS.googleMatchesPerImage ? back : front).push(hit);
+  }
+  const ranked = [...front, ...back];
+
   const perImage = new Map<string, number>();
   const kept = ranked.filter((hit) => {
     const count = perImage.get(hit.imageKey) ?? 0;

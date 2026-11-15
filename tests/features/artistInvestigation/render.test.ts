@@ -899,6 +899,102 @@ describe("renderReport: reverse image search", () => {
     expect(searched([])).toContain("**Services**\nNo lookup ran.");
   });
 
+  describe("Google web detection", () => {
+    const BILLED = "Google bills web detection per image, and this run sent";
+    const HOW_TO_READ =
+      'In Google\'s matches "exact" is a page that holds the whole image, and "probable" a page that holds a part of it or an edited copy.';
+
+    it("says how many images Google was sent and how to read its matches", () => {
+      const text =
+        section(
+          render({
+            provenance: {
+              matches: [
+                provenanceMatch({
+                  service: "google",
+                  sourceUrl: "https://shop.example.com/listing/55",
+                  platform: "shop.example.com",
+                  uploader: null,
+                  artists: [],
+                  similarity: null,
+                  quality: "probable",
+                  ownership: "unknown",
+                  matchedHandle: null,
+                  predatesAccount: null,
+                }),
+              ],
+              services: [
+                service(),
+                service({ service: "google", queries: 3, cacheHits: 1, matches: 1 }),
+              ],
+              omitted: 0,
+            },
+          }),
+          "Reverse image search"
+        ) ?? "";
+
+      expect(text).toContain(
+        [
+          "**Services**",
+          "Fluffle: ran, 2 lookups, 1 match",
+          "Google web detection: ran, 3 lookups (+1 from cache), 1 match",
+          `-# ${BILLED} 3 images. ${HOW_TO_READ}`,
+        ].join("\n")
+      );
+      expect(text).toContain(
+        [
+          "`p1` [shop.example.com](https://shop.example.com/listing/55) · probable · no post date · via Google web detection",
+          "Name check: nothing to compare: no name on the match, or the applicant claimed no handles outside Discord",
+        ].join("\n")
+      );
+    });
+
+    it("leaves the billing line out when every answer came from the cache", () => {
+      const text = searched([service({ service: "google", queries: 0, cacheHits: 4, matches: 0 })]);
+
+      expect(text).toContain("Google web detection: ran, 0 lookups (+4 from cache), 0 matches");
+      expect(text).not.toContain(BILLED);
+      expect(text).not.toContain(HOW_TO_READ);
+    });
+
+    it("counts one image in the singular and explains nothing when Google found nothing", () => {
+      const text = searched([service({ service: "google", queries: 1, matches: 0 })]);
+
+      expect(text).toContain(`-# ${BILLED} 1 image.`);
+      expect(text).not.toContain(HOW_TO_READ);
+    });
+
+    it("says nothing about billing when the lookup was skipped or refused", () => {
+      const skipped = searched([
+        service({
+          service: "google",
+          status: "skipped",
+          detail: "no Google Vision key stored, set one with /service-keys",
+          queries: 0,
+          matches: 0,
+        }),
+      ]);
+      const refused = searched([
+        service({
+          service: "google",
+          status: "failed",
+          detail:
+            "0 of 3 lookups finished: credentials were rejected (HTTP 403): Google's reason: ACCESS_DENIED",
+          queries: 0,
+          matches: 0,
+        }),
+      ]);
+
+      expect(skipped).toContain(
+        "Google web detection: skipped (no Google Vision key stored, set one with /service-keys)"
+      );
+      expect(refused).toContain(
+        "Google web detection: **failed** (0 of 3 lookups finished: credentials were rejected (HTTP 403): Google's reason: ACCESS\\_DENIED)"
+      );
+      expect(`${skipped}${refused}`).not.toContain(BILLED);
+    });
+  });
+
   it("lists a match with its source, similarity, names and date", () => {
     const text = section(
       render({

@@ -104,13 +104,16 @@ The owner-only review aid for 2D artist verification tickets needs migration 084
 | `INVESTIGATE_MAX_IMAGES` | Images analyzed per run, 1 to 20 | `12` |
 | `SAUCENAO_API_KEY` | SauceNAO reverse image search. Skipped when unset. Set from Discord with `/service-keys` | unset |
 | `E621_LOGIN`, `E621_API_KEY` | e621 reverse image search. Skipped unless both are set. Set from Discord with `/service-keys` | unset |
-| `PROVENANCE_USER_AGENT` | User-Agent sent to the lookup services | `pawtropolis-tech/<version>` plus the repo URL |
+| `GOOGLE_VISION_API_KEY` | Google's web detection, which looks for the image on the open web. It runs on the key of the avatar scan. Skipped when unset. Set from Discord with `/service-keys` | unset |
+| `PROVENANCE_USER_AGENT` | User-Agent sent to Fluffle, e621 and SauceNAO | `pawtropolis-tech/<version>` plus the repo URL |
 
 Fluffle needs no key. The cap counts only the runs this command records in `artist_investigation_run`. Anything else that uses the same key is not counted, and the Claude Console stays the billing record. Lookup results are cached by image hash for 7 days in `artist_provenance_cache`.
 
+Google bills web detection per image to the Google Cloud project behind the Vision key: the first 1000 images a month are free, and after that it is 3.50 USD per 1000 ([Cloud Vision pricing](https://cloud.google.com/vision/pricing), read on 2026-11-15). A run sends each image once and no mirrored copy, and an image that was looked up in the last 7 days is answered from the cache. This spend is not in the report's footer and is not counted against `INVESTIGATE_MONTHLY_CAP_USD`. The project needs billing switched on and the Cloud Vision API enabled. When Google refuses a request, the report shows the HTTP status and Google's reason code, such as `ACCESS_DENIED`. Google's own sentence is left out, because it can name the project.
+
 ### `/service-keys`
 
-With `/service-keys` a bot owner sets, tests and removes three keys from Discord: `GOOGLE_VISION_API_KEY` (the avatar scan and `/audit nsfw`), `SAUCENAO_API_KEY`, and `E621_LOGIN` with `E621_API_KEY` (the lookups in `/investigate-artist`). It needs `OWNER_IDS` and a command sync (`npm run deploy:cmds` on the host). There is no migration and no new variable.
+With `/service-keys` a bot owner sets, tests and removes three keys from Discord: `GOOGLE_VISION_API_KEY` (the avatar scan, `/audit nsfw` and Google's web detection in `/investigate-artist`), `SAUCENAO_API_KEY`, and `E621_LOGIN` with `E621_API_KEY` (two more lookups in `/investigate-artist`). It needs `OWNER_IDS` and a command sync (`npm run deploy:cmds` on the host). There is no migration and no new variable.
 
 - **Where a key goes.** Into the `.env` file in the bot's working directory, which is the file PM2 starts both apps with, and into the running process. `deploy.sh` never ships or replaces that file, so a key set from Discord is still there after a deploy and after a restart. PM2 keeps no copy of these values: they are read from the file each time the bot starts, so a removed key stays removed.
 - **How the file is changed.** The line for the name is replaced where it stands, or added at the end when there is none. Every other line stays as it is, byte for byte, and so do the file's line endings and permissions. The new content is written to a temporary file next to `.env` and renamed over it, so a crash in the middle cannot leave half a file.

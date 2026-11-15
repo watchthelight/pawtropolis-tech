@@ -2405,7 +2405,7 @@ A private second opinion on a 2D artist verification ticket. Run it inside the a
 **What it looks at:**
 1. Every message in the ticket: text, images, links and gallery handles. Videos and other files are listed by name only, and links are not opened
 2. What the server knows about the applicant: account age, join date, roles, recent activity, their gate application, their other 2D artist tickets and the Verify Blacklist thread
-3. Reverse image search for each image on Fluffle, e621 and SauceNAO. A service with no API key configured is skipped, and the report names it as skipped. The e621 and SauceNAO keys are set with [`/service-keys`](#service-keys)
+3. Reverse image search for each image: the art archives Fluffle, e621 and SauceNAO, and the open web through Google's web detection. A service with no key stored is skipped, and the report names it as skipped. The keys are set with [`/service-keys`](#service-keys). Google's web detection uses the Google Vision key
 4. Claude's read of the images and the ticket text, rated against each handbook rule
 
 **What you get back:**
@@ -2421,6 +2421,9 @@ A private second opinion on a 2D artist verification ticket. Run it inside the a
 - Where the requirements shown to applicants ask for something other than the mod handbook does, it rates by the handbook. A requirement line the handbook overrules is marked as such in the report, and the Notes say when the ticket's greeting carries one
 - It only works in a 2D artist ticket (`2d-artist-NNNN` in the Tickets category, or a first-party ticket of that type). Anywhere else it says so
 - A run takes a minute or two for a small ticket and longer with many images. It costs real money: a ticket with four images came to about $0.18 with the default model. The command refuses to start when the month's tracked spend would pass `INVESTIGATE_MONTHLY_CAP_USD`
+- Google's web detection finds pages on the open web that hold the image, which the art archives do not cover. It names no artist, gives no post date and no similarity figure. Its matches say "exact" for a page with the whole image and "probable" for a page with a part of it or an edited copy. The name check for such a match goes by the account name in the page's address, when there is one
+- Six matches are listed per image. When Google finds more than four pages for one image, the others go to the end of that image's list, so a picture that is all over the web cannot push the art archives' matches off it
+- Google bills web detection per image. Mirrored copies are not sent there, and the report says how many images a run sent. This is not part of the cost in the footer and not counted against `INVESTIGATE_MONTHLY_CAP_USD`
 - A timelapse or a layered source file is the strongest proof the workflow asks for, and the command cannot open either. Watch the video and open the file yourself
 - Images are capped per run (`INVESTIGATE_MAX_IMAGES`, 12 by default) and large ones are downscaled before they are sent anywhere
 - One run at a time
@@ -2436,7 +2439,7 @@ Sets, tests and removes the API keys the bot uses for outside services, so nobod
 
 | Service | What the key is for | Without a key |
 |---------|---------------------|---------------|
-| Google Vision | The avatar scan when a member joins or changes their avatar, and `/audit nsfw` | Avatars are not scanned, and `/audit nsfw` runs but flags nobody |
+| Google Vision | The avatar scan when a member joins or changes their avatar, `/audit nsfw`, and Google's web detection in `/investigate-artist` | Avatars are not scanned, `/audit nsfw` runs but flags nobody, and `/investigate-artist` skips Google's web detection and names it as skipped |
 | SauceNAO | The SauceNAO lookup in `/investigate-artist` | The lookup is skipped, and the report names it as skipped |
 | e621 | The e621 lookup in `/investigate-artist`. It takes the account name and that account's API key | The lookup is skipped, and the report names it as skipped |
 
@@ -2457,7 +2460,7 @@ Sets, tests and removes the API keys the bot uses for outside services, so nobod
 **Important notes:**
 - A key is never shown again after you enter it: not in a reply, not in the logs. To replace one, set it again
 - The test is a real request. For SauceNAO it uses one search of the account's daily allowance. For Google Vision it is one label request, counted like any scan
-- When Google refuses a request (billing switched off, key revoked), the avatar scans stop for six hours. `status` says when that is the case, and a `test` that Google accepts starts them again
+- When Google refuses a request (billing switched off, the Vision API not enabled for the project, key revoked), the avatar scans stop for six hours. `status` says when that is the case, and a `test` that Google accepts starts them again
 - A key cannot contain spaces, double quotes, `#`, `$`, backslashes or line breaks. None of the three services issues keys like that, so a refusal for this reason means something else got pasted along
 - The keys for `/isitreal` are set with `/config isitreal`. The Claude API key for `/investigate-artist` stays in the `.env` file on the host
 

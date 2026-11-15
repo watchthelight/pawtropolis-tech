@@ -86,6 +86,18 @@ const context = (overrides: Partial<ProvenanceContext> = {}): ProvenanceContext 
 });
 
 const source = (n: number) => `https://www.furaffinity.net/view/${n}/`;
+const webPage = (n: number) => `https://pages.example.com/${n}`;
+
+/** A match the way the Google adapter builds one: a page, no names, no score. */
+const googleMatch = (sourceUrl: string) =>
+  rawMatch({
+    service: "google",
+    sourceUrl,
+    platform: "pages.example.com",
+    uploader: null,
+    artists: [],
+    similarity: null,
+  });
 
 describe("runProvenance", () => {
   let db: ReturnType<typeof memoryDb>;
@@ -474,6 +486,80 @@ describe("runProvenance", () => {
         ["fluffle", 1, 1],
         ["saucenao", 1, 0],
       ]);
+    });
+
+    it("keeps the art archive's entry when Google finds the same page", async () => {
+      // The archive found the page only with the mirrored copy. Google's entry is
+      // for the original and still must not replace it: it names nobody.
+      const archive = () =>
+        service(
+          "fluffle",
+          async (image) => (image.bytes.toString().startsWith("mirrored") ? [rawMatch()] : []),
+          { mirrored: true }
+        );
+      const google = () => service("google", async () => [googleMatch(rawMatch().sourceUrl)]);
+      const mirroredArchiveEntry = [
+        expect.objectContaining({
+          service: "fluffle",
+          artists: ["FoxyArtz"],
+          variant: "mirrored",
+          baseHints: [
+            "found only when the image was mirrored, so the submission may be a flipped copy",
+          ],
+        }),
+      ];
+
+      expect((await run(["img1"], [archive(), google()])).matches).toEqual(mirroredArchiveEntry);
+      expect((await run(["img2"], [google(), archive()])).matches).toEqual(mirroredArchiveEntry);
+    });
+
+    it("ranks Google's first four matches for an image with the rest and puts the later ones last", async () => {
+      const google = service("google", async () =>
+        Array.from({ length: 6 }, (_, i) => googleMatch(webPage(i)))
+      );
+      const fluffle = service("fluffle", async () => [
+        rawMatch({ sourceUrl: source(1), quality: "probable", similarity: 85 }),
+        rawMatch({ sourceUrl: source(2), quality: "probable", similarity: 80 }),
+        rawMatch({ sourceUrl: source(3), quality: "probable", similarity: 75 }),
+      ]);
+
+      const result = await run(["img1"], [fluffle, google]);
+
+      // Six whole copies on the web would otherwise take every place on the list.
+      expect(result.matches.map((m) => m.sourceUrl)).toEqual([
+        webPage(0),
+        webPage(1),
+        webPage(2),
+        webPage(3),
+        source(1),
+        source(2),
+      ]);
+      expect(result.omitted).toBe(3);
+      expect(result.services.map((s) => [s.service, s.matches])).toEqual([
+        ["fluffle", 2],
+        ["google", 4],
+      ]);
+    });
+
+    it("lists more of Google's matches when nothing else needs the room", async () => {
+      const google = service("google", async () =>
+        Array.from({ length: 7 }, (_, i) => googleMatch(webPage(i)))
+      );
+      const fluffle = service("fluffle", async () => [
+        rawMatch({ sourceUrl: source(1), quality: "probable", similarity: 85 }),
+      ]);
+
+      const result = await run(["img1"], [fluffle, google]);
+
+      expect(result.matches.map((m) => m.sourceUrl)).toEqual([
+        webPage(0),
+        webPage(1),
+        webPage(2),
+        webPage(3),
+        source(1),
+        webPage(4),
+      ]);
+      expect(result.omitted).toBe(2);
     });
 
     it("prefers the copy of a duplicate that carries a post date", async () => {

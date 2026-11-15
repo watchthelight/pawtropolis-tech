@@ -59,8 +59,10 @@ export const LIMITS = {
   maxOutputTokens: 20_000,
   /** Images downloaded and decoded at the same time. */
   imageConcurrency: 4,
-  /** Matches kept per image and service after sorting by similarity. */
+  /** Matches kept per image, over all services together, best first. */
   matchesPerQuery: 6,
+  /** How many of Google's matches for one image are ranked with the rest. Later ones go last. */
+  googleMatchesPerImage: 4,
   /** Pages of the Ticket Tool log read when looking for the applicant's other tickets. */
   logPages: 5,
   /** Pages of the Verify Blacklist thread read. */
@@ -77,6 +79,8 @@ export interface InvestigationSettings {
   sauceNaoApiKey: string | null;
   e621Login: string | null;
   e621ApiKey: string | null;
+  /** The key of the avatar scan. Google's web detection lookup runs on it too. */
+  googleVisionApiKey: string | null;
   userAgent: string;
 }
 
@@ -96,6 +100,7 @@ export function getSettings(): InvestigationSettings {
     sauceNaoApiKey: process.env.SAUCENAO_API_KEY?.trim() || null,
     e621Login: process.env.E621_LOGIN?.trim() || null,
     e621ApiKey: process.env.E621_API_KEY?.trim() || null,
+    googleVisionApiKey: process.env.GOOGLE_VISION_API_KEY?.trim() || null,
     userAgent: env.PROVENANCE_USER_AGENT || defaultUserAgent(),
   };
 }

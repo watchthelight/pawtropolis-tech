@@ -890,7 +890,7 @@ describe("runInvestigation: a stage that fails", () => {
     });
     expect(report.provenance).toEqual({
       matches: [],
-      services: [failed("fluffle"), failed("e621"), failed("saucenao")],
+      services: [failed("fluffle"), failed("e621"), failed("saucenao"), failed("google")],
       omitted: 0,
     });
     expect(h.deps.analyze.mock.calls[0]?.[0].provenance).toEqual(report.provenance);

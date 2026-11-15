@@ -64,6 +64,7 @@ export function settings(overrides: Partial<InvestigationSettings> = {}): Invest
     sauceNaoApiKey: null,
     e621Login: null,
     e621ApiKey: null,
+    googleVisionApiKey: null,
     userAgent: "test-agent/1.0",
     ...overrides,
   };

@@ -86,6 +86,7 @@ const SERVICE_NAMES: Record<ProvenanceServiceName, string> = {
   fluffle: "Fluffle",
   e621: "e621",
   saucenao: "SauceNAO",
+  google: "Google web detection",
 };
 
 const RATING_WORDS: Record<Rating, string> = {
@@ -433,6 +434,16 @@ function provenanceSection(report: InvestigationReport): Section {
     if (s.status === "partial") return `${name}: **incomplete** (${detail}); ${counts}`;
     return `${name}: ran, ${counts}`;
   });
+  const google = provenance.services.find((s) => s.service === "google");
+  const googleNotes = [
+    google && google.queries > 0
+      ? `Google bills web detection per image, and this run sent ${plural(google.queries, "image")}.`
+      : null,
+    google && google.matches > 0
+      ? 'In Google\'s matches "exact" is a page that holds the whole image, and "probable" a page that holds a part of it or an edited copy.'
+      : null,
+  ].filter(Boolean);
+  if (googleNotes.length > 0) services.push(`-# ${googleNotes.join(" ")}`);
   const blocks = [`**Services**\n${services.length > 0 ? services.join("\n") : "No lookup ran."}`];
 
   const analyzed = evidence.images.filter((image) =>

@@ -94,7 +94,7 @@ export interface TicketEvidence {
   transcriptTruncated: boolean;
 }
 
-export type ProvenanceServiceName = "fluffle" | "e621" | "saucenao";
+export type ProvenanceServiceName = "fluffle" | "e621" | "saucenao" | "google";
 export type ImageVariant = "original" | "mirrored";
 
 /** One hit from a lookup service, before it is compared with the applicant. */

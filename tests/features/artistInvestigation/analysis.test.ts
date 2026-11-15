@@ -657,6 +657,40 @@ describe("buildPromptText", () => {
       );
       expect(brief).not.toContain("The matches for img1 name");
     });
+
+    it("passes on a Google match and tells the model how to read one", () => {
+      const prompt = buildPromptText(
+        input({
+          provenance: {
+            services: [report({ service: "google", queries: 1, matches: 1 })],
+            omitted: 0,
+            matches: [
+              provenanceMatch({
+                service: "google",
+                sourceUrl: "https://shop.example.com/listing/55",
+                platform: "shop.example.com",
+                uploader: null,
+                artists: [],
+                similarity: null,
+                quality: "probable",
+                ownership: "unknown",
+                matchedHandle: null,
+                predatesAccount: null,
+              }),
+            ],
+          },
+        })
+      );
+
+      expect(prompt.brief).toContain("- google: ran; 1 lookup, 1 match\n");
+      expect(prompt.brief).toContain(
+        "- p1 for img1: https://shop.example.com/listing/55 | found by google | probable | site shop.example.com | no post date | ownership label: nothing to compare: no name on the match, or the applicant claimed no handles outside Discord\n"
+      );
+      // The quality words mean something else for Google than for the art archives.
+      expect(prompt.system).toContain(
+        '- A match found by google comes from Google\'s web detection, which searches the open web and not an art archive. For these matches "exact" means the page holds the whole image, and "probable" means it holds a part of it or an edited copy, such as a crop.'
+      );
+    });
   });
 
   describe("transcript", () => {

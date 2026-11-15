@@ -34,7 +34,7 @@ type VisionAPIResponse = {
   }>;
 };
 
-const VISION_ENDPOINT = "https://vision.googleapis.com/v1/images:annotate";
+export const VISION_ENDPOINT = "https://vision.googleapis.com/v1/images:annotate";
 
 // No key means this detection layer is skipped. The key is read on every call,
 // so one set or removed with /service-keys counts from the next scan on.

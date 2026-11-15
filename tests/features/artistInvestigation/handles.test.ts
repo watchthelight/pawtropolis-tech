@@ -345,6 +345,22 @@ describe("scatteredImages", () => {
     expect(scatteredImages([...uploads, ...archived])).toEqual(new Map([["img1", 4]]));
   });
 
+  it("leaves Google's matches out of the count", () => {
+    // Four accounts that reposted one picture are four copies, not four look-alikes.
+    const reposts = Array.from({ length: 4 }, (_, i) =>
+      on("img1", {
+        service: "google",
+        platform: "twitter",
+        sourceUrl: `https://x.com/reposter${i}/status/1700000000000000000`,
+        artists: [],
+        uploader: null,
+      })
+    );
+
+    expect(scatteredImages(reposts).size).toBe(0);
+    expect(scatteredImages([...reposts, ...strangers("img1", 4)])).toEqual(new Map([["img1", 4]]));
+  });
+
   it("ignores matches that carry no name", () => {
     const nameless = Array.from({ length: 6 }, (_, i) =>
       on("img1", { artists: [], uploader: null, sourceUrl: `https://example.com/art/${i}` })

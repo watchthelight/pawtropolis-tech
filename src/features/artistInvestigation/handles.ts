@@ -396,6 +396,9 @@ export function scatteredImages(
 ): Map<string, number> {
   const names = new Map<string, Set<string>>();
   for (const match of matches) {
+    // Google finds copies on the open web, where one picture is reposted under
+    // many accounts. Counting those would call a widely copied image a look-alike.
+    if (match.service === "google") continue;
     const name = normalizeHandle(matchNames(match)[0] ?? "");
     if (!name) continue;
     names.set(match.imageKey, (names.get(match.imageKey) ?? new Set<string>()).add(name));
