@@ -298,7 +298,7 @@ export async function handleServiceKeysModal(
     const unstorable = service.fields.find((field) => !isStorableEnvValue(values[field.env] ?? ""));
     if (unstorable) {
       await interaction.editReply({
-        content: `**Not saved.** "${unstorable.label}" is empty or has a character that cannot be stored: spaces, double quotes, \`#\`, \`$\`, backslashes and line breaks are out. Check that the whole value was pasted and nothing else. Nothing was changed.`,
+        content: `**Not saved.** "${unstorable.label}" is empty or has a character that cannot be stored. Letters, digits and \`. _ ~ + / = : @ -\` can be, and \`'\` after the first character. Check that the whole value was pasted and nothing else. Nothing was changed.`,
       });
       return;
     }

@@ -21,8 +21,11 @@ import path from "node:path";
 export type EnvChanges = Record<string, string | null>;
 
 const NAME = /^[A-Z][A-Z0-9_]*$/;
-// No whitespace, quotes at the start, #, $, backslash or line breaks: each of
-// those is read differently by at least one of the two parsers.
+// Letters, digits and . _ ~ + / = : @ - anywhere, ' after the first character.
+// Both parsers read those back exactly as written. Everything else is refused:
+// a # ends the value, whitespace at either end is dropped and a pair of quotes
+// around the value is taken off. $, backslashes and the rest stay out as well,
+// because other readers of such a file (a shell, dotenv-expand) give them a meaning.
 const STORABLE_VALUE = /^[A-Za-z0-9._~+/=:@-][A-Za-z0-9._~+/=:@'-]*$/;
 const MAX_VALUE_LENGTH = 512;
 
