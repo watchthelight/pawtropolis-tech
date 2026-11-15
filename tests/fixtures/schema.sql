@@ -1132,8 +1132,6 @@ CREATE INDEX IF NOT EXISTS idx_movie_attendance_event_type
       ON movie_attendance(guild_id, event_type, event_date);
 CREATE INDEX IF NOT EXISTS idx_movie_attendance_guild_user ON movie_attendance(guild_id, user_id);
 CREATE INDEX IF NOT EXISTS idx_msg_ticket ON ticket_message(ticket_id, created_at);
-CREATE INDEX IF NOT EXISTS idx_msgarc_author_time ON messages_archive(author_id, created_at_s);
-CREATE INDEX IF NOT EXISTS idx_msgarc_channel_time ON messages_archive(channel_id, created_at_s);
 CREATE INDEX IF NOT EXISTS idx_msgarc_guild_time ON messages_archive(guild_id, created_at_s);
 CREATE INDEX IF NOT EXISTS idx_msr_user_recent
         ON member_role_snapshots(guild_id, user_id, removed_at DESC);

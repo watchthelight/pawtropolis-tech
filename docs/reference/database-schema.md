@@ -4,7 +4,7 @@ Generated from `tests/fixtures/schema.sql` by `scripts/gen-schema-doc.mjs` (`npm
 
 SQLite in WAL mode at `DB_PATH` (default `data/data.db`). Discord ids are TEXT snowflakes. Timestamps are either ISO 8601 TEXT (`*_at`) or Unix seconds INTEGER (`*_at_s`, `*_ts`), as named. The bot opens the file with a 64 MB page cache, a 256 MB memory map and a 64 MB WAL cap; the dashboard opens the same file read-mostly.
 
-103 tables, 0 virtual tables, 120 indexes.
+103 tables, 0 virtual tables, 118 indexes.
 
 ## Retention
 
@@ -925,7 +925,7 @@ Indexes: `idx_react_emoji`, `idx_react_user`
 | `ingested_at_s` | INTEGER | not null |
 | `ingest_source` | TEXT | not null |
 
-Indexes: `idx_msgarc_author_time`, `idx_msgarc_channel_time`, `idx_msgarc_guild_time`
+Indexes: `idx_msgarc_guild_time`
 
 ### metrics_epoch
 
