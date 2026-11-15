@@ -31,9 +31,9 @@
 <p align="center">
   <!-- Static Badges -->
   <img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/watchthelight/0866e5418ac20ee43515b318ddcdc324/raw/badge-version.json" alt="Version">
-  <img src="https://img.shields.io/badge/node-%3E%3D20-brightgreen?logo=node.js&logoColor=white" alt="Node.js">
+  <img src="https://img.shields.io/badge/node-%3E%3D20.9-brightgreen?logo=node.js&logoColor=white" alt="Node.js">
   <img src="https://img.shields.io/badge/discord.js-v14-5865F2?logo=discord&logoColor=white" alt="Discord.js">
-  <img src="https://img.shields.io/badge/TypeScript-5.5-3178C6?logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/TypeScript-6.0-3178C6?logo=typescript&logoColor=white" alt="TypeScript">
   <img src="https://img.shields.io/badge/license-ANW--1.0-blue" alt="License">
 </p>
 
@@ -52,9 +52,13 @@ Pawtropolis Tech is a server-owned verification system that handles community on
 
 Every review action is logged, every decision is attributable, and the bot stays out of the way when it has no work to do.
 
+The current release is **26.0.0** (2026-11-14): [release notes](docs/releases/26.0.0.md), [changelog](CHANGELOG.md).
+
 ---
 
 ## Quick Start
+
+Needs Node 20.9.0 or newer. CI runs Node 24.
 
 ```bash
 # Clone and install
@@ -66,8 +70,8 @@ npm install
 cp .env.example .env
 # Edit .env with your DISCORD_TOKEN and CLIENT_ID
 
-# Run all checks
-npm run check
+# Run the checks CI enforces
+npm run typecheck && npm run lint && npm run knip && npm test && npm run build
 
 # Start development server
 npm run dev
@@ -79,8 +83,13 @@ npm run dev
 | `npm run dev` | Development mode with hot reload |
 | `npm run build` | Build for production |
 | `npm run test` | Run test suite |
-| `npm run check` | Run all quality checks |
+| `npm run typecheck` | Type-check `src/` and `scripts/` |
+| `npm run lint` | ESLint; errors fail CI, warnings do not |
+| `npm run knip` | Find unused files, exports and dependencies |
+| `npm run check` | Typecheck, lint, format check and tests in one go. It stops at the format check until the older files are formatted (see [ci-policy](docs/operations/ci-policy.md)) |
 | `npm run deploy:cmds` | Deploy slash commands to Discord |
+
+The dashboard in `web/` is its own package: `cd web && npm install`, then `npm run dev`, `npm run check` and `npm run build`. The full test suite includes dashboard tests, so install `web/` and run `npx svelte-kit sync` there before `npm test`.
 
 ---
 
@@ -107,6 +116,13 @@ npm run dev
 - Google Cloud Vision SafeSearch integration
 - Configurable detection thresholds
 - One-click Google Lens reverse image search
+
+### Artist Verification Review
+- `/investigate-artist`, run inside a 2D artist verification ticket by a bot owner (`OWNER_IDS`), reads the whole ticket and every image in it
+- Reverse image lookups (Fluffle, and SauceNAO and e621 when a key is set) and the applicant's history in the server
+- A Claude API assessment against the handbook's own criteria: an advisory score, a breakdown per criterion with the evidence, flags and follow-up questions
+- The reply is ephemeral and nothing is posted in the ticket. It gives indicators, never a verdict, and it never approves, denies, changes roles or messages the applicant
+- Cost per run and a monthly total are tracked, and the command refuses to run past `INVESTIGATE_MONTHLY_CAP_USD`
 
 ### Operations
 - Health monitoring with uptime checks, an off-process database integrity check every 6 hours, and event-loop lag tracking on the dashboard system page
@@ -137,6 +153,11 @@ npm run dev
 | `DB_HEALTHCHECK_MODE` | Boot-time integrity check: `quick` (production default), `full` or `skip` |
 | `RETENTION_ENABLED` | Lets the retention scheduler delete instead of logging a dry run |
 | `SENTRY_PROFILES_SAMPLE_RATE` | Opt-in CPU profiling (0 disables and skips loading the profiler) |
+| `OWNER_IDS` | Comma-separated Discord user IDs with owner permissions. `/investigate-artist` runs for these IDs only |
+| `ANTHROPIC_API_KEY`, `ANTHROPIC_WORKSPACE_ID` | Claude API key and workspace for `/investigate-artist`. Without the key the command still gathers the ticket and runs the lookups, and says the assessment was skipped |
+| `INVESTIGATE_MONTHLY_CAP_USD` | Monthly spend cap for `/investigate-artist` (default 200; 0 switches the command off) |
+| `SAUCENAO_API_KEY`, `E621_LOGIN`, `E621_API_KEY` | Optional lookup services. One without a key is skipped and named as skipped in the report |
+| `DASHBOARD_API_HOST` | Bind address of the bot's internal dashboard API (default `127.0.0.1`) |
 
 Every variable the code reads, with its default, is in [`.env.example`](.env.example) (bot) and [`web/.env.example`](web/.env.example) (dashboard); `tests/docs/env-example.test.ts` fails when either file and the code disagree.
 
@@ -177,6 +198,10 @@ For full command reference, see [docs/BOT-HANDBOOK.md](docs/BOT-HANDBOOK.md).
 | [MOD-QUICKREF.md](docs/MOD-QUICKREF.md) | Quick reference for moderators |
 | [PERMS-MATRIX.md](docs/PERMS-MATRIX.md) | Permission requirements |
 | [CHANGELOG.md](CHANGELOG.md) | Version history |
+| [Release notes 26.0.0](docs/releases/26.0.0.md) | What changed in v26, what to set on the host, release steps |
+| [MODERNIZATION_PLAN.md](MODERNIZATION_PLAN.md) | The v26 audit: findings, what shipped, what was deferred, open decisions |
+| [ci-policy.md](docs/operations/ci-policy.md) | What CI enforces and what it tolerates |
+| [deployment-hardening.md](docs/operations/deployment-hardening.md) | Deploy procedure |
 | [github-discord-badges](docs/reference/github-discord-badges.md) | GitHub-renderable Discord role/channel badges |
 
 ### Discord Badges in Docs
