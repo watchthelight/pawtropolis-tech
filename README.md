@@ -199,7 +199,7 @@ For full command reference, see [docs/BOT-HANDBOOK.md](docs/BOT-HANDBOOK.md).
 | [MOD-QUICKREF.md](docs/MOD-QUICKREF.md) | Quick reference for moderators |
 | [PERMS-MATRIX.md](docs/PERMS-MATRIX.md) | Permission requirements |
 | [CHANGELOG.md](CHANGELOG.md) | Version history |
-| [Release notes 26.0.0](docs/releases/26.0.0.md) | What changed in v26, what to set on the host, release steps |
+| [Release notes 26.0.0](docs/releases/26.0.0.md) | What changed in v26, how the deploy went, how to roll back |
 | [MODERNIZATION_PLAN.md](MODERNIZATION_PLAN.md) | The v26 audit: findings, what shipped, what was deferred, open decisions |
 | [ci-policy.md](docs/operations/ci-policy.md) | What CI enforces and what it tolerates |
 | [deployment-hardening.md](docs/operations/deployment-hardening.md) | Deploy procedure |
