@@ -1,5 +1,7 @@
 # Ticket System: Production Cutover
 
+> **On hold (owner decision, 2026-11-15).** The cutover is not planned for now and Ticket Tool stays the live ticket system. This guide is stale and has to be refreshed before anyone follows it. Its paths and its PM2 app name come from an older host layout (`/opt/pawtropolis`, `pawtropolis-bot`); today the app lives in `/home/ubuntu/pawtropolis-tech` and is called `pawtropolis`. The counters were seeded on 2026-04-30: the first-party seed is 144 while live ticket numbering is past 0309. The first-party `ticket` table has no rows in production.
+
 This document describes how to flip Pawtropolis from the third-party Ticket Tool bot to the first-party ticket system shipped in migrations 067 + 068 and the `src/features/tickets/` module tree.
 
 ## Pre-flight
