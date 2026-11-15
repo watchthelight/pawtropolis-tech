@@ -217,7 +217,7 @@ describe("embed content", () => {
         const visionApiKey = undefined;
         const visionStatus = visionApiKey
           ? "✅ Enabled"
-          : "⚠️ Disabled (set GOOGLE_VISION_API_KEY)";
+          : "⚠️ Disabled (no GOOGLE_VISION_API_KEY: the bot owner sets it with /service-keys)";
         expect(visionStatus).toContain("Disabled");
         expect(visionStatus).toContain("GOOGLE_VISION_API_KEY");
       });

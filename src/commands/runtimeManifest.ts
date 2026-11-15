@@ -71,6 +71,7 @@ export const SLASH_COMMAND_NAMES = [
   "audit",
   "isitreal",
   "investigate-artist",
+  "service-keys",
 
   // Help
   "help",

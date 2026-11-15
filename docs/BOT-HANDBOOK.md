@@ -716,6 +716,7 @@ Scan member avatars for NSFW content using Google Vision API SafeSearch detectio
 - Users without custom avatars (default Discord avatars) are skipped
 - API calls cost money after the free tier (~$1.50 per 1000 calls)
 - Use "Flagged members only" scope to reduce API costs when targeting suspicious accounts
+- The scan needs a Google Vision API key, which the bot owner sets with [`/service-keys`](#service-keys). Without a working key the audit runs to the end and flags nobody
 
 **When to use this:**
 - After running `/audit members` to check flagged accounts' avatars
@@ -740,6 +741,8 @@ In addition to manual audits, the bot automatically monitors avatar changes in r
 - Flagged users are saved to the `nsfw_flags` table
 
 This runs automatically: no commands needed. Check `/health` to confirm "NSFW Avatar Monitor: Active" is shown.
+
+The monitor uses the same Google Vision API key as `/audit nsfw`. With no key, or while Google refuses the key, avatars are not scanned. `/service-keys status` shows which of the two it is.
 
 ---
 
@@ -2041,7 +2044,7 @@ The help system organizes commands into 9 categories:
 | Rewards & Inventory | stash, redeem |
 | Events | movie, event, attendance, verify |
 | Tickets | postticketpanel, closeticket, assignticket |
-| System | help, health, update, database, resetdata, backfill |
+| System | help, health, update, database, resetdata, backfill, service-keys (owner only) |
 
 Click any category button to see all commands in that category. From there, use the select menu to dive into specific commands.
 
@@ -2402,7 +2405,7 @@ A private second opinion on a 2D artist verification ticket. Run it inside the a
 **What it looks at:**
 1. Every message in the ticket: text, images, links and gallery handles. Videos and other files are listed by name only, and links are not opened
 2. What the server knows about the applicant: account age, join date, roles, recent activity, their gate application, their other 2D artist tickets and the Verify Blacklist thread
-3. Reverse image search for each image on Fluffle, e621 and SauceNAO. A service with no API key configured is skipped, and the report names it as skipped
+3. Reverse image search for each image on Fluffle, e621 and SauceNAO. A service with no API key configured is skipped, and the report names it as skipped. The e621 and SauceNAO keys are set with [`/service-keys`](#service-keys)
 4. Claude's read of the images and the ticket text, rated against each handbook rule
 
 **What you get back:**
@@ -2423,6 +2426,47 @@ A private second opinion on a 2D artist verification ticket. Run it inside the a
 - One run at a time
 
 Setup (API keys and the cap) is covered in [deployment-config.md](operations/deployment-config.md#investigate-artist).
+
+---
+
+### `/service-keys`
+**Who can use it:** Bot Owner only (user IDs listed in `OWNER_IDS`). The Server Dev bypass does not apply.
+
+Sets, tests and removes the API keys the bot uses for outside services, so nobody has to log in to the host for it. Only you see the replies.
+
+| Service | What the key is for | Without a key |
+|---------|---------------------|---------------|
+| Google Vision | The avatar scan when a member joins or changes their avatar, and `/audit nsfw` | Avatars are not scanned, and `/audit nsfw` runs but flags nobody |
+| SauceNAO | The SauceNAO lookup in `/investigate-artist` | The lookup is skipped, and the report names it as skipped |
+| e621 | The e621 lookup in `/investigate-artist`. It takes the account name and that account's API key | The lookup is skipped, and the report names it as skipped |
+
+| Subcommand | What it does |
+|------------|--------------|
+| `status` | Lists the services and says which ones have a key. It never shows a key |
+| `set` | Opens a private form for one service. The key is tried against the service and stored only if the service accepts it |
+| `clear` | Removes the stored key of one service |
+| `test` | Tries the stored keys against their services and shows what each one answered. Name a service to test only that one |
+
+**How a key gets stored:**
+1. Run `/service-keys set` and pick the service
+2. Paste the key into the form. Only you see the form, and the key is not part of the command text
+3. The bot makes one real request to the service with that key
+4. If the service accepts it, the key is written to the bot's `.env` file on the host and used from then on. No restart is needed, and the key is still there after one
+5. If the service refuses it, nothing is stored and the reply shows what the service answered. A key that was stored before stays in use
+
+**Important notes:**
+- A key is never shown again after you enter it: not in a reply, not in the logs. To replace one, set it again
+- The test is a real request. For SauceNAO it uses one search of the account's daily allowance. For Google Vision it is one label request, counted like any scan
+- When Google refuses a request (billing switched off, key revoked), the avatar scans stop for six hours. `status` says when that is the case, and a `test` that Google accepts starts them again
+- A key cannot contain spaces, double quotes, `#`, `$`, backslashes or line breaks. None of the three services issues keys like that, so a refusal for this reason means something else got pasted along
+- The keys for `/isitreal` are set with `/config isitreal`. The Claude API key for `/investigate-artist` stays in the `.env` file on the host
+
+**Example:**
+```
+/service-keys status
+/service-keys set service:SauceNAO
+/service-keys test
+```
 
 ---
 
@@ -2613,7 +2657,7 @@ Sets the odds for the bot to react to messages with the skull emoji. `chance:1` 
 | **Senior Admin+** | SA and above | `/panic`, `/stats export/reset` |
 | **Community Manager+** | CM and above | `/update banner/avatar`, `/backfill` |
 | **Bot Owner / Server Dev** | Server Dev or Bot Owner | `/database`, `/poke` |
-| **Bot Owner** | User IDs in `OWNER_IDS` only (no Server Dev bypass) | `/investigate-artist` |
+| **Bot Owner** | User IDs in `OWNER_IDS` only (no Server Dev bypass) | `/investigate-artist`, `/service-keys` |
 
 ### Understanding "X and above"
 

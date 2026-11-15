@@ -31,6 +31,7 @@ import {
   BTN_DBRECOVER_RE,
   BTN_AUDIT_RE,
   BTN_REPORT_RESOLVE_RE,
+  SERVICE_KEYS_MODAL_PREFIX,
   identifyModalRoute,
   isKeyForm,
 } from "../lib/modalPatterns.js";
@@ -76,6 +77,7 @@ import {
   routeIsitRealInteraction,
 } from "../commands/config/isitreal.js";
 import { handleToggleApiButton } from "../commands/config/toggleapis.js";
+import { handleServiceKeysModal } from "../commands/service-keys.js";
 import { handleTicketButton, handleCloseModal } from "../features/tickets/handlers.js";
 import { handleRedeemRewardButton } from "../features/artistRotation/index.js";
 import { handleUseByteButton, handleUseByteSelectMenu } from "../features/byteTokenHandler.js";
@@ -1020,6 +1022,26 @@ export function registerInteractionCreate(
 
             if (customId.startsWith("v1:gate:reset:")) {
               await handleResetModal(interaction);
+              return;
+            }
+
+            // The key form of /service-keys set
+            if (customId.startsWith(SERVICE_KEYS_MODAL_PREFIX)) {
+              logger.info(
+                {
+                  evt: "ix_route_match",
+                  kind: "modal",
+                  route: "service_keys_set",
+                  id: customId,
+                  traceId,
+                },
+                "route: service keys form"
+              );
+              const executor = wrapCommand<ModalSubmitInteraction>(
+                "service_keys_set",
+                handleServiceKeysModal
+              );
+              await executor(interaction);
               return;
             }
 

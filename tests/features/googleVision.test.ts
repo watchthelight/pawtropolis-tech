@@ -360,6 +360,179 @@ describe("the API key", () => {
   });
 });
 
+describe("the key test and the pause", () => {
+  const AVATAR = "https://cdn.discordapp.com/avatars/123/hash.png";
+  const KEY = "AIzaSy-test-key-0123456789";
+  const IMAGE = Buffer.from("not really a jpeg").toString("base64");
+  const fetchMock = vi.fn();
+  let savedKey: string | undefined;
+
+  const answer = (status: number, body: string) => async () => new Response(body, { status });
+
+  async function load() {
+    vi.resetModules();
+    return import("../../src/features/googleVision.js");
+  }
+
+  beforeEach(() => {
+    savedKey = process.env.GOOGLE_VISION_API_KEY;
+    delete process.env.GOOGLE_VISION_API_KEY;
+    fetchMock.mockReset();
+    fetchMock.mockImplementation(answer(200, '{"responses":[{}]}'));
+    vi.stubGlobal("fetch", fetchMock);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+    if (savedKey === undefined) delete process.env.GOOGLE_VISION_API_KEY;
+    else process.env.GOOGLE_VISION_API_KEY = savedKey;
+  });
+
+  describe("testVisionKey", () => {
+    it("passes a key that Google answers with 200", async () => {
+      const { testVisionKey } = await load();
+
+      expect(await testVisionKey(KEY, IMAGE)).toEqual({ ok: true });
+    });
+
+    it("sends the image inline, with the key in a header and not in the URL", async () => {
+      const { testVisionKey } = await load();
+      await testVisionKey(KEY, IMAGE);
+
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(url).toBe("https://vision.googleapis.com/v1/images:annotate");
+      expect((init.headers as Record<string, string>)["X-Goog-Api-Key"]).toBe(KEY);
+      expect(JSON.parse(init.body as string)).toEqual({
+        requests: [
+          { image: { content: IMAGE }, features: [{ type: "LABEL_DETECTION", maxResults: 1 }] },
+        ],
+      });
+    });
+
+    it("uses the key it is given, not the stored one", async () => {
+      process.env.GOOGLE_VISION_API_KEY = "stored-key";
+      const { testVisionKey } = await load();
+      await testVisionKey(KEY, IMAGE);
+
+      const init = fetchMock.mock.calls[0]![1] as RequestInit;
+      expect((init.headers as Record<string, string>)["X-Goog-Api-Key"]).toBe(KEY);
+    });
+
+    it("gives Google's own words when the key is refused", async () => {
+      fetchMock.mockImplementation(
+        answer(
+          400,
+          '{"error":{"code":400,"message":"API key not valid. Please pass a valid API key."}}'
+        )
+      );
+      const { testVisionKey } = await load();
+
+      expect(await testVisionKey(KEY, IMAGE)).toEqual({
+        ok: false,
+        reason: "HTTP 400: API key not valid. Please pass a valid API key.",
+      });
+    });
+
+    it("gives the status alone when the answer is not JSON", async () => {
+      fetchMock.mockImplementation(answer(502, "<html>Bad Gateway</html>"));
+      const { testVisionKey } = await load();
+
+      expect(await testVisionKey(KEY, IMAGE)).toEqual({ ok: false, reason: "HTTP 502" });
+    });
+
+    it("cuts a long message", async () => {
+      fetchMock.mockImplementation(
+        answer(403, JSON.stringify({ error: { message: "x".repeat(900) } }))
+      );
+      const { testVisionKey } = await load();
+      const result = await testVisionKey(KEY, IMAGE);
+
+      expect(result).toEqual({ ok: false, reason: `HTTP 403: ${"x".repeat(300)}` });
+    });
+
+    it("says so when Google does not answer in time", async () => {
+      fetchMock.mockImplementation(async () => {
+        throw new DOMException("The operation timed out.", "TimeoutError");
+      });
+      const { testVisionKey } = await load();
+
+      expect(await testVisionKey(KEY, IMAGE)).toEqual({
+        ok: false,
+        reason: "no answer in 15 seconds",
+      });
+    });
+
+    it("never repeats the text of a failed request, which can quote the key", async () => {
+      fetchMock.mockImplementation(async () => {
+        throw new TypeError(`Invalid header value: ${KEY}`);
+      });
+      const { testVisionKey } = await load();
+      const result = await testVisionKey(KEY, IMAGE);
+
+      expect(result).toEqual({ ok: false, reason: "no answer (network error)" });
+      expect(JSON.stringify(result)).not.toContain(KEY);
+    });
+
+    it("does not pause the scans when a test is refused", async () => {
+      fetchMock.mockImplementation(answer(403, '{"error":{"message":"billing"}}'));
+      const { testVisionKey, visionPausedUntil } = await load();
+      await testVisionKey(KEY, IMAGE);
+
+      expect(visionPausedUntil()).toBe(0);
+    });
+  });
+
+  describe("the pause", () => {
+    it("is not on before anything was refused", async () => {
+      const { visionPausedUntil } = await load();
+
+      expect(visionPausedUntil()).toBe(0);
+    });
+
+    it("says until when scans are held back after a refusal", async () => {
+      process.env.GOOGLE_VISION_API_KEY = KEY;
+      fetchMock.mockImplementation(answer(403, '{"error":{"message":"billing"}}'));
+      const { detectNsfwVision, visionPausedUntil } = await load();
+      const before = Date.now();
+      await detectNsfwVision(AVATAR);
+
+      const sixHours = 6 * 60 * 60 * 1000;
+      expect(visionPausedUntil()).toBeGreaterThanOrEqual(before + sixHours);
+      expect(visionPausedUntil()).toBeLessThanOrEqual(Date.now() + sixHours);
+    });
+
+    it("ends by itself after six hours", async () => {
+      vi.useFakeTimers({ toFake: ["Date"] });
+      process.env.GOOGLE_VISION_API_KEY = KEY;
+      fetchMock.mockImplementation(answer(429, "{}"));
+      const { detectNsfwVision, visionPausedUntil } = await load();
+      await detectNsfwVision(AVATAR);
+      expect(visionPausedUntil()).toBeGreaterThan(0);
+
+      vi.setSystemTime(Date.now() + 6 * 60 * 60 * 1000 + 1);
+
+      expect(visionPausedUntil()).toBe(0);
+    });
+
+    it("resumeVision lets the next scan through", async () => {
+      process.env.GOOGLE_VISION_API_KEY = KEY;
+      fetchMock.mockImplementation(answer(403, '{"error":{"message":"billing"}}'));
+      const { detectNsfwVision, resumeVision, visionPausedUntil } = await load();
+      await detectNsfwVision(AVATAR);
+      await detectNsfwVision(AVATAR);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+
+      resumeVision();
+
+      expect(visionPausedUntil()).toBe(0);
+      await detectNsfwVision(AVATAR);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+  });
+});
+
 describe("error handling", () => {
   describe("API response errors", () => {
     it("returns null on non-ok response", () => {

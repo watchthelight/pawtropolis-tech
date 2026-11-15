@@ -108,7 +108,9 @@ export const e621: LookupService = {
   gapMs: 1_100,
   mirrored: true,
   unavailableReason: (settings) =>
-    settings.e621Login && settings.e621ApiKey ? null : "E621_LOGIN and E621_API_KEY are not set",
+    settings.e621Login && settings.e621ApiKey
+      ? null
+      : "no account name and API key stored, set them with /service-keys",
 
   async search(image, context) {
     await context.pace();

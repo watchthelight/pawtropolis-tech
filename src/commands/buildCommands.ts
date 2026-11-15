@@ -56,6 +56,7 @@ import { data as artData } from "./art.js";
 import { data as auditData } from "./audit.js";
 import { data as isitrealData } from "./isitreal.js";
 import { data as investigateArtistData } from "./investigate-artist.js";
+import { data as serviceKeysData } from "./service-keys.js";
 import { data as helpData } from "./help/index.js";
 import { data as developerData } from "./developer.js";
 import { data as testData } from "./test.js";
@@ -130,6 +131,7 @@ export function buildCommands() {
     auditData.toJSON(),
     isitrealData.toJSON(),
     investigateArtistData.toJSON(),
+    serviceKeysData.toJSON(),
 
     // Help system
     helpData.toJSON(),

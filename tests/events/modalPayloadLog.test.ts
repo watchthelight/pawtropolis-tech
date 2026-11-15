@@ -26,7 +26,7 @@ vi.mock("../../src/lib/errorCard.js", async (importOriginal) => ({
   postErrorCard: h.errorCard,
 }));
 
-import { Collection } from "discord.js";
+import { Collection, MessageFlags } from "discord.js";
 import { registerInteractionCreate } from "../../src/events/interactionCreate.js";
 import { logger } from "../../src/lib/logger.js";
 
@@ -112,6 +112,22 @@ describe("the verbose payload log", () => {
     expect(h.isitreal).toHaveBeenCalledTimes(1);
     expect(events()).toContain("modal_fields");
     expect(events()).not.toContain("modal_field_values");
+    expect(logged()).not.toContain(SECRET);
+  });
+
+  it("leaves the values of the /service-keys form out, all the way through its handler", async () => {
+    // Not on the owner list, so the real handler answers with its refusal.
+    const interaction = modalSubmit("svckeys:set:vision", { GOOGLE_VISION_API_KEY: SECRET });
+
+    await router()(interaction);
+
+    expect(interaction.reply).toHaveBeenCalledWith({
+      content: "❌ This command is only available to the bot owner.",
+      flags: MessageFlags.Ephemeral,
+    });
+    expect(h.errorCard).not.toHaveBeenCalled();
+    expect(events()).not.toContain("modal_field_values");
+    expect(events()).not.toContain("ix_route_miss");
     expect(logged()).not.toContain(SECRET);
   });
 

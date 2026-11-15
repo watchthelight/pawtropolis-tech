@@ -56,10 +56,10 @@ export async function postGateConfigCard(
 
   // Surface Vision API status in the config card so admins know if avatar scanning works.
   // The 75% accuracy note sets expectations - it's not perfect and manual review still matters.
-  const visionApiKey = process.env.GOOGLE_VISION_API_KEY;
+  const visionApiKey = process.env.GOOGLE_VISION_API_KEY?.trim();
   const visionStatus = visionApiKey
     ? "✅ Enabled (75% accuracy on NSFW)"
-    : "⚠️ Disabled (set GOOGLE_VISION_API_KEY)";
+    : "⚠️ Disabled (no GOOGLE_VISION_API_KEY: the bot owner sets it with /service-keys)";
 
   const embed = new EmbedBuilder()
     .setTitle("Pawtropolis Tech — Gate Configuration")

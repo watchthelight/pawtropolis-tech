@@ -125,6 +125,11 @@ The dashboard has its own scripts, run inside `web/`: `npm run dev`, `npm run ch
 - The reply is ephemeral and nothing is posted in the ticket. It gives indicators, never a verdict, and it never approves, denies, changes roles or messages the applicant
 - Cost per run and a monthly total are tracked, and the command refuses to run past `INVESTIGATE_MONTHLY_CAP_USD`
 
+### Service Keys From Discord
+- `/service-keys` lets a bot owner set, test and remove the Google Vision, SauceNAO and e621 keys without logging in to the host
+- A key goes into a private form, is tried against its service, and is stored only when the service accepts it
+- It is written to the host's `.env` and used at once, with no restart. No reply and no log line ever contains a key
+
 ### Operations
 - Health monitoring with uptime checks, an off-process database integrity check every 6 hours, and event-loop lag tracking on the dashboard system page
 - Retention scheduler: hourly action-log search index catch-up, daily `PRAGMA optimize`, and flag-gated pruning of expired rows, deploy backups and 30-day-old verification posts (`RETENTION_ENABLED=true`)
@@ -157,7 +162,8 @@ The dashboard has its own scripts, run inside `web/`: `npm run dev`, `npm run ch
 | `OWNER_IDS` | Comma-separated Discord user IDs with owner permissions. `/investigate-artist` runs for these IDs only |
 | `ANTHROPIC_API_KEY`, `ANTHROPIC_WORKSPACE_ID` | Claude API key and workspace for `/investigate-artist`. Without the key the command still gathers the ticket and runs the lookups, and says the assessment was skipped |
 | `INVESTIGATE_MONTHLY_CAP_USD` | Monthly spend cap for `/investigate-artist` (default 200; 0 switches the command off) |
-| `SAUCENAO_API_KEY`, `E621_LOGIN`, `E621_API_KEY` | Optional lookup services. One without a key is skipped and named as skipped in the report |
+| `SAUCENAO_API_KEY`, `E621_LOGIN`, `E621_API_KEY` | Optional lookup services. One without a key is skipped and named as skipped in the report. A bot owner can set these from Discord with `/service-keys` |
+| `GOOGLE_VISION_API_KEY` | Google Cloud Vision key for the avatar scan and `/audit nsfw`. Also set from Discord with `/service-keys` |
 | `DASHBOARD_API_HOST` | Bind address of the bot's internal dashboard API (default `127.0.0.1`) |
 
 Every variable the code reads, with its default, is in [`.env.example`](.env.example) (bot) and [`web/.env.example`](web/.env.example) (dashboard); `tests/docs/env-example.test.ts` fails when either file and the code disagree.

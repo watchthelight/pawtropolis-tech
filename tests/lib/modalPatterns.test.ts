@@ -22,6 +22,7 @@ import {
   MODAL_ACCEPT_RE,
   MODAL_KICK_RE,
   MODAL_UNCLAIM_RE,
+  SERVICE_KEYS_MODAL_PREFIX,
   identifyModalRoute,
   isKeyForm,
 } from "../../src/lib/modalPatterns.js";
@@ -335,6 +336,8 @@ describe("modalPatterns", () => {
     it("knows the forms that take an API key", () => {
       expect(isKeyForm("isitreal_modal_hive")).toBe(true);
       expect(isKeyForm("isitreal_modal_sightengine")).toBe(true);
+      expect(isKeyForm(`${SERVICE_KEYS_MODAL_PREFIX}vision`)).toBe(true);
+      expect(isKeyForm("svckeys:set:e621")).toBe(true);
     });
 
     it("leaves every other form alone", () => {

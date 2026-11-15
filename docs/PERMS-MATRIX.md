@@ -227,6 +227,10 @@ Restricted to the user IDs in the `OWNER_IDS` environment variable. The check ru
 | Command | Description |
 |---------|-------------|
 | `/investigate-artist` | Private advisory review of a 2D artist verification ticket. Never approves, denies or changes roles |
+| `/service-keys status` | Which outside services have an API key. Never shows a key |
+| `/service-keys set` | Enter a key in a private form. Stored only if the service accepts it. The form checks the owner list again when it is submitted |
+| `/service-keys clear` | Remove a stored key |
+| `/service-keys test` | Try the stored keys against their services |
 
 ---
 
@@ -410,7 +414,7 @@ Bypass conditions are checked before anything else:
 | Senior Admin+ | SA+ | `/panic`, `/stats export/reset` |
 | Community Manager+ | CM+ | `/backfill`, `/gate setup`, `/admin-migrate-unverified` |
 | Bot Owner / Server Dev | [BO/SD] | `/database`, `/poke`, `/testidea`, `/test`, `/developer` |
-| Bot Owner | [BO] | `/investigate-artist` |
+| Bot Owner | [BO] | `/investigate-artist`, `/service-keys` |
 | Discord Perm | ManageMessages | `/send`, `/closeticket` |
 | Hybrid | ManageMessages AND staff (mod roles, ManageGuild or reviewer) AND password | `/purge` |
 | Discord Perm | ManageGuild | `/postticketpanel`, `/review-set-listopen-output` |

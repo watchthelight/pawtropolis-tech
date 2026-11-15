@@ -79,9 +79,12 @@ export const BTN_QOTD_RE = /^qotd:(approve|reject):code([0-9A-F]{6})$/;
 const MODAL_QOTD_SUGGEST_RE = /^v1:modal:qotd:suggest$/;
 const MODAL_QOTD_REJECT_RE = /^v1:modal:qotd:reject:([0-9A-F]{6})$/;
 
+// The form opened by `/service-keys set`. The service id follows the prefix.
+export const SERVICE_KEYS_MODAL_PREFIX = "svckeys:set:";
+
 // Forms whose text fields are API keys. The router can log what was typed into
 // a form (VERBOSE_PAYLOADS=1), and a key must never reach the log file.
-const KEY_FORM_PREFIXES = ["isitreal_modal_"];
+const KEY_FORM_PREFIXES = ["isitreal_modal_", SERVICE_KEYS_MODAL_PREFIX];
 
 export function isKeyForm(customId: string): boolean {
   return KEY_FORM_PREFIXES.some((prefix) => customId.startsWith(prefix));

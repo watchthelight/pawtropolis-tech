@@ -1123,6 +1123,49 @@ export const COMMAND_REGISTRY: CommandMetadata[] = [
     aliases: ["populate", "filldata"],
   },
   {
+    name: "service-keys",
+    description: "Set, test or remove the API keys of outside services",
+    category: "system",
+    permissionLevel: "owner",
+    usage: "/service-keys <subcommand>",
+    subcommands: [
+      { name: "status", description: "Which services have a key. Never shows a key" },
+      {
+        name: "set",
+        description: "Enter a key in a private form. It is stored only if the service accepts it",
+        options: [
+          { name: "service", description: "Google Vision, SauceNAO or e621", type: "string", required: true },
+        ],
+      },
+      {
+        name: "clear",
+        description: "Remove a stored key",
+        options: [
+          { name: "service", description: "Google Vision, SauceNAO or e621", type: "string", required: true },
+        ],
+      },
+      {
+        name: "test",
+        description: "Try the stored keys against their services",
+        options: [
+          { name: "service", description: "One service. Leave empty to test all of them", type: "string", required: false },
+        ],
+      },
+    ],
+    examples: ["/service-keys status", "/service-keys set service:SauceNAO", "/service-keys test"],
+    notes:
+      "Owner-only, and every reply is visible only to you. The Google Vision key is for the avatar scan and /audit nsfw; " +
+      "the SauceNAO and e621 keys are for the lookups in /investigate-artist. A key goes into a private form, is tried against " +
+      "its service, and is stored in the bot's .env file only if the service accepts it. It is in use at once, with no restart.",
+    workflowTips: [
+      "Run /service-keys status first to see what is missing",
+      "A key the service refuses is not stored, and the reply says what the service answered",
+      "The keys for /isitreal are set with /config isitreal",
+    ],
+    relatedCommands: ["investigate-artist", "audit", "config"],
+    aliases: ["apikeys", "keys"],
+  },
+  {
     name: "developer",
     description: "Developer tools for debugging and trace inspection",
     category: "system",

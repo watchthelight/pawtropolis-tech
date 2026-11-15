@@ -105,7 +105,8 @@ export const saucenao: LookupService = {
   gapMs: 8_000,
   // A second query per image would spend the daily allowance twice as fast.
   mirrored: false,
-  unavailableReason: (settings) => (settings.sauceNaoApiKey ? null : "SAUCENAO_API_KEY is not set"),
+  unavailableReason: (settings) =>
+    settings.sauceNaoApiKey ? null : "no API key stored, set one with /service-keys",
 
   async search(image, { settings, pace }) {
     await pace();

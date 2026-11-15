@@ -25,7 +25,7 @@ Categories follow `/help`'s grouping. **Hidden** = registered but intentionally 
 | Analytics | `/stats` (subcommands: activity, approval-rate, leaderboard, user, export, reset, history) |
 | Search | `/search` |
 | Tickets | `/postticketpanel`, `/closeticket`, `/assignticket` |
-| Help & System | `/help`, `/health`, `/update`, `/database`, `/resetdata`, `/backfill` |
+| Help & System | `/help`, `/health`, `/update`, `/database`, `/resetdata`, `/backfill`, `/service-keys` |
 | Developer Tools (hidden from /help) | `/developer`, `/test`, `/testidea`, `/skullmode` |
 
 ## Registering commands

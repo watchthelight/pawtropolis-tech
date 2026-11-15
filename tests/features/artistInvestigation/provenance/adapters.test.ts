@@ -281,10 +281,10 @@ describe("e621", () => {
   const keys = { e621Login: "pawbot", e621ApiKey: "e6-secret", userAgent: "pawtropolis-test/1.0" };
 
   it("is skipped unless both the login and the key are set", () => {
-    expect(e621.unavailableReason(settings())).toBe("E621_LOGIN and E621_API_KEY are not set");
-    expect(e621.unavailableReason(settings({ e621Login: "pawbot" }))).toBe(
-      "E621_LOGIN and E621_API_KEY are not set"
-    );
+    const reason = "no account name and API key stored, set them with /service-keys";
+    expect(e621.unavailableReason(settings())).toBe(reason);
+    expect(e621.unavailableReason(settings({ e621Login: "pawbot" }))).toBe(reason);
+    expect(e621.unavailableReason(settings({ e621ApiKey: "e6-secret" }))).toBe(reason);
     expect(e621.unavailableReason(settings(keys))).toBeNull();
   });
 
@@ -434,7 +434,9 @@ describe("saucenao", () => {
   const keys = { sauceNaoApiKey: "sauce-secret" };
 
   it("is skipped without a key and never searches mirrored copies", () => {
-    expect(saucenao.unavailableReason(settings())).toBe("SAUCENAO_API_KEY is not set");
+    expect(saucenao.unavailableReason(settings())).toBe(
+      "no API key stored, set one with /service-keys"
+    );
     expect(saucenao.unavailableReason(settings(keys))).toBeNull();
     expect(saucenao.mirrored).toBe(false);
   });

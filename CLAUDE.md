@@ -73,7 +73,8 @@ What CI enforces is in [docs/operations/ci-policy.md](./docs/operations/ci-polic
 - `src/events/`, `src/listeners/`: gateway event handlers. `events/interactionCreate.ts` routes slash commands, buttons and modals. `src/scheduler/`: the background jobs.
 - `src/db/`: better-sqlite3 in WAL mode. `src/db/db.ts` opens `DB_PATH` when it is imported. `src/store/`: small persistence helpers.
 - `src/web/`: the bot's HTTP side. `dashboardApi.ts` is the Fastify API the dashboard calls; it binds to `127.0.0.1` by default (`DASHBOARD_API_HOST`) and checks a shared secret. The linked-roles, badge and status endpoints live here too.
-- `src/lib/`: shared helpers. Environment parsing is in `src/lib/env.ts`.
+- `src/lib/`: shared helpers. Environment parsing is in `src/lib/env.ts`. `src/lib/envFile.ts` sets and removes single lines in the host's `.env` and in `process.env`.
+- `src/features/serviceKeys.ts`: the API keys the owner sets from Discord with `/service-keys` (Google Vision, SauceNAO, e621), each with a test call. They are stored through `envFile.ts`, so code that uses one reads `process.env` at the time of use, not the `env` object that is parsed once at start.
 - `web/`: the SvelteKit dashboard. It reads SQLite directly and calls the bot API through `web/src/lib/server/botApi.ts` when it needs the Discord client.
 - `migrations/`: numbered TypeScript migrations. `scripts/`: operational scripts. `docs/`: handbooks, references, operations docs and release notes.
 

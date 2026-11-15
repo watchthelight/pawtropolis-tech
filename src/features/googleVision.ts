@@ -197,6 +197,65 @@ export async function detectNsfwVision(imageUrl: string): Promise<VisionResult |
   }
 }
 
+/** When scans resume after Google refused a request, in ms. 0 when they are not paused. */
+export function visionPausedUntil(): number {
+  return Date.now() < pausedUntil ? pausedUntil : 0;
+}
+
+/** Lift the pause. For a test call that Google accepted. */
+export function resumeVision(): void {
+  pausedUntil = 0;
+}
+
+/**
+ * One annotate call that shows whether Google takes this key. The image goes
+ * inline, so Google fetches nothing. HTTP 200 means the key is known and the
+ * project behind it may call the API. Anything else comes back with Google's
+ * own message, which can name the project: show it to the owner only.
+ */
+export async function testVisionKey(
+  apiKey: string,
+  imageBase64: string
+): Promise<{ ok: true } | { ok: false; reason: string }> {
+  let response: Response;
+  try {
+    response = await fetch(VISION_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": apiKey,
+      },
+      body: JSON.stringify({
+        requests: [
+          {
+            image: { content: imageBase64 },
+            features: [{ type: "LABEL_DETECTION", maxResults: 1 }],
+          },
+        ],
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+  } catch (err) {
+    // Never the error's own text: a rejected header value is quoted in it.
+    const name = err instanceof Error ? err.name : "";
+    return {
+      ok: false,
+      reason:
+        name === "TimeoutError" || name === "AbortError"
+          ? "no answer in 15 seconds"
+          : "no answer (network error)",
+    };
+  }
+  if (response.ok) {
+    return { ok: true };
+  }
+  const body = (await response.json().catch(() => null)) as {
+    error?: { message?: unknown };
+  } | null;
+  const message = typeof body?.error?.message === "string" ? body.error.message.slice(0, 300) : "";
+  return { ok: false, reason: `HTTP ${response.status}${message ? `: ${message}` : ""}` };
+}
+
 /**
  * Calculate combined NSFW score from Vision API results.
  *

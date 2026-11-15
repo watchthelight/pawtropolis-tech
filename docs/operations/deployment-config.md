@@ -102,11 +102,24 @@ The owner-only review aid for 2D artist verification tickets needs migration 084
 | `INVESTIGATE_MODEL` | Model that writes the assessment | `claude-opus-5-5` |
 | `INVESTIGATE_MONTHLY_CAP_USD` | Monthly cap in USD on this command's tracked spend. `0` switches the command off | `200` |
 | `INVESTIGATE_MAX_IMAGES` | Images analyzed per run, 1 to 20 | `12` |
-| `SAUCENAO_API_KEY` | SauceNAO reverse image search. Skipped when unset | unset |
-| `E621_LOGIN`, `E621_API_KEY` | e621 reverse image search. Skipped unless both are set | unset |
+| `SAUCENAO_API_KEY` | SauceNAO reverse image search. Skipped when unset. Set from Discord with `/service-keys` | unset |
+| `E621_LOGIN`, `E621_API_KEY` | e621 reverse image search. Skipped unless both are set. Set from Discord with `/service-keys` | unset |
 | `PROVENANCE_USER_AGENT` | User-Agent sent to the lookup services | `pawtropolis-tech/<version>` plus the repo URL |
 
 Fluffle needs no key. The cap counts only the runs this command records in `artist_investigation_run`. Anything else that uses the same key is not counted, and the Claude Console stays the billing record. Lookup results are cached by image hash for 7 days in `artist_provenance_cache`.
+
+### `/service-keys`
+
+With `/service-keys` a bot owner sets, tests and removes three keys from Discord: `GOOGLE_VISION_API_KEY` (the avatar scan and `/audit nsfw`), `SAUCENAO_API_KEY`, and `E621_LOGIN` with `E621_API_KEY` (the lookups in `/investigate-artist`). It needs `OWNER_IDS` and a command sync (`npm run deploy:cmds` on the host). There is no migration and no new variable.
+
+- **Where a key goes.** Into the `.env` file in the bot's working directory, which is the file PM2 starts both apps with, and into the running process. `deploy.sh` never ships or replaces that file, so a key set from Discord is still there after a deploy and after a restart. PM2 keeps no copy of these values: they are read from the file each time the bot starts, so a removed key stays removed.
+- **How the file is changed.** The line for the name is replaced where it stands, or added at the end when there is none. Every other line stays as it is, byte for byte, and so do the file's line endings and permissions. The new content is written to a temporary file next to `.env` and renamed over it, so a crash in the middle cannot leave half a file.
+- **What can be stored.** Up to 512 characters with no whitespace, no quote at the start and no `#`, `$` or backslash. dotenv and Node's `--env-file` read such a value back the same way.
+- **When it counts.** At once. The lookups and the avatar scan read their keys from the environment on every run.
+- **By hand.** Editing `.env` over SSH still works. The bot needs a restart after that, because a running process does not read the file again.
+- **In the log.** `service_key_set`, `service_key_cleared`, `service_key_refused` and `service_key_test` name the service and the user. No line holds a key, and none holds what a service answered.
+
+The keys for `/isitreal` have their own setup in `/config isitreal`. The Claude API key is not covered: it stays in `.env`.
 
 ### Example `.env` File
 

@@ -175,6 +175,10 @@ commands.set(isitreal.data.name, wrapCommand("isitreal", isitreal.execute));
 import * as investigateArtist from "./commands/investigate-artist.js";
 commands.set(investigateArtist.data.name, wrapCommand("investigate-artist", investigateArtist.execute));
 
+// API keys of outside services, set from Discord (owner-only, private)
+import * as serviceKeys from "./commands/service-keys.js";
+commands.set(serviceKeys.data.name, wrapCommand("service-keys", serviceKeys.execute));
+
 // Unblock command (remove permanent rejection)
 import * as unblock from "./commands/unblock.js";
 commands.set(unblock.data.name, wrapCommand("unblock", unblock.execute));
