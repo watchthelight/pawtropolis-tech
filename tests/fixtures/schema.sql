@@ -422,12 +422,6 @@ CREATE TABLE IF NOT EXISTS general_messages_ctx (
     id       TEXT PRIMARY KEY,
     ctx_json TEXT NOT NULL
   );
-CREATE TABLE IF NOT EXISTS general_messages_effort (
-    id           TEXT PRIMARY KEY,
-    created_at_s INTEGER NOT NULL,
-    score        REAL NOT NULL,
-    model        TEXT NOT NULL
-  );
 CREATE TABLE IF NOT EXISTS general_messages_embed (
     id            TEXT PRIMARY KEY,
     target_vec    BLOB NOT NULL,
@@ -463,18 +457,6 @@ CREATE TABLE IF NOT EXISTS general_messages_raw (
     attachments   INTEGER NOT NULL,
     embeds        INTEGER NOT NULL,
     reply_to      TEXT
-  );
-CREATE TABLE IF NOT EXISTS general_messages_resonance (
-    id           TEXT PRIMARY KEY,
-    created_at_s INTEGER NOT NULL,
-    reply_count  INTEGER NOT NULL,
-    score        REAL NOT NULL
-  );
-CREATE TABLE IF NOT EXISTS general_messages_score (
-    id           TEXT PRIMARY KEY,
-    created_at_s INTEGER NOT NULL,
-    score        REAL NOT NULL,
-    features     TEXT NOT NULL
   );
 CREATE TABLE IF NOT EXISTS guild_config (
   guild_id TEXT PRIMARY KEY,
@@ -1082,9 +1064,6 @@ CREATE INDEX IF NOT EXISTS idx_config_audit_guild
 CREATE INDEX IF NOT EXISTS idx_db_backups_checksum ON db_backups(checksum);
 CREATE INDEX IF NOT EXISTS idx_db_backups_created_at ON db_backups(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_event_ticket ON ticket_event(ticket_id, created_at);
-CREATE INDEX IF NOT EXISTS idx_gme_time ON general_messages_effort(created_at_s);
-CREATE INDEX IF NOT EXISTS idx_gme_time_id_score
-    ON general_messages_effort(created_at_s, id, score);
 CREATE INDEX IF NOT EXISTS idx_gmr_human_text_id
     ON general_messages_raw(id)
     WHERE is_bot = 0 AND length(content) > 0;
@@ -1092,12 +1071,6 @@ CREATE INDEX IF NOT EXISTS idx_gmr_human_time_author_id
     ON general_messages_raw(created_at_s, author_id, id)
     WHERE is_bot = 0;
 CREATE INDEX IF NOT EXISTS idx_gmr_time ON general_messages_raw(created_at_s);
-CREATE INDEX IF NOT EXISTS idx_gmres_id_score
-    ON general_messages_resonance(id, score);
-CREATE INDEX IF NOT EXISTS idx_gmres_time ON general_messages_resonance(created_at_s);
-CREATE INDEX IF NOT EXISTS idx_gms_id_score
-    ON general_messages_score(id, score);
-CREATE INDEX IF NOT EXISTS idx_gms_time ON general_messages_score(created_at_s);
 CREATE INDEX IF NOT EXISTS idx_health_alerts_severity ON health_alerts(severity);
 CREATE INDEX IF NOT EXISTS idx_health_alerts_triggered_at ON health_alerts(triggered_at DESC);
 CREATE INDEX IF NOT EXISTS idx_health_alerts_type ON health_alerts(alert_type);

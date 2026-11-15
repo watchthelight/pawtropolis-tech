@@ -4,7 +4,7 @@ Generated from `tests/fixtures/schema.sql` by `scripts/gen-schema-doc.mjs` (`npm
 
 SQLite in WAL mode at `DB_PATH` (default `data/data.db`). Discord ids are TEXT snowflakes. Timestamps are either ISO 8601 TEXT (`*_at`) or Unix seconds INTEGER (`*_at_s`, `*_ts`), as named. The bot opens the file with a 64 MB page cache, a 256 MB memory map and a 64 MB WAL cap; the dashboard opens the same file read-mostly.
 
-103 tables, 0 virtual tables, 118 indexes.
+100 tables, 0 virtual tables, 112 indexes.
 
 ## Retention
 
@@ -507,17 +507,6 @@ Indexes: `idx_db_backups_checksum`, `idx_db_backups_created_at`
 | `id` | TEXT | pk |
 | `ctx_json` | TEXT | not null |
 
-### general_messages_effort
-
-| Column | Type | Notes |
-|---|---|---|
-| `id` | TEXT | pk |
-| `created_at_s` | INTEGER | not null |
-| `score` | REAL | not null |
-| `model` | TEXT | not null |
-
-Indexes: `idx_gme_time`, `idx_gme_time_id_score`
-
 ### general_messages_embed
 
 | Column | Type | Notes |
@@ -567,28 +556,6 @@ Indexes: `idx_gme_time`, `idx_gme_time_id_score`
 | `reply_to` | TEXT |  |
 
 Indexes: `idx_gmr_human_text_id`, `idx_gmr_human_time_author_id`, `idx_gmr_time`
-
-### general_messages_resonance
-
-| Column | Type | Notes |
-|---|---|---|
-| `id` | TEXT | pk |
-| `created_at_s` | INTEGER | not null |
-| `reply_count` | INTEGER | not null |
-| `score` | REAL | not null |
-
-Indexes: `idx_gmres_id_score`, `idx_gmres_time`
-
-### general_messages_score
-
-| Column | Type | Notes |
-|---|---|---|
-| `id` | TEXT | pk |
-| `created_at_s` | INTEGER | not null |
-| `score` | REAL | not null |
-| `features` | TEXT | not null |
-
-Indexes: `idx_gms_id_score`, `idx_gms_time`
 
 ### guild_config
 
