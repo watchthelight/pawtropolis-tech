@@ -2461,7 +2461,7 @@ Sets, tests and removes the API keys the bot uses for outside services, so nobod
 - A key is never shown again after you enter it: not in a reply, not in the logs. To replace one, set it again
 - The test is a real request. For SauceNAO it uses one search of the account's daily allowance. For Google Vision it is one label request, counted like any scan
 - When Google refuses a request (billing switched off, the Vision API not enabled for the project, key revoked), the avatar scans stop for six hours. `status` says when that is the case, and a `test` that Google accepts starts them again
-- A key cannot contain spaces, double quotes, `#`, `$`, backslashes or line breaks. None of the three services issues keys like that, so a refusal for this reason means something else got pasted along
+- A key can contain letters, digits and `. _ ~ + / = : @ -`, and `'` after the first character. Everything else is refused, such as spaces, double quotes, `#`, `$`, backslashes and line breaks. None of the three services issues keys like that, so a refusal for this reason means something else got pasted along
 - The keys for `/isitreal` are set with `/config isitreal`. The Claude API key for `/investigate-artist` stays in the `.env` file on the host
 
 **Example:**
