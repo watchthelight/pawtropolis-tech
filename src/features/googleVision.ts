@@ -34,11 +34,13 @@ type VisionAPIResponse = {
   }>;
 };
 
-// Feature flag - disabled if no API key configured. This is intentional:
-// running without Vision API just means we skip this detection layer.
-// GOTCHA: This is evaluated at module load time. If you set the env var after
-// the module loads, it won't pick it up. Restart the bot.
-const GOOGLE_VISION_ENABLED = process.env.GOOGLE_VISION_API_KEY ? true : false;
+const VISION_ENDPOINT = "https://vision.googleapis.com/v1/images:annotate";
+
+// No key means this detection layer is skipped. The key is read on every call,
+// so one set or removed with /service-keys counts from the next scan on.
+function visionKey(): string | null {
+  return process.env.GOOGLE_VISION_API_KEY?.trim() || null;
+}
 
 /**
  * Maps Google's categorical likelihood enum to numeric probability.
@@ -74,7 +76,8 @@ const REJECTION_PAUSE_MS = 6 * 60 * 60 * 1000;
 let pausedUntil = 0;
 
 export async function detectNsfwVision(imageUrl: string): Promise<VisionResult | null> {
-  if (!GOOGLE_VISION_ENABLED) {
+  const apiKey = visionKey();
+  if (!apiKey) {
     return null;
   }
   if (Date.now() < pausedUntil) {
@@ -82,15 +85,10 @@ export async function detectNsfwVision(imageUrl: string): Promise<VisionResult |
   }
 
   try {
-    const apiKey = process.env.GOOGLE_VISION_API_KEY;
-    if (!apiKey) {
-      return null;
-    }
-
     // Direct REST API call - simpler than SDK for API key auth.
     // Security: API key passed via X-Goog-Api-Key header instead of URL query param
     // to prevent accidental exposure in logs, browser history, or referrer headers.
-    const endpoint = "https://vision.googleapis.com/v1/images:annotate";
+    const endpoint = VISION_ENDPOINT;
 
     // We request both SAFE_SEARCH_DETECTION and LABEL_DETECTION.
     // This is a pricing optimization: SafeSearch is FREE when bundled with

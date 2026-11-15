@@ -5,7 +5,7 @@
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { afterEach, describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("../../src/lib/logger.js", () => ({
   logger: {
@@ -248,19 +248,115 @@ describe("API configuration", () => {
   });
 });
 
-describe("feature flag", () => {
-  describe("GOOGLE_VISION_ENABLED", () => {
-    it("is true when API key configured", () => {
-      const apiKey = "test-api-key";
-      const enabled = apiKey ? true : false;
-      expect(enabled).toBe(true);
-    });
+describe("the API key", () => {
+  const AVATAR = "https://cdn.discordapp.com/avatars/123/hash.png";
+  const fetchMock = vi.fn();
+  let savedKey: string | undefined;
 
-    it("is false when API key not configured", () => {
-      const apiKey = undefined;
-      const enabled = apiKey ? true : false;
-      expect(enabled).toBe(false);
-    });
+  const safeSearchAnswer = () =>
+    new Response(
+      JSON.stringify({
+        responses: [
+          {
+            safeSearchAnnotation: {
+              adult: "LIKELY",
+              spoof: "UNKNOWN",
+              medical: "UNKNOWN",
+              violence: "VERY_UNLIKELY",
+              racy: "POSSIBLE",
+            },
+          },
+        ],
+      }),
+      { status: 200 }
+    );
+
+  /** A fresh copy of the module, so a pause left by one test does not reach the next. */
+  async function load() {
+    vi.resetModules();
+    return import("../../src/features/googleVision.js");
+  }
+
+  beforeEach(() => {
+    savedKey = process.env.GOOGLE_VISION_API_KEY;
+    delete process.env.GOOGLE_VISION_API_KEY;
+    fetchMock.mockReset();
+    fetchMock.mockImplementation(async () => safeSearchAnswer());
+    vi.stubGlobal("fetch", fetchMock);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    if (savedKey === undefined) delete process.env.GOOGLE_VISION_API_KEY;
+    else process.env.GOOGLE_VISION_API_KEY = savedKey;
+  });
+
+  it("makes no request when no key is set", async () => {
+    const { detectNsfwVision } = await load();
+
+    expect(await detectNsfwVision(AVATAR)).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("uses a key that was set after the module loaded", async () => {
+    const { detectNsfwVision } = await load();
+    expect(await detectNsfwVision(AVATAR)).toBeNull();
+
+    process.env.GOOGLE_VISION_API_KEY = "key-set-later";
+    const result = await detectNsfwVision(AVATAR);
+
+    expect(result).toMatchObject({ adultScore: 0.8, racyScore: 0.5, violenceScore: 0 });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe("https://vision.googleapis.com/v1/images:annotate");
+    expect((init.headers as Record<string, string>)["X-Goog-Api-Key"]).toBe("key-set-later");
+    expect(url).not.toContain("key-set-later");
+  });
+
+  it("stops calling as soon as the key is removed", async () => {
+    process.env.GOOGLE_VISION_API_KEY = "first-key";
+    const { detectNsfwVision } = await load();
+    await detectNsfwVision(AVATAR);
+
+    delete process.env.GOOGLE_VISION_API_KEY;
+
+    expect(await detectNsfwVision(AVATAR)).toBeNull();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("sends the key that is set at the time of the call", async () => {
+    process.env.GOOGLE_VISION_API_KEY = "first-key";
+    const { detectNsfwVision } = await load();
+    await detectNsfwVision(AVATAR);
+
+    process.env.GOOGLE_VISION_API_KEY = "second-key";
+    await detectNsfwVision(AVATAR);
+
+    const keys = fetchMock.mock.calls.map(
+      (call) => ((call[1] as RequestInit).headers as Record<string, string>)["X-Goog-Api-Key"]
+    );
+    expect(keys).toEqual(["first-key", "second-key"]);
+  });
+
+  it("treats a blank key as no key", async () => {
+    process.env.GOOGLE_VISION_API_KEY = "   ";
+    const { detectNsfwVision } = await load();
+
+    expect(await detectNsfwVision(AVATAR)).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("pauses after Google refuses a request", async () => {
+    process.env.GOOGLE_VISION_API_KEY = "refused-key";
+    fetchMock.mockImplementation(
+      async () => new Response('{"error":{"message":"billing"}}', { status: 403 })
+    );
+    const { detectNsfwVision } = await load();
+
+    expect(await detectNsfwVision(AVATAR)).toBeNull();
+    expect(await detectNsfwVision(AVATAR)).toBeNull();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
 
