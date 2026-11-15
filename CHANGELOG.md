@@ -8,7 +8,7 @@ All changes to Pawtropolis Tech are tracked here.
 
 ## [26.2.0] - 2026-11-15
 
-26.2.0 brings the chat research pipeline back, which the owner decided on 2026-11-15 (`MODERNIZATION_PLAN.md`, section 7, item 15). One job scores the messages of the main chat on the host's own CPU and keeps the scores in a file of its own, and the dashboard has its Quality tab again, for moderators and up. The bot's own code does not change. What the release needs on the host is in [`docs/releases/26.2.0.md`](docs/releases/26.2.0.md).
+26.2.0 brings the chat research pipeline back, which the owner decided on 2026-11-15 (`MODERNIZATION_PLAN.md`, section 7, item 15). One job scores the messages of the main chat on the host's own CPU and keeps the scores in a file of its own, and the dashboard has its Quality tab again, for moderators and up. The bot's own code does not change. It went to production on 2026-11-15 (UTC), and the record of that deploy and of the cutover on the host is in [`docs/releases/26.2.0.md`](docs/releases/26.2.0.md).
 
 ### Added
 
@@ -49,7 +49,7 @@ All changes to Pawtropolis Tech are tracked here.
 The steps on the host are in [`docs/releases/26.2.0.md`](docs/releases/26.2.0.md). In short:
 
 - The deploy installs the job's library in `research/` and fetches the four model files into `data/research-model`, 91 MB together. It runs migration 086 after its database backup. No command is added or changed.
-- The history of the main chat was scored once on the dev machine, 1,965,039 messages from 2021-10-08 on, and the finished file of 200 MB is copied to `data/research.db` before the first run. Without it the job would score the whole history on the host, 2,000 messages per run.
+- The history of the main chat was scored once on the dev machine, 1,965,039 messages from 2021-10-08 on, and the finished file of 200 MB was copied to `data/research.db` before the first run. Without it the job would score the whole history on the host, 2,000 messages per run.
 - The crontab line is installed once, by hand, with the command in `scripts/quality-cron.txt`. Nothing starts the job before that.
 - No new environment key is needed. `RESEARCH_DB_PATH` is optional.
 
