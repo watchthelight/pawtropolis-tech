@@ -7,6 +7,13 @@ Reverse chronological by completion date.
 ## 2026-11-15
 
 - [x] [Owner decisions from the v26 audit](done/00287.md) `High` All sixteen decided by the owner. The two held changes are merged, the dashboard deploy waits for CI and three dead files are gone. The rest is in #00289 to #00296 and ships with 26.1.0.
+- [x] [Service keys set from Discord](done/00289.md) `High` `/service-keys`, owner only: set, test and clear the Google Vision, SauceNAO and e621 keys from Discord. A key is stored in the host's `.env` once its service accepts it and counts without a restart. Shipped in 26.1.0. Not yet run as a real interaction.
+- [x] [Google web detection as a lookup in /investigate-artist](done/00290.md) `Medium` A fourth reverse image lookup, through the Google Vision key. Shipped in 26.1.0. It has only run against stubbed answers, because Google refuses the production key with 403.
+- [x] [/purge requires a staff role in the handler](done/00291.md) `Medium` A caller without a staff role is refused before the password is compared. Shipped in 26.1.0.
+- [x] [Artist verification criteria follow the handbook](done/00292.md) `Medium` The handbook has the three rules the owner settled, `criteria.ts` quotes them and a parity test holds the two together. Shipped in 26.1.0. Staff still have to edit the public requirements message and the ticket greeting.
+- [x] [Move the host to Node 24](done/00293.md) `High` The host runs Node 24.22.3 from the NodeSource apt package. Every Node app on it was restarted and checked. The way back to Node 20 is kept for now. The record is in `docs/releases/26.1.0.md`.
+- [x] [Drop the two unused indexes on messages_archive](done/00294.md) `Medium` Migration 085 dropped `idx_msgarc_author_time` and `idx_msgarc_channel_time`, 208 MB. On a rebuilt copy an archived message takes a little under half the time and a little over half the page writes. Applied on the host with 26.1.0.
+- [x] [Release 26.1.0](done/00296.md) `High` Carries out the owner decisions of 2026-11-15. In production since 13:03 UTC, on Node 24 since 13:16 UTC. The record is in `docs/releases/26.1.0.md`.
 
 ## 2026-11-14
 
