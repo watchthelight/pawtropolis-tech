@@ -13,6 +13,7 @@ Reverse chronological by completion date.
 - [x] [Artist verification criteria follow the handbook](done/00292.md) `Medium` The handbook has the three rules the owner settled, `criteria.ts` quotes them and a parity test holds the two together. Shipped in 26.1.0. Staff still have to edit the public requirements message and the ticket greeting.
 - [x] [Move the host to Node 24](done/00293.md) `High` The host runs Node 24.22.3 from the NodeSource apt package. Every Node app on it was restarted and checked. The way back to Node 20 is kept for now. The record is in `docs/releases/26.1.0.md`.
 - [x] [Drop the two unused indexes on messages_archive](done/00294.md) `Medium` Migration 085 dropped `idx_msgarc_author_time` and `idx_msgarc_channel_time`, 208 MB. On a rebuilt copy an archived message takes a little under half the time and a little over half the page writes. Applied on the host with 26.1.0.
+- [x] [Bring the research pipeline back](done/00295.md) `Medium` One job scores the main chat on the host into a file of its own, and the dashboard has its Quality tab again. The seven dead cron lines, their five empty tables and their logs are gone. Shipped in 26.2.0, in production since 18:59 UTC. The record is in `docs/releases/26.2.0.md`. Left over: #00297 and #00298.
 - [x] [Release 26.1.0](done/00296.md) `High` Carries out the owner decisions of 2026-11-15. In production since 13:03 UTC, on Node 24 since 13:16 UTC. The record is in `docs/releases/26.1.0.md`.
 
 ## 2026-11-14
