@@ -14,7 +14,6 @@
  */
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
-import { handleFromUrl } from "../handles.js";
 import type { RawMatch } from "../types.js";
 import {
   LookupError,
@@ -25,6 +24,8 @@ import {
   isHttpUrl,
   lookupFetch,
   multipartImage,
+  plainText,
+  platformOf,
   qualityFromScore,
   readJson,
   tweetDate,
@@ -33,23 +34,6 @@ import {
 
 const ENDPOINT = "https://saucenao.com/search.php";
 const MIN_SIMILARITY = 65;
-
-const stripHtml = (text: string) =>
-  text
-    .replace(/<[^>]*>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 160);
-
-function platformOf(url: string): string | null {
-  const known = handleFromUrl(url)?.platform;
-  if (known) return known;
-  try {
-    return new URL(url).hostname.replace(/^www\./, "").toLowerCase();
-  } catch {
-    return null;
-  }
-}
 
 function isoDate(value: unknown): string | null {
   const text = asString(value);
@@ -129,7 +113,7 @@ export const saucenao: LookupService = {
     // Below zero is a problem with the request or the account. Above zero means
     // some indexes were offline and the results that did come back are still good.
     if (status < 0)
-      throw new LookupError(stripHtml(asString(header.message) ?? "request was refused"), true);
+      throw new LookupError(plainText(asString(header.message) ?? "request was refused"), true);
 
     return asArray(body.results)
       .map(toMatch)

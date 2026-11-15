@@ -9,6 +9,7 @@
 // SPDX-License-Identifier: LicenseRef-ANW-1.0
 
 import { LIMITS, type InvestigationSettings } from "../config.js";
+import { handleFromUrl } from "../handles.js";
 import type { ProvenanceServiceName, RawMatch } from "../types.js";
 
 /** A lookup that did not produce an answer. `fatal` means retrying other images is pointless. */
@@ -135,6 +136,25 @@ export function tweetDate(url: string): string | null {
   if (!id) return null;
   const ms = Number((BigInt(id) >> 22n) + TWITTER_EPOCH_MS);
   return ms < Date.now() + 86_400_000 ? new Date(ms).toISOString() : null;
+}
+
+/** Text a service sends with markup in it, as one short plain line. */
+export const plainText = (text: string) =>
+  text
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 160);
+
+/** The site a match sits on: a platform this command knows, else the host name. */
+export function platformOf(url: string): string | null {
+  const known = handleFromUrl(url)?.platform;
+  if (known) return known;
+  try {
+    return new URL(url).hostname.replace(/^www\./, "").toLowerCase();
+  } catch {
+    return null;
+  }
 }
 
 export const asRecord = (value: unknown): Record<string, unknown> =>
