@@ -68,20 +68,32 @@ jobs:
           scp -i ~/.ssh/id_ec2 -o StrictHostKeyChecking=accept-new \
             web-deploy.tar.gz "$EC2_USER@$EC2_HOST:/home/ubuntu/pawtropolis-tech/"
 
-      - name: Extract and restart on EC2
+      # The artefact carries package-lock.json, so the build can need packages
+      # the host has not installed yet. npm ci runs when node_modules was not
+      # installed from the lockfile just extracted; deploy.sh keeps the same
+      # marker. The braces make bash read the whole script before it runs any
+      # of it, so a command that reads stdin cannot swallow the rest.
+      - name: Extract, install and restart on EC2
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
         run: |
           ssh -i ~/.ssh/id_ec2 -o StrictHostKeyChecking=accept-new \
-            "$EC2_USER@$EC2_HOST" 'bash -lc "
-              set -euo pipefail
-              cd /home/ubuntu/pawtropolis-tech/web &&
-              tar -xzf ../web-deploy.tar.gz &&
-              pm2 restart pawtropolis-web &&
-              rm -f ../web-deploy.tar.gz &&
-              pm2 list | grep pawtropolis-web
-            "'
+            "$EC2_USER@$EC2_HOST" 'bash -ls' <<'REMOTE'
+          {
+            set -euo pipefail
+            cd /home/ubuntu/pawtropolis-tech/web
+            tar -xzf ../web-deploy.tar.gz
+            lock_hash=$(sha256sum package-lock.json | cut -d' ' -f1)
+            if [ "$lock_hash" != "$(cat node_modules/.lock-sha256 2>/dev/null)" ]; then
+              npm ci --omit=dev
+              echo "$lock_hash" > node_modules/.lock-sha256
+            fi
+            pm2 restart pawtropolis-web
+            rm -f ../web-deploy.tar.gz
+            pm2 list | grep pawtropolis-web
+          }
+          REMOTE
 
       - name: Smoke test
         env:
