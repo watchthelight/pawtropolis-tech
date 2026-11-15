@@ -8,11 +8,11 @@ All changes to Pawtropolis Tech are tracked here.
 
 ## [26.0.0] - 2026-11-14
 
-Version 26 is the end-of-2026 release; the number jumps from 7. It has one new command, `/investigate-artist`, and a modernization pass over the whole repository: security and reliability fixes from an audit, dependency updates, quality gates that pass for real and are now enforced, and four measured optimizations. The audit, everything that was deferred and why, and the decisions left for the owner are in [`MODERNIZATION_PLAN.md`](MODERNIZATION_PLAN.md). The release steps are in [`docs/releases/26.0.0.md`](docs/releases/26.0.0.md).
+Version 26 is the end-of-2026 release; the number jumps from 7. It has one new command, `/investigate-artist`, and a modernization pass over the whole repository: security and reliability fixes from an audit, dependency updates, quality gates that pass for real and are now enforced, and four measured optimizations. The audit, everything that was deferred and why, and the decisions left for the owner are in [`MODERNIZATION_PLAN.md`](MODERNIZATION_PLAN.md). It went to production on 2026-11-15 (UTC), and the record of that deploy is in [`docs/releases/26.0.0.md`](docs/releases/26.0.0.md).
 
 ### Breaking
 
-- Node: `engines` is now `>=20.9.0`. sharp 0.35 requires it and canvas 3.2 does not support 20.0 to 20.8. Check `node -v` on the host before deploying (#00282).
+- Node: `engines` is now `>=20.9.0`. sharp 0.35 requires it and canvas 3.2 does not support 20.0 to 20.8. The host runs 20.20.2 (#00282).
 - Dashboard sessions: a session cookie that does not decrypt is rejected. Anyone still holding a cookie from before cookies were encrypted signs in again (#00280).
 - Dashboard API: the bot's internal API listens on `127.0.0.1` by default instead of all interfaces. Set `DASHBOARD_API_HOST=0.0.0.0` only if the dashboard calls the bot from another machine (#00280).
 - Stats: weekly active users in the Stats Observatory and the Pulse daily chart show different numbers from this release on. The old ones were wrong (#00284).
@@ -80,7 +80,7 @@ Query numbers were measured on a read-only copy of the production database, medi
 - Overrides for packages that are no longer in the tree are removed, and the fast-uri and brace-expansion floors are raised (#00282).
 - Both `package.json` files carry an `allowScripts` allowlist, so `npm ci` on npm 11.21 runs the native builds it needs without the install-script warning (#00282).
 - `npm audit` for the bot went from 26 findings (11 high) to 1: zod, which needs the zod 4 major and whose advisory is in a v4 code path this repo does not use. The dashboard went from 28 (1 critical, 8 high) to 14, none critical or high (#00282).
-- Held back: better-sqlite3 stays at 12.4.1 until the production Node version is confirmed. The major upgrades (Sentry 11, zod 4, vitest 5, eslint 10, TypeScript 7, SvelteKit 3 with Vite 8) are deferred with reasons in `MODERNIZATION_PLAN.md` (#00286).
+- Held back: better-sqlite3 stays at 12.4.1 in the bot and 12.6.2 in the dashboard while the host runs Node 20. Releases from 12.10.0 on ship no prebuilt binary for Node 20, so the host would compile them from source. The major upgrades (Sentry 11, zod 4, vitest 5, eslint 10, TypeScript 7, SvelteKit 3 with Vite 8) are deferred with reasons in `MODERNIZATION_PLAN.md` (#00286).
 
 ### Tests
 
@@ -88,14 +88,14 @@ Query numbers were measured on a read-only copy of the production database, medi
 
 ### Upgrade notes
 
-The same steps with exact commands are in [`docs/releases/26.0.0.md`](docs/releases/26.0.0.md).
+26.0.0 went to production on 2026-11-15 (UTC). What was done on the host, what was checked afterwards and how to roll back are in [`docs/releases/26.0.0.md`](docs/releases/26.0.0.md). What the upgrade needs:
 
-- Before deploying, run `node -v` on the host. It must print 20.9.0 or newer.
-- Add to the host `.env`: `ANTHROPIC_API_KEY`, `ANTHROPIC_WORKSPACE_ID` and your Discord user ID in `OWNER_IDS`. Optional: `SAUCENAO_API_KEY`, `E621_LOGIN` and `E621_API_KEY` (free accounts), `INVESTIGATE_MONTHLY_CAP_USD` (default 200). Without `OWNER_IDS` the command refuses everyone; without the Anthropic key it runs the lookups and gives no assessment.
-- The first deploy of this version installs dependencies on the host from scratch: `npm ci --omit=dev` in the root and in `web/`. That takes a few minutes and removes any package that was added there by hand.
+- Node 20.9.0 or newer on the host. It runs 20.20.2.
+- In the host `.env`: `ANTHROPIC_API_KEY`, `ANTHROPIC_WORKSPACE_ID` and the owner's Discord user ID in `OWNER_IDS`. Optional: `SAUCENAO_API_KEY`, `E621_LOGIN` and `E621_API_KEY` (free accounts), `INVESTIGATE_MONTHLY_CAP_USD` (default 200). Without `OWNER_IDS` the command refuses everyone; without the Anthropic key it runs the lookups and gives no assessment.
+- The first deploy of this version installs dependencies on the host from scratch: `npm ci --omit=dev` in the root and in `web/`. That took 10 and 17 seconds, and it removes any package that was added there by hand.
 - The deploy runs migration 084, which only adds two tables (`artist_investigation_run`, `artist_provenance_cache`).
 - `./deploy.sh` registers the slash commands on the host as step 6.6, which is what makes `/investigate-artist` appear. If it prints a registration warning, run `npm run deploy:cmds` on the host.
-- Merging to `main` also starts the dashboard deploy workflow, because `docs/**` and `web/**` changed.
+- A push to `main` also starts the dashboard deploy workflow, because `docs/**` and `web/**` changed.
 - Anyone still holding a dashboard cookie from before cookies were encrypted is asked to sign in again.
 
 ## [7.0.0] - 2026-09-02
